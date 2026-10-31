@@ -1,4 +1,5 @@
 use nestlink_protocol::api::*;
+use nestlink_protocol::service_plane::group::*;
 use nestlink_protocol::service_plane::{
     ServiceLeaseClaims, ServiceQuotaLimitUpdate, ServiceQuotaUsageQuery, ServiceQuotaUsageView,
     ServiceResourceSnapshot, SignedServiceLease, SignedServiceResourceQuery,
@@ -10,7 +11,6 @@ use nestlink_protocol::service_plane::{
         ServicePublicationRequest, ServiceResourceGrant, SignedServiceIssuerDelegation,
     },
 };
-use nestlink_protocol::service_plane::group::*;
 use nestlink_protocol::services::private::*;
 use nestlink_protocol::spaces::addressing::*;
 use nestlink_protocol::spaces::service_publication::*;

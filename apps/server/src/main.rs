@@ -86,9 +86,9 @@ enum Command {
     /// Does not alter host routing or publish a service.
     FixedIngressBootstrap {
         #[arg(long)]
-        config:PathBuf,
+        config: PathBuf,
         #[arg(long)]
-        output_directory:PathBuf,
+        output_directory: PathBuf,
     },
     /// Generate dedicated Caddy JSON without replacing existing files.
     CaddyBootstrap {
@@ -422,10 +422,17 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             control.stop();
             result?;
         }
-        Command::FixedIngressBootstrap{config,output_directory}=>{
-            let config=nestlink_server::service_edge::frontdoor::FixedIngressConfig::load(&config)?;
+        Command::FixedIngressBootstrap {
+            config,
+            output_directory,
+        } => {
+            let config =
+                nestlink_server::service_edge::frontdoor::FixedIngressConfig::load(&config)?;
             config.write_bundle(&output_directory)?;
-            println!("Exact group IPVS-NAT bundle created at {}. Apply it only to an explicitly prepared dedicated Ubuntu director; actual fixed-entry acceptance is still required.",output_directory.display());
+            println!(
+                "Exact group IPVS-NAT bundle created at {}. Apply it only to an explicitly prepared dedicated Ubuntu director; actual fixed-entry acceptance is still required.",
+                output_directory.display()
+            );
         }
         Command::CaddyBootstrap {
             caddy_config,

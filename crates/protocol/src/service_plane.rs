@@ -8,9 +8,9 @@ use crate::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::net::{IpAddr, SocketAddr};
+pub mod group;
 pub mod observation;
 pub mod publication;
-pub mod group;
 
 pub const SERVICE_LEASE_MS: u64 = 10_000;
 pub const SERVICE_RESOURCE_MS: u64 = 2_000;
@@ -517,17 +517,29 @@ pub fn decode_service_message<T: DeserializeOwned>(
 
 impl ServiceLeaseClaims {
     pub fn edge_node_id(&self) -> &str {
-        self.edge_group.as_ref().map_or(self.definition.edge_node_id.as_str(), |binding| binding.member_node_id.as_str())
+        self.edge_group
+            .as_ref()
+            .map_or(self.definition.edge_node_id.as_str(), |binding| {
+                binding.member_node_id.as_str()
+            })
     }
     pub fn accounting_node_id(&self) -> &str {
-        self.edge_group.as_ref().map_or(self.definition.accounting_node_id(), |binding| binding.member_node_id.as_str())
+        self.edge_group
+            .as_ref()
+            .map_or(self.definition.accounting_node_id(), |binding| {
+                binding.member_node_id.as_str()
+            })
     }
     pub fn effective_limits(&self) -> crate::api::ServiceLimits {
-        self.edge_group.as_ref().map_or(self.definition.limits, |binding| binding.allocation)
+        self.edge_group
+            .as_ref()
+            .map_or(self.definition.limits, |binding| binding.allocation)
     }
     pub fn validate(&self) -> Result<(), ContractError> {
         self.definition.validate()?;
-        if let Some(binding) = &self.edge_group { binding.validate(self)?; }
+        if let Some(binding) = &self.edge_group {
+            binding.validate(self)?;
+        }
         publication::service_socket(&self.edge_service_address)?;
         if self.usage_grant.signature.len() != 64 {
             return Err(invalid());
@@ -585,7 +597,8 @@ impl ServiceLeaseClaims {
             || grant.edge_runtime_id != self.edge_runtime_id
             || grant.edge_runtime_generation != self.edge_runtime_generation
             || grant.byte_ceiling > self.effective_limits().maximum_bytes
-            || self.edge_group.is_some() && grant.byte_ceiling != self.effective_limits().maximum_bytes
+            || self.edge_group.is_some()
+                && grant.byte_ceiling != self.effective_limits().maximum_bytes
             || grant.issued_at_unix_ms > self.issued_at_unix_ms
             || grant.expires_at_unix_ms < self.expires_at_unix_ms
         {

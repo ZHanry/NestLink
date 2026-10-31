@@ -178,7 +178,12 @@ impl OnlinePacketAccess {
         let revoked = BTreeSet::new();
         let pin = self.pin.clone();
         let deployment = self.deployment.clone();
-        let context = Self::context(&pin, &deployment, self.policy.claims.scope.policy_epoch, &revoked)?;
+        let context = Self::context(
+            &pin,
+            &deployment,
+            self.policy.claims.scope.policy_epoch,
+            &revoked,
+        )?;
         let source = PacketPeerAuthority::from_directory(
             &context,
             self.policy.source.member.clone(),

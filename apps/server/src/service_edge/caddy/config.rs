@@ -27,6 +27,10 @@ pub struct CaddyEdgeGroupConfig {
     /// hostname on every edge; HTTP-01 is not randomly sent to another edge.
     pub certificate:PathBuf,
     pub private_key:PathBuf,
+    /// Optional operator-selected DER CA for this deployment's DNS/readiness
+    /// HTTPS clients. This protected local file never comes from a group lease.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub https_root:Option<PathBuf>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "transport", rename_all = "snake_case", deny_unknown_fields)]
@@ -59,7 +63,8 @@ impl CaddyServiceConfig {
             if !valid_id(&group.group_id) || !nestlink_protocol::services::revision_valid(group.revision)
                 || group.aggregate_sha256==[0;32] || group.ingress_ip.is_unspecified() || group.ingress_ip.is_multicast()
                 || matches!(group.ingress_ip,IpAddr::V4(ip) if ip.is_broadcast())
-                || !group.certificate.is_absolute() || !group.private_key.is_absolute() || group.certificate==group.private_key {
+                || !group.certificate.is_absolute() || !group.private_key.is_absolute() || group.certificate==group.private_key
+                || group.https_root.as_ref().is_some_and(|path|!path.is_absolute()) {
                 return Err(denied());
             }
         }
@@ -90,6 +95,16 @@ impl CaddyServiceConfig {
         match &self.admin {
             CaddyAdmin::Unix { .. } => "http://localhost".into(),
             CaddyAdmin::LoopbackHttp { address } => format!("http://{address}"),
+        }
+    }
+    pub(super) fn https_client(&self,builder:reqwest::ClientBuilder)->io::Result<reqwest::ClientBuilder> {
+        match self.edge_group.as_ref().and_then(|group|group.https_root.as_ref()) {
+            Some(path)=>{
+                let der=nestlink_platform_security::read_private(path,16*1024).map_err(fault)?;
+                let root=reqwest::Certificate::from_der(&der).map_err(fault)?;
+                Ok(builder.add_root_certificate(root))
+            },
+            None=>Ok(builder),
         }
     }
     fn admin_listen(&self) -> io::Result<String> {

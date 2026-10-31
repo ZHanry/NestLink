@@ -16,8 +16,8 @@ mod network_tun_system;
 mod private_service_proxy;
 mod private_web_gateway;
 mod privileged_input;
-mod session_store;
 mod service_group;
+mod session_store;
 mod space_dns;
 mod space_dns_system;
 

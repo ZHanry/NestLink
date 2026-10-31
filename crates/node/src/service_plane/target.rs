@@ -37,7 +37,7 @@ pub struct LocalTargetOwner {
     runtime_id: String,
     stopped: watch::Sender<bool>,
     used_opens: Mutex<HashMap<[u8; 32], Instant>>,
-    group_choice: Option<(String, u64, [u8;32])>,
+    group_choice: Option<(String, u64, [u8; 32])>,
 }
 pub struct PreparedLocalTunnel {
     pub(super) flow: ServiceFlowPermit,
@@ -116,16 +116,30 @@ impl LocalTargetOwner {
         target_id: String,
         protocol: String,
         address: SocketAddr,
-        host_public_key: [u8;32],
+        host_public_key: [u8; 32],
         group: &nestlink_protocol::service_plane::group::ServiceEdgeGroupView,
-    ) -> Result<Self,Error> {
-        let mut owner = Self::from_local_choice(context,original_view,target_id,protocol,address,host_public_key)?;
+    ) -> Result<Self, Error> {
+        let mut owner = Self::from_local_choice(
+            context,
+            original_view,
+            target_id,
+            protocol,
+            address,
+            host_public_key,
+        )?;
         group.validate(&owner.original_view.definition)?;
         if group.service_id != owner.original_view.id
             || owner.original_view.revision.checked_add(1) != Some(group.service_revision)
             || group.definition_sha256 != definition_digest(&owner.original_view.definition)?
-            || group.target_sha256 != owner.target_sha256 { return Err(Error::Target); }
-        owner.group_choice=Some((group.group_id.clone(),group.revision,nestlink_identity::service_plane::group::service_edge_group_digest(group)?));
+            || group.target_sha256 != owner.target_sha256
+        {
+            return Err(Error::Target);
+        }
+        owner.group_choice = Some((
+            group.group_id.clone(),
+            group.revision,
+            nestlink_identity::service_plane::group::service_edge_group_digest(group)?,
+        ));
         Ok(owner)
     }
     pub fn target_id(&self) -> &str {
@@ -156,10 +170,14 @@ impl LocalTargetOwner {
             && c.target_id == self.target_id
             && c.target_sha256 == self.target_sha256
             && c.host_key_sha256 == digest(&self.host_public_key)
-            && match (&self.group_choice,&c.edge_group) {
-                (None,None)=>true,
-                (Some((id,revision,digest)),Some(binding))=>binding.group.group_id==*id && binding.group.revision==*revision && binding.aggregate_sha256==*digest,
-                _=>false,
+            && match (&self.group_choice, &c.edge_group) {
+                (None, None) => true,
+                (Some((id, revision, digest)), Some(binding)) => {
+                    binding.group.group_id == *id
+                        && binding.group.revision == *revision
+                        && binding.aggregate_sha256 == *digest
+                }
+                _ => false,
             }
     }
     pub fn prepare(

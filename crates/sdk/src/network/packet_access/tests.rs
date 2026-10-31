@@ -4,8 +4,8 @@ use etherparse::PacketBuilder;
 use nestlink_identity::network::{NetworkAuthoritySigner, verify_network_grant};
 use nestlink_protocol::{
     network::{
-        ConnectivityClaims, GrantScope, MembershipClaims, NetworkRule, IpProtocol, PathClaims, PathPolicy,
-        PeerPair, SpaceRole,
+        ConnectivityClaims, GrantScope, IpProtocol, MembershipClaims, NetworkRule, PathClaims,
+        PathPolicy, PeerPair, SpaceRole,
     },
     spaces::{SpaceView, addressing::SpaceAddressView},
 };

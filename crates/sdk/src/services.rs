@@ -34,11 +34,13 @@ use std::net::SocketAddr;
 #[cfg(not(target_arch = "wasm32"))]
 mod publication;
 #[cfg(not(target_arch = "wasm32"))]
+pub use publication::group::{
+    LocalServiceGroupChoice, LocalServiceGroupRuntime, ServiceGroupHostWait,
+};
+#[cfg(not(target_arch = "wasm32"))]
 pub use publication::{
     HttpsBackendTls, LocalServiceRuntime, ServiceHostStopReport, ServiceHostWait,
 };
-#[cfg(not(target_arch = "wasm32"))]
-pub use publication::group::{LocalServiceGroupChoice, LocalServiceGroupRuntime, ServiceGroupHostWait};
 
 /// Created only from an explicit local choice. It cannot be deserialized from IPC
 /// or a server response. Keep this owner beside the local target registration;

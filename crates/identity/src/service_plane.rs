@@ -10,8 +10,8 @@ use nestlink_protocol::{
     ContractError, ErrorCode, NodeResourceQueryClaims, service_plane::*, valid_id,
 };
 use zeroize::Zeroizing;
-pub mod publication;
 pub mod group;
+pub mod publication;
 
 pub(crate) const LEASE: &[u8] = b"NestLink/v15/service-publication-lease/v1\0";
 pub(crate) const QUERY: &[u8] = b"NestLink/v15/service-resource-query/v1\0";

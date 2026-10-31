@@ -109,12 +109,22 @@ fn public_plan_refuses_symlinks_and_fifos_without_blocking_the_helper() -> Resul
     symlink(&path, &alias)?;
     assert!(read_plan(&alias).is_err());
     let fifo = temporary.path().join("plan-fifo");
-    if !std::process::Command::new("/usr/bin/mkfifo").arg("--").arg(&fifo).status()?.success() {
+    if !std::process::Command::new("/usr/bin/mkfifo")
+        .arg("--")
+        .arg(&fifo)
+        .status()?
+        .success()
+    {
         return Err("could not create the Linux FIFO fixture".into());
     }
     let (send, receive) = std::sync::mpsc::channel();
-    std::thread::spawn(move || { let _ = send.send(read_plan(&fifo).is_err()); });
-    assert!(receive.recv_timeout(Duration::from_secs(1))?, "the administrative monitor must reject a FIFO before reading");
+    std::thread::spawn(move || {
+        let _ = send.send(read_plan(&fifo).is_err());
+    });
+    assert!(
+        receive.recv_timeout(Duration::from_secs(1))?,
+        "the administrative monitor must reject a FIFO before reading"
+    );
     Ok(())
 }
 

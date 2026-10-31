@@ -52,11 +52,11 @@ fn parse(bytes: &[u8], name: &str, kind: u16) -> io::Result<Vec<Answer>> {
     Ok(response.answers)
 }
 async fn query(config: &CaddyServiceConfig, name: &str, kind: u16) -> io::Result<Vec<Answer>> {
-    let client = reqwest::Client::builder()
+    let client = config.https_client(reqwest::Client::builder()
         .no_proxy()
         .redirect(reqwest::redirect::Policy::none())
         .connect_timeout(Duration::from_secs(1))
-        .timeout(Duration::from_secs(3))
+        .timeout(Duration::from_secs(3)))?
         .build()
         .map_err(fault)?;
     let response = client
@@ -114,13 +114,13 @@ pub(super) async fn probe(config: &CaddyServiceConfig, entry: &Entry) -> io::Res
     let addresses=if let Some(binding)=&entry.edge_group {vec![binding.group.member(&entry.node_id).map_err(fault)?.ingress_ip]}else{config.public_ips.clone()};
     let probes = addresses.iter().map(|ip| async move {
         let port = if entry.scheme == "https" { 443 } else { 80 };
-        let client = reqwest::Client::builder()
+        let client = config.https_client(reqwest::Client::builder()
             .no_proxy()
             .redirect(reqwest::redirect::Policy::none())
             .connect_timeout(Duration::from_secs(1))
             .timeout(Duration::from_secs(3))
             .pool_max_idle_per_host(0)
-            .resolve(&entry.hostname, (*ip, port).into())
+            .resolve(&entry.hostname, (*ip, port).into()))?
             .build()
             .map_err(fault)?;
         let response = client

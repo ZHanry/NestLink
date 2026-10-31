@@ -3,7 +3,13 @@
 use super::*;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_protocol::network::GrantClaims;
-use nestlink_sdk::{Sdk, network::{packet_access::{OnlinePacketAccess, PACKET_MTU}, routed::PinnedNetworkSpace}};
+use nestlink_sdk::{
+    Sdk,
+    network::{
+        packet_access::{OnlinePacketAccess, PACKET_MTU},
+        routed::PinnedNetworkSpace,
+    },
+};
 use nestlink_transport_quic::packet_codec::{DirectPacketEndpoint, PacketAssembler, encode_direct};
 use std::{net::SocketAddr, path::Path};
 use tokio::time::Instant;
@@ -11,51 +17,94 @@ use tokio::time::Instant;
 #[derive(clap::Args)]
 pub(crate) struct TunArgs {
     /// Existing ordinary installation with protected login recovery enabled.
-    #[arg(long)] state_dir: PathBuf,
-    #[arg(long)] space: String,
-    #[arg(long)] grant: String,
+    #[arg(long)]
+    state_dir: PathBuf,
+    #[arg(long)]
+    space: String,
+    #[arg(long)]
+    grant: String,
     /// Operator-pinned 32-byte space authority, URL-safe unpadded base64.
-    #[arg(long)] authority: String,
+    #[arg(long)]
+    authority: String,
     /// Explicit locally approved NetworkAccess digest; issuance alone is not consent.
-    #[arg(long)] approve_digest: String,
+    #[arg(long)]
+    approve_digest: String,
     /// Exact physical underlay interface; never inferred from an overlay route.
-    #[arg(long, value_parser = clap::value_parser!(u32).range(1..))] interface: u32,
+    #[arg(long, value_parser = clap::value_parser!(u32).range(1..))]
+    interface: u32,
     /// Concrete address on that original underlay. Port zero is allowed.
-    #[arg(long)] bind: SocketAddr,
+    #[arg(long)]
+    bind: SocketAddr,
     /// Exact remote physical endpoint; omit on the accepting side.
-    #[arg(long)] dial: Option<SocketAddr>,
+    #[arg(long)]
+    dial: Option<SocketAddr>,
     /// Fresh owner-private public plan for a separately invoked root helper.
-    #[arg(long)] plan: PathBuf,
+    #[arg(long)]
+    plan: PathBuf,
 }
-fn bytes32(value: &str) -> Result<[u8;32]> {
-    if value.len() != 43 { return Err(io::Error::other("expected 32-byte URL-safe unpadded base64 value").into()); }
-    let bytes: [u8;32] = URL_SAFE_NO_PAD.decode(value)?.try_into().map_err(|_| io::Error::other("invalid pinned digest length"))?;
-    if URL_SAFE_NO_PAD.encode(bytes) != value || bytes == [0;32] { return Err(io::Error::other("noncanonical or zero pinned digest").into()); }
+fn bytes32(value: &str) -> Result<[u8; 32]> {
+    if value.len() != 43 {
+        return Err(io::Error::other("expected 32-byte URL-safe unpadded base64 value").into());
+    }
+    let bytes: [u8; 32] = URL_SAFE_NO_PAD
+        .decode(value)?
+        .try_into()
+        .map_err(|_| io::Error::other("invalid pinned digest length"))?;
+    if URL_SAFE_NO_PAD.encode(bytes) != value || bytes == [0; 32] {
+        return Err(io::Error::other("noncanonical or zero pinned digest").into());
+    }
     Ok(bytes)
 }
 pub(crate) async fn run(args: TunArgs) -> Result {
-    if rustix::process::geteuid().as_raw() == 0 { return Err(io::Error::other("network-tun must run as the original ordinary user; use a separate network-tun-system helper for OS configuration").into()); }
-    if args.bind.ip().is_unspecified() || args.bind.ip().is_multicast()
-        || args.dial.is_some_and(|address| address.port()==0 || address.ip().is_unspecified() || address.ip().is_multicast())
-    { return Err(io::Error::other("select concrete original underlay endpoints").into()); }
+    if rustix::process::geteuid().as_raw() == 0 {
+        return Err(io::Error::other("network-tun must run as the original ordinary user; use a separate network-tun-system helper for OS configuration").into());
+    }
+    if args.bind.ip().is_unspecified()
+        || args.bind.ip().is_multicast()
+        || args.dial.is_some_and(|address| {
+            address.port() == 0 || address.ip().is_unspecified() || address.ip().is_multicast()
+        })
+    {
+        return Err(io::Error::other("select concrete original underlay endpoints").into());
+    }
     let approved = bytes32(&args.approve_digest)?;
-    let pin = PinnedNetworkSpace::new(args.space.clone(),bytes32(&args.authority)?)?;
-    let installation = nestlink_local_ipc::maintenance::InstallationStartup::acquire(&std::env::current_exe()?)?;
+    let pin = PinnedNetworkSpace::new(args.space.clone(), bytes32(&args.authority)?)?;
+    let installation =
+        nestlink_local_ipc::maintenance::InstallationStartup::acquire(&std::env::current_exe()?)?;
     let directory = installation.state_directory(&args.state_dir)?;
     nestlink_platform_security::check_private_directory(&directory)?;
     let _runtime = nestlink_local_ipc::HeadlessRuntimeLease::acquire(&directory)?;
-    let sdk = crate::session_store::SessionStore::new(directory.clone()).restore().await.ok_or_else(|| io::Error::other("sign in and enable protected login recovery before starting a managed TUN"))?;
+    let sdk = crate::session_store::SessionStore::new(directory.clone())
+        .restore()
+        .await
+        .ok_or_else(|| {
+            io::Error::other(
+                "sign in and enable protected login recovery before starting a managed TUN",
+            )
+        })?;
     let login = crate::space_dns::session_snapshot(&directory)?;
-    if !directory.join("installation-device.json").try_exists()? { return Err(io::Error::other("TUN requires the original registered installation identity").into()); }
+    if !directory.join("installation-device.json").try_exists()? {
+        return Err(
+            io::Error::other("TUN requires the original registered installation identity").into(),
+        );
+    }
     let local = crate::identity(&directory)?;
     let owner_id = nestlink_auth::random_id();
     // The irreversible online claim happens before binding a packet socket,
     // creating a plan, or asking the helper for any OS resource. A lost start
     // response consumes this grant; this command never retries it.
-    let mut access = OnlinePacketAccess::start(&sdk,&pin,&local,&args.grant,approved,owner_id.clone()).await?;
-    let underlay = nestlink_platform_network::path::NetworkPathManager::new(nestlink_platform_network::path::RoutePolicy::Interface(args.interface))?;
-    let mut endpoint = DirectPacketEndpoint::bind(args.bind,&local.identity,access.remote_peer(),underlay)?;
-    println!("Original pinned physical packet endpoint: {}",endpoint.local_addr());
+    let mut access =
+        OnlinePacketAccess::start(&sdk, &pin, &local, &args.grant, approved, owner_id.clone())
+            .await?;
+    let underlay = nestlink_platform_network::path::NetworkPathManager::new(
+        nestlink_platform_network::path::RoutePolicy::Interface(args.interface),
+    )?;
+    let mut endpoint =
+        DirectPacketEndpoint::bind(args.bind, &local.identity, access.remote_peer(), underlay)?;
+    println!(
+        "Original pinned physical packet endpoint: {}",
+        endpoint.local_addr()
+    );
     let result = async {
         let view = tokio::time::timeout(Duration::from_secs(2),sdk.network_access(&args.space,&args.grant)).await??;
         let signed = nestlink_sdk::network_management::decode_network_grant(&view.access)?;
@@ -95,23 +144,38 @@ pub(crate) async fn run(args: TunArgs) -> Result {
         outcome
     }.await;
     access.stop();
-    let released = endpoint.close_and_wait(Instant::now()+Duration::from_secs(5)).await;
+    let released = endpoint
+        .close_and_wait(Instant::now() + Duration::from_secs(5))
+        .await;
     // Always attempt and report physical carrier cleanup even on OS failure.
     released?;
     result
 }
 
-fn local_current(directory:&Path,login:[u8;32]) -> Result {
-    if nestlink_local_ipc::maintenance::requested(directory)? { return Err(io::Error::other("installation maintenance requested; the original TUN is stopping").into()); }
-    if crate::space_dns::session_snapshot(directory).ok() != Some(login) { return Err(io::Error::other("original protected login changed; a TUN grant cannot survive logout or account replacement").into()); }
+fn local_current(directory: &Path, login: [u8; 32]) -> Result {
+    if nestlink_local_ipc::maintenance::requested(directory)? {
+        return Err(io::Error::other(
+            "installation maintenance requested; the original TUN is stopping",
+        )
+        .into());
+    }
+    if crate::space_dns::session_snapshot(directory).ok() != Some(login) {
+        return Err(io::Error::other("original protected login changed; a TUN grant cannot survive logout or account replacement").into());
+    }
     Ok(())
 }
-async fn wait_ready(plan:&TunPlan,sdk:&Sdk,access:&mut OnlinePacketAccess,directory:&Path,login:[u8;32]) -> Result<TunState> {
-    let signal=crate::space_dns_system::termination();
+async fn wait_ready(
+    plan: &TunPlan,
+    sdk: &Sdk,
+    access: &mut OnlinePacketAccess,
+    directory: &Path,
+    login: [u8; 32],
+) -> Result<TunState> {
+    let signal = crate::space_dns_system::termination();
     tokio::pin!(signal);
-    let mut tick=tokio::time::interval(Duration::from_millis(250));
+    let mut tick = tokio::time::interval(Duration::from_millis(250));
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
-    let mut refreshed=Instant::now();
+    let mut refreshed = Instant::now();
     loop {
         tokio::select! {biased;
             result=&mut signal=>{result?;return Err(io::Error::other("original TUN stopped before administrator admission").into());},
@@ -133,23 +197,39 @@ async fn wait_ready(plan:&TunPlan,sdk:&Sdk,access:&mut OnlinePacketAccess,direct
     }
 }
 #[allow(clippy::too_many_arguments)]
-async fn adopt_ready(plan:&TunPlan,state:&TunState,sdk:&Sdk,access:&mut OnlinePacketAccess,directory:&Path,login:[u8;32]) -> Result<tun_rs::AsyncDevice> {
+async fn adopt_ready(
+    plan: &TunPlan,
+    state: &TunState,
+    sdk: &Sdk,
+    access: &mut OnlinePacketAccess,
+    directory: &Path,
+    login: [u8; 32],
+) -> Result<tun_rs::AsyncDevice> {
     // UP becomes observable before the helper durably commits its readback and
     // closes its one creating queue. That original EBUSY is a handoff wait,
     // never permission to attach a changed interface or restart the business.
-    let deadline=Instant::now()+access.remaining_lifetime().min(Duration::from_secs(2));
-    let signal=crate::space_dns_system::termination();
+    let deadline = Instant::now() + access.remaining_lifetime().min(Duration::from_secs(2));
+    let signal = crate::space_dns_system::termination();
     tokio::pin!(signal);
-    let wait=async {
-        let mut refreshed=Instant::now();
+    let wait = async {
+        let mut refreshed = Instant::now();
         loop {
-            local_current(directory,login)?;
+            local_current(directory, login)?;
             plan.validate(true)?;
-            if refreshed.elapsed()>=Duration::from_secs(1) {access.refresh(sdk).await?;refreshed=Instant::now();}
-            match linux::adopt(plan,state).await {
-                Ok(device)=>return Ok(device),
-                Err(error) if error.downcast_ref::<io::Error>().is_some_and(|error|error.raw_os_error()==Some(16))=>tokio::time::sleep(Duration::from_millis(25)).await,
-                Err(error)=>return Err(error),
+            if refreshed.elapsed() >= Duration::from_secs(1) {
+                access.refresh(sdk).await?;
+                refreshed = Instant::now();
+            }
+            match linux::adopt(plan, state).await {
+                Ok(device) => return Ok(device),
+                Err(error)
+                    if error
+                        .downcast_ref::<io::Error>()
+                        .is_some_and(|error| error.raw_os_error() == Some(16)) =>
+                {
+                    tokio::time::sleep(Duration::from_millis(25)).await
+                }
+                Err(error) => return Err(error),
             }
         }
     };
@@ -159,15 +239,24 @@ async fn adopt_ready(plan:&TunPlan,state:&TunState,sdk:&Sdk,access:&mut OnlinePa
     }
 }
 #[allow(clippy::too_many_arguments)]
-async fn establish(endpoint:&mut DirectPacketEndpoint,dial:Option<SocketAddr>,sdk:&Sdk,access:&mut OnlinePacketAccess,directory:&Path,login:[u8;32],plan:&TunPlan,state:&TunState) -> Result {
-    let binding=access.business_digest();
-    let group=access.transport_group();
-    let deadline=Instant::now()+access.remaining_lifetime().min(Duration::from_secs(10));
-    let signal=crate::space_dns_system::termination();
+async fn establish(
+    endpoint: &mut DirectPacketEndpoint,
+    dial: Option<SocketAddr>,
+    sdk: &Sdk,
+    access: &mut OnlinePacketAccess,
+    directory: &Path,
+    login: [u8; 32],
+    plan: &TunPlan,
+    state: &TunState,
+) -> Result {
+    let binding = access.business_digest();
+    let group = access.transport_group();
+    let deadline = Instant::now() + access.remaining_lifetime().min(Duration::from_secs(10));
+    let signal = crate::space_dns_system::termination();
     tokio::pin!(signal);
-    let connection=endpoint.establish(dial,binding,group,deadline);
+    let connection = endpoint.establish(dial, binding, group, deadline);
     tokio::pin!(connection);
-    let mut tick=tokio::time::interval(Duration::from_secs(1));
+    let mut tick = tokio::time::interval(Duration::from_secs(1));
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     loop {
         tokio::select! {biased;
@@ -181,24 +270,42 @@ async fn establish(endpoint:&mut DirectPacketEndpoint,dial:Option<SocketAddr>,sd
         }
     }
 }
-#[derive(Default,Serialize)]
-struct Counters { sent_packets:u64,received_packets:u64,rejected_packets:u64,spent_bytes:u64 }
+#[derive(Default, Serialize)]
+struct Counters {
+    sent_packets: u64,
+    received_packets: u64,
+    rejected_packets: u64,
+    spent_bytes: u64,
+}
 #[allow(clippy::too_many_arguments)]
-async fn packet_loop(device:&tun_rs::AsyncDevice,endpoint:&mut DirectPacketEndpoint,sdk:&Sdk,access:&mut OnlinePacketAccess,directory:&Path,login:[u8;32],plan:&TunPlan,state:&TunState) -> Result {
+async fn packet_loop(
+    device: &tun_rs::AsyncDevice,
+    endpoint: &mut DirectPacketEndpoint,
+    sdk: &Sdk,
+    access: &mut OnlinePacketAccess,
+    directory: &Path,
+    login: [u8; 32],
+    plan: &TunPlan,
+    state: &TunState,
+) -> Result {
     // A 65536-byte read prevents a provider truncating an oversized packet to
     // an apparently valid approved prefix. IPv6's 1280-byte complete packet is
     // split only by the already authenticated bounded carrier codec.
-    let mut buffer=vec![0_u8;65_536];
-    let mut assembler=PacketAssembler::new(access.business_digest(),access.wire_direction().reverse(),PACKET_MTU)?;
-    let connection=endpoint.connection()?.clone();
-    let mut sequence=0_u64;
-    let mut counters=Counters::default();
-    let signal=crate::space_dns_system::termination();
+    let mut buffer = vec![0_u8; 65_536];
+    let mut assembler = PacketAssembler::new(
+        access.business_digest(),
+        access.wire_direction().reverse(),
+        PACKET_MTU,
+    )?;
+    let connection = endpoint.connection()?.clone();
+    let mut sequence = 0_u64;
+    let mut counters = Counters::default();
+    let signal = crate::space_dns_system::termination();
     tokio::pin!(signal);
-    let mut tick=tokio::time::interval(Duration::from_millis(250));
+    let mut tick = tokio::time::interval(Duration::from_millis(250));
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
-    let mut refreshed=Instant::now();
-    let outcome=loop {
+    let mut refreshed = Instant::now();
+    let outcome = loop {
         tokio::select! {biased;
             result=&mut signal=>break result.map_err(Into::into),
             _=tick.tick()=>{
@@ -232,22 +339,34 @@ async fn packet_loop(device:&tun_rs::AsyncDevice,endpoint:&mut DirectPacketEndpo
             },
         }
     };
-    counters.spent_bytes=access.spent_bytes();
+    counters.spent_bytes = access.spent_bytes();
     // Only bounded aggregate counters are printed. No packet, address, signed
     // credential, application content or private key enters diagnostics.
-    println!("TUN packet counters: {}",serde_json::to_string(&counters)?);
+    println!("TUN packet counters: {}", serde_json::to_string(&counters)?);
     outcome
 }
-pub(super) async fn release_plan(plan:&TunPlan,path:&Path) -> Result {
+pub(super) async fn release_plan(plan: &TunPlan, path: &Path) -> Result {
     match TunPlan::read(path) {
-        Ok(current) if current==*plan=>{
+        Ok(current) if current == *plan => {
             std::fs::remove_file(path)?;
-            std::fs::File::open(path.parent().ok_or_else(||io::Error::other("TUN plan parent missing"))?)?.sync_all()?;
-        },
-        Err(error) if error.downcast_ref::<io::Error>().is_some_and(|error|error.kind()==io::ErrorKind::NotFound)=>{},
-        _=>return Err(io::Error::other("TUN plan changed; preserving the input file and awaiting exact root recovery").into()),
+            std::fs::File::open(
+                path.parent()
+                    .ok_or_else(|| io::Error::other("TUN plan parent missing"))?,
+            )?
+            .sync_all()?;
+        }
+        Err(error)
+            if error
+                .downcast_ref::<io::Error>()
+                .is_some_and(|error| error.kind() == io::ErrorKind::NotFound) => {}
+        _ => {
+            return Err(io::Error::other(
+                "TUN plan changed; preserving the input file and awaiting exact root recovery",
+            )
+            .into());
+        }
     }
-    let deadline=Instant::now()+Duration::from_secs(5);
+    let deadline = Instant::now() + Duration::from_secs(5);
     tokio::time::timeout_at(deadline,async {
         loop {
             if linux::inspect(plan).await?.is_none(){return Ok::<(),Box<dyn std::error::Error+Send+Sync>>(());}

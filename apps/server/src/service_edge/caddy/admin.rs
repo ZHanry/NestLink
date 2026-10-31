@@ -9,6 +9,7 @@ pub(super) struct Admin {
     // mutations across all workers and startup reconciliation.
     serial: Arc<tokio::sync::Mutex<()>>,
     pub(super) lifecycle: Arc<tokio::sync::Mutex<()>>,
+    provisioned_certificates: Option<Value>,
 }
 impl Admin {
     pub(super) fn new(config: &CaddyServiceConfig) -> io::Result<Self> {
@@ -35,6 +36,7 @@ impl Admin {
             origin: config.origin(),
             serial: Arc::new(tokio::sync::Mutex::new(())),
             lifecycle: Arc::new(tokio::sync::Mutex::new(())),
+            provisioned_certificates: config.edge_group.as_ref().map(|group|serde_json::json!([{"certificate":group.certificate,"key":group.private_key}])),
         })
     }
     pub(super) async fn request(
@@ -135,9 +137,10 @@ impl Admin {
             .await?
             .ok_or_else(denied)?;
         let object = body.as_object().ok_or_else(denied)?;
-        if object.len() != 2
+        if object.len() != if self.provisioned_certificates.is_some(){3}else{2}
             || object.get("@id").and_then(Value::as_str)
                 != Some(config::certificate_id(node).as_str())
+            || object.get("load_files") != self.provisioned_certificates.as_ref()
         {
             return Err(denied());
         }

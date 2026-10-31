@@ -384,10 +384,21 @@ impl Store {
         edge: &Edge,
         now_ms: u64,
     ) -> Result<(), StorageError> {
-        self.service_capacity_for_edge(record, edge, &record.definition.edge_node_id, &record.definition.limits, now_ms)
+        self.service_capacity_for_edge(
+            record,
+            edge,
+            &record.definition.edge_node_id,
+            &record.definition.limits,
+            now_ms,
+        )
     }
     fn service_capacity_for_edge(
-        &self, record: &Record, edge: &Edge, node_id: &str, limits: &ServiceLimits, now_ms: u64,
+        &self,
+        record: &Record,
+        edge: &Edge,
+        node_id: &str,
+        limits: &ServiceLimits,
+        now_ms: u64,
     ) -> Result<(), StorageError> {
         let sample =
             |sql: &str, account: Option<&str>| -> Result<(u64, u64, u64, u64), StorageError> {
@@ -538,15 +549,37 @@ impl Store {
         requested: u64,
         now_ms: u64,
     ) -> Result<SignedServiceUsageBudgetGrant, StorageError> {
-        Self::reserve_service_usage_for_edge(tx, signer, record, approval, publication_id, generation,
-            runtime_id, runtime_generation, ingress_revision, requested, now_ms,
-            record.definition.accounting_node_id(), &record.definition.limits)
+        Self::reserve_service_usage_for_edge(
+            tx,
+            signer,
+            record,
+            approval,
+            publication_id,
+            generation,
+            runtime_id,
+            runtime_generation,
+            ingress_revision,
+            requested,
+            now_ms,
+            record.definition.accounting_node_id(),
+            &record.definition.limits,
+        )
     }
     #[allow(clippy::too_many_arguments)]
     fn reserve_service_usage_for_edge(
-        tx: &Transaction<'_>, signer: &ServiceLeaseSigner, record: &Record, approval: &Approval,
-        publication_id: &str, generation: u64, runtime_id: &str, runtime_generation: u64,
-        ingress_revision: u64, requested: u64, now_ms: u64, node_id: &str, limits: &ServiceLimits,
+        tx: &Transaction<'_>,
+        signer: &ServiceLeaseSigner,
+        record: &Record,
+        approval: &Approval,
+        publication_id: &str,
+        generation: u64,
+        runtime_id: &str,
+        runtime_generation: u64,
+        ingress_revision: u64,
+        requested: u64,
+        now_ms: u64,
+        node_id: &str,
+        limits: &ServiceLimits,
     ) -> Result<SignedServiceUsageBudgetGrant, StorageError> {
         let quota_revision: u64 = tx.query_row(
             "SELECT revision FROM service_quota_settings WHERE singleton=1",
@@ -572,12 +605,7 @@ impl Store {
                 &record.definition.host_device_id,
                 DEVICE_BYTES,
             )?,
-            Self::quota_available(
-                tx,
-                "node",
-                node_id,
-                NODE_BYTES,
-            )?,
+            Self::quota_available(tx, "node", node_id, NODE_BYTES)?,
             Self::quota_available(
                 tx,
                 "resource",
@@ -792,7 +820,9 @@ impl Store {
         id: &str,
         now_ms: u64,
     ) -> Result<ServicePublicationStatus, StorageError> {
-        if let Some(status) = self.group_publication_status(id, now_ms)? { return Ok(status); }
+        if let Some(status) = self.group_publication_status(id, now_ms)? {
+            return Ok(status);
+        }
         type Row = (u32, String, bool, u64);
         let row: Option<Row> = self.connection.query_row(
             "SELECT p.state,p.claims_json,COALESCE(p.control_runtime_id=s.control_runtime_id AND s.restore_fenced=0,0),n.last_issued_at FROM service_publications p JOIN service_publication_settings s ON s.singleton=1 JOIN data_nodes n ON n.id=p.node_id WHERE p.service_id=?1 AND p.state IN (0,1) AND p.promised_until>?2",
@@ -933,8 +963,18 @@ impl Store {
             let old: ServiceLeaseClaims = serde_json::from_str(&json)?;
             if old.edge_group.is_some() {
                 let next = match self.group_member_claims(&old, now_ms, next(old.lease_sequence)?) {
-                    Ok((claims, _)) if old.expires_at_unix_ms > now_ms && old.edge_node_id() == q.node_id.as_str() => claims,
-                    Ok(_) | Err(StorageError::Forbidden | StorageError::Unauthorized | StorageError::Invalid(_)) => {
+                    Ok((claims, _))
+                        if old.expires_at_unix_ms > now_ms
+                            && old.edge_node_id() == q.node_id.as_str() =>
+                    {
+                        claims
+                    }
+                    Ok(_)
+                    | Err(
+                        StorageError::Forbidden
+                        | StorageError::Unauthorized
+                        | StorageError::Invalid(_),
+                    ) => {
                         tx.execute("UPDATE service_publications SET state=1 WHERE id=?1", [&id])?;
                         continue;
                     }
