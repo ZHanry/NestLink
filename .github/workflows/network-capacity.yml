@@ -17,6 +17,11 @@ on:
         type: choice
         options: [pair-windows, origin-window]
         default: pair-windows
+      sampling:
+        description: Optional perf diagnostic; requires release and pair-windows and does not qualify AC68
+        type: choice
+        options: [none, perf]
+        default: none
 permissions:
   contents: read
 jobs:
@@ -31,6 +36,7 @@ jobs:
       CAPACITY_MODE: ${{ inputs.mode }}
       CAPACITY_PROFILE: ${{ inputs.profile }}
       CAPACITY_SCHEDULE: ${{ inputs.schedule }}
+      CAPACITY_SAMPLING: ${{ inputs.sampling }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -49,7 +55,7 @@ jobs:
       - name: Build and attempt original authorized service capacity with complete failure records
         shell: python
         run: |
-          import hashlib, json, os, pathlib, re, subprocess, time
+          import hashlib, json, os, pathlib, re, runpy, subprocess, time
           assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
           output = pathlib.Path(os.environ['RUNNER_TEMP'])/'network-capacity'
           output.mkdir()
@@ -81,25 +87,48 @@ jobs:
           receipt['offered_load']['management_logins_per_active_consumer'] = 1
           receipt['offered_load']['streams_per_pair'] = 50
           receipt['offered_load']['same_lease_control_owners_per_wave'] = 20 if mode == 'multiplexed' else 1000
+          sampling = os.environ.get('CAPACITY_SAMPLING') or 'none'
+          sampler = None
           def execute(name, command, timeout):
               started = time.monotonic()
               record = {'name':name,'argv':command,'timeout_seconds':timeout,'return_code':None,'timed_out':False}
               receipt['commands'].append(record)
               try:
                   with (output/(name+'.log')).open('wb') as stream, (output/(name+'.stderr.log')).open('wb') as errors:
-                      result = subprocess.run(command,stdout=stream,stderr=errors,timeout=timeout)
+                      if sampler is not None and name == 'execution':
+                          result = sampler.run(command,stream,errors,timeout,record)
+                      else:
+                          result = subprocess.run(command,stdout=stream,stderr=errors,timeout=timeout)
                   record['return_code'] = result.returncode
                   assert result.returncode == 0, name+' failed; original failure retained'
               except subprocess.TimeoutExpired:
                   record['timed_out'] = True
                   raise
               finally:
-                  record['seconds'] = time.monotonic()-started
+                  elapsed = time.monotonic()-started
+                  if sampler is not None and name == 'execution':
+                      record['seconds'] = sampler.metadata.get('target_seconds',elapsed)
+                      record['diagnostic_total_seconds'] = elapsed
+                  else:
+                      record['seconds'] = elapsed
           def execute_tests(name, command, timeout, expected):
               execute(name, command, timeout)
               summaries = re.findall(r'test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;', (output/(name+'.log')).read_text())
               assert summaries == [(str(expected),'0','0')], name+' exact executed inventory differs'
           try:
+              assert sampling in ('none','perf')
+              if sampling == 'perf':
+                  receipt['diagnostic_only'] = True
+                  receipt['ac68_passed'] = False
+                  receipt['diagnostic_passed'] = False
+                  receipt['original_workload_passed'] = False
+                  assert profile == 'release' and schedule == 'pair-windows', 'perf requires the original release pair-windows workload'
+                  execute('perf-orchestration-tests',['python3','-B','-m','unittest','discover','-s','scripts','-p','test_capacity_perf.py','-v'],60)
+                  os.environ['CARGO_PROFILE_RELEASE_DEBUG'] = '1'
+                  os.environ['CARGO_PROFILE_RELEASE_STRIP'] = 'none'
+                  sampler = runpy.run_path('scripts/network-capacity-perf.py')['PerfSampler'](output,source)
+                  receipt['sampling'] = sampler.metadata
+                  sampler.prepare()
               os.environ['NESTLINK_CAPACITY_SAMPLES'] = str(output/'samples.jsonl')
               execute('build-currentness',['cargo','test',*cargo_profile,'--locked','-p','nestlink-storage','-p','nestlink-identity','--lib','--test','network_policy','--no-run','--message-format=json-render-diagnostics'],1200)
               currentness = [item['executable'] for line in (output/'build-currentness.log').read_text().splitlines()
@@ -147,7 +176,12 @@ jobs:
                   case = 'hundred_enrolled_nodes_twenty_pairs_thousand_multiplexed_shared_origin_ramp'
               execute_tests('execution',[str(executable),'--exact',case,'--ignored','--nocapture','--test-threads=1'],660,1)
               execute('strict-capacity',['cargo','clippy',*cargo_profile,'--locked','-p','nestlink-sdk','--test','capacity','--test','private_services','--','-D','warnings'],300)
-              receipt['passed'] = True
+              if sampler is not None:
+                  receipt['original_workload_passed'] = True
+                  receipt['diagnostic_passed'] = sampler.metadata['status'] == 'passed'
+                  assert receipt['diagnostic_passed'], 'perf diagnostic failed; original workload result retained separately'
+              else:
+                  receipt['passed'] = True
           except BaseException as error:
               receipt['failure'] = repr(error)
               raise
