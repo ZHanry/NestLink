@@ -130,7 +130,7 @@ fn make_announcement(
     )
     .map_err(io::Error::other)?;
     let announcement = MediaAnnouncement {
-        version: formats.canonical_version(),
+        version: u32::from(formats.canonical_version()),
         device_id: device_id.into(),
         direction,
         revision: id,
