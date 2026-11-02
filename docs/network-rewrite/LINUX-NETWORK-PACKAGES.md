@@ -33,8 +33,12 @@ W34 的新增 Linux 角色复用现有 `nestlink-daemon`，包括私有服务代
 
 中断升级场景先核对并安装 `c0fc249fc24c4bab389fe10690a2becb1b71257e` 的留存原生 DEB，x64/ARM64 分别固定官方 Actions artifact `13055507795`、`13055977059` 及 ZIP 摘要。当前同源 daemon 的字节不变，由原构造器生成明确标记为 `+hosted.interruption.1` 的故障注入包修订；真实 dpkg 必须确认该版本更高并完成实际 unpack。公开 `dpkg --pre-invoke` hook 仅用于确定配置前的中断点，报告实际 dpkg PID 和进程启动时间，经核对原映像及进程身份后定点 SIGKILL。中断必须留下明确的 unpacked 状态；随后用保留原 DEB 显式降级恢复，核对原版本、所有 payload 文件和目录权限、残留、用户数据，再恢复当前候选并卸载。
 
-上述包修订仅是托管故障实验制品，不属于发行候选或生产更新，不进入更新渠道。它没有调用正式签名安装 owner，不证明正式签名更新、schema 准入后的回滚或 Windows 安装资格。新增场景在对应源码的 x64 和 ARM64 Actions 实际成功、回执及文件摘要完成复核前保持未通过；源码中存在用例不能替代执行证据。
+上述包修订仅是托管故障实验制品，不属于发行候选或生产更新，不进入更新渠道。它没有调用正式签名安装 owner，不证明正式签名更新、schema 准入后的回滚或 Windows 安装资格。新增场景仅以对应源码的 x64 和 ARM64 Actions 实际成功、回执及文件摘要完成复核作为通过依据；源码中存在用例不能替代执行证据。
 
 源码 `2cb75d4d7e2a55ba703480fe2933e8fd46c95c74` 的 [Actions 41410131614](https://github.com/ZHanry/NestLink/actions/runs/41410131614) 已实际完成两个原生构建及两架构端口冲突检查：原 server 明确报告端口占用、原监听者保留、配置与身份保持、释放端口后的实际 health 和正常停止/端口重绑均通过。四份 build/package 官方 ZIP 的摘要和字节数一致，两套 package 回执各 37 个文件的摘要、大小和完整清单均已核对，完整证据在 `evidence/linux-package-attempt-2cb75d4.json`。
 
 同一次运行的升级故障检查先完成原包核验、真实较高版本 unpack，但普通协调器错误地尝试读取 root dpkg 的 `/proc/<pid>/exe`，被内核以 `PermissionError` 拒绝；目标 SIGKILL 与显式回滚均未执行，整个 package job 保持失败。后续实现将进程镜像、starttime 和 hook 参数核验与信号操作放在同一个显式 sudo 故障注入器内执行，普通业务 owner 仍不提权。该修复需要新的对应源码 Actions 成功，不能使用先前的端口结果替代中断升级资格。
+
+修复后的源码 `2f79d4bfbad6c5588104fe9cae55294314b5b183` 在 [Actions 41412721054](https://github.com/ZHanry/NestLink/actions/runs/41412721054) 的原生 x64、ARM64 job 均完整通过。两架构继续通过真实端口冲突及恢复；原 dpkg 经原镜像、starttime 和 hook 参数核验后均被实际 SIGKILL，configure 进程返回 `-9`，中断状态均为 `install ok unpacked`。原包显式降级恢复到 `0.7.0~rc.1` 及 `install ok installed`，全部原 payload 字节、文件/目录权限（包含根目录）、残留和用户 sentinel 检查通过；随后恢复当前同源候选并正常卸载。
+
+四份官方 build/package ZIP 的 SHA256 和字节数已核对；两套 package 回执各 43 个文件（共 86）的摘要、大小、74 条命令日志摘要、主包身份和源码/run 绑定均已复核，未发现重复或未列入回执的文件。完整回执与制品来源保存在 `evidence/linux-package-attempt-2f79d4b.json`。这次源码的产品版本仍是 `0.7.0-rc.1`，结果仅证明该源码的 unsigned hosted 安装故障范围，不代表同源 `0.8.0RC` 全平台候选、正式签名或现场目标验收已通过。
