@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+  "workflow": ".github/workflows/web-build.yml",
+  "run_id": 41413594293,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413594293",
+  "conclusion": "success",
+  "scoped_setup_and_existing_web_native_passed": true,
+  "whole_W30_passed": false,
+  "engines": [
+    {
+      "browser": "chrome",
+      "artifact_id": 13127721462,
+      "artifact_sha256": "d258b8d82ac32e7b781c0e633d3e20e575547f710aa80137a0c7651c9b72b367",
+      "browser_version": "Chrome/156.0.8078.47",
+      "runner_receipt": {
+        "schema_version": 1,
+        "passed": true,
+        "github_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+        "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+        "started_unix_ms": 1793609197917,
+        "global_trust_modified": false,
+        "browser_product": "chrome",
+        "exit_codes": {
+          "browser": 0,
+          "native": 0
+        },
+        "validation_failures": [],
+        "cleanup": {
+          "browser_forced": false,
+          "native_forced": false,
+          "process_errors": [],
+          "owned_processes_stopped": true,
+          "download_directory_empty_after_probe": true,
+          "private_directory_removed": true
+        },
+        "error": null,
+        "inputs": {
+          "native_sha256": "db98cc4b92c4e6381c673a7c73297837e0f11840238edf261701f14bb310cc8b",
+          "caddy_sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+          "site_index_sha256": "64a29bc348335f80b8b1851c72fa12c0ed450d26f9835f06cf338af7576c4298",
+          "runner_sha256": "aaac95a5b24c04ec231bcecf664c230a3ddc0bfdc12fd4faec3507b604449318"
+        },
+        "tls_verified_exact_leaf_and_ip_san": true,
+        "finished_unix_ms": 1793609360219
+      },
+      "browser_report_sha256": "9beb62e26f32439ab8a5c41b136f336bf873989c5004c17fcf2c4adbd8612171",
+      "setup_guide_ui": {
+        "passed": true,
+        "modes": [
+          {
+            "mode": "remote",
+            "server_get_paths": [
+              "/api/v3/auth/me",
+              "/api/v3/devices",
+              "/api/v3/network/discovery",
+              "/api/v3/policy"
+            ],
+            "actual_readback": true
+          },
+          {
+            "mode": "private",
+            "server_get_paths": [
+              "/api/v3/auth/me",
+              "/api/v3/devices",
+              "/api/v3/services"
+            ],
+            "actual_readback": true
+          },
+          {
+            "mode": "public",
+            "server_get_paths": [
+              "/api/v3/auth/me",
+              "/api/v3/devices",
+              "/api/v3/services",
+              "/api/v3/policy"
+            ],
+            "actual_readback": true
+          },
+          {
+            "mode": "network",
+            "server_get_paths": [
+              "/api/v3/auth/me",
+              "/api/v3/devices",
+              "/api/v3/network/discovery",
+              "/api/v3/policy"
+            ],
+            "actual_readback": true
+          }
+        ],
+        "read_only": true,
+        "existing_space_and_remote_navigation": true,
+        "logout_during_read_no_followup": true,
+        "collapsed_after_checks": true,
+        "dedicated_page_closed": true
+      },
+      "all_retained_files": [
+        {
+          "path": "browser-report-progress.jsonl",
+          "bytes": 3114,
+          "sha256": "fadacba7d0a0e9c19158c7fa642f652108cbd5e8c86c85a3783ab72c478c6c30"
+        },
+        {
+          "path": "browser-report-remote-narrow.png",
+          "bytes": 28749,
+          "sha256": "f97b16921bee8d10e4c6cce57f181d9fe2d48ee1f760161832a28d3f7dc13936"
+        },
+        {
+          "path": "browser-report-tunnel-editor.png",
+          "bytes": 78001,
+          "sha256": "47b55beb2ae123e9355bb75acbaa138a8867f136a53ffbdb649f58936ce80a5c"
+        },
+        {
+          "path": "browser-report-video.png",
+          "bytes": 8303,
+          "sha256": "6a09162bf494693dceb62ee8878836777341d54a71851a6ea235040a0604a075"
+        },
+        {
+          "path": "browser-report-workspace.png",
+          "bytes": 112970,
+          "sha256": "8a42c310c63d89d9413e66421a52491da6533db9e1628b37139df8ec7fec3a60"
+        },
+        {
+          "path": "browser-report.json",
+          "bytes": 873689,
+          "sha256": "9beb62e26f32439ab8a5c41b136f336bf873989c5004c17fcf2c4adbd8612171"
+        },
+        {
+          "path": "connected.json",
+          "bytes": 24,
+          "sha256": "eb6aca21988bbfb247e8090439a12f31fa3d6d73aa8e601a292f6557d506c06e"
+        },
+        {
+          "path": "data-result.json",
+          "bytes": 2731,
+          "sha256": "5cbe7617d337d2ebe11ed4f907a663b01e1f3c96dfb8c46fec444d5f00ea49db"
+        },
+        {
+          "path": "database-cleanup.json",
+          "bytes": 297,
+          "sha256": "bc7665d7004a905fd6a0b7d73ff9b61fea7fe4c21a01df9df10974b61411ace5"
+        },
+        {
+          "path": "host-result.json",
+          "bytes": 617,
+          "sha256": "8860e124db781055ce2e27a0caf288061dc85fc022780afd95328a06d8633d43"
+        },
+        {
+          "path": "host-start-gate.json",
+          "bytes": 144,
+          "sha256": "1381cf1e7c4d59b7a3e6bd68f1d0c70547b014c8ad65d90026221caf2a90c2a2"
+        },
+        {
+          "path": "input-records.jsonl",
+          "bytes": 1053,
+          "sha256": "9fd9ead293bf675a786b792e6c8762b236147f3ee815e1fbc29d6e15ae8b852d"
+        },
+        {
+          "path": "management-stages.jsonl",
+          "bytes": 77352,
+          "sha256": "ef0bd1ff49732396f9f51d80a219fa5409814b7c0a7927a01f5a0a98b8d0a8a2"
+        },
+        {
+          "path": "negotiation-events.jsonl",
+          "bytes": 1626,
+          "sha256": "02016bab556ccc481359962e13e96003c40aec24d773bde75b0fcaff0b14907b"
+        },
+        {
+          "path": "runner-result.json",
+          "bytes": 1148,
+          "sha256": "954409689d6a9ec7bbca1d2be708887680b28abccb2294ecf8a87a5e8c9b4333"
+        }
+      ]
+    },
+    {
+      "browser": "edge",
+      "artifact_id": 13127009748,
+      "artifact_sha256": "0051d6d451b1c45722e132809ef463dcd65f5257b465b3d839cca1caa5ec889a",
+      "browser_version": "Edg/156.0.4314.56",
+      "runner_receipt": {
+        "schema_version": 1,
+        "passed": true,
+        "github_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+        "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+        "started_unix_ms": 1793609283036,
+        "global_trust_modified": false,
+        "browser_product": "edge",
+        "exit_codes": {
+          "browser": 0,
+          "native": 0
+        },
+        "validation_failures": [],
+        "cleanup": {
+          "browser_forced": false,
+          "native_forced": false,
+          "process_errors": [],
+          "owned_processes_stopped": true,
+          "download_directory_empty_after_probe": true,
+          "private_directory_removed": true
+        },
+        "error": null,
+        "inputs": {
+          "native_sha256": "c627889af98e9305fbf4ecddd85ecafa6c1ef68d57c95f0a2224034de37521ab",
+          "caddy_sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+          "site_index_sha256": "64a29bc348335f80b8b1851c72fa12c0ed450d26f9835f06cf338af7576c4298",
+          "runner_sha256": "aaac95a5b24c04ec231bcecf664c230a3ddc0bfdc12fd4faec3507b604449318"
+        },
+        "tls_verified_exact_leaf_and_ip_san": true,
+        "finished_unix_ms": 1793609444783
+      },
+      "browser_report_sha256": "73b26cc3479a3531a191fa17e36f33b91e38fd4d10a5e3824d191bc582548c3f",
+      "setup_guide_ui": {
+        "passed": true,
+        "modes": [
+          {
+            "mode": "remote",
+            "server_get_paths": [
+              "/api/v3/auth/me",
+              "/api/v3/devices",
+              "/api/v3/network/discovery",
+              "/api/v3/policy"
+            ],
+            "actual_readback": true
+          },
+          {
+            "mode": "private",
+            "server_get_paths": [
+              "/api/v3/auth/me",
+              "/api/v3/devices",
+              "/api/v3/services"
+            ],
+            "actual_readback": true
+          },
+          {
+            "mode": "public",
+            "server_get_paths": [
+              "/api/v3/auth/me",
+              "/api/v3/devices",
+              "/api/v3/services",
+              "/api/v3/policy"
+            ],
+            "actual_readback": true
+          },
+          {
+            "mode": "network",
+            "server_get_paths": [
+              "/api/v3/auth/me",
+              "/api/v3/devices",
+              "/api/v3/network/discovery",
+              "/api/v3/policy"
+            ],
+            "actual_readback": true
+          }
+        ],
+        "read_only": true,
+        "existing_space_and_remote_navigation": true,
+        "logout_during_read_no_followup": true,
+        "collapsed_after_checks": true,
+        "dedicated_page_closed": true
+      },
+      "all_retained_files": [
+        {
+          "path": "browser-report-progress.jsonl",
+          "bytes": 3122,
+          "sha256": "8f84a05ece94c4beb8abb48597f5b499539e5b803dbd7ae84104236ebc694504"
+        },
+        {
+          "path": "browser-report-remote-narrow.png",
+          "bytes": 27402,
+          "sha256": "528aab9e299a46608713ac414cef79ff148eac40dfb75a853d7833d516d202b4"
+        },
+        {
+          "path": "browser-report-tunnel-editor.png",
+          "bytes": 78019,
+          "sha256": "bf96427db6904ec45ea74ad5fbc6161244c0918b4b240a30210e05d3c2b245a6"
+        },
+        {
+          "path": "browser-report-video.png",
+          "bytes": 8303,
+          "sha256": "6a09162bf494693dceb62ee8878836777341d54a71851a6ea235040a0604a075"
+        },
+        {
+          "path": "browser-report-workspace.png",
+          "bytes": 113145,
+          "sha256": "b3b967dad61d0f26cb60ab186f9588efdd3f833b4ec7fb0a11463507c43fd2b2"
+        },
+        {
+          "path": "browser-report.json",
+          "bytes": 997610,
+          "sha256": "73b26cc3479a3531a191fa17e36f33b91e38fd4d10a5e3824d191bc582548c3f"
+        },
+        {
+          "path": "connected.json",
+          "bytes": 24,
+          "sha256": "eb6aca21988bbfb247e8090439a12f31fa3d6d73aa8e601a292f6557d506c06e"
+        },
+        {
+          "path": "data-result.json",
+          "bytes": 2731,
+          "sha256": "5cbe7617d337d2ebe11ed4f907a663b01e1f3c96dfb8c46fec444d5f00ea49db"
+        },
+        {
+          "path": "database-cleanup.json",
+          "bytes": 297,
+          "sha256": "bc7665d7004a905fd6a0b7d73ff9b61fea7fe4c21a01df9df10974b61411ace5"
+        },
+        {
+          "path": "host-result.json",
+          "bytes": 617,
+          "sha256": "f9a0a8302aa2fff643777ea0b97163cd60e48e2a21088b0a8a0a77638bdc20b4"
+        },
+        {
+          "path": "host-start-gate.json",
+          "bytes": 144,
+          "sha256": "9a8d1665d2bfa9ad6d36f77f7aba276f993bc575806ff4de312e84190a58a3a2"
+        },
+        {
+          "path": "input-records.jsonl",
+          "bytes": 1053,
+          "sha256": "9fd9ead293bf675a786b792e6c8762b236147f3ee815e1fbc29d6e15ae8b852d"
+        },
+        {
+          "path": "management-stages.jsonl",
+          "bytes": 79066,
+          "sha256": "5e9f5004d63ea841b3d007fa0c3dde4ead535b77534649f67b39fc57a8ed6641"
+        },
+        {
+          "path": "negotiation-events.jsonl",
+          "bytes": 1512,
+          "sha256": "71403c63e8888fe4831304c3ca6f62276f8af32f793e244d40f009465e0d083f"
+        },
+        {
+          "path": "runner-result.json",
+          "bytes": 1146,
+          "sha256": "cbd5cadf637c051bfa61dc104c67ce957d92ab908696a33775cae6cf7ec0c62b"
+        }
+      ]
+    }
+  ],
+  "scope": "Actual optimized production Web/native browser integration, read-only setup guide in all four modes, existing navigation and logout-during-read fencing.",
+  "limitations": [
+    "Loopback and owned synthetic native capture/input. No installed Windows target, real GPU, positive phone provisioning, OS forwarding or whole first-run setup claim."
+  ]
+}

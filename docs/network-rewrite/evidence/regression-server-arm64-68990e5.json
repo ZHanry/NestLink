@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "68990e55c04363edebc86d3ee7c7d0627be874e8",
+  "workflow": ".github/workflows/regression-server.yml",
+  "run_id": 41415862488,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41415862488",
+  "conclusion": "success",
+  "artifact_id": 13128525345,
+  "artifact_sha256": "c206ab8b88ae749eee42c4165af8140852cf1121b05f0f823b9ed45a9d1f0582",
+  "artifact_bytes": 43937734,
+  "receipt": {
+    "schema_version": 1,
+    "purpose": "regression-only",
+    "source_revision": "68990e55c04363edebc86d3ee7c7d0627be874e8",
+    "version": "0.7.0-rc.1",
+    "target": "aarch64-unknown-linux-gnu",
+    "image_id": "sha256:c66c9c8df63c9bbfb4fe10f044e0ce2de39a252a1fe7b4d75351dee9fa00f28d",
+    "base": "ubuntu:24.04@sha256:68ee22004a9109b44973313b02ff7b1de250f1de0f5ecb628d73f579aaff33ac",
+    "binary_sha256": "61c8db9e3e9db779660466e227aaa6a2fce73948227cf44bedb55f48b001f678",
+    "archive_sha256": "6dff02cb539916d5bcd3990fed2fe2254a61f20a345f95244c012dedb8858522",
+    "archive_bytes": 44701829,
+    "repository": "ZHanry/NestLink",
+    "run_id": "41415862488",
+    "run_attempt": "1",
+    "full_product_acceptance": "pending",
+    "production_update_eligible": false,
+    "config_sha256": "sha256:c66c9c8df63c9bbfb4fe10f044e0ce2de39a252a1fe7b4d75351dee9fa00f28d",
+    "oci_manifest_sha256": "sha256:8dc317e5c8200d70b79aa7a01f680fb365e324d0ccb625df7fcc607babce9937",
+    "rootfs_diff_ids": [
+      "sha256:9a354992483c962fa69075527e7a2690fd9103f53d2c10af083fb31f24335256",
+      "sha256:f1791f6119aedb7bf42930b4eede0cbaf567021539f1b90522e601aeed343fd2",
+      "sha256:0622d566d8671f6416bc3b776ce4ccd6d762fe408b33b2167dea872a1669a8ce",
+      "sha256:99f9394d17c29ce38b7324101316ad00334d2dab2439d6c6f494343b451bcc94"
+    ],
+    "architecture": "arm64",
+    "os": "linux"
+  },
+  "receipt_sha256": "4c27e86ca68b2bf1e6d8b823398a0e52bf11350f883e90bdec3e8ccd85171cf1",
+  "scope": "Exact ARM64 hosted server build/tests, locked license collection, deployable non-root Docker image version check and archive/config identity.",
+  "limitations": [
+    "Version0.7.0-rc.1 regression-only, not0.8.0RC full product release, installation, target devices or production update."
+  ],
+  "prior_failure": {
+    "run_id": 41412706018,
+    "source_revision": "2f79d4bfbad6c5588104fe9cae55294314b5b183",
+    "reason": "Exact locked etherparse crate omitted full original license files; full original upstream commit license supplements added without weakening collector."
+  }
+}

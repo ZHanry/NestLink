@@ -8,6 +8,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: rust-core-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   core:
     strategy:
