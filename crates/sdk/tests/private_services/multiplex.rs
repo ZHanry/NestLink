@@ -58,9 +58,14 @@ async fn terminal_usage(sdk: &Sdk, service: &str, host: &str, spent: u64) -> Res
         }
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     }).await??;
-    for scope in [ServiceQuotaScope::Device, ServiceQuotaScope::Node] {
+    let account = sdk.principal().ok_or("private fixture login missing")?.account_id.clone();
+    for (scope, key) in [
+        (ServiceQuotaScope::Account, account),
+        (ServiceQuotaScope::Device, host.into()),
+        (ServiceQuotaScope::Node, host.into()),
+    ] {
         let usage = sdk.service_quota_usage(ServiceQuotaUsageQuery {
-            scope, scope_key: host.into(),
+            scope, scope_key: key,
         }).await?;
         assert_eq!(usage.spent_bytes, spent);
         assert_eq!(usage.outstanding_bytes, 0);
@@ -71,9 +76,9 @@ async fn terminal_usage(sdk: &Sdk, service: &str, host: &str, spent: u64) -> Res
 
 async fn http_exchange(mut stream: BiStream) -> Result<u64> {
     stream.write_all(REQUEST).await?;
-    stream.shutdown().await?;
     let mut response = Vec::new();
     stream.read_to_end(&mut response).await?;
+    stream.shutdown().await?;
     assert!(response.starts_with(b"HTTP/1.1 200"));
     assert!(response.ends_with(BODY.as_bytes()));
     Ok((REQUEST.len() + response.len()) as u64)
