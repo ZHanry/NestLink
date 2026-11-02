@@ -28,3 +28,9 @@ W34 的新增 Linux 角色复用现有 `nestlink-daemon`，包括私有服务代
 `.github/workflows/linux-network-package.yml` 在 GitHub 托管的原生 x64 和 ARM64 runner 上复用同一 DEB 构造器，构建并安装实际 daemon，逐个执行所有组网 CLI 的帮助入口，验证普通用户安装被拒绝、缺登录和 root 业务运行被拒绝、重装字节一致和卸载保留用户数据。日志、实际包、依赖锁和可执行文件摘要绑定执行的源码、workflow、run、attempt 和 runner。候选预检同时要求该矩阵与完整网络工作流在同一 SHA 成功。
 
 该安装矩阵证明实验环境的实际 DEB 操作与入口拒绝行为。真实 TUN、子网、系统 DNS、LAN 和 WireGuard 使用各自独立网络实验及现场验收；签名资格、物理 ARM64、Android/iOS、其他 VPN 共存和中断升级恢复不能从这个矩阵推定通过。
+
+新增 W34 异常场景沿用同一个候选 DEB 构造器和系统 dpkg，不实现另一套安装器。工作流同时构建同源 `nestlink-server`，安装原 server DEB，以普通用户用原 `init/control` 入口验证真实 TCP 端口占用必须明确失败、原占用者仍能传输、部署身份及配置不变。释放原端口后，必须由实际安装的控制服务返回 health，正常停机后端口才能重新绑定。network 包本身不自动启动监听，缺登录拒绝不能代替这项端口冲突验证。
+
+中断升级场景先核对并安装 `c0fc249fc24c4bab389fe10690a2becb1b71257e` 的留存原生 DEB，x64/ARM64 分别固定官方 Actions artifact `13055507795`、`13055977059` 及 ZIP 摘要。当前同源 daemon 的字节不变，由原构造器生成明确标记为 `+hosted.interruption.1` 的故障注入包修订；真实 dpkg 必须确认该版本更高并完成实际 unpack。公开 `dpkg --pre-invoke` hook 仅用于确定配置前的中断点，报告实际 dpkg PID 和进程启动时间，经核对原映像及进程身份后定点 SIGKILL。中断必须留下明确的 unpacked 状态；随后用保留原 DEB 显式降级恢复，核对原版本、所有 payload 文件和目录权限、残留、用户数据，再恢复当前候选并卸载。
+
+上述包修订仅是托管故障实验制品，不属于发行候选或生产更新，不进入更新渠道。它没有调用正式签名安装 owner，不证明正式签名更新、schema 准入后的回滚或 Windows 安装资格。新增场景在对应源码的 x64 和 ARM64 Actions 实际成功、回执及文件摘要完成复核前保持未通过；源码中存在用例不能替代执行证据。
