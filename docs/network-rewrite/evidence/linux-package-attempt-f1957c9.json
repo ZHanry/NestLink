@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "source_revision": "f1957c9af71949125c460b0c396cffc8d2c2dc07",
+  "workflow": ".github/workflows/linux-network-package.yml",
+  "workflow_conclusion": "failure",
+  "run_id": 41407206784,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41407206784",
+  "run_attempt": 1,
+  "passed": false,
+  "artifacts_retained": 0,
+  "failed_log_export": {
+    "command": "gh run view 41407206784 --repo ZHanry/NestLink --log-failed",
+    "bytes": 549485,
+    "sha256": "6b252246ae8e2872ade97182b771e3c8074f29f2b382e35dba7f3945df70f87e",
+    "retention_scope": "Digest of the locally downloaded official failed-log export; the full export is not embedded in this evidence document."
+  },
+  "observed": {
+    "architectures": ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"],
+    "role_inventory_and_package_isolation_tests_passed": true,
+    "failed_stage": "Native daemon release compilation, before package coordinator execution",
+    "compile_errors": [
+      {
+        "code": "E0277",
+        "path": "apps/daemon/src/offline_remote.rs",
+        "line": 379,
+        "message": "tokio::spawn(listener.accept()) requires Send, but the original offline future retains dyn std::any::Any"
+      },
+      {
+        "code": "E0599",
+        "path": "apps/daemon/src/private_service_proxy/offline/target.rs",
+        "line": 73,
+        "message": "File.take requires std::io::Read in scope"
+      }
+    ],
+    "actual_port_conflict_executed": false,
+    "actual_dpkg_interruption_executed": false,
+    "package_receipts_produced": false,
+    "original_artifact_upload_failed_because_no_package_directory_existed": true
+  },
+  "limitations": [
+    "This attempt qualifies neither added installation fault scenario.",
+    "Follow-up source changes must be executed on hosted x64 and ARM64 runners before acceptance.",
+    "No formal signed update, Windows installer or physical-target qualification is claimed."
+  ]
+}
