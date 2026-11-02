@@ -20,6 +20,9 @@ jobs:
       EXPECTED_SOURCE: ${{ inputs.source_revision }}
       SECURITY_MODE: ${{ inputs.mode }}
       CARGO_INCREMENTAL: "0"
+      # The repository's rust-toolchain.toml selects stable. cargo-fuzz also
+      # spawns cargo/rustc, so pin every subprocess to the installed ASan nightly.
+      RUSTUP_TOOLCHAIN: nightly-2026-10-25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -57,6 +60,7 @@ jobs:
               assert result.returncode == 0, name+' failed'
           try:
               execute('rust-version',['rustc','-vV'])
+              assert 'release: ' in (version := (output/'rust-version.log').read_text()) and '-nightly' in version, 'sanitizer fuzzing requires the pinned nightly compiler'
               if receipt['mode'] == 'derive-lock':
                   execute('derive-lock',['cargo','generate-lockfile','--manifest-path',str(project/'Cargo.toml')])
                   (output/'Cargo.lock').write_bytes(lock.read_bytes())

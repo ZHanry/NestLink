@@ -156,6 +156,9 @@ async fn hundred_enrolled_nodes_twenty_pairs_thousand_simultaneous_authorized_st
 async fn capacity() -> Result {
     resource_sample("before_setup")?;
     let directory = tempfile::tempdir()?;
+    // The original durable meter refuses a permissive parent. This directory
+    // is freshly owned by this fixture; retain the production privacy gate.
+    nestlink_platform_security::private_directory(directory.path())?;
     let deployment = random_id();
     let signer = PermitSigner::generate();
     let issuer = signer.public_key();
