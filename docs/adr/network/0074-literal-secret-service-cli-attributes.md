@@ -1,6 +1,7 @@
 # 0074 — Preserve opaque login bindings as literal Secret Service attributes
 
-Date: 2026-11-03. Status: implemented; real hosted regression pending.
+Date: 2026-11-03. Status: implemented; real hosted regression passed; additional
+strict-clippy repair and complete original resident matrix pending.
 Scope: the existing Linux Secret Service CLI adapter and original resident
 fixture. There is no new dependency, service replacement or stored binding format.
 
@@ -48,11 +49,32 @@ target and strict-clippy command; it does not replace or alter any of the four
 original resident cases or their expected names/counts. A failure-only boolean
 records whether a future original binding had an option prefix, without its value.
 
-The new regression has not yet run. Preserve sourcee202's failure and require
-actual hosted old-argv rejection plus new-argv retained-data success, and the
-complete original resident matrix. No local build, format, lint, test, Python
-execution or packaging occurred. This does not resolve earlier unrelated SDK
-management-response-invalid or public-PKI fixture DNS failures by inference.
+Preserve sourcee202's failure and require actual hosted old-argv rejection plus
+new-argv retained-data success, strict lint and the complete original resident
+matrix. No local build, format, lint, test, Python execution or packaging occurred.
+This does not resolve earlier unrelated SDK management-response-invalid or
+public-PKI fixture DNS failures by inference.
+
+Run [41483674367](https://github.com/ZHanry/NestLink/actions/runs/41483674367),
+exact source `4ec2c3c0addea9d708629d58b2932ec035bd5569`, exercised the real
+Linux regression successfully: one test passed in0.11s, including both retired
+CLI exit2 assertions and repaired store/read retained-data equality. All other
+focused tests and the original three strict commands passed on both OS. The
+new integration target's extra strict command failed `clippy::duplicate_mod`:
+it loaded the production argv module directly and through original support.
+Newer `2285fd1f01887efb130433e81f21c941c8b01bb2` reuses support's single
+module with `use`, without suppressing a lint or changing runtime behavior.
+The source4ec run predates and cannot qualify that lint repair.
+
+Original Linux resident remains3/4: management8 and both full carrier cases
+passed, but pending case2/logout failed before SDK setup at the unchanged
+public-PKI fixture DNS deadline. Original Windows resident remains0/4: after
+management case0 actually ran and stopped, case1 and the remaining cases
+reported original socket Os10013 PermissionDenied. The receipt does not identify
+the failing bind stage or OS cause. Keep these failures and require newer
+exact-source strict lint and the original both-OS matrix. Full receipts and
+independent hashes of all46 downloaded files, with38 matching producer entries,
+are in [source4ec evidence](../../network-rewrite/evidence/native-offline-resident-4ec2c3c.json).
 
 Reviewed mature interfaces and source:
 

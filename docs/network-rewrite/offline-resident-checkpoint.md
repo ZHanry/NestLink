@@ -349,3 +349,56 @@ or claimed proven; the new regression and full original matrix still need
 their own exact-source execution. Earlier unrelated SDK Invalid and independent
 fixture DNS failures remain historical evidence. No local project execution
 or new hosted dispatch occurred in this evidence work.
+
+## Source4ec real literal-attribute regression and original matrix failures
+
+Run [41483674367](https://github.com/ZHanry/NestLink/actions/runs/41483674367),
+exact source `4ec2c3c0addea9d708629d58b2932ec035bd5569`, completed with both
+original jobs failed. All scoped AppCore/daemon/desktop cases, the actual
+capture-terminal and download-consent regressions, and the original three
+strict clippy commands passed on both OS. The same-archive fixed17-file libyuv
+suppliers built and verified on both x64 targets, and original Rust consumers
+linked and ran. Exact commands, original names/results, native receipts, fixed
+Rust timing records and every downloaded file digest are in
+[native-offline-resident-4ec2c3c.json](evidence/native-offline-resident-4ec2c3c.json).
+All46 downloaded files were independently byte-counted and SHA256-hashed;
+all38 producer inventory entries match, and both source-before/after files
+are byte-identical and clean. Native archive hashes remain producer inventory,
+and ZIP digests remain explicitly GitHub-reported metadata.
+
+Linux's separate real Secret Service leading-hyphen regression passed1/1 in
+0.11s. It actually required the retired store and lookup argv to return2, then
+required the original private D-Bus/gnome-keyring to retain and return the same
+secret through repaired production argv under the original ten-second gate.
+No raw attribute or secret is recorded. Its added strict command failed
+`clippy::duplicate_mod` because the new integration loaded `secret_tool.rs`
+directly and through support. Newer commit
+`2285fd1f01887efb130433e81f21c941c8b01bb2` uses support's single production
+module instead, without a lint suppression or runtime change. These source4ec
+receipts cannot qualify that newer fix. See
+[ADR0074](../adr/network/0074-literal-secret-service-cli-attributes.md).
+
+Original Linux resident is3/4 in254.56s. Management8 and complete QUIC/TLS
+initial/rebuilt real pixels, two262144-byte completed files per carrier and
+EOF/IPC Exit passed. Pending case0 EOF and case1 Stop ran; case2/logout setup
+failed before SDK calls at the unchanged temporary public-PKI HTTPS DNS
+deadline. The case3 identity path did not complete after that failure. QUIC
+first initial/rebuilt decode totals were4872/6274us (allocation4041/5409us,
+whole FFI824/864us); TLS was7534/4481us (6541/3795us,991/685us). Later full-case
+FFI observations were492–770us. These debug context costs remain distinct
+from a pure codec benchmark.
+
+Original Windows resident is0/4 in97.54s. Management case0 actually ran with
+DXGI and completed its stopped endpoints. Management case1, pending case0
+and both full data cases then reported original socket Os10013 PermissionDenied.
+The recorded errors do not identify the failing bind stage, excluded port
+range or OS cause. No Windows full-case pixel/file/rebuild success is claimed
+on this source. Earlier sourcee202's4/4 success remains separate historical
+evidence and does not replace this result.
+
+The original four names/counts/assertions, immutable60ms ingress anchor,
+40ms late threshold, PTS/capture clocks, frame/IPC deadlines, cumulative
+offline budget, ordinary OS tokens and independent public-PKI owner remain
+unchanged. Require newer exact-source strict lint and all four original cases
+on both OS. No local build, formatter, lint, test, Python execution or
+packaging occurred; this evidence work did not dispatch another workflow.

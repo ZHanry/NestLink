@@ -1,0 +1,1821 @@
+{
+    "schema_version":  1,
+    "scope":  "Complete original focused offline AppCore/daemon/desktop and original four resident cases on hosted Linux/Windows, plus separate Linux real Secret Service literal-attribute regression; no full Rust-core, physical target, public NAT or advanced-media acceptance",
+    "source_revision":  "4ec2c3c0addea9d708629d58b2932ec035bd5569",
+    "workflow":  ".github/workflows/offline-resident.yml",
+    "run_id":  41483674367,
+    "run_attempt":  1,
+    "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41483674367",
+    "conclusion":  "failure",
+    "build_provenance":  "Both original hosted jobs built and verified the same-archive libyuv fixed17-file supplier with native C++ Release/Windows dynamic CRT checks, matching clean source-before/after and installed receipt inventory. Original Rust consumers actually linked and ran. Native archives are producer inventory, not independently downloaded binaries.",
+    "execution_provenance":  "All scoped AppCore/daemon/desktop tests, actual signed/proved capture-terminal and download-consent regressions, and original three strict clippy commands passed on both OS. Original resident Linux3/4 and Windows0/4 remained failed. Additional Linux real Secret Service regression1/1 passed; its extra strict clippy failed duplicate_mod.",
+    "targets":  [
+                    {
+                        "platform":  "linux",
+                        "job_id":  125408282622,
+                        "runner_os":  "Linux",
+                        "runner_environment":  "github-hosted",
+                        "image_os":  "ubuntu24",
+                        "image_version":  "20261026.354.1",
+                        "execution_identity":  "original non-root hosted runner and original PAM desktop session",
+                        "conclusion":  "failure",
+                        "source_before":  {
+                                              "revision":  "4ec2c3c0addea9d708629d58b2932ec035bd5569",
+                                              "tree":  "c0701a5d3d29b68ac6e62359f597986fe144f518",
+                                              "status":  "",
+                                              "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+                                          },
+                        "source_after":  {
+                                             "revision":  "4ec2c3c0addea9d708629d58b2932ec035bd5569",
+                                             "tree":  "c0701a5d3d29b68ac6e62359f597986fe144f518",
+                                             "status":  "",
+                                             "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+                                         },
+                        "source_unchanged":  true,
+                        "independent_source_facts_bytes_equal":  true,
+                        "https_tool_sha256_before":  "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872",
+                        "https_tool_sha256_after":  "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872",
+                        "https_tool_matches_frozen_receipt":  true,
+                        "commands":  [
+                                         {
+                                             "name":  "rustc-version",
+                                             "command":  [
+                                                             "rustc",
+                                                             "--version",
+                                                             "--verbose"
+                                                         ],
+                                             "log":  "rustc-version.log",
+                                             "started_unix":  1793637646.8796275,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793637654.5623722
+                                         },
+                                         {
+                                             "name":  "cargo-version",
+                                             "command":  [
+                                                             "cargo",
+                                                             "--version"
+                                                         ],
+                                             "log":  "cargo-version.log",
+                                             "started_unix":  1793637654.5624592,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793637654.5944343
+                                         },
+                                         {
+                                             "name":  "app-core",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-app-core",
+                                                             "--test",
+                                                             "native_offline",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "app-core.log",
+                                             "started_unix":  1793637654.6202621,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "expected_tests":  [
+                                                                    "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+                                                                    "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry"
+                                                                ],
+                                             "finished_unix":  1793637812.8069046
+                                         },
+                                         {
+                                             "name":  "app-core-capture-terminal-unit",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-app-core",
+                                                             "--lib",
+                                                             "runtime::native_capture_failure_tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "app-core-capture-terminal-unit.log",
+                                             "started_unix":  1793637812.8069942,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "runtime::native_capture_failure_tests::old_capture_failure_preserves_transport_recovery_and_live_capture_failure_is_terminal",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793637821.3475895
+                                         },
+                                         {
+                                             "name":  "daemon-remote-unit",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "offline_remote::tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-remote-unit.log",
+                                             "started_unix":  1793637821.347679,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "offline_remote::tests::original_resident_entry_requires_an_explicit_direct_carrier_and_controller_peer",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "offline_remote::tests::original_resident_json_cannot_import_authority_or_enable_carrier_fallback",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793637880.948024
+                                         },
+                                         {
+                                             "name":  "daemon-private-unit",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "private_service_proxy::offline::tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-private-unit.log",
+                                             "started_unix":  1793637880.948115,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "private_service_proxy::offline::tests::original_private_resident_empty_actions_reject_injected_authority_fields",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793637883.3681085
+                                         },
+                                         {
+                                             "name":  "daemon-download-consent-unit",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-download-consent-unit.log",
+                                             "started_unix":  1793637883.36821,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793637883.7332394
+                                         },
+                                         {
+                                             "name":  "daemon-entry-unit",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "entry_tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-entry-unit.log",
+                                             "started_unix":  1793637883.73333,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "entry_tests::command_dispatch_keeps_the_windows_main_future_bounded",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793637884.1483736
+                                         },
+                                         {
+                                             "name":  "desktop-layout",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-desktop",
+                                                             "--lib",
+                                                             "layout_tests::independent_offline_",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "desktop-layout.log",
+                                             "started_unix":  1793637884.1484683,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "layout_tests::independent_offline_viewport_close_requires_exact_local_receipts_without_online_inspect_or_revoke",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "layout_tests::independent_offline_workspace_displays_finite_scope_without_management_login",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793637975.120564
+                                         },
+                                         {
+                                             "name":  "resident",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--test",
+                                                             "offline_remote_resident",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "resident.log",
+                                             "started_unix":  1793637975.1206558,
+                                             "passed":  false,
+                                             "exit_code":  101,
+                                             "cases":  [
+                                                           [
+                                                               "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                                                               "FAILED"
+                                                           ],
+                                                           [
+                                                               "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "3",
+                                                                   "1",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "expected_tests":  [
+                                                                    "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                                                                    "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                                                                    "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                                    "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit"
+                                                                ],
+                                             "finished_unix":  1793638242.4520168
+                                         },
+                                         {
+                                             "name":  "secret-service-literal-attributes",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--test",
+                                                             "secret_service_literal_attributes",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "secret-service-literal-attributes.log",
+                                             "started_unix":  1793638242.4521077,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "original_secret_service_stores_and_reads_a_leading_hyphen_attribute",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "expected_tests":  [
+                                                                    "original_secret_service_stores_and_reads_a_leading_hyphen_attribute"
+                                                                ],
+                                             "finished_unix":  1793638245.0752227
+                                         },
+                                         {
+                                             "name":  "app-core-clippy",
+                                             "command":  [
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-app-core",
+                                                             "--test",
+                                                             "native_offline",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "app-core-clippy.log",
+                                             "started_unix":  1793638245.075319,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793638309.5340188
+                                         },
+                                         {
+                                             "name":  "daemon-clippy",
+                                             "command":  [
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "daemon-clippy.log",
+                                             "started_unix":  1793638309.5341063,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793638350.6459444
+                                         },
+                                         {
+                                             "name":  "resident-clippy",
+                                             "command":  [
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--test",
+                                                             "offline_remote_resident",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "resident-clippy.log",
+                                             "started_unix":  1793638350.6460433,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793638383.2988987
+                                         },
+                                         {
+                                             "name":  "secret-service-literal-attributes-clippy",
+                                             "command":  [
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--test",
+                                                             "secret_service_literal_attributes",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "secret-service-literal-attributes-clippy.log",
+                                             "started_unix":  1793638383.298995,
+                                             "passed":  false,
+                                             "exit_code":  101,
+                                             "finished_unix":  1793638384.1650448
+                                         }
+                                     ],
+                        "original_resident_result":  {
+                                                         "result":  "FAILED",
+                                                         "passed":  3,
+                                                         "failed":  1,
+                                                         "ignored":  0,
+                                                         "duration_seconds":  254.56,
+                                                         "cases":  [
+                                                                       [
+                                                                           "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                                                                           "ok"
+                                                                       ],
+                                                                       [
+                                                                           "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                                                                           "FAILED"
+                                                                       ],
+                                                                       [
+                                                                           "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                                           "ok"
+                                                                       ],
+                                                                       [
+                                                                           "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                                           "ok"
+                                                                       ]
+                                                                   ]
+                                                     },
+                        "extra_secret_service_commands":  [
+                                                              {
+                                                                  "name":  "secret-service-literal-attributes",
+                                                                  "command":  [
+                                                                                  "cargo",
+                                                                                  "test",
+                                                                                  "--locked",
+                                                                                  "-p",
+                                                                                  "nestlink-daemon",
+                                                                                  "--test",
+                                                                                  "secret_service_literal_attributes",
+                                                                                  "--",
+                                                                                  "--show-output",
+                                                                                  "--test-threads=1",
+                                                                                  "--color",
+                                                                                  "never"
+                                                                              ],
+                                                                  "log":  "secret-service-literal-attributes.log",
+                                                                  "started_unix":  1793638242.4521077,
+                                                                  "passed":  true,
+                                                                  "exit_code":  0,
+                                                                  "cases":  [
+                                                                                [
+                                                                                    "original_secret_service_stores_and_reads_a_leading_hyphen_attribute",
+                                                                                    "ok"
+                                                                                ]
+                                                                            ],
+                                                                  "summaries":  [
+                                                                                    [
+                                                                                        "1",
+                                                                                        "0",
+                                                                                        "0"
+                                                                                    ]
+                                                                                ],
+                                                                  "expected_tests":  [
+                                                                                         "original_secret_service_stores_and_reads_a_leading_hyphen_attribute"
+                                                                                     ],
+                                                                  "finished_unix":  1793638245.0752227
+                                                              },
+                                                              {
+                                                                  "name":  "secret-service-literal-attributes-clippy",
+                                                                  "command":  [
+                                                                                  "cargo",
+                                                                                  "clippy",
+                                                                                  "--locked",
+                                                                                  "-p",
+                                                                                  "nestlink-daemon",
+                                                                                  "--test",
+                                                                                  "secret_service_literal_attributes",
+                                                                                  "--",
+                                                                                  "-D",
+                                                                                  "warnings"
+                                                                              ],
+                                                                  "log":  "secret-service-literal-attributes-clippy.log",
+                                                                  "started_unix":  1793638383.298995,
+                                                                  "passed":  false,
+                                                                  "exit_code":  101,
+                                                                  "finished_unix":  1793638384.1650448
+                                                              }
+                                                          ],
+                        "native_receipt_evidence":  {
+                                                        "target":  "x86_64-unknown-linux-gnu",
+                                                        "profile":  "release",
+                                                        "linkage":  "static",
+                                                        "crt":  "system",
+                                                        "lock_sha256":  "d3cebf3254b04e24890defa81e7ed14676afb70235488d80847ad92573d79a93",
+                                                        "sources":  [
+                                                                        {
+                                                                            "name":  "libvpx",
+                                                                            "version":  "1.16.0",
+                                                                            "commit":  "1024874c5919305883187e2953de8fcb4c3d7fa6",
+                                                                            "archive_sha256":  "274c00c0b21f03a9152e324b1989f73b74268aa8545b39ef5faccc50fdb56393",
+                                                                            "archive_bytes":  5637178,
+                                                                            "source_tree_sha256":  "2e6333b99b544480c3bc6859c65d4814d5b1092f83ecb4381673d414b8fc92c5",
+                                                                            "source_tree_format":  "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+                                                                            "source_file_count":  1250
+                                                                        },
+                                                                        {
+                                                                            "name":  "opus",
+                                                                            "version":  "1.6.1",
+                                                                            "commit":  "22244de5a79bd1d6d623c32e72bf1954b56235be",
+                                                                            "archive_sha256":  "3267aa969b2b26542417f57819a5bc25d5079355300307dd2dddc7c704aed418",
+                                                                            "archive_bytes":  4888967,
+                                                                            "source_tree_sha256":  "32f8d26ab717f00dc94474b5fe17a88639f27fc972b58cea60e1ed67a34ef9f3",
+                                                                            "source_tree_format":  "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+                                                                            "source_file_count":  752
+                                                                        }
+                                                                    ],
+                                                        "bundled_components":  [
+                                                                                   {
+                                                                                       "name":  "libyuv",
+                                                                                       "version":  "1711",
+                                                                                       "commit":  "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1",
+                                                                                       "repository":  "https://chromium.googlesource.com/libyuv/libyuv",
+                                                                                       "parent_source":  "libvpx",
+                                                                                       "path":  "third_party/libyuv",
+                                                                                       "license":  "BSD-3-Clause",
+                                                                                       "source_files":  [
+                                                                                                            "convert_argb.cc",
+                                                                                                            "cpu_id.cc",
+                                                                                                            "planar_functions.cc",
+                                                                                                            "row_any.cc",
+                                                                                                            "row_common.cc",
+                                                                                                            "row_gcc.cc",
+                                                                                                            "row_win.cc",
+                                                                                                            "row_neon.cc",
+                                                                                                            "row_neon64.cc",
+                                                                                                            "row_msa.cc",
+                                                                                                            "scale_any.cc",
+                                                                                                            "scale_common.cc",
+                                                                                                            "scale_gcc.cc",
+                                                                                                            "scale_win.cc",
+                                                                                                            "scale_neon.cc",
+                                                                                                            "scale_neon64.cc",
+                                                                                                            "scale_msa.cc"
+                                                                                                        ]
+                                                                                   }
+                                                                               ],
+                                                        "features":  {
+                                                                         "vp8":  true,
+                                                                         "vp8_encoder":  true,
+                                                                         "vp8_decoder":  true,
+                                                                         "vp9":  false,
+                                                                         "libyuv_i420_to_bgra":  true,
+                                                                         "opus_float":  true,
+                                                                         "opus_fixed_point":  false,
+                                                                         "opus_dred":  false,
+                                                                         "opus_deep_plc":  false,
+                                                                         "opus_osce":  false,
+                                                                         "opus_custom_modes":  false,
+                                                                         "opus_nonthreadsafe_pseudostack":  false
+                                                                     },
+                                                        "libyuv_configuration":  {
+                                                                                     "options":  [
+                                                                                                     "-DCMAKE_BUILD_TYPE=Release",
+                                                                                                     "-DCMAKE_INSTALL_PREFIX=/home/runner/work/_temp/nestlink-codecs/x86_64-unknown-linux-gnu",
+                                                                                                     "-DCMAKE_CXX_COMPILER=/usr/bin/x86_64-linux-gnu-g++-13",
+                                                                                                     "-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja",
+                                                                                                     "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+                                                                                                     "-DLIBYUV_SOURCE=/home/runner/work/_temp/nestlink-codecs/sources/libvpx-1024874c5919305883187e2953de8fcb4c3d7fa6/third_party/libyuv"
+                                                                                                 ],
+                                                                                     "source_files":  [
+                                                                                                          "convert_argb.cc",
+                                                                                                          "cpu_id.cc",
+                                                                                                          "planar_functions.cc",
+                                                                                                          "row_any.cc",
+                                                                                                          "row_common.cc",
+                                                                                                          "row_gcc.cc",
+                                                                                                          "row_win.cc",
+                                                                                                          "row_neon.cc",
+                                                                                                          "row_neon64.cc",
+                                                                                                          "row_msa.cc",
+                                                                                                          "scale_any.cc",
+                                                                                                          "scale_common.cc",
+                                                                                                          "scale_gcc.cc",
+                                                                                                          "scale_win.cc",
+                                                                                                          "scale_neon.cc",
+                                                                                                          "scale_neon64.cc",
+                                                                                                          "scale_msa.cc"
+                                                                                                      ],
+                                                                                     "compile_command_count":  17,
+                                                                                     "cmake_project_sha256":  "a0c689352c3bac45b147a84f8216e3eb5c4d44192dcc4450792f992f77efdcf7",
+                                                                                     "compile_commands_sha256":  "b36ce9cb60d3db2716da1aa7b4bbfeb2676db0043dbaef418a4c061f2742056a"
+                                                                                 },
+                                                        "cxx_tool":  [
+                                                                         {
+                                                                             "name":  "cxx",
+                                                                             "path":  "/usr/bin/x86_64-linux-gnu-g++-13",
+                                                                             "version":  "x86_64-linux-gnu-g++-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+                                                                             "sha256":  "1353e9bdd29a7295c7226bf6c63abccce056d8cac31f112e5cdbecc3f28c2769"
+                                                                         }
+                                                                     ],
+                                                        "yuv_library_inventory":  [
+                                                                                      {
+                                                                                          "path":  "lib/libyuv.a",
+                                                                                          "kind":  "library",
+                                                                                          "bytes":  653098,
+                                                                                          "sha256":  "d998c987c37a33c70fe1d2b43b6e41f20b9f102d12279a063283f18b016dcc14"
+                                                                                      }
+                                                                                  ],
+                                                        "original_notice_inventory":  [
+                                                                                          {
+                                                                                              "path":  "share/licenses/libvpx/third_party/libyuv/LICENSE",
+                                                                                              "kind":  "metadata",
+                                                                                              "bytes":  1506,
+                                                                                              "sha256":  "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f"
+                                                                                          },
+                                                                                          {
+                                                                                              "path":  "share/licenses/libvpx/third_party/libyuv/README.libvpx",
+                                                                                              "kind":  "metadata",
+                                                                                              "bytes":  727,
+                                                                                              "sha256":  "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814"
+                                                                                          }
+                                                                                      ],
+                                                        "validation":  {
+                                                                           "fresh_source_verified_before_and_after_build":  true,
+                                                                           "configured_features_verified":  true,
+                                                                           "archive_architectures":  {
+                                                                                                         "vpx":  {
+                                                                                                                     "object_count":  128,
+                                                                                                                     "elf_class":  64,
+                                                                                                                     "machine":  62,
+                                                                                                                     "archive_sha256":  "bf6cc4494dc1ccffa8d59535d5272e7ac8b3740ba51fc416fe1f1220191aac96"
+                                                                                                                 },
+                                                                                                         "opus":  {
+                                                                                                                      "object_count":  152,
+                                                                                                                      "elf_class":  64,
+                                                                                                                      "machine":  62,
+                                                                                                                      "archive_sha256":  "876fcf59b4fb1f1f71267f7972b596e8927e157e4cc61aaa5b32b7eadfb303c4"
+                                                                                                                  },
+                                                                                                         "yuv":  {
+                                                                                                                     "object_count":  17,
+                                                                                                                     "elf_class":  64,
+                                                                                                                     "machine":  62,
+                                                                                                                     "archive_sha256":  "d998c987c37a33c70fe1d2b43b6e41f20b9f102d12279a063283f18b016dcc14"
+                                                                                                                 }
+                                                                                                     },
+                                                                           "native_runtime_tests_run":  false
+                                                                       },
+                                                        "inventory_scope":  "Producer native receipt records; focused artifact includes receipt bytes, not native archive/header binaries. Independent file hashes below qualify downloaded receipt bytes."
+                                                    },
+                        "observed_vp8_rust_stages":  [
+                                                         {
+                                                             "case":  "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                             "transport":  "quic",
+                                                             "role":  "controller",
+                                                             "frame":  1,
+                                                             "first":  true,
+                                                             "geometry_us":  6,
+                                                             "allocation_us":  4041,
+                                                             "ffi_us":  824,
+                                                             "total_us":  4872,
+                                                             "status":  0
+                                                         },
+                                                         {
+                                                             "case":  "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                             "transport":  "quic",
+                                                             "role":  "controller",
+                                                             "frame":  2,
+                                                             "first":  false,
+                                                             "geometry_us":  0,
+                                                             "allocation_us":  5206,
+                                                             "ffi_us":  586,
+                                                             "total_us":  5793,
+                                                             "status":  0
+                                                         },
+                                                         {
+                                                             "case":  "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                             "transport":  "quic",
+                                                             "role":  "controller",
+                                                             "frame":  3,
+                                                             "first":  false,
+                                                             "geometry_us":  1,
+                                                             "allocation_us":  8416,
+                                                             "ffi_us":  645,
+                                                             "total_us":  9063,
+                                                             "status":  0
+                                                         },
+                                                         {
+                                                             "case":  "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                             "transport":  "quic",
+                                                             "role":  "controller",
+                                                             "frame":  1,
+                                                             "first":  true,
+                                                             "geometry_us":  0,
+                                                             "allocation_us":  5409,
+                                                             "ffi_us":  864,
+                                                             "total_us":  6274,
+                                                             "status":  0
+                                                         },
+                                                         {
+                                                             "case":  "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                             "transport":  "quic",
+                                                             "role":  "controller",
+                                                             "frame":  2,
+                                                             "first":  false,
+                                                             "geometry_us":  0,
+                                                             "allocation_us":  4991,
+                                                             "ffi_us":  516,
+                                                             "total_us":  5508,
+                                                             "status":  0
+                                                         },
+                                                         {
+                                                             "case":  "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                             "transport":  "quic",
+                                                             "role":  "controller",
+                                                             "frame":  3,
+                                                             "first":  false,
+                                                             "geometry_us":  1,
+                                                             "allocation_us":  5690,
+                                                             "ffi_us":  611,
+                                                             "total_us":  6302,
+                                                             "status":  0
+                                                         },
+                                                         {
+                                                             "case":  "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                             "transport":  "tls",
+                                                             "role":  "controller",
+                                                             "frame":  1,
+                                                             "first":  true,
+                                                             "geometry_us":  1,
+                                                             "allocation_us":  6541,
+                                                             "ffi_us":  991,
+                                                             "total_us":  7534,
+                                                             "status":  0
+                                                         },
+                                                         {
+                                                             "case":  "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                             "transport":  "tls",
+                                                             "role":  "controller",
+                                                             "frame":  2,
+                                                             "first":  false,
+                                                             "geometry_us":  1,
+                                                             "allocation_us":  4062,
+                                                             "ffi_us":  492,
+                                                             "total_us":  4556,
+                                                             "status":  0
+                                                         },
+                                                         {
+                                                             "case":  "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                             "transport":  "tls",
+                                                             "role":  "controller",
+                                                             "frame":  3,
+                                                             "first":  false,
+                                                             "geometry_us":  1,
+                                                             "allocation_us":  5603,
+                                                             "ffi_us":  635,
+                                                             "total_us":  6240,
+                                                             "status":  0
+                                                         },
+                                                         {
+                                                             "case":  "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                             "transport":  "tls",
+                                                             "role":  "controller",
+                                                             "frame":  1,
+                                                             "first":  true,
+                                                             "geometry_us":  1,
+                                                             "allocation_us":  3795,
+                                                             "ffi_us":  685,
+                                                             "total_us":  4481,
+                                                             "status":  0
+                                                         },
+                                                         {
+                                                             "case":  "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                             "transport":  "tls",
+                                                             "role":  "controller",
+                                                             "frame":  2,
+                                                             "first":  false,
+                                                             "geometry_us":  1,
+                                                             "allocation_us":  6256,
+                                                             "ffi_us":  610,
+                                                             "total_us":  6867,
+                                                             "status":  0
+                                                         },
+                                                         {
+                                                             "case":  "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                             "transport":  "tls",
+                                                             "role":  "controller",
+                                                             "frame":  3,
+                                                             "first":  false,
+                                                             "geometry_us":  1,
+                                                             "allocation_us":  7406,
+                                                             "ffi_us":  770,
+                                                             "total_us":  8178,
+                                                             "status":  0
+                                                         }
+                                                     ],
+                        "timing_scope":  "Original debug controller first three decode calls per native context; allocation and whole native FFI included. Records retain actual case identity. No pure libvpx or throughput benchmark is claimed.",
+                        "artifact":  {
+                                         "platform":  "linux",
+                                         "id":  13160978932,
+                                         "name":  "original-offline-resident-ubuntu-24.04-4ec2c3c0addea9d708629d58b2932ec035bd5569-1",
+                                         "size_in_bytes":  80464,
+                                         "github_reported_digest":  "sha256:47de248052d24721298aadc018aa5ebd211aee13df7d77aa74b2e38532d75860",
+                                         "job_id":  125408282622
+                                     },
+                        "independent_file_verification":  {
+                                                              "downloaded_file_count":  24,
+                                                              "producer_inventory_count":  20,
+                                                              "producer_inventory_mismatches":  [
+
+                                                                                                ],
+                                                              "files":  [
+                                                                            {
+                                                                                "path":  "nestlink-codecs/x86_64-unknown-linux-gnu/nestlink-codecs.json",
+                                                                                "bytes":  29209,
+                                                                                "sha256":  "a4e9f249d1063c908532d6db9044ce0e0099d55dc0eac6909c6ea17e556f8b31"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-native-offline-https-license.txt",
+                                                                                "bytes":  11357,
+                                                                                "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-native-offline-https-tool.json",
+                                                                                "bytes":  871,
+                                                                                "sha256":  "b747166c10ed339f5acc55bd9219b2e39972c5cbde33ca321eb81790949e87e6"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/app-core.log",
+                                                                                "bytes":  45019,
+                                                                                "sha256":  "fa947cd98bee35bc199e449ac6f4f74487e2d83c4fcd6414471bdca2228f47ec"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/app-core-capture-terminal-unit.log",
+                                                                                "bytes":  14307,
+                                                                                "sha256":  "8cf3f6766b7a2f69f3ed428b24ab0bdec75684c9723a331686614ade095a7aec"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/app-core-clippy.log",
+                                                                                "bytes":  27573,
+                                                                                "sha256":  "ffcd89ae507bc80fc90d45931d8b62085425866666fae5ae5e4d87004a11e976"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/cargo-version.log",
+                                                                                "bytes":  36,
+                                                                                "sha256":  "b6ef6807dd96d18b833474ad68e7a23a29e562a29c67afa71a59fb9a73df0068"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/daemon-clippy.log",
+                                                                                "bytes":  17722,
+                                                                                "sha256":  "a58c30853ec44e1a7542b6e418d29f3fdc8967203999f84577ec58e7d5934fdf"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/daemon-download-consent-unit.log",
+                                                                                "bytes":  14157,
+                                                                                "sha256":  "4e73acd68bdaa515baa2f4592a0acbc53bbc4b0e465f1a40f3ecee6087367ea4"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/daemon-entry-unit.log",
+                                                                                "bytes":  14228,
+                                                                                "sha256":  "1b82d631aff71378c943dcaf2e15ea977fc3914fa1fad2ad1bb59f959f3f6e2c"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/daemon-private-unit.log",
+                                                                                "bytes":  15786,
+                                                                                "sha256":  "b36fe8ac91234fcdf5614b13dd56602471deb4f683d0fa1409e422c32fc76412"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/daemon-remote-unit.log",
+                                                                                "bytes":  18556,
+                                                                                "sha256":  "5d58850cde0ba6d84bad4156cd1c6ccf0eb5c5742a75fc7b6ca686ed74e9e9d4"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/desktop-layout.log",
+                                                                                "bytes":  28085,
+                                                                                "sha256":  "93c4746d152ce8a04a7687605013514fdcd9a4f9517e1162f5f53736192bec8f"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/nestlink-codecs.json",
+                                                                                "bytes":  29209,
+                                                                                "sha256":  "a4e9f249d1063c908532d6db9044ce0e0099d55dc0eac6909c6ea17e556f8b31"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
+                                                                                "bytes":  11357,
+                                                                                "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
+                                                                                "bytes":  871,
+                                                                                "sha256":  "b747166c10ed339f5acc55bd9219b2e39972c5cbde33ca321eb81790949e87e6"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/receipt.json",
+                                                                                "bytes":  15783,
+                                                                                "sha256":  "721add173803e074bd0d1fef52dbf1bee44b67d16c0903ef0c2fb6fc7f2a7662"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/resident.log",
+                                                                                "bytes":  39354,
+                                                                                "sha256":  "02d1ce56a35afd931f53d3fb9eb92fa424af0dcc7dde0c6eac75cfe296f78f44"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/resident-clippy.log",
+                                                                                "bytes":  17605,
+                                                                                "sha256":  "1006c2e424ec015b05211a5778176a3c1741407ec951e7d29592e5dc4940ca40"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/rustc-version.log",
+                                                                                "bytes":  633,
+                                                                                "sha256":  "c21d4eda194b86fd08d5f56a5a74a7753ac880789ca7703e9e18d8e899e8a408"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/secret-service-literal-attributes.log",
+                                                                                "bytes":  14224,
+                                                                                "sha256":  "bd06633e844e25d3a2d2a9df1151454c7d2f525202f0943e9887c2f15b03b73d"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/secret-service-literal-attributes-clippy.log",
+                                                                                "bytes":  14304,
+                                                                                "sha256":  "b640b69c7baefa28b13b1112fa5fb2133d300e846368e2977a17b9b3bf8d4563"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/source-after.json",
+                                                                                "bytes":  222,
+                                                                                "sha256":  "fbfedafa3dcd554a79330ca80ec6be33d7f3df72cf5296aa17ba58b11bb4cb42"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/source-before.json",
+                                                                                "bytes":  222,
+                                                                                "sha256":  "fbfedafa3dcd554a79330ca80ec6be33d7f3df72cf5296aa17ba58b11bb4cb42"
+                                                                            }
+                                                                        ],
+                                                              "digest_scope":  "Every downloaded/extracted file independently SHA256-hashed and byte-counted. GitHub artifact digest is GitHub-reported metadata, not an independently hashed ZIP."
+                                                          }
+                    },
+                    {
+                        "platform":  "windows",
+                        "job_id":  125408280412,
+                        "runner_os":  "Windows",
+                        "runner_environment":  "github-hosted",
+                        "image_os":  "win22",
+                        "image_version":  "20261026.347.1",
+                        "execution_identity":  "verified original medium non-admin wrapper",
+                        "conclusion":  "failure",
+                        "source_before":  {
+                                              "revision":  "4ec2c3c0addea9d708629d58b2932ec035bd5569",
+                                              "tree":  "c0701a5d3d29b68ac6e62359f597986fe144f518",
+                                              "status":  "",
+                                              "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+                                          },
+                        "source_after":  {
+                                             "revision":  "4ec2c3c0addea9d708629d58b2932ec035bd5569",
+                                             "tree":  "c0701a5d3d29b68ac6e62359f597986fe144f518",
+                                             "status":  "",
+                                             "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+                                         },
+                        "source_unchanged":  true,
+                        "independent_source_facts_bytes_equal":  true,
+                        "https_tool_sha256_before":  "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343",
+                        "https_tool_sha256_after":  "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343",
+                        "https_tool_matches_frozen_receipt":  true,
+                        "commands":  [
+                                         {
+                                             "name":  "rustc-version",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "rustc",
+                                                             "--version",
+                                                             "--verbose"
+                                                         ],
+                                             "log":  "rustc-version.log",
+                                             "started_unix":  1793637780.3072793,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793637790.7018096
+                                         },
+                                         {
+                                             "name":  "cargo-version",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "--version"
+                                                         ],
+                                             "log":  "cargo-version.log",
+                                             "started_unix":  1793637790.7018096,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793637791.3503242
+                                         },
+                                         {
+                                             "name":  "app-core",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-app-core",
+                                                             "--test",
+                                                             "native_offline",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "app-core.log",
+                                             "started_unix":  1793637791.412845,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "expected_tests":  [
+                                                                    "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+                                                                    "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry"
+                                                                ],
+                                             "finished_unix":  1793638105.609091
+                                         },
+                                         {
+                                             "name":  "app-core-capture-terminal-unit",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-app-core",
+                                                             "--lib",
+                                                             "runtime::native_capture_failure_tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "app-core-capture-terminal-unit.log",
+                                             "started_unix":  1793638105.609091,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "runtime::native_capture_failure_tests::old_capture_failure_preserves_transport_recovery_and_live_capture_failure_is_terminal",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793638124.0713403
+                                         },
+                                         {
+                                             "name":  "daemon-remote-unit",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "offline_remote::tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-remote-unit.log",
+                                             "started_unix":  1793638124.0713403,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "offline_remote::tests::original_resident_entry_requires_an_explicit_direct_carrier_and_controller_peer",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "offline_remote::tests::original_resident_json_cannot_import_authority_or_enable_carrier_fallback",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793638269.132527
+                                         },
+                                         {
+                                             "name":  "daemon-private-unit",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "private_service_proxy::offline::tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-private-unit.log",
+                                             "started_unix":  1793638269.132527,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "private_service_proxy::offline::tests::original_private_resident_empty_actions_reject_injected_authority_fields",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793638272.2939453
+                                         },
+                                         {
+                                             "name":  "daemon-download-consent-unit",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-download-consent-unit.log",
+                                             "started_unix":  1793638272.2939453,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793638273.2790954
+                                         },
+                                         {
+                                             "name":  "daemon-entry-unit",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "entry_tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-entry-unit.log",
+                                             "started_unix":  1793638273.2790954,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "entry_tests::command_dispatch_keeps_the_windows_main_future_bounded",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793638274.2796893
+                                         },
+                                         {
+                                             "name":  "desktop-layout",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-desktop",
+                                                             "--lib",
+                                                             "layout_tests::independent_offline_",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "desktop-layout.log",
+                                             "started_unix":  1793638274.2796893,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "layout_tests::independent_offline_viewport_close_requires_exact_local_receipts_without_online_inspect_or_revoke",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "layout_tests::independent_offline_workspace_displays_finite_scope_without_management_login",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793638436.9233487
+                                         },
+                                         {
+                                             "name":  "resident",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--test",
+                                                             "offline_remote_resident",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "resident.log",
+                                             "started_unix":  1793638436.9233487,
+                                             "passed":  false,
+                                             "exit_code":  101,
+                                             "cases":  [
+                                                           [
+                                                               "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                                                               "FAILED"
+                                                           ],
+                                                           [
+                                                               "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                                                               "FAILED"
+                                                           ],
+                                                           [
+                                                               "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                               "FAILED"
+                                                           ],
+                                                           [
+                                                               "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                               "FAILED"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "0",
+                                                                   "4",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "expected_tests":  [
+                                                                    "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                                                                    "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                                                                    "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                                    "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit"
+                                                                ],
+                                             "finished_unix":  1793638561.871261
+                                         },
+                                         {
+                                             "name":  "app-core-clippy",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-app-core",
+                                                             "--test",
+                                                             "native_offline",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "app-core-clippy.log",
+                                             "started_unix":  1793638561.871261,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793638676.9117088
+                                         },
+                                         {
+                                             "name":  "daemon-clippy",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "daemon-clippy.log",
+                                             "started_unix":  1793638676.9117088,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793638756.9516077
+                                         },
+                                         {
+                                             "name":  "resident-clippy",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--test",
+                                                             "offline_remote_resident",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "resident-clippy.log",
+                                             "started_unix":  1793638756.9516077,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793638816.589082
+                                         }
+                                     ],
+                        "original_resident_result":  {
+                                                         "result":  "FAILED",
+                                                         "passed":  0,
+                                                         "failed":  4,
+                                                         "ignored":  0,
+                                                         "duration_seconds":  97.54,
+                                                         "cases":  [
+                                                                       [
+                                                                           "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                                                                           "FAILED"
+                                                                       ],
+                                                                       [
+                                                                           "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                                                                           "FAILED"
+                                                                       ],
+                                                                       [
+                                                                           "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                                           "FAILED"
+                                                                       ],
+                                                                       [
+                                                                           "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                                           "FAILED"
+                                                                       ]
+                                                                   ]
+                                                     },
+                        "extra_secret_service_commands":  [
+
+                                                          ],
+                        "native_receipt_evidence":  {
+                                                        "target":  "x86_64-pc-windows-msvc",
+                                                        "profile":  "release",
+                                                        "linkage":  "static",
+                                                        "crt":  "dynamic",
+                                                        "lock_sha256":  "d3cebf3254b04e24890defa81e7ed14676afb70235488d80847ad92573d79a93",
+                                                        "sources":  [
+                                                                        {
+                                                                            "name":  "libvpx",
+                                                                            "version":  "1.16.0",
+                                                                            "commit":  "1024874c5919305883187e2953de8fcb4c3d7fa6",
+                                                                            "archive_sha256":  "274c00c0b21f03a9152e324b1989f73b74268aa8545b39ef5faccc50fdb56393",
+                                                                            "archive_bytes":  5637178,
+                                                                            "source_tree_sha256":  "5b81a0b7a847c3da45b8ccbad7f0bcd68b0c462849f2fc83a37ba2e46feedc43",
+                                                                            "source_tree_format":  "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+                                                                            "source_file_count":  1250
+                                                                        },
+                                                                        {
+                                                                            "name":  "opus",
+                                                                            "version":  "1.6.1",
+                                                                            "commit":  "22244de5a79bd1d6d623c32e72bf1954b56235be",
+                                                                            "archive_sha256":  "3267aa969b2b26542417f57819a5bc25d5079355300307dd2dddc7c704aed418",
+                                                                            "archive_bytes":  4888967,
+                                                                            "source_tree_sha256":  "b0d7439aa9aa8ddd60da5c76478cf8f1a845cb8231bf039ff47f0da5fb7ceed6",
+                                                                            "source_tree_format":  "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+                                                                            "source_file_count":  752
+                                                                        }
+                                                                    ],
+                                                        "bundled_components":  [
+                                                                                   {
+                                                                                       "name":  "libyuv",
+                                                                                       "version":  "1711",
+                                                                                       "commit":  "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1",
+                                                                                       "repository":  "https://chromium.googlesource.com/libyuv/libyuv",
+                                                                                       "parent_source":  "libvpx",
+                                                                                       "path":  "third_party/libyuv",
+                                                                                       "license":  "BSD-3-Clause",
+                                                                                       "source_files":  [
+                                                                                                            "convert_argb.cc",
+                                                                                                            "cpu_id.cc",
+                                                                                                            "planar_functions.cc",
+                                                                                                            "row_any.cc",
+                                                                                                            "row_common.cc",
+                                                                                                            "row_gcc.cc",
+                                                                                                            "row_win.cc",
+                                                                                                            "row_neon.cc",
+                                                                                                            "row_neon64.cc",
+                                                                                                            "row_msa.cc",
+                                                                                                            "scale_any.cc",
+                                                                                                            "scale_common.cc",
+                                                                                                            "scale_gcc.cc",
+                                                                                                            "scale_win.cc",
+                                                                                                            "scale_neon.cc",
+                                                                                                            "scale_neon64.cc",
+                                                                                                            "scale_msa.cc"
+                                                                                                        ]
+                                                                                   }
+                                                                               ],
+                                                        "features":  {
+                                                                         "vp8":  true,
+                                                                         "vp8_encoder":  true,
+                                                                         "vp8_decoder":  true,
+                                                                         "vp9":  false,
+                                                                         "libyuv_i420_to_bgra":  true,
+                                                                         "opus_float":  true,
+                                                                         "opus_fixed_point":  false,
+                                                                         "opus_dred":  false,
+                                                                         "opus_deep_plc":  false,
+                                                                         "opus_osce":  false,
+                                                                         "opus_custom_modes":  false,
+                                                                         "opus_nonthreadsafe_pseudostack":  false
+                                                                     },
+                                                        "libyuv_configuration":  {
+                                                                                     "options":  [
+                                                                                                     "-DCMAKE_BUILD_TYPE=Release",
+                                                                                                     "-DCMAKE_INSTALL_PREFIX=D:\\a\\_temp\\nestlink-codecs\\x86_64-pc-windows-msvc",
+                                                                                                     "-DCMAKE_CXX_COMPILER=C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe",
+                                                                                                     "-DCMAKE_MAKE_PROGRAM=C:/ProgramData/chocolatey/bin/ninja.exe",
+                                                                                                     "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+                                                                                                     "-DLIBYUV_SOURCE=D:/a/_temp/nestlink-codecs/sources/libvpx-1024874c5919305883187e2953de8fcb4c3d7fa6/third_party/libyuv",
+                                                                                                     "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL"
+                                                                                                 ],
+                                                                                     "source_files":  [
+                                                                                                          "convert_argb.cc",
+                                                                                                          "cpu_id.cc",
+                                                                                                          "planar_functions.cc",
+                                                                                                          "row_any.cc",
+                                                                                                          "row_common.cc",
+                                                                                                          "row_gcc.cc",
+                                                                                                          "row_win.cc",
+                                                                                                          "row_neon.cc",
+                                                                                                          "row_neon64.cc",
+                                                                                                          "row_msa.cc",
+                                                                                                          "scale_any.cc",
+                                                                                                          "scale_common.cc",
+                                                                                                          "scale_gcc.cc",
+                                                                                                          "scale_win.cc",
+                                                                                                          "scale_neon.cc",
+                                                                                                          "scale_neon64.cc",
+                                                                                                          "scale_msa.cc"
+                                                                                                      ],
+                                                                                     "compile_command_count":  17,
+                                                                                     "cmake_project_sha256":  "a0c689352c3bac45b147a84f8216e3eb5c4d44192dcc4450792f992f77efdcf7",
+                                                                                     "compile_commands_sha256":  "e7bcecd59e5931e87d6567aebaf2a204dad599ecbe1647b69c9050f309f01f50"
+                                                                                 },
+                                                        "cxx_tool":  [
+                                                                         {
+                                                                             "name":  "cxx",
+                                                                             "path":  "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+                                                                             "version":  "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64\r\nCopyright (C) Microsoft Corporation.  All rights reserved.\r\n\r\nusage: cl [ option... ] filename... [ /link linkoption... ]",
+                                                                             "sha256":  "fe251ef50a1545b1b0835ee17b1e785459712b38d79e45b5c1d3d28970a36619"
+                                                                         }
+                                                                     ],
+                                                        "yuv_library_inventory":  [
+                                                                                      {
+                                                                                          "path":  "lib/yuv.lib",
+                                                                                          "kind":  "library",
+                                                                                          "bytes":  406800,
+                                                                                          "sha256":  "295e2e53de59a5eda843d9c0c6d4427ab5d2a321f188c3b9d4122dcd1125c502"
+                                                                                      }
+                                                                                  ],
+                                                        "original_notice_inventory":  [
+                                                                                          {
+                                                                                              "path":  "share/licenses/libvpx/third_party/libyuv/LICENSE",
+                                                                                              "kind":  "metadata",
+                                                                                              "bytes":  1506,
+                                                                                              "sha256":  "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f"
+                                                                                          },
+                                                                                          {
+                                                                                              "path":  "share/licenses/libvpx/third_party/libyuv/README.libvpx",
+                                                                                              "kind":  "metadata",
+                                                                                              "bytes":  727,
+                                                                                              "sha256":  "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814"
+                                                                                          }
+                                                                                      ],
+                                                        "validation":  {
+                                                                           "fresh_source_verified_before_and_after_build":  true,
+                                                                           "configured_features_verified":  true,
+                                                                           "archive_architectures":  {
+
+                                                                                                     },
+                                                                           "native_runtime_tests_run":  false
+                                                                       },
+                                                        "inventory_scope":  "Producer native receipt records; focused artifact includes receipt bytes, not native archive/header binaries. Independent file hashes below qualify downloaded receipt bytes."
+                                                    },
+                        "observed_vp8_rust_stages":  [
+
+                                                     ],
+                        "timing_scope":  "Original debug controller first three decode calls per native context; allocation and whole native FFI included. Records retain actual case identity. No pure libvpx or throughput benchmark is claimed.",
+                        "artifact":  {
+                                         "platform":  "windows",
+                                         "id":  13162477450,
+                                         "name":  "original-offline-resident-windows-2022-4ec2c3c0addea9d708629d58b2932ec035bd5569-1",
+                                         "size_in_bytes":  76882,
+                                         "github_reported_digest":  "sha256:d3a283fa7cd1c0bc2beb0e632c22529ada0060dfe19c613466a15f8b50e5075f",
+                                         "job_id":  125408280412
+                                     },
+                        "independent_file_verification":  {
+                                                              "downloaded_file_count":  22,
+                                                              "producer_inventory_count":  18,
+                                                              "producer_inventory_mismatches":  [
+
+                                                                                                ],
+                                                              "files":  [
+                                                                            {
+                                                                                "path":  "nestlink-codecs/x86_64-pc-windows-msvc/nestlink-codecs.json",
+                                                                                "bytes":  32481,
+                                                                                "sha256":  "73e911adbbeddd11c595878b0ac002b5c22d37e781de20683bf997b428264415"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-native-offline-https-license.txt",
+                                                                                "bytes":  11357,
+                                                                                "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-native-offline-https-tool.json",
+                                                                                "bytes":  895,
+                                                                                "sha256":  "2f282c72214ff51f8ad6e27f0215d963641c9f6330eb098dc5b0f440df3fe4d3"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/app-core.log",
+                                                                                "bytes":  44204,
+                                                                                "sha256":  "c22621ec89e9ff8a740f05c4dd943fbdef0f63d1c834bce5b5061df2ba73766c"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/app-core-capture-terminal-unit.log",
+                                                                                "bytes":  14153,
+                                                                                "sha256":  "fe9e4c1235ee51d187d25f11314b6c3b1093d7585582ed3f7cd02eae102b8fcd"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/app-core-clippy.log",
+                                                                                "bytes":  26978,
+                                                                                "sha256":  "2e6d6217b63912b6dc61eec449a35940f8848b1448e627402bcbc13d91106e86"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/cargo-version.log",
+                                                                                "bytes":  123,
+                                                                                "sha256":  "d23c4c65b8674a054de5e636a3a8a764f439ce1ebffd9dc967c550b1298f9ed1"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/daemon-clippy.log",
+                                                                                "bytes":  18620,
+                                                                                "sha256":  "64715b03c328a5026cf79476ec95bc500d9fdc61ec21a55b7298cb3cb305bb41"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/daemon-download-consent-unit.log",
+                                                                                "bytes":  14015,
+                                                                                "sha256":  "9261bb5d1d25bf7eb8a86432f75e83a10c087790bc253f774dc61637f2cb5e5e"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/daemon-entry-unit.log",
+                                                                                "bytes":  14087,
+                                                                                "sha256":  "43e39691202269fb8920828aff0717ca64916c3ee5a17f4e2f2a42f8e881c31b"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/daemon-private-unit.log",
+                                                                                "bytes":  15644,
+                                                                                "sha256":  "1612f1155afb7fb040c34e0ba20cb3443366673727d69ff64fcd5efa8f117516"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/daemon-remote-unit.log",
+                                                                                "bytes":  19813,
+                                                                                "sha256":  "332ae0cf08631a1b5c1ae2bf0224fffb275e5c66b60b26e7ba6db7432df7c34e"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/desktop-layout.log",
+                                                                                "bytes":  23398,
+                                                                                "sha256":  "dd50c8eb8832e687928b15a5b9007d54d3a7daf463b1402fa5c9de56c812ff7a"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/nestlink-codecs.json",
+                                                                                "bytes":  32481,
+                                                                                "sha256":  "73e911adbbeddd11c595878b0ac002b5c22d37e781de20683bf997b428264415"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
+                                                                                "bytes":  11357,
+                                                                                "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
+                                                                                "bytes":  895,
+                                                                                "sha256":  "2f282c72214ff51f8ad6e27f0215d963641c9f6330eb098dc5b0f440df3fe4d3"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/receipt.json",
+                                                                                "bytes":  16590,
+                                                                                "sha256":  "93b4125ae11a9341518bbf3adc5dc50ebf3c901680b50fc4dd030c8f841cbf2d"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/resident.log",
+                                                                                "bytes":  17440,
+                                                                                "sha256":  "ddb18d9ad8d046f8fb630a246ee36b7a2ee112c3e034e16297a0a21a8ad031dc"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/resident-clippy.log",
+                                                                                "bytes":  17316,
+                                                                                "sha256":  "f54c05275449b32c1e66b4932d824801c8edc7b976f49c4ec7626c5900060336"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/rustc-version.log",
+                                                                                "bytes":  714,
+                                                                                "sha256":  "28a4631a2b64df26ae9a4c2b585ab6d75e8c29ce917e588c8fdec54fc8f16c15"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/source-after.json",
+                                                                                "bytes":  228,
+                                                                                "sha256":  "3ec9851bd8f5283f2ddf7f444eb530d3667548e14769d000695744d5edc6f287"
+                                                                            },
+                                                                            {
+                                                                                "path":  "nestlink-offline-resident-focused/source-before.json",
+                                                                                "bytes":  228,
+                                                                                "sha256":  "3ec9851bd8f5283f2ddf7f444eb530d3667548e14769d000695744d5edc6f287"
+                                                                            }
+                                                                        ],
+                                                              "digest_scope":  "Every downloaded/extracted file independently SHA256-hashed and byte-counted. GitHub artifact digest is GitHub-reported metadata, not an independently hashed ZIP."
+                                                          }
+                    }
+                ],
+    "observations":  [
+                         "Linux original management8 and both complete QUIC/TLS initial/rebuilt real pixels, two262144-byte completed files per carrier and EOF/IPC Exit passed. Original resident3/4 in254.56s remains failed: pending case2/logout setup reached the original temporary public-PKI HTTPS DNS deadline before SDK setup. Case0 EOF and case1 Stop ran first; case3 identity did not complete after the failure.",
+                         "Linux dedicated real leading-hyphen Secret Service regression passed1/1 in0.11s. It requires both retired store/lookup argv to return actual exit2, then requires repaired shared production argv to store/read the identical Zeroizing secret through original private D-Bus/gnome-keyring under the unchanged10-second store gate. No attribute or secret value is retained in evidence.",
+                         "Linux extra strict clippy failed clippy::duplicate_mod because the new integration target loaded production secret_tool.rs directly and through original support. Newer2285fd1f01887efb130433e81f21c941c8b01bb2 reuses support single module with use; it suppresses no lint and does not change argv/assertions/deadlines. This run predates and cannot qualify that repair.",
+                         "Windows original resident0/4 in97.54s remains failed. Management case0 really ran DXGI/resident and stopped; case1, pending case0 and both full carrier cases then reported original Os10013 PermissionDenied socket-access errors. These logs do not identify the failing bind stage, reserved range or OS cause; no actual pixel/file/rebuild success is claimed for these Windows full carrier cases.",
+                         "Linux QUIC first initial/rebuilt decode totals4872/6274us included allocation4041/5409us and FFI824/864us. TLS first initial/rebuilt totals7534/4481us included allocation6541/3795us and FFI991/685us. Later observed full-case FFI492-770us. Fixed Rust observations include original context costs and are not a pure libvpx benchmark.",
+                         "The original immutable60ms validated-ingress anchor,40ms late threshold, frame/IPC deadlines, PTS/capture clocks, cumulative authority budget, OS identities, HTTPS trust boundary and four resident names/counts/assertions remain unchanged. The standard literal-attribute CLI separator adds no new supplier, binding format, key/cipher or service replacement.",
+                         "Earlier sourcee202 Windows4/4 remains separate historical evidence and cannot turn this Windows failure into a success. Newer lint repair and all four original resident cases on both OS require their own hosted evidence. No local project build, format, lint, test, Python execution or packaging occurred."
+                     ],
+    "independent_verification":  {
+                                     "downloaded_files_hashed":  46,
+                                     "producer_inventory_records_verified":  38,
+                                     "producer_inventory_mismatches":  0,
+                                     "acceptance_status":  "Real leading-hyphen Linux CLI/Secret Service repair exercised successfully; extra strict and original both-OS resident matrix remain incomplete. Original DNS/socket failures preserved."
+                                 }
+}
