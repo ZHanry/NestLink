@@ -386,6 +386,11 @@ async fn execute(
             path_mode,
             access,
         } => {
+            if native.is_some_and(crate::NativeSessionConfig::requires_local_media_approval)
+                && access != RemoteAccess::LocalApproval
+            {
+                return Err(Failure::local(FailureKind::NativeSessionUnavailable));
+            }
             let request = RemoteRequest {
                 id: random_id(),
                 controller_device_id: local()?.device_id.clone(),
@@ -399,15 +404,20 @@ async fn execute(
                         .principal()
                         .ok_or_else(|| Failure::local(FailureKind::SignInRequired))?
                         .account_id;
-                    if let Some(provider) = native.and_then(|n| {
-                        n.media_provider_for_request(
+                    let media = match native {
+                        Some(config) => config.media_provider_for_request(
                             &sdk.health().deployment_id,
                             account,
                             &request.controller_device_id,
                             &request.host_device_id,
-                        )
-                    }) {
-                        let _announcement = provider
+                        ).map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?,
+                        None => None,
+                    };
+                    if let Some((provider, version)) = media {
+                        if !valid_media_permissions(&request.permissions) {
+                            return Err(Failure::local(FailureKind::Trust));
+                        }
+                        let announcement = provider
                             .publish(
                                 sdk,
                                 local()?,
@@ -416,8 +426,13 @@ async fn execute(
                             )
                             .await
                             .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
+                        native.ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?
+                            .validate_media_publication(
+                                &announcement, &local()?.device_id,
+                                nestlink_protocol::media_authority::MediaDirection::Decode, unix_ms()?,
+                            ).map_err(|_| Failure::local(FailureKind::Trust))?;
                         fence.check()?;
-                        write(sdk.request_media_remote(request), effect, fence).await?
+                        write(sdk.request_media_remote_versioned(request, version), effect, fence).await?
                     } else {
                         write(sdk.create_remote(request), effect, fence).await?
                     }
@@ -463,40 +478,31 @@ async fn execute(
             choice,
             reviewed_scope,
         } => {
-            let view = read(sdk.remote(&request_id), fence).await?;
-            if view.nonce != expected_nonce
-                || view.policy_revision != expected_policy_revision
-                || view.status != "pending"
-                || read(sdk.remote_media_scope(&request_id), fence)
-                    .await?
-                    .as_ref()
-                    != Some(&reviewed_scope)
-            {
-                return Err(Failure::local(FailureKind::Trust));
-            }
+            let mut view = read(sdk.remote(&request_id), fence).await?;
+            let current_scope = read(sdk.remote_media_scope(&request_id), fence).await?;
+            validate_media_review(
+                &view, &local()?.device_id, (&expected_nonce, expected_policy_revision),
+                &choice, &reviewed_scope, current_scope.as_ref(), unix_ms()?,
+            )?;
             if choice.approved {
-                let policy = native
-                    .and_then(|n| n.internal_software_media_candidate.as_ref())
+                let config = native
                     .ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?;
                 let account = &sdk
                     .principal()
                     .ok_or_else(|| Failure::local(FailureKind::SignInRequired))?
                     .account_id;
-                // Check real local account/key, peer pair and reviewed singleton
-                // before any Encode publication, probe or approval signature.
-                policy
-                    .authorize_host_approval(
+                // Check the real local key, configured mode and reviewed exact
+                // scope before any Encode publication or approval signature.
+                let provider = config
+                    .media_provider_for_approval(
                         &sdk.health().deployment_id,
                         account,
                         &local()?.device_id,
                         &view.controller_device_id,
                         &view.host_device_id,
-                        &reviewed_scope.formats,
+                        &reviewed_scope,
                     )
                     .map_err(|_| Failure::local(FailureKind::Trust))?;
-                let provider = native
-                    .and_then(|n| n.media_provider.as_ref())
-                    .ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?;
                 let announcement = provider
                     .publish(
                         sdk,
@@ -506,6 +512,10 @@ async fn execute(
                     )
                     .await
                     .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
+                config.validate_media_publication(
+                    &announcement, &local()?.device_id,
+                    nestlink_protocol::media_authority::MediaDirection::Encode, unix_ms()?,
+                ).map_err(|_| Failure::local(FailureKind::Trust))?;
                 let available = announcement
                     .validate(unix_ms()?)
                     .map_err(|_| Failure::local(FailureKind::Trust))?;
@@ -520,6 +530,14 @@ async fn execute(
                     return Err(Failure::local(FailureKind::Trust));
                 }
                 fence.check()?;
+                // A bounded hardware probe can outlive the pending review.
+                // Re-read its identity, deadline and scope before signing.
+                view = read(sdk.remote(&request_id), fence).await?;
+                let current_scope = read(sdk.remote_media_scope(&request_id), fence).await?;
+                validate_media_review(
+                    &view, &local()?.device_id, (&expected_nonce, expected_policy_revision),
+                    &choice, &reviewed_scope, current_scope.as_ref(), unix_ms()?,
+                )?;
             }
             write(
                 sdk.approve_media_remote(local()?, &view, choice, &reviewed_scope),
@@ -706,3 +724,44 @@ fn unix_ms() -> Result<u64, Failure> {
         .try_into()
         .map_err(|_| Failure::local(FailureKind::Trust))
 }
+
+fn valid_media_permissions(permissions: &[i32]) -> bool {
+    permissions.contains(&(nestlink_protocol::Permission::View as i32))
+        && permissions.len() <= 7
+        && permissions.iter().enumerate().all(|(index, permission)| {
+            matches!(nestlink_protocol::Permission::try_from(*permission),
+                Ok(value) if value != nestlink_protocol::Permission::Unspecified)
+                && !permissions[..index].contains(permission)
+        })
+}
+fn validate_media_review(
+    view: &RemoteView,
+    local_host: &str,
+    expected: (&str, u64),
+    choice: &ApprovalChoice,
+    reviewed: &nestlink_protocol::media_authority::FrozenMediaScope,
+    current: Option<&nestlink_protocol::media_authority::FrozenMediaScope>,
+    now: u64,
+) -> Result<(), Failure> {
+    if view.host_device_id != local_host
+        || view.nonce != expected.0
+        || view.policy_revision != expected.1
+        || view.status != "pending"
+        || view.expires_at_unix_ms <= now
+        || reviewed.validate().is_err()
+        || current != Some(reviewed)
+        || (choice.approved && (
+            !valid_media_permissions(&choice.permissions)
+            || nestlink_policy::PathSet::from_wire(&choice.paths).is_err()
+            || choice.permissions.iter().any(|permission| !view.permissions.contains(permission))
+            || choice.paths.iter().any(|path| !view.paths.contains(path))
+        ))
+    {
+        return Err(Failure::local(FailureKind::Trust));
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+#[path = "sdk_call/media_approval_tests.rs"]
+mod media_approval_tests;

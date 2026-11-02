@@ -1,0 +1,113 @@
+{
+    "schema_version":  1,
+    "source_revision":  "61aee1fd2bb8bb2936ef899249a63142c1ca70ff",
+    "work_packages":  [
+                          "W32",
+                          "W33"
+                      ],
+    "status":  "qualified_hosted_checks_with_daemon_compile_failure",
+    "build_provenance":  {
+                             "workflow":  ".github/workflows/windows-media-owner.yml",
+                             "workflow_revision":  "61aee1fd2bb8bb2936ef899249a63142c1ca70ff",
+                             "checkout_input_revision":  "61aee1fd2bb8bb2936ef899249a63142c1ca70ff",
+                             "run_id":  41407817861,
+                             "attempt":  1,
+                             "job_id":  125153754113,
+                             "runner":  "windows-2025",
+                             "runner_environment":  "github-hosted",
+                             "dependency_lock_sha256":  "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+                             "conclusion":  "failure",
+                             "url":  "https://github.com/ZHanry/NestLink/actions/runs/41407817861"
+                         },
+    "execution_provenance":  {
+                                 "environment":  "same-source GitHub-hosted Windows ordinary user token",
+                                 "physical_gpu_or_desktop_execution":  false,
+                                 "target_acceptance_claimed":  false,
+                                 "production_issuance_enabled":  false
+                             },
+    "artifact":  {
+                     "id":  13124682139,
+                     "name":  "windows-media-owner-61aee1fd2bb8bb2936ef899249a63142c1ca70ff-1",
+                     "archive_sha256":  "49df103ab37a403f6b24d42f41d2d43380728177448ded9cc52e39d4e7e5accd",
+                     "source_receipt_sha256":  "55c2b53b8629c2e4eef70394af28c7bec34a25a8bcc632842c6bc9989b301552"
+                 },
+    "passed_checks":  [
+                          {
+                              "log":  "compressed-context-tests.log",
+                              "sha256":  "4beeedfe9b7b08ed332f165b41e8af5d8fb502447e0c2a1271ec6500e81792c6",
+                              "tests_passed":  4
+                          },
+                          {
+                              "log":  "desktop-clippy.log",
+                              "sha256":  "205a0695b39c698fbd82889ee1d3fd9047a0d3e9e0f44c6509830633e8bfaf4e"
+                          },
+                          {
+                              "log":  "hevc-clippy.log",
+                              "sha256":  "d373a4308274d28f3629cb0a7a2729bc3d25d67d06e2fc730c40f0cf055b99f0"
+                          },
+                          {
+                              "log":  "hevc-contract-tests.log",
+                              "sha256":  "02f14178d037addaa997c560597ec0aaa4f17b00a221bb6e5411f73a3406b4d0",
+                              "tests_passed":  5
+                          },
+                          {
+                              "log":  "hevc-execution-tests.log",
+                              "sha256":  "cacdb5432b510e1d504eed1603ff1b418b8223db985328d4b737ff6b87395892",
+                              "tests_passed":  4
+                          },
+                          {
+                              "log":  "hevc-target-tests.log",
+                              "sha256":  "0015fd4d088011abe3925806a03d8f23137e3e216b80844a243cd742f5da8a71",
+                              "tests_passed":  2
+                          },
+                          {
+                              "log":  "media-provider-tests.log",
+                              "sha256":  "aea26714f21f1de4d26bb82a4a5c5e220731179471d88823ca2a2fbd56c2a6c3",
+                              "tests_passed":  10
+                          },
+                          {
+                              "log":  "native-media-wire-tests.log",
+                              "sha256":  "8e2efedf34f9394f69523034a63db2c4b24576e5aa4e7fe1730acde395513aa2",
+                              "tests_passed":  8
+                          },
+                          {
+                              "log":  "presenter-tests.log",
+                              "sha256":  "8a3737c49f085c6de9141cbd15efb15419a13c3b9ebe9c856d0a92db1d549ccf",
+                              "tests_passed":  5
+                          },
+                          {
+                              "log":  "readback-ipc-tests.log",
+                              "sha256":  "5f50f24d4f1c6bb5b40a2daceec3f1e39f368a07421d3d3a59944ef832061660",
+                              "tests_passed":  13
+                          },
+                          {
+                              "log":  "receiver-tests.log",
+                              "sha256":  "fe7555581d11e4eed6b674f46f41df6d40bdb50b670b2ee16a4542dab1a7ad00",
+                              "tests_passed":  9
+                          },
+                          {
+                              "log":  "signed-store-media-tests.log",
+                              "sha256":  "1e2b7ad7be255a6f65d1887078ec62803a4d918eebf310cecb685a3e8523f849",
+                              "tests_passed":  9
+                          }
+                      ],
+    "failed_checks":  [
+                          {
+                              "log":  "daemon-hevc-selection-tests.log",
+                              "sha256":  "896e123f20c3d6dccdc234cd479b59ca3bc454eacaa2eae5b74ef185cbe2e36a",
+                              "reason":  "daemon test binary did not compile: offline_remote.rs:382 non-Send dyn Any in tokio::spawn(listener.accept()); private_service_proxy/offline/target.rs:73 missing std::io::Read for File::take",
+                              "tests_executed":  false
+                          }
+                      ],
+    "not_executed":  [
+                         "daemon HEVC selection and cleanup regression tests",
+                         "daemon/app-core/media-session final strict clippy"
+                     ],
+    "limits":  [
+                   "Run failure is retained. Per-step success does not convert the complete workflow to passed.",
+                   "No physical GPU or target acceptance ran. W32/W33 cadence, device loss, multiple adapters, advanced-format matrix, weak-network and concurrent-file target cases remain open.",
+                   "Later explicit GPU opt-in, request routing and local approval changes are outside source 61aee1f and are not verified by this run.",
+                   "Original daemon readback receipts do not attest to an independent desktop GPU owner; unproven ownership transfer remains rejected.",
+                   "Production issuance remains disabled. Existing Luanti 25-second failure and its acceptance gate are unchanged."
+               ]
+}

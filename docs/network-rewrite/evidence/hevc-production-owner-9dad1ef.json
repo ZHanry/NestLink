@@ -1,0 +1,114 @@
+{
+    "schema_version":  1,
+    "source_revision":  "9dad1efc2a2b72e432fee0f39aa3edb0742efdea",
+    "work_packages":  [
+                          "W32",
+                          "W33"
+                      ],
+    "status":  "qualified_hosted_checks_passed_without_physical_gpu_acceptance",
+    "build_provenance":  {
+                             "workflow":  ".github/workflows/windows-media-owner.yml",
+                             "workflow_revision":  "9dad1efc2a2b72e432fee0f39aa3edb0742efdea",
+                             "checkout_input_revision":  "9dad1efc2a2b72e432fee0f39aa3edb0742efdea",
+                             "run_id":  41409675519,
+                             "attempt":  1,
+                             "job_id":  125159607050,
+                             "runner":  "windows-2025",
+                             "runner_environment":  "github-hosted",
+                             "dependency_lock_sha256":  "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+                             "conclusion":  "success",
+                             "url":  "https://github.com/ZHanry/NestLink/actions/runs/41409675519"
+                         },
+    "execution_provenance":  {
+                                 "environment":  "same-source GitHub-hosted Windows ordinary user token",
+                                 "physical_gpu_or_desktop_execution":  false,
+                                 "target_acceptance_claimed":  false,
+                                 "production_issuance_enabled":  false
+                             },
+    "artifact":  {
+                     "id":  13125708004,
+                     "name":  "windows-media-owner-9dad1efc2a2b72e432fee0f39aa3edb0742efdea-1",
+                     "archive_sha256":  "ca658ecca8ccaff7c6658321e8cfd77c31bea01a237d079e959a68dd73b31115",
+                     "source_receipt_sha256":  "174f863a212f779cf12b3e4721493e4569195526570d015324bae1a22f84d331"
+                 },
+    "passed_checks":  [
+                          {
+                              "log":  "compressed-context-tests.log",
+                              "sha256":  "ed9576b83ccbfefb35657ff2a859304e7eb6180d2eb7a269f9cc0c042f71493e",
+                              "tests_passed":  4
+                          },
+                          {
+                              "log":  "daemon-hevc-selection-tests.log",
+                              "sha256":  "6f67522f9cd5b45ab378de426ffa0695250f09b02585d2633f139c7b93c4319f",
+                              "tests_passed":  2
+                          },
+                          {
+                              "log":  "daemon-media-clippy.log",
+                              "sha256":  "8cbd234073337aab887e0b08efa2057505de73003548c7048b3d19302333529c"
+                          },
+                          {
+                              "log":  "desktop-clippy.log",
+                              "sha256":  "9f3cd7280367ef603d4870feb2914583c75904e2b6158788827b4e99b8480582"
+                          },
+                          {
+                              "log":  "hevc-clippy.log",
+                              "sha256":  "5a76e0113087ff1338d88d2fe32789df029716475f6ef0317b57a45b16ba94a6"
+                          },
+                          {
+                              "log":  "hevc-contract-tests.log",
+                              "sha256":  "1a7985804b9a98894320b3ecc7a1e234097c136a33b1d05ae39719ff7544ad72",
+                              "tests_passed":  5
+                          },
+                          {
+                              "log":  "hevc-execution-tests.log",
+                              "sha256":  "6f6f5b97de80ad770f7bb2882925c588d555ec6863ae34af09e8487dbb7c3189",
+                              "tests_passed":  4
+                          },
+                          {
+                              "log":  "hevc-target-tests.log",
+                              "sha256":  "cf44dc05d622ca533053750aa41b2d46916eca10f173cccdf0966f78c1fc2e3f",
+                              "tests_passed":  2
+                          },
+                          {
+                              "log":  "media-provider-tests.log",
+                              "sha256":  "328e3fbc9b3111bb0b41ad97c8c3ec1a6ecd89a6caeaa0d2c75b8ffce955acfa",
+                              "tests_passed":  10
+                          },
+                          {
+                              "log":  "native-media-wire-tests.log",
+                              "sha256":  "898cea9a6dcd3e6de19d6d55ece1904ef43588d52ab07877faca9b48f71524b8",
+                              "tests_passed":  8
+                          },
+                          {
+                              "log":  "presenter-tests.log",
+                              "sha256":  "f95f5b236e3becd9c782cb00faed100cead6ea85bf039b0bd6baef5cbf651b0b",
+                              "tests_passed":  5
+                          },
+                          {
+                              "log":  "readback-ipc-tests.log",
+                              "sha256":  "e84f11bd43d2d595ed7233365d8415b1099012c5af95a09f86c24cabb20d0f1e",
+                              "tests_passed":  13
+                          },
+                          {
+                              "log":  "receiver-tests.log",
+                              "sha256":  "81628b43b53d16d28010d5c9b4f8525345f97cfdff4360465d3a27a911eef04e",
+                              "tests_passed":  9
+                          },
+                          {
+                              "log":  "signed-store-media-tests.log",
+                              "sha256":  "001167e350d4668f1c3486a4293af9ef40cc62a0e99edf29fbcf4765c80b800b",
+                              "tests_passed":  9
+                          }
+                      ],
+    "prior_failures_retained":  [
+                                    "hevc-production-owner-61aee1f.json",
+                                    "hevc-original-receiver-46c389b.json"
+                                ],
+    "limits":  [
+                   "This run validates contract regressions and strictly compiles the original HEVC producer/receiver/platform owners. It does not execute physical GPU capture/decode/presentation or establish performance.",
+                   "Later explicit GPU opt-in, request routing and local approval changes are outside source 9dad1ef and are not verified by this run.",
+                   "W32/W33 cadence, device loss, display/DPI/multiple-adapter, advanced-format matrix, weak-network and concurrent-file target cases remain open.",
+                   "Original daemon readback receipts do not attest to an independent desktop GPU owner; unproven ownership transfer remains rejected.",
+                   "Production issuance remains disabled. Earlier failed runs and existing Luanti 25-second failure remain preserved; this workflow success does not satisfy the full release gate."
+               ]
+}

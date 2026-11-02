@@ -273,6 +273,12 @@ impl NativeMediaProvider {
     pub fn target(&self) -> VideoConfig {
         self.target
     }
+    pub(crate) fn matches_gpu_hevc_main8_target(&self, target: VideoConfig) -> bool {
+        self.backend == ProviderBackend::GpuHevcMain8
+            && self.targets.len() == 1
+            && (self.target.width, self.target.height, self.target.fps, self.target.bitrate_kbps)
+                == (target.width, target.height, target.fps, target.bitrate_kbps)
+    }
     /// Explicit candidate policy replaces the convenience ladder with exactly
     /// its reviewed formats. Every target still needs its own actual probe.
     pub(crate) fn with_exact_formats(
