@@ -262,10 +262,7 @@ pub(crate) async fn current(
         .db(move |store| {
             let at = now_ms()?;
             let actor = store.authenticate(&token, at / 1000)?;
-            let lease = store.private_service_lease(&actor, &id, &reservation, &signer, at)?;
-            let network =
-                store.private_service_network_path(&actor, &id, &reservation, &signer, at)?;
-            Ok((lease, network))
+            store.private_service_current_authority(&actor, &id, &reservation, &signer, at)
         })
         .await?;
     Ok(Json(grant(&state, lease, network)?))

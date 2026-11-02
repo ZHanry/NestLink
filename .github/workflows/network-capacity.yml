@@ -101,6 +101,13 @@ jobs:
               assert summaries == [(str(expected),'0','0')], name+' exact executed inventory differs'
           try:
               os.environ['NESTLINK_CAPACITY_SAMPLES'] = str(output/'samples.jsonl')
+              execute('build-currentness',['cargo','test',*cargo_profile,'--locked','-p','nestlink-storage','--lib','--no-run','--message-format=json-render-diagnostics'],1200)
+              currentness = [item['executable'] for line in (output/'build-currentness.log').read_text().splitlines()
+                if (item:=json.loads(line)).get('reason')=='compiler-artifact'
+                and item.get('executable') and item['target']['name']=='nestlink_storage']
+              assert len(currentness)==1, 'exact currentness harness missing'
+              receipt['currentness_executable_sha256'] = hashlib.sha256(pathlib.Path(currentness[0]).read_bytes()).hexdigest()
+              execute_tests('currentness-authority',[currentness[0],'combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_and_revoke','--show-output'],60,1)
               # Compile every harness under the original build budget. Test
               # execution budgets must not accidentally include release LTO.
               execute('build',['cargo','test',*cargo_profile,'--locked','-p','nestlink-sdk','--lib','--test','capacity','--test','private_services','--no-run','--message-format=json-render-diagnostics'],1200)

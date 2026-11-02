@@ -248,9 +248,22 @@ impl Store {
         signer: &ServiceLeaseSigner,
         now: u64,
     ) -> Result<PrivateServiceNetworkPath, StorageError> {
+        Ok(self
+            .private_service_current_authority(actor, service, grant_id, signer, now)?
+            .1)
+    }
+    /// One current transaction and one verified immutable business lease for
+    /// the complete management readback. Nothing is cached between requests.
+    pub fn private_service_current_authority(
+        &self,
+        actor: &Principal,
+        service: &str,
+        grant_id: &str,
+        signer: &ServiceLeaseSigner,
+        now: u64,
+    ) -> Result<(SignedPrivateServiceLease, PrivateServiceNetworkPath), StorageError> {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
-        let lease = self.private_service_lease(actor, service, grant_id, signer, now)?;
-        let lease = verify_private_service_lease(&lease, &signer.public_key())?;
+        let lease = self.private_service_verified(actor, service, grant_id, signer, now)?;
         let snapshot = crate::network_policy::read_snapshot(&tx, &lease.claims().space_id, now)?;
         let json: Option<String> = tx.query_row(
             "SELECT network_json FROM private_service_leases WHERE grant_id=?1",
@@ -261,6 +274,6 @@ impl Store {
         verify(&snapshot, &path, &lease)?;
         self.private_service_relay_current(&tx, grant_id, &lease, now)?;
         tx.commit()?;
-        Ok(path)
+        Ok((lease.signed().clone(), path))
     }
 }

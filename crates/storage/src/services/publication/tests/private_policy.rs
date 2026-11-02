@@ -152,6 +152,78 @@ fn ledgers(f: &mut Fixture, spent: u64, outstanding: u64) -> Result {
 }
 
 #[test]
+fn combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_and_revoke() -> Result {
+    let mut f = Fixture::new()?;
+    let access = configure(&mut f)?;
+    let lease = f.store.issue_private_service(
+        &f.creator,
+        &f.view.id,
+        request(&f, &access),
+        &f.service_signer,
+        now()?,
+    )?;
+    let verified = verify_private_service_lease(&lease, &f.service_signer.public_key())?;
+    let usage: ServiceUsageBudgetGrantClaims = decode_service_message(
+        &verified.lease().claims().usage_grant.claims,
+        SERVICE_USAGE_BYTES,
+    )?;
+    let path = f.store.issue_private_service_network_path(
+        &f.creator,
+        &f.view.id,
+        &usage.grant_id,
+        &f.service_signer,
+        &access.network,
+        now()?,
+    )?;
+    let (observed, observed_path) = f.store.private_service_current_authority(
+        &f.approver,
+        &f.view.id,
+        &usage.grant_id,
+        &f.service_signer,
+        now()?,
+    )?;
+    assert_eq!(serde_json::to_vec(&observed)?, serde_json::to_vec(&lease)?);
+    assert_eq!(serde_json::to_vec(&observed_path)?, serde_json::to_vec(&path)?);
+    assert!(f.store.private_service_current_authority(
+        &f.creator,
+        &f.view.id,
+        &usage.grant_id,
+        &f.service_signer,
+        verified.lease().claims().expires_at_unix_ms,
+    ).is_err());
+
+    let original = serde_json::to_string(&lease)?;
+    let mut corrupt = lease.clone();
+    corrupt.signature[0] ^= 1;
+    f.store.connection.execute(
+        "UPDATE private_service_leases SET lease_json=?1 WHERE grant_id=?2",
+        params![serde_json::to_string(&corrupt)?, usage.grant_id],
+    )?;
+    assert!(f.store.private_service_current_authority(
+        &f.creator, &f.view.id, &usage.grant_id, &f.service_signer, now()?,
+    ).is_err());
+    f.store.connection.execute(
+        "UPDATE private_service_leases SET lease_json=?1 WHERE grant_id=?2",
+        params![original, usage.grant_id],
+    )?;
+    f.store.private_service_current_authority(
+        &f.creator, &f.view.id, &usage.grant_id, &f.service_signer, now()?,
+    )?;
+    f.store.revoke_private_service(
+        &f.creator,
+        &f.view.id,
+        &verified.claims().acl_rule_id,
+        access.exposure.revision,
+        now()?,
+    )?;
+    assert!(f.store.private_service_current_authority(
+        &f.creator, &f.view.id, &usage.grant_id, &f.service_signer, now()?,
+    ).is_err());
+    ledgers(&mut f, 0, access.exposure.private_maximum_bytes)?;
+    Ok(())
+}
+
+#[test]
 fn both_modes_share_durable_allowance_exact_network_graph_and_terminal_private_owner() -> Result {
     let mut f = Fixture::new()?;
     let access = configure(&mut f)?;

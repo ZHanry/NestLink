@@ -769,16 +769,28 @@ impl Store {
         signer: &ServiceLeaseSigner,
         now: u64,
     ) -> Result<SignedPrivateServiceLease, StorageError> {
+        Ok(self
+            .private_service_verified(actor, service, grant, signer, now)?
+            .signed()
+            .clone())
+    }
+    fn private_service_verified(
+        &self,
+        actor: &Principal,
+        service: &str,
+        grant: &str,
+        signer: &ServiceLeaseSigner,
+        now: u64,
+    ) -> Result<VerifiedPrivateServiceLease, StorageError> {
         require_id(grant)?;
         self.validate_access(actor, now / 1000)?;
-        let signed = self.private_service_lease_current(service, grant, signer, now)?;
-        let verified = verify_private_service_lease(&signed, &signer.public_key())?;
+        let verified = self.private_service_lease_current_verified(service, grant, signer, now)?;
         if actor.account_id != verified.lease().claims().account_id
             && actor.account_id != verified.claims().consumer_account_id
         {
             return Err(StorageError::Forbidden);
         }
-        Ok(signed)
+        Ok(verified)
     }
     pub(crate) fn private_service_lease_current(
         &self,
@@ -787,6 +799,18 @@ impl Store {
         signer: &ServiceLeaseSigner,
         now: u64,
     ) -> Result<SignedPrivateServiceLease, StorageError> {
+        Ok(self
+            .private_service_lease_current_verified(service, grant, signer, now)?
+            .signed()
+            .clone())
+    }
+    fn private_service_lease_current_verified(
+        &self,
+        service: &str,
+        grant: &str,
+        signer: &ServiceLeaseSigner,
+        now: u64,
+    ) -> Result<VerifiedPrivateServiceLease, StorageError> {
         let row:Option<(String,String)>=self.connection.query_row("SELECT l.lease_json,l.consumer_device_id FROM private_service_leases l JOIN service_usage_grants g ON g.grant_id=l.grant_id WHERE l.service_id=?1 AND l.grant_id=?2 AND l.revoked=0 AND g.terminal=0",params![service,grant],|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
         let (json, consumer) = row.ok_or(StorageError::Forbidden)?;
         let signed: SignedPrivateServiceLease = serde_json::from_str(&json)?;
@@ -827,7 +851,7 @@ impl Store {
         {
             return Err(StorageError::Forbidden);
         }
-        Ok(signed)
+        Ok(verified)
     }
     pub fn accept_private_service_usage(
         &mut self,

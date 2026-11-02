@@ -61,3 +61,13 @@ burst opening behavior. Both scenarios retain every admitted backend until all
 two-second hold, for all three waves. Original immutable signed leases, each
 three-second handshake, HTTP/rate/quota gates, exact byte accounting and physical
 cleanup remain unchanged. No successful outcome is inferred before execution.
+
+Run 41441918578 at 8a35c4e observed the separate origin-window ramp in
+release profile. The original seven HTTP, one negotiation and six multiplex
+regressions passed; twenty control owners and 598 actual application flows
+were ready. The next handshake rejected invalid signed authority near original
+lease expiry. No thousand-live sample or completed wave exists. The official
+archive and eleven receipt files were verified; the failure remains recorded.
+ADR 0066 removes redundant work within one production readback without caching
+authority or changing any original deadline or currentness requirement. Its
+new source and original workloads still require hosted validation.
