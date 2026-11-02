@@ -332,6 +332,8 @@ async fn actual_tc_step_original_vp8_files_and_input() -> Result {
     )
     .await?;
     let baseline_end = sequence;
+    let baseline_stats = video.stats();
+    eprintln!("actual baseline producer: {baseline_stats:?}");
     assert!(
         initial_frames > 20,
         "baseline actual decode/presentation did not progress"
@@ -365,6 +367,9 @@ async fn actual_tc_step_original_vp8_files_and_input() -> Result {
     )
     .await?;
     let loaded_end = sequence;
+    let loaded_stats = video.stats();
+    eprintln!("actual file-loaded producer: {loaded_stats:?}");
+    fs::write(root.join("pre-step-stats.txt"),format!("baseline={baseline_stats:?}\nfile_loaded={loaded_stats:?}\n"))?;
     assert!(
         loaded_frames > 20,
         "file concurrency froze actual presented video"

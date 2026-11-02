@@ -1,6 +1,6 @@
 use crate::worker::{self, Worker};
 use crate::{ShutdownReport, WorkerMonitor};
-use nestlink_media_codec::{VideoCodec, VideoConfig, VideoEncoder, VideoQuality};
+use nestlink_media_codec::{ReceiverCondition, VideoCodec, VideoConfig, VideoEncoder, VideoQuality};
 use nestlink_protocol::{
     NativeVideo, NativeVideoFeedback, SCHEMA_VERSION, VIDEO_KEYFRAME_INTERVAL_MS,
 };
@@ -93,6 +93,9 @@ pub struct ProducerBudgetObservation {
     pub cadence_fps: u32,
     pub bitrate_kbps: u32,
     pub observed_at: Instant,
+    pub encoding_time: Duration,
+    pub enqueue_time: Duration,
+    pub receiver_condition: Option<ReceiverCondition>,
 }
 impl VideoSender {
     /// Binds capture and sending to the same authorized session. There is no
@@ -537,11 +540,15 @@ fn send<D: CaptureDevice>(
                 .get_mut(&source)
                 .ok_or_else(|| io::Error::other("missing sent encoder"))?;
             let now=Instant::now();
-            let changed=if qos_enabled {
+            let enqueue_time = enqueue_started.elapsed();
+            let condition=if qos_enabled {
                 let context=nestlink_protocol::native_qos::ReceiverContext{connection_generation:epoch.connection,layout_epoch:epoch.layout,source,format_epoch:0,format_sha256:Vec::new()};
-                let condition=receiver_qos.condition(&context,encoder.sequence,encoder.quality.fps(),now);
-                encoder.quality.observe_with_receiver(now,encoding_time,enqueue_started.elapsed(),condition)
-            }else{encoder.quality.observe(now,encoding_time,enqueue_started.elapsed())};
+                Some(receiver_qos.condition(&context,encoder.sequence,encoder.quality.fps(),now))
+            }else{None};
+            let changed=match condition {
+                Some(condition)=>encoder.quality.observe_with_receiver(now,encoding_time,enqueue_time,condition),
+                None=>encoder.quality.observe(now,encoding_time,enqueue_time),
+            };
             if let Some(kbps) = changed {
                 encoder.codec.set_bitrate(kbps)?;
                 encoder.config.bitrate_kbps = kbps;
@@ -553,6 +560,9 @@ fn send<D: CaptureDevice>(
                     cadence_fps: encoder.quality.fps(),
                     bitrate_kbps: encoder.config.bitrate_kbps,
                     observed_at: now,
+                    encoding_time,
+                    enqueue_time,
+                    receiver_condition: condition,
                 });
                 stats.enqueued_video_bytes = stats.enqueued_video_bytes.saturating_add(bytes.len() as u64);
             }
