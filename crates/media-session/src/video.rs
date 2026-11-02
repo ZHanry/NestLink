@@ -568,8 +568,13 @@ fn send<D: CaptureDevice>(
                 });
                 stats.enqueued_video_bytes = stats.enqueued_video_bytes.saturating_add(bytes.len() as u64);
             }
-            encoder.next_frame = Instant::now()
-                + Duration::from_nanos(1_000_000_000 / u64::from(encoder.quality.fps()));
+            // The cadence includes encoding and enqueue work. Sleeping for a
+            // full period after that work silently reduced actual production
+            // below the selected budget and concealed network pressure. An
+            // overrun starts at most one next frame, never a catch-up burst.
+            encoder.next_frame = (encode_started
+                + Duration::from_nanos(1_000_000_000 / u64::from(encoder.quality.fps())))
+                .max(Instant::now());
         }
     })
 }
