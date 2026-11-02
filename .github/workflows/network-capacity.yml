@@ -20,7 +20,7 @@ on:
       sampling:
         description: Optional perf diagnostic; requires release and pair-windows and does not qualify AC68
         type: choice
-        options: [none, perf]
+        options: [none, perf, perf-phases]
         default: none
 permissions:
   contents: read
@@ -116,17 +116,18 @@ jobs:
               summaries = re.findall(r'test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;', (output/(name+'.log')).read_text())
               assert summaries == [(str(expected),'0','0')], name+' exact executed inventory differs'
           try:
-              assert sampling in ('none','perf')
-              if sampling == 'perf':
+              assert sampling in ('none','perf','perf-phases')
+              if sampling in ('perf','perf-phases'):
                   receipt['diagnostic_only'] = True
                   receipt['ac68_passed'] = False
                   receipt['diagnostic_passed'] = False
                   receipt['original_workload_passed'] = False
                   assert profile == 'release' and schedule == 'pair-windows', 'perf requires the original release pair-windows workload'
+                  assert sampling != 'perf-phases' or mode == 'multiplexed', 'perf-phases requires the original twenty multiplex control owners'
                   execute('perf-orchestration-tests',['python3','-B','-m','unittest','discover','-s','scripts','-p','test_capacity_perf.py','-v'],60)
                   os.environ['CARGO_PROFILE_RELEASE_DEBUG'] = '1'
                   os.environ['CARGO_PROFILE_RELEASE_STRIP'] = 'none'
-                  sampler = runpy.run_path('scripts/network-capacity-perf.py')['PerfSampler'](output,source)
+                  sampler = runpy.run_path('scripts/network-capacity-perf.py')['PerfSampler'](output,source,phase_reporting=sampling == 'perf-phases')
                   receipt['sampling'] = sampler.metadata
                   sampler.prepare()
               os.environ['NESTLINK_CAPACITY_SAMPLES'] = str(output/'samples.jsonl')

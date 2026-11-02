@@ -11,10 +11,11 @@ import time
 
 
 class PerfSampler:
-    def __init__(self, output, source_revision):
+    def __init__(self, output, source_revision, phase_reporting=False):
         self.output = pathlib.Path(output)
         self.tool = None
         self.private = None
+        self.phase_reporting = phase_reporting
         self.metadata = {
             "diagnostic_only": True,
             "acceptance_qualified": False,
@@ -39,6 +40,24 @@ class PerfSampler:
             "commands": [],
             "failures": [],
         }
+        if phase_reporting:
+            self.metadata["phase_reporting"] = {
+                "status": "pending",
+                "scope": "Existing first-wave record boundaries; the last window extends to original target exit.",
+                "clock_source": "CLOCK_REALTIME",
+                "event_clock_source": "capacity.rs wall_ms / SystemTime since UNIX_EPOCH",
+                "boundary_quantization_ns": 1_000_000,
+                "clock_jump_tolerance_ns": 5_000_000,
+                "maximum_anchor_uncertainty_ns": 1_000_000,
+                "clock_anchors": [],
+                "windows": [],
+                "limitations": [
+                    "Existing event timestamps are truncated to milliseconds; each internal boundary has an excluded one-millisecond band.",
+                    "The third window is after-all-controls-recorded, including scheduler handoff, flow opening and any later hold, waves or teardown; it is not pure opening or currentness.",
+                    "No absolute timestamp is inferred from flow_ready.open_microseconds, and no call graph is recorded.",
+                    "Realtime/monotonic anchors at target start/end and existing one-second waits reject observed offset jumps; transient changes between observations cannot be ruled out.",
+                ],
+            }
 
     def _fail(self, reason):
         self.metadata["status"] = "failed"
@@ -51,6 +70,21 @@ class PerfSampler:
             )
         except Exception as error:
             self._fail("perf metadata: " + repr(error))
+
+    def _clock_anchor(self, label):
+        if not self.phase_reporting:
+            return
+        try:
+            before = time.monotonic_ns()
+            realtime = time.time_ns()
+            after = time.monotonic_ns()
+            self.metadata["phase_reporting"]["clock_anchors"].append({
+                "label": label, "realtime_ns": realtime,
+                "monotonic_before_ns": before, "monotonic_after_ns": after,
+            })
+        except Exception as error:
+            # A diagnostic clock failure cannot suppress the original target.
+            self._fail("perf phase clock anchor: " + repr(error))
 
     def _command(self, name, argv, timeout, allow_failure=False):
         record = {"name": name, "argv": argv, "timeout_seconds": timeout,
@@ -158,6 +192,7 @@ class PerfSampler:
         recorder_logs = []
         record = None
         started = time.monotonic()
+        self._clock_anchor("target_start")
         target = subprocess.Popen(command, stdout=stdout, stderr=stderr)
         self.metadata["target_pid"] = target.pid
         raw = self.private / "perf.data"
@@ -165,6 +200,8 @@ class PerfSampler:
             argv = ["sudo", "-n", "env", "PERF_CONFIG=/dev/null", "LC_ALL=C",
                     self.tool, "record", "-e", "cpu-clock:u", "-F", "99",
                     "--no-buildid-cache", "-o", str(raw), "--pid", str(target.pid)]
+            if self.phase_reporting:
+                argv.extend(["--timestamp", "--clockid", "CLOCK_REALTIME"])
             record = {"name": "perf-record", "argv": argv, "return_code": None,
                       "timed_out": False, "target_threads_inherited": True}
             self.metadata["commands"].append(record)
@@ -190,6 +227,7 @@ class PerfSampler:
                     return_code = target.wait(timeout=min(1, remaining))
                     break
                 except subprocess.TimeoutExpired:
+                    self._clock_anchor("target_wait")
                     if (recorder is not None and recorder.poll() is not None
                             and not premature_exit and target.poll() is None):
                         premature_exit = True
@@ -199,6 +237,7 @@ class PerfSampler:
             return subprocess.CompletedProcess(command, return_code)
         finally:
             self.metadata["target_seconds"] = time.monotonic() - started
+            self._clock_anchor("target_end")
             try:
                 if recorder is not None:
                     if recorder.poll() is None:
@@ -253,5 +292,125 @@ class PerfSampler:
         self.metadata["report_sha256"] = hashlib.sha256(
             (self.output / "perf-report.log").read_bytes()
         ).hexdigest()
+        if self.phase_reporting:
+            self._report_phases(raw)
         if not self.metadata["failures"]:
             self.metadata["status"] = "passed"
+
+    def _phase_windows(self):
+        phase = self.metadata["phase_reporting"]
+        anchors = phase["clock_anchors"]
+        if len(anchors) < 2 or anchors[0]["label"] != "target_start" or anchors[-1]["label"] != "target_end":
+            raise ValueError("missing target endpoint clock anchors")
+        lower, upper = [], []
+        previous = None
+        for anchor in anchors:
+            before, after, realtime = (anchor[key] for key in (
+                "monotonic_before_ns", "monotonic_after_ns", "realtime_ns"
+            ))
+            if any(type(value) is not int or value < 0 for value in (before, after, realtime)):
+                raise ValueError("invalid clock anchor")
+            if before > after or after - before > phase["maximum_anchor_uncertainty_ns"]:
+                raise ValueError("uncertain clock anchor")
+            if previous is not None and before < previous:
+                raise ValueError("nonmonotonic clock anchors")
+            previous = after
+            lower.append(realtime - after)
+            upper.append(realtime - before)
+        phase["observed_realtime_offset_span_ns"] = max(0, max(lower) - min(upper))
+        if phase["observed_realtime_offset_span_ns"] > phase["clock_jump_tolerance_ns"]:
+            raise ValueError("observed realtime clock jump; phase attribution refused")
+        events = [json.loads(line) for line in (self.output / "samples.jsonl").read_text().splitlines()]
+
+        def only(stage):
+            matching = [event for event in events if event.get("stage") == stage]
+            if len(matching) != 1:
+                raise ValueError("expected exactly one " + stage + " boundary")
+            return matching[0]
+
+        def timestamp(event):
+            value = event.get("at_unix_ms")
+            if type(value) is not int or value < 0:
+                raise ValueError("missing or invalid original event timestamp")
+            return value * 1_000_000
+
+        setup = timestamp(only("before_setup"))
+        hosts = timestamp(only("all_hosts_ready"))
+        controls = [event for event in events if event.get("stage") == "multiplex_control_ready"
+                    and type(event.get("wave")) is int and event["wave"] == 0]
+        if len(controls) != 20 or any(type(event.get("pair")) is not int for event in controls) or {
+            event["pair"] for event in controls
+        } != set(range(20)):
+            raise ValueError("missing or duplicate original first-wave control owners")
+        control_times = [timestamp(event) for event in controls]
+        end = anchors[-1]["realtime_ns"]
+        quantum = phase["boundary_quantization_ns"]
+        if (setup + quantum < anchors[0]["realtime_ns"] or hosts < setup
+                or min(control_times) < hosts or max(control_times) + quantum > end):
+            raise ValueError("original event boundaries are outside the target clock range or reversed")
+        controls_end = max(control_times)
+        boundaries = [
+            ("setup", setup + quantum, hosts - 1, "before_setup", "all_hosts_ready"),
+            ("hosted-ready-to-all-controls-recorded", hosts + quantum, controls_end - 1,
+             "all_hosts_ready", "max first-wave multiplex_control_ready (20 unique pairs)"),
+            ("after-all-controls-recorded", controls_end + quantum, end,
+             "max first-wave multiplex_control_ready (20 unique pairs)", "target_end clock anchor"),
+        ]
+        windows = []
+        for name, start, stop, start_event, stop_event in boundaries:
+            if start >= stop:
+                raise ValueError("empty or reversed guarded phase window: " + name)
+            windows.append({
+                "name": name, "start_ns": start, "stop_ns": stop,
+                "start_source": start_event, "stop_source": stop_event,
+                "clock_source": "CLOCK_REALTIME", "boundary_quantization_ns": quantum,
+                "time_argument": f"{start // 1_000_000_000}.{start % 1_000_000_000:09d},"
+                                 f"{stop // 1_000_000_000}.{stop % 1_000_000_000:09d}",
+            })
+        phase["windows"] = windows
+        return windows
+
+    def _report_phases(self, raw):
+        # Mature perf performs all timestamp filtering and symbol aggregation.
+        # Existing target event files are read only after the target has ended.
+        try:
+            phase = self.metadata["phase_reporting"]
+            phase["status"] = "reporting"
+            windows = self._phase_windows()
+            if not self._command(
+                "perf-phase-header", ["sudo", "-n", "env", "PERF_CONFIG=/dev/null", "LC_ALL=C",
+                                      self.tool, "report", "--header-only", "-i", str(raw)], 60
+            ):
+                phase["status"] = "failed"
+                return
+            header = (self.output / "perf-phase-header.log").read_text()
+            # perf v6.8 util/header.c prints clockid_name from util/clockid.c.
+            if not re.search(r"^# clockid:\s+realtime \(0\)\s*$", header, re.MULTILINE):
+                raise ValueError("perf header does not attest CLOCK_REALTIME")
+            phase["perf_header_attests_realtime"] = True
+            phase["header_sha256"] = hashlib.sha256(
+                (self.output / "perf-phase-header.log").read_bytes()
+            ).hexdigest()
+            for window in windows:
+                name = "perf-phase-" + window["name"]
+                if not self._command(
+                    name, ["sudo", "-n", "env", "PERF_CONFIG=/dev/null", "LC_ALL=C", self.tool,
+                           "report", "--stdio", "--stdio-color", "never", "--no-children",
+                           "--show-nr-samples", "--sort", "dso,symbol", "--percent-limit", "0",
+                           "--time", window["time_argument"], "-i", str(raw)], 60
+                ):
+                    phase["status"] = "failed"
+                    return
+                path = self.output / (name + ".log")
+                report = path.read_text()
+                samples = sum(int(value) for value in re.findall(
+                    r"^\s+[0-9.]+%\s+(\d+)\s+", report, re.MULTILINE
+                ))
+                window["symbol_samples"] = samples
+                window["report_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+                if samples <= 0:
+                    raise ValueError("phase report has no symbol samples: " + window["name"])
+            phase["status"] = "passed"
+        except Exception as error:
+            self.metadata["phase_reporting"]["status"] = "failed"
+            self._fail("perf phase reporting: " + repr(error))
