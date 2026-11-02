@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { isDeepStrictEqual } = require('node:util');
+const bidi = require('./refactor-browser-bidi.cjs');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const downloadObservers = new WeakMap();
@@ -45,7 +46,7 @@ async function createPage(browser, ready, args, tls) {
   const page = await context.newPage();
   if (args.engine === 'chrome') {
     const session = await browser.target().createCDPSession();
-    const observer = { session, started: [], progress: new Map() };
+    const observer = { session, transport: 'CDP', started: [], progress: new Map() };
     session.on('Browser.downloadWillBegin', event => {
       if (observer.started.length < 4) observer.started.push({ guid: event.guid, filename: event.suggestedFilename });
     });
@@ -57,6 +58,10 @@ async function createPage(browser, ready, args, tls) {
     // final file can exist before Chromium finishes its download bookkeeping.
     await session.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: downloads,
       browserContextId: context.id, eventsEnabled: true });
+    downloadObservers.set(page, observer);
+  } else {
+    const observer = bidi.observeDownload(browser, page, ready.origin);
+    observer.transport = 'webDriverBiDi';
     downloadObservers.set(page, observer);
   }
   return page;
@@ -73,15 +78,27 @@ async function completedDownload(page, expected) {
       check(started.filename === expected.filename, 'Actual browser download filename differs');
       check(progress?.state !== 'canceled', 'Actual browser download was canceled');
       if (progress?.state === 'completed') {
-        check(progress.received_bytes === expected.bytes && progress.total_bytes === expected.bytes,
+        if (observer.transport === 'CDP') check(progress.received_bytes === expected.bytes && progress.total_bytes === expected.bytes,
           'Completed browser download byte counters differ');
-        return { ...started, ...progress };
+        check(!observer.errors?.length, 'Actual BiDi download events did not match the owned transfer');
+        // BiDi reports completion and path, not CDP byte counters. Both engines
+        // still require exact file length/SHA before and after browser exit.
+        return { transport: observer.transport, ...started, ...progress };
       }
     }
     check(observer.started.length <= 1, 'Unexpected additional browser download');
     await sleep(25);
   }
   throw new Error('Actual browser download completion event did not arrive');
+}
+
+async function closeObservations(page, report) {
+  const observer = downloadObservers.get(page);
+  if (!observer) return;
+  if (observer.session) await observer.session.detach();
+  else observer.close();
+  downloadObservers.delete(page);
+  if (report.owned_data) report.owned_data.download_observers_closed = true;
 }
 
 async function install(page, ready, args) {
@@ -459,4 +476,4 @@ async function cleanupAfterBrowser(ready, args, report) {
   data.owned_saved_file_removed = true;
 }
 
-module.exports = { createPage, install, request, exercise, holdTerminalKey, disconnect, cleanupAfterBrowser };
+module.exports = { createPage, install, request, exercise, holdTerminalKey, disconnect, cleanupAfterBrowser, closeObservations };

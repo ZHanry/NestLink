@@ -15,6 +15,45 @@
   "research_runtime_exclusion": "EasyTier is idea_reference only; no executable, library, FFI, forked core or adapted code is selected.",
   "components": [
     {
+      "id": "C28",
+      "purpose": "Actual stable Firefox as the third production Web/native integration engine",
+      "existing_implementation": [
+        "Existing puppeteer-core 25.14.0 and prior stock Firefox BiDi development adapter",
+        "Original production release Web site, native fixture, media metrics and owned input/files checks",
+        "Mozilla NSS certutil temporary profile database"
+      ],
+      "candidates": [
+        "Official Mozilla stable Firefox with existing Puppeteer WebDriver BiDi (selected)",
+        "Playwright patched Firefox (retains its historical scope; cannot establish actual stable Firefox)",
+        "Chromium with changed User-Agent (rejected; no independent Firefox behavior)"
+      ],
+      "official_sources": [
+        "https://product-details.mozilla.org/1.0/firefox_versions.json",
+        "https://archive.mozilla.org/pub/firefox/releases/159.0/SHA512SUMS",
+        "https://archive.mozilla.org/pub/firefox/releases/159.0/linux-x86_64/en-US/firefox-159.0.tar.xz",
+        "https://github.com/puppeteer/puppeteer/tree/d1b9a2162a0113356db5093f055b4a2e1979c6a8/packages/puppeteer-core/src/bidi"
+      ],
+      "maintenance_status": {
+        "reviewed_at": "2026-11-02",
+        "evidence": "Official metadata reports stable159.0 released2026-10-27. Exact official Linux archive SHA512 is frozen. Pinned launcher source reviewed for actual response/request body collection and download context behavior; hosted execution pending."
+      },
+      "platforms": ["GitHub-hosted ubuntu-24.04 Linux x86_64 laboratory"],
+      "version": {"firefox": "159.0 stable", "puppeteer_core": "25.14.0", "nss_certutil": "Runner distribution package; exact imported leaf read back"},
+      "license": "Firefox MPL-2.0 and bundled notices; Puppeteer Apache-2.0; NSS MPL-2.0. Validation tools only; no new product linkage or redistribution.",
+      "selection_reason": "Reuse the mature browser and its original BiDi automation; no new driver, protocol client or fake engine.",
+      "adapter_boundary": "Owned loopback fixture only. Thin bounded response/claims observer, actual request JSON and standard BiDi download completion events. Original production authorization, UI, media counters, thresholds and cleanup remain required.",
+      "security_and_operations_cost": [
+        "Profile-local exact CA:FALSE leaf peer trust, acceptInsecureCerts=false and no system trust changes",
+        "Puppeteer BiDi body collector has its own20MB encoded buffer; adapter rejects projected response bodies above262144bytes and reads only completed original requests",
+        "Pinned internal BiDi connection/frame context used only to observe standard download events; no new permission or interception commands",
+        "Firefox has no equivalent of the separate CDP page WebRTC impairment mode; explicit refusal remains and that scenario stays pending",
+        "No Linux loopback test substitutes for Windows, physical media/input devices, public NAT or full target qualification"
+      ],
+      "work_packages": ["W17"],
+      "validation_status": "implemented_hosted_three_engine_execution_pending",
+      "decision_ref": "docs/refactor/FIREFOX-NATIVE-ACTIONS.md"
+    },
+    {
       "id": "C27",
       "purpose": "Coverage-guided ASan mutation of original network/offline/media protocol boundaries",
       "existing_implementation": [

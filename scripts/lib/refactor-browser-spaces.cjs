@@ -2,6 +2,7 @@
 'use strict';
 const { randomUUID } = require('node:crypto');
 const { prepareManagementResponseObservation } = require('./refactor-browser-response-observer.cjs');
+const { requestJson } = require('./refactor-browser-bidi.cjs');
 const subnetUi = require('./refactor-browser-subnet.cjs');
 const wireguardUi = require('./refactor-browser-wireguard.cjs');
 const PANEL = '[aria-label="Network spaces"]';
@@ -115,7 +116,7 @@ async function run(page, ready, report, { engine, disconnectedEvent, duringRateW
     active.base = '/api/v3/network/spaces/' + created.space_id;
     await page.select(field('device'), ready.host_device_id);
     const joined = await action(page, 'Join or rejoin device', 'POST', active.base + '/devices');
-    const joinBody = JSON.parse(joined.response.request().postData());
+    const joinBody = await requestJson(joined.response);
     check(joinBody.expected_revision === created.revision && joinBody.expected_membership_epoch === 0,
       'Device join did not use current revision and explicit epoch zero');
     facts.created_and_device_joined = true;
@@ -167,7 +168,7 @@ async function run(page, ready, report, { engine, disconnectedEvent, duringRateW
     await page.select(field('account'), account);
     await page.select(field('role'), 'member');
     const member = await action(page, 'Save role or transfer ownership', 'PUT', active.base + '/people/' + account);
-    check(JSON.parse(member.response.request().postData()).role === 'member', 'Member role choice was lost');
+    check((await requestJson(member.response)).role === 'member', 'Member role choice was lost');
     await recipient.bringToFront();
     await action(recipient, 'Read my spaces', 'GET', '/api/v3/network/spaces'); await read(recipient, name);
     check(await recipient.$(field('role')) === null, 'Ordinary member received role management controls');

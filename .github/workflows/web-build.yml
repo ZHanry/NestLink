@@ -12,6 +12,8 @@ on:
       - "tests/refactor/test_browser_native_runner.py"
       - "tests/refactor/test_browser_response_observer.cjs"
       - "tests/refactor/test_browser_workspace_ui.cjs"
+      - "tests/refactor/test_browser_bidi.cjs"
+      - "docs/refactor/firefox-stable-linux.lock.json"
       - "scripts/fixtures/browser-native-host/**"
       - "scripts/refactor-browser-native-*"
       - "scripts/lib/refactor-browser-*.cjs"
@@ -33,6 +35,8 @@ on:
       - "tests/refactor/test_browser_native_runner.py"
       - "tests/refactor/test_browser_response_observer.cjs"
       - "tests/refactor/test_browser_workspace_ui.cjs"
+      - "tests/refactor/test_browser_bidi.cjs"
+      - "docs/refactor/firefox-stable-linux.lock.json"
       - "scripts/fixtures/browser-native-host/**"
       - "scripts/refactor-browser-native-*"
       - "scripts/lib/refactor-browser-*.cjs"
@@ -71,7 +75,8 @@ jobs:
           node --check scripts/lib/refactor-browser-spaces.cjs
           node --check scripts/lib/refactor-browser-subnet.cjs
           node --check scripts/lib/refactor-browser-wireguard.cjs
-          node --test tests/refactor/test_browser_response_observer.cjs tests/refactor/test_browser_workspace_ui.cjs 2>&1 | tee "$RUNNER_TEMP/nestlink-browser-contracts-node.log"
+          node --check scripts/lib/refactor-browser-bidi.cjs
+          node --test tests/refactor/test_browser_response_observer.cjs tests/refactor/test_browser_workspace_ui.cjs tests/refactor/test_browser_bidi.cjs 2>&1 | tee "$RUNNER_TEMP/nestlink-browser-contracts-node.log"
       - name: Retain browser contract output
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -166,7 +171,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chrome, edge]
+        browser: [chrome, edge, firefox]
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
@@ -188,7 +193,7 @@ jobs:
           printf 'CARGO_TARGET_DIR=%s/nestlink-browser-native-target\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - name: Install native codec build tools
         # Keep Chinese controls readable in the same browser screenshots we review.
-        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev fonts-noto-cjk
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev fonts-noto-cjk libnss3-tools libgtk-3-0t64 libasound2t64
       - name: Build and verify reviewed native codecs on GitHub
         run: |
           python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/nestlink-codec-sources" --work-dir "$RUNNER_TEMP/nestlink-codecs"
@@ -234,14 +239,57 @@ jobs:
           test "$(stat --format='%u:%g:%a' "$edge_sandbox")" = '0:0:4755'
           "$edge_binary" --version
           printf 'path=%s\n' "$edge_binary" >> "$GITHUB_OUTPUT"
+      - name: Extract the SHA512-pinned official stable Firefox archive
+        if: matrix.browser == 'firefox'
+        id: firefox
+        shell: python
+        run: |
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import tarfile
+          import urllib.request
+
+          lock_path = Path("docs/refactor/firefox-stable-linux.lock.json")
+          lock = json.loads(lock_path.read_text(encoding="utf-8"))
+          directory = Path(os.environ["RUNNER_TEMP"]) / "nestlink-firefox-stable"
+          directory.mkdir()
+          archive = directory / "firefox.tar.xz"
+          with urllib.request.urlopen(lock["archive_url"], timeout=120) as response, archive.open("xb") as target:
+              while chunk := response.read(1024 * 1024):
+                  target.write(chunk)
+          archive_sha512 = hashlib.file_digest(archive.open("rb"), "sha512").hexdigest()
+          if archive_sha512 != lock["archive_sha512"]:
+              raise ValueError("Official Firefox archive differs from the reviewed SHA512SUMS")
+          with tarfile.open(archive, "r:xz") as source:
+              source.extractall(directory, filter="data")
+          binary = directory / "firefox/firefox"
+          version = subprocess.check_output([str(binary), "--version"], text=True, timeout=20).strip()
+          if version != "Mozilla Firefox " + lock["version"]:
+              raise ValueError("Extracted Firefox version differs from the fixed stable release")
+          receipt = {"browser_product": "firefox", "version": lock["version"],
+              "source_url": lock["archive_url"], "checksums_url": lock["checksums_url"],
+              "archive_sha512": archive_sha512, "archive_verified": True,
+              "executable_version": version,
+              "executable_sha256": hashlib.file_digest(binary.open("rb"), "sha256").hexdigest(),
+              "lock_sha256": hashlib.file_digest(lock_path.open("rb"), "sha256").hexdigest(),
+              "github_run_id": os.environ["GITHUB_RUN_ID"], "github_run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "github_sha": os.environ["GITHUB_SHA"], "runner": os.environ["RUNNER_OS"]}
+          receipt_path = directory / "browser-source.json"
+          receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as target:
+              target.write(f"path={binary}\nsource={receipt_path}\n")
       - name: Exercise real video, audio, input, files and cleanup
         run: |
           python3 scripts/refactor-browser-native-run.py \
             --site "$RUNNER_TEMP/nestlink-web-dist" \
             --fixture "$CARGO_TARGET_DIR/release/nestlink-browser-native-host-fixture" \
             --caddy "$RUNNER_TEMP/nestlink-browser-caddy/caddy" \
-            --chrome "${{ steps.chrome.outputs.path || steps.edge.outputs.path }}" \
+            --browser-executable "${{ steps.chrome.outputs.path || steps.edge.outputs.path || steps.firefox.outputs.path }}" \
             --browser-product "${{ matrix.browser }}" \
+            --browser-source "${{ steps.firefox.outputs.source }}" \
             --tools "$RUNNER_TEMP/nestlink-browser-tools/node_modules/puppeteer-core" \
             --output "$RUNNER_TEMP/nestlink-browser-native-evidence"
       - name: Upload sanitized integration evidence

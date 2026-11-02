@@ -32,11 +32,18 @@ nestlink-browser-native-host-fixture <production-static-site> <new-evidence-dire
 `scripts/refactor-browser-native-run.py` owns the temporary processes and calls
 `scripts/refactor-browser-native-check.cjs` with `--ready`, `--report`,
 `--tools`, `--executable`, `--tls` and `--engine chrome|firefox`. The tools directory must
-be the reviewed puppeteer-core 25.14.0 package. The GitHub job uses Chrome and
-the SHA-256-pinned Caddy v2.11.7 Linux amd64 executable. It generates a one-day
+be the reviewed puppeteer-core 25.14.0 package. The GitHub job independently uses
+Chrome, Edge and official stable Firefox with the SHA-256-pinned Caddy v2.11.7
+Linux amd64 executable. Firefox is fixed to the reviewed official archive and
+its SHA512 in `docs/refactor/firefox-stable-linux.lock.json`; each run retains
+the actual executable version/SHA256 and source. It generates a one-day
 127.0.0.1 certificate and fresh browser profile. Chrome receives only the exact
 leaf SPKI for that process; broad certificate-error bypass is disabled and no
-installed profile or system trust store is changed. The runner independently
+installed profile or system trust store is changed. Firefox instead trusts only
+the exact CA:FALSE leaf as an SSL peer in its fresh owned NSS profile, with
+`acceptInsecureCerts=false`. Its BiDi response and download completion adapters
+retain the same media, input, file and cleanup requirements; see
+`docs/refactor/FIREFOX-NATIVE-ACTIONS.md` from the repository root. The runner independently
 verifies the TLS certificate, IP SAN and same-run production index before browsing.
 The probe logs in through the actual UI, requests the native host,
 checks real decoded RTP frames over the requested duration (36–1800 seconds)

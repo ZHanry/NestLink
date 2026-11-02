@@ -2,6 +2,7 @@
 'use strict';
 const { randomUUID } = require('node:crypto');
 const { prepareManagementResponseObservation } = require('./refactor-browser-response-observer.cjs');
+const { requestJson } = require('./refactor-browser-bidi.cjs');
 const PANEL = '[aria-label="Space membership"]';
 const SPACE = PANEL + ' input';
 const DEVICE = PANEL + ' label:nth-of-type(2) select';
@@ -78,7 +79,7 @@ async function chooseRole(page, value) {
 }
 async function mutation(page, operation, snapshot, role, expectedStatus = 200) {
   const { response, body: result } = await action(page, operation, expectedStatus);
-  const body = JSON.parse(response.request().postData());
+  const body = await requestJson(response);
   check(body.expected_policy_revision === snapshot.revision
     && body.expected_membership_epoch === snapshot.epoch, 'Mutation did not bind the actual revision and membership epoch');
   if (operation !== 'revoke') check(body.role === role, 'Mutation lost the selected role');
@@ -111,7 +112,7 @@ async function authorityAction(page, operation, previous = null, status = operat
     const response = await pending;
     check(response.status() === status, 'Authority ' + operation + ' returned unexpected HTTP status ' + response.status());
     if (previous) {
-      const sent = JSON.parse(response.request().postData());
+      const sent = await requestJson(response);
       check(sent.expected_revision === previous.policy.revision && sent.expected_policy_epoch === previous.policy.policy_epoch,
         'Authority mutation did not bind the actual revision and policy epoch');
     }
@@ -262,7 +263,7 @@ async function run(page, ready, report, { engine, disconnectedEvent } = {}) {
     // must be rejected by the server even without inferring existence from GET.
     await page.locator(SPACE).fill(randomUUID());
     await page.locator(SPACE).fill(space);
-    check(JSON.parse((await action(page, 'initialize', 409)).response.request().postData()).expected_revision === 0,
+    check((await requestJson((await action(page, 'initialize', 409)).response)).expected_revision === 0,
       'Repeated explicit initialization must keep revision zero and conflict');
     await readPolicy(page);
     await chooseDevice(page, ready.host_device_id);

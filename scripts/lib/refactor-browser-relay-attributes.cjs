@@ -1,6 +1,7 @@
 // Production relay metadata controls, SDK and real server/SQLite. No mocks.
 'use strict';
 const { prepareManagementResponseObservation } = require('./refactor-browser-response-observer.cjs');
+const { requestJson } = require('./refactor-browser-bidi.cjs');
 const PANEL = '[aria-label="Relay attributes"]';
 const REGION = PANEL + ' [data-node-relay-field="region"]';
 const COST = PANEL + ' [data-node-relay-field="cost"]';
@@ -74,7 +75,7 @@ async function exchange(page, method, trigger, { previous = null, attributes = n
     const response = await pending;
     check(response.status() === status, 'Unexpected ' + method + ' HTTP status ' + response.status());
     if (previous) {
-      const sent = JSON.parse(response.request().postData());
+      const sent = await requestJson(response);
       check(sent.expected_revision === previous.revision && sent.attributes.region === attributes.region
         && sent.attributes.cost_weight === attributes.cost_weight,
       'Real update lost the prior revision or explicit unknown/zero attributes');

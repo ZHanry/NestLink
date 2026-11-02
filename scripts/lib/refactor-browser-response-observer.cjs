@@ -72,6 +72,24 @@ function failedMetadata(event) {
     observed_monotonic_ms: performance.now(), observed_unix_ms: Date.now() };
 }
 
+function projectPermitClaims(value, entry) {
+  const claims = value?.claims;
+  if (!value || typeof value !== 'object' || Array.isArray(value) ||
+      !claims || typeof claims !== 'object' || Array.isArray(claims) ||
+      typeof value.permit !== 'string' || !/^[A-Za-z0-9_-]+$/.test(value.permit) ||
+      typeof claims.session_id !== 'string' || !uuid.test(claims.session_id) ||
+      claims.session_id.toLowerCase() !== entry.sessionId ||
+      typeof claims.controller_device_id !== 'string' || !uuid.test(claims.controller_device_id)) throw new Error('invalid-claims');
+  for (const key of ['lease_sequence', 'connection_generation', 'issued_at_unix_ms', 'expires_at_unix_ms']) {
+    if (!Number.isSafeInteger(claims[key]) || claims[key] <= 0) throw new Error('invalid-claims');
+  }
+  if (claims.expires_at_unix_ms <= claims.issued_at_unix_ms) throw new Error('invalid-claims');
+  return { lease_sequence: claims.lease_sequence, connection_generation: claims.connection_generation,
+    session_id: claims.session_id, controller_device_id: claims.controller_device_id,
+    issued_at_unix_ms: claims.issued_at_unix_ms, expires_at_unix_ms: claims.expires_at_unix_ms,
+    observed_monotonic_ms: entry.observedMonotonic, observed_unix_ms: entry.observedUnix };
+}
+
 function createResponseObserver({ session, origin, disconnectedEvent, facts, onClaims, onError, limits = {}, contract = null }) {
   const destination = new URL(origin);
   if (destination.origin !== origin || destination.protocol !== 'https:' || destination.hostname !== '127.0.0.1' ||
@@ -139,23 +157,7 @@ function createResponseObserver({ session, origin, disconnectedEvent, facts, onC
     if (entry) finish(entry);
     try { onError(diagnostic); } catch { /* Facts still retain the original safe failure. */ }
   };
-  const observedClaims = (value, entry) => {
-    const claims = value?.claims;
-    if (!value || typeof value !== 'object' || Array.isArray(value) ||
-        !claims || typeof claims !== 'object' || Array.isArray(claims) ||
-        typeof value.permit !== 'string' || !/^[A-Za-z0-9_-]+$/.test(value.permit) ||
-        typeof claims.session_id !== 'string' || !uuid.test(claims.session_id) ||
-        claims.session_id.toLowerCase() !== entry.sessionId ||
-        typeof claims.controller_device_id !== 'string' || !uuid.test(claims.controller_device_id)) throw new Error('invalid-claims');
-    for (const key of ['lease_sequence', 'connection_generation', 'issued_at_unix_ms', 'expires_at_unix_ms']) {
-      if (!Number.isSafeInteger(claims[key]) || claims[key] <= 0) throw new Error('invalid-claims');
-    }
-    if (claims.expires_at_unix_ms <= claims.issued_at_unix_ms) throw new Error('invalid-claims');
-    return { lease_sequence: claims.lease_sequence, connection_generation: claims.connection_generation,
-      session_id: claims.session_id, controller_device_id: claims.controller_device_id,
-      issued_at_unix_ms: claims.issued_at_unix_ms, expires_at_unix_ms: claims.expires_at_unix_ms,
-      observed_monotonic_ms: entry.observedMonotonic, observed_unix_ms: entry.observedUnix };
-  };
+  const observedClaims = projectPermitClaims;
   const decodeChunk = (encoded, remaining) => {
     if (typeof encoded !== 'string' || encoded.length > Math.ceil(remaining / 3) * 4) {
       throw new Error('body-limit');
@@ -704,4 +706,4 @@ async function prepareManagementResponseObservation({ onResponse = () => {}, onE
 }
 
 module.exports = { createPermitResponseObserver, preparePermitResponseObservation,
-  createManagementResponseObserver, prepareManagementResponseObservation };
+  createManagementResponseObserver, prepareManagementResponseObservation, projectPermitClaims };

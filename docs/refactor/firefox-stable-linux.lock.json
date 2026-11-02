@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "browser_product": "firefox",
+  "channel": "stable",
+  "version": "159.0",
+  "reviewed_at": "2026-11-02",
+  "official_release_date": "2026-10-27",
+  "version_metadata_url": "https://product-details.mozilla.org/1.0/firefox_versions.json",
+  "checksums_url": "https://archive.mozilla.org/pub/firefox/releases/159.0/SHA512SUMS",
+  "archive_url": "https://archive.mozilla.org/pub/firefox/releases/159.0/linux-x86_64/en-US/firefox-159.0.tar.xz",
+  "archive_sha512": "d81bb0b4334cd3e1add28102c8cad149d80a5441f96389a469f48d6268d53a8b2cf8582f1de946a44c9c088c526adbd006e1a8be1ac188ca43dfd15ae2d684c0",
+  "automation": "Existing puppeteer-core 25.14.0; WebDriver BiDi",
+  "upstream_source_commit": "d1b9a2162a0113356db5093f055b4a2e1979c6a8",
+  "review_scope": "Official metadata and exact release checksum read; no local browser/dependency installation or execution. Archive download, verification, extraction and browser execution occur only on GitHub-hosted Actions."
+}

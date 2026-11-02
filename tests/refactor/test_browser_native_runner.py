@@ -5,6 +5,7 @@ import copy
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -89,7 +90,7 @@ def completed_receipts():
         "passed", "focus_loss_release_observed", "panel_close_revoked_approvals",
         "private_stage_removed", "upload_acknowledged_by_actual_ui",
         "terminal_key_held_before_disconnect", "terminal_key_released",
-        "browser_storage_lock_released", "owned_saved_file_removed")}
+        "browser_storage_lock_released", "owned_saved_file_removed", "download_observers_closed")}
     host = {key: True for key in ("connected", "capture_prepared", "capture_reset",
                                   "audio_enabled", "audio_reset", "audio_cleanup_succeeded")}
     host.update({"cleanup_failed": False, "capture_starts": 1, "capture_frames": 470, "audio_chunks": 1200})
@@ -106,6 +107,66 @@ def completed_receipts():
 
 
 class NativeRunnerTests(unittest.TestCase):
+    def test_firefox_trusts_only_the_exact_generated_leaf_in_its_owned_profile(self):
+        with tempfile.TemporaryDirectory() as directory:
+            private = Path(directory)
+            calls = []
+
+            def command(arguments, *, input_bytes=None):
+                calls.append(arguments)
+                if arguments[:2] == ["openssl", "req"]:
+                    (private / "leaf-key.pem").write_bytes(b"owned-key")
+                    (private / "leaf.pem").write_bytes(b"owned-leaf-pem")
+                if arguments[:2] == ["openssl", "x509"]:
+                    return b"owned-leaf-der" if "-outform" in arguments else b"owned-public-key"
+                if arguments[0] == "certutil" and "-L" in arguments:
+                    return b"owned-leaf-pem"
+                return b"owned-spki"
+
+            with patch.object(RUNNER, "command", side_effect=command):
+                tls = RUNNER.make_tls(private, "https://127.0.0.1:45678", "firefox")
+            self.assertIs(tls["firefox_profile_exact_leaf_trusted"], True)
+            self.assertIs(tls["global_trust_modified"], False)
+            nss = [arguments for arguments in calls if arguments[0] == "certutil"]
+            self.assertEqual(len(nss), 3)
+            for arguments in nss:
+                self.assertEqual(arguments[arguments.index("-d") + 1], "sql:" + str(private / "profile"))
+            imported = next(arguments for arguments in nss if "-A" in arguments)
+            self.assertEqual(imported[imported.index("-t") + 1], "P,,")
+            self.assertEqual(imported[imported.index("-i") + 1], str(private / "leaf.pem"))
+            self.assertIn("basicConstraints=critical,CA:FALSE", calls[0])
+
+    def test_firefox_requires_its_real_runtime_bidi_owner_and_same_original_media_thresholds(self):
+        receipts = completed_receipts()
+        browser = receipts[0]
+        browser.update({"browser_product": "firefox", "engine": "firefox",
+            "browser_version": "firefox/" + RUNNER.read_json(ROOT / "docs/refactor/firefox-stable-linux.lock.json")["version"],
+            "browser_runtime_version_verified": True,
+            "bidi_helper_sha256": RUNNER.sha256((ROOT / "scripts/lib/refactor-browser-bidi.cjs").read_bytes())})
+        browser["permit_response_observer"] = {"passed": True, "closed": True, "listeners_removed": True,
+            "pending": 0, "errors": [], "transport": "webDriverBiDi", "bidi_owner": {
+                "prepared_before_navigation": True, "request_listeners_removed": True, "closed": True,
+                "passed": True, "cleanup_errors": []}}
+        self.assertEqual(RUNNER.validate_receipts(*receipts, expected_browser_product="firefox"), [])
+        for key in browser["permit_response_observer"]["bidi_owner"]:
+            partial = copy.deepcopy(receipts)
+            partial[0]["permit_response_observer"]["bidi_owner"].pop(key)
+            self.assertIn("permit-response-bidi-owner", RUNNER.validate_receipts(*partial, expected_browser_product="firefox"))
+        for key, replacement, failure in (
+                ("browser_product", "chrome", "browser-product"),
+                ("browser_runtime_version_verified", False, "firefox-runtime-version"),
+                ("browser_version", "Chrome/159.0", "firefox-runtime-version"),
+                ("bidi_helper_sha256", "0" * 64, "bidi-helper-source"),
+                ("decoded_elapsed_seconds", 35.99, "video-duration"),
+                ("intervals", [{"decoded_fps": 8.99, "received_bytes": 1}] * 3, "actual-video-counters"),
+                ("audio_intervals", [{"sample_rate": 43199, "packets_per_second": 50}] * 3, "actual-opus-counters")):
+            partial = copy.deepcopy(receipts)
+            partial[0][key] = replacement
+            self.assertIn(failure, RUNNER.validate_receipts(*partial, expected_browser_product="firefox"))
+        partial = copy.deepcopy(receipts)
+        partial[0]["owned_data"]["download_observers_closed"] = False
+        self.assertIn("browser-data-download_observers_closed", RUNNER.validate_receipts(*partial, expected_browser_product="firefox"))
+
     def test_chrome_cannot_be_reported_as_edge_or_an_unobserved_product(self):
         receipts = completed_receipts()
         self.assertEqual(RUNNER.validate_receipts(*receipts), [])

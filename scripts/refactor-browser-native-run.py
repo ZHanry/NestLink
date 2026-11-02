@@ -288,7 +288,7 @@ def validate_receipts(browser, host, data, database, exit_codes, expected_browse
             failures.append(label)
 
     require(exit_codes == {"browser": 0, "native": 0}, "process-exit")
-    require(expected_browser_product in ("chrome", "edge")
+    require(expected_browser_product in ("chrome", "edge", "firefox")
             and browser.get("browser_product") == expected_browser_product
             and browser.get("browser_product_verified") is True, "browser-product")
     failures.extend(validate_workspace_ui(browser.get("workspace_ui")))
@@ -351,10 +351,23 @@ def validate_receipts(browser, host, data, database, exit_codes, expected_browse
     require(isinstance(observer, dict) and observer.get("passed") is True
             and observer.get("closed") is True and observer.get("listeners_removed") is True
             and observer.get("pending") == 0 and observer.get("errors") == [], "permit-response-observer")
-    owner = observer.get("session_owner", {}) if isinstance(observer, dict) else {}
-    require(isinstance(owner, dict) and all(owner.get(key) is True for key in (
-        "session_created", "prepared_before_navigation", "network_disabled", "session_detached", "closed", "passed"))
-        and owner.get("cleanup_errors") == [], "permit-response-session-owner")
+    if expected_browser_product == "firefox":
+        owner = observer.get("bidi_owner", {}) if isinstance(observer, dict) else {}
+        require(isinstance(owner, dict) and all(owner.get(key) is True for key in (
+            "prepared_before_navigation", "request_listeners_removed", "closed", "passed"))
+            and owner.get("cleanup_errors") == [] and observer.get("transport") == "webDriverBiDi",
+            "permit-response-bidi-owner")
+        require(browser.get("bidi_helper_sha256") == sha256(
+            (ROOT / "scripts/lib/refactor-browser-bidi.cjs").read_bytes()), "bidi-helper-source")
+        lock = read_json(ROOT / "docs/refactor/firefox-stable-linux.lock.json")
+        runtime_version = browser.get("browser_version")
+        require(browser.get("engine") == "firefox" and browser.get("browser_runtime_version_verified") is True
+            and isinstance(runtime_version, str) and runtime_version.lower() == "firefox/" + lock["version"], "firefox-runtime-version")
+    else:
+        owner = observer.get("session_owner", {}) if isinstance(observer, dict) else {}
+        require(isinstance(owner, dict) and all(owner.get(key) is True for key in (
+            "session_created", "prepared_before_navigation", "network_disabled", "session_detached", "closed", "passed"))
+            and owner.get("cleanup_errors") == [], "permit-response-session-owner")
     profile = browser.get("capture_profile", {})
     require(all(profile.get(key) == value for key, value in {
         "name": "smoke", "width": 320, "height": 180, "fps": 10,
@@ -375,7 +388,7 @@ def validate_receipts(browser, host, data, database, exit_codes, expected_browse
     for field in ("passed", "focus_loss_release_observed", "panel_close_revoked_approvals",
                   "private_stage_removed", "upload_acknowledged_by_actual_ui",
                   "terminal_key_held_before_disconnect", "terminal_key_released",
-                  "browser_storage_lock_released", "owned_saved_file_removed"):
+                  "browser_storage_lock_released", "owned_saved_file_removed", "download_observers_closed"):
         require(owned.get(field) is True, "browser-data-" + field)
     for field in ("connected", "capture_prepared", "capture_reset", "audio_enabled",
                   "audio_reset", "audio_cleanup_succeeded"):
@@ -408,7 +421,7 @@ def command(arguments, *, input_bytes=None):
     return result.stdout
 
 
-def make_tls(private, origin):
+def make_tls(private, origin, browser_product="chrome"):
     cert, key = private / "leaf.pem", private / "leaf-key.pem"
     command(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-sha256", "-nodes", "-days", "1",
              "-subj", "/CN=127.0.0.1", "-addext", "subjectAltName=IP:127.0.0.1",
@@ -421,6 +434,21 @@ def make_tls(private, origin):
     tls = {"origin": origin, "global_trust_modified": False, "leaf_sha256": sha256(leaf),
            "leaf_spki_sha256_base64": base64.b64encode(hashlib.sha256(spki).digest()).decode("ascii"),
            "profile": str(private / "profile")}
+    if browser_product == "firefox":
+        # NSS trusts only this exact CA:FALSE leaf as an SSL peer. Its fresh
+        # database belongs to the private attempt, never a system/user profile.
+        profile = private / "profile"
+        profile.mkdir(mode=0o700)
+        database = "sql:" + str(profile)
+        command(["certutil", "-N", "--empty-password", "-d", database])
+        command(["certutil", "-A", "-d", database, "-n", "nestlink-owned-loopback-leaf",
+                 "-t", "P,,", "-i", str(cert)])
+        imported = command(["certutil", "-L", "-d", database,
+                            "-n", "nestlink-owned-loopback-leaf", "-a"])
+        readback = command(["openssl", "x509", "-outform", "DER"], input_bytes=imported)
+        if readback != leaf:
+            raise ValueError("Firefox NSS imported certificate differs from the exact temporary leaf")
+        tls["firefox_profile_exact_leaf_trusted"] = True
     write_json(private / "tls.json", tls)
     return tls
 
@@ -553,6 +581,26 @@ def run(args):
         facts["inputs"] = {"native_sha256": sha256(fixture.read_bytes()), "caddy_sha256": CADDY_SHA256,
                            "site_index_sha256": sha256((site / "index.html").read_bytes()),
                            "runner_sha256": sha256(Path(__file__).read_bytes())}
+        browser_source = read_json(Path(args.browser_source).resolve(strict=True)) if args.browser_source else None
+        if args.browser_product == "firefox":
+            lock = read_json(ROOT / "docs/refactor/firefox-stable-linux.lock.json")
+            if (not isinstance(browser_source, dict) or browser_source.get("browser_product") != "firefox"
+                    or browser_source.get("version") != lock["version"]
+                    or browser_source.get("source_url") != lock["archive_url"]
+                    or browser_source.get("archive_sha512") != lock["archive_sha512"]
+                    or browser_source.get("lock_sha256") != sha256((ROOT / "docs/refactor/firefox-stable-linux.lock.json").read_bytes())
+                    or browser_source.get("executable_sha256") != sha256(chrome.read_bytes())
+                    or browser_source.get("executable_version") != "Mozilla Firefox " + lock["version"]
+                    or browser_source.get("github_sha") != os.environ.get("GITHUB_SHA")
+                    or browser_source.get("archive_verified") is not True):
+                raise ValueError("Firefox requires the verified official stable archive and exact executable receipt")
+            facts["browser_source"] = browser_source
+        else:
+            facts["browser_source"] = {"browser_product": args.browser_product,
+                "source": "GitHub runner stable Chrome" if args.browser_product == "chrome" else "SHA256-pinned Microsoft stable Edge package in workflow",
+                "executable_sha256": sha256(chrome.read_bytes())}
+        facts["automation"] = {"puppeteer_core_version": PUPPETEER_VERSION,
+            "protocol": "webDriverBiDi" if args.browser_product == "firefox" else "cdp"}
         for name in ("runtime", "probe", "received"):
             (private / name).mkdir()
         env = dict(os.environ, TMPDIR=str(private / "runtime"),
@@ -560,7 +608,7 @@ def run(args):
         with socket.socket() as listener:
             listener.bind(("127.0.0.1", 0))
             origin = f"https://127.0.0.1:{listener.getsockname()[1]}"
-        tls = make_tls(private, origin)
+        tls = make_tls(private, origin, args.browser_product)
         native = spawn("native", [fixture, site, private / "native", origin, "smoke", "36", "audio", "owned-data"], env)
         ready = wait_ready(private / "native" / "ready.json", native)
         if ready.get("origin") != origin or not ready.get("scope", "").startswith("Ephemeral local development fixture"):
@@ -582,8 +630,9 @@ def run(args):
         facts["tls_verified_exact_leaf_and_ip_san"] = True
         browser = spawn("browser", ["node", ROOT / "scripts/refactor-browser-native-check.cjs",
             "--ready", private / "native/ready.json", "--report", private / "probe/browser-report.json",
-            "--tools", tools, "--executable", chrome, "--engine", "chrome", "--tls", private / "tls.json",
+            "--tools", tools, "--executable", chrome, "--engine", "firefox" if args.browser_product == "firefox" else "chrome", "--tls", private / "tls.json",
             "--browser-product", args.browser_product,
+            "--expected-browser-version", browser_source["version"] if args.browser_product == "firefox" else "runner-stable",
             "--owned-data", "true", "--upload-fixture", private / "selected-upload.bin",
             "--download-directory", private / "received"], env)
         # Includes the space lifecycle's deliberate production rate-window
@@ -630,6 +679,8 @@ def run(args):
                 ("native", "data-result.json"), ("native", "database-cleanup.json"))]
             facts["validation_failures"].extend(validate_receipts(
                 *receipts, facts["exit_codes"], expected_browser_product=args.browser_product))
+            if receipts[0].get("executable_sha256") != facts.get("browser_source", {}).get("executable_sha256"):
+                facts["validation_failures"].append("browser-executable-source")
         except Exception as error:
             facts["validation_failures"].append("missing-or-invalid-completion-receipt")
             facts["receipt_error"] = sanitize(f"{type(error).__name__}: {error}", secrets)
@@ -659,9 +710,11 @@ def run(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("site", "fixture", "caddy", "chrome", "tools", "output"):
+    for name in ("site", "fixture", "caddy", "tools", "output"):
         parser.add_argument("--" + name, required=True)
-    parser.add_argument("--browser-product", choices=("chrome", "edge"), default="chrome")
+    parser.add_argument("--browser-executable", "--chrome", dest="chrome", required=True)
+    parser.add_argument("--browser-product", choices=("chrome", "edge", "firefox"), default="chrome")
+    parser.add_argument("--browser-source", help="Verified official Firefox archive/executable receipt")
     return run(parser.parse_args())
 
 

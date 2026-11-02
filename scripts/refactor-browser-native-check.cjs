@@ -10,6 +10,7 @@ const { performance } = require('node:perf_hooks');
 const { videoInterval, audioInterval } = require('./lib/refactor-browser-media-metrics.cjs');
 const { prepareNetworkDamage, exerciseNetworkDamage } = require('./lib/refactor-browser-network-damage.cjs');
 const { preparePermitResponseObservation } = require('./lib/refactor-browser-response-observer.cjs');
+const bidi = require('./lib/refactor-browser-bidi.cjs');
 const ownedData = require('./lib/refactor-browser-owned-data.cjs');
 const workspaceUi = require('./lib/refactor-browser-workspace-ui.cjs');
 const edgeNamespaceUi = require('./lib/refactor-browser-edge-namespace.cjs');
@@ -37,6 +38,7 @@ const origin = new URL(ready.origin);
 if (origin.protocol !== 'https:' || origin.hostname !== '127.0.0.1' || !origin.port || !ready.scope.startsWith('Ephemeral local development fixture')) throw new Error('Only the owned HTTPS loopback fixture is allowed');
 const tls = JSON.parse(fs.readFileSync(args.tls, 'utf8'));
 if (tls.origin !== ready.origin || tls.global_trust_modified !== false || !/^[A-Za-z0-9+/]{43}=$/.test(tls.leaf_spki_sha256_base64)) throw new Error('An isolated temporary certificate trust setup is required');
+if (args.engine === 'firefox' && tls.firefox_profile_exact_leaf_trusted !== true) throw new Error('Firefox requires the exact temporary leaf in its fresh owned NSS profile');
 if (fs.existsSync(args.report)) throw new Error('Preserve the previous browser report');
 const toolsPromise = import(require('node:url').pathToFileURL(path.join(path.resolve(args.tools), 'lib', 'puppeteer', 'puppeteer-core.js')).href);
 if (require(path.join(path.resolve(args.tools), 'package.json')).version !== '25.14.0') throw new Error('Use the reviewed pinned Puppeteer runtime');
@@ -59,6 +61,7 @@ report.relay_attributes_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refa
 report.spaces_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-spaces.cjs'));
 report.subnet_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-subnet.cjs'));
 report.wireguard_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-wireguard.cjs'));
+report.bidi_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-bidi.cjs'));
 const progressPath = args.report.replace(/\.json$/, '') + '-progress.jsonl';
 const progress = fs.openSync(progressPath, 'wx');
 const retainSample = value => {
@@ -67,7 +70,7 @@ const retainSample = value => {
   fs.fsyncSync(progress);
 };
 report.tls = { origin: tls.origin, leaf_sha256: tls.leaf_sha256, global_trust_modified: false,
-  browser_trust: args.engine === 'firefox' ? 'Temporary CA in this fresh profile only' : 'Exact temporary leaf SPKI in this fresh process only' };
+  browser_trust: args.engine === 'firefox' ? 'Exact temporary leaf SSL peer in this fresh NSS profile only' : 'Exact temporary leaf SPKI in this fresh process only' };
 
 function check(value, message) { if (!value) throw new Error(message); }
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -123,6 +126,8 @@ async function main() {
     const { default: tools, CDPSessionEvent } = await toolsPromise;
     browser = await tools.launch({ executablePath: args.executable, browser: args.engine, headless: true,
       userDataDir: tls.profile, acceptInsecureCerts: false,
+      protocol: args.engine === 'firefox' ? 'webDriverBiDi' : 'cdp',
+      ...(args.engine === 'firefox' ? { extraPrefsFirefox: { 'security.enterprise_roots.enabled': false } } : {}),
       args: args.engine === 'chrome' ? ['--no-first-run', '--no-default-browser-check', '--ignore-certificate-errors-spki-list=' + tls.leaf_spki_sha256_base64] : [], timeout: 30000 });
     report.browser_version = await browser.version();
     const userAgent = await browser.userAgent();
@@ -133,6 +138,11 @@ async function main() {
     check(productMatches,
       'Actual browser product differs from the requested qualification');
     report.browser_product_verified = true;
+    if (args.engine === 'firefox') {
+      check(/^\d+\.\d+(?:\.\d+)?$/.test(args['expected-browser-version'] || ''), 'Explicit reviewed Firefox stable version is required');
+      check(report.browser_version.toLowerCase() === 'firefox/' + args['expected-browser-version'], 'Runtime Firefox version differs from the verified official stable archive');
+      report.browser_runtime_version_verified = true;
+    }
     page = await ownedData.createPage(browser, ready, args, tls);
     const observationOptions = { disconnectedEvent: CDPSessionEvent.Disconnected,
       onClaims: (operation, claims) => {
@@ -150,6 +160,10 @@ async function main() {
     } else if (args.engine === 'chrome') {
       report.permit_response_observer = {};
       responseOwner = await preparePermitResponseObservation({ ...observationOptions, page,
+        origin: ready.origin, facts: report.permit_response_observer });
+    } else {
+      report.permit_response_observer = {};
+      responseOwner = bidi.preparePermitResponseObservation({ ...observationOptions, page,
         origin: ready.origin, facts: report.permit_response_observer });
     }
     await ownedData.install(page, ready, args);
@@ -533,6 +547,10 @@ async function main() {
       try { await responseOwner.close(); }
       catch (error) { cleanupErrors.push('Owned response observer close: ' + String(error.message).slice(0, 300)); }
     }
+    if (page) {
+      try { await ownedData.closeObservations(page, report); }
+      catch (error) { cleanupErrors.push('Owned download observer close: ' + String(error.message).slice(0, 300)); }
+    }
     if (browser) {
       try { await browser.close(); report.browser_closed = true; }
       catch (error) { cleanupErrors.push('Browser close: ' + String(error.message).slice(0, 300)); }
@@ -580,8 +598,9 @@ async function main() {
     report.renewal_sequence_valid = report.renewals.every((renewal, index, all) =>
       renewal.lease_sequence === index + 2 && (!index || renewal.connection_generation === all[0].connection_generation));
     if (report.error !== null || report.page_errors.length !== 0 || report.api_failures.length !== 0 || !report.renewal_sequence_valid ||
-        (args.engine === 'chrome' && report.permit_response_observer?.passed !== true) ||
-        (responseOwner && report.permit_response_observer?.session_owner?.passed !== true) ||
+        report.permit_response_observer?.passed !== true ||
+        (responseOwner && (args.engine === 'firefox' ? report.permit_response_observer?.bidi_owner?.passed
+          : report.permit_response_observer?.session_owner?.passed) !== true) ||
         (args['exercise-network-damage'] === 'true' && report.network_damage?.passed !== true)) {
       report.passed = false;
       process.exitCode = 1;
