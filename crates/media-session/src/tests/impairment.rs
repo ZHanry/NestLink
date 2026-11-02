@@ -216,7 +216,10 @@ async fn actual_tc_step_original_vp8_files_and_input() -> Result {
         std::env::var_os("NESTLINK_MEDIA_IMPAIRMENT_DIR").ok_or("hosted driver required")?,
     );
     let mut pair = pair_for_network_lab(true, None, false, true, true).await?;
-    let (signer, mut claims) = pair.lab_authority.take().ok_or("explicit fixture authority required")?;
+    let (signer, mut claims) = pair
+        .lab_authority
+        .take()
+        .ok_or("explicit fixture authority required")?;
     let absolute_expiry = claims.issued_at_unix_ms + 60_000;
     let host_lease = pair.host.lease_control();
     let controller_lease = pair.controller.lease_control();
@@ -236,11 +239,17 @@ async fn actual_tc_step_original_vp8_files_and_input() -> Result {
             claims.issued_at_unix_ms = now.unix_ms;
             claims.expires_at_unix_ms = (now.unix_ms + 15_000).min(absolute_expiry);
             let signed = signer.sign(&claims)?.encode_to_vec();
-            host_lease.renew(verify_permit(&signed, &signer.public_key())?, now.monotonic_ms)?;
-            controller_lease.renew(verify_permit(&signed, &signer.public_key())?, now.monotonic_ms)?;
+            host_lease.renew(
+                verify_permit(&signed, &signer.public_key())?,
+                now.monotonic_ms,
+            )?;
+            controller_lease.renew(
+                verify_permit(&signed, &signer.public_key())?,
+                now.monotonic_ms,
+            )?;
             renewals += 1;
         }
-        Ok::<_,Box<dyn std::error::Error+Send+Sync>>(renewals)
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(renewals)
     });
     let addresses = pair.quic_addresses.ok_or("real QUIC pair required")?;
     fs::write(
@@ -444,7 +453,10 @@ async fn actual_tc_step_original_vp8_files_and_input() -> Result {
         "input dispatch p95 increase exceeded original10ms: base={baseline} loaded={loaded} impaired={impaired}"
     );
     let _ = renewal_stop.send(());
-    assert!(renewal.await?? > 0, "actual original signed lease renewal required");
+    assert!(
+        renewal.await?? > 0,
+        "actual original signed lease renewal required"
+    );
     pair.revoke.send_replace(Some(StopReason::Revoked));
     pair.controller_revoke
         .send_replace(Some(StopReason::Revoked));

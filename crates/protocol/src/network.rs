@@ -15,6 +15,9 @@ pub const MAX_PREFIXES: usize = 32;
 pub const MAX_RULES: usize = 64;
 pub const CORE_CAPABILITY: &str = "network-core-v1";
 pub const MIGRATION_CAPABILITY: &str = "path-migration-v1";
+/// Explicit inner remote-control protocol for independently authorized routes.
+/// The frozen legacy ALPN retains its original proof and recovery semantics.
+pub const REMOTE_CAPABILITY_ALPN: &[u8] = b"nestlink/network-remote/1";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

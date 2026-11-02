@@ -166,7 +166,7 @@ impl RoutedEstablishment {
         // isolation. A caller cannot relabel a service grant as remote control
         // or supply an arbitrary ALPN for an authenticated route.
         let inner_alpn = match authorization.purpose() {
-            Purpose::RemoteControl => nestlink_protocol::ALPN.as_bytes(),
+            Purpose::RemoteControl => nestlink_protocol::network::REMOTE_CAPABILITY_ALPN,
             Purpose::PrivateService => nestlink_protocol::service_plane::publication::SERVICE_ALPN,
             _ => return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()),
         };

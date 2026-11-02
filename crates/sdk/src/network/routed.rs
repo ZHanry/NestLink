@@ -260,12 +260,38 @@ async fn authorize_remote_observed<'a>(
         observer: None,
     };
     let connection = owner.transport.connection()?.clone();
+    // The independently verified route selects an explicit new protocol. Its
+    // capability exchange adds no rights and cannot fall back to legacy proof.
+    // The original owner remains retained through negotiation and proof.
+    let capability_initiator = matches!(setup.role, EndpointRole::Controller);
+    let capability = async {
+        use nestlink_protocol::network::{CapabilityOffer, CORE_CAPABILITY, NegotiatedProtocol, PeerId, REMOTE_CAPABILITY_ALPN};
+        use nestlink_transport_quic::capability::{CapabilityBinding, exchange};
+        let selected = exchange(
+            &connection,
+            capability_initiator,
+            REMOTE_CAPABILITY_ALPN,
+            &CapabilityBinding {
+                expected_peer: PeerId(digest(peer_key)),
+                business_digest: observation_binding.business_grant_digest,
+                transport_group: observation_binding.transport_group.ok_or_else(|| io::Error::new(io::ErrorKind::PermissionDenied,"missing original signed transport group"))?,
+            },
+            &CapabilityOffer {
+                schema_version: nestlink_protocol::network::SCHEMA_VERSION,
+                supported: vec![CORE_CAPABILITY.into()],
+                required: vec![CORE_CAPABILITY.into()],
+            },
+            setup_deadline,
+        ).await.map_err(io::Error::other)?;
+        if selected != (NegotiatedProtocol::NetworkV1 { path_migration: false }) {
+            return Err(io::Error::new(io::ErrorKind::PermissionDenied,"unsupported routed remote capability selection").into());
+        }
+        nestlink_remote::quic::authorize(connection, None, setup, &local.identity, peer_key).await
+    };
     let proved = tokio::select! { biased;
         _ = wait_setup_stop(&mut stop) => Err(RemoteError::Stopped),
         _ = wait_setup_cancel(&mut cancel) => Err(RemoteError::Stopped),
-        result = tokio::time::timeout_at(setup_deadline, nestlink_remote::quic::authorize(
-            connection, None, setup, &local.identity, peer_key,
-        )) => result.unwrap_or_else(|_| Err(io::Error::new(io::ErrorKind::TimedOut,
+        result = tokio::time::timeout_at(setup_deadline, capability) => result.unwrap_or_else(|_| Err(io::Error::new(io::ErrorKind::TimedOut,
             "routed business setup deadline exhausted").into())),
     };
     match proved {
