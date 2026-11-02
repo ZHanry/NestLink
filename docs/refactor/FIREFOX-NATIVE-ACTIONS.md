@@ -55,8 +55,16 @@ an incomplete load or a failed cleanup remains a failed integration.
 The Firefox download context uses Puppeteer's standard `downloadBehavior`.
 The adapter observes the pinned BiDi connection's standard
 `browsingContext.downloadWillBegin` and `browsingContext.downloadEnd` events,
-correlated to the exact page context, owned blob origin, navigation and fixed
-filename. No new protocol session or permission command is created. BiDi
+correlated to the exact page context, owned blob URL, download ID, nullable
+navigation and fixed filename. Firefox159's original NavigationManager assigns
+a download UUID while its navigation is null for a Blob save with no ongoing
+document navigation. The adapter uses that actual download ID, never a fabricated
+navigation. This follows the fixed official release sources:
+
+- `https://github.com/mozilla-firefox/firefox/blob/FIREFOX_159_0_RELEASE/remote/shared/NavigationManager.sys.mjs`
+- `https://github.com/mozilla-firefox/firefox/blob/FIREFOX_159_0_RELEASE/remote/webdriver-bidi/modules/root/browsingContext.sys.mjs`
+
+No new protocol session or permission command is created. BiDi
 reports completion without CDP's received-byte counters; both engines still
 require the actual saved file's exact length and SHA256 before and after
 browser exit. The owned final file is physically removed only after that

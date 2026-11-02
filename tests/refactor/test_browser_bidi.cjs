@@ -109,18 +109,19 @@ test('finite pending admission refuses the thirty-third request and closes every
   assert.equal(f.page.eventNames().length, 0);
 });
 
-test('actual BiDi download completion correlates the exact owned page, blob origin, navigation and filename', () => {
+test('actual BiDi Blob download completion correlates its download ID even with the official null navigation', () => {
   const connection = new EventEmitter();
   const browser = { cdpSupported: false, connection };
   const page = { mainFrame: () => ({ browsingContext: { id: 'owned-context' } }) };
   const observer = observeDownload(browser, page, origin);
-  connection.emit('browsingContext.downloadWillBegin', { context: 'foreign-context', url: 'blob:' + origin + '/id', navigation: 'ignored', suggestedFilename: 'owned-download.bin' });
+  connection.emit('browsingContext.downloadWillBegin', { context: 'foreign-context', url: 'blob:' + origin + '/id', download: 'ignored-download', navigation: null, suggestedFilename: 'owned-download.bin' });
   assert.equal(observer.started.length, 0);
-  connection.emit('browsingContext.downloadWillBegin', { context: 'owned-context', url: 'blob:' + origin + '/id', navigation: 'owned-navigation', suggestedFilename: 'owned-download.bin' });
+  connection.emit('browsingContext.downloadWillBegin', { context: 'owned-context', url: 'blob:' + origin + '/id', download: 'owned-download', navigation: null, suggestedFilename: 'owned-download.bin' });
   assert.equal(observer.progress.size, 0);
-  connection.emit('browsingContext.downloadEnd', { context: 'owned-context', navigation: 'owned-navigation', status: 'complete', filepath: '/private/never-publish' });
+  connection.emit('browsingContext.downloadEnd', { context: 'owned-context', url: 'blob:' + origin + '/id', download: 'owned-download', navigation: null, status: 'complete', filepath: '/private/never-publish' });
   assert.equal(observer.started[0].filename, 'owned-download.bin');
-  assert.equal(observer.progress.get('owned-navigation').state, 'completed');
+  assert.equal(observer.started[0].navigation, null);
+  assert.equal(observer.progress.get('owned-download').state, 'completed');
   assert.equal(JSON.stringify([...observer.progress.values()]).includes('/private/'), false);
   observer.close();
   assert.equal(observer.closed, true);
@@ -131,10 +132,24 @@ test('unexpected download origins and unmatched completions are refused rather t
   const connection = new EventEmitter();
   const observer = observeDownload({ cdpSupported: false, connection },
     { mainFrame: () => ({ browsingContext: { id: 'owned-context' } }) }, origin);
-  connection.emit('browsingContext.downloadWillBegin', { context: 'owned-context', url: 'blob:https://other.invalid/id', navigation: 'wrong', suggestedFilename: 'owned-download.bin' });
-  connection.emit('browsingContext.downloadEnd', { context: 'owned-context', navigation: 'wrong', status: 'complete' });
+  connection.emit('browsingContext.downloadWillBegin', { context: 'owned-context', url: 'blob:https://other.invalid/id', download: 'wrong', navigation: null, suggestedFilename: 'owned-download.bin' });
+  connection.emit('browsingContext.downloadEnd', { context: 'owned-context', url: 'blob:' + origin + '/id', download: 'wrong', navigation: null, status: 'complete' });
   assert.equal(observer.started.length, 0);
   assert.equal(observer.progress.size, 0);
   assert.equal(observer.errors.length, 2);
+  observer.close();
+});
+
+test('a different download ID, changed blob or changed nullable navigation cannot complete the original save', () => {
+  const connection = new EventEmitter();
+  const observer = observeDownload({ cdpSupported: false, connection },
+    { mainFrame: () => ({ browsingContext: { id: 'owned-context' } }) }, origin);
+  const event = { context: 'owned-context', url: 'blob:' + origin + '/id', download: 'owned-download', navigation: null };
+  connection.emit('browsingContext.downloadWillBegin', { ...event, suggestedFilename: 'owned-download.bin' });
+  for (const change of [{ download: 'other-download' }, { url: 'blob:' + origin + '/other-id' }, { navigation: 'unexpected-navigation' }]) {
+    connection.emit('browsingContext.downloadEnd', { ...event, ...change, status: 'complete' });
+  }
+  assert.equal(observer.progress.size, 0);
+  assert.equal(observer.errors.length, 3);
   observer.close();
 });

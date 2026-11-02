@@ -167,26 +167,35 @@ function observeDownload(browser, page, origin) {
     throw new Error('Pinned Firefox BiDi download event surface is unavailable');
   }
   const observer = { started: [], progress: new Map(), errors: [], closed: false };
+  const sources = new Map();
+  const identifier = value => typeof value === 'string' && value.length > 0 && value.length <= 128;
   const failure = category => { if (observer.errors.length < 8) observer.errors.push(category); };
   const begin = event => {
     if (event.context !== context) return;
     if (typeof event.url !== 'string' || !event.url.startsWith('blob:' + origin + '/')
-        || typeof event.navigation !== 'string' || event.navigation.length === 0 || event.navigation.length > 128
+        || !identifier(event.download) || (event.navigation !== null && !identifier(event.navigation))
         || event.suggestedFilename !== 'owned-download.bin'
-        || observer.started.length >= 4) { failure('unexpected-download'); return; }
-    observer.started.push({ guid: event.navigation, filename: event.suggestedFilename });
+        || sources.has(event.download) || observer.started.length >= 4) { failure('unexpected-download'); return; }
+    // Firefox159 generates a download UUID even when saving an owned Blob
+    // causes no navigation. Its standard navigation field is then null.
+    sources.set(event.download, event.url);
+    observer.started.push({ guid: event.download, navigation: event.navigation, filename: event.suggestedFilename });
   };
   const end = event => {
     if (event.context !== context) return;
-    if (!observer.started.some(item => item.guid === event.navigation)
-        || !['complete', 'canceled'].includes(event.status)) { failure('unmatched-download-end'); return; }
-    observer.progress.set(event.navigation, { state: event.status === 'complete' ? 'completed' : 'canceled' });
+    const started = observer.started.find(item => item.guid === event.download);
+    if (!started || event.navigation !== started.navigation || event.url !== sources.get(event.download)
+        || observer.progress.has(event.download) || !['complete', 'canceled'].includes(event.status)) {
+      failure('unmatched-download-end'); return;
+    }
+    observer.progress.set(event.download, { state: event.status === 'complete' ? 'completed' : 'canceled' });
   };
   connection.on('browsingContext.downloadWillBegin', begin);
   connection.on('browsingContext.downloadEnd', end);
   observer.close = () => {
     connection.off('browsingContext.downloadWillBegin', begin);
     connection.off('browsingContext.downloadEnd', end);
+    sources.clear();
     observer.closed = true;
   };
   return observer;
