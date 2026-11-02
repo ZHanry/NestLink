@@ -70,8 +70,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 -B scripts/refactor-linux-network-package.py --binary "$CARGO_TARGET_DIR/release/nestlink-daemon" --server "$CARGO_TARGET_DIR/release/nestlink-server" --output "${{ runner.temp }}/linux-network-package"
+      - name: Locate actual package and build evidence after execution
+        id: evidence-presence
+        if: ${{ !cancelled() }}
+        run: |
+          if test -f "$RUNNER_TEMP/linux-network-package/linux-network-package.json"; then
+            echo "package=true" >> "$GITHUB_OUTPUT"
+          fi
+          if test -f "$RUNNER_TEMP/linux-network-build-evidence/provenance.json"; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Retain native package, exact hashes and actual installation logs
-        if: ${{ !cancelled() && hashFiles(format('{0}/linux-network-package/linux-network-package.json', runner.temp)) != '' }}
+        if: ${{ !cancelled() && steps.evidence-presence.outputs.package == 'true' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: linux-network-package-${{ matrix.target }}-${{ github.sha }}-${{ github.run_attempt }}
@@ -79,7 +89,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
       - name: Retain same-source build evidence including pre-install failures
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.evidence-presence.outputs.build == 'true' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: linux-network-build-${{ matrix.target }}-${{ github.sha }}-${{ github.run_attempt }}
