@@ -58,10 +58,13 @@ impl Check {
     }
 }
 
-async fn read_checks(sdk: &Sdk, purpose: Purpose) -> Result<Vec<Check>, SdkError> {
+async fn read_checks(sdk: &Sdk, purpose: Purpose, current: &impl Fn() -> bool) -> Result<Vec<Check>, SdkError> {
+    let check_current = || if current() { Ok(()) } else { Err(SdkError::Invalid) };
+    check_current()?;
     // Re-read the account before any optional administrator-only operation.
     // The cached principal alone cannot prove the role is still current.
     let account = sdk.me().await?;
+    check_current()?;
     if sdk
         .principal()
         .is_none_or(|p| p.account_id != account.principal.account_id)
@@ -76,25 +79,33 @@ async fn read_checks(sdk: &Sdk, purpose: Purpose) -> Result<Vec<Check>, SdkError
         ),
         failed: false,
     }];
-    checks.push(Check::result(UiCopy::new("设备登记", "Device enrollment"), sdk.devices().await.map(|devices| {
+    let devices = sdk.devices().await;
+    check_current()?;
+    checks.push(Check::result(UiCopy::new("设备登记", "Device enrollment"), devices.map(|devices| {
         let enrolled = devices.iter().filter(|view| !view.revoked).count();
         UiCopy::new(format!("服务器返回 {enrolled} 台未撤销设备；在线和可达状态需在实际会话中确认。"), format!("The server returned {enrolled} non-revoked devices; availability and reachability require an actual session."))
     }))?);
     if purpose == Purpose::Remote || purpose == Purpose::Network {
-        checks.push(Check::result(UiCopy::new("原生 STUN 配置", "Native STUN configuration"), sdk.native_discovery_config().await.map(|config| {
+        let discovery = sdk.native_discovery_config().await;
+        check_current()?;
+        checks.push(Check::result(UiCopy::new("原生 STUN 配置", "Native STUN configuration"), discovery.map(|config| {
             let count = config.stun_servers.len();
             UiCopy::new(format!("部署返回 {count} 个地址；此读取未测试 UDP 可达性，也未更改本机批准。"), format!("The deployment returned {count} endpoints. This read does not test UDP reachability or change local consent."))
         }))?);
     }
     if purpose == Purpose::Private || purpose == Purpose::Public {
-        checks.push(Check::result(UiCopy::new("服务发布记录", "Service publication records"), sdk.services(None, 50).await.map(|page| {
+        let services = sdk.services(None, 50).await;
+        check_current()?;
+        checks.push(Check::result(UiCopy::new("服务发布记录", "Service publication records"), services.map(|page| {
             let count = page.services.len();
             let published = page.services.iter().filter(|service| service.publication == ServicePublicationStatus::Published).count();
             UiCopy::new(format!("本页 {count} 项服务中，服务器记录 {published} 项已发布；更多记录：{}。这不是外网或本机目标可达性检查。", if page.more { "有" } else { "无" }), format!("The server records {published} published services among {count} on this page; more records: {}. This does not check public ingress or local target reachability.", if page.more { "yes" } else { "no" }))
         }))?);
     }
     if account.principal.is_admin && purpose != Purpose::Private {
-        checks.push(Check::result(UiCopy::new("部署策略", "Deployment policy"), sdk.policy().await.map(|view| {
+        let policy = sdk.policy().await;
+        check_current()?;
+        checks.push(Check::result(UiCopy::new("部署策略", "Deployment policy"), policy.map(|view| {
             let policy = view.policy;
             UiCopy::new(format!("版本 {}：转发 {}，远控路径 {}，公网入口 {}。保存的策略仍需本次业务和双方设备批准。", view.revision, policy.server_forwarding, policy.peer_path_mode, policy.public_ingress), format!("Revision {}: forwarding {}, remote paths {}, public ingress {}. Saved policy still requires session and device approvals.", view.revision, policy.server_forwarding, policy.peer_path_mode, policy.public_ingress))
         }))?);
@@ -141,12 +152,12 @@ pub(super) fn SetupPanel(
         let alive = alive.clone();
         spawn_local(async move {
             let client = sdk.lock().await;
-            let result = read_checks(&client, mode).await;
+            let current = || alive.load(Ordering::Acquire)
+                && session_revision.try_get_untracked() == Some(session)
+                && revision.try_get_untracked() == Some(request);
+            let result = read_checks(&client, mode, &current).await;
             drop(client);
-            if !alive.load(Ordering::Acquire)
-                || session_revision.try_get_untracked() != Some(session)
-                || revision.try_get_untracked() != Some(request)
-            {
+            if !current() {
                 return;
             }
             busy.set(false);

@@ -760,7 +760,8 @@ async fn run() -> Result {
                         response
                     } else {
                         let delay_management_read = request.method() == axum::http::Method::GET
-                            && (request.uri().path().starts_with("/api/v3/network/spaces/")
+                            && (request.uri().path() == "/api/v3/auth/me"
+                                || request.uri().path().starts_with("/api/v3/network/spaces/")
                                 || (request.uri().path().starts_with("/api/v3/nodes/")
                                     && request.uri().path().ends_with("/relay-attributes")));
                         let response = next.run(request).await;

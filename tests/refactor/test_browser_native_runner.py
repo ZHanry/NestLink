@@ -53,7 +53,7 @@ def completed_receipts():
             "slow_old_response_ignored", "node_switch_clears_draft")},
         "edge_namespace_ui_helper_sha256": RUNNER.sha256(
             (ROOT / "scripts/lib/refactor-browser-edge-namespace.cjs").read_bytes()),
-        "setup_guide_ui": {"passed": True, "read_only": True, "existing_space_and_remote_navigation": True,
+        "setup_guide_ui": {"passed": True, "read_only": True, "existing_space_and_remote_navigation": True, "logout_during_read_no_followup": True,
             "collapsed_after_checks": True, "modes": [{"mode": mode, "actual_readback": True}
                 for mode in ("remote", "private", "public", "network")]},
         "setup_ui_helper_sha256": RUNNER.sha256((ROOT / "scripts/lib/refactor-browser-setup.cjs").read_bytes()),
@@ -197,7 +197,7 @@ class NativeRunnerTests(unittest.TestCase):
             receipts = completed_receipts()
             receipts[0]["setup_guide_ui"] = replacement
             self.assertIn("setup-guide-all-modes", RUNNER.validate_receipts(*receipts))
-        for field in ("read_only", "existing_space_and_remote_navigation", "collapsed_after_checks"):
+        for field in ("read_only", "existing_space_and_remote_navigation", "collapsed_after_checks", "logout_during_read_no_followup"):
             receipts = completed_receipts()
             receipts[0]["setup_guide_ui"][field] = False
             self.assertIn("setup-guide-" + field, RUNNER.validate_receipts(*receipts))

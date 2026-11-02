@@ -301,7 +301,7 @@ def validate_receipts(browser, host, data, database, exit_codes, expected_browse
             sha256((ROOT / "scripts/lib/refactor-browser-edge-namespace.cjs").read_bytes()),
             "edge-namespace-helper-source")
     setup = browser.get("setup_guide_ui", {})
-    for field in ("passed", "read_only", "existing_space_and_remote_navigation", "collapsed_after_checks"):
+    for field in ("passed", "read_only", "existing_space_and_remote_navigation", "collapsed_after_checks", "logout_during_read_no_followup"):
         require(isinstance(setup, dict) and setup.get(field) is True, "setup-guide-" + field)
     modes = setup.get("modes", []) if isinstance(setup, dict) else []
     require(isinstance(modes, list) and len(modes) == 4

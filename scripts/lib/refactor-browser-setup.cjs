@@ -10,6 +10,48 @@ async function clickText(page, text) {
   }
   throw new Error('Setup action missing: ' + text);
 }
+async function signIn(page, ready) {
+  await page.goto(ready.origin, { waitUntil: 'networkidle0' });
+  await page.locator('.language-selector button[lang="en"]').click();
+  await page.locator('.entry-panel button.primary').click();
+  await page.waitForSelector('#username', { visible: true });
+  await page.locator('#username').fill(ready.username);
+  await page.locator('#password').fill(ready.password);
+  await page.locator('.entry-panel button.primary').click();
+  await page.waitForSelector('.desktop-directory button.record', { visible: true });
+}
+async function logoutDuringRead(page, ready, facts) {
+  const sibling = await page.browserContext().newPage();
+  try {
+    await signIn(sibling, ready);
+    await sibling.locator(PANEL + ' summary').click();
+    let arrived = false, followups = 0;
+    const observe = request => {
+      if (request.method() === 'GET' && ['/api/v3/devices', '/api/v3/network/discovery', '/api/v3/policy'].includes(new URL(request.url()).pathname)) followups++;
+    };
+    sibling.on('request', observe);
+    const response = sibling.waitForResponse(value => value.request().method() === 'GET'
+      && new URL(value.url()).pathname === '/api/v3/auth/me');
+    response.then(() => { arrived = true; });
+    const requested = sibling.waitForRequest(value => value.method() === 'GET'
+      && new URL(value.url()).pathname === '/api/v3/auth/me');
+    await clickText(sibling, 'Read current state'); await requested;
+    await sibling.locator('.sidebar-foot button:last-child').click();
+    check(!arrived, 'Logout did not precede the delayed actual account read');
+    check((await response).status() === 200, 'Delayed account read was not real server success');
+    await sibling.waitForFunction(() => !document.querySelector('.workspace')
+      && document.querySelector('.entry-panel button.primary')?.disabled === false);
+    sibling.off('request', observe);
+    check(followups === 0, 'A signed-out setup read started a follow-up request');
+    check(await sibling.$(PANEL) === null, 'A late account reply restored signed-out controls');
+    await signIn(sibling, ready);
+    check(await sibling.$$eval(PANEL + ' ul li', elements => elements.length) === 0,
+      'A new login retained an old setup readback');
+    facts.logout_during_read_no_followup = true;
+  } finally {
+    await sibling.close();
+  }
+}
 async function run(page, ready, report) {
   const facts = report.setup_guide_ui = { passed: false, modes: [], read_only: false };
   const observed = [];
@@ -62,6 +104,7 @@ async function run(page, ready, report) {
     facts.existing_space_and_remote_navigation = true;
     check(observed.every(request => request.method === 'GET'), 'The setup read changed a protected resource');
     facts.read_only = true;
+    await logoutDuringRead(page, ready, facts);
     await page.locator(PANEL + ' summary').click();
     facts.collapsed_after_checks = true;
     facts.passed = true;

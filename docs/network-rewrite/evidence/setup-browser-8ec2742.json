@@ -1,0 +1,351 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "8ec27425494ead306d36f6fc32f1812aa574f4e7",
+  "workflow": ".github/workflows/web-build.yml",
+  "run_id": 41405353461,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41405353461",
+  "workflow_conclusion": "success",
+  "build_provenance": {
+    "execution_environment": "github-hosted ubuntu-24.04",
+    "same_run_release_site_and_optimized_native_fixture": true,
+    "site_artifact": {
+      "id": 13123213117,
+      "node_id": "MDg6QXJ0aWZhY3QxMzEyMzIxMzExNw==",
+      "name": "nestlink-web-dist",
+      "size_in_bytes": 2094783,
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13123213117",
+      "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13123213117/zip",
+      "expired": false,
+      "digest": "sha256:c9ce68519887161c7f18ce08d9308fe357af710c5a665175b4fcc75885561356",
+      "created_at": "2026-11-02T07:29:46Z",
+      "updated_at": "2026-11-02T07:29:46Z",
+      "expires_at": "2027-01-31T07:17:38Z",
+      "workflow_run": {
+        "id": 41405353461,
+        "repository_id": 1423035582,
+        "head_repository_id": 1423035582,
+        "head_branch": "main",
+        "head_sha": "8ec27425494ead306d36f6fc32f1812aa574f4e7"
+      }
+    }
+  },
+  "execution_provenance": {
+    "scope": "Actual compiled production Web controls, pinned SDK and real server/SQLite over isolated verified HTTPS; actual native synthetic media fixture",
+    "browsers": [
+      {
+        "browser_product": "edge",
+        "job_id": 125150144972,
+        "job_conclusion": "success",
+        "artifact_id": 13123938621,
+        "github_archive_digest": "sha256:6e25224bc7c10f90a610805dd4c33da6ee3bf044724a5bfdb47da8aa44f88984",
+        "source_revision": "8ec27425494ead306d36f6fc32f1812aa574f4e7",
+        "setup_guide": {
+          "passed": true,
+          "modes": [
+            {
+              "mode": "remote",
+              "server_get_paths": [
+                "/api/v3/auth/me",
+                "/api/v3/devices",
+                "/api/v3/network/discovery",
+                "/api/v3/policy"
+              ],
+              "actual_readback": true
+            },
+            {
+              "mode": "private",
+              "server_get_paths": [
+                "/api/v3/auth/me",
+                "/api/v3/devices",
+                "/api/v3/services"
+              ],
+              "actual_readback": true
+            },
+            {
+              "mode": "public",
+              "server_get_paths": [
+                "/api/v3/auth/me",
+                "/api/v3/devices",
+                "/api/v3/services",
+                "/api/v3/policy"
+              ],
+              "actual_readback": true
+            },
+            {
+              "mode": "network",
+              "server_get_paths": [
+                "/api/v3/auth/me",
+                "/api/v3/devices",
+                "/api/v3/network/discovery",
+                "/api/v3/policy"
+              ],
+              "actual_readback": true
+            }
+          ],
+          "read_only": true,
+          "existing_space_and_remote_navigation": true,
+          "collapsed_after_checks": true
+        },
+        "setup_helper_sha256": "489cb79a67b98b877e1a221157eaf823c7aa871a5c4e369c9d4efdd3f9595b32",
+        "actual_process_exit_codes": {
+          "browser": 0,
+          "native": 0
+        },
+        "validation_failures": [],
+        "cleanup": {
+          "browser_forced": false,
+          "native_forced": false,
+          "process_errors": [],
+          "owned_processes_stopped": true,
+          "download_directory_empty_after_probe": true,
+          "private_directory_removed": true
+        },
+        "build_inputs": {
+          "native_sha256": "4e6338b9db0fc2902d48e50ce25b8c40106b6d3671c514b40f9e0d51c8c922b8",
+          "caddy_sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+          "site_index_sha256": "8298aa860a3513205b487621c70ba3a53c58405ffa7abcfab9ca7238d21a13f6",
+          "runner_sha256": "8e192482cf836c6d6dc0fc741f50e6c5a1877877294ef71af433b05e10ab3766"
+        },
+        "downloaded_files_sha256": [
+          {
+            "path": "browser-report-progress.jsonl",
+            "bytes": 3144,
+            "sha256": "06083bef862188fcfa10427e55a817df3cba7383a1563c3862d13d2249e1935a"
+          },
+          {
+            "path": "browser-report-remote-narrow.png",
+            "bytes": 27402,
+            "sha256": "528aab9e299a46608713ac414cef79ff148eac40dfb75a853d7833d516d202b4"
+          },
+          {
+            "path": "browser-report-tunnel-editor.png",
+            "bytes": 78019,
+            "sha256": "bf96427db6904ec45ea74ad5fbc6161244c0918b4b240a30210e05d3c2b245a6"
+          },
+          {
+            "path": "browser-report-video.png",
+            "bytes": 8303,
+            "sha256": "6a09162bf494693dceb62ee8878836777341d54a71851a6ea235040a0604a075"
+          },
+          {
+            "path": "browser-report-workspace.png",
+            "bytes": 113518,
+            "sha256": "9ff9386da9a751a446e8d97310a9716de0bae2ca2d76eecff41569d08f9dd636"
+          },
+          {
+            "path": "browser-report.json",
+            "bytes": 927294,
+            "sha256": "086a4e53a8f6d584639f44ddf3672502a37af38a05c1a4bb8e75d1b62f358b0f"
+          },
+          {
+            "path": "connected.json",
+            "bytes": 24,
+            "sha256": "eb6aca21988bbfb247e8090439a12f31fa3d6d73aa8e601a292f6557d506c06e"
+          },
+          {
+            "path": "data-result.json",
+            "bytes": 2731,
+            "sha256": "5cbe7617d337d2ebe11ed4f907a663b01e1f3c96dfb8c46fec444d5f00ea49db"
+          },
+          {
+            "path": "database-cleanup.json",
+            "bytes": 297,
+            "sha256": "bc7665d7004a905fd6a0b7d73ff9b61fea7fe4c21a01df9df10974b61411ace5"
+          },
+          {
+            "path": "host-result.json",
+            "bytes": 617,
+            "sha256": "f17645b8dab2d992110ab7f9f7887eca179ac2b2b8e4e8a1feb0509e7e806ff9"
+          },
+          {
+            "path": "host-start-gate.json",
+            "bytes": 144,
+            "sha256": "3196b7eb63b1148006e5a2c07dfc7e9877a8860bc722249cc2518de589dc4c5e"
+          },
+          {
+            "path": "input-records.jsonl",
+            "bytes": 1053,
+            "sha256": "9fd9ead293bf675a786b792e6c8762b236147f3ee815e1fbc29d6e15ae8b852d"
+          },
+          {
+            "path": "management-stages.jsonl",
+            "bytes": 78214,
+            "sha256": "aac676ede01f2cd09615ebbe9913fa561ea5eee5ae9091a8cbc4f148d9807b28"
+          },
+          {
+            "path": "negotiation-events.jsonl",
+            "bytes": 1512,
+            "sha256": "a17e9b12058ec4993c8d6e5252638ccf9b08ff70e2fa9ea655fda7420f0a87f3"
+          },
+          {
+            "path": "runner-result.json",
+            "bytes": 1146,
+            "sha256": "38fb731a5b199ee430d461f8d3cffbe6d10b47a32d76d2870887e9425c0aff9e"
+          }
+        ]
+      },
+      {
+        "browser_product": "chrome",
+        "job_id": 125150144621,
+        "job_conclusion": "success",
+        "artifact_id": 13124267168,
+        "github_archive_digest": "sha256:78bb390dea277943fb6bb3224af4a6725ca1e110f2eddbda58a1e60807a9e4cb",
+        "source_revision": "8ec27425494ead306d36f6fc32f1812aa574f4e7",
+        "setup_guide": {
+          "passed": true,
+          "modes": [
+            {
+              "mode": "remote",
+              "server_get_paths": [
+                "/api/v3/auth/me",
+                "/api/v3/devices",
+                "/api/v3/network/discovery",
+                "/api/v3/policy"
+              ],
+              "actual_readback": true
+            },
+            {
+              "mode": "private",
+              "server_get_paths": [
+                "/api/v3/auth/me",
+                "/api/v3/devices",
+                "/api/v3/services"
+              ],
+              "actual_readback": true
+            },
+            {
+              "mode": "public",
+              "server_get_paths": [
+                "/api/v3/auth/me",
+                "/api/v3/devices",
+                "/api/v3/services",
+                "/api/v3/policy"
+              ],
+              "actual_readback": true
+            },
+            {
+              "mode": "network",
+              "server_get_paths": [
+                "/api/v3/auth/me",
+                "/api/v3/devices",
+                "/api/v3/network/discovery",
+                "/api/v3/policy"
+              ],
+              "actual_readback": true
+            }
+          ],
+          "read_only": true,
+          "existing_space_and_remote_navigation": true,
+          "collapsed_after_checks": true
+        },
+        "setup_helper_sha256": "489cb79a67b98b877e1a221157eaf823c7aa871a5c4e369c9d4efdd3f9595b32",
+        "actual_process_exit_codes": {
+          "browser": 0,
+          "native": 0
+        },
+        "validation_failures": [],
+        "cleanup": {
+          "browser_forced": false,
+          "native_forced": false,
+          "process_errors": [],
+          "owned_processes_stopped": true,
+          "download_directory_empty_after_probe": true,
+          "private_directory_removed": true
+        },
+        "build_inputs": {
+          "native_sha256": "eee3dbc77c6e96317b15e9913b4d2d7a4e99480cb8b5c54a063bd863a2abf3a8",
+          "caddy_sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+          "site_index_sha256": "8298aa860a3513205b487621c70ba3a53c58405ffa7abcfab9ca7238d21a13f6",
+          "runner_sha256": "8e192482cf836c6d6dc0fc741f50e6c5a1877877294ef71af433b05e10ab3766"
+        },
+        "downloaded_files_sha256": [
+          {
+            "path": "browser-report-progress.jsonl",
+            "bytes": 3135,
+            "sha256": "acf00774ca69ef5270d92b33ea34accdb5edc9ce284ba879ff757668626baee0"
+          },
+          {
+            "path": "browser-report-remote-narrow.png",
+            "bytes": 28749,
+            "sha256": "f97b16921bee8d10e4c6cce57f181d9fe2d48ee1f760161832a28d3f7dc13936"
+          },
+          {
+            "path": "browser-report-tunnel-editor.png",
+            "bytes": 78001,
+            "sha256": "47b55beb2ae123e9355bb75acbaa138a8867f136a53ffbdb649f58936ce80a5c"
+          },
+          {
+            "path": "browser-report-video.png",
+            "bytes": 8302,
+            "sha256": "7ab4acdbf4a521ef9d805be7ccf223f42b56bf47a87dd4cbf54119e1f6dcbca4"
+          },
+          {
+            "path": "browser-report-workspace.png",
+            "bytes": 113616,
+            "sha256": "f71d5f59f3ec23e867267280366b3767742f33aa66252f37cd6373b240c8a33f"
+          },
+          {
+            "path": "browser-report.json",
+            "bytes": 939278,
+            "sha256": "e73264f4db2975f6d4b36701c218d4acf3cf370ce731460bde273aec3c1ca6f4"
+          },
+          {
+            "path": "connected.json",
+            "bytes": 24,
+            "sha256": "eb6aca21988bbfb247e8090439a12f31fa3d6d73aa8e601a292f6557d506c06e"
+          },
+          {
+            "path": "data-result.json",
+            "bytes": 2842,
+            "sha256": "b55d374295e88fd19ecab87d1fdd21ac8ca87e2dc5342065e3436b684aec024a"
+          },
+          {
+            "path": "database-cleanup.json",
+            "bytes": 297,
+            "sha256": "bc7665d7004a905fd6a0b7d73ff9b61fea7fe4c21a01df9df10974b61411ace5"
+          },
+          {
+            "path": "host-result.json",
+            "bytes": 617,
+            "sha256": "dd18fa43e72858735437f1056d49e6078f5d9191ba0b9acc31e282fe3c7d3a2c"
+          },
+          {
+            "path": "host-start-gate.json",
+            "bytes": 144,
+            "sha256": "e6421ebca13267034c21625529cfb8d49ee65713f4a1a7672fc5bad28165053c"
+          },
+          {
+            "path": "input-records.jsonl",
+            "bytes": 1123,
+            "sha256": "e4d66e448173ce13cf3b286013759515beeb1e8ba42a9df83269ae391a46474e"
+          },
+          {
+            "path": "management-stages.jsonl",
+            "bytes": 77567,
+            "sha256": "3d0a2fa6ee95936b4f5939fb152d625aac223ff9a0e699e262de3e0372eb455f"
+          },
+          {
+            "path": "negotiation-events.jsonl",
+            "bytes": 1512,
+            "sha256": "d25e65b9c7e96c29a3bf914ccab3469e0a9a5fff14481b64fabd9affe49bcf07"
+          },
+          {
+            "path": "runner-result.json",
+            "bytes": 1148,
+            "sha256": "c2bae6e8afadb50e990f0b0838a8953b4c62b4b51fac34a6e1aecc8cf5ca57fa"
+          }
+        ]
+      }
+    ]
+  },
+  "whole_W30_AC51_AC52_passed": false,
+  "verification": "Downloaded both browser artifacts, read complete actual reports and runner validation/cleanup, hashed all30 extracted files, checked setup helper source digest. GitHub archive digests are API metadata; no separate local ZIP digest check. No local project build or tests.",
+  "limitations": [
+    "This exact source qualifies the four read-only setup purpose paths, existing spaces/remote navigation and continued original browser-native integration on Chrome/Edge.",
+    "Administrator fixture reads do not qualify every ordinary-user/denial/expired/unmounted setup read case or installed onboarding.",
+    "No Firefox, Windows installed desktop, physical GPU or true input-to-display acceptance is claimed.",
+    "Read enrollment/configuration/publication records are explicitly separate from reachability; no STUN/TURN/public ingress probe pass is inferred."
+  ]
+}
