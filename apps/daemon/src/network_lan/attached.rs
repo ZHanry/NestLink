@@ -2,8 +2,15 @@
 //! The TUN helper and signed packet authority remain the existing originals.
 use super::{Result, bytes32, policy_bytes};
 use crate::network_packet_runtime::{PacketIoFuture, WholePacketDevice};
-use nestlink_sdk::network::{lan::{LanBridge, LanPolicy}, packet_access::OnlinePacketAccess};
-use std::{io, path::PathBuf, time::{Duration, Instant}};
+use nestlink_sdk::network::{
+    lan::{LanBridge, LanPolicy},
+    packet_access::OnlinePacketAccess,
+};
+use std::{
+    io,
+    path::PathBuf,
+    time::{Duration, Instant},
+};
 
 #[derive(clap::Args)]
 pub(crate) struct Options {
@@ -27,14 +34,19 @@ impl Options {
     pub fn prepare(&self, space: &str) -> Result<Option<Reviewed>> {
         let (Some(path), Some(approval)) = (&self.lan_policy, &self.approve_lan_policy) else {
             if self.lan_policy.is_some() || self.approve_lan_policy.is_some() {
-                return Err(io::Error::other("LAN policy and independent approval must be supplied together").into());
+                return Err(io::Error::other(
+                    "LAN policy and independent approval must be supplied together",
+                )
+                .into());
             }
             return Ok(None);
         };
         let digest = bytes32(approval)?;
         let bytes = policy_bytes(path)?;
         if nestlink_identity::digest(&bytes) != digest {
-            return Err(io::Error::other("LAN policy differs from its independent approval").into());
+            return Err(
+                io::Error::other("LAN policy differs from its independent approval").into(),
+            );
         }
         let policy: LanPolicy = serde_json::from_slice(&bytes)?;
         policy.validate()?;
@@ -42,16 +54,25 @@ impl Options {
         if policy.space_id != space {
             return Err(io::Error::other("LAN policy belongs to another pinned space").into());
         }
-        Ok(Some(Reviewed { path: path.clone(), digest, policy }))
+        Ok(Some(Reviewed {
+            path: path.clone(),
+            digest,
+            policy,
+        }))
     }
 }
 impl Reviewed {
     pub fn bind(self, access: &OnlinePacketAccess) -> Result<Attached> {
         if nestlink_identity::digest(&policy_bytes(&self.path)?) != self.digest {
-            return Err(io::Error::other("LAN approval changed before original TUN handoff").into());
+            return Err(
+                io::Error::other("LAN approval changed before original TUN handoff").into(),
+            );
         }
         let bridge = LanBridge::bind(self.policy.clone(), &self.policy.space_id, access)?;
-        Ok(Attached { review: self, bridge })
+        Ok(Attached {
+            review: self,
+            bridge,
+        })
     }
 }
 impl Attached {
@@ -63,7 +84,8 @@ impl Attached {
         Ok(())
     }
     pub fn shutdown(&self) -> io::Result<()> {
-        self.bridge.shutdown(Instant::now() + Duration::from_secs(5))
+        self.bridge
+            .shutdown(Instant::now() + Duration::from_secs(5))
     }
 }
 /// Both devices are observed by the same noncloneable packet admission and
@@ -75,7 +97,9 @@ pub(crate) struct Device<'a, D> {
 impl<D: WholePacketDevice> WholePacketDevice for Device<'_, D> {
     fn recv<'a>(&'a self, packet: &'a mut [u8]) -> PacketIoFuture<'a> {
         Box::pin(async move {
-            let Some(lan) = self.lan else { return self.host.recv(packet).await; };
+            let Some(lan) = self.lan else {
+                return self.host.recv(packet).await;
+            };
             let mut discovery = vec![0_u8; nestlink_sdk::network::packet_access::PACKET_MTU];
             tokio::select! {
                 result = self.host.recv(packet) => result,
@@ -91,7 +115,8 @@ impl<D: WholePacketDevice> WholePacketDevice for Device<'_, D> {
     fn send<'a>(&'a self, packet: &'a [u8]) -> PacketIoFuture<'a> {
         Box::pin(async move {
             if let Some(lan) = self.lan
-                && lan.bridge.handles_admitted(packet) {
+                && lan.bridge.handles_admitted(packet)
+            {
                 return lan.bridge.receive_admitted(packet);
             }
             self.host.send(packet).await

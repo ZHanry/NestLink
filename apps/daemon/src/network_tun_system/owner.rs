@@ -275,7 +275,9 @@ struct HostGuard<'a> {
 impl crate::network_packet_runtime::OwnerGuard for HostGuard<'_> {
     fn check_local(&self) -> Result {
         local_current(self.directory, self.login)?;
-        if let Some(lan) = self.lan { lan.check()?; }
+        if let Some(lan) = self.lan {
+            lan.check()?;
+        }
         Ok(())
     }
     fn check(&self) -> crate::network_packet_runtime::GuardFuture<'_> {

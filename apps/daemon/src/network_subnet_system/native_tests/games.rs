@@ -13,12 +13,22 @@ async fn actual_luanti_client_server_play_and_original_kernel_carrier_stop() -> 
     nestlink_platform_security::new_private_directory(&output)?;
     let lab = lab::Lab::new()?;
     nestlink_platform_security::create_private(&lab.config(), &serde_json::to_vec(&lab)?)?;
-    assert!(lab.status("setup").await?, "exact owned subnet setup failed");
+    assert!(
+        lab.status("setup").await?,
+        "exact owned subnet setup failed"
+    );
     let fixture = fixture::Fixture::for_game()?;
-    let plans = [fixture.plan(0, lab.plan(0), lab.bridge(0)).await?,
-        fixture.plan(1, lab.plan(1), lab.bridge(1)).await?];
-    for plan in &plans { plan.save_new()?; }
-    let mut helpers = [lab.command("apply0")?.spawn()?, lab.command("apply1")?.spawn()?];
+    let plans = [
+        fixture.plan(0, lab.plan(0), lab.bridge(0)).await?,
+        fixture.plan(1, lab.plan(1), lab.bridge(1)).await?,
+    ];
+    for plan in &plans {
+        plan.save_new()?;
+    }
+    let mut helpers = [
+        lab.command("apply0")?.spawn()?,
+        lab.command("apply1")?.spawn()?,
+    ];
     let mut game: Option<Child> = None;
     let outcome = async {
         let (first, second) = helpers.split_at_mut(1);
@@ -68,8 +78,12 @@ async fn actual_luanti_client_server_play_and_original_kernel_carrier_stop() -> 
         Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
     }.await;
     if let Some(game) = &mut game
-        && game.try_wait()?.is_none() {
-        if let Some(pid) = game.id().and_then(|pid| rustix::process::Pid::from_raw(pid as i32)) {
+        && game.try_wait()?.is_none()
+    {
+        if let Some(pid) = game
+            .id()
+            .and_then(|pid| rustix::process::Pid::from_raw(pid as i32))
+        {
             let _ = rustix::process::kill_process(pid, rustix::process::Signal::TERM);
         }
         let _ = tokio::time::timeout(Duration::from_secs(10), game.wait()).await;
@@ -86,7 +100,9 @@ async fn actual_luanti_client_server_play_and_original_kernel_carrier_stop() -> 
     assert!(teardown, "exact native game lab teardown failed");
     for entry in std::fs::read_dir(&lab.ordinary)? {
         let path = entry?.path();
-        if path.is_file() { std::fs::remove_file(path)?; }
+        if path.is_file() {
+            std::fs::remove_file(path)?;
+        }
     }
     std::fs::remove_dir(&lab.ordinary)?;
     Ok(())
