@@ -1,0 +1,248 @@
+{
+  "schema_version":  1,
+  "source_revision":  "fa5238737ea661ec06c5dce90230af21e1a0d6bb",
+  "task_ids":  [
+          "W27",
+          "W31"
+        ],
+  "run_id":  41478815180,
+  "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41478815180",
+  "workflow":  ".github/workflows/media-qos.yml",
+  "run_attempt":  1,
+  "job_id":  125391402709,
+  "conclusion":  "success",
+  "whole_task_passed":  false,
+  "release_qualification_claimed":  false,
+  "scope":  "Hosted actual mature VP8/Opus and original media/channel owner, signed receiver feedback, finite candidate provider/HTTP, real Core file lifecycle and strict all-target media/Core/daemon lint. The pinned bundled libyuv change is present. No physical GPU, real public NAT, full original resident matrix, external weak-network, whole W27/W31 or release acceptance.",
+  "artifact":  {
+          "downloaded_zip_sha256":  "f74e45118a9c30619e4e7254f62c898bb504d0f990b55dbc090f54bd9f985dd3",
+          "id":  13158558744,
+          "producer_inventory_count":  9,
+          "all_payload_count":  10,
+          "official_digest":  "sha256:f74e45118a9c30619e4e7254f62c898bb504d0f990b55dbc090f54bd9f985dd3",
+          "name":  "media-qos-fa5238737ea661ec06c5dce90230af21e1a0d6bb-1",
+          "producer_hashes_verified":  true,
+          "bytes":  32062,
+          "zip_digest_verified":  true,
+          "files":  [
+                  {
+                    "path":  "candidate-http-tests.log",
+                    "sha256":  "e14beae87d62ee0fab79269534bd36d61df6412ab80326808239b645c4978cef",
+                    "bytes":  14127
+                  },
+                  {
+                    "path":  "candidate-policy-tests.log",
+                    "sha256":  "9da579cd06ecb46d417d3253791834ca98741fea7fd04015695d0dbb2c3c20ea",
+                    "bytes":  822
+                  },
+                  {
+                    "path":  "candidate-provider-tests.log",
+                    "sha256":  "e4522c1c2af309bff9907ddad2e1d43fad92ac6f42f5b2d34f48bd150b570a97",
+                    "bytes":  41929
+                  },
+                  {
+                    "path":  "clippy.log",
+                    "sha256":  "de0847a81ed23fc55aa91ee1a7dc39ec9c4272ca9260ec59966deea133956b37",
+                    "bytes":  39639
+                  },
+                  {
+                    "path":  "media-tests.log",
+                    "sha256":  "01c919cabe52151c0c97f93695f82790c90dd550c116792958764d6c2b05f352",
+                    "bytes":  68599
+                  },
+                  {
+                    "path":  "native-file-tests.log",
+                    "sha256":  "d860d8f6501a6210b42436eb5836dff8603ff1d5c2975068cd201ed19b771ce0",
+                    "bytes":  20368
+                  },
+                  {
+                    "path":  "queue-tests.log",
+                    "sha256":  "2927678246f2125612df645f7c465626fe95ad00efb05d792ef75dc1839d4222",
+                    "bytes":  4105
+                  },
+                  {
+                    "path":  "receipt.json",
+                    "sha256":  "ca97dce7123d71b42a948f07c21205af149fcaf42444b027c9e500e85d6f6946",
+                    "bytes":  1760
+                  },
+                  {
+                    "path":  "report-contract-tests.log",
+                    "sha256":  "f986da67734fbf7bc280f8a083fbd7d619e98333644d26290113c1a284fe4f2f",
+                    "bytes":  2192
+                  },
+                  {
+                    "path":  "report-negotiation-tests.log",
+                    "sha256":  "b2e30cb00fb782cac17661a60e927fc08929f34663fb64a087b505c8ea806f54",
+                    "bytes":  2665
+                  }
+                ]
+        },
+  "build_provenance":  {
+              "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+              "run_attempt":  "1",
+              "workflow":  "ZHanry/NestLink/.github/workflows/media-qos.yml@refs/heads/main",
+              "run_id":  "41478815180",
+              "job_id":  125391402709,
+              "source_revision":  "fa5238737ea661ec06c5dce90230af21e1a0d6bb",
+              "runner_environment":  "github-hosted",
+              "runner_os":  "Linux",
+              "repository":  "ZHanry/NestLink"
+            },
+  "results":  [
+          {
+            "summaries":  [
+                     {
+                       "outcome":  "ok",
+                       "ignored":  0,
+                       "failed":  0,
+                       "passed":  2
+                     }
+                   ],
+            "path":  "candidate-http-tests.log"
+          },
+          {
+            "summaries":  [
+                     {
+                       "outcome":  "ok",
+                       "ignored":  0,
+                       "failed":  0,
+                       "passed":  2
+                     }
+                   ],
+            "path":  "candidate-policy-tests.log"
+          },
+          {
+            "summaries":  [
+                     {
+                       "outcome":  "ok",
+                       "ignored":  0,
+                       "failed":  0,
+                       "passed":  12
+                     }
+                   ],
+            "path":  "candidate-provider-tests.log"
+          },
+          {
+            "summaries":  [
+
+                   ],
+            "path":  "clippy.log"
+          },
+          {
+            "summaries":  [
+                     {
+                       "outcome":  "ok",
+                       "ignored":  0,
+                       "failed":  0,
+                       "passed":  45
+                     },
+                     {
+                       "outcome":  "ok",
+                       "ignored":  0,
+                       "failed":  0,
+                       "passed":  68
+                     }
+                   ],
+            "path":  "media-tests.log"
+          },
+          {
+            "summaries":  [
+                     {
+                       "outcome":  "ok",
+                       "ignored":  0,
+                       "failed":  0,
+                       "passed":  1
+                     }
+                   ],
+            "path":  "native-file-tests.log"
+          },
+          {
+            "summaries":  [
+                     {
+                       "outcome":  "ok",
+                       "ignored":  0,
+                       "failed":  0,
+                       "passed":  13
+                     }
+                   ],
+            "path":  "queue-tests.log"
+          },
+          {
+            "summaries":  [
+                     {
+                       "outcome":  "ok",
+                       "ignored":  0,
+                       "failed":  0,
+                       "passed":  1
+                     }
+                   ],
+            "path":  "report-contract-tests.log"
+          },
+          {
+            "summaries":  [
+                     {
+                       "outcome":  "ok",
+                       "ignored":  0,
+                       "failed":  0,
+                       "passed":  1
+                     }
+                   ],
+            "path":  "report-negotiation-tests.log"
+          }
+        ],
+  "retained_contracts":  [
+                "Original VP8 black/white, odd chroma, round-trip color/PSNR, truncation/corruption, PTS and raw/packet budget assertions passed unchanged.",
+                "Actual mature I420-to-BGRA known vectors passed; codec 45/45 and media-session 68/68.",
+                "Original immutable validated-ingress 60ms anchor, 40ms late threshold, independent leases, deadlines and cumulative meters remain unchanged.",
+                "Strict Clippy command used --all-targets -- -D warnings and succeeded; this workflow does not run the separate VP8 C boundary sanitizer or prefix/notice integration tests.",
+                "Earlier resident failures, Luanti 25-second failure and failed capacity attempts remain failed."
+              ],
+  "producer_receipt":  {
+              "source_revision":  "fa5238737ea661ec06c5dce90230af21e1a0d6bb",
+              "workflow":  "ZHanry/NestLink/.github/workflows/media-qos.yml@refs/heads/main",
+              "run_id":  "41478815180",
+              "run_attempt":  "1",
+              "runner_environment":  "github-hosted",
+              "runner_os":  "Linux",
+              "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+              "scope":  "Actual mature codecs, original media/channel owner regressions and strict lint. No physical GPU, external weak-network, full W31 or target acceptance claim.",
+              "files":  [
+                      {
+                        "path":  "candidate-http-tests.log",
+                        "sha256":  "e14beae87d62ee0fab79269534bd36d61df6412ab80326808239b645c4978cef"
+                      },
+                      {
+                        "path":  "candidate-policy-tests.log",
+                        "sha256":  "9da579cd06ecb46d417d3253791834ca98741fea7fd04015695d0dbb2c3c20ea"
+                      },
+                      {
+                        "path":  "candidate-provider-tests.log",
+                        "sha256":  "e4522c1c2af309bff9907ddad2e1d43fad92ac6f42f5b2d34f48bd150b570a97"
+                      },
+                      {
+                        "path":  "clippy.log",
+                        "sha256":  "de0847a81ed23fc55aa91ee1a7dc39ec9c4272ca9260ec59966deea133956b37"
+                      },
+                      {
+                        "path":  "media-tests.log",
+                        "sha256":  "01c919cabe52151c0c97f93695f82790c90dd550c116792958764d6c2b05f352"
+                      },
+                      {
+                        "path":  "native-file-tests.log",
+                        "sha256":  "d860d8f6501a6210b42436eb5836dff8603ff1d5c2975068cd201ed19b771ce0"
+                      },
+                      {
+                        "path":  "queue-tests.log",
+                        "sha256":  "2927678246f2125612df645f7c465626fe95ad00efb05d792ef75dc1839d4222"
+                      },
+                      {
+                        "path":  "report-contract-tests.log",
+                        "sha256":  "f986da67734fbf7bc280f8a083fbd7d619e98333644d26290113c1a284fe4f2f"
+                      },
+                      {
+                        "path":  "report-negotiation-tests.log",
+                        "sha256":  "b2e30cb00fb782cac17661a60e927fc08929f34663fb64a087b505c8ea806f54"
+                      }
+                    ]
+            }
+}

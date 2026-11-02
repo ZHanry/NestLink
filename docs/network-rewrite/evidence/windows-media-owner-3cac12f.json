@@ -1,0 +1,1141 @@
+{
+  "schema_version":  1,
+  "task_ids":  [
+          "W32",
+          "W33"
+        ],
+  "source_revision":  "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+  "run_id":  41475594482,
+  "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41475594482",
+  "run_attempt":  1,
+  "workflow":  ".github/workflows/windows-media-owner.yml",
+  "status":  "completed",
+  "conclusion":  "success",
+  "whole_task_qualified":  false,
+  "scope":  "Original hosted ordinary-process Windows 2022/2025 owner boundaries and real native IPC/TLS peer process regressions on Windows 2025 and Linux. Includes the original Windows 2022 compressed keyframe recovery case that failed on source9f. Hosted source includes Float16 precision and exact MFT scope changes, but success here is not actual GPU/desktop/HDR/throughput or source precision acceptance.",
+  "jobs":  [
+        {
+          "conclusion":  "success",
+          "name":  "owner-boundaries (windows-2025)",
+          "id":  125380197654
+        },
+        {
+          "conclusion":  "success",
+          "name":  "native-peer-process (windows-2025)",
+          "id":  125380197789
+        },
+        {
+          "conclusion":  "success",
+          "name":  "native-peer-process (ubuntu-24.04)",
+          "id":  125380198074
+        },
+        {
+          "conclusion":  "success",
+          "name":  "owner-boundaries (windows-2022)",
+          "id":  125380200927
+        }
+      ],
+  "artifacts":  [
+           {
+             "downloaded_zip_sha256":  "229c30ccf30a506e1baf420df555ab5641557e38e8c91d0b39d9e9ccb175698a",
+             "producer_receipt":  {
+                          "source_revision":  "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+                          "workflow_revision":  "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+                          "run_id":  "41475594482",
+                          "attempt":  "1",
+                          "runner_environment":  "github-hosted",
+                          "runner_os":  "Windows",
+                          "runner_label":  "windows-2022",
+                          "dependency_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+                          "hardware_or_target_acceptance_claimed":  false,
+                          "tool_sources":  {
+                                    "scripts/network-rewrite-gpu-cadence.py":  "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+                                    "tests/network/test_gpu_cadence.py":  "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+                                  }
+                        },
+             "id":  13158512938,
+             "test_summaries":  [
+                        {
+                          "summaries":  [
+
+                                  ],
+                          "path":  "capture-precision-clippy.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  4
+                                    }
+                                  ],
+                          "path":  "compressed-context-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  1
+                                    }
+                                  ],
+                          "path":  "compressed-native-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  2
+                                    }
+                                  ],
+                          "path":  "daemon-hevc-selection-tests.log"
+                        },
+                        {
+                          "summaries":  [
+
+                                  ],
+                          "path":  "daemon-media-clippy.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  3
+                                    }
+                                  ],
+                          "path":  "decoded-export-owner-tests.log"
+                        },
+                        {
+                          "summaries":  [
+
+                                  ],
+                          "path":  "desktop-clippy.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  1
+                                    }
+                                  ],
+                          "path":  "h264-output-geometry-tests.log"
+                        },
+                        {
+                          "summaries":  [
+
+                                  ],
+                          "path":  "hevc-clippy.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  8
+                                    }
+                                  ],
+                          "path":  "hevc-contract-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  4
+                                    }
+                                  ],
+                          "path":  "hevc-execution-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  1
+                                    }
+                                  ],
+                          "path":  "hevc-mf-color-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  4
+                                    }
+                                  ],
+                          "path":  "hevc-target-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  2
+                                    }
+                                  ],
+                          "path":  "media-opt-in-approval-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  3
+                                    }
+                                  ],
+                          "path":  "media-opt-in-cli-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  6
+                                    }
+                                  ],
+                          "path":  "media-opt-in-config-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  4
+                                    }
+                                  ],
+                          "path":  "media-opt-in-http-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  12
+                                    }
+                                  ],
+                          "path":  "media-provider-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  2
+                                    }
+                                  ],
+                          "path":  "mf-adapter-binding-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  8
+                                    }
+                                  ],
+                          "path":  "native-media-wire-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  5
+                                    }
+                                  ],
+                          "path":  "presenter-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  17
+                                    }
+                                  ],
+                          "path":  "readback-ipc-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  9
+                                    }
+                                  ],
+                          "path":  "receiver-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  4
+                                    }
+                                  ],
+                          "path":  "shared-surface-descriptor-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  1
+                                    }
+                                  ],
+                          "path":  "shared-surface-transfer-claim-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  10
+                                    }
+                                  ],
+                          "path":  "signed-store-media-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  1
+                                    }
+                                  ],
+                          "path":  "wgc-float16-source-tests.log"
+                        }
+                      ],
+             "inventory":  [
+                      {
+                        "path":  "capture-precision-clippy.log",
+                        "sha256":  "6a484f2e150fd391c26bbf0e27ace3997065a5a47900a4f85694f6f5e5ab154a",
+                        "bytes":  3111
+                      },
+                      {
+                        "path":  "compressed-context-tests.log",
+                        "sha256":  "dd39eb6ad14ae05f189a0b24ad8a560e95c188fd0a7a95ea4a1222237b9fd78e",
+                        "bytes":  14997
+                      },
+                      {
+                        "path":  "compressed-native-tests.log",
+                        "sha256":  "83711a6174016dc2172b42cc375d8ad9acb941c98951558d342d9c56b198b1ee",
+                        "bytes":  49765
+                      },
+                      {
+                        "path":  "daemon-hevc-selection-tests.log",
+                        "sha256":  "151c1a873fa5d9fc1f7f22b655664a6a2aa22945bf22e96f3a149ef4c6b40f57",
+                        "bytes":  14603
+                      },
+                      {
+                        "path":  "daemon-media-clippy.log",
+                        "sha256":  "e43316347b076dc98d2a04b5c0272b751bee6ae400ec2347dbfbbc76c2e49511",
+                        "bytes":  19982
+                      },
+                      {
+                        "path":  "decoded-export-owner-tests.log",
+                        "sha256":  "e972d9b007321c12791cea06b339ac4e159c07a4de0254078c7fed821ddbbe95",
+                        "bytes":  965
+                      },
+                      {
+                        "path":  "desktop-clippy.log",
+                        "sha256":  "4545ce78f4061164881b7da60f3a0c6a28f98cab7f61e1126be2a74622202ea8",
+                        "bytes":  29132
+                      },
+                      {
+                        "path":  "h264-output-geometry-tests.log",
+                        "sha256":  "74faafe9bed5c5419d0dfc8ae2cf4963c77abfedea06d832f787ddf811ebf23d",
+                        "bytes":  1265
+                      },
+                      {
+                        "path":  "hevc-clippy.log",
+                        "sha256":  "31ac3944f3eb5f84040997155472ce056485905ae5a294e95c7276d899d7c1dd",
+                        "bytes":  877
+                      },
+                      {
+                        "path":  "hevc-contract-tests.log",
+                        "sha256":  "21e0ae35fe44a0a9a3a3c8e13a77492bbe12924055cc6286c606b5e1535891fb",
+                        "bytes":  1867
+                      },
+                      {
+                        "path":  "hevc-execution-tests.log",
+                        "sha256":  "abf1ebdd0e6c25922ad85da6bb8f96c41fa50e9fd3538a99fecb69108925731c",
+                        "bytes":  1121
+                      },
+                      {
+                        "path":  "hevc-mf-color-tests.log",
+                        "sha256":  "e3a2f2c02ab6fa83c60d9c699972b50f5a15edb5813b3149e575bd1242b6ea4d",
+                        "bytes":  606
+                      },
+                      {
+                        "path":  "hevc-target-tests.log",
+                        "sha256":  "93322aa1e8a83d612ba061072da88783239519e6e29017ca881d6b0550fbe684",
+                        "bytes":  2976
+                      },
+                      {
+                        "path":  "media-opt-in-approval-tests.log",
+                        "sha256":  "41baf54d69acae670ea40d25cefb2785d9e0d21a6154cd2f9282163254f72b9e",
+                        "bytes":  14586
+                      },
+                      {
+                        "path":  "media-opt-in-cli-tests.log",
+                        "sha256":  "0b50b58ba98d090e4fb1fcb108f68923af8355ff1f310c2e42aee2cf62f25437",
+                        "bytes":  20373
+                      },
+                      {
+                        "path":  "media-opt-in-config-tests.log",
+                        "sha256":  "ad79ae80eac8c6f362fda42d092d2219ac98cd2366885a6424811b5b699a741f",
+                        "bytes":  15461
+                      },
+                      {
+                        "path":  "media-opt-in-http-tests.log",
+                        "sha256":  "71797e4eedd5b76deffe12e5692afe3ddce14f32429a7c0fb1d7137dcd8e907b",
+                        "bytes":  15004
+                      },
+                      {
+                        "path":  "media-provider-tests.log",
+                        "sha256":  "12ffbdcb83e6b23fd0c415980cf4bd1318be7afdd8c621a8110614762f321f1d",
+                        "bytes":  21197
+                      },
+                      {
+                        "path":  "mf-adapter-binding-tests.log",
+                        "sha256":  "90b7d71fd3460db4039714b1f15d9f65a8457bd6bf50b0527784100635e6f447",
+                        "bytes":  841
+                      },
+                      {
+                        "path":  "native-media-wire-tests.log",
+                        "sha256":  "0dcd44c2e8789969f093b5d93253f52b28cc9382513a71b436bde174e1c3bc17",
+                        "bytes":  1593
+                      },
+                      {
+                        "path":  "presenter-tests.log",
+                        "sha256":  "0410ba7d96697b67ab8068bc0746f8acb516693f1829f1af7eec9384020ea1e1",
+                        "bytes":  15055
+                      },
+                      {
+                        "path":  "readback-ipc-tests.log",
+                        "sha256":  "f38521af71827612dec66e44344ab54d1e4c386adc031a45ccea0a0af614d94e",
+                        "bytes":  17314
+                      },
+                      {
+                        "path":  "receiver-tests.log",
+                        "sha256":  "ceeee6a8f73f9476997e262ff4b89b417deb6f47004ba640e876c02b0068fa2c",
+                        "bytes":  26291
+                      },
+                      {
+                        "path":  "shared-surface-descriptor-tests.log",
+                        "sha256":  "154ce5004c688cf95b2e01bc8514858794c1b7915e405bc9774ddb922ea4bdd0",
+                        "bytes":  14955
+                      },
+                      {
+                        "path":  "shared-surface-transfer-claim-tests.log",
+                        "sha256":  "e73c0d193c71f6f8fa0a35e4b5edd46c6d76e446d1d79467ea4fdb9d399be925",
+                        "bytes":  648
+                      },
+                      {
+                        "path":  "signed-store-media-tests.log",
+                        "sha256":  "98d4fd4004441d370a7cd6bae17f064bbee81ecff8149c6281789f62f17f6c03",
+                        "bytes":  3861
+                      },
+                      {
+                        "path":  "source-receipt.json",
+                        "sha256":  "2b86dd9a48f3eb0a3912c8a18aa51b51cc8894ce9c22ea822b3224b8e5be0c75",
+                        "bytes":  689
+                      },
+                      {
+                        "path":  "wgc-float16-source-tests.log",
+                        "sha256":  "001de53dcf6f8543fd292e682f580e170fb4922ec646b02d889497f2db143180",
+                        "bytes":  3364
+                      }
+                    ],
+             "producer_inventory_entries":  0,
+             "official_digest":  "sha256:229c30ccf30a506e1baf420df555ab5641557e38e8c91d0b39d9e9ccb175698a",
+             "name":  "windows-media-owner-windows-2022-3cac12ff6166cc979005c5078824c13c09bd8a8c-1",
+             "producer_inventory_present":  false,
+             "zip_digest_verified":  true
+           },
+           {
+             "downloaded_zip_sha256":  "8d4adc05f308c45a31bf0a02da1aa1911b697508230dde4b23de27ab58a077d5",
+             "producer_receipt":  {
+                          "source_revision":  "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+                          "workflow_revision":  "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+                          "run_id":  "41475594482",
+                          "attempt":  "1",
+                          "runner_environment":  "github-hosted",
+                          "runner_os":  "Windows",
+                          "runner_label":  "windows-2025",
+                          "dependency_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+                          "hardware_or_target_acceptance_claimed":  false,
+                          "tool_sources":  {
+                                    "scripts/network-rewrite-gpu-cadence.py":  "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+                                    "tests/network/test_gpu_cadence.py":  "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+                                  }
+                        },
+             "id":  13158068273,
+             "test_summaries":  [
+                        {
+                          "summaries":  [
+
+                                  ],
+                          "path":  "capture-precision-clippy.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  4
+                                    }
+                                  ],
+                          "path":  "compressed-context-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  1
+                                    }
+                                  ],
+                          "path":  "compressed-native-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  2
+                                    }
+                                  ],
+                          "path":  "daemon-hevc-selection-tests.log"
+                        },
+                        {
+                          "summaries":  [
+
+                                  ],
+                          "path":  "daemon-media-clippy.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  3
+                                    }
+                                  ],
+                          "path":  "decoded-export-owner-tests.log"
+                        },
+                        {
+                          "summaries":  [
+
+                                  ],
+                          "path":  "desktop-clippy.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  1
+                                    }
+                                  ],
+                          "path":  "h264-output-geometry-tests.log"
+                        },
+                        {
+                          "summaries":  [
+
+                                  ],
+                          "path":  "hevc-clippy.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  8
+                                    }
+                                  ],
+                          "path":  "hevc-contract-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  4
+                                    }
+                                  ],
+                          "path":  "hevc-execution-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  1
+                                    }
+                                  ],
+                          "path":  "hevc-mf-color-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  4
+                                    }
+                                  ],
+                          "path":  "hevc-target-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  2
+                                    }
+                                  ],
+                          "path":  "media-opt-in-approval-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  3
+                                    }
+                                  ],
+                          "path":  "media-opt-in-cli-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  6
+                                    }
+                                  ],
+                          "path":  "media-opt-in-config-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  4
+                                    }
+                                  ],
+                          "path":  "media-opt-in-http-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  12
+                                    }
+                                  ],
+                          "path":  "media-provider-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  2
+                                    }
+                                  ],
+                          "path":  "mf-adapter-binding-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  8
+                                    }
+                                  ],
+                          "path":  "native-media-wire-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  5
+                                    }
+                                  ],
+                          "path":  "presenter-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  17
+                                    }
+                                  ],
+                          "path":  "readback-ipc-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  9
+                                    }
+                                  ],
+                          "path":  "receiver-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  4
+                                    }
+                                  ],
+                          "path":  "shared-surface-descriptor-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  1
+                                    }
+                                  ],
+                          "path":  "shared-surface-transfer-claim-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  10
+                                    }
+                                  ],
+                          "path":  "signed-store-media-tests.log"
+                        },
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  1
+                                    }
+                                  ],
+                          "path":  "wgc-float16-source-tests.log"
+                        }
+                      ],
+             "inventory":  [
+                      {
+                        "path":  "capture-precision-clippy.log",
+                        "sha256":  "abe95a07c8a9ab8a0242fe827fdd0b0b2271204f8d420d6a297b4ac627635b92",
+                        "bytes":  3111
+                      },
+                      {
+                        "path":  "compressed-context-tests.log",
+                        "sha256":  "997b8d3d43a488da414248b18818505d669a64d2c850d686a860fac9c26c82e4",
+                        "bytes":  14997
+                      },
+                      {
+                        "path":  "compressed-native-tests.log",
+                        "sha256":  "1d0f4060dab09a1739deba0e75ae6f4dc10b0b86d29da5def99246dcfceebe85",
+                        "bytes":  49765
+                      },
+                      {
+                        "path":  "daemon-hevc-selection-tests.log",
+                        "sha256":  "363de2e3db8bb58310cc274f2f79187aeb9a24ea0af6a3b4227f05d5c0b4b94b",
+                        "bytes":  14603
+                      },
+                      {
+                        "path":  "daemon-media-clippy.log",
+                        "sha256":  "00c0844700ad87e1f0f75301261c1005cc396c6b9d8a0068b20fd2f038013efb",
+                        "bytes":  19982
+                      },
+                      {
+                        "path":  "decoded-export-owner-tests.log",
+                        "sha256":  "5b1b9abd919f9ef16cc8eb8d981dd920abe58ad95f90f92f088e3a5ba260a05a",
+                        "bytes":  965
+                      },
+                      {
+                        "path":  "desktop-clippy.log",
+                        "sha256":  "99ff5ca617b00a64a706010a9fa2cb314ad69fac3e092ca56151a673161dcc1c",
+                        "bytes":  29132
+                      },
+                      {
+                        "path":  "h264-output-geometry-tests.log",
+                        "sha256":  "44b5ec1ea928d90171bcb46fb231a2e67e66d9f428131bae5fc565755a11bd5c",
+                        "bytes":  1265
+                      },
+                      {
+                        "path":  "hevc-clippy.log",
+                        "sha256":  "018b8aa9b9db63e077c9e39acada31ca5879beab160a0a7ab66f48de5e4af5b9",
+                        "bytes":  877
+                      },
+                      {
+                        "path":  "hevc-contract-tests.log",
+                        "sha256":  "c2b07a2e1fb4bf8533b997aad34d44724a0529be210b23664560de2b83cedc32",
+                        "bytes":  1867
+                      },
+                      {
+                        "path":  "hevc-execution-tests.log",
+                        "sha256":  "2c4d6dc8fb358661eaa979cb78ad291219b7a66e0f2e3edf5c0b4429a9659048",
+                        "bytes":  1121
+                      },
+                      {
+                        "path":  "hevc-mf-color-tests.log",
+                        "sha256":  "a15506efae65fa87804390c1b2a5d16158aae3990f0a2d853bdbcd6556daa8ec",
+                        "bytes":  606
+                      },
+                      {
+                        "path":  "hevc-target-tests.log",
+                        "sha256":  "c5d09ffb71133e8e31f54e2a9582eccebcc0f936b2a5f4d642383bdc3056c085",
+                        "bytes":  2976
+                      },
+                      {
+                        "path":  "media-opt-in-approval-tests.log",
+                        "sha256":  "6ce821686944a0b2dd194afa26fb0fd53c93fb6a013542f9946dffa29b3fc9f0",
+                        "bytes":  14586
+                      },
+                      {
+                        "path":  "media-opt-in-cli-tests.log",
+                        "sha256":  "cdeccfbd6efa7146e51889cea3f9678ad940c3f3b3028092562c0e0239e0ae02",
+                        "bytes":  20373
+                      },
+                      {
+                        "path":  "media-opt-in-config-tests.log",
+                        "sha256":  "0301050d669ab12aba80a8252bce10c0f868700fda06c264456a11c3e92d7042",
+                        "bytes":  15461
+                      },
+                      {
+                        "path":  "media-opt-in-http-tests.log",
+                        "sha256":  "8c4fa31b1ff3f84c4c51b22f72ccaf9c6e0f82dbcd34baa3517e0c4e8e6bf0a0",
+                        "bytes":  15004
+                      },
+                      {
+                        "path":  "media-provider-tests.log",
+                        "sha256":  "e9d9801e42fb0518d8f14a68ebf10f1714ebad28514f218e20ba16fd01f82122",
+                        "bytes":  21197
+                      },
+                      {
+                        "path":  "mf-adapter-binding-tests.log",
+                        "sha256":  "079883e03b57b72f444b3f2c7efd5f4a7eef102b717aa4a5707b6c4adfa6fd1d",
+                        "bytes":  841
+                      },
+                      {
+                        "path":  "native-media-wire-tests.log",
+                        "sha256":  "27972e273b1162ccabda239579fdf500217422e425d31b4a1d37e5a5dd382efa",
+                        "bytes":  1593
+                      },
+                      {
+                        "path":  "presenter-tests.log",
+                        "sha256":  "23f48ec758996ef42738135ee1e47c4f613817691352cecd75ba394d82c587f6",
+                        "bytes":  15055
+                      },
+                      {
+                        "path":  "readback-ipc-tests.log",
+                        "sha256":  "270756ca2ce33ac8bbf0bfd42da977d8e8fc61be491db003fa06a3a3898b3e16",
+                        "bytes":  17314
+                      },
+                      {
+                        "path":  "receiver-tests.log",
+                        "sha256":  "f8f6700f8a6622e4db9721acd1281f05e4e839ee7580f52c3e9669c517ecfd0f",
+                        "bytes":  26291
+                      },
+                      {
+                        "path":  "shared-surface-descriptor-tests.log",
+                        "sha256":  "45d29092884bf1737ff4cbecfdc9932f0124ad74ac48602d7f14775ae7cb7cf8",
+                        "bytes":  14955
+                      },
+                      {
+                        "path":  "shared-surface-transfer-claim-tests.log",
+                        "sha256":  "d8dee8362f3cc46a433ad05b408bad4dacb90f4d16a26a88aa3456d821a6e82f",
+                        "bytes":  648
+                      },
+                      {
+                        "path":  "signed-store-media-tests.log",
+                        "sha256":  "f7e851907ad9390083b8d9150f940a90efec587bc1040780ebac3c8245e70461",
+                        "bytes":  3862
+                      },
+                      {
+                        "path":  "source-receipt.json",
+                        "sha256":  "8e051466259549edfa2fb86f5f02d31f6bbbfb2216184d52a4eecc76a37a30a2",
+                        "bytes":  689
+                      },
+                      {
+                        "path":  "wgc-float16-source-tests.log",
+                        "sha256":  "0f3974a87a1c905b081f4c0705ebbf27977775589158ee9712b452885313f82e",
+                        "bytes":  3364
+                      }
+                    ],
+             "producer_inventory_entries":  0,
+             "official_digest":  "sha256:8d4adc05f308c45a31bf0a02da1aa1911b697508230dde4b23de27ab58a077d5",
+             "name":  "windows-media-owner-windows-2025-3cac12ff6166cc979005c5078824c13c09bd8a8c-1",
+             "producer_inventory_present":  false,
+             "zip_digest_verified":  true
+           },
+           {
+             "downloaded_zip_sha256":  "0f31bd9fd314e5b5e81656206e21a4fcfb3fd67cd6456c4d70bbeb23e4b42b80",
+             "producer_receipt":  {
+                          "source_revision":  "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+                          "run_id":  "41475594482",
+                          "attempt":  "1",
+                          "runner_os":  "Windows",
+                          "runner_environment":  "github-hosted",
+                          "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+                          "scope":  "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+                          "passed":  true,
+                          "commands":  [
+                                  {
+                                    "name":  "ipc-tests",
+                                    "argv":  [
+                                          "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+                                          "scripts/refactor-windows-normal-user.py",
+                                          "cargo",
+                                          "test",
+                                          "--locked",
+                                          "-p",
+                                          "nestlink-local-ipc",
+                                          "--lib",
+                                          "--",
+                                          "--show-output"
+                                        ],
+                                    "return_code":  0
+                                  },
+                                  {
+                                    "name":  "strict-peer-owner",
+                                    "argv":  [
+                                          "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+                                          "scripts/refactor-windows-normal-user.py",
+                                          "cargo",
+                                          "clippy",
+                                          "--locked",
+                                          "-p",
+                                          "nestlink-local-ipc",
+                                          "-p",
+                                          "nestlink-platform-security",
+                                          "--all-targets",
+                                          "--",
+                                          "-D",
+                                          "warnings"
+                                        ],
+                                    "return_code":  0
+                                  }
+                                ],
+                          "files":  [
+                                {
+                                  "path":  "ipc-tests.log",
+                                  "bytes":  21570,
+                                  "sha256":  "be6e453846111e590edfc7982d3831f5557130d3544acb38f0f65ddb2ee7cab5"
+                                },
+                                {
+                                  "path":  "strict-peer-owner.log",
+                                  "bytes":  5758,
+                                  "sha256":  "94bc950e9585a11deebeb7a5f4207f76f49063c83dd76e670301028f8dcbc34b"
+                                }
+                              ]
+                        },
+             "id":  13157311992,
+             "test_summaries":  [
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  27
+                                    }
+                                  ],
+                          "path":  "ipc-tests.log"
+                        },
+                        {
+                          "summaries":  [
+
+                                  ],
+                          "path":  "strict-peer-owner.log"
+                        }
+                      ],
+             "inventory":  [
+                      {
+                        "path":  "ipc-tests.log",
+                        "sha256":  "be6e453846111e590edfc7982d3831f5557130d3544acb38f0f65ddb2ee7cab5",
+                        "bytes":  21570
+                      },
+                      {
+                        "path":  "receipt.json",
+                        "sha256":  "c9a918a57dd17be79b752454b3f44189eb77416717cb8a7305972decf3e2d3cf",
+                        "bytes":  1622
+                      },
+                      {
+                        "path":  "strict-peer-owner.log",
+                        "sha256":  "94bc950e9585a11deebeb7a5f4207f76f49063c83dd76e670301028f8dcbc34b",
+                        "bytes":  5758
+                      }
+                    ],
+             "producer_inventory_entries":  2,
+             "official_digest":  "sha256:0f31bd9fd314e5b5e81656206e21a4fcfb3fd67cd6456c4d70bbeb23e4b42b80",
+             "name":  "native-peer-process-windows-2025-3cac12ff6166cc979005c5078824c13c09bd8a8c-1",
+             "producer_inventory_present":  true,
+             "zip_digest_verified":  true
+           },
+           {
+             "downloaded_zip_sha256":  "d84ca35cb88bdefcc5f8926983588106792ceced25f1ffe442db94ce940daeb8",
+             "producer_receipt":  {
+                          "source_revision":  "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+                          "run_id":  "41475594482",
+                          "attempt":  "1",
+                          "runner_os":  "Linux",
+                          "runner_environment":  "github-hosted",
+                          "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+                          "scope":  "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+                          "passed":  true,
+                          "commands":  [
+                                  {
+                                    "name":  "ipc-tests",
+                                    "argv":  [
+                                          "cargo",
+                                          "test",
+                                          "--locked",
+                                          "-p",
+                                          "nestlink-local-ipc",
+                                          "--lib",
+                                          "--",
+                                          "--show-output"
+                                        ],
+                                    "return_code":  0
+                                  },
+                                  {
+                                    "name":  "strict-peer-owner",
+                                    "argv":  [
+                                          "cargo",
+                                          "clippy",
+                                          "--locked",
+                                          "-p",
+                                          "nestlink-local-ipc",
+                                          "-p",
+                                          "nestlink-platform-security",
+                                          "--all-targets",
+                                          "--",
+                                          "-D",
+                                          "warnings"
+                                        ],
+                                    "return_code":  0
+                                  }
+                                ],
+                          "files":  [
+                                {
+                                  "path":  "ipc-tests.log",
+                                  "bytes":  20853,
+                                  "sha256":  "6b3293f6cc2db28cbe88d4a51ccb3b6a315fecca85e89bec246cb95964788f60"
+                                },
+                                {
+                                  "path":  "strict-peer-owner.log",
+                                  "bytes":  5633,
+                                  "sha256":  "1aa187fee4df88bbb2b0ed7b02606e25b2d130a7adbb7d39f5ed3ab1f48b4516"
+                                }
+                              ]
+                        },
+             "id":  13156144449,
+             "test_summaries":  [
+                        {
+                          "summaries":  [
+                                    {
+                                      "outcome":  "ok",
+                                      "ignored":  0,
+                                      "failed":  0,
+                                      "passed":  24
+                                    }
+                                  ],
+                          "path":  "ipc-tests.log"
+                        },
+                        {
+                          "summaries":  [
+
+                                  ],
+                          "path":  "strict-peer-owner.log"
+                        }
+                      ],
+             "inventory":  [
+                      {
+                        "path":  "ipc-tests.log",
+                        "sha256":  "6b3293f6cc2db28cbe88d4a51ccb3b6a315fecca85e89bec246cb95964788f60",
+                        "bytes":  20853
+                      },
+                      {
+                        "path":  "receipt.json",
+                        "sha256":  "60ec1c72838c99c0523ceb72b285a295dafa361c4b7e909a28bf3abfff9f8f5c",
+                        "bytes":  1311
+                      },
+                      {
+                        "path":  "strict-peer-owner.log",
+                        "sha256":  "1aa187fee4df88bbb2b0ed7b02606e25b2d130a7adbb7d39f5ed3ab1f48b4516",
+                        "bytes":  5633
+                      }
+                    ],
+             "producer_inventory_entries":  2,
+             "official_digest":  "sha256:d84ca35cb88bdefcc5f8926983588106792ceced25f1ffe442db94ce940daeb8",
+             "name":  "native-peer-process-ubuntu-24.04-3cac12ff6166cc979005c5078824c13c09bd8a8c-1",
+             "producer_inventory_present":  true,
+             "zip_digest_verified":  true
+           }
+         ],
+  "limitations":  [
+            "Both owner artifacts contain source receipts without a producer payload inventory. Every downloaded payload was independently hashed and byte-counted; no producer inventory verification is claimed for those two artifacts.",
+            "Both peer-process artifacts contain explicit payload inventories; all four payload entries matched independent byte counts and SHA256.",
+            "Actual physical Windows target commands on source3cac still failed: Main8 original SPS primaries0 and Main10 zero exact-scope AMD encoder. Those original failures are retained separately in windows-hevc-target-3cac12f.json.",
+            "Original source9f Windows2022 compressed keyframe failure, all resident failures and Luanti25s failure remain retained. This result is scoped to this exact source and hosted workflow.",
+            "No local build, formatting, lint, project server or automated product test was executed."
+          ]
+}

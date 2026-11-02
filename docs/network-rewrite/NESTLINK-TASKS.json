@@ -2618,6 +2618,7 @@
         "docs/network-rewrite/evidence/native-offline-resident-78a7cb4.json",
         "docs/network-rewrite/offline-resident-checkpoint.md",
         "docs/network-rewrite/evidence/native-offline-resident-f570243.json",
+        "docs/network-rewrite/evidence/media-libyuv-fa52387.json",
         "docs/adr/network/0073-reuse-bundled-libyuv-vp8-conversion.md"
       ],
       "blockers": [],
@@ -2894,6 +2895,7 @@
         "docs/adr/network/0053-finite-probed-media-budget-switch.md",
         "docs/network-rewrite/evidence/media-receiver-actual-mtls-5cde425.json",
         "docs/network-rewrite/evidence/media-and-native-files-2494ab3.json",
+        "docs/network-rewrite/evidence/media-libyuv-fa52387.json",
         "docs/network-rewrite/evidence/offline-media-b166d8b.json",
         "docs/adr/network/0060-real-kernel-media-impairment.md",
         "docs/network-rewrite/evidence/media-real-impairment-failures.json",
@@ -2912,6 +2914,7 @@
           "docs/adr/network/0053-finite-probed-media-budget-switch.md",
           "docs/network-rewrite/evidence/media-receiver-actual-mtls-5cde425.json",
           "docs/network-rewrite/evidence/media-and-native-files-2494ab3.json",
+          "docs/network-rewrite/evidence/media-libyuv-fa52387.json",
           "docs/network-rewrite/evidence/offline-media-b166d8b.json",
           "docs/adr/network/0060-real-kernel-media-impairment.md",
           "docs/network-rewrite/evidence/media-real-impairment-failures.json",
@@ -2982,6 +2985,7 @@
         "docs/network-rewrite/evidence/windows-direction-target-670c662.json",
         "docs/network-rewrite/evidence/compressed-native-0f8d9a3.json",
         "docs/network-rewrite/evidence/windows-media-owner-3e292c4.json",
+        "docs/network-rewrite/evidence/windows-media-owner-3cac12f.json",
         "docs/network-rewrite/evidence/windows-hevc-target-3e292c4.json"
       ],
       "blockers": [],
@@ -3047,6 +3051,7 @@
         "docs/network-rewrite/evidence/compressed-native-0f8d9a3.json",
         "docs/network-rewrite/evidence/windows-hevc-target-b6b5520.json",
         "docs/network-rewrite/evidence/windows-media-owner-3e292c4.json",
+        "docs/network-rewrite/evidence/windows-media-owner-3cac12f.json",
         "docs/network-rewrite/evidence/windows-hevc-target-3e292c4.json"
       ],
       "blockers": [],
