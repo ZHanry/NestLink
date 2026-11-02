@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "source_revision": "09fee9572e77d72a522a35dfcdc33a90327426a1",
+  "workflow": ".github/workflows/network-games.yml",
+  "run_id": 41373368884,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41373368884",
+  "workflow_conclusion": "failure",
+  "job_conclusion": "failure",
+  "passed": false,
+  "artifact": {
+    "id": 13110890376,
+    "name": "game-luanti-09fee9572e77d72a522a35dfcdc33a90327426a1-1",
+    "official_digest": "sha256:6c3c199dc134e1916e9557d1362118d7ae642861b52879f94836c7eea3cf1838",
+    "downloaded_zip_sha256": "6c3c199dc134e1916e9557d1362118d7ae642861b52879f94836c7eea3cf1838",
+    "outer_receipt_sha256": "4d62719e2fbf7bb715107c320cc84f1d86f921e7ca3ccb66460f654cd0440bef",
+    "execution_receipt_sha256": "152a8b9e2dbb3d8b925d86e626c4c601b987ad003e4c9c48a4d9b7f3988c4b50",
+    "retained_file_digest_and_size_entries_verified": 53
+  },
+  "observed": {
+    "actual_game_flow_passed": false,
+    "failure": "AssertionError: ",
+    "driver_actor_cleanup_errors": [],
+    "outer_failure": "AssertionError: actual-game-original-subnet-owner",
+    "strict_passed": null,
+    "execution_passed": null,
+    "outer_namespace_cleanup_errors": null,
+    "actual_visible_window": "0x400006 (has no name), WM_CLASS luanti/luanti",
+    "class_search_attempts": 16,
+    "startup_bound_seconds": 25,
+    "gameplay_input_executed": false,
+    "failure_screenshot_sha256": "00d7d2037518ebad04c98c1f0a96d222ef48e98eceec63f571387c9a860e54d2"
+  },
+  "scope": "Official Luanti WM_CLASS appeared within the original 25-second startup bound; driver prematurely asserted the still-unassigned caption at attempt 16. Gameplay and stop/disconnect did not execute; no acceptance claim.",
+  "candidate_correction": {
+    "source_commit": "6b5d3f74b995600a33f38cc2554240721da6d73c",
+    "change": "Wait for the exact observed Luanti caption inside the same original 25-second absolute startup deadline after the visible exact WM_CLASS appears. No timeout or gameplay gate changed.",
+    "verification_status": "pending_same_source_actions"
+  }
+}

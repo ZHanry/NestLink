@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "source_revision": "09fee9572e77d72a522a35dfcdc33a90327426a1",
+  "workflow": ".github/workflows/network-games.yml",
+  "run_id": 41373368884,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41373368884",
+  "workflow_conclusion": "failure",
+  "job_conclusion": "success",
+  "passed": true,
+  "artifact": {
+    "id": 13110048877,
+    "name": "game-teeworlds-09fee9572e77d72a522a35dfcdc33a90327426a1-1",
+    "official_digest": "sha256:53087e0bd40f4b2f376813458d991d0fec8484fa47ee97a00c53e22741f08d7d",
+    "downloaded_zip_sha256": "53087e0bd40f4b2f376813458d991d0fec8484fa47ee97a00c53e22741f08d7d",
+    "outer_receipt_sha256": "c27d6e2cc763ba5e687680ba65755bd93003fe6ea219bf9df31faab1eeb1e894",
+    "execution_receipt_sha256": "3a45fae12d86a15d512d9c24170432a449127f39d6f001e8bb64c583cfaaff75",
+    "retained_file_digest_and_size_entries_verified": 137
+  },
+  "observed": {
+    "actual_game_flow_passed": true,
+    "failure": null,
+    "driver_actor_cleanup_errors": [],
+    "outer_failure": null,
+    "strict_passed": true,
+    "execution_passed": true,
+    "outer_namespace_cleanup_errors": [],
+    "sustained_play_seconds": 10.280985810999994,
+    "client_offline_after_revocation_seconds": 11.154819283999984,
+    "official_client_exit_code": 0,
+    "demo_files": [
+      {
+        "path": "teeworlds-home/.local/share/teeworlds/demos/auto/autorecord_2026-11-02_01-40-30.demo",
+        "sha256": "282f28087039cb7691a638387ed9b69a9b5c43053c9127ccb7853dadd5a32462",
+        "bytes": 9325
+      }
+    ],
+    "actual_management_revocation": true,
+    "official_lan_browser_room_observed": true
+  },
+  "scope": "Complete hosted official Teeworlds discovery/join/play/demo/live-management-revoke/ordinary-zero-exit, strict SDK/daemon check and cleanup passed. The sibling Luanti job failed, so the whole games workflow is failure; physical sites and full W28 remain separate."
+}
