@@ -24,7 +24,9 @@ The original Luanti 25-second check and its failure status remain unchanged.
   exact original bytes, same runtime/newer generation, unchanged bundle,
   second connection attempt/cumulative quota, stale-generation rejection,
   authenticated IPC Exit and original cleanup/socket checks. This establishes
-  that exact TLS laboratory case only.
+  that exact TLS laboratory case only. See
+  `evidence/native-offline-resident-78a7cb4.json` for all original results and
+  independently downloaded payload hashes.
 
 ## Confirmed changes and remaining failures
 
@@ -63,8 +65,10 @@ The original Luanti 25-second check and its failure status remain unchanged.
 
 ## Next exact-source hosted work
 
-After the scoped edits are committed and pushed by the main task, run the
-original focused Linux/Windows matrix and hosted formatting on that source.
+The main task pushed `f570243c12e0390e963e373988fd76f5ec44b465` and started
+the original focused Linux/Windows matrix as
+[41455823431](https://github.com/ZHanry/NestLink/actions/runs/41455823431),
+with hosted formatting separately dispatched. Both are pending here.
 Require all four original resident tests to execute and pass before marking
 resident completion. Follow the real protected-login stage and pending-case
 operation, and repair only confirmed failures. Preserve every failed receipt,
