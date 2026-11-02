@@ -4,7 +4,9 @@ use crate::gpu_diagnostics::{ReceiverObservation, TerminalSink};
 use eframe::egui;
 use nestlink_media_codec::{
     GpuDecodeStep, GpuH264Presenter, GpuHevcPresenter, GpuVideoSurface, VideoConfig,
+    GpuSharedPresenter, TransferredSurfaceRing,
 };
+use nestlink_app_ipc::shared_video::{ImportedSharedFrame,SharedVideoContext};
 use std::{
     collections::VecDeque,
     io,
@@ -103,6 +105,8 @@ pub struct Presenter {
     observation: Arc<Mutex<ReceiverObservation>>,
     terminal_sink: Option<TerminalSink>,
     input: Option<mpsc::SyncSender<AccessUnit>>,
+    shared_input: Option<mpsc::SyncSender<ImportedSharedFrame>>,
+    shared_ring: Option<TransferredSurfaceRing>,
     events: Option<mpsc::Receiver<Event>>,
     config: VideoConfig,
     context: Arc<CompressedContext>,
@@ -125,6 +129,15 @@ impl Presenter {
     pub fn context(&self) -> Arc<CompressedContext> {
         self.context.clone()
     }
+    pub fn for_shared(context:SharedVideoContext,ring:TransferredSurfaceRing,generation:u64)->io::Result<Self> {
+        context.validate().map_err(io::Error::other)?;
+        if context.native_ring().map_err(io::Error::other)? != ring.descriptor() {return Err(io::Error::other("imported ring differs from authenticated context"));}
+        ring.check_current()?;
+        let mut presenter=Self::for_context(context.width,context.height,generation,context.media)?;
+        presenter.shared_ring=Some(ring);
+        Ok(presenter)
+    }
+    pub fn is_shared(&self)->bool {self.shared_ring.is_some()}
     pub fn observation_handle(&self) -> Arc<Mutex<ReceiverObservation>> {
         self.observation.clone()
     }
@@ -151,6 +164,8 @@ impl Presenter {
                 ..ReceiverObservation::default()
             })),
             input: None,
+            shared_input: None,
+            shared_ring: None,
             events: None,
             config,
             context: Arc::new(context),
@@ -266,6 +281,7 @@ impl Presenter {
                 .and_then(|state| state.surface.clone());
             if let Some(surface) = surface {
                 let (tx, rx) = mpsc::sync_channel(8);
+                let (shared_tx,shared_rx)=mpsc::sync_channel(3);
                 let (event_tx, event_rx) = mpsc::sync_channel(32);
                 let cancel = self.cancel.clone();
                 let decode_authority = self.decode_authority.clone();
@@ -273,6 +289,7 @@ impl Presenter {
                 let units = self.queued_units.clone();
                 let config = self.config;
                 let owner_context = self.context.clone();
+                let shared_ring=self.shared_ring.clone();
                 let observation = self.observation.clone();
                 let mut observed = self
                     .observation
@@ -283,7 +300,9 @@ impl Presenter {
                     .name("nestlink-gpu-presenter".into())
                     .spawn(move || {
                         observed.worker_started = true;
-                        let outcome = run(
+                        let outcome = if let Some(ring)=shared_ring {
+                            run_shared(surface,(config,owner_context,decode_authority),ring,shared_rx,&event_tx,&cancel,(&mut observed,&observation))
+                        } else { run(
                             surface,
                             (config, owner_context, decode_authority),
                             rx,
@@ -291,7 +310,7 @@ impl Presenter {
                             &cancel,
                             (&bytes, &units),
                             (&mut observed, &observation),
-                        );
+                        ) };
                         if let Err(error) = outcome {
                             observed.failed = true;
                             let _ = event_tx.try_send(Event::Failed(error.to_string()));
@@ -305,6 +324,7 @@ impl Presenter {
                     Ok(worker) => {
                         self.worker = Some(worker);
                         self.input = Some(tx);
+                        self.shared_input=Some(shared_tx);
                         self.events = Some(event_rx);
                     }
                     Err(error) => result.push(Event::Failed(error.to_string())),
@@ -330,7 +350,7 @@ impl Presenter {
             .collect()
     }
     pub fn submit(&self, unit: AccessUnit) -> Result<(), AccessUnit> {
-        if unit.context != self.context {
+        if self.is_shared() || unit.context != self.context {
             return Err(unit);
         }
         let Some(input) = &self.input else {
@@ -372,11 +392,17 @@ impl Presenter {
             }
         }
     }
+    pub fn submit_shared(&self,frame:ImportedSharedFrame)->Result<(),ImportedSharedFrame> {
+        if !self.is_shared() || frame.descriptor().context.media != *self.context || self.cancel.load(Ordering::Acquire) {return Err(frame);}
+        let Some(input)=&self.shared_input else {return Err(frame);};
+        input.try_send(frame).map_err(|error| match error {mpsc::TrySendError::Full(frame)|mpsc::TrySendError::Disconnected(frame)=>frame})
+    }
     pub fn stop(&mut self) {
         self.visible.store(false, Ordering::Release);
         self.cancel.store(true, Ordering::Release);
         self.decode_authority.store(false, Ordering::Release);
         self.input = None;
+        self.shared_input=None;
         if let Ok(mut state) = self.paint.lock() {
             state.active = false;
             if let Some(surface) = &state.surface {
@@ -410,7 +436,7 @@ impl Presenter {
             && self
                 .observation
                 .lock()
-                .is_ok_and(|value| !value.decoder_opened || value.native_cleanup_completed)
+                .is_ok_and(|value| (!value.decoder_opened && !value.shared_import_opened) || value.native_cleanup_completed)
     }
 }
 impl Drop for Presenter {
@@ -695,6 +721,72 @@ fn run(
             "{error}; GPU checked cleanup failed: {cleanup}"
         ))),
         (Ok(()), Ok(())) => Ok(()),
+    }
+}
+
+fn run_shared(
+    surface:GpuVideoSurface,
+    target:(VideoConfig,Arc<CompressedContext>,Arc<AtomicBool>),
+    ring:TransferredSurfaceRing,
+    input:mpsc::Receiver<ImportedSharedFrame>,
+    events:&mpsc::SyncSender<Event>,
+    cancel:&AtomicBool,
+    telemetry:(&mut ReceiverObservation,&Mutex<ReceiverObservation>),
+)->io::Result<()> {
+    let (config,context,authority)=target;
+    let (observed,observation)=telemetry;
+    let hardware=context.decoder_hardware.ok_or_else(|| io::Error::other("shared importer lacks exact hardware"))?;
+    let expected=gpu_config(&context,config.width,config.height)?;
+    if expected.fps!=config.fps || expected.bitrate_kbps!=config.bitrate_kbps || ring.descriptor().adapter_luid!=hardware.adapter_luid {
+        return Err(io::Error::other("original shared importer target differs"));
+    }
+    let mut importer=GpuSharedPresenter::open(&surface,config,ring.clone(),hardware.driver_version,authority)?;
+    observed.shared_import_opened=true;
+    observed.qpc_frequency=nestlink_media_codec::gpu_qpc().ok().map(|(_,frequency)| frequency);
+    let outcome=(|| {
+        events.try_send(Event::Prepared).map_err(|_| io::Error::other("shared importer event owner unavailable"))?;
+        while !cancel.load(Ordering::Acquire) {
+            ring.check_current()?;
+            let frame=match input.recv_timeout(Duration::from_millis(2)) {
+                Ok(frame)=>frame,
+                Err(mpsc::RecvTimeoutError::Timeout)=>continue,
+                Err(_)=>break,
+            };
+            frame.check_transfer_owner().map_err(io::Error::other)?;
+            let descriptor=frame.descriptor();
+            if descriptor.context.media!=*context || descriptor.context.native_ring().map_err(io::Error::other)?!=ring.descriptor()
+                || frame.ring().descriptor()!=ring.descriptor()
+            {return Err(io::Error::other("shared frame belongs to another original context"));}
+            observed.shared_transferred=observed.shared_transferred.saturating_add(1);
+            let native=descriptor.native_frame().map_err(io::Error::other)?;
+            let result=importer.consume(native,descriptor.native_sequence,descriptor.not_after_qpc)?;
+            frame.check_transfer_owner().map_err(io::Error::other)?;
+            if !result.consumed {return Err(io::Error::other("shared importer did not return actual GPU consumption"));}
+            observed.shared_consumed=observed.shared_consumed.saturating_add(1);
+            observed.retired=observed.retired.saturating_add(1);
+            observed.last_retired_pts=Some(descriptor.pts_90khz);
+            if result.gpu_converted {observed.converted=observed.converted.saturating_add(1);}
+            let submitted_qpc=if let Some(receipt)=result.submitted {
+                receipt.check_current()?;
+                if receipt.ring()!=ring.descriptor() || receipt.frame()!=native || receipt.native_sequence()!=descriptor.native_sequence {return Err(io::Error::other("actual shared submission receipt differs"));}
+                let qpc=receipt.submitted_qpc();
+                observed.submitted=observed.submitted.saturating_add(1);
+                observed.last_submitted_qpc=Some(qpc);observed.last_submitted_pts=Some(descriptor.pts_90khz);
+                observed.submission_cadence.record(qpc);
+                Some(qpc)
+            } else {None};
+            events.try_send(Event::Presented {submitted_qpc,gpu_converted:result.gpu_converted}).map_err(|_| io::Error::other("shared importer event budget exhausted"))?;
+            if let Ok(mut value)=observation.try_lock() {*value=observed.clone();}
+        }
+        Ok(())
+    })();
+    surface.revoke();
+    let cleanup=importer.close();
+    observed.native_cleanup_completed=cleanup.is_ok();
+    match (outcome,cleanup) {
+        (Err(error),Ok(()))|(Ok(()),Err(error))=>Err(error),
+        (Err(error),Err(cleanup))=>Err(io::Error::other(format!("{error}; shared importer cleanup failed: {cleanup}"))),
+        (Ok(()),Ok(()))=>Ok(()),
     }
 }
 

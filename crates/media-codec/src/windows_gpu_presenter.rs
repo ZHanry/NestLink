@@ -5,6 +5,9 @@ use crate::{H264Validator, HevcMain8Admission};
 use std::{
     collections::VecDeque, ffi::c_void, io, marker::PhantomData, ptr::NonNull, rc::Rc, sync::Arc,
 };
+#[path = "windows_shared_presenter.rs"]
+mod shared;
+pub use shared::{GpuSharedConsumption,GpuSharedPresenter,SharedGpuSubmissionReceipt};
 
 unsafe extern "C" {
     fn nl_gpu_surface_discover(key: u64, width: u32, height: u32, result: *mut *mut c_void) -> i32;

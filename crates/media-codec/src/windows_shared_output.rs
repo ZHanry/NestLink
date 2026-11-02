@@ -3,7 +3,7 @@
 #![allow(unsafe_code)]
 use crate::{VideoConfig, windows_mf::Transform};
 use nestlink_platform_security::local_stream::VerifiedProcessExportTarget;
-use std::{ffi::c_void, io, os::windows::io::AsRawHandle, sync::{Arc, atomic::{AtomicBool, AtomicU8, Ordering}}};
+use std::{ffi::c_void, io, os::windows::io::{AsRawHandle,FromRawHandle,OwnedHandle}, sync::{Arc, atomic::{AtomicBool, AtomicU8, Ordering}}};
 use sha2::{Digest, Sha256};
 
 #[repr(C)]
@@ -19,7 +19,7 @@ pub struct SharedRingDescriptor {
 }
 impl SharedRingDescriptor {
     pub fn validate(&self, config: VideoConfig) -> io::Result<()> {
-        if self.ring_id==[0;16] || self.handles.iter().any(|value| *value==0 || usize::try_from(*value).is_err())
+        if self.ring_id==[0;16] || self.handles.iter().any(|value| *value==0 || *value>isize::MAX as u64 || usize::try_from(*value).is_err())
             || self.resource_ids.contains(&[0;16]) || self.handles[0]==self.handles[1] || self.handles[0]==self.handles[2] || self.handles[1]==self.handles[2]
             || self.resource_ids[0]==self.resource_ids[1] || self.resource_ids[0]==self.resource_ids[2] || self.resource_ids[1]==self.resource_ids[2]
             || (self.width,self.height)!=(config.width,config.height) || self.width==0 || self.height==0
@@ -145,4 +145,31 @@ impl SharedDecodedFrame {
 }
 impl Drop for SharedDecodedFrame {
     fn drop(&mut self) {let _=self.status.compare_exchange(0,2,Ordering::AcqRel,Ordering::Acquire);}
+}
+
+struct TransferredRingOwner {
+    descriptor:SharedRingDescriptor,
+    _handles:[OwnedHandle;3],
+    peer:VerifiedProcessExportTarget,
+}
+/// Destination-owned NT handles received once over the authenticated native
+/// connection. Clones retain the same handles; no serialized execution proof.
+#[derive(Clone)]
+pub struct TransferredSurfaceRing(Arc<TransferredRingOwner>);
+impl TransferredSurfaceRing {
+    /// Claim once, after checking the exact native TLS descriptor and peer.
+    /// This owns only the destination handles, never the daemon decoder.
+    pub fn from_authenticated_peer(descriptor:SharedRingDescriptor,peer:VerifiedProcessExportTarget)->io::Result<Self> {
+        peer.check_current()?;
+        descriptor.validate(VideoConfig {width:descriptor.width,height:descriptor.height,fps:1,bitrate_kbps:64})?;
+        // SAFETY: the native TLS producer duplicated these distinct NT handles
+        // into this process. The authenticated consumer calls this once; Arc
+        // clones, never a second numeric adoption, retain their ownership.
+        let handles=descriptor.handles.map(|handle| unsafe {OwnedHandle::from_raw_handle(handle as usize as *mut c_void)});
+        let owner=Self(Arc::new(TransferredRingOwner {descriptor,_handles:handles,peer}));
+        owner.check_current()?;
+        Ok(owner)
+    }
+    pub fn descriptor(&self)->SharedRingDescriptor {self.0.descriptor}
+    pub fn check_current(&self)->io::Result<()> {self.0.peer.check_current()}
 }

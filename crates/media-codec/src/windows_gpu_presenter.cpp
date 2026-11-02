@@ -8,6 +8,7 @@
 #include <mftransform.h>
 #include <mferror.h>
 #include <d3d11.h>
+#include <d3d11_1.h>
 #include <d3d10.h>
 #include <dxgi1_2.h>
 #include <wrl/client.h>
@@ -19,6 +20,7 @@
 #include <array>
 #include <cstdio>
 #include "owner_observation.h"
+#include "shared_surface_abi.h"
 using Microsoft::WRL::ComPtr;
 namespace {
 struct Surface {
@@ -197,6 +199,7 @@ HRESULT output_type(Presenter& p) {
     }
     return MF_E_INVALIDMEDIATYPE;
 }
+HRESULT configure_output(Presenter& p,UINT fps);
 HRESULT configure(Presenter& p, UINT fps, UINT kbps) {
     trace(p.surface,"configure_begin");
     trace(p.surface,"d3d11_device_create_begin");
@@ -246,6 +249,13 @@ HRESULT configure(Presenter& p, UINT fps, UINT kbps) {
     hr=p.decoder->SetInputType(0,type.Get(),0); if (FAILED(hr)) return hr;
     trace(p.surface,"decoder_output_type_begin");
     hr=output_type(p); if (FAILED(hr)) return hr;
+    hr=configure_output(p,fps);if(FAILED(hr))return hr;
+    trace(p.surface,"decoder_begin_streaming_begin");
+    hr=p.decoder->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING,0); if (FAILED(hr)) return hr;
+    return p.decoder->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM,0);
+}
+HRESULT configure_output(Presenter& p,UINT fps) {
+    HRESULT hr=S_OK;
     ComPtr<IDXGIDevice> dxgi; ComPtr<IDXGIAdapter> adapter; ComPtr<IDXGIFactory2> factory;
     hr=p.device.As(&dxgi); if (FAILED(hr)) return hr;
     hr=dxgi->GetAdapter(&adapter); if (FAILED(hr)) return hr;
@@ -275,9 +285,7 @@ HRESULT configure(Presenter& p, UINT fps, UINT kbps) {
     hr=p.video->CreateVideoProcessor(p.enumerator.Get(),0,&p.processor); if (FAILED(hr)) return hr;
     D3D11_QUERY_DESC query{D3D11_QUERY_EVENT,0};
     hr=p.device->CreateQuery(&query,&p.completion); if (FAILED(hr)) return hr;
-    trace(p.surface,"decoder_begin_streaming_begin");
-    hr=p.decoder->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING,0); if (FAILED(hr)) return hr;
-    return p.decoder->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM,0);
+    return S_OK;
 }
 // No CPU readback. Keep the decoder sample until the GPU event confirms consumption.
 HRESULT receive(Presenter& p, uint64_t* pts, uint64_t* qpc, uint32_t* submitted,uint32_t* converted) {
@@ -416,6 +424,7 @@ present_ready:
     QueryPerformanceCounter(&now); *qpc=static_cast<uint64_t>(now.QuadPart);
     return S_OK;
 }
+#include "shared_import_presenter.h"
 }
 extern "C" int32_t nl_gpu_surface_discover(uint64_t key, uint32_t screen_width, uint32_t screen_height, void** result) noexcept {
     if (!result) return E_POINTER; *result=nullptr;
@@ -599,4 +608,23 @@ extern "C" int32_t nl_gpu_close_checked(void* handle) noexcept {
         p->checked_shutdown=true;
     }
     delete p;return result;
+}
+extern "C" int32_t nl_gpu_shared_open(void* surface,const NlSharedRingDescriptor* ring,uint32_t fps,uint64_t driver,void** result) noexcept {
+    auto* target=static_cast<Surface*>(surface);
+    if(!target || !target->live || !ring || !result || !ring->width || !ring->height || ring->width>8192 || ring->height>8192 ||
+        ((ring->width|ring->height)&1) || !fps || fps>120 || !driver)return E_INVALIDARG;
+    *result=nullptr;
+    std::unique_ptr<SharedPresenter> owner(new(std::nothrow)SharedPresenter());if(!owner)return E_OUTOFMEMORY;
+    const HRESULT hr=owner->initialize(target,*ring,fps,driver);if(FAILED(hr))return hr;
+    *result=owner.release();return S_OK;
+}
+extern "C" int32_t nl_gpu_shared_consume(void* handle,const NlSharedFrame* frame,uint64_t deadline,uint64_t* qpc,uint32_t* consumed,uint32_t* converted,uint32_t* submitted) noexcept {
+    auto* owner=static_cast<SharedPresenter*>(handle);
+    if(!owner || !frame || !qpc || !consumed || !converted || !submitted)return E_INVALIDARG;
+    *qpc=0;*consumed=0;*converted=0;*submitted=0;
+    return owner->consume(*frame,deadline,qpc,consumed,converted,submitted);
+}
+extern "C" int32_t nl_gpu_shared_close(void* handle) noexcept {
+    auto* owner=static_cast<SharedPresenter*>(handle);if(!owner || owner->output.thread!=GetCurrentThreadId())return E_INVALIDARG;
+    delete owner;return S_OK;
 }

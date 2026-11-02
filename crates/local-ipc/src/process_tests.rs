@@ -7,6 +7,32 @@ use std::{
 };
 type TestResult<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 const CHILD_DIRECTORY: &str = "NESTLINK_NATIVE_TLS_CHILD_DIRECTORY";
+const EXPORTED_CONTENT:&str = "original retained native TLS process export";
+
+#[allow(unsafe_code)]
+mod native_handle_fixture {
+    use std::{ffi::c_void,fs::File,io,os::windows::io::{AsRawHandle,FromRawHandle}};
+    #[link(name="kernel32")]
+    unsafe extern "system" {
+        fn GetCurrentProcess()->*mut c_void;
+        fn DuplicateHandle(source_process:*mut c_void,source:*mut c_void,target_process:*mut c_void,target:*mut *mut c_void,access:u32,inherit:i32,options:u32)->i32;
+    }
+    pub fn duplicate(file:&File,target:&nestlink_platform_security::local_stream::VerifiedProcessExportTarget)->io::Result<u64> {
+        target.with_process_handle(|process| {
+            let mut duplicate=std::ptr::null_mut();
+            // SAFETY: original borrowed process capability and live source file;
+            // the real child owns the new handle and closes it after reading.
+            if unsafe {DuplicateHandle(GetCurrentProcess(),file.as_raw_handle(),process.as_raw_handle(),&mut duplicate,0,0,2)}==0 {return Err(io::Error::last_os_error());}
+            Ok(duplicate as usize as u64)
+        })
+    }
+    pub fn receive(handle:u64)->io::Result<File> {
+        if handle==0 || handle>isize::MAX as u64 {return Err(io::Error::other("invalid test handle"));}
+        // SAFETY: exact authenticated parent fixture duplicated this fresh file
+        // handle into this child; it is adopted once and never reopened by PID.
+        Ok(unsafe {File::from_raw_handle(handle as usize as *mut c_void)})
+    }
+}
 struct ChildOwner(Child);
 impl Drop for ChildOwner {
     fn drop(&mut self) {
@@ -23,6 +49,12 @@ async fn child_native_tls_process() -> TestResult {
     let mut client = LocalStream::connect(Path::new(&directory)).await?;
     client.verified_peer_process()?.check_current()?;
     client.send(&"native-child-ready").await?;
+    let mut file=native_handle_fixture::receive(client.receive::<u64>().await?)?;
+    let mut content=String::new();
+    std::io::Read::read_to_string(&mut file,&mut content)?;
+    assert_eq!(content,EXPORTED_CONTENT);
+    drop(file);
+    client.send(&content).await?;
     assert_eq!(client.receive::<String>().await?, "exit-original-child");
     Ok(())
 }
@@ -56,6 +88,14 @@ async fn original_native_tls_peer_is_the_actual_child_and_exit_retires_its_handl
     assert_eq!(original.runtime_id(), daemon.runtime_id());
     assert_eq!(accepted.receive::<String>().await?, "native-child-ready");
     original.check_current()?;
+    let target=original.export_target()?;
+    let mut source=tempfile::NamedTempFile::new()?;
+    std::io::Write::write_all(&mut source,EXPORTED_CONTENT.as_bytes())?;
+    let source=std::fs::File::open(source.path())?;
+    let remote=native_handle_fixture::duplicate(&source,&target)?;
+    drop(source);
+    accepted.send(&remote).await?;
+    assert_eq!(accepted.receive::<String>().await?,EXPORTED_CONTENT);
     accepted.send(&"exit-original-child").await?;
     let status = tokio::time::timeout(Duration::from_secs(5), async {
         loop {
@@ -68,6 +108,10 @@ async fn original_native_tls_peer_is_the_actual_child_and_exit_retires_its_handl
     .await??;
     assert!(status.success());
     assert!(original.check_current().is_err());
+    assert!(target.check_current().is_err());
+    let invoked=std::sync::atomic::AtomicBool::new(false);
+    assert!(target.with_process_handle(|_| {invoked.store(true,std::sync::atomic::Ordering::Release);Ok(())}).is_err());
+    assert!(!invoked.load(std::sync::atomic::Ordering::Acquire));
     Ok(())
 }
 

@@ -2,6 +2,22 @@
 use super::*;
 use bridge::{CompressedContext, CompressedVideoFeedback, CompressedVideoUpdate};
 use gpu_presenter::{AccessUnit, Event, Presenter};
+use nestlink_app_ipc::shared_video::{ImportedSharedFrame,SharedVideoContext};
+
+enum Preparation {
+    Compressed {context:CompressedContext,width:u32,height:u32},
+    Shared {context:SharedVideoContext,ring:nestlink_app_core::TransferredSurfaceRing},
+}
+impl Preparation {
+    fn context(&self)->&CompressedContext {match self {Self::Compressed {context,..}=>context,Self::Shared {context,..}=>&context.media}}
+    fn dimensions(&self)->(u32,u32) {match self {Self::Compressed {width,height,..}=>(*width,*height),Self::Shared {context,..}=>(context.width,context.height)}}
+    fn presenter(self,generation:u64)->std::io::Result<Presenter> {
+        match self {
+            Self::Compressed {context,width,height}=>Presenter::for_context(width,height,generation,context),
+            Self::Shared {context,ring}=>Presenter::for_shared(context,ring,generation),
+        }
+    }
+}
 
 pub(super) struct GpuVideo {
     enabled: bool,
@@ -10,7 +26,8 @@ pub(super) struct GpuVideo {
     presenter: Option<Presenter>,
     retiring: Option<(CompressedContext, Presenter)>,
     pending: Option<AccessUnit>,
-    pending_prepare: Option<(CompressedContext, u32, u32)>,
+    pending_prepare: Option<Preparation>,
+    pending_shared: Option<ImportedSharedFrame>,
     generation: u64,
     pub submitted: bool,
     pub submitted_count: u64,
@@ -27,6 +44,7 @@ impl Default for GpuVideo {
             retiring: None,
             pending: None,
             pending_prepare: None,
+            pending_shared: None,
             generation: 0,
             submitted: false,
             submitted_count: 0,
@@ -56,6 +74,7 @@ impl GpuVideo {
     }
     pub fn stop(&mut self) {
         self.pending = None;
+        self.pending_shared=None;
         self.pending_prepare = None;
         self.submitted = false;
         if let Some(mut presenter) = self.presenter.take() {
@@ -99,12 +118,12 @@ impl DesktopApp {
                     .track_terminal(presenter.observation_handle());
             }
             if joined
-                && self
+                && (presenter.is_shared() || self
                     .bridge
                     .compressed_feedback(CompressedVideoFeedback::Stopped {
                         context: binding.clone(),
                         joined: true,
-                    })
+                    }))
             {
                 self.gpu_video.retiring = None;
             }
@@ -165,8 +184,10 @@ impl DesktopApp {
         let mut release_input = false;
         let mut failed = false;
         if gpu.retiring.is_none()
-            && let Some((binding, width, height)) = gpu.pending_prepare.take()
+            && let Some(preparation) = gpu.pending_prepare.take()
         {
+            let binding=preparation.context().clone();
+            let (width,height)=preparation.dimensions();
             if !compressed_current(
                 &binding,
                 snapshot,
@@ -180,12 +201,7 @@ impl DesktopApp {
                 if gpu.generation == 0 {
                     failed = true;
                 } else {
-                    gpu.presenter = match Presenter::for_context(
-                        width,
-                        height,
-                        gpu.generation,
-                        binding.clone(),
-                    ) {
+                    gpu.presenter = match preparation.presenter(gpu.generation) {
                         Ok(presenter) => Some(presenter.with_terminal_sink(
                             super::gpu_diagnostics::TerminalSink::new(&self.directory, &binding),
                         )),
@@ -222,7 +238,7 @@ impl DesktopApp {
                 }
                 match event {
                     Event::Prepared => {
-                        if !self
+                        if !presenter.is_shared() && !self
                             .bridge
                             .compressed_feedback(CompressedVideoFeedback::Prepared {
                                 context: binding,
@@ -236,7 +252,7 @@ impl DesktopApp {
                         native_sequence,
                         pts_90khz,
                     } => {
-                        if !self
+                        if presenter.is_shared() || !self
                             .bridge
                             .compressed_feedback(CompressedVideoFeedback::Decoded {
                                 context: binding,
@@ -290,12 +306,30 @@ impl DesktopApp {
                 return true;
             }
         }
+        if let Some(frame)=gpu.pending_shared.take() {
+            let Some(presenter)=&gpu.presenter else {gpu.enabled=false;self.bridge.enable_compressed_video(false);return false;};
+            if let Err(frame)=presenter.submit_shared(frame) {gpu.pending_shared=Some(frame);return true;}
+        }
         // One producer FIFO; never replace an unaccepted compressed reference.
         for _ in 0..10 {
             let Some(update) = self.bridge.take_compressed_update() else {
                 break;
             };
             match update {
+                CompressedVideoUpdate::SharedPreparing {context:binding,ring}=>{
+                    if binding.validate().is_err() || !compressed_current(&binding.media,snapshot,runtime.as_deref(),self.bridge.native_displays().as_ref()) {
+                        failed=true;break;
+                    }
+                    release_input=true;
+                    gpu.stop();
+                    gpu.pending_prepare=Some(Preparation::Shared {context:binding,ring});
+                    break;
+                }
+                CompressedVideoUpdate::SharedFrame(frame)=>{
+                    if gpu.context.as_ref()!=Some(&frame.descriptor().context.media) || !self.bridge.compressed_authorized() {failed=true;break;}
+                    let Some(presenter)=&gpu.presenter else {failed=true;break;};
+                    if let Err(frame)=presenter.submit_shared(frame) {gpu.pending_shared=Some(frame);break;}
+                }
                 CompressedVideoUpdate::Stopped => {
                     release_input = true;
                     gpu.stop();
@@ -323,7 +357,7 @@ impl DesktopApp {
                     gpu.stop();
                     // Do not accumulate a second GPU/device owner while an old driver is stuck.
                     if gpu.retiring.is_some() {
-                        gpu.pending_prepare = Some((binding, width, height));
+                        gpu.pending_prepare = Some(Preparation::Compressed {context:binding,width,height});
                         break;
                     }
                     gpu.generation = gpu.generation.checked_add(1).unwrap_or(0);

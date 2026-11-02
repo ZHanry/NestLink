@@ -30,7 +30,7 @@ pub use nestlink_media_session::{
 #[cfg(windows)]
 pub use nestlink_media_session::SharedVideoConsumer;
 #[cfg(windows)]
-pub use nestlink_media_codec::{SharedFrameDescriptor, SharedRingDescriptor};
+pub use nestlink_media_codec::{SharedFrameDescriptor, SharedRingDescriptor, TransferredSurfaceRing};
 #[cfg(not(target_arch = "wasm32"))]
 pub use runtime::*;
 

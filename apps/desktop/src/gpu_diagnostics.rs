@@ -146,6 +146,12 @@ pub(super) struct ReceiverObservation {
     pub height: u32,
     pub worker_started: bool,
     pub decoder_opened: bool,
+    #[serde(default)]
+    pub shared_import_opened: bool,
+    #[serde(default)]
+    pub shared_transferred: u64,
+    #[serde(default)]
+    pub shared_consumed: u64,
     /// Checked native resource destruction, independent of the Rust thread join.
     #[serde(default)]
     pub native_cleanup_completed: bool,

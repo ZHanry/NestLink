@@ -82,13 +82,23 @@ pub struct ImportedSharedFrame {
     descriptor:SharedFrameDescriptor,
     peer:VerifiedLocalPeer,
     active:Arc<AtomicBool>,
+    ring:nestlink_app_core::TransferredSurfaceRing,
 }
 impl ImportedSharedFrame {
     pub fn descriptor(&self) -> &SharedFrameDescriptor {&self.descriptor}
-    pub fn check_current(&self) -> Result<(),Error> {
+    pub fn ring(&self) -> nestlink_app_core::TransferredSurfaceRing {self.ring.clone()}
+    /// Retains the authentic transferred resource even after its presentation
+    /// deadline. A late/hidden frame may only return the actual native key.
+    pub fn check_transfer_owner(&self) -> Result<(),Error> {
         self.peer.check_current()?;
+        self.ring.check_current().map_err(|_| Error::Protocol)?;
         self.descriptor.validate()?;
-        if !self.active.load(Ordering::Acquire) || qpc()?.0 >= self.descriptor.not_after_qpc {return Err(Error::Protocol);}
+        if !self.active.load(Ordering::Acquire) {return Err(Error::Protocol);}
+        Ok(())
+    }
+    pub fn check_current(&self) -> Result<(),Error> {
+        self.check_transfer_owner()?;
+        if qpc()?.0 >= self.descriptor.not_after_qpc {return Err(Error::Protocol);}
         Ok(())
     }
 }
@@ -106,6 +116,7 @@ pub struct SharedVideoClient {
     last_token:u64,
     last_keys:[u64;3],
     authority_sequence:u64,
+    ring:nestlink_app_core::TransferredSurfaceRing,
 }
 impl SharedVideoClient {
     pub async fn open(directory:&Path,binding:NativeVideoBinding) -> Result<Self,Error> {
@@ -122,8 +133,10 @@ impl SharedVideoClient {
         context.validate()?;
         if context.binding() != binding || context.qpc_frequency != qpc()?.1 {return Err(Error::Protocol);}
         peer.check_current()?;
-        Ok(Self {connection,context,peer,active:Arc::new(AtomicBool::new(true)),last_sequence:0,last_pts:0,last_token:0,last_keys:[0;3],authority_sequence:0})
+        let ring = nestlink_app_core::TransferredSurfaceRing::from_authenticated_peer(context.native_ring()?,peer.export_target()?).map_err(|_| Error::Protocol)?;
+        Ok(Self {connection,context,peer,active:Arc::new(AtomicBool::new(true)),last_sequence:0,last_pts:0,last_token:0,last_keys:[0;3],authority_sequence:0,ring})
     }
+    pub fn ring(&self) -> nestlink_app_core::TransferredSurfaceRing {self.ring.clone()}
     pub async fn receive(&mut self) -> Result<SharedVideoMessage,Error> {
         let result = self.receive_current().await;
         if result.is_err() {self.active.store(false,Ordering::Release);}
@@ -135,10 +148,11 @@ impl SharedVideoClient {
         let message:SurfaceMessage = self.connection.receive().await?;
         self.peer.check_current()?;
         let (now,frequency) = qpc()?;
+        if frequency != self.context.qpc_frequency {return Err(Error::Protocol);}
         match message {
             SurfaceMessage::Authority {context,sequence,not_after_qpc} => {
                 if context != self.context || sequence <= self.authority_sequence || sequence > i64::MAX as u64
-                    || not_after_qpc <= now || not_after_qpc.saturating_sub(now) > frequency*AUTHORITY_MS/1000
+                    || not_after_qpc <= now || not_after_qpc.saturating_sub(now) > frequency/10
                 {return Err(Error::Protocol);}
                 self.authority_sequence = sequence;
                 Ok(SharedVideoMessage::Authority {not_after_qpc})
@@ -148,12 +162,12 @@ impl SharedVideoClient {
                 if descriptor.context != self.context || descriptor.native_sequence <= self.last_sequence || descriptor.token <= self.last_token
                     || (self.last_sequence > 0 && descriptor.pts_90khz <= self.last_pts)
                     || descriptor.acquire_key <= self.last_keys[descriptor.slot as usize]
-                    || descriptor.not_after_qpc <= now || descriptor.not_after_qpc.saturating_sub(now) > frequency*AUTHORITY_MS/1000
+                    || descriptor.not_after_qpc <= now || descriptor.not_after_qpc.saturating_sub(now) > frequency/10
                     || descriptor.resource_expires_qpc.saturating_sub(now) > frequency*5
                 {return Err(Error::Protocol);}
                 self.last_sequence = descriptor.native_sequence; self.last_pts = descriptor.pts_90khz; self.last_token = descriptor.token;
                 self.last_keys[descriptor.slot as usize] = descriptor.acquire_key;
-                Ok(SharedVideoMessage::Frame(ImportedSharedFrame {descriptor,peer:self.peer.clone(),active:self.active.clone()}))
+                Ok(SharedVideoMessage::Frame(ImportedSharedFrame {descriptor,peer:self.peer.clone(),active:self.active.clone(),ring:self.ring.clone()}))
             }
         }
     }

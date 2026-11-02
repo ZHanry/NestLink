@@ -30,7 +30,7 @@ impl SharedVideoContext {
             || self.media.decoder_hardware.is_none_or(|hardware| hardware.adapter_luid != self.adapter_luid)
             || (self.width,self.height) != (contract.config().width,contract.config().height)
             || self.ring_id == [0;16] || self.resource_ids.contains(&[0;16])
-            || self.handles.iter().any(|handle| *handle == 0 || usize::try_from(*handle).is_err())
+            || self.handles.iter().any(|handle| *handle == 0 || *handle > isize::MAX as u64 || usize::try_from(*handle).is_err())
             || self.handles[0] == self.handles[1] || self.handles[0] == self.handles[2] || self.handles[1] == self.handles[2]
             || self.resource_ids[0] == self.resource_ids[1] || self.resource_ids[0] == self.resource_ids[2] || self.resource_ids[1] == self.resource_ids[2]
             || self.bytes != u64::from(self.width)*u64::from(self.height)*3/2*3 || self.bytes > 128*1024*1024
