@@ -1,0 +1,774 @@
+{
+  "schema_version": 1,
+  "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+  "run_id": 41463321460,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41463321460",
+  "qualification": "scoped_l0_l1_original_format_failure_retained",
+  "whole_task_qualified": false,
+  "targets": [
+    {
+      "platform": "windows",
+      "artifact_id": 13153235614,
+      "official_artifact_digest": "sha256:a68da7ef85c5a349279b8b2e456153db42017fee21d4b8067b4e253436e5e290",
+      "all_receipt_payloads_verified": true,
+      "receipt": {
+        "schema_version": 1,
+        "kind": "nestlink-network-rewrite-contract-checks",
+        "recorded_at": "2026-11-02T14:52:52Z",
+        "timezone": "Asia/Shanghai",
+        "status": "failed",
+        "evidence_levels": [
+          "L0",
+          "L1"
+        ],
+        "acceptance_claims": [],
+        "failure": null,
+        "source_before": {
+          "expected_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "exact_source": true,
+          "clean": true,
+          "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "status_raw_bytes": 0,
+          "status": [],
+          "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+        },
+        "source_after": {
+          "expected_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "exact_source": true,
+          "clean": true,
+          "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "status_raw_bytes": 0,
+          "status": [],
+          "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+        },
+        "commands": [
+          {
+            "name": "ordinary-windows-token",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "-B",
+              "scripts/refactor-windows-normal-user.py",
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "-B",
+              "scripts/refactor-windows-normal-user.py",
+              "--check"
+            ],
+            "started_at": "2026-11-02T14:36:15Z",
+            "timeout_seconds": 60,
+            "log": "ordinary-windows-token.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:36:15Z",
+            "elapsed_seconds": 0.187,
+            "log_bytes": 464,
+            "log_sha256": "a325ac71d620ce3a1158d945d417a44ccae87c9511df6babea6f69b2ea7f695a"
+          },
+          {
+            "name": "rust-toolchain",
+            "argv": [
+              "rustc",
+              "--version",
+              "--verbose"
+            ],
+            "started_at": "2026-11-02T14:36:15Z",
+            "timeout_seconds": 60,
+            "log": "rust-toolchain.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:36:15Z",
+            "elapsed_seconds": 0.11,
+            "log_bytes": 278,
+            "log_sha256": "beabd282a470df0e5e72901b06be68f1929a81a14abbf0da137417df374f408d"
+          },
+          {
+            "name": "format-check",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "-B",
+              "scripts/format-first-party.py",
+              "--check",
+              "--receipt",
+              "D:\\a\\_temp\\nestlink-network-rewrite-windows-2022\\format-check-commands.json"
+            ],
+            "started_at": "2026-11-02T14:36:15Z",
+            "timeout_seconds": 300,
+            "log": "format-check.log",
+            "return_code": 1,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:36:24Z",
+            "elapsed_seconds": 9.031,
+            "log_bytes": 8056,
+            "log_sha256": "1c98d40371478498a304ba5cad789334747480008ccb5bc94affe40b0d3cd586"
+          },
+          {
+            "name": "format-worktree-create",
+            "argv": [
+              "git",
+              "worktree",
+              "add",
+              "--detach",
+              "D:\\a\\_temp\\nestlink-network-rewrite-windows-2022\\format-source",
+              "HEAD"
+            ],
+            "started_at": "2026-11-02T14:36:24Z",
+            "timeout_seconds": 120,
+            "log": "format-worktree-create.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:36:25Z",
+            "elapsed_seconds": 0.594,
+            "log_bytes": 331,
+            "log_sha256": "1bc3b75278d1614404bbc72251921501142860e14350776ad9ddc592c7f63044"
+          },
+          {
+            "name": "format-patch-generate",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "-B",
+              "scripts/format-first-party.py",
+              "--receipt",
+              "D:\\a\\_temp\\nestlink-network-rewrite-windows-2022\\format-patch-commands.json"
+            ],
+            "started_at": "2026-11-02T14:36:25Z",
+            "timeout_seconds": 300,
+            "log": "format-patch-generate.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:36:32Z",
+            "elapsed_seconds": 7.719,
+            "log_bytes": 5911,
+            "log_sha256": "44feab6e3193b7145d1bced3eac868bdc1039d11c51fdb2e14cee3deff3f5dc1"
+          },
+          {
+            "name": "format-worktree-remove",
+            "argv": [
+              "git",
+              "worktree",
+              "remove",
+              "--force",
+              "D:\\a\\_temp\\nestlink-network-rewrite-windows-2022\\format-source"
+            ],
+            "started_at": "2026-11-02T14:36:33Z",
+            "timeout_seconds": 120,
+            "log": "format-worktree-remove.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:36:33Z",
+            "elapsed_seconds": 0.187,
+            "log_bytes": 159,
+            "log_sha256": "e63e42ecccd533c68cb41573fb8240e0c901a5c1ecad0f3222ad6edbd34a2859"
+          },
+          {
+            "name": "contract-clippy",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--all-targets",
+              "--locked",
+              "--keep-going",
+              "-p",
+              "nestlink-protocol",
+              "-p",
+              "nestlink-identity",
+              "-p",
+              "nestlink-policy",
+              "-p",
+              "nestlink-connectivity",
+              "-p",
+              "nestlink-storage",
+              "-p",
+              "nestlink-traversal",
+              "-p",
+              "nestlink-transport-stream",
+              "-p",
+              "nestlink-transport-quic",
+              "-p",
+              "nestlink-transport-wss",
+              "-p",
+              "nestlink-remote",
+              "-p",
+              "nestlink-server",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "started_at": "2026-11-02T14:36:33Z",
+            "timeout_seconds": 1200,
+            "log": "contract-clippy.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:38:51Z",
+            "elapsed_seconds": 137.797,
+            "log_bytes": 28925,
+            "log_sha256": "821df1d052846c8c24418547bf6ec5beb8d6e35b0e2b7eed767451be18a3202e"
+          },
+          {
+            "name": "contract-tests",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "-B",
+              "scripts/refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "--lib",
+              "--tests",
+              "--no-fail-fast",
+              "-p",
+              "nestlink-protocol",
+              "-p",
+              "nestlink-identity",
+              "-p",
+              "nestlink-policy",
+              "-p",
+              "nestlink-connectivity",
+              "-p",
+              "nestlink-storage",
+              "-p",
+              "nestlink-traversal",
+              "-p",
+              "nestlink-transport-stream",
+              "-p",
+              "nestlink-transport-quic",
+              "-p",
+              "nestlink-transport-wss",
+              "-p",
+              "nestlink-remote",
+              "-p",
+              "nestlink-server"
+            ],
+            "started_at": "2026-11-02T14:38:51Z",
+            "timeout_seconds": 1200,
+            "log": "contract-tests.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:52:51Z",
+            "elapsed_seconds": 840.407,
+            "log_bytes": 97898,
+            "log_sha256": "90729211569b8a38b8870702b5ebb28ee64ca20f55ecbe1fd1ea79c9d09a3ea6"
+          },
+          {
+            "name": "ci-evidence-tests",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "-B",
+              "scripts/refactor-windows-normal-user.py",
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "-B",
+              "-m",
+              "unittest",
+              "discover",
+              "-s",
+              "tests/network",
+              "-p",
+              "test_*.py",
+              "-v"
+            ],
+            "started_at": "2026-11-02T14:52:51Z",
+            "timeout_seconds": 1200,
+            "log": "ci-evidence-tests.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:52:52Z",
+            "elapsed_seconds": 0.75,
+            "log_bytes": 5158,
+            "log_sha256": "e78af827c4f3209e0b9cc4fce14f265fc3707f1a54da8b8e51475089d65ed8f1"
+          }
+        ],
+        "build_provenance": {
+          "repository": "ZHanry/NestLink",
+          "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "workflow": "Network rewrite contract checks",
+          "workflow_path": ".github/workflows/network-rewrite.yml",
+          "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+          "workflow_sha": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "job": "contract",
+          "run_id": "41463321460",
+          "run_attempt": "1",
+          "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41463321460",
+          "runner": {
+            "environment": "github-hosted",
+            "name": "GitHub Actions 1000011874",
+            "os": "Windows",
+            "architecture": "X64"
+          },
+          "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+          "artifact_kind": "validation-logs-and-formatter-patch",
+          "artifact_files": [
+            {
+              "path": "ci-evidence-tests.log",
+              "bytes": 5158,
+              "sha256": "e78af827c4f3209e0b9cc4fce14f265fc3707f1a54da8b8e51475089d65ed8f1"
+            },
+            {
+              "path": "contract-clippy.log",
+              "bytes": 28925,
+              "sha256": "821df1d052846c8c24418547bf6ec5beb8d6e35b0e2b7eed767451be18a3202e"
+            },
+            {
+              "path": "contract-tests.log",
+              "bytes": 97898,
+              "sha256": "90729211569b8a38b8870702b5ebb28ee64ca20f55ecbe1fd1ea79c9d09a3ea6"
+            },
+            {
+              "path": "format-check-commands.json",
+              "bytes": 6041,
+              "sha256": "b440d8e43703b6bcdd1c5a49cf6c39e0d15d05c598c42cfee207c791f01373b3"
+            },
+            {
+              "path": "format-check.log",
+              "bytes": 8056,
+              "sha256": "1c98d40371478498a304ba5cad789334747480008ccb5bc94affe40b0d3cd586"
+            },
+            {
+              "path": "format-patch-commands.json",
+              "bytes": 6006,
+              "sha256": "3a1311b054ba0e5bb98c28ae6a9c2e801d02fb9813e8cb9a7068ecd7ad0d533d"
+            },
+            {
+              "path": "format-patch-generate.log",
+              "bytes": 5911,
+              "sha256": "44feab6e3193b7145d1bced3eac868bdc1039d11c51fdb2e14cee3deff3f5dc1"
+            },
+            {
+              "path": "format-worktree-create.log",
+              "bytes": 331,
+              "sha256": "1bc3b75278d1614404bbc72251921501142860e14350776ad9ddc592c7f63044"
+            },
+            {
+              "path": "format-worktree-remove.log",
+              "bytes": 159,
+              "sha256": "e63e42ecccd533c68cb41573fb8240e0c901a5c1ecad0f3222ad6edbd34a2859"
+            },
+            {
+              "path": "format-worktree-status.json",
+              "bytes": 237,
+              "sha256": "40cd7a3709ecc7ce2e72cec700b45edc3bbae95ffe85c9bae465e161047a0adf"
+            },
+            {
+              "path": "ordinary-windows-token.log",
+              "bytes": 464,
+              "sha256": "a325ac71d620ce3a1158d945d417a44ccae87c9511df6babea6f69b2ea7f695a"
+            },
+            {
+              "path": "rust-toolchain.log",
+              "bytes": 278,
+              "sha256": "beabd282a470df0e5e72901b06be68f1929a81a14abbf0da137417df374f408d"
+            },
+            {
+              "path": "rustfmt.patch",
+              "bytes": 2819,
+              "sha256": "520560b290279a7c616246e003ec353d9107e7a7fb92074ddba8d760e16c5704"
+            }
+          ],
+          "receipt_digest_source": "GitHub Actions upload-artifact digest; self-hash excluded"
+        },
+        "execution_provenance": {
+          "kind": "github_actions",
+          "repository": "ZHanry/NestLink",
+          "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "workflow": "Network rewrite contract checks",
+          "workflow_path": ".github/workflows/network-rewrite.yml",
+          "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+          "workflow_sha": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "job": "contract",
+          "run_id": "41463321460",
+          "run_attempt": "1",
+          "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41463321460",
+          "runner": {
+            "environment": "github-hosted",
+            "name": "GitHub Actions 1000011874",
+            "os": "Windows",
+            "architecture": "X64"
+          },
+          "executed_commands": [
+            "ordinary-windows-token",
+            "rust-toolchain",
+            "format-check",
+            "format-worktree-create",
+            "format-patch-generate",
+            "format-worktree-remove",
+            "contract-clippy",
+            "contract-tests",
+            "ci-evidence-tests"
+          ],
+          "target_device_acceptance": false,
+          "l2_network_experiment": false
+        },
+        "limitations": [
+          "L0/L1 contract and CI receipt checks only; AC04 production-socket fault experiments have not run here.",
+          "No target GPU, phone, physical NAT, TUN, public HA, game or cross-day acceptance is claimed.",
+          "A formatting patch is review material; failing source is not replaced or counted as passing."
+        ]
+      }
+    },
+    {
+      "platform": "linux",
+      "artifact_id": 13149793903,
+      "official_artifact_digest": "sha256:d0ec0d901e91e12366bc9c7682381ed87e47aebeae98886911e877f27b724301",
+      "all_receipt_payloads_verified": true,
+      "receipt": {
+        "schema_version": 1,
+        "kind": "nestlink-network-rewrite-contract-checks",
+        "recorded_at": "2026-11-02T14:46:27Z",
+        "timezone": "Asia/Shanghai",
+        "status": "failed",
+        "evidence_levels": [
+          "L0",
+          "L1"
+        ],
+        "acceptance_claims": [],
+        "failure": null,
+        "source_before": {
+          "expected_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "exact_source": true,
+          "clean": true,
+          "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "status_raw_bytes": 0,
+          "status": [],
+          "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+        },
+        "source_after": {
+          "expected_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "exact_source": true,
+          "clean": true,
+          "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "status_raw_bytes": 0,
+          "status": [],
+          "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+        },
+        "commands": [
+          {
+            "name": "rust-toolchain",
+            "argv": [
+              "rustc",
+              "--version",
+              "--verbose"
+            ],
+            "started_at": "2026-11-02T14:37:07Z",
+            "timeout_seconds": 60,
+            "log": "rust-toolchain.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:37:07Z",
+            "elapsed_seconds": 0.032,
+            "log_bytes": 280,
+            "log_sha256": "c7245021aa13946aa7cd0392858ea449cd24903a8d23ccd66c8aa2095b645d3c"
+          },
+          {
+            "name": "format-check",
+            "argv": [
+              "/usr/bin/python",
+              "-B",
+              "scripts/format-first-party.py",
+              "--check",
+              "--receipt",
+              "/home/runner/work/_temp/nestlink-network-rewrite-ubuntu-24.04/format-check-commands.json"
+            ],
+            "started_at": "2026-11-02T14:37:07Z",
+            "timeout_seconds": 300,
+            "log": "format-check.log",
+            "return_code": 1,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:37:12Z",
+            "elapsed_seconds": 4.774,
+            "log_bytes": 7889,
+            "log_sha256": "d93a3281345e2bfcb72e4c0c818b890716d0fc8cf3c2834b061a3166be7c6624"
+          },
+          {
+            "name": "format-worktree-create",
+            "argv": [
+              "git",
+              "worktree",
+              "add",
+              "--detach",
+              "/home/runner/work/_temp/nestlink-network-rewrite-ubuntu-24.04/format-source",
+              "HEAD"
+            ],
+            "started_at": "2026-11-02T14:37:12Z",
+            "timeout_seconds": 120,
+            "log": "format-worktree-create.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:37:12Z",
+            "elapsed_seconds": 0.164,
+            "log_bytes": 340,
+            "log_sha256": "45360127ff7809d658214feec2d7349e2cb28d68ac93aab0ace3c2fae6523bc1"
+          },
+          {
+            "name": "format-patch-generate",
+            "argv": [
+              "/usr/bin/python",
+              "-B",
+              "scripts/format-first-party.py",
+              "--receipt",
+              "/home/runner/work/_temp/nestlink-network-rewrite-ubuntu-24.04/format-patch-commands.json"
+            ],
+            "started_at": "2026-11-02T14:37:12Z",
+            "timeout_seconds": 300,
+            "log": "format-patch-generate.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:37:17Z",
+            "elapsed_seconds": 5.074,
+            "log_bytes": 5870,
+            "log_sha256": "fcc827cf002fc5dbd5b600e7f1bf3a8839dbc18b626677f29713b92b9437714e"
+          },
+          {
+            "name": "format-worktree-remove",
+            "argv": [
+              "git",
+              "worktree",
+              "remove",
+              "--force",
+              "/home/runner/work/_temp/nestlink-network-rewrite-ubuntu-24.04/format-source"
+            ],
+            "started_at": "2026-11-02T14:37:17Z",
+            "timeout_seconds": 120,
+            "log": "format-worktree-remove.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:37:17Z",
+            "elapsed_seconds": 0.032,
+            "log_bytes": 168,
+            "log_sha256": "76e73a9276514cc8d858af54fc8c29be701f24a7d4ccb259c1b5dd2d9190faba"
+          },
+          {
+            "name": "contract-clippy",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--all-targets",
+              "--locked",
+              "--keep-going",
+              "-p",
+              "nestlink-protocol",
+              "-p",
+              "nestlink-identity",
+              "-p",
+              "nestlink-policy",
+              "-p",
+              "nestlink-connectivity",
+              "-p",
+              "nestlink-storage",
+              "-p",
+              "nestlink-traversal",
+              "-p",
+              "nestlink-transport-stream",
+              "-p",
+              "nestlink-transport-quic",
+              "-p",
+              "nestlink-transport-wss",
+              "-p",
+              "nestlink-remote",
+              "-p",
+              "nestlink-server",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "started_at": "2026-11-02T14:37:17Z",
+            "timeout_seconds": 1200,
+            "log": "contract-clippy.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:38:31Z",
+            "elapsed_seconds": 74.011,
+            "log_bytes": 29016,
+            "log_sha256": "9cf472608a0ee97958c7d085bef44c18c075a4d17de05a9b919d5ae58a40a0bc"
+          },
+          {
+            "name": "contract-tests",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "--lib",
+              "--tests",
+              "--no-fail-fast",
+              "-p",
+              "nestlink-protocol",
+              "-p",
+              "nestlink-identity",
+              "-p",
+              "nestlink-policy",
+              "-p",
+              "nestlink-connectivity",
+              "-p",
+              "nestlink-storage",
+              "-p",
+              "nestlink-traversal",
+              "-p",
+              "nestlink-transport-stream",
+              "-p",
+              "nestlink-transport-quic",
+              "-p",
+              "nestlink-transport-wss",
+              "-p",
+              "nestlink-remote",
+              "-p",
+              "nestlink-server"
+            ],
+            "started_at": "2026-11-02T14:38:31Z",
+            "timeout_seconds": 1200,
+            "log": "contract-tests.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:46:27Z",
+            "elapsed_seconds": 475.767,
+            "log_bytes": 99094,
+            "log_sha256": "8749064df894efbbd4bbada1c2a600340831fa544aa9a4f77c9dce167d43fb90"
+          },
+          {
+            "name": "ci-evidence-tests",
+            "argv": [
+              "/usr/bin/python",
+              "-B",
+              "-m",
+              "unittest",
+              "discover",
+              "-s",
+              "tests/network",
+              "-p",
+              "test_*.py",
+              "-v"
+            ],
+            "started_at": "2026-11-02T14:46:27Z",
+            "timeout_seconds": 1200,
+            "log": "ci-evidence-tests.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-02T14:46:27Z",
+            "elapsed_seconds": 0.264,
+            "log_bytes": 4442,
+            "log_sha256": "c4d41dcf4b07e37a5c6738cf32bd8da8b91cb5a9095fbdf406e448795ce526e9"
+          }
+        ],
+        "build_provenance": {
+          "repository": "ZHanry/NestLink",
+          "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "workflow": "Network rewrite contract checks",
+          "workflow_path": ".github/workflows/network-rewrite.yml",
+          "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+          "workflow_sha": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "job": "contract",
+          "run_id": "41463321460",
+          "run_attempt": "1",
+          "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41463321460",
+          "runner": {
+            "environment": "github-hosted",
+            "name": "GitHub Actions 1000011877",
+            "os": "Linux",
+            "architecture": "X64"
+          },
+          "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+          "artifact_kind": "validation-logs-and-formatter-patch",
+          "artifact_files": [
+            {
+              "path": "ci-evidence-tests.log",
+              "bytes": 4442,
+              "sha256": "c4d41dcf4b07e37a5c6738cf32bd8da8b91cb5a9095fbdf406e448795ce526e9"
+            },
+            {
+              "path": "contract-clippy.log",
+              "bytes": 29016,
+              "sha256": "9cf472608a0ee97958c7d085bef44c18c075a4d17de05a9b919d5ae58a40a0bc"
+            },
+            {
+              "path": "contract-tests.log",
+              "bytes": 99094,
+              "sha256": "8749064df894efbbd4bbada1c2a600340831fa544aa9a4f77c9dce167d43fb90"
+            },
+            {
+              "path": "format-check-commands.json",
+              "bytes": 5797,
+              "sha256": "24c135880b6cb006244cd43a5518ea7fc19d9043aaea81b3de90f1e9ad314449"
+            },
+            {
+              "path": "format-check.log",
+              "bytes": 7889,
+              "sha256": "d93a3281345e2bfcb72e4c0c818b890716d0fc8cf3c2834b061a3166be7c6624"
+            },
+            {
+              "path": "format-patch-commands.json",
+              "bytes": 5764,
+              "sha256": "7e5380bdaba55b3263e59d5ca7ecd68200d41f0f842a4d59e6d251b39890d665"
+            },
+            {
+              "path": "format-patch-generate.log",
+              "bytes": 5870,
+              "sha256": "fcc827cf002fc5dbd5b600e7f1bf3a8839dbc18b626677f29713b92b9437714e"
+            },
+            {
+              "path": "format-worktree-create.log",
+              "bytes": 340,
+              "sha256": "45360127ff7809d658214feec2d7349e2cb28d68ac93aab0ace3c2fae6523bc1"
+            },
+            {
+              "path": "format-worktree-remove.log",
+              "bytes": 168,
+              "sha256": "76e73a9276514cc8d858af54fc8c29be701f24a7d4ccb259c1b5dd2d9190faba"
+            },
+            {
+              "path": "format-worktree-status.json",
+              "bytes": 229,
+              "sha256": "177cd8dce6127cdc6a89616ad1463f691b10bdd85c26cdaa2108d0c8e3385df5"
+            },
+            {
+              "path": "rust-toolchain.log",
+              "bytes": 280,
+              "sha256": "c7245021aa13946aa7cd0392858ea449cd24903a8d23ccd66c8aa2095b645d3c"
+            },
+            {
+              "path": "rustfmt.patch",
+              "bytes": 2819,
+              "sha256": "520560b290279a7c616246e003ec353d9107e7a7fb92074ddba8d760e16c5704"
+            }
+          ],
+          "receipt_digest_source": "GitHub Actions upload-artifact digest; self-hash excluded"
+        },
+        "execution_provenance": {
+          "kind": "github_actions",
+          "repository": "ZHanry/NestLink",
+          "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "workflow": "Network rewrite contract checks",
+          "workflow_path": ".github/workflows/network-rewrite.yml",
+          "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+          "workflow_sha": "10d62244747447ca9752d8d0b5c20e02fe578235",
+          "job": "contract",
+          "run_id": "41463321460",
+          "run_attempt": "1",
+          "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41463321460",
+          "runner": {
+            "environment": "github-hosted",
+            "name": "GitHub Actions 1000011877",
+            "os": "Linux",
+            "architecture": "X64"
+          },
+          "executed_commands": [
+            "rust-toolchain",
+            "format-check",
+            "format-worktree-create",
+            "format-patch-generate",
+            "format-worktree-remove",
+            "contract-clippy",
+            "contract-tests",
+            "ci-evidence-tests"
+          ],
+          "target_device_acceptance": false,
+          "l2_network_experiment": false
+        },
+        "limitations": [
+          "L0/L1 contract and CI receipt checks only; AC04 production-socket fault experiments have not run here.",
+          "No target GPU, phone, physical NAT, TUN, public HA, game or cross-day acceptance is claimed.",
+          "A formatting patch is review material; failing source is not replaced or counted as passing."
+        ]
+      }
+    }
+  ],
+  "observation": "Both original platform jobs passed strict contract Clippy, contract tests and25CI-evidence tests. Both failed only first-party format-check; exact hosted patch was independently reviewed and imported in3b4970f. These source10d runs remain failures; later source must independently pass mandatory qualification."
+}

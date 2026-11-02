@@ -1,0 +1,747 @@
+{
+  "schema_version": 1,
+  "scope": "Actual original Windows ordinary-token owner and compressed IPC checks; no physical GPU/desktop/throughput/whole acceptance qualification",
+  "run_id": 41463310874,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41463310874",
+  "status": "success_scoped",
+  "whole_task_qualified": false,
+  "targets": [
+    {
+      "platform": "windows-2025",
+      "artifact_id": 13150881629,
+      "official_artifact_digest": "sha256:5c0fc4c7614e3211721ec6ac7b7339daa6650475276ba1339269bee38017d652",
+      "receipt": {
+        "source_revision": "b6b5520418756712c6c833c86e0a153dff394d1a",
+        "workflow_revision": "b6b5520418756712c6c833c86e0a153dff394d1a",
+        "run_id": "41460667796",
+        "attempt": "1",
+        "runner_environment": "github-hosted",
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+        "hardware_or_target_acceptance_claimed": false,
+        "tool_sources": {
+          "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+        }
+      },
+      "artifact_files": [
+        {
+          "path": "compressed-context-tests.log",
+          "bytes": 18838,
+          "sha256": "0b29582d346e3730b876507cf4ca37893c0d824592c0ffb276238635bab68fd4"
+        },
+        {
+          "path": "compressed-native-tests.log",
+          "bytes": 18311,
+          "sha256": "8c5054180c6362fc17eef188a69d6a0e9dfce7e4b828bc6b7b8dee6e19240177"
+        },
+        {
+          "path": "daemon-hevc-selection-tests.log",
+          "bytes": 14603,
+          "sha256": "fd05911a780d36efa9344e0161ced8173a523f6a395e39a623268b30c367d39c"
+        },
+        {
+          "path": "daemon-media-clippy.log",
+          "bytes": 19982,
+          "sha256": "cf14237e248fdb1a1acf96d0b1016d234bbb8d2444ef8992a6aef433ecdaa508"
+        },
+        {
+          "path": "decoded-export-owner-tests.log",
+          "bytes": 965,
+          "sha256": "6cfd5aee5b77b245cd3f76cbeea6eb6c60c33a9ccc623c8c2905eca2b31772e7"
+        },
+        {
+          "path": "desktop-clippy.log",
+          "bytes": 29132,
+          "sha256": "73f88cb31b4e7d3e2c71ae75dbcbc28ff9405fb73eaccb7e2e1ad4969c8ea6b0"
+        },
+        {
+          "path": "h264-output-geometry-tests.log",
+          "bytes": 1265,
+          "sha256": "46107bfb4edd5261abf12e054c4bb90eb02bfecc57beaf19d0d228b7871bb17d"
+        },
+        {
+          "path": "hevc-clippy.log",
+          "bytes": 1070,
+          "sha256": "a534175bfee2983806b83cd83471d9c53e29a3663b299b58a05a9fa2b7b39bd9"
+        },
+        {
+          "path": "hevc-contract-tests.log",
+          "bytes": 1867,
+          "sha256": "4d4c398edf68da3b01f74d480619f2131b403480cc881c3d480a1fdfc7f12dbb"
+        },
+        {
+          "path": "hevc-execution-tests.log",
+          "bytes": 1121,
+          "sha256": "cf26e24fe39d88a914e7dbafd31a9e6d39bbcbbfaf626fabbcddd4fb3252f080"
+        },
+        {
+          "path": "hevc-mf-color-tests.log",
+          "bytes": 606,
+          "sha256": "e2460ba89a93e7d452c1e4366fa48eb05fc0ec4fa085301430ebbb1f4fdb9603"
+        },
+        {
+          "path": "hevc-target-tests.log",
+          "bytes": 3812,
+          "sha256": "7543cab605496009df2b651e0b770290c69c358612829284af926d07d579878a"
+        },
+        {
+          "path": "media-opt-in-approval-tests.log",
+          "bytes": 14586,
+          "sha256": "bd5e9ac02d6f1f5dbe7998407e3002fb05145130576c1643f5dfe371614bdede"
+        },
+        {
+          "path": "media-opt-in-cli-tests.log",
+          "bytes": 20373,
+          "sha256": "9078457264006cab42734f0cde88b0cf65a101cf873b1650f2d9fc7652db0bf7"
+        },
+        {
+          "path": "media-opt-in-config-tests.log",
+          "bytes": 15354,
+          "sha256": "e38695f24d349631141c00eb1c669b7bdf3e0e73097045c4088b16b7321bc0a2"
+        },
+        {
+          "path": "media-opt-in-http-tests.log",
+          "bytes": 14897,
+          "sha256": "f454dcba2bdeb593aad7c2d0f84a1ef09d8ab410035cdf5d2e80b5dc77c11a78"
+        },
+        {
+          "path": "media-provider-tests.log",
+          "bytes": 22113,
+          "sha256": "2023f7c70b4fc7033aa1d510c8c373df2b325ff157ff40028967d7a39d4e5e33"
+        },
+        {
+          "path": "native-media-wire-tests.log",
+          "bytes": 1593,
+          "sha256": "97f5fe229360c9348bc553387b0d1817866be4a4534306548eb8636964fc18e0"
+        },
+        {
+          "path": "presenter-tests.log",
+          "bytes": 15055,
+          "sha256": "37c9d5104cf06bfc648debf6caed9cca980db185d312763f1657f305317ad327"
+        },
+        {
+          "path": "readback-ipc-tests.log",
+          "bytes": 17314,
+          "sha256": "82a2e02a78716c0c5e8605769f67070605fc34227eae7a2c08bb4233fd1fd9c6"
+        },
+        {
+          "path": "receiver-tests.log",
+          "bytes": 44531,
+          "sha256": "646215272c014a170ef1a2378ce90631e976989de38854df0390d5e79eb5a0a7"
+        },
+        {
+          "path": "shared-surface-descriptor-tests.log",
+          "bytes": 14955,
+          "sha256": "51aa924d7d39aba4c2937fb72be13d035506cba8542393e8e94ab0056e81d624"
+        },
+        {
+          "path": "shared-surface-transfer-claim-tests.log",
+          "bytes": 648,
+          "sha256": "3270560741e3cf2371ba275867e31b1c19a56b295b3f417f03c2f833934f1222"
+        },
+        {
+          "path": "signed-store-media-tests.log",
+          "bytes": 4044,
+          "sha256": "59460a12cdc3e25ce33f0d351def9370387854e747ff6c4f699c5aa19272b7b2"
+        },
+        {
+          "path": "source-receipt.json",
+          "bytes": 627,
+          "sha256": "f7dd9120faea5d967b30b9abd57e7915b8460893e36318a5a401915d960c7d3c"
+        }
+      ],
+      "passing_test_summaries": {
+        "compressed-context-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.08s"
+        ],
+        "compressed-native-tests.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.65s"
+        ],
+        "daemon-hevc-selection-tests.log": [
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 49 filtered out; finished in 0.00s"
+        ],
+        "daemon-media-clippy.log": [],
+        "decoded-export-owner-tests.log": [
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 72 filtered out; finished in 0.00s"
+        ],
+        "desktop-clippy.log": [],
+        "h264-output-geometry-tests.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s"
+        ],
+        "hevc-clippy.log": [],
+        "hevc-contract-tests.log": [
+          "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s"
+        ],
+        "hevc-execution-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 59 filtered out; finished in 0.00s"
+        ],
+        "hevc-mf-color-tests.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s"
+        ],
+        "hevc-target-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.00s"
+        ],
+        "media-opt-in-approval-tests.log": [
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 77 filtered out; finished in 0.00s"
+        ],
+        "media-opt-in-cli-tests.log": [
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 48 filtered out; finished in 0.01s"
+        ],
+        "media-opt-in-config-tests.log": [
+          "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 73 filtered out; finished in 1.75s"
+        ],
+        "media-opt-in-http-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.37s"
+        ],
+        "media-provider-tests.log": [
+          "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.08s"
+        ],
+        "native-media-wire-tests.log": [
+          "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s"
+        ],
+        "presenter-tests.log": [
+          "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 81 filtered out; finished in 0.00s"
+        ],
+        "readback-ipc-tests.log": [
+          "test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.11s"
+        ],
+        "receiver-tests.log": [
+          "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 77 filtered out; finished in 0.07s"
+        ],
+        "shared-surface-descriptor-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.05s"
+        ],
+        "shared-surface-transfer-claim-tests.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s"
+        ],
+        "signed-store-media-tests.log": [
+          "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 10.07s"
+        ]
+      },
+      "compressed_delivery_observations": [
+        "compressed_ipc actual_two_tls=true software_decoded=12 credit_reused=true owner_joined_before_receipt=true"
+      ],
+      "run_id": 41460667796,
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41460667796"
+    },
+    {
+      "platform": "windows-2022",
+      "artifact_id": 13151591896,
+      "official_artifact_digest": "sha256:68dc9078b26f8fba1237f9fe3b42c7b9b3e5cf80ad2111b511948f81a9fd64a6",
+      "receipt": {
+        "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+        "workflow_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+        "run_id": "41463310874",
+        "attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Windows",
+        "runner_label": "windows-2022",
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+        "hardware_or_target_acceptance_claimed": false,
+        "tool_sources": {
+          "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+        }
+      },
+      "artifact_files": [
+        {
+          "path": "compressed-context-tests.log",
+          "bytes": 14997,
+          "sha256": "e224719ff3bd131749b8ae8f23901508e0b9f00f8d6585493daf0636190b97e9"
+        },
+        {
+          "path": "compressed-native-tests.log",
+          "bytes": 41308,
+          "sha256": "bce05e5f1468929bfa29adfca6b27180396a834cea394de8d0808135cd05a18d"
+        },
+        {
+          "path": "daemon-hevc-selection-tests.log",
+          "bytes": 14603,
+          "sha256": "d05e34d55536346f077832ead9add99014adcbf4fbb85f255ba01d51e5f93932"
+        },
+        {
+          "path": "daemon-media-clippy.log",
+          "bytes": 19982,
+          "sha256": "b0a7feb8b6fde880dc89b8c685809231782923bb12f9d4848246cf22122e1d6a"
+        },
+        {
+          "path": "decoded-export-owner-tests.log",
+          "bytes": 965,
+          "sha256": "2f159b62dc157943a0be1b7dd541a709b6bd732a5a0b8150ed5a6554b2dfd456"
+        },
+        {
+          "path": "desktop-clippy.log",
+          "bytes": 29132,
+          "sha256": "5899ab59d1b565d63963333a7c3c287006e47eff7b8b3455f6b2a9cfe9bd9d1d"
+        },
+        {
+          "path": "h264-output-geometry-tests.log",
+          "bytes": 1265,
+          "sha256": "a90c5bbc49186e6c448e239ce7832c4638a7cb88ed51683ec1fe68c86a4d2164"
+        },
+        {
+          "path": "hevc-clippy.log",
+          "bytes": 1070,
+          "sha256": "a9d2d5072892d390648a8c3a2a2470dcc82fb812e9afef4efacba3222073e10a"
+        },
+        {
+          "path": "hevc-contract-tests.log",
+          "bytes": 1867,
+          "sha256": "3bc97df75245284c241c960a4af1ba36ac7f35aef317ec6f27d6fdefe0ad0d8c"
+        },
+        {
+          "path": "hevc-execution-tests.log",
+          "bytes": 1121,
+          "sha256": "cf26e24fe39d88a914e7dbafd31a9e6d39bbcbbfaf626fabbcddd4fb3252f080"
+        },
+        {
+          "path": "hevc-mf-color-tests.log",
+          "bytes": 606,
+          "sha256": "ee34bc06118f0674a051dffce5f71858a1526fe7b7969b158bf97d33c3592a9f"
+        },
+        {
+          "path": "hevc-target-tests.log",
+          "bytes": 3812,
+          "sha256": "b825dd58f9da919e3775e7a98e3bdea8420b2a862458761b9ff385341fc81838"
+        },
+        {
+          "path": "media-opt-in-approval-tests.log",
+          "bytes": 14586,
+          "sha256": "afdf7c68d710e502f2a902ac1abe9b8781823b0020823383ae6472488d85324c"
+        },
+        {
+          "path": "media-opt-in-cli-tests.log",
+          "bytes": 20373,
+          "sha256": "f6f4a16de68ea04b97b4687421a59ecaabcc342d193375fc9b26dda34b65101d"
+        },
+        {
+          "path": "media-opt-in-config-tests.log",
+          "bytes": 15354,
+          "sha256": "12d99c11ee6bdd34e9e538cfb9e92a8de7b076aabe57651a2630c88a24e3586e"
+        },
+        {
+          "path": "media-opt-in-http-tests.log",
+          "bytes": 14897,
+          "sha256": "6b9d6214f73d43aeae07df233d06fd908785ad31408cd00ff04d897fc4f577df"
+        },
+        {
+          "path": "media-provider-tests.log",
+          "bytes": 21197,
+          "sha256": "e031c82b3caf74a08433af0e8ca7fbb4c6fc5b34d7765c8d9ee2d3a3c1fff84c"
+        },
+        {
+          "path": "native-media-wire-tests.log",
+          "bytes": 1593,
+          "sha256": "43c13583b6d539fb11d0b4662e9a89dd4ebd42d857c6f3bd595b3e10f3b9022d"
+        },
+        {
+          "path": "presenter-tests.log",
+          "bytes": 15055,
+          "sha256": "d158dbab921a37ff5acb41a3ac265ba4b927b5326f3f6189378abda34616e30c"
+        },
+        {
+          "path": "readback-ipc-tests.log",
+          "bytes": 17314,
+          "sha256": "966b1c8473e16c1b6c6399e72b1d2c2af051f5ebe3237e0ba889ed3c02c3593c"
+        },
+        {
+          "path": "receiver-tests.log",
+          "bytes": 26291,
+          "sha256": "8c36c8c16b4811b185d53a5265326033f7e5934616b88f57b1f3bdd9dd2fb476"
+        },
+        {
+          "path": "shared-surface-descriptor-tests.log",
+          "bytes": 14955,
+          "sha256": "adf3fbe651542de5d7b716003b44639f2819c16fa4044cad525012f79df9fa7b"
+        },
+        {
+          "path": "shared-surface-transfer-claim-tests.log",
+          "bytes": 648,
+          "sha256": "baefe5dbd91756c6f424a56511fbdc56abbba2c2c5570ae3c7671cd77876e7d8"
+        },
+        {
+          "path": "signed-store-media-tests.log",
+          "bytes": 4044,
+          "sha256": "e88a1ac70e7a38c727b3826589af5acef43daf6ff28cda67c4b553997c9e6879"
+        },
+        {
+          "path": "source-receipt.json",
+          "bytes": 689,
+          "sha256": "95e1e1a9b4b423f8327be8ffa2937221cf1cd6c18bcee22dc81ee41feb56bea5"
+        }
+      ],
+      "passing_test_summaries": {
+        "compressed-context-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.09s"
+        ],
+        "compressed-native-tests.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.62s"
+        ],
+        "daemon-hevc-selection-tests.log": [
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 49 filtered out; finished in 0.00s"
+        ],
+        "daemon-media-clippy.log": [],
+        "decoded-export-owner-tests.log": [
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 72 filtered out; finished in 0.00s"
+        ],
+        "desktop-clippy.log": [],
+        "h264-output-geometry-tests.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s"
+        ],
+        "hevc-clippy.log": [],
+        "hevc-contract-tests.log": [
+          "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s"
+        ],
+        "hevc-execution-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 59 filtered out; finished in 0.00s"
+        ],
+        "hevc-mf-color-tests.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s"
+        ],
+        "hevc-target-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.00s"
+        ],
+        "media-opt-in-approval-tests.log": [
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 77 filtered out; finished in 0.00s"
+        ],
+        "media-opt-in-cli-tests.log": [
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 48 filtered out; finished in 0.01s"
+        ],
+        "media-opt-in-config-tests.log": [
+          "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 73 filtered out; finished in 1.82s"
+        ],
+        "media-opt-in-http-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.21s"
+        ],
+        "media-provider-tests.log": [
+          "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.15s"
+        ],
+        "native-media-wire-tests.log": [
+          "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s"
+        ],
+        "presenter-tests.log": [
+          "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 81 filtered out; finished in 0.00s"
+        ],
+        "readback-ipc-tests.log": [
+          "test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.13s"
+        ],
+        "receiver-tests.log": [
+          "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 77 filtered out; finished in 0.06s"
+        ],
+        "shared-surface-descriptor-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.04s"
+        ],
+        "shared-surface-transfer-claim-tests.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s"
+        ],
+        "signed-store-media-tests.log": [
+          "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 10.24s"
+        ]
+      },
+      "compressed_delivery_observations": [
+        "compressed_ipc actual_two_tls=true software_decoded=12 credit_reused=true owner_joined_before_receipt=true"
+      ],
+      "run_id": 41463310874,
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41463310874"
+    },
+    {
+      "platform": "windows-2025",
+      "artifact_id": 13151197643,
+      "official_artifact_digest": "sha256:b4d22ab264c48ee43783739a6402a5e3a3525f62059a505c07ba15cc4a5cfee8",
+      "receipt": {
+        "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+        "workflow_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+        "run_id": "41463310874",
+        "attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Windows",
+        "runner_label": "windows-2025",
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+        "hardware_or_target_acceptance_claimed": false,
+        "tool_sources": {
+          "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+        }
+      },
+      "artifact_files": [
+        {
+          "path": "compressed-context-tests.log",
+          "bytes": 14997,
+          "sha256": "c9fab739c5cf0f2e5ef196a559e5d0dee11a62672274bea5cafed2cd36b62f13"
+        },
+        {
+          "path": "compressed-native-tests.log",
+          "bytes": 41310,
+          "sha256": "74aeeec4d927f5a8016b4b5b2de975cae85c048d3cac787fbacd18ce33577dcf"
+        },
+        {
+          "path": "daemon-hevc-selection-tests.log",
+          "bytes": 14603,
+          "sha256": "f0889fd55e493cf9320dbbf0765436c0001dc9ab12d72a3e2fda975707776955"
+        },
+        {
+          "path": "daemon-media-clippy.log",
+          "bytes": 19982,
+          "sha256": "44ba0a766c217a78251c7572b2ef31e00cabe46755a620760ea229bea92809c1"
+        },
+        {
+          "path": "decoded-export-owner-tests.log",
+          "bytes": 965,
+          "sha256": "5e704e87168de7754817af353202683896f9fa8f7663fb9b644385e980ae8bea"
+        },
+        {
+          "path": "desktop-clippy.log",
+          "bytes": 29132,
+          "sha256": "7ed4be0fc1f8909f51bf2bfdfcafd1ba01ee2446510ab07a204fd50065edd511"
+        },
+        {
+          "path": "h264-output-geometry-tests.log",
+          "bytes": 1265,
+          "sha256": "87e7835b84129aef669345bfbe20536ce9b95a658ad6305f9d4689105ed468dd"
+        },
+        {
+          "path": "hevc-clippy.log",
+          "bytes": 1070,
+          "sha256": "16f762ef47cf7c356ec919d4ee32f1ed30ba658102c46e74ac4227295b202f12"
+        },
+        {
+          "path": "hevc-contract-tests.log",
+          "bytes": 1867,
+          "sha256": "ff1d1d7d651e19e2870e2ae095a1db79a677979ef8ca41dd5be353df7a14d315"
+        },
+        {
+          "path": "hevc-execution-tests.log",
+          "bytes": 1121,
+          "sha256": "896f53176de8c785b53db6db97df644d98d5815da7e8a9b3e616f4eb36263b08"
+        },
+        {
+          "path": "hevc-mf-color-tests.log",
+          "bytes": 606,
+          "sha256": "af516c8a0c6acc9a99c5335a8c33fcc6998b52b18dd568769eac8ddbbcd9c906"
+        },
+        {
+          "path": "hevc-target-tests.log",
+          "bytes": 3812,
+          "sha256": "62f3c05f5acc31808fcfdaab2461c162925a9354d93ee451753e6487424b1618"
+        },
+        {
+          "path": "media-opt-in-approval-tests.log",
+          "bytes": 14586,
+          "sha256": "eb955337147b0907d36a2527516a2e4105a47ffaa37eda2ed08bf27402a7ce2f"
+        },
+        {
+          "path": "media-opt-in-cli-tests.log",
+          "bytes": 20373,
+          "sha256": "29143dda97f3be19817054e0f3769f087845926ee7ed1225c315d7b83f42480b"
+        },
+        {
+          "path": "media-opt-in-config-tests.log",
+          "bytes": 15354,
+          "sha256": "3a33c0b91a91dbfaf603a89e4b14bfe4e95f968f2b8ebae0cc559f70de841f46"
+        },
+        {
+          "path": "media-opt-in-http-tests.log",
+          "bytes": 14897,
+          "sha256": "8372fed4ebcf6721b6d447aa86b5f7dd6f7392fe8be362fe2a607cb22daf4a68"
+        },
+        {
+          "path": "media-provider-tests.log",
+          "bytes": 21197,
+          "sha256": "48b7215ad85e28bf26cca805478649512efe4e5564ee1a17ae0381804c6251cd"
+        },
+        {
+          "path": "native-media-wire-tests.log",
+          "bytes": 1593,
+          "sha256": "8bd7804aa764e2c35fabf34437f0075d506a208e0276ab3360ed92bb5742ef06"
+        },
+        {
+          "path": "presenter-tests.log",
+          "bytes": 15055,
+          "sha256": "a8770d6e7f7619d801ee20f914dfe944e8d84d730e660f56277d53b9ac1bafe8"
+        },
+        {
+          "path": "readback-ipc-tests.log",
+          "bytes": 17314,
+          "sha256": "ac9d935efd1f6638303e51e96ce058f91e69d9f7ca04e0242486d8e9909fbc5b"
+        },
+        {
+          "path": "receiver-tests.log",
+          "bytes": 26291,
+          "sha256": "0bd5014900b46d9b86024871201f3e63bd646c7af6475eef326d2c42c38a285d"
+        },
+        {
+          "path": "shared-surface-descriptor-tests.log",
+          "bytes": 14955,
+          "sha256": "6c33ad32974eb734fd24da70100904870d1b60b89a2e3764116a23c88c77bfb6"
+        },
+        {
+          "path": "shared-surface-transfer-claim-tests.log",
+          "bytes": 648,
+          "sha256": "5e8610de9206180aea4f0e8d741b5d2b9d590c5c0c8ce0d30467219155f604a3"
+        },
+        {
+          "path": "signed-store-media-tests.log",
+          "bytes": 4044,
+          "sha256": "b88c31063ab1bf9336ebb5814e7139a4b1c1c9aa029019d2da6d781a0a7aaa2f"
+        },
+        {
+          "path": "source-receipt.json",
+          "bytes": 689,
+          "sha256": "442d12f7333100660ae556a06e376edcec4df8da51a82eb49f3bf17b5ddfcb1f"
+        }
+      ],
+      "passing_test_summaries": {
+        "compressed-context-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.09s"
+        ],
+        "compressed-native-tests.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.08s"
+        ],
+        "daemon-hevc-selection-tests.log": [
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 49 filtered out; finished in 0.00s"
+        ],
+        "daemon-media-clippy.log": [],
+        "decoded-export-owner-tests.log": [
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 72 filtered out; finished in 0.00s"
+        ],
+        "desktop-clippy.log": [],
+        "h264-output-geometry-tests.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s"
+        ],
+        "hevc-clippy.log": [],
+        "hevc-contract-tests.log": [
+          "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s"
+        ],
+        "hevc-execution-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 59 filtered out; finished in 0.00s"
+        ],
+        "hevc-mf-color-tests.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s"
+        ],
+        "hevc-target-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.00s"
+        ],
+        "media-opt-in-approval-tests.log": [
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 77 filtered out; finished in 0.00s"
+        ],
+        "media-opt-in-cli-tests.log": [
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 48 filtered out; finished in 0.01s"
+        ],
+        "media-opt-in-config-tests.log": [
+          "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 73 filtered out; finished in 1.79s"
+        ],
+        "media-opt-in-http-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.35s"
+        ],
+        "media-provider-tests.log": [
+          "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.15s"
+        ],
+        "native-media-wire-tests.log": [
+          "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s"
+        ],
+        "presenter-tests.log": [
+          "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 81 filtered out; finished in 0.00s"
+        ],
+        "readback-ipc-tests.log": [
+          "test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.11s"
+        ],
+        "receiver-tests.log": [
+          "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 77 filtered out; finished in 0.07s"
+        ],
+        "shared-surface-descriptor-tests.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.05s"
+        ],
+        "shared-surface-transfer-claim-tests.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s"
+        ],
+        "signed-store-media-tests.log": [
+          "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 10.81s"
+        ]
+      },
+      "compressed_delivery_observations": [
+        "compressed_ipc actual_two_tls=true software_decoded=12 credit_reused=true owner_joined_before_receipt=true"
+      ],
+      "run_id": 41463310874,
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41463310874"
+    }
+  ],
+  "limitations": [
+    "b6b5520 artifact is historical source41460667796/windows2025; it is retained separately in target receipt and cannot qualify source10d or latest source.",
+    "Original Windows2022 earlier compressed timeout failures remain in historical evidence. This10d Windows2022 rerun passed the unchanged original two-TLS12-decode/credit/join case.",
+    "New adapter binding source5797def still requires independent hosted build and actual verified target diagnostics."
+  ],
+  "peer_process_targets": [
+    {
+      "platform": "ubuntu-24.04",
+      "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+      "run_id": 41463310874,
+      "artifact_id": 13149917647,
+      "official_artifact_digest": "sha256:c57bdccf8eb35aeae35e4125c08cd74a06ee120bb70611fe25342fc20f1205ce",
+      "artifact_files": [
+        {
+          "path": "ipc-tests.log",
+          "bytes": 20853,
+          "sha256": "18994c799a29e490351695ceaf69fff2e6d3acea1d111d85562df979c42d8d98"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 1311,
+          "sha256": "bb09eb91547e2a8b7135f30ec1beccb1190a1b73e8737461395da17fad88c698"
+        },
+        {
+          "path": "strict-peer-owner.log",
+          "bytes": 5633,
+          "sha256": "aa64fed0ebf95129ac28fb9d081da17f0ac5729530deefb8dadee9700b94517c"
+        }
+      ],
+      "test_summaries": [
+        {
+          "file": "ipc-tests.log",
+          "results": [
+            "test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.28s"
+          ]
+        },
+        {
+          "file": "strict-peer-owner.log",
+          "results": []
+        }
+      ]
+    },
+    {
+      "platform": "windows-2025",
+      "source_revision": "10d62244747447ca9752d8d0b5c20e02fe578235",
+      "run_id": 41463310874,
+      "artifact_id": 13149198618,
+      "official_artifact_digest": "sha256:3095c54c046b6ef6da7a2b848d0a64192ccb7a624dfb027d308b70c5945888c0",
+      "artifact_files": [
+        {
+          "path": "ipc-tests.log",
+          "bytes": 21570,
+          "sha256": "5e99b7810b360b597205be4119be1d7bcc4e56d85d107e07a5b164bad08e8f09"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 1622,
+          "sha256": "0bf4a5b0f71eefa6db31dd6572b295bad9deed5607ac4ff6dc91ffaa77e83503"
+        },
+        {
+          "path": "strict-peer-owner.log",
+          "bytes": 5758,
+          "sha256": "6aaef226bf73ce8c5edc97485771a277d1d801a0abc9f7c31f00a08366f27b83"
+        }
+      ],
+      "test_summaries": [
+        {
+          "file": "ipc-tests.log",
+          "results": [
+            "test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.65s"
+          ]
+        },
+        {
+          "file": "strict-peer-owner.log",
+          "results": []
+        }
+      ]
+    }
+  ]
+}

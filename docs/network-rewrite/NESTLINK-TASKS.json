@@ -5396,7 +5396,7 @@
       ],
       "environment": {},
       "limitations": [
-        "Original independent-grant POST rate, original bounded database admission and debug immutable lease expiry failures all retained. Debug8c6 established20controlowners butzeroapplicationflow; explicit release-profile run41434724934 remains separate and pending. No1000flow/wholeAC68 or24hoursoak pass."
+        "Original failures are retained across all 15 attempts. Sources 1dd4efd (798 flow_ready) and 10d6224 (800 flow_ready) do not prove 1000 simultaneously live flows or any complete three-wave run. All 10d pre-load currentness, canonical-view, live snapshot, HTTP and multiplex regressions plus strict-currentness passed. No whole AC68 or 24-hour soak qualification."
       ],
       "global_policy_ids": [
         "R01",
