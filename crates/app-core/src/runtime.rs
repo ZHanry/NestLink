@@ -608,7 +608,11 @@ struct NativeVideoRoute {
     timing: SessionMediaTiming,
 }
 impl NativeVideoRoute {
-    fn attach(channels: &mut ChannelRuntime, key: &NativeSessionKey, timing: SessionMediaTiming) -> Arc<Self> {
+    fn attach(
+        channels: &mut ChannelRuntime,
+        key: &NativeSessionKey,
+        timing: SessionMediaTiming,
+    ) -> Arc<Self> {
         Arc::new(Self {
             receiver_qos: Mutex::new(nestlink_media_session::ReceiverReportTracker::default()),
             execution: Mutex::new(None),
@@ -616,10 +620,20 @@ impl NativeVideoRoute {
             connection_generation: key.connection_generation,
             sender: channels.sender(),
             lease: channels.lease_control(),
-            gate: Arc::new(HostVideoGate { state: Mutex::new(HostVideoGateState::default()) }),
-            format_gate: Arc::new(HostVideoGate { state: Mutex::new(HostVideoGateState { active: true, ..HostVideoGateState::default() }) }),
+            gate: Arc::new(HostVideoGate {
+                state: Mutex::new(HostVideoGateState::default()),
+            }),
+            format_gate: Arc::new(HostVideoGate {
+                state: Mutex::new(HostVideoGateState {
+                    active: true,
+                    ..HostVideoGateState::default()
+                }),
+            }),
             send_order: AsyncMutex::new(()),
-            cursor: Mutex::new(NativeVideoCursor { keyframe_pending: true, ..NativeVideoCursor::default() }),
+            cursor: Mutex::new(NativeVideoCursor {
+                keyframe_pending: true,
+                ..NativeVideoCursor::default()
+            }),
             timing,
         })
     }
@@ -1245,9 +1259,17 @@ impl CoreHandle {
         binding: &NativeSessionBinding,
     ) -> Result<nestlink_media_codec::VideoCodec, NativeVideoError> {
         let route = self.native_host_video_route(binding)?;
-        if route.lease.media_formats().map_err(|_| NativeVideoError::Unauthorized)?
-            .is_some_and(|formats| formats.formats().iter()
-                .any(|format| format.codec == nestlink_protocol::media_format::Codec::Hevc)) {
+        if route
+            .lease
+            .media_formats()
+            .map_err(|_| NativeVideoError::Unauthorized)?
+            .is_some_and(|formats| {
+                formats
+                    .formats()
+                    .iter()
+                    .any(|format| format.codec == nestlink_protocol::media_format::Codec::Hevc)
+            })
+        {
             // HEVC uses its independently signed hardware owner API. It must
             // never be relabelled as either legacy codec at this boundary.
             return Err(NativeVideoError::Invalid);
@@ -1330,12 +1352,23 @@ impl CoreHandle {
     #[cfg(windows)]
     #[allow(clippy::too_many_arguments)]
     pub fn send_native_hevc_execution_frame(
-        &self, session_binding: &NativeSessionBinding, source_binding: NativeVideoBinding,
-        pts_90khz: u64, repeated_source: bool, encoded_frame: Vec<u8>,
+        &self,
+        session_binding: &NativeSessionBinding,
+        source_binding: NativeVideoBinding,
+        pts_90khz: u64,
+        repeated_source: bool,
+        encoded_frame: Vec<u8>,
         execution: nestlink_media_codec::HevcExecutionReceipt,
     ) -> impl Future<Output = Result<(), NativeVideoError>> + '_ {
-        self.send_native_video_frame_inner(session_binding.clone(), source_binding,
-            pts_90khz, true, repeated_source, Zeroizing::new(encoded_frame), Some(execution.into()))
+        self.send_native_video_frame_inner(
+            session_binding.clone(),
+            source_binding,
+            pts_90khz,
+            true,
+            repeated_source,
+            Zeroizing::new(encoded_frame),
+            Some(execution.into()),
+        )
     }
     // Shared by the existing frame APIs and the sealed execution entry point.
     #[allow(clippy::too_many_arguments)]
@@ -1393,21 +1426,27 @@ impl CoreHandle {
                         && formats.contains(&v.format)
                 })
                 .ok_or(NativeVideoError::Unauthorized)?;
-            receipt.matches_format(value.format)
+            receipt
+                .matches_format(value.format)
                 .map_err(|_| NativeVideoError::Unauthorized)?;
-            let display_config = if value.format.codec == nestlink_protocol::media_format::Codec::Hevc {
+            let display_config = if value.format.codec
+                == nestlink_protocol::media_format::Codec::Hevc
+            {
                 let config = nestlink_media_session::hevc_main8_contract(value.format)
-                    .map_err(|_| NativeVideoError::Unauthorized)?.config();
+                    .map_err(|_| NativeVideoError::Unauthorized)?
+                    .config();
                 if (config.width, config.height) != (source_binding.width, source_binding.height) {
                     return Err(NativeVideoError::Unauthorized);
                 }
                 config
-            } else { nestlink_media_session::h264_display_config(
-                value.format,
-                source_binding.width,
-                source_binding.height,
-            )
-            .map_err(|_| NativeVideoError::Unauthorized)? };
+            } else {
+                nestlink_media_session::h264_display_config(
+                    value.format,
+                    source_binding.width,
+                    source_binding.height,
+                )
+                .map_err(|_| NativeVideoError::Unauthorized)?
+            };
             let actual_config = receipt.target().config();
             if (actual_config.width, actual_config.height)
                 != (display_config.width, display_config.height)
@@ -1447,7 +1486,10 @@ impl CoreHandle {
             format_sha256: confirmed
                 .as_ref()
                 .map_or_else(Vec::new, |v| v.format_sha256.to_vec()),
-            codec: if confirmed.as_ref().is_some_and(|v| v.format.codec == nestlink_protocol::media_format::Codec::Hevc) {
+            codec: if confirmed
+                .as_ref()
+                .is_some_and(|v| v.format.codec == nestlink_protocol::media_format::Codec::Hevc)
+            {
                 nestlink_protocol::NativeVideoCodec::HevcMain8 as i32
             } else if route
                 .lease
@@ -5105,7 +5147,11 @@ impl Actor {
                         })
                     }));
                 let video_route = if accepted && key.host_view_authorized {
-                    Some(NativeVideoRoute::attach(established.session.channels(), &key, media_timing.clone()))
+                    Some(NativeVideoRoute::attach(
+                        established.session.channels(),
+                        &key,
+                        media_timing.clone(),
+                    ))
                 } else {
                     None
                 };
