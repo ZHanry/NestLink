@@ -60,6 +60,7 @@ jobs:
           (pathlib.Path(os.environ["RUNNER_TEMP"])/"linux-network-build-evidence/provenance.json").write_text(json.dumps(record,indent=2)+"\n")
           PY
       - name: Build locked codecs and exact native headless daemon on GitHub
+        shell: bash
         run: |
           python3 -B scripts/refactor-native-codecs.py build --target ${{ matrix.target }} --cache-dir "${{ runner.temp }}/codec-sources" --work-dir "${{ runner.temp }}/network-codecs"
           python3 -B scripts/refactor-native-codecs.py verify --target ${{ matrix.target }} --prefix "$NESTLINK_CODEC_PREFIX"
