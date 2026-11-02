@@ -12,6 +12,68 @@ permissions:
   contents: read
 
 jobs:
+  native-peer-process:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      EXPECTED_SOURCE: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - name: Exercise the actual local TLS process owner and portable compatibility
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, subprocess, sys
+          output = pathlib.Path(os.environ['RUNNER_TEMP'])/'local-peer-process'
+          output.mkdir()
+          source = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert source == os.environ['EXPECTED_SOURCE']
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          assert subprocess.check_output(['git','status','--porcelain=v1']) == b''
+          receipt = {'source_revision':source,'run_id':os.environ['GITHUB_RUN_ID'],
+            'attempt':os.environ['GITHUB_RUN_ATTEMPT'],'runner_os':os.environ['RUNNER_OS'],
+            'runner_environment':os.environ['RUNNER_ENVIRONMENT'],
+            'cargo_lock_sha256':hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
+            'scope':'Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.',
+            'passed':False,'commands':[]}
+          wrapper = [sys.executable,'scripts/refactor-windows-normal-user.py'] if os.name == 'nt' else []
+          try:
+              for name, args in [
+                ('ipc-tests',['cargo','test','--locked','-p','nestlink-local-ipc','--lib','--','--show-output']),
+                ('strict-peer-owner',['cargo','clippy','--locked','-p','nestlink-local-ipc','-p','nestlink-platform-security','--all-targets','--','-D','warnings'])]:
+                  command = wrapper + args
+                  with (output/(name+'.log')).open('wb') as log:
+                      result = subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,timeout=600)
+                  receipt['commands'].append({'name':name,'argv':command,'return_code':result.returncode})
+                  assert result.returncode == 0, name+' failed; original diagnostic retained'
+              receipt['passed'] = True
+          except BaseException as error:
+              receipt['failure'] = repr(error)
+              raise
+          finally:
+              receipt['files'] = [{'path':path.name,'bytes':path.stat().st_size,'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
+                for path in sorted(output.iterdir()) if path.is_file()]
+              (output/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: native-peer-process-${{ matrix.os }}-${{ inputs.source_revision }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/local-peer-process/
+          if-no-files-found: error
+          retention-days: 30
   owner-boundaries:
     runs-on: windows-2025
     timeout-minutes: 60
