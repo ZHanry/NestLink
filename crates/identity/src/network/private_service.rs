@@ -112,7 +112,7 @@ pub fn verify_private_service_grant(
         revoked_grant_ids: &revoked,
     };
     let decode = |view: &nestlink_protocol::api::NetworkGrantView| {
-        verify_network_grant(&remote::signed(view)?, &context)
+        remote::verify_view(view, &context)
     };
     let member = |view: &nestlink_protocol::api::NetworkGrantView,
                   installation: &str,

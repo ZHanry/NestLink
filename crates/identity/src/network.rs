@@ -7,6 +7,8 @@ use nestlink_protocol::{
 };
 use std::collections::BTreeSet;
 use zeroize::Zeroizing;
+#[cfg(test)]
+mod canonical_view_tests;
 mod private_service;
 mod remote;
 pub use private_service::{
@@ -115,6 +117,13 @@ pub struct NetworkAuthoritySigner {
 pub struct SignedNetworkGrant {
     pub claims: Vec<u8>,
     pub signature: Vec<u8>,
+}
+
+/// An internal canonical candidate tied to the exact immutable signed bytes.
+/// It carries no authority until signature and current-context verification.
+struct DecodedNetworkGrant<'a> {
+    signed: &'a SignedNetworkGrant,
+    claims: GrantClaims,
 }
 
 #[derive(Clone)]
@@ -454,40 +463,56 @@ pub fn verify_network_grant(
     signed: &SignedNetworkGrant,
     context: &NetworkVerification<'_>,
 ) -> Result<VerifiedNetworkGrant, ContractError> {
-    let claims = GrantClaims::decode_canonical(&signed.claims)?;
-    // Canonical decoding checked equality with the original bytes. The message
-    // below contains those exact bytes, including the grant kind and schema.
-    let mut message = claims.domain().to_vec();
-    let length = u32::try_from(signed.claims.len()).map_err(|_| {
-        ContractError::new(
-            ErrorCode::CapacityExceeded,
-            "network grant exceeds its byte budget",
-        )
-    })?;
-    message.extend_from_slice(&length.to_be_bytes());
-    message.extend_from_slice(&signed.claims);
-    let invalid_signature = || {
-        ContractError::new(
-            ErrorCode::IdentityMismatch,
-            "invalid network signature or authority key",
-        )
-    };
-    let authority =
-        VerifyingKey::from_bytes(context.authority_key).map_err(|_| invalid_signature())?;
-    let signature = Signature::from_slice(&signed.signature).map_err(|_| invalid_signature())?;
-    authority
-        .verify_strict(&message, &signature)
-        .map_err(|_| invalid_signature())?;
-    // The same claims signed by another trusted authority must have a distinct
-    // reference. Keep the reference domain separate from the signature domain.
-    let mut reference = b"NestLink/network/v1/grant-digest\0".to_vec();
-    reference.extend_from_slice(context.authority_key);
-    reference.extend_from_slice(&message);
-    let verified = VerifiedNetworkGrant {
-        claims,
-        digest: digest(&reference),
-        issuer: *context.authority_key,
-    };
-    verified.check_current(context)?;
-    Ok(verified)
+    DecodedNetworkGrant::decode(signed)?.verify(context)
+}
+
+impl<'a> DecodedNetworkGrant<'a> {
+    fn decode(signed: &'a SignedNetworkGrant) -> Result<Self, ContractError> {
+        Ok(Self {
+            signed,
+            claims: GrantClaims::decode_canonical(&signed.claims)?,
+        })
+    }
+
+    fn verify(
+        self,
+        context: &NetworkVerification<'_>,
+    ) -> Result<VerifiedNetworkGrant, ContractError> {
+        let Self { signed, claims } = self;
+        // Canonical decoding checked equality with the original bytes. The
+        // message contains those exact bytes, including grant kind and schema.
+        let mut message = claims.domain().to_vec();
+        let length = u32::try_from(signed.claims.len()).map_err(|_| {
+            ContractError::new(
+                ErrorCode::CapacityExceeded,
+                "network grant exceeds its byte budget",
+            )
+        })?;
+        message.extend_from_slice(&length.to_be_bytes());
+        message.extend_from_slice(&signed.claims);
+        let invalid_signature = || {
+            ContractError::new(
+                ErrorCode::IdentityMismatch,
+                "invalid network signature or authority key",
+            )
+        };
+        let authority =
+            VerifyingKey::from_bytes(context.authority_key).map_err(|_| invalid_signature())?;
+        let signature = Signature::from_slice(&signed.signature).map_err(|_| invalid_signature())?;
+        authority
+            .verify_strict(&message, &signature)
+            .map_err(|_| invalid_signature())?;
+        // The same claims signed by another trusted authority must have a
+        // distinct reference, separate from the signature domain.
+        let mut reference = b"NestLink/network/v1/grant-digest\0".to_vec();
+        reference.extend_from_slice(context.authority_key);
+        reference.extend_from_slice(&message);
+        let verified = VerifiedNetworkGrant {
+            claims,
+            digest: digest(&reference),
+            issuer: *context.authority_key,
+        };
+        verified.check_current(context)?;
+        Ok(verified)
+    }
 }

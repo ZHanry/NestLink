@@ -127,6 +127,25 @@ pub(super) fn remote_path_peers(
 }
 
 pub(super) fn signed(view: &NetworkGrantView) -> Result<SignedNetworkGrant, ContractError> {
+    let signed = decode_view_bytes(view)?;
+    let claims = GrantClaims::decode_canonical(&signed.claims)?;
+    check_view_metadata(view, &claims)?;
+    Ok(signed)
+}
+
+/// The private service caller keeps one canonical decode for this invocation.
+/// Metadata is checked before the original signature and live-context checks.
+pub(super) fn verify_view(
+    view: &NetworkGrantView,
+    context: &NetworkVerification<'_>,
+) -> Result<VerifiedNetworkGrant, ContractError> {
+    let signed = decode_view_bytes(view)?;
+    let candidate = DecodedNetworkGrant::decode(&signed)?;
+    check_view_metadata(view, &candidate.claims)?;
+    candidate.verify(context)
+}
+
+fn decode_view_bytes(view: &NetworkGrantView) -> Result<SignedNetworkGrant, ContractError> {
     let decode = |s: &str| -> Result<Vec<u8>, ContractError> {
         let bytes = URL_SAFE_NO_PAD.decode(s).map_err(|_| denied())?;
         if URL_SAFE_NO_PAD.encode(&bytes) != s {
@@ -134,15 +153,20 @@ pub(super) fn signed(view: &NetworkGrantView) -> Result<SignedNetworkGrant, Cont
         }
         Ok(bytes)
     };
-    let signed = SignedNetworkGrant {
+    Ok(SignedNetworkGrant {
         claims: decode(&view.claims)?,
         signature: decode(&view.signature)?,
-    };
-    let claims = GrantClaims::decode_canonical(&signed.claims)?;
+    })
+}
+
+fn check_view_metadata(
+    view: &NetworkGrantView,
+    claims: &GrantClaims,
+) -> Result<(), ContractError> {
     if view.schema_version != SCHEMA_VERSION || view.grant_id != claims.scope().grant_id {
         return Err(denied());
     }
-    Ok(signed)
+    Ok(())
 }
 
 /// The resource MUST already have passed the exact-query node-policy signature
