@@ -29,8 +29,11 @@ SERVER = Path("/opt/nestlink-rc/server/nestlink-server")
 def retained_package(output, architecture, producer):
     artifact, expected = OLD_ARTIFACTS[architecture]
     request = urllib.request.Request(f"https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/{artifact}/zip",
-        headers={"Accept": "application/vnd.github+json", "Authorization": "Bearer " + os.environ["GITHUB_TOKEN"],
+        headers={"Accept": "application/vnd.github+json",
                  "User-Agent": "NestLink-explicit-hosted-package-recovery"})
+    # The API redirects to its signed artifact URL. Python's unredirected header
+    # keeps the workflow token on the original api.github.com request only.
+    request.add_unredirected_header("Authorization", "Bearer " + os.environ["GITHUB_TOKEN"])
     archive = output / "retained-previous-artifact.zip"
     with urllib.request.urlopen(request, timeout=90) as source, archive.open("xb") as destination:
         total = 0
