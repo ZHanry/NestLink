@@ -127,7 +127,7 @@ impl CompressedContext {
         }
     }
     pub fn validate(&self) -> Result<(), Error> {
-        if !matches!(self.ipc_version, 2 | 3 | 4) || self.format_epoch > i64::MAX as u64 {
+        if !matches!(self.ipc_version, 2..=4) || self.format_epoch > i64::MAX as u64 {
             return Err(Error::Protocol);
         }
         match &self.format {

@@ -38,6 +38,11 @@ const NODES: usize = 100;
 const PAIRS: usize = 20;
 const FLOWS: usize = 50;
 const WAVES: usize = 3;
+// All pairs use one management origin. Ramp the offered application flows
+// through a finite process-wide opening window as well as each owner's
+// original eight-handshake window. Every opened target remains live until
+// all 1000 have passed the unchanged simultaneous-load assertion.
+const OPENING_WINDOW: usize = 8;
 const PASSWORD: &str = "hosted-capacity-explicit-lab-password";
 
 fn wall_ms() -> Result<u64> {
@@ -170,16 +175,22 @@ impl Flow {
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 #[ignore = "explicit hosted capacity workflow retains build, samples and failures"]
 async fn hundred_enrolled_nodes_twenty_pairs_thousand_simultaneous_authorized_streams() -> Result {
-    run_capacity(false).await
+    run_capacity(false, false).await
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 #[ignore = "explicit hosted capacity workflow retains build, samples and failures"]
 async fn hundred_enrolled_nodes_twenty_pairs_thousand_multiplexed_authorized_streams() -> Result {
-    run_capacity(true).await
+    run_capacity(true, false).await
 }
 
-async fn run_capacity(multiplexed: bool) -> Result {
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[ignore = "explicit shared-origin ramp; original pair-window failure retained separately"]
+async fn hundred_enrolled_nodes_twenty_pairs_thousand_multiplexed_shared_origin_ramp() -> Result {
+    run_capacity(true, true).await
+}
+
+async fn run_capacity(multiplexed: bool, shared_origin_ramp: bool) -> Result {
     assert_eq!(
         std::env::var("RUNNER_ENVIRONMENT").as_deref(),
         Ok("github-hosted")
@@ -190,15 +201,18 @@ async fn run_capacity(multiplexed: bool) -> Result {
         .with_ansi(false)
         .try_init()
         .map_err(|error| std::io::Error::other(error.to_string()))?;
-    tokio::time::timeout(Duration::from_secs(600), capacity(multiplexed)).await??;
+    tokio::time::timeout(Duration::from_secs(600), capacity(multiplexed, shared_origin_ramp)).await??;
     Ok(())
 }
 
-async fn capacity(multiplexed: bool) -> Result {
+async fn capacity(multiplexed: bool, shared_origin_ramp: bool) -> Result {
     resource_sample("before_setup")?;
     record(json!({"stage":"load_mode","multiplexed":multiplexed,
         "registered_installations":NODES,"active_pairs":PAIRS,"simultaneous_actual_tcp_targets":PAIRS*FLOWS,
-        "management_logins_per_consumer":1,"original_rate_lease_quota_rules":true}))?;
+        "management_logins_per_consumer":1,"original_rate_lease_quota_rules":true,
+        "opening_schedule":if shared_origin_ramp {"origin-window"} else {"pair-windows"},
+        "global_pending_opens":if shared_origin_ramp {OPENING_WINDOW} else {PAIRS*8},
+        "per_pair_pending_opens":8}))?;
     let directory = tempfile::tempdir()?;
     // The original durable meter refuses a permissive parent. This directory
     // is freshly owned by this fixture; retain the production privacy gate.
@@ -429,6 +443,11 @@ async fn capacity(multiplexed: bool) -> Result {
             }
         }
         let opening_windows: Vec<_> = (0..PAIRS).map(|_| Arc::new(Semaphore::new(8))).collect();
+        let global_opening_window = Arc::new(Semaphore::new(if shared_origin_ramp {
+            OPENING_WINDOW
+        } else {
+            PAIRS * 8
+        }));
         let (release, released) = watch::channel(false);
         let (ready, mut readiness) = mpsc::channel(PAIRS * FLOWS);
         let mut workers = JoinSet::new();
@@ -440,6 +459,7 @@ async fn capacity(multiplexed: bool) -> Result {
                 let request = pair.request(&consumer);
                 let owner = owners[index].clone();
                 let opening_window = opening_windows[index].clone();
+                let global_opening_window = global_opening_window.clone();
                 let ready = ready.clone();
                 let mut released = released.clone();
                 workers.spawn(async move {
@@ -448,6 +468,7 @@ async fn capacity(multiplexed: bool) -> Result {
                         // Respect the original finite negotiation window. The
                         // full 1000 live TCP targets remain an exact assertion.
                         let _opening = opening_window.acquire_owned().await?;
+                        let _global_opening = global_opening_window.acquire_owned().await?;
                         Flow::Multiplexed(owner.open_stream(&consumer).await.map_err(|error| {
                             std::io::Error::other(format!(
                                 "wave {wave} pair {index} flow {flow} open_stream: {error}"

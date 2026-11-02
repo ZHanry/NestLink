@@ -3031,7 +3031,7 @@
       ],
       "evidence_refs": [],
       "blockers": [],
-      "implementation_notes": "Sourcebc52249/1518218 adds strict actual Main8 complete96bit PTL/geometry/VUI output validation and original-GPU-NV12 MF encoder owner boundary. Source7a53a28 adds independentv3 canonical69-byte format while preservingv2 H26457-byte contract; signed authority/NLMF/IPC/provider/capture/presenter production integration remains in progress. Synthetic HEVC probes do not complete this task; advanced444/10bit/HDR/high-frame fallback remains mandatory work."
+      "implementation_notes": "Sourcebc52249/1518218 adds strict actual Main8 complete96bit PTL/geometry/VUI output validation and original-GPU-NV12 MF encoder owner boundary. Source7a53a28 adds independentv3 canonical69-byte format while preservingv2 H26457-byte contract; signed authority/NLMF/IPC/provider/capture/presenter production integration remains in progress. Synthetic HEVC probes do not complete this task; advanced444/10bit/HDR/high-frame fallback remains mandatory work. Source59882e4 additionally wires Main10/P010/v4 explicit SDR authority, compressed/readback/shared-surface ownership and separate8byte64MiB admission;4K144 is a target configuration rather than actual probe evidence. Originalhardware/HDR/444/target gaps remain open."
     },
     {
       "id": "W34",
@@ -3413,7 +3413,7 @@
         "docs/network-rewrite/evidence/capacity-attempts-20261102.json"
       ],
       "blockers": [],
-      "implementation_notes": "Original100enrolled-installation/20pair/1000realTCPflow/3wave capacity implemented. All failed attempts retained, including private-parent, originalPOSTrate, originaldatabase429 and debug8c6 immutableleaseexpiry. Run41431119457 passed7nativeHTTP+6multiplex+negotiation, established20control owners, butzero flow_ready. Explicitproductionrelease-profile41434724934runs unchangedassertions/deadlines/rates/quotas/currentness checks; no success inferred. Real24hourtargetsoak remainsunrun."
+      "implementation_notes": "Original100enrolled-installation/20pair/1000realTCPflow/3wave capacity implemented. All failed attempts retained, including private-parent, originalPOSTrate, originaldatabase429 and debug8c6 immutableleaseexpiry. Run41431119457 passed7nativeHTTP+6multiplex+negotiation, established20control owners, butzero flow_ready. Explicitproductionrelease-profile41434724934runs unchangedassertions/deadlines/rates/quotas/currentness checks; no success inferred. Real24hourtargetsoak remainsunrun. Sourceb971 run41437445247 now executed release load: original7HTTP/1negotiation/6multiplex pass,20controlready,61flowready, original3s management timeout before1000live. Failure and11receipt hashes plus officialZIP verified. Separate named eight-open shared-origin ramp observation added without altering original pair-window execution or full-load/lease/assertion requirements; neither passed nor fullW39 qualification claimed."
     },
     {
       "id": "W40",

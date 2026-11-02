@@ -1175,9 +1175,211 @@
         ]
       },
       "failure_observation": "Explicit release profile capacity executable compiled in 406.53s. The following native HTTP cargo test command then timed out during release harness compilation inside its original180s test budget; stdout contains no running tests or load sample. Four recorded files verified. Capacity did not execute, no successful load inferred; retained separately from the original failed debug lease expiry. Next workflow separates unchanged build and execution budgets and records timed-out command provenance."
+    },
+    {
+      "run_id": 41437445247,
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41437445247",
+      "artifact_id": 13137643004,
+      "artifact_sha256": "85e87ec922f930cd56f3f85770004e8049f45d5486ebdef272217d6d12e50e34",
+      "official_archive_digest_verified": true,
+      "receipt_files_verified": 11,
+      "receipt": {
+        "source_revision": "b97182d39a1512f57cea36b2a2a7e40c217363e1",
+        "workflow": "ZHanry/NestLink/.github/workflows/network-capacity.yml@refs/heads/main",
+        "workflow_revision": "b97182d39a1512f57cea36b2a2a7e40c217363e1",
+        "run_id": "41437445247",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Linux",
+        "kernel": [
+          "Linux",
+          "runnervm48cm3",
+          "7.0.0-1017-azure",
+          "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+          "x86_64"
+        ],
+        "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+        "offered_load": {
+          "registered_installations_in_one_space": 100,
+          "active_pairs": 20,
+          "simultaneous_flows": 1000,
+          "reconnect_waves": 3,
+          "management_logins_per_active_consumer": 1,
+          "streams_per_pair": 50,
+          "same_lease_control_owners_per_wave": 20
+        },
+        "scope": "Original HTTP management and signed grants, actual kernel QUIC/TCP targets, original limits and four-scope durable accounting. One independent management login per active consumer, unchanged original rate limits.",
+        "limitations": [
+          "one hosted process; not physical nodes or independently deployed relay runtimes",
+          "short-run samples cannot qualify cross-day soak, complete E2E or all bounded queues"
+        ],
+        "passed": false,
+        "commands": [
+          {
+            "name": "build",
+            "argv": [
+              "cargo",
+              "test",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-sdk",
+              "--lib",
+              "--test",
+              "capacity",
+              "--test",
+              "private_services",
+              "--no-run",
+              "--message-format=json-render-diagnostics"
+            ],
+            "timeout_seconds": 1200,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 595.8880255319999
+          },
+          {
+            "name": "native-http-backpressure",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_sdk-64cea9a381569b15",
+              "http_admission::tests::",
+              "--show-output",
+              "--test-threads=1"
+            ],
+            "timeout_seconds": 180,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 16.012220694999996
+          },
+          {
+            "name": "explicit-negotiation",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_sdk-64cea9a381569b15",
+              "explicit_negotiation_preserves_legacy_wire_and_old_host_refusal",
+              "--show-output"
+            ],
+            "timeout_seconds": 300,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 0.00370565399998668
+          },
+          {
+            "name": "multiplex-original-owners",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/private_services-989ec0830865331e",
+              "multiplex::",
+              "--show-output",
+              "--test-threads=1"
+            ],
+            "timeout_seconds": 300,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 12.700036003000037
+          },
+          {
+            "name": "execution",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/capacity-501e3b83170da29c",
+              "--exact",
+              "hundred_enrolled_nodes_twenty_pairs_thousand_multiplexed_authorized_streams",
+              "--ignored",
+              "--nocapture",
+              "--test-threads=1"
+            ],
+            "timeout_seconds": 660,
+            "return_code": 101,
+            "timed_out": false,
+            "seconds": 248.82926869000005
+          }
+        ],
+        "build_profile": "release",
+        "original_assertions_and_deadlines_preserved": true,
+        "load_mode": "multiplexed",
+        "test_executables": {
+          "nestlink_sdk": {
+            "path": "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_sdk-64cea9a381569b15",
+            "sha256": "fcd90f89534f81d07fe161dce1c90122253f9da727c068fd4abf99084f501b06"
+          },
+          "capacity": {
+            "path": "/home/runner/work/NestLink/NestLink/target/release/deps/capacity-501e3b83170da29c",
+            "sha256": "531a97c155d22b829e947485181abd6fa7c4af3960291263ccd4e96558094314"
+          },
+          "private_services": {
+            "path": "/home/runner/work/NestLink/NestLink/target/release/deps/private_services-989ec0830865331e",
+            "sha256": "48ad404c4732b10474d1611203ea4f2eda243c37375969c08ca7fb0dd154186e"
+          }
+        },
+        "executable_sha256": "531a97c155d22b829e947485181abd6fa7c4af3960291263ccd4e96558094314",
+        "failure": "AssertionError('execution failed; original failure retained')",
+        "files": [
+          {
+            "path": "build.log",
+            "bytes": 460171,
+            "sha256": "981dbf5de30c4c2423b1a522af7d969ba1bd5227d72586bd9ce88341a2053985"
+          },
+          {
+            "path": "build.stderr.log",
+            "bytes": 60127,
+            "sha256": "2c1bc4359bbf5cdb32b79bde42fc38df1fdbfb4d7d6f1806970b8a75322b36d2"
+          },
+          {
+            "path": "execution.log",
+            "bytes": 312,
+            "sha256": "1984c56a882c87254ef1bfd35e4ec5b16202f38848293d9cb3e475ee2b0bc246"
+          },
+          {
+            "path": "execution.stderr.log",
+            "bytes": 103,
+            "sha256": "0b2788adcacb2488299314ce9aced8b7a138e8adf78ab1813bf9803d9f789c7b"
+          },
+          {
+            "path": "explicit-negotiation.log",
+            "bytes": 374,
+            "sha256": "d70a340704109595a9e8ed79f0488ae9061a901ffd7107d3622bd40b220d93c1"
+          },
+          {
+            "path": "explicit-negotiation.stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "multiplex-original-owners.log",
+            "bytes": 1201,
+            "sha256": "15171e66fef85dd1221f5ffe7045f0270ba6453af800b42f52000ed5c9afe34f"
+          },
+          {
+            "path": "multiplex-original-owners.stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "native-http-backpressure.log",
+            "bytes": 1570,
+            "sha256": "60707540a2f2e557f3267616847989a47b8a6de4bcd6dc3db6b89fdaa1d39a70"
+          },
+          {
+            "path": "native-http-backpressure.stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "samples.jsonl",
+            "bytes": 9234,
+            "sha256": "0681020fad653835d057bad1a4a25593d94b542a2e71c07efb53314dd41aa2e0"
+          }
+        ]
+      },
+      "stage_counts": {
+        "before_setup": 1,
+        "load_mode": 1,
+        "all_hosts_ready": 1,
+        "multiplex_lease_issued": 20,
+        "multiplex_control_ready": 20,
+        "flow_ready": 61
+      },
+      "failure_observation": "Explicit release build and all original 7 HTTP, 1 negotiation and 6 multiplex owner regressions passed. Twenty original control owners were ready; 61 application flows became ready. Wave 0 pair 8 flow 2 open_stream failed at its original 3-second handshake with management request timed out. No wave_live sample, no 1000 simultaneous load, no complete wave or successful capacity qualification. Immutable signed leases retain the original approximately 10-second authority. This original per-pair opening-window scenario remains unchanged and failed."
     }
   ],
-  "next_implementation": "Compile all original harnesses together under the existing1200s build budget; record exact hashes and execute unchanged7HTTP/1negotiation/6multiplex/1capacity inventories under their original180/300/660s budgets. Retain all prior failed attempts, unchanged original signed lease/rate/quota/currentness gates and full100/20/1000/three-wave assertions.",
+  "next_implementation": "Retain original pair-windows execution and all its failures. Compare a separately named, explicitly selected origin-window ramp with eight pending opens across the shared management origin. The new observation retains all 100 enrolled installations, 20 pairs, 1000 simultaneous actual TCP targets held for two seconds, three waves, exact bytes/accounting, original immutable leases, 3-second handshakes and physical cleanup. Neither its result nor release optimization qualifies the original burst opening schedule or target soak.",
   "limitations": [
     "One hosted process with enrolled installations; not 100 physical machines. No achieved 1000 simultaneous flow claim, no queue stability or 24h soak claim."
   ]

@@ -12,6 +12,11 @@ on:
         type: choice
         options: [debug, release]
         default: debug
+      schedule:
+        description: Explicit opening schedule; original pair-window failures remain retained
+        type: choice
+        options: [pair-windows, origin-window]
+        default: pair-windows
 permissions:
   contents: read
 jobs:
@@ -25,6 +30,7 @@ jobs:
       RUST_BACKTRACE: "1"
       CAPACITY_MODE: ${{ inputs.mode }}
       CAPACITY_PROFILE: ${{ inputs.profile }}
+      CAPACITY_SCHEDULE: ${{ inputs.schedule }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -66,6 +72,10 @@ jobs:
           assert profile in ('debug','release')
           cargo_profile = ['--release'] if profile == 'release' else []
           receipt['build_profile'] = profile
+          schedule = os.environ['CAPACITY_SCHEDULE']
+          assert schedule in ('pair-windows', 'origin-window')
+          assert schedule != 'origin-window' or mode == 'multiplexed'
+          receipt['opening_schedule'] = schedule
           receipt['original_assertions_and_deadlines_preserved'] = True
           receipt['load_mode'] = mode
           receipt['offered_load']['management_logins_per_active_consumer'] = 1
@@ -109,6 +119,8 @@ jobs:
                   execute_tests('explicit-negotiation',[str(executables['nestlink_sdk']),'explicit_negotiation_preserves_legacy_wire_and_old_host_refusal','--show-output'],300,1)
                   execute_tests('multiplex-original-owners',[str(executables['private_services']),'multiplex::','--show-output','--test-threads=1'],300,6)
               case = 'hundred_enrolled_nodes_twenty_pairs_thousand_'+('multiplexed' if mode == 'multiplexed' else 'simultaneous')+'_authorized_streams'
+              if schedule == 'origin-window':
+                  case = 'hundred_enrolled_nodes_twenty_pairs_thousand_multiplexed_shared_origin_ramp'
               execute_tests('execution',[str(executable),'--exact',case,'--ignored','--nocapture','--test-threads=1'],660,1)
               execute('strict-capacity',['cargo','clippy',*cargo_profile,'--locked','-p','nestlink-sdk','--test','capacity','--test','private_services','--','-D','warnings'],300)
               receipt['passed'] = True
@@ -123,7 +135,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: network-capacity-${{ inputs.mode }}-${{ inputs.profile }}-${{ github.sha }}-${{ github.run_attempt }}
+          name: network-capacity-${{ inputs.mode }}-${{ inputs.profile }}-${{ inputs.schedule }}-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/network-capacity/
           if-no-files-found: error
           retention-days: 30

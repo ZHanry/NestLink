@@ -41,3 +41,23 @@ individual hashes, then executes those binaries under the unchanged 180/300/660
 second execution budgets. It also verifies the exact executed test counts and
 records a command before starting it so a timeout cannot omit that command from
 the provenance. Application deadlines, gates and assertions are unchanged.
+
+Run 41437445247 at b97182d executed the explicit release-profile workload after
+all three original harnesses built. The seven HTTP, one negotiation and six
+multiplex owner regressions passed. All twenty control owners were ready, and
+61 actual application flows reached readiness. Wave zero, pair eight, flow two
+then hit the original three-second handshake deadline while awaiting management
+currentness. There is no wave_live sample or completed thousand-target wave.
+Its official archive and all eleven receipt files were hash-verified. This
+original pair-window execution remains failed.
+
+The original pair-window scenario permits eight pending application opens per
+pair, or 160 across the shared management origin. A separate test and explicit
+workflow schedule, origin-window, observe a ramp with eight pending opens across
+that origin. It retains each original per-pair limit. This scheduling observation
+is recorded separately; it does not replace the original scenario or qualify its
+burst opening behavior. Both scenarios retain every admitted backend until all
+1000 actual TCP targets have passed the same simultaneous-load assertion and
+two-second hold, for all three waves. Original immutable signed leases, each
+three-second handshake, HTTP/rate/quota gates, exact byte accounting and physical
+cleanup remain unchanged. No successful outcome is inferred before execution.
