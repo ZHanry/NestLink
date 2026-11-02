@@ -69,6 +69,61 @@ LRESULT CALLBACK parent_proc(HWND hwnd, UINT message, WPARAM w, LPARAM l, UINT_P
 }
 struct Presenter;
 HRESULT black(Presenter& p);
+struct GpuInputGeometry {
+    uint32_t coded_width=0,coded_height=0,crop[4]{};
+};
+static_assert(sizeof(GpuInputGeometry)==24,"GPU input geometry ABI");
+struct GpuOutputGeometry {
+    UINT width=0,height=0,left=0,top=0;
+    bool operator==(const GpuOutputGeometry& other) const {
+        return width==other.width && height==other.height && left==other.left && top==other.top;
+    }
+};
+bool same_geometry(const GpuInputGeometry& a,const GpuInputGeometry& b) {
+    return a.coded_width==b.coded_width && a.coded_height==b.coded_height &&
+        a.crop[0]==b.crop[0] && a.crop[1]==b.crop[1] && a.crop[2]==b.crop[2] && a.crop[3]==b.crop[3];
+}
+bool valid_input_geometry(const GpuInputGeometry& g,UINT width,UINT height,bool hevc) {
+    const uint64_t horizontal=static_cast<uint64_t>(g.crop[0])+g.crop[1];
+    const uint64_t vertical=static_cast<uint64_t>(g.crop[2])+g.crop[3];
+    if(!width || !height || !g.coded_width || !g.coded_height || g.coded_width>8192 || g.coded_height>8192 ||
+        ((width|height|g.coded_width|g.coded_height|g.crop[0]|g.crop[1]|g.crop[2]|g.crop[3])&1) ||
+        horizontal+width!=g.coded_width || vertical+height!=g.coded_height ||
+        static_cast<uint64_t>(g.coded_width)*g.coded_height*4>65*1024*1024)return false;
+    if(hevc)return g.coded_width==width && g.coded_height==height && !horizontal && !vertical;
+    return g.coded_width==(width+15)/16*16 && g.coded_height==(height+15)/16*16;
+}
+// MF raw output can already be cropped or retain exactly the SPS coded extent.
+// Padded dimensions alone never establish a display rectangle. They require a
+// complete integer aperture which agrees with the independently validated SPS.
+HRESULT output_geometry(IMFMediaType* type,UINT width,UINT height,
+    const GpuInputGeometry* expected,GpuOutputGeometry* output) {
+    if(!type || !output)return E_POINTER;
+    UINT32 w=0,h=0;
+    HRESULT hr=MFGetAttributeSize(type,MF_MT_FRAME_SIZE,&w,&h);
+    if(FAILED(hr))return hr;
+    if(!w || !h || ((w|h)&1) || w>8192 || h>8192 ||
+        static_cast<uint64_t>(w)*h*4>65*1024*1024)return MF_E_INVALIDMEDIATYPE;
+    MFVideoArea area{};UINT32 actual=0;
+    hr=type->GetBlob(MF_MT_MINIMUM_DISPLAY_APERTURE,reinterpret_cast<UINT8*>(&area),
+        static_cast<UINT32>(sizeof(area)),&actual);
+    const bool aperture=SUCCEEDED(hr);
+    if(FAILED(hr) && hr!=MF_E_ATTRIBUTENOTFOUND)return MF_E_INVALIDMEDIATYPE;
+    if(aperture && (actual!=sizeof(area) || area.OffsetX.fract || area.OffsetY.fract ||
+        area.OffsetX.value<0 || area.OffsetY.value<0 || area.Area.cx!=static_cast<LONG>(width) ||
+        area.Area.cy!=static_cast<LONG>(height)))return MF_E_INVALIDMEDIATYPE;
+    const UINT left=aperture?static_cast<UINT>(area.OffsetX.value):0;
+    const UINT top=aperture?static_cast<UINT>(area.OffsetY.value):0;
+    if(w==width && h==height) {
+        if(left || top)return MF_E_INVALIDMEDIATYPE;
+    } else {
+        if(!expected || !aperture || w!=expected->coded_width || h!=expected->coded_height ||
+            left!=expected->crop[0] || top!=expected->crop[2] ||
+            static_cast<uint64_t>(left)+width+expected->crop[1]!=w ||
+            static_cast<uint64_t>(top)+height+expected->crop[3]!=h)return MF_E_INVALIDMEDIATYPE;
+    }
+    *output={w,h,left,top};return S_OK;
+}
 std::atomic<bool> nl_gpu_probe_owner_reserved{false};
 struct Presenter {
     bool hevc=false;
@@ -80,7 +135,10 @@ struct Presenter {
     Surface* surface=nullptr;
     DWORD thread=GetCurrentThreadId();
     bool com=false, mf=false;
-    UINT width=0,height=0;
+    UINT width=0,height=0,fps=0;
+    GpuInputGeometry input_geometry{};
+    bool input_geometry_bound=false;
+    GpuOutputGeometry output_geometry{};
     ComPtr<ID3D11Device> device;
     ComPtr<ID3D11DeviceContext> context;
     ComPtr<IMFDXGIDeviceManager> manager;
@@ -187,20 +245,19 @@ HRESULT output_type(Presenter& p) {
         }
         GUID sub{};
         if (FAILED(t->GetGUID(MF_MT_SUBTYPE,&sub)) || sub!=MFVideoFormat_NV12) continue;
-        UINT32 w=0,h=0;
-        if (FAILED(MFGetAttributeSize(t.Get(),MF_MT_FRAME_SIZE,&w,&h)) || w!=p.width || h!=p.height) continue;
-        MFVideoArea area{}; UINT32 actual=0;
-        if (SUCCEEDED(t->GetBlob(MF_MT_MINIMUM_DISPLAY_APERTURE,reinterpret_cast<UINT8*>(&area),static_cast<UINT32>(sizeof(area)),&actual)) &&
-            (actual!=sizeof(area) || area.OffsetX.value || area.OffsetX.fract || area.OffsetY.value || area.OffsetY.fract ||
-             area.Area.cx!=static_cast<LONG>(p.width) || area.Area.cy!=static_cast<LONG>(p.height))) return MF_E_INVALIDMEDIATYPE;
+        GpuOutputGeometry geometry{};
+        hr=output_geometry(t.Get(),p.width,p.height,p.input_geometry_bound?&p.input_geometry:nullptr,&geometry);
+        if(FAILED(hr))continue;
         hr=sdr_type(p,t.Get(),true); if (FAILED(hr)) return hr;
         hr=p.decoder->SetOutputType(0,t.Get(),0);
         trace_result(p.surface,"decoder_set_output_type",hr);
+        if(SUCCEEDED(hr))p.output_geometry=geometry;
         return hr;
     }
     return MF_E_INVALIDMEDIATYPE;
 }
 HRESULT configure_output(Presenter& p,UINT fps);
+HRESULT configure_processor(Presenter& p,UINT fps);
 HRESULT configure(Presenter& p, UINT fps, UINT kbps) {
     trace(p.surface,"configure_begin");
     trace(p.surface,"d3d11_device_create_begin");
@@ -270,22 +327,30 @@ HRESULT configure_output(Presenter& p,UINT fps) {
     if (FAILED(hr)) return hr;
     black(p);
     factory->MakeWindowAssociation(p.surface->child.load(),DXGI_MWA_NO_ALT_ENTER);
+    p.fps=fps;
+    hr=configure_processor(p,fps);if(FAILED(hr))return hr;
+    D3D11_QUERY_DESC query{D3D11_QUERY_EVENT,0};
+    return p.device->CreateQuery(&query,&p.completion);
+}
+HRESULT configure_processor(Presenter& p,UINT fps) {
     D3D11_VIDEO_PROCESSOR_CONTENT_DESC content{};
     content.InputFrameFormat=D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;
-    content.InputWidth=p.width; content.InputHeight=p.height;
+    content.InputWidth=p.output_geometry.width?p.output_geometry.width:p.width;
+    content.InputHeight=p.output_geometry.height?p.output_geometry.height:p.height;
     content.OutputWidth=p.width; content.OutputHeight=p.height;
     content.InputFrameRate={fps,1}; content.OutputFrameRate={fps,1};
     content.Usage=D3D11_VIDEO_USAGE_PLAYBACK_NORMAL;
     trace(p.surface,"video_processor_create_begin");
-    hr=p.video->CreateVideoProcessorEnumerator(&content,&p.enumerator); if (FAILED(hr)) return hr;
+    ComPtr<ID3D11VideoProcessorEnumerator> enumerator;
+    ComPtr<ID3D11VideoProcessor> processor;
+    HRESULT hr=p.video->CreateVideoProcessorEnumerator(&content,&enumerator); if (FAILED(hr)) return hr;
     UINT flags=0;
-    hr=p.enumerator->CheckVideoProcessorFormat(p.input_format,&flags);
+    hr=enumerator->CheckVideoProcessorFormat(p.input_format,&flags);
     if (FAILED(hr) || !(flags&D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_INPUT)) return E_NOTIMPL;
-    hr=p.enumerator->CheckVideoProcessorFormat(desc.Format,&flags);
+    hr=enumerator->CheckVideoProcessorFormat(DXGI_FORMAT_B8G8R8A8_UNORM,&flags);
     if (FAILED(hr) || !(flags&D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT)) return E_NOTIMPL;
-    hr=p.video->CreateVideoProcessor(p.enumerator.Get(),0,&p.processor); if (FAILED(hr)) return hr;
-    D3D11_QUERY_DESC query{D3D11_QUERY_EVENT,0};
-    hr=p.device->CreateQuery(&query,&p.completion); if (FAILED(hr)) return hr;
+    hr=p.video->CreateVideoProcessor(enumerator.Get(),0,&processor); if (FAILED(hr)) return hr;
+    p.processor=processor;p.enumerator=enumerator;
     return S_OK;
 }
 // No CPU readback. Keep the decoder sample until the GPU event confirms consumption.
@@ -316,7 +381,12 @@ HRESULT receive(Presenter& p, uint64_t* pts, uint64_t* qpc, uint32_t* submitted,
     auto& received=p.ready[(p.time_head+p.ready_count)%p.ready.size()];
     received.Attach(data.pSample);
     if (hr==MF_E_TRANSFORM_NEED_MORE_INPUT) {received.Reset();goto present_ready;}
-    if (hr==MF_E_TRANSFORM_STREAM_CHANGE) { received.Reset();trace(p.surface,"stream_change_output_type_begin");hr=output_type(p);trace_result(p.surface,"stream_change_output_type",hr); return FAILED(hr)?hr:S_FALSE; }
+    if (hr==MF_E_TRANSFORM_STREAM_CHANGE) {
+        received.Reset();trace(p.surface,"stream_change_output_type_begin");
+        hr=output_type(p);trace_result(p.surface,"stream_change_output_type",hr);
+        if(SUCCEEDED(hr))hr=configure_processor(p,p.fps);
+        return FAILED(hr)?hr:S_FALSE;
+    }
     if (FAILED(hr)) {received.Reset();return hr;}
     if (!received) return E_UNEXPECTED;
     LONGLONG received_time=0; hr=received->GetSampleTime(&received_time);
@@ -337,6 +407,9 @@ present_ready:
     hr=p.decoder->GetOutputCurrentType(0,&actual_type); if (FAILED(hr)) return hr;
     trace(p.surface,"decoded_output_color_validate_begin");
     hr=sdr_type(p,actual_type.Get(),false); if (FAILED(hr)) return hr;
+    GpuOutputGeometry geometry{};
+    hr=output_geometry(actual_type.Get(),p.width,p.height,p.input_geometry_bound?&p.input_geometry:nullptr,&geometry);
+    if(FAILED(hr) || !(geometry==p.output_geometry))return MF_E_INVALIDMEDIATYPE;
     trace(p.surface,"decoded_output_color_validate_end");
     LONGLONG time=0; hr=sample->GetSampleTime(&time);
     if (FAILED(hr) || time<0) return E_UNEXPECTED;
@@ -360,8 +433,9 @@ present_ready:
     D3D11_TEXTURE2D_DESC desc{}; texture->GetDesc(&desc);
     ComPtr<ID3D11Device> source_device; texture->GetDevice(&source_device);
     if (source_device.Get()!=p.device.Get() || desc.Format!=DXGI_FORMAT_NV12 ||
-        desc.Width<p.width || desc.Height<p.height || desc.Width>p.width+255 || desc.Height>p.height+31 ||
-        desc.MipLevels!=1 || sub>=desc.ArraySize) return MF_E_INVALIDMEDIATYPE;
+        desc.Width<geometry.width || desc.Height<geometry.height || desc.Width>p.width+255 || desc.Height>p.height+31 ||
+        ((desc.Width|desc.Height)&1) || static_cast<uint64_t>(desc.Width)*desc.Height*4>65*1024*1024 ||
+        desc.MipLevels!=1 || desc.SampleDesc.Count!=1 || desc.SampleDesc.Quality || sub>=desc.ArraySize) return MF_E_INVALIDMEDIATYPE;
     D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC in{};
     in.ViewDimension=D3D11_VPIV_DIMENSION_TEXTURE2D; in.Texture2D.ArraySlice=sub;
     ComPtr<ID3D11VideoProcessorInputView> input;
@@ -372,7 +446,9 @@ present_ready:
     ComPtr<ID3D11VideoProcessorOutputView> output;
     hr=p.video->CreateVideoProcessorOutputView(back.Get(),p.enumerator.Get(),&out,&output); if (FAILED(hr)) return hr;
     RECT rect{0,0,static_cast<LONG>(p.width),static_cast<LONG>(p.height)};
-    p.video_context->VideoProcessorSetStreamSourceRect(p.processor.Get(),0,TRUE,&rect);
+    RECT source_rect{static_cast<LONG>(geometry.left),static_cast<LONG>(geometry.top),
+        static_cast<LONG>(geometry.left+p.width),static_cast<LONG>(geometry.top+p.height)};
+    p.video_context->VideoProcessorSetStreamSourceRect(p.processor.Get(),0,TRUE,&source_rect);
     p.video_context->VideoProcessorSetStreamDestRect(p.processor.Get(),0,TRUE,&rect);
     p.video_context->VideoProcessorSetOutputTargetRect(p.processor.Get(),TRUE,&rect);
     p.video_context->VideoProcessorSetStreamFrameFormat(p.processor.Get(),0,D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE);
@@ -552,6 +628,13 @@ extern "C" int32_t nl_gpu_open_hevc(void* surface, uint32_t width, uint32_t heig
     if((width|height)&7)return E_INVALIDARG;
     return open_presenter(surface,width,height,fps,kbps,true,result);
 }
+extern "C" int32_t nl_gpu_input_geometry(void* handle,const GpuInputGeometry* geometry) noexcept {
+    auto* p=static_cast<Presenter*>(handle);
+    if(!p || !geometry || p->thread!=GetCurrentThreadId())return E_INVALIDARG;
+    if(!valid_input_geometry(*geometry,p->width,p->height,p->hevc) ||
+        (p->input_geometry_bound && !same_geometry(p->input_geometry,*geometry)))return MF_E_INVALIDMEDIATYPE;
+    p->input_geometry=*geometry;p->input_geometry_bound=true;return S_OK;
+}
 extern "C" int32_t nl_gpu_step(void* handle, const uint8_t* bytes, size_t length, uint64_t pts, uint64_t due, uint64_t expires,
     uint32_t* accepted, uint64_t* output_pts, uint64_t* qpc, uint32_t* submitted,uint32_t* converted) noexcept {
     auto* p=static_cast<Presenter*>(handle);
@@ -559,7 +642,7 @@ extern "C" int32_t nl_gpu_step(void* handle, const uint8_t* bytes, size_t length
     *accepted=0; *submitted=0;*converted=0;
     if (!authorized(*p)) return E_ABORT;
     if (length && p->time_size<p->times.size()) {
-        if (!bytes || length>8*1024*1024 || pts>static_cast<uint64_t>(INT64_MAX)/1000) return E_INVALIDARG;
+        if (!bytes || !p->input_geometry_bound || length>8*1024*1024 || pts>static_cast<uint64_t>(INT64_MAX)/1000) return E_INVALIDARG;
         ComPtr<IMFMediaBuffer> buffer; ComPtr<IMFSample> sample;
         HRESULT hr=MFCreateMemoryBuffer(static_cast<DWORD>(length),&buffer); if (FAILED(hr)) return hr;
         BYTE* dest=nullptr; hr=buffer->Lock(&dest,nullptr,nullptr); if (FAILED(hr)) return hr;
@@ -575,6 +658,56 @@ extern "C" int32_t nl_gpu_step(void* handle, const uint8_t* bytes, size_t length
         else if (hr!=MF_E_NOTACCEPTING) return hr;
     }
     return receive(*p,output_pts,qpc,submitted,converted);
+}
+// Metadata-only regression cases use the same IMFMediaType reader as the live
+// owner. They open no window, GPU device, decoder or capture resource.
+extern "C" uint32_t nl_gpu_output_geometry_contract() noexcept {
+    const HRESULT com=CoInitializeEx(nullptr,COINIT_MULTITHREADED);
+    if(FAILED(com))return 0;
+    if(FAILED(MFStartup(MF_VERSION,MFSTARTUP_NOSOCKET))){CoUninitialize();return 0;}
+    uint32_t passed=0;
+    {
+        GpuInputGeometry sps{1920,1088,{0,0,0,8}};
+        const auto type=[](UINT width,UINT height,ComPtr<IMFMediaType>& value)->HRESULT {
+            HRESULT hr=MFCreateMediaType(&value);
+            return FAILED(hr)?hr:MFSetAttributeSize(value.Get(),MF_MT_FRAME_SIZE,width,height);
+        };
+        const auto aperture=[](IMFMediaType* value,int top,WORD fraction,UINT width,UINT height)->HRESULT {
+            MFVideoArea area{};area.OffsetY.value=static_cast<short>(top);area.OffsetY.fract=fraction;
+            area.Area.cx=static_cast<LONG>(width);area.Area.cy=static_cast<LONG>(height);
+            return value->SetBlob(MF_MT_MINIMUM_DISPLAY_APERTURE,reinterpret_cast<const UINT8*>(&area),static_cast<UINT32>(sizeof(area)));
+        };
+        ComPtr<IMFMediaType> visible,padded,foreign;
+        GpuOutputGeometry actual{};
+        if(SUCCEEDED(type(1920,1080,visible)) &&
+            SUCCEEDED(output_geometry(visible.Get(),1920,1080,nullptr,&actual)) &&
+            actual.width==1920 && actual.height==1080 && !actual.left && !actual.top)passed|=1;
+        if(SUCCEEDED(type(1920,1088,padded)) &&
+            FAILED(output_geometry(padded.Get(),1920,1080,&sps,&actual)))passed|=4;
+        if(padded && SUCCEEDED(aperture(padded.Get(),0,0,1920,1080))) {
+            if(SUCCEEDED(output_geometry(padded.Get(),1920,1080,&sps,&actual)) &&
+                actual.width==1920 && actual.height==1088 && !actual.left && !actual.top)passed|=2;
+            if(FAILED(output_geometry(padded.Get(),1920,1080,nullptr,&actual)))passed|=8;
+            if(SUCCEEDED(type(1920,1096,foreign)) && SUCCEEDED(aperture(foreign.Get(),0,0,1920,1080)) &&
+                FAILED(output_geometry(foreign.Get(),1920,1080,&sps,&actual)))passed|=16;
+            bool conflicts=SUCCEEDED(aperture(padded.Get(),4,0,1920,1080)) &&
+                FAILED(output_geometry(padded.Get(),1920,1080,&sps,&actual));
+            conflicts=conflicts && SUCCEEDED(aperture(padded.Get(),0,1,1920,1080)) &&
+                FAILED(output_geometry(padded.Get(),1920,1080,&sps,&actual));
+            conflicts=conflicts && SUCCEEDED(aperture(padded.Get(),0,0,1920,1072)) &&
+                FAILED(output_geometry(padded.Get(),1920,1080,&sps,&actual));
+            const UINT8 malformed=0;
+            conflicts=conflicts && SUCCEEDED(padded->SetBlob(MF_MT_MINIMUM_DISPLAY_APERTURE,&malformed,1)) &&
+                FAILED(output_geometry(padded.Get(),1920,1080,&sps,&actual));
+            if(conflicts)passed|=32;
+            GpuInputGeometry centered{1920,1088,{0,0,4,4}};
+            if(SUCCEEDED(aperture(padded.Get(),4,0,1920,1080)) &&
+                valid_input_geometry(centered,1920,1080,false) &&
+                SUCCEEDED(output_geometry(padded.Get(),1920,1080,&centered,&actual)) && actual.top==4)passed|=128;
+        }
+        if(visible && SUCCEEDED(output_geometry(visible.Get(),1920,1080,&sps,&actual)))passed|=64;
+    }
+    MFShutdown();CoUninitialize();return passed;
 }
 extern "C" int32_t nl_gpu_owner_observation(void* handle,NlOwnerObservation* out) noexcept {
     auto* p=static_cast<Presenter*>(handle);

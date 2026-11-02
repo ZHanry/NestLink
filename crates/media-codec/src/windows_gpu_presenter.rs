@@ -53,6 +53,7 @@ unsafe extern "C" {
         submitted: *mut u32,
         converted: *mut u32,
     ) -> i32;
+    fn nl_gpu_input_geometry(handle: *mut c_void, geometry: *const GpuInputGeometry) -> i32;
     fn nl_gpu_close_checked(handle: *mut c_void) -> i32;
     fn nl_gpu_owner_observation(
         handle: *mut c_void,
@@ -192,11 +193,41 @@ enum Admission {
     H264(H264Validator),
     Hevc(HevcMain8Admission),
 }
+/// Geometry comes from the accepted SPS parser, never from MF alignment guesses.
+#[repr(C)]
+struct GpuInputGeometry {
+    coded_width: u32,
+    coded_height: u32,
+    crop: [u32; 4],
+}
 impl Admission {
     fn validate(&mut self, bytes: &[u8]) -> io::Result<()> {
         match self {
             Self::H264(value) => value.validate(bytes).map(|_| ()),
             Self::Hevc(value) => value.validate(bytes),
+        }
+    }
+    fn geometry(&self) -> io::Result<GpuInputGeometry> {
+        match self {
+            Self::H264(value) => {
+                let geometry = value
+                    .sps_geometry()
+                    .ok_or_else(|| io::Error::other("GPU input lacks validated SPS geometry"))?;
+                Ok(GpuInputGeometry {
+                    coded_width: geometry.coded_width,
+                    coded_height: geometry.coded_height,
+                    crop: geometry.crop,
+                })
+            }
+            Self::Hevc(value) => {
+                // The exact HEVC admission accepts uncropped coded geometry only.
+                let config = value.config();
+                Ok(GpuInputGeometry {
+                    coded_width: config.width,
+                    coded_height: config.height,
+                    crop: [0; 4],
+                })
+            }
         }
     }
 }
@@ -314,6 +345,10 @@ impl GpuH264Presenter {
         // parameter history. Actual output still binds to the original ledger.
         let mut next = self.validator.clone();
         next.validate(bytes)?;
+        let geometry = next.geometry()?;
+        // SAFETY: initialized scalar-only ABI, same worker-owned native decoder.
+        // The native owner pins this geometry and refuses later replacement.
+        checked(unsafe { nl_gpu_input_geometry(self.handle.as_ptr(), &geometry) })?;
         let step = self.exchange(sequence, pts_90khz, bytes, due_qpc, not_after_qpc)?;
         if step.accepted {
             self.validator = next;
@@ -627,5 +662,22 @@ impl Drop for GpuHevcPresenter {
         if let Err(error) = self.inner.close_owner() {
             eprintln!("HEVC original GPU presenter cleanup failed: {error}");
         }
+    }
+}
+
+#[cfg(test)]
+mod geometry_tests {
+    unsafe extern "C" {
+        fn nl_gpu_output_geometry_contract() -> u32;
+    }
+
+    #[test]
+    fn native_output_matches_real_sps_padding_and_rejects_unbound_or_conflicting_apertures() {
+        // Exercises the production validator with actual IMFMediaType objects.
+        // The 1920x1088/1080 case is the retained target STREAM_CHANGE failure.
+        // SAFETY: no arguments or caller resources; native code owns and closes
+        // its thread-local COM/MF objects before returning the scenario bitmask.
+        let passed = unsafe { nl_gpu_output_geometry_contract() };
+        assert_eq!(passed, 255, "native MF geometry scenario bitmask: {passed:#x}");
     }
 }

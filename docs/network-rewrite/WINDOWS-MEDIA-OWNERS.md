@@ -134,3 +134,19 @@ encode/decode and an independent software decoder before publication. The
 desktop capture source remains BGRA8 SDR, so P010 conversion is not HDR or native
 ten-bit capture qualification. These changes still need exact-source hosted
 validation and physical hardware execution; see the detailed owner record.
+
+The actual 1920x1080/60/8000 GPU controller direction attempt built by hosted run
+41452426792 at `2ffc870909d50904379fdbd2b4dc5e060248a6d9` failed at MF
+`STREAM_CHANGE`: the original SPS describes a 1920x1088 coded frame cropped to
+1920x1080, and the decoder declared that same integer minimum display aperture,
+but the presenter required raw coded dimensions to equal the visible dimensions.
+That attempt remains failed. The repair pins the independently validated SPS
+coded/crop geometry on the same native owner before input, accepts padded MF
+output only when its complete aperture matches that geometry, and reconfigures
+the video processor for the actual coded input with the unchanged visible
+output. Already cropped raw output remains valid; unbound padding, foreign
+coded extents, shifted/conflicting or fractional apertures and malformed blobs
+remain invalid. The ordinary-token hosted metadata regression uses the same
+production reader on real IMFMediaType objects. The corrected tool still needs
+its own same-source hosted build and original target rerun; these metadata
+checks do not establish GPU execution or physical scanout.

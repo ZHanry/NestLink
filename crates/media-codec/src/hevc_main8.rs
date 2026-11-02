@@ -181,6 +181,10 @@ pub struct HevcMain8Admission {
     validator: Validator,
 }
 impl HevcMain8Admission {
+    #[cfg(windows)]
+    pub(crate) fn config(&self) -> VideoConfig {
+        self.expected.config()
+    }
     pub fn new(expected: HevcMain8Contract) -> Self {
         Self {
             expected,

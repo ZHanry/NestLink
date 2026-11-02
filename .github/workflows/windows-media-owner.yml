@@ -149,6 +149,8 @@ jobs:
         if: ${{ !cancelled() }}
         shell: pwsh
         run: |
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib hevc_probe:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/hevc-contract-tests.log"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib hevc_execution:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/hevc-execution-tests.log"
