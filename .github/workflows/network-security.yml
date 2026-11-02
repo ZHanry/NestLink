@@ -29,7 +29,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
         with:
           toolchain: nightly-2026-10-25
-          components: rust-src
+          components: rust-src, rustfmt
       - name: Derive lock or execute bounded sanitizer fuzzing on the exact source
         shell: python
         run: |
@@ -60,9 +60,12 @@ jobs:
               if receipt['mode'] == 'derive-lock':
                   execute('derive-lock',['cargo','generate-lockfile','--manifest-path',str(project/'Cargo.toml')])
                   (output/'Cargo.lock').write_bytes(lock.read_bytes())
+                  execute('review-fuzz-format',['cargo','fmt','--manifest-path',str(project/'Cargo.toml')])
+                  (output/'fuzz-rustfmt.patch').write_bytes(subprocess.check_output(['git','diff','--binary','--no-ext-diff','--',str(project)]))
               else:
                   before = lock.read_bytes()
                   receipt['cargo_lock_sha256'] = hashlib.sha256(before).hexdigest()
+                  execute('check-fuzz-format',['cargo','fmt','--manifest-path',str(project/'Cargo.toml'),'--','--check'])
                   execute('fetch-locked',['cargo','fetch','--locked','--manifest-path',str(project/'Cargo.toml')])
                   execute('install-fuzzer',['cargo','install','cargo-fuzz','--version','=0.13.2','--locked'])
                   offline = dict(os.environ, CARGO_NET_OFFLINE='true')

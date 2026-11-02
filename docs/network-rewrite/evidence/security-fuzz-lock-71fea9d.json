@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "71fea9dd85a47af52cd3132ed8327cb1ef0b1ee4",
+  "workflow": ".github/workflows/network-security.yml",
+  "run_id": 41407694699,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41407694699",
+  "mode": "derive-lock",
+  "runner_environment": "github-hosted",
+  "runner_os": "Linux",
+  "conclusion": "success",
+  "artifact_id": 13123898731,
+  "github_artifact_digest": "sha256:97247952ffdedd239a01907aee46ecf1348fa74c4dd12f8a7da276c13d0878aa",
+  "receipt_sha256": "e4c1f411f24333b0272f815f4e7e416d6aef75a84b70b277480b2ef2d1fead7e",
+  "files": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 29262,
+      "sha256": "0ec4c791ef9d969a005838d6e35c9f810d4c497d9014e3b81335125da3d5410b"
+    },
+    {
+      "path": "derive-lock.log",
+      "bytes": 205,
+      "sha256": "210c5a4b562b4c0ce6958ee663a2701df5e8ff3a8f7ba37be2eb05edb4e42dcb"
+    },
+    {
+      "path": "rust-version.log",
+      "bytes": 633,
+      "sha256": "c21d4eda194b86fd08d5f56a5a74a7753ac880789ca7703e9e18d8e899e8a408"
+    }
+  ],
+  "commands": [
+    {
+      "name": "rust-version",
+      "argv": [
+        "rustc",
+        "-vV"
+      ],
+      "return_code": 0
+    },
+    {
+      "name": "derive-lock",
+      "argv": [
+        "cargo",
+        "generate-lockfile",
+        "--manifest-path",
+        "tests/security/fuzz/Cargo.toml"
+      ],
+      "return_code": 0
+    }
+  ],
+  "imported_path": "tests/security/fuzz/Cargo.lock",
+  "verification": "Verified every extracted receipt file by SHA256/byte size. Current manifest Git blob matched exact source before importing the Actions-generated lock. No local dependency resolution, compilation, formatter or test.",
+  "fuzz_execution_passed": false,
+  "whole_W36_or_AC62_passed": false,
+  "scope": "Separate test-only dependency lock generated on pinned nightly Actions. This is not fuzzer execution or product security acceptance."
+}
