@@ -84,7 +84,9 @@ impl LegacyPrepare {
         match nestlink_protocol::NativeVideoCodec::try_from(codec) {
             Ok(nestlink_protocol::NativeVideoCodec::Vp8) => Ok(VideoCodec::Vp8),
             Ok(nestlink_protocol::NativeVideoCodec::H264Baseline) => Ok(VideoCodec::H264Baseline),
-            Ok(nestlink_protocol::NativeVideoCodec::HevcMain8) | Err(_) => Err(io::Error::other("unsupported legacy codec")),
+            Ok(nestlink_protocol::NativeVideoCodec::HevcMain8) | Err(_) => {
+                Err(io::Error::other("unsupported legacy codec"))
+            }
         }
     }
     pub fn surface(&self) -> LegacySurface {

@@ -428,15 +428,27 @@ impl ExternalVideoCleanup {
     }
 }
 impl VideoPresentation {
-    pub fn decoder_hardware_target(&self) -> io::Result<nestlink_protocol::media_authority::HardwareMediaTarget> {
+    pub fn decoder_hardware_target(
+        &self,
+    ) -> io::Result<nestlink_protocol::media_authority::HardwareMediaTarget> {
         use nestlink_protocol::media_authority::MediaDirection;
-        self.lease.check_media_binding(Channel::Video, self.connection_generation)
+        self.lease
+            .check_media_binding(Channel::Video, self.connection_generation)
             .map_err(io::Error::other)?;
-        if self.lease.local_media_backend(MediaDirection::Decode).map_err(io::Error::other)?
-            .as_deref() != Some("gpu-hevc-decoder") {
-            return Err(io::Error::other("no local exact HEVC hardware decoder evidence"));
+        if self
+            .lease
+            .local_media_backend(MediaDirection::Decode)
+            .map_err(io::Error::other)?
+            .as_deref()
+            != Some("gpu-hevc-decoder")
+        {
+            return Err(io::Error::other(
+                "no local exact HEVC hardware decoder evidence",
+            ));
         }
-        self.lease.local_media_hardware_target(MediaDirection::Decode).map_err(io::Error::other)?
+        self.lease
+            .local_media_hardware_target(MediaDirection::Decode)
+            .map_err(io::Error::other)?
             .ok_or_else(|| io::Error::other("local HEVC decoder platform absent"))
     }
     pub fn current_execution(&self) -> io::Result<Option<crate::LiveExecutionReceipt>> {
@@ -532,15 +544,23 @@ impl VideoPresentation {
         if hevc {
             let target = crate::hevc_main8_contract(value.format)?.config();
             if (target.width, target.height) != (layout.width, layout.height) {
-                return Err(io::Error::other("HEVC format differs from selected original display"));
+                return Err(io::Error::other(
+                    "HEVC format differs from selected original display",
+                ));
             }
-        } else { crate::negotiated_format::configured_target(value, layout.width, layout.height, true)?; }
+        } else {
+            crate::negotiated_format::configured_target(value, layout.width, layout.height, true)?;
+        }
         if self
             .lease
             .local_media_backend(nestlink_protocol::media_authority::MediaDirection::Decode)
             .map_err(io::Error::other)?
             .as_deref()
-            != Some(if hevc { "gpu-hevc-decoder" } else { "cpu-software" })
+            != Some(if hevc {
+                "gpu-hevc-decoder"
+            } else {
+                "cpu-software"
+            })
         {
             return Err(io::Error::other(
                 "no executable confirmed software decoder backend",
@@ -591,9 +611,14 @@ impl VideoPresentation {
         self.lease
             .check_media_binding(Channel::Video, self.connection_generation)
             .map_err(io::Error::other)?;
-        let hevc = context.format.is_some_and(|f| f.codec == nestlink_protocol::media_format::Codec::Hevc);
-        let capability = if hevc { nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY }
-            else { nestlink_protocol::media::H264_CAPABILITY };
+        let hevc = context
+            .format
+            .is_some_and(|f| f.codec == nestlink_protocol::media_format::Codec::Hevc);
+        let capability = if hevc {
+            nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY
+        } else {
+            nestlink_protocol::media::H264_CAPABILITY
+        };
         if !self
             .lease
             .media_capability(capability)
@@ -625,7 +650,9 @@ impl VideoPresentation {
             })
             .ok_or_else(|| io::Error::other("external selection differs"))?;
         if hevc && state.execution.is_some() {
-            return Err(io::Error::other("HEVC original readback execution must transfer and join through a proved live GPU handoff"));
+            return Err(io::Error::other(
+                "HEVC original readback execution must transfer and join through a proved live GPU handoff",
+            ));
         }
         let signed_formats = self.lease.media_formats().map_err(io::Error::other)?;
         if let Some(formats) = signed_formats {
@@ -634,14 +661,20 @@ impl VideoPresentation {
                 .local_media_backend(nestlink_protocol::media_authority::MediaDirection::Decode)
                 .map_err(io::Error::other)?
                 .as_deref()
-                != Some(if hevc { "gpu-hevc-decoder" } else { "gpu-presenter" })
+                != Some(if hevc {
+                    "gpu-hevc-decoder"
+                } else {
+                    "gpu-presenter"
+                })
             {
                 return Err(io::Error::other(
                     "external GPU backend absent from local executable evidence",
                 ));
             }
             if hevc && context.decoder_hardware != Some(self.decoder_hardware_target()?) {
-                return Err(io::Error::other("HEVC external decoder platform differs from local frozen evidence"));
+                return Err(io::Error::other(
+                    "HEVC external decoder platform differs from local frozen evidence",
+                ));
             }
             let confirmed = state
                 .format
@@ -1419,7 +1452,12 @@ struct Decoder {
 impl Decoder {
     fn retire_codec(&mut self) -> io::Result<()> {
         #[cfg(windows)]
-        { self.hevc_ready.clear(); if let Some(mut owner) = self.hevc.take() { owner.shutdown()?; } }
+        {
+            self.hevc_ready.clear();
+            if let Some(mut owner) = self.hevc.take() {
+                owner.shutdown()?;
+            }
+        }
         if let Some(codec) = self.codec.take()
             && matches!(&codec, VideoDecoder::Execution { .. })
         {
@@ -1469,7 +1507,9 @@ impl Decoder {
         self.deadline(now)?;
         #[cfg(windows)]
         if self.hevc.is_some() {
-            return Err(io::Error::other("HEVC original execution recovery requires fresh preparation and format ACK"));
+            return Err(io::Error::other(
+                "HEVC original execution recovery requires fresh preparation and format ACK",
+            ));
         }
         self.pending.clear();
         self.prepare = None;
@@ -1619,9 +1659,16 @@ impl Decoder {
         }
         if packet.codec == nestlink_protocol::NativeVideoCodec::HevcMain8 as i32 {
             #[cfg(windows)]
-            { return self.decode_hevc(packet, payload, epoch, now); }
+            {
+                return self.decode_hevc(packet, payload, epoch, now);
+            }
             #[cfg(not(windows))]
-            { return Err(io::Error::new(io::ErrorKind::Unsupported, "HEVC hardware decoder is unavailable on this platform")); }
+            {
+                return Err(io::Error::new(
+                    io::ErrorKind::Unsupported,
+                    "HEVC hardware decoder is unavailable on this platform",
+                ));
+            }
         }
         if self.prepare.is_none() {
             self.prepare = Some(crate::legacy_format::LegacyPrepare::from_wire_cpu_visible(
@@ -1648,7 +1695,9 @@ impl Decoder {
             let kind = match nestlink_protocol::NativeVideoCodec::try_from(packet.codec) {
                 Ok(nestlink_protocol::NativeVideoCodec::Vp8) => VideoCodec::Vp8,
                 Ok(nestlink_protocol::NativeVideoCodec::H264Baseline) => VideoCodec::H264Baseline,
-                Ok(nestlink_protocol::NativeVideoCodec::HevcMain8) | Err(_) => return Err(io::Error::other("codec lacks a legacy decoder")),
+                Ok(nestlink_protocol::NativeVideoCodec::HevcMain8) | Err(_) => {
+                    return Err(io::Error::other("codec lacks a legacy decoder"));
+                }
             };
             self.codec = Some(if self.format.is_some() {
                 return Err(io::Error::other(
@@ -1874,11 +1923,30 @@ fn prepare_display_decoder(
         let negotiated = signed_formats.is_some();
         let mut execution_format = None;
         if let Some(formats) = signed_formats {
-            if formats.formats().iter().any(|f| f.codec == nestlink_protocol::media_format::Codec::Hevc) {
+            if formats
+                .formats()
+                .iter()
+                .any(|f| f.codec == nestlink_protocol::media_format::Codec::Hevc)
+            {
                 #[cfg(windows)]
-                { return hevc::prepare(decoder, layout, revision, &formats, format.as_ref(), lease, output); }
+                {
+                    return hevc::prepare(
+                        decoder,
+                        layout,
+                        revision,
+                        &formats,
+                        format.as_ref(),
+                        lease,
+                        output,
+                    );
+                }
                 #[cfg(not(windows))]
-                { return Err(io::Error::new(io::ErrorKind::Unsupported, "exact HEVC has no hardware decoder on this platform")); }
+                {
+                    return Err(io::Error::new(
+                        io::ErrorKind::Unsupported,
+                        "exact HEVC has no hardware decoder on this platform",
+                    ));
+                }
             }
             if lease
                 .local_media_backend(nestlink_protocol::media_authority::MediaDirection::Decode)
@@ -1983,7 +2051,8 @@ fn prepare_display_decoder(
                 .as_ref()
                 .map(VideoDecoder::current_execution)
                 .transpose()?
-                .flatten().map(crate::LiveExecutionReceipt::from);
+                .flatten()
+                .map(crate::LiveExecutionReceipt::from);
             if negotiated && !uses_external && state.execution.is_none() {
                 return Err(io::Error::other("decoder readiness lacks live execution"));
             }
@@ -2009,11 +2078,23 @@ fn receive(
         .media_capability(nestlink_protocol::native_qos::CAPABILITY)
         .map_err(io::Error::other)?;
     let mut qos_window = crate::receiver_qos::ReportWindow::new(Instant::now());
-    let exact_hevc = lease.media_formats().map_err(io::Error::other)?.is_some_and(|formats|
-        formats.formats().iter().all(|f| f.codec == nestlink_protocol::media_format::Codec::Hevc));
+    let exact_hevc = lease
+        .media_formats()
+        .map_err(io::Error::other)?
+        .is_some_and(|formats| {
+            formats
+                .formats()
+                .iter()
+                .all(|f| f.codec == nestlink_protocol::media_format::Codec::Hevc)
+        });
     let codec_kind = if exact_hevc {
-        if !lease.media_capability(nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY).map_err(io::Error::other)? {
-            return Err(io::Error::other("HEVC wire codec lacks its independent exact capability"));
+        if !lease
+            .media_capability(nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY)
+            .map_err(io::Error::other)?
+        {
+            return Err(io::Error::other(
+                "HEVC wire codec lacks its independent exact capability",
+            ));
         }
         nestlink_protocol::NativeVideoCodec::HevcMain8 as i32
     } else if lease

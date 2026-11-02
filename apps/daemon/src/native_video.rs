@@ -33,6 +33,9 @@ const FPS: u32 = 30;
 const BITRATE_KBPS: u32 = 4_000;
 const CAPTURE_TICK: Duration = Duration::from_millis(10);
 const FIRST_FRAME_TIMEOUT: Duration = Duration::from_secs(5);
+#[cfg(windows)]
+#[path = "native_video_hevc.rs"]
+mod hevc;
 
 fn authorized_session(core: &CoreHandle) -> Option<SessionIdentity> {
     core.native_host_session_binding()
@@ -148,6 +151,8 @@ async fn run_native_video_capture(
         }
 
         let mut input = prepared.input;
+        #[cfg(windows)]
+        let hevc = prepared.hevc;
         let display = match prepared
             .displays
             .iter()
@@ -230,7 +235,13 @@ async fn run_native_video_capture(
             let core = core.clone();
             let identity = identity.clone();
             let stop = stop.clone();
-            move || stream_capture(&core, &identity, controller, runtime, &stop)
+            move || {
+                #[cfg(windows)]
+                if let Some(hevc) = hevc {
+                    return hevc::stream(&core, &identity, controller, hevc, runtime, &stop);
+                }
+                stream_capture(&core, &identity, controller, runtime, &stop)
+            }
         })
         .await;
         let (controller, exit) = match worker {
@@ -368,6 +379,8 @@ struct PreparedCapture {
     displays: Vec<Display>,
     initial_source: u32,
     input: Option<SystemInput>,
+    #[cfg(windows)]
+    hevc: Option<hevc::Capture>,
 }
 
 async fn reset_prepared(mut prepared: PreparedCapture) -> io::Result<()> {
@@ -431,6 +444,9 @@ async fn prepare_capture(
             .into_iter()
             .filter(|source| approval.approved_sources.contains(&source.display().source))
             .collect::<Vec<_>>();
+        let use_hevc = core.native_video_formats(identity).map_err(PrepareError::Capture)?
+            .is_some_and(|formats| formats.formats().iter()
+                .all(|format| format.codec == nestlink_protocol::media_format::Codec::Hevc));
         let displays = selected
             .iter()
             .map(|source| source.display())
@@ -451,11 +467,11 @@ async fn prepare_capture(
         let privileged = privileged.clone();
         let connection_generation = identity.connection_generation;
         let diagnostics = crate::native_gpu_diagnostics::observer(connection_generation);
-        let (device, input) = tokio::task::spawn_blocking(move || {
-            let mut device = nestlink_platform_capture::WindowsHostCapture::open_with_observer(
-                selected,
-                Some(diagnostics),
-            )?;
+        let (device, input, hevc) = tokio::task::spawn_blocking(move || {
+            let hevc = use_hevc.then(|| hevc::Capture::new(selected.clone()));
+            let mut device = if let Some(hevc) = &hevc { ErasedCapture(Box::new(hevc.clone())) }
+                else { ErasedCapture(Box::new(nestlink_platform_capture::WindowsHostCapture::open_with_observer(
+                    selected, Some(diagnostics))?)) };
             let input = if input_enabled {
                 let opened = privileged
                     .open(
@@ -485,26 +501,28 @@ async fn prepare_capture(
             } else {
                 None
             };
-            Ok::<_, PrepareError>((device, input))
+            Ok::<_, PrepareError>((device, input, hevc))
         })
         .await
         .map_err(io::Error::other)??;
         if *cancel.borrow() {
             reset_prepared(PreparedCapture {
-                device: ErasedCapture(Box::new(device)),
+                device,
                 displays,
                 initial_source,
                 input,
+                hevc,
             })
             .await
             .map_err(PrepareError::Cleanup)?;
             return Err(io::Error::new(io::ErrorKind::Interrupted, "capture cancelled").into());
         }
         Ok(PreparedCapture {
-            device: ErasedCapture(Box::new(device)),
+            device,
             displays,
             initial_source,
             input,
+            hevc,
         })
     }
     #[cfg(target_os = "linux")]

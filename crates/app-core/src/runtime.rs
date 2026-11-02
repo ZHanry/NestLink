@@ -1245,6 +1245,13 @@ impl CoreHandle {
         binding: &NativeSessionBinding,
     ) -> Result<nestlink_media_codec::VideoCodec, NativeVideoError> {
         let route = self.native_host_video_route(binding)?;
+        if route.lease.media_formats().map_err(|_| NativeVideoError::Unauthorized)?
+            .is_some_and(|formats| formats.formats().iter()
+                .any(|format| format.codec == nestlink_protocol::media_format::Codec::Hevc)) {
+            // HEVC uses its independently signed hardware owner API. It must
+            // never be relabelled as either legacy codec at this boundary.
+            return Err(NativeVideoError::Invalid);
+        }
         let h264 = route
             .lease
             .media_capability(nestlink_protocol::media::H264_CAPABILITY)

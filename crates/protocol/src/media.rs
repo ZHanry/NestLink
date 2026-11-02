@@ -10,8 +10,16 @@ use prost::Message;
 pub const H264_CAPABILITY: &str = "h264-baseline-v1";
 pub fn negotiated_video_codec(claims: &crate::PermitClaims) -> crate::NativeVideoCodec {
     if claims.media_format_version == crate::media_authority::HEVC_FORMAT_VERSION
-        && crate::media_authority::permit_formats(claims).ok().flatten()
-            .is_some_and(|formats| formats.formats().iter().all(|f| f.codec == crate::media_format::Codec::Hevc)) {
+        && crate::media_authority::permit_formats(claims)
+            .ok()
+            .flatten()
+            .is_some_and(|formats| {
+                formats
+                    .formats()
+                    .iter()
+                    .all(|f| f.codec == crate::media_format::Codec::Hevc)
+            })
+    {
         return crate::NativeVideoCodec::HevcMain8;
     }
     if claims
@@ -151,13 +159,21 @@ impl NativeVideo {
                 return Ok(());
             }
             Ok(crate::NativeVideoCodec::HevcMain8) => {
-                if self.format_epoch == 0 || self.format_sha256.len() != 32
-                    || !self.width.is_multiple_of(8) || !self.height.is_multiple_of(8)
+                if self.format_epoch == 0
+                    || self.format_sha256.len() != 32
+                    || !self.width.is_multiple_of(8)
+                    || !self.height.is_multiple_of(8)
                     || !self.keyframe
                     || !(packet.starts_with(&[0, 0, 1]) || packet.starts_with(&[0, 0, 0, 1]))
-                    || !packet.windows(5).any(|part| part[..3] == [0, 0, 1]
-                        && matches!((part[3] >> 1) & 63, 19 | 20) && part[4] == 1) {
-                    return Err(invalid("HEVC Main8 requires exact format identity and a bounded IDR envelope"));
+                    || !packet.windows(5).any(|part| {
+                        part[..3] == [0, 0, 1]
+                            && matches!((part[3] >> 1) & 63, 19 | 20)
+                            && part[4] == 1
+                    })
+                {
+                    return Err(invalid(
+                        "HEVC Main8 requires exact format identity and a bounded IDR envelope",
+                    ));
                 }
                 // Exact full SPS/PTL/geometry/color and all dependencies are
                 // admitted by the pinned media owner before native decode.

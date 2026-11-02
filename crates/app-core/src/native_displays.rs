@@ -972,6 +972,12 @@ impl CoreHandle {
             .local_media_backend(nestlink_protocol::media_authority::MediaDirection::Encode)
             .map_err(io::Error::other)
     }
+    pub fn native_video_encoder_hardware_target(&self, binding: &NativeSessionBinding)
+        -> io::Result<Option<nestlink_protocol::media_authority::HardwareMediaTarget>> {
+        self.display_route(binding)?.lease
+            .local_media_hardware_target(nestlink_protocol::media_authority::MediaDirection::Encode)
+            .map_err(io::Error::other)
+    }
     pub fn native_video_formats(
         &self,
         binding: &NativeSessionBinding,

@@ -49,7 +49,10 @@ fn hevc_wire_marker_requires_exact_identity_and_keeps_legacy_markers_strict() ->
     for case in 0..8 {
         let mut invalid = frame.clone();
         match case {
-            0 => { invalid.format_epoch = 0; invalid.format_sha256.clear(); }
+            0 => {
+                invalid.format_epoch = 0;
+                invalid.format_sha256.clear();
+            }
             1 => invalid.format_sha256 = vec![0; 32],
             2 => invalid.keyframe = false,
             3 => invalid.width = 30,

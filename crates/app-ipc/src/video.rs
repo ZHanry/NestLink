@@ -584,7 +584,11 @@ fn encode_header(
         return Err(crate::Error::Protocol);
     }
     let mut bytes = [0_u8; VIDEO_HEADER_BYTES];
-    bytes[0..8].copy_from_slice(if fields.codec == 2 { VIDEO_HEVC_MAGIC } else { VIDEO_MAGIC });
+    bytes[0..8].copy_from_slice(if fields.codec == 2 {
+        VIDEO_HEVC_MAGIC
+    } else {
+        VIDEO_MAGIC
+    });
     bytes[8] = fields.kind;
     bytes[9] = PIXEL_BGRA8;
     bytes[10] = fields.codec;
@@ -704,11 +708,20 @@ mod tests {
     }
     #[test]
     fn hevc_readback_pixels_have_an_independent_strict_magic() -> Result<(), crate::Error> {
-        let mut encoded = encode_header(&binding(), HeaderFields {
-            codec: 2, hardware_decode: true, kind: KIND_FRAME,
-            layout_epoch: 2, sequence: 3, pts_90khz: 90,
-            width: 640, height: 480, payload_bytes: 640 * 480 * 4,
-        })?;
+        let mut encoded = encode_header(
+            &binding(),
+            HeaderFields {
+                codec: 2,
+                hardware_decode: true,
+                kind: KIND_FRAME,
+                layout_epoch: 2,
+                sequence: 3,
+                pts_90khz: 90,
+                width: 640,
+                height: 480,
+                payload_bytes: 640 * 480 * 4,
+            },
+        )?;
         assert_eq!(&encoded[..8], VIDEO_HEVC_MAGIC);
         assert_eq!(decode_header(&encoded)?.codec, 2);
         encoded[..8].copy_from_slice(VIDEO_MAGIC);
