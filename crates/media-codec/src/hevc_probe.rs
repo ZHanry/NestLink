@@ -378,10 +378,22 @@ fn sps_inner(nal: &[u8], width: u32, height: u32, complete: bool) -> io::Result<
         }
         if complete {
             b.field = "vui.chroma_loc_info_present_flag";
-            if b.read(1)? != 0 { return Err(rejection("sps.chroma_location", "explicit chroma location is outside the exact Main8 contract")); }
-            for field in ["vui.neutral_chroma_indication_flag", "vui.field_seq_flag", "vui.frame_field_info_present_flag", "vui.default_display_window_flag"] {
+            if b.read(1)? != 0 {
+                return Err(rejection(
+                    "sps.chroma_location",
+                    "explicit chroma location is outside the exact Main8 contract",
+                ));
+            }
+            for field in [
+                "vui.neutral_chroma_indication_flag",
+                "vui.field_seq_flag",
+                "vui.frame_field_info_present_flag",
+                "vui.default_display_window_flag",
+            ] {
                 b.field = field;
-                if b.read(1)? != 0 { return Err(rejection("sps.unsupported_vui", field)); }
+                if b.read(1)? != 0 {
+                    return Err(rejection("sps.unsupported_vui", field));
+                }
             }
             b.field = "vui.timing_info_present_flag";
             if b.read(1)? != 0 {
@@ -389,18 +401,36 @@ fn sps_inner(nal: &[u8], width: u32, height: u32, complete: bool) -> io::Result<
                 let units = b.read(32)?;
                 b.field = "vui.time_scale";
                 let scale = b.read(32)?;
-                if units == 0 || scale == 0 { return Err(rejection("sps.invalid_timing", "zero VUI clock")); }
+                if units == 0 || scale == 0 {
+                    return Err(rejection("sps.invalid_timing", "zero VUI clock"));
+                }
                 stream_timing = Some([units, scale]);
                 b.field = "vui.poc_proportional_to_timing_flag";
-                if b.read(1)? != 0 { return Err(rejection("sps.poc_timing", "POC-derived rate is outside the exact contract")); }
+                if b.read(1)? != 0 {
+                    return Err(rejection(
+                        "sps.poc_timing",
+                        "POC-derived rate is outside the exact contract",
+                    ));
+                }
                 b.field = "vui.hrd_parameters_present_flag";
-                if b.read(1)? != 0 { return Err(rejection("sps.hrd", "HRD syntax is outside the bounded Main8 contract")); }
+                if b.read(1)? != 0 {
+                    return Err(rejection(
+                        "sps.hrd",
+                        "HRD syntax is outside the bounded Main8 contract",
+                    ));
+                }
             }
             b.field = "vui.bitstream_restriction_flag";
             if b.read(1)? != 0 {
                 b.field = "vui.restriction_flags";
                 b.read(3)?;
-                for field in ["vui.min_spatial_segmentation_idc", "vui.max_bytes_per_pic_denom", "vui.max_bits_per_min_cu_denom", "vui.log2_max_mv_length_horizontal", "vui.log2_max_mv_length_vertical"] {
+                for field in [
+                    "vui.min_spatial_segmentation_idc",
+                    "vui.max_bytes_per_pic_denom",
+                    "vui.max_bits_per_min_cu_denom",
+                    "vui.log2_max_mv_length_horizontal",
+                    "vui.log2_max_mv_length_vertical",
+                ] {
                     b.field = field;
                     b.ue(4096)?;
                 }
@@ -409,12 +439,23 @@ fn sps_inner(nal: &[u8], width: u32, height: u32, complete: bool) -> io::Result<
     }
     if complete {
         b.field = "sps.extension_present_flag";
-        if b.read(1)? != 0 { return Err(rejection("sps.extension", "extension syntax is outside the exact Main8 contract")); }
+        if b.read(1)? != 0 {
+            return Err(rejection(
+                "sps.extension",
+                "extension syntax is outside the exact Main8 contract",
+            ));
+        }
         b.field = "sps.rbsp_stop_one_bit";
-        if b.read(1)? != 1 { return Err(rejection("sps.rbsp_stop", "missing stop bit")); }
-        if b.bytes.len() * 8 - b.pos > 7 { return Err(rejection("sps.rbsp_tail", "extra SPS bytes after syntax")); }
+        if b.read(1)? != 1 {
+            return Err(rejection("sps.rbsp_stop", "missing stop bit"));
+        }
+        if b.bytes.len() * 8 - b.pos > 7 {
+            return Err(rejection("sps.rbsp_tail", "extra SPS bytes after syntax"));
+        }
         while b.pos < b.bytes.len() * 8 {
-            if b.read(1)? != 0 { return Err(rejection("sps.rbsp_padding", "nonzero trailing padding")); }
+            if b.read(1)? != 0 {
+                return Err(rejection("sps.rbsp_padding", "nonzero trailing padding"));
+            }
         }
     }
     Ok(Sps {
@@ -442,7 +483,12 @@ pub(crate) struct Validator {
     complete_sps: bool,
 }
 impl Validator {
-    pub(crate) fn exact_main8() -> Self { Self { complete_sps: true, ..Self::default() } }
+    pub(crate) fn exact_main8() -> Self {
+        Self {
+            complete_sps: true,
+            ..Self::default()
+        }
+    }
     pub fn info(&self) -> Option<Sps> {
         self.sps
     }
@@ -481,7 +527,11 @@ impl Validator {
                     next.vps = Some(b.read(4)?);
                 }
                 33 => {
-                    let info = if next.complete_sps { sps_inner(nal, width, height, true)? } else { sps(nal, width, height)? };
+                    let info = if next.complete_sps {
+                        sps_inner(nal, width, height, true)?
+                    } else {
+                        sps(nal, width, height)?
+                    };
                     if next.vps != Some(info.vps) {
                         return Err(rejection(
                             "sps.vps_reference",
@@ -563,15 +613,24 @@ mod tests {
         let mut nal = vec![0x42, 1];
         let mut zeros = 0;
         for value in rbsp {
-            if zeros >= 2 && value <= 3 { nal.push(3); zeros = 0; }
+            if zeros >= 2 && value <= 3 {
+                nal.push(3);
+                zeros = 0;
+            }
             nal.push(value);
             zeros = if value == 0 { zeros + 1 } else { 0 };
         }
         nal
     }
     #[test]
-    fn actual_main8_contract_keeps_exact_ptl_and_rejected_change_cannot_poison_history() -> io::Result<()> {
-        let config = VideoConfig { width: 640, height: 480, fps: 30, bitrate_kbps: 4000 };
+    fn actual_main8_contract_keeps_exact_ptl_and_rejected_change_cannot_poison_history()
+    -> io::Result<()> {
+        let config = VideoConfig {
+            width: 640,
+            height: 480,
+            fps: 30,
+            bitrate_kbps: 4000,
+        };
         let sps = fixture(false, 0, 1);
         let valid = access_unit(sps.clone(), &[0x28, 1, 0xb0]);
         let original = HevcMain8Contract::observe(&valid, config)?;
@@ -592,9 +651,20 @@ mod tests {
         assert!(HevcMain8Contract::observe(&high_tier, config).is_err());
         let mut extra_sps = sps.clone();
         extra_sps.push(0x55);
-        assert!(HevcMain8Contract::observe(&access_unit(extra_sps, &[0x28, 1, 0xb0]), config).is_err());
+        assert!(
+            HevcMain8Contract::observe(&access_unit(extra_sps, &[0x28, 1, 0xb0]), config).is_err()
+        );
         assert!(HevcMain8Contract::observe(&valid, VideoConfig { fps: 0, ..config }).is_err());
-        assert!(HevcMain8Contract::observe(&valid, VideoConfig { bitrate_kbps: 1, ..config }).is_err());
+        assert!(
+            HevcMain8Contract::observe(
+                &valid,
+                VideoConfig {
+                    bitrate_kbps: 1,
+                    ..config
+                }
+            )
+            .is_err()
+        );
         Ok(())
     }
     fn fixture(full_range: bool, depth: u32, matrix: u32) -> Vec<u8> {
