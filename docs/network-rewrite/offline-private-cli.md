@@ -4,6 +4,8 @@
 
 两端先用本产品既有登录流程启用受保护的登录恢复，并注册本机设备。普通用户运行以下命令；每个进程只拥有原有的一个登录及安装运行锁：
 
+空间成员通过已认证的空间详情读取原权威公钥，设备成员资格、服务访问及本机目标批准仍分别检查。旧部署管理员命名空间保留原管理员策略读取，普通宿主不需要部署管理员身份。
+
 ```text
 nestlink-daemon private-service-proxy --state-dir <本机私有状态目录> offline --space <空间 UUID> --role host --listen <可达的本机 IP:端口>
 nestlink-daemon private-service-proxy --state-dir <另一台设备的私有状态目录> offline --space <同一空间 UUID> --role source --peer <宿主实际监听 IP:端口>

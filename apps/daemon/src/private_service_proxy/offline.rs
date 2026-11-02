@@ -3,7 +3,6 @@
 //! restored from a file, command line, IPC caller or another process.
 use super::Result;
 use crate::offline_resident::{LocalGuard, emit, input};
-use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_identity::offline::OfflineProcess;
 use nestlink_protocol::{offline::management::*, services::private::*};
 use nestlink_sdk::{
@@ -457,11 +456,7 @@ pub(super) async fn run(
         )
         .into());
     }
-    let policy = sdk.network_policy(&args.space).await?;
-    let authority = URL_SAFE_NO_PAD
-        .decode(policy.authority_public_key)?
-        .try_into()
-        .map_err(|_| invalid("network authority key length"))?;
+    let authority = crate::offline_resident::authority(&sdk, &args.space).await?;
     let guard = LocalGuard::new(directory.clone(), original_login)?;
     let mut resident = Resident {
         args,

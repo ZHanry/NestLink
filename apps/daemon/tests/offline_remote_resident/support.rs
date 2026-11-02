@@ -2,7 +2,7 @@ use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_auth::{Secret, VaultKey, random_id};
 use nestlink_identity::{InstallationIdentity, PermitSigner};
 use nestlink_protocol::{
-    Path as NetworkPath, Permission, api::*, network::SpaceRole, offline::management::*,
+    Path as NetworkPath, Permission, api::*, network::SpaceRole, offline::management::*, spaces::*,
 };
 use nestlink_sdk::{DeviceIdentity, Sdk};
 use serde_json::{Value, json};
@@ -11,7 +11,7 @@ use std::{
     path::{Path, PathBuf},
     process::Stdio,
     sync::{
-        Arc, Mutex,
+        Arc, Mutex, OnceLock,
         atomic::{AtomicBool, AtomicUsize, Ordering},
     },
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -359,6 +359,7 @@ pub struct Fixture {
     pub online_expiry: u64,
     pub connection_generation: u64,
     pub lease_sequence: u64,
+    pub policy_revision: u64,
     router: axum::Router,
     address: std::net::SocketAddr,
     server: Option<Server>,
@@ -381,15 +382,11 @@ impl Fixture {
         let host = area.join("host");
         let source_identity = installation(&source)?;
         let host_identity = installation(&host)?;
-        let space = random_id();
+        let pinned_space = Arc::new(OnceLock::new());
         let sessions = [random_id(), random_id()];
         let setup = Arc::new(AtomicBool::new(true));
         let scope = https::Scope {
-            space: space.clone(),
-            devices: [
-                source_identity.device_id.clone(),
-                host_identity.device_id.clone(),
-            ],
+            space: pinned_space.clone(),
             sessions: sessions.clone(),
             setup: setup.clone(),
         };
@@ -466,6 +463,32 @@ impl Fixture {
             )
             .await?;
         }
+        let created = source_sdk.create_space(SpaceCreateRequest { name: "Original resident protected HTTPS space".into() }).await?;
+        let space = created.space_id;
+        pinned_space.set(space.clone()).map_err(|_| io::Error::other("fixture space was already pinned"))?;
+        let invitation = source_sdk.invite_to_space(&space, SpaceInvitationRequest {
+            expected_revision: created.revision,
+            role: SpaceRole::Member,
+            target_account_id: Some(host_sdk.principal().ok_or("host principal")?.account_id.clone()),
+            expires_at_unix_ms: wall()? + 120_000,
+        }).await?;
+        let accepted = host_sdk.accept_space_invitation(&space, &invitation.invitation.invitation_id,
+            SpaceInvitationAcceptance { token: invitation.token }).await?;
+        assert_eq!(accepted.role, SpaceRole::Member);
+        let mut revision = accepted.revision;
+        for (sdk, identity) in [(&source_sdk, &source_identity), (&host_sdk, &host_identity)] {
+            revision = sdk.join_space_device(&space, SpaceDeviceJoin {
+                expected_revision: revision,
+                expected_membership_epoch: 0,
+                installation_id: identity.device_id.clone(),
+            }).await?.revision;
+        }
+        assert!(matches!(host_sdk.network_policy(&space).await,
+            Err(nestlink_sdk::SdkError::Api(status, _)) if status.as_u16() == 403),
+            "the actual host account must retain the original admin-only policy denial");
+        let member_view = host_sdk.space_details(&space).await?.space;
+        assert_eq!(member_view.role, SpaceRole::Member);
+        assert_eq!(member_view.authority_public_key, created.authority_public_key);
         let request = |id| RemoteRequest {
             id,
             controller_device_id: source_identity.device_id.clone(),
@@ -502,20 +525,6 @@ impl Fixture {
             .create_trusted_remote(request(sessions[1].clone()))
             .await?;
         let original = source_sdk.permit(&trusted.id).await?;
-        source_sdk.configure_network_authority(&space, 0).await?;
-        for (revision, identity) in [(1, &source_identity), (2, &host_identity)] {
-            source_sdk
-                .set_network_member(
-                    &space,
-                    &identity.device_id,
-                    NetworkMemberRequest {
-                        expected_policy_revision: revision,
-                        expected_membership_epoch: 0,
-                        role: SpaceRole::Member,
-                    },
-                )
-                .await?;
-        }
         source_sdk
             .set_offline_enabled(
                 &space,
@@ -536,6 +545,7 @@ impl Fixture {
             online_expiry: original.claims().expires_at_unix_ms,
             connection_generation: original.claims().connection_generation,
             lease_sequence: original.claims().lease_sequence,
+            policy_revision: revision,
             router,
             address,
             server: Some(server),
@@ -730,7 +740,7 @@ pub async fn activate(
     let host_nonce =
         host.request(json!({"command":"begin"}), "process").await?["process_nonce"].clone();
     let draft = source.request(json!({"command":"draft","request":{
-        "session_id":fixture.session,"expected_policy_revision":3,"expected_connection_generation":fixture.connection_generation,"expected_lease_sequence":fixture.lease_sequence,
+        "session_id":fixture.session,"expected_policy_revision":fixture.policy_revision,"expected_connection_generation":fixture.connection_generation,"expected_lease_sequence":fixture.lease_sequence,
         "process_nonces":[source_nonce,host_nonce],"operations":["view","file_read"],"direct_transports":["quic","tls"],
         "maximum_bytes":16_777_216,"maximum_file_write_bytes":0,"maximum_connections":6,"expires_at_ms":wall()?+90_000
     }}),"draft").await?;

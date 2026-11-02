@@ -25,6 +25,29 @@ pub(crate) fn empty_command<'de, D: serde::Deserializer<'de>>(
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
 }
+/// Product-space members discover the original authority through their scoped
+/// HTTPS space view. Retain the existing admin-only legacy namespace fallback;
+/// a forbidden member lookup never grants policy access to an ordinary user.
+pub(crate) async fn authority(sdk: &nestlink_sdk::Sdk, space: &str) -> Result<[u8; 32]> {
+    use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+    let encoded = match sdk.space_details(space).await {
+        Ok(details) => {
+            if details.space.space_id != space
+                || details.space.archived
+                || details.space.deployment_id != sdk.health().deployment_id
+            {
+                return Err(invalid("space authority differs from this live authenticated deployment").into());
+            }
+            details.space.authority_public_key
+        }
+        Err(nestlink_sdk::SdkError::Api(status, _)) if status.as_u16() == 403 => {
+            sdk.network_policy(space).await?.authority_public_key
+        }
+        Err(error) => return Err(error.into()),
+    };
+    URL_SAFE_NO_PAD.decode(encoded)?.try_into()
+        .map_err(|_| invalid("network authority key length").into())
+}
 pub(crate) fn emit(event: &str, value: impl Serialize) -> Result<()> {
     let mut output = io::stdout().lock();
     serde_json::to_writer(

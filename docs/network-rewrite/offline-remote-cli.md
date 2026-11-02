@@ -4,6 +4,8 @@
 
 先在普通桌面入口完成设备注册、受信设备批准、允许记住登录，以及本次远控的真实在线批准。关闭该安装的普通守护进程，释放同一用户目录的单实例锁。两个角色均使用各自现有安装目录，以普通用户启动；不能通过重新启动恢复进程 nonce 或消费过的离线包。
 
+普通空间成员通过其已认证的空间详情读取该空间的权威公钥，仍需拥有原设备、原业务批准及真实离线包，空间成员资格不增加业务权限。旧部署管理员配置的独立命名空间保留原管理员策略读取；不会把普通主机账户提升为部署管理员。
+
 ```text
 nestlink-daemon offline-remote --state-dir <本机已有私有目录> --space <空间ID> --session <已批准的远控会话ID> --role host --transport quic --listen <本机明确直连IP>:<端口>
 nestlink-daemon offline-remote --state-dir <本机已有私有目录> --space <空间ID> --session <同一远控会话ID> --role controller --transport quic --peer <主机明确直连IP>:<端口>

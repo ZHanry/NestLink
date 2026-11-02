@@ -9,7 +9,7 @@ use std::{
     path::Path,
     process::Stdio,
     sync::{
-        Arc,
+        Arc, OnceLock,
         atomic::{AtomicBool, Ordering},
     },
     time::{Duration, Instant},
@@ -17,8 +17,7 @@ use std::{
 
 #[derive(Clone)]
 pub(super) struct Scope {
-    pub space: String,
-    pub devices: [String; 2],
+    pub space: Arc<OnceLock<String>>,
     pub sessions: [String; 2],
     pub setup: Arc<AtomicBool>,
 }
@@ -36,6 +35,7 @@ impl Scope {
             .collect::<Vec<_>>();
         let method = request.method();
         let setup = self.setup.load(Ordering::Acquire);
+        let own_space = self.space.get().map(String::as_str);
         let allowed = match (method, path.as_slice()) {
             (&Method::GET, ["api", "v3", "health"])
             | (&Method::POST, ["api", "v3", "health", "proof"])
@@ -44,6 +44,12 @@ impl Scope {
             (&Method::POST, ["api", "v3", "accounts" | "devices" | "remote"])
             | (&Method::POST, ["api", "v3", "devices", "challenge"])
             | (&Method::POST, ["api", "v3", "remote", "trusted"]) => setup,
+            (&Method::POST, ["api", "v3", "network", "spaces"]) => setup && own_space.is_none(),
+            (&Method::GET, ["api", "v3", "network", "spaces", space]) => Some(*space) == own_space,
+            (&Method::POST, ["api", "v3", "network", "spaces", space, "devices" | "invitations"])
+            | (&Method::POST, ["api", "v3", "network", "spaces", space, "invitations", _, "accept"]) => {
+                setup && Some(*space) == own_space
+            }
             (&Method::POST, ["api", "v3", "remote", session, "approval" | "trust"]) => {
                 setup && self.sessions.iter().any(|id| id.as_str() == *session)
             }
@@ -51,15 +57,7 @@ impl Scope {
                 self.sessions.iter().any(|id| id.as_str() == *session)
             }
             (&Method::GET, ["api", "v3", "network", "spaces", space, "policy"]) => {
-                *space == self.space
-            }
-            (&Method::PUT, ["api", "v3", "network", "spaces", space, "authority"]) => {
-                setup && *space == self.space
-            }
-            (&Method::PUT, ["api", "v3", "network", "spaces", space, "members", device]) => {
-                setup
-                    && *space == self.space
-                    && self.devices.iter().any(|id| id.as_str() == *device)
+                Some(*space) == own_space
             }
             (&Method::GET | &Method::PUT, ["api", "v3", "network", "spaces", space, "offline"])
             | (
@@ -73,7 +71,7 @@ impl Scope {
                     "offline",
                     "remote-drafts",
                 ],
-            ) => *space == self.space,
+            ) => Some(*space) == own_space,
             (
                 &Method::GET | &Method::DELETE,
                 [
@@ -100,7 +98,7 @@ impl Scope {
                     bundle,
                     "approval" | "consume",
                 ],
-            ) => *space == self.space && nestlink_protocol::valid_id(bundle),
+            ) => Some(*space) == own_space && nestlink_protocol::valid_id(bundle),
             (
                 &Method::POST,
                 [
@@ -115,7 +113,7 @@ impl Scope {
                     "consume-challenge",
                     "0" | "1",
                 ],
-            ) => *space == self.space && nestlink_protocol::valid_id(bundle),
+            ) => Some(*space) == own_space && nestlink_protocol::valid_id(bundle),
             _ => false,
         };
         if allowed {

@@ -1,7 +1,6 @@
 //! Resident online review/consume and independent offline native data owner.
 //! Authority stays in this process; the desktop uses the existing local IPC.
 use crate::offline_resident::{LocalGuard, Result, emit, input};
-use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_app_core::{
     Limits, NativeOfflineRemote, NativeOfflineSession, NativeOfflineTransport, NativeSessionStatus,
     ShutdownState,
@@ -761,11 +760,7 @@ pub(crate) async fn run(args: OfflineRemoteArgs) -> Result<()> {
     } else {
         sdk.permit(&args.session).await?
     };
-    let policy = sdk.network_policy(&args.space).await?;
-    let authority = URL_SAFE_NO_PAD
-        .decode(policy.authority_public_key)?
-        .try_into()
-        .map_err(|_| invalid("network authority key length"))?;
+    let authority = crate::offline_resident::authority(&sdk, &args.space).await?;
     let guard = LocalGuard::new(directory.clone(), login)?;
     drop(installation);
     let mut resident = Resident {
