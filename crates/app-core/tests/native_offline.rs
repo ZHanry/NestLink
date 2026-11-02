@@ -1,5 +1,6 @@
 //! Real online consume, expired online permit and independent AppCore data routes.
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+use nestlink_app_core::*;
 use nestlink_auth::{Secret, VaultKey, random_id};
 use nestlink_identity::PermitSigner;
 use nestlink_identity::offline::OfflineProcess;
@@ -9,7 +10,6 @@ use nestlink_protocol::{
     network::SpaceRole,
     offline::{OfflineDirectTransport, OfflineRemoteOperation, management::*},
 };
-use nestlink_app_core::*;
 use nestlink_sdk::{DeploymentTrust, DeviceIdentity, Sdk};
 use nestlink_session::{EndpointRole, SessionBinding};
 use std::io;
@@ -97,7 +97,12 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
             id: random_id(),
             controller_device_id: controller.device_id.clone(),
             host_device_id: host.device_id.clone(),
-            permissions: vec![Permission::View as i32, Permission::Input as i32, Permission::FileRead as i32, Permission::FileWrite as i32],
+            permissions: vec![
+                Permission::View as i32,
+                Permission::Input as i32,
+                Permission::FileRead as i32,
+                Permission::FileWrite as i32,
+            ],
             path_mode: "direct_only".into(),
         };
         let pending = controller_sdk.create_remote(request()).await?;
@@ -107,7 +112,12 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
                 &pending,
                 ApprovalChoice {
                     approved: true,
-                    permissions: vec![Permission::View as i32, Permission::Input as i32, Permission::FileRead as i32, Permission::FileWrite as i32],
+                    permissions: vec![
+                        Permission::View as i32,
+                        Permission::Input as i32,
+                        Permission::FileRead as i32,
+                        Permission::FileWrite as i32,
+                    ],
                     paths: vec![Path::Direct as i32],
                 },
             )
@@ -177,7 +187,10 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
                     expected_connection_generation: original.claims().connection_generation,
                     expected_lease_sequence: original.claims().lease_sequence,
                     process_nonces: [source_process.nonce(), host_process.nonce()],
-                    operations: vec![OfflineRemoteOperation::View, OfflineRemoteOperation::FileRead],
+                    operations: vec![
+                        OfflineRemoteOperation::View,
+                        OfflineRemoteOperation::FileRead,
+                    ],
                     direct_transports: vec![
                         OfflineDirectTransport::Quic,
                         OfflineDirectTransport::Tls,
@@ -199,7 +212,10 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
                         expected_connection_generation: original.claims().connection_generation,
                         expected_lease_sequence: original.claims().lease_sequence,
                         process_nonces: [source_process.nonce(), host_process.nonce()],
-                        operations: vec![OfflineRemoteOperation::View, OfflineRemoteOperation::FileRead],
+                        operations: vec![
+                            OfflineRemoteOperation::View,
+                            OfflineRemoteOperation::FileRead
+                        ],
                         direct_transports: vec![OfflineDirectTransport::Quic],
                         maximum_bytes: 1048576,
                         maximum_file_write_bytes: 0,
@@ -277,7 +293,12 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
             policy_revision: c.policy_revision,
             connection_generation: c.connection_generation,
             capability_sha256: c.capability_sha256.as_slice().try_into()?,
-            granted_permissions: vec![Permission::View, Permission::Input, Permission::FileRead, Permission::FileWrite],
+            granted_permissions: vec![
+                Permission::View,
+                Permission::Input,
+                Permission::FileRead,
+                Permission::FileWrite,
+            ],
             supported_capabilities: c.required_capabilities.clone(),
             local_paths: nestlink_policy::PathSet::DIRECT,
             media: None,
@@ -319,8 +340,12 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
         let target = NativeOfflineRemote::new(target, Limits::default())?;
         let listener = target.listen(transport, "127.0.0.1:0".parse()?).await?;
         let peer = listener.address()?;
-        assert!(matches!(target.listen(transport, "127.0.0.1:0".parse()?).await, Err(NativeOfflineError::Active)));
-        let (host_session, controller_session) = tokio::join!(listener.accept(), source.connect(transport, peer));
+        assert!(matches!(
+            target.listen(transport, "127.0.0.1:0".parse()?).await,
+            Err(NativeOfflineError::Active)
+        ));
+        let (host_session, controller_session) =
+            tokio::join!(listener.accept(), source.connect(transport, peer));
         let mut host_session = host_session?;
         let mut controller_session = controller_session?;
         let host_handle = host_session.handle();
@@ -330,47 +355,134 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
             assert_eq!(snapshot.authentication, Authentication::Disconnected);
             assert!(snapshot.server.is_none());
             assert!(snapshot.principal.is_none());
-            let offline = snapshot.native_offline.as_ref().ok_or("offline product scope missing")?;
+            let offline = snapshot
+                .native_offline
+                .as_ref()
+                .ok_or("offline product scope missing")?;
             assert_eq!(offline.transport, transport);
-            assert_eq!(offline.operations, vec![OfflineRemoteOperation::View, OfflineRemoteOperation::FileRead]);
+            assert_eq!(
+                offline.operations,
+                vec![
+                    OfflineRemoteOperation::View,
+                    OfflineRemoteOperation::FileRead
+                ]
+            );
             assert_eq!(offline.budget.connection_attempts, 1);
             assert!(handle.native_input_layout().is_err());
             assert!(handle.native_audio_binding().is_none());
         }
-        let session_binding = host_handle.native_host_session_binding().ok_or("host offline View missing")?;
-        let forbidden = controller_handle.submit(Action::StartNativeSession { relay_node_id: None, request_id: session_binding.request_id.clone() })?.wait().await?;
+        let session_binding = host_handle
+            .native_host_session_binding()
+            .ok_or("host offline View missing")?;
+        let forbidden = controller_handle
+            .submit(Action::StartNativeSession {
+                relay_node_id: None,
+                request_id: session_binding.request_id.clone(),
+            })?
+            .wait()
+            .await?;
         assert_eq!(forbidden.result.status, OperationStatus::Failed);
-        assert_eq!(forbidden.result.failure.ok_or("online action failure missing")?.kind, FailureKind::SignInRequired);
+        assert_eq!(
+            forbidden
+                .result
+                .failure
+                .ok_or("online action failure missing")?
+                .kind,
+            FailureKind::SignInRequired
+        );
         let resets = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        host_handle.publish_native_display_candidates(&session_binding, vec![DisplayDescriptor {
-            source: 0, left: 0, top: 0, width: 64, height: 48, label: "Explicit offline test display".into()
-        }], true)?;
-        host_handle.configure_native_video_stream(&session_binding, 0, 64, 48, 1).await?;
-        host_handle.advertise_native_displays(&session_binding).await?;
+        host_handle.publish_native_display_candidates(
+            &session_binding,
+            vec![DisplayDescriptor {
+                source: 0,
+                left: 0,
+                top: 0,
+                width: 64,
+                height: 48,
+                label: "Explicit offline test display".into(),
+            }],
+            true,
+        )?;
+        host_handle
+            .configure_native_video_stream(&session_binding, 0, 64, 48, 1)
+            .await?;
+        host_handle
+            .advertise_native_displays(&session_binding)
+            .await?;
         let request = tokio::time::timeout(Duration::from_secs(3), async {
             loop {
-                if let Some(request) = host_handle.native_display_switch_request(&session_binding)? { return Ok::<_, io::Error>(request); }
+                if let Some(request) =
+                    host_handle.native_display_switch_request(&session_binding)?
+                {
+                    return Ok::<_, io::Error>(request);
+                }
                 tokio::time::sleep(Duration::from_millis(5)).await;
             }
-        }).await??;
-        let selection = host_handle.commit_native_display_switch(&session_binding, &request).await?;
+        })
+        .await??;
+        let selection = host_handle
+            .commit_native_display_switch(&session_binding, &request)
+            .await?;
         tokio::time::timeout(Duration::from_secs(3), async {
             loop {
-                if controller_handle.native_displays(&session_binding)?.selected.as_ref() == Some(&selection) { return Ok::<_, io::Error>(()); }
+                if controller_handle
+                    .native_displays(&session_binding)?
+                    .selected
+                    .as_ref()
+                    == Some(&selection)
+                {
+                    return Ok::<_, io::Error>(());
+                }
                 tokio::time::sleep(Duration::from_millis(5)).await;
             }
-        }).await??;
-        let capture = host_handle.attach_native_video_capture(&session_binding, 1, Capture { resets: resets.clone(), emitted: false }, nestlink_remote::video::Display {
-            source: 0, logical: nestlink_remote::input::InputLayout { left: 0, top: 0, width: 64, height: 48 }
-        })?;
+        })
+        .await??;
+        let capture = host_handle.attach_native_video_capture(
+            &session_binding,
+            1,
+            Capture {
+                resets: resets.clone(),
+                emitted: false,
+            },
+            nestlink_remote::video::Display {
+                source: 0,
+                logical: nestlink_remote::input::InputLayout {
+                    left: 0,
+                    top: 0,
+                    width: 64,
+                    height: 48,
+                },
+            },
+        )?;
         let raw = capture.poll()?.ok_or("actual capture frame missing")?;
         let pixels = raw.frame.pixels.clone();
         drop(raw);
-        let pts = host_handle.native_video_capture_pts(&session_binding, std::time::Instant::now())?;
+        let pts =
+            host_handle.native_video_capture_pts(&session_binding, std::time::Instant::now())?;
         let packet = tokio::task::spawn_blocking(move || {
-            nestlink_media_codec::Vp8Encoder::new(nestlink_media_codec::VideoConfig { width: 64, height: 48, fps: 30, bitrate_kbps: 1000 })?.encode(&pixels, pts, true)
-        }).await??;
-        host_handle.send_native_video_frame(&session_binding, NativeVideoBinding { source: 0, width: 64, height: 48, layout_epoch: 1 }, pts, packet.keyframe, packet.data).await?;
+            nestlink_media_codec::Vp8Encoder::new(nestlink_media_codec::VideoConfig {
+                width: 64,
+                height: 48,
+                fps: 30,
+                bitrate_kbps: 1000,
+            })?
+            .encode(&pixels, pts, true)
+        })
+        .await??;
+        host_handle
+            .send_native_video_frame(
+                &session_binding,
+                NativeVideoBinding {
+                    source: 0,
+                    width: 64,
+                    height: 48,
+                    layout_epoch: 1,
+                },
+                pts,
+                packet.keyframe,
+                packet.data,
+            )
+            .await?;
         tokio::time::timeout(Duration::from_secs(3), async {
             loop {
                 if let Some(frame) = controller_handle.poll_native_video()? {
@@ -381,27 +493,63 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
                 }
                 tokio::time::sleep(Duration::from_millis(5)).await;
             }
-        }).await??;
+        })
+        .await??;
         let temporary_parent = std::env::temp_dir().canonicalize()?;
         let directory = temporary_parent.join(format!("nestlink-offline-core-{}", random_id()));
         nestlink_platform_security::new_private_directory(&directory)?;
         let bytes: Vec<u8> = (0..262_144).map(|index| (index % 251) as u8).collect();
         std::fs::write(directory.join("source.bin"), &bytes)?;
         let root_id = random_id();
-        let (root, _root_consent) = nestlink_platform_files::ApprovedReadRoot::open(&root_id, &directory, bytes.len() as u64)?;
-        host_handle.native_host_start_file_read(&session_binding, 1, nestlink_platform_files::FileRoots::new(vec![root])?).await?;
-        assert_eq!(controller_handle.native_file_access(&session_binding, 1)?, NativeFileAccess { is_host: false, read: true, write: false });
-        assert!(controller_handle.native_file_write_roots(&session_binding, 1).await.is_err());
+        let (root, _root_consent) = nestlink_platform_files::ApprovedReadRoot::open(
+            &root_id,
+            &directory,
+            bytes.len() as u64,
+        )?;
+        host_handle
+            .native_host_start_file_read(
+                &session_binding,
+                1,
+                nestlink_platform_files::FileRoots::new(vec![root])?,
+            )
+            .await?;
+        assert_eq!(
+            controller_handle.native_file_access(&session_binding, 1)?,
+            NativeFileAccess {
+                is_host: false,
+                read: true,
+                write: false
+            }
+        );
+        assert!(
+            controller_handle
+                .native_file_write_roots(&session_binding, 1)
+                .await
+                .is_err()
+        );
         let output = directory.join("download");
-        let (destination, _destination_consent) = nestlink_platform_files::download::LocalDownloadSelection::new(&output, "received.bin", bytes.len() as u64)?;
-        let task = controller_handle.native_download(&session_binding, 1, nestlink_sdk::files::NativeDownloadRequest::new(&root_id, "source.bin")?, destination)?;
+        let (destination, _destination_consent) =
+            nestlink_platform_files::download::LocalDownloadSelection::new(
+                &output,
+                "received.bin",
+                bytes.len() as u64,
+            )?;
+        let task = controller_handle.native_download(
+            &session_binding,
+            1,
+            nestlink_sdk::files::NativeDownloadRequest::new(&root_id, "source.bin")?,
+            destination,
+        )?;
         let downloaded = tokio::time::timeout(Duration::from_secs(5), task.wait_finished()).await?;
         assert_eq!(downloaded.phase, NativeFileTaskPhase::Completed);
         assert_eq!(downloaded.confirmed_bytes, bytes.len() as u64);
         assert_eq!(std::fs::read(output.join("received.bin"))?, bytes);
         assert!(source.budget()?.remaining_bytes < 1048576 - 262144);
         if transport == NativeOfflineTransport::Quic {
-            let stop = controller_handle.submit(Action::StopNativeSession { request_id: session_binding.request_id.clone(), connection_generation: session_binding.connection_generation })?;
+            let stop = controller_handle.submit(Action::StopNativeSession {
+                request_id: session_binding.request_id.clone(),
+                connection_generation: session_binding.connection_generation,
+            })?;
             let completed = tokio::time::timeout(Duration::from_secs(5), stop.wait()).await??;
             assert_eq!(completed.result.status, OperationStatus::Succeeded);
         } else {
@@ -431,10 +579,13 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
         drop(host_handle);
         drop(controller_handle);
         let resolved = directory.canonicalize()?;
-        if resolved.parent() != Some(temporary_parent.as_path()) { return Err("test cleanup escaped temporary parent".into()); }
+        if resolved.parent() != Some(temporary_parent.as_path()) {
+            return Err("test cleanup escaped temporary parent".into());
+        }
         std::fs::remove_dir_all(resolved)?;
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
-    }).await?
+    })
+    .await?
 }
 
 struct Capture {
@@ -442,16 +593,36 @@ struct Capture {
     emitted: bool,
 }
 impl nestlink_remote::video::CaptureDevice for Capture {
-    fn check(&mut self) -> io::Result<()> { Ok(()) }
-    fn poll_frame(&mut self) -> io::Result<Option<nestlink_remote::video::RawFrame>> {
-        if std::mem::replace(&mut self.emitted, true) { return Ok(None); }
-        Ok(Some(nestlink_remote::video::RawFrame { source: 0, width: 64, height: 48, captured_at: std::time::Instant::now(), pixels: [0, 255, 0, 255].repeat(64 * 48) }))
+    fn check(&mut self) -> io::Result<()> {
+        Ok(())
     }
-    fn reset(&mut self) -> io::Result<()> { self.resets.fetch_add(1, std::sync::atomic::Ordering::SeqCst); Ok(()) }
+    fn poll_frame(&mut self) -> io::Result<Option<nestlink_remote::video::RawFrame>> {
+        if std::mem::replace(&mut self.emitted, true) {
+            return Ok(None);
+        }
+        Ok(Some(nestlink_remote::video::RawFrame {
+            source: 0,
+            width: 64,
+            height: 48,
+            captured_at: std::time::Instant::now(),
+            pixels: [0, 255, 0, 255].repeat(64 * 48),
+        }))
+    }
+    fn reset(&mut self) -> io::Result<()> {
+        self.resets
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        Ok(())
+    }
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-async fn independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry() -> Result { exercise(NativeOfflineTransport::Quic).await }
+async fn independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry()
+-> Result {
+    exercise(NativeOfflineTransport::Quic).await
+}
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-async fn independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry() -> Result { exercise(NativeOfflineTransport::Tls).await }
+async fn independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry()
+-> Result {
+    exercise(NativeOfflineTransport::Tls).await
+}

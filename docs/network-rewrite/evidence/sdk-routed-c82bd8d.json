@@ -499,7 +499,7 @@
                         "The full workflow failed; this is scoped positive evidence, not full-workspace or release acceptance.",
                         "AppCore-dependent scopes and full check/test compilation stopped on native_media_provider.rs:130 assigning a u16 canonical version to a u32 field. Parent reports the later source fixes this; this old-source failure remains retained.",
                         "First-party formatting also failed.",
-                        "The dependencies job failed while installing cargo-deny 0.20.2 on a crates.io HTTP/2 fetch, before the audit. Only that job was requested for retry after the run completed.",
+                        "The original dependencies job failed while installing cargo-deny 0.20.2 on a crates.io HTTP/2 fetch, before the audit. Its isolated attempt-2 retry, job 125131265782, succeeded, including both the locked product dependency graph and independent browser fixture graph audits. The downloaded retry log SHA-256 is eeba4f1cec71a9285a8536c85efb7450f8fe16f916bef321b3ce1375cc63ca64. The original full run remains failed.",
                         "No physical NAT, GPU, mobile or release artifact acceptance is claimed."
                     ],
     "highlighted_regressions":  [

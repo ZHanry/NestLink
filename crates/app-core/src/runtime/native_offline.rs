@@ -96,7 +96,11 @@ impl NativeOfflineRemote {
             remaining_bytes: value.remaining_bytes,
             remaining_file_write_bytes: value.remaining_file_write_bytes,
             connection_attempts: value.connection_attempts,
-            remaining_lifetime_ms: value.remaining_lifetime.as_millis().try_into().unwrap_or(u64::MAX),
+            remaining_lifetime_ms: value
+                .remaining_lifetime
+                .as_millis()
+                .try_into()
+                .unwrap_or(u64::MAX),
             stopped: value.stopped,
         })
     }
@@ -113,8 +117,19 @@ impl NativeOfflineRemote {
         Ok(self.0.sdk.synchronize_online().await?)
     }
     fn pending(&self) -> Result<(Pending, OwnedSemaphorePermit), NativeOfflineError> {
-        let permit = self.0.active.clone().try_acquire_owned().map_err(|_| NativeOfflineError::Active)?;
-        Ok((Pending { remote: self.clone(), armed: true }, permit))
+        let permit = self
+            .0
+            .active
+            .clone()
+            .try_acquire_owned()
+            .map_err(|_| NativeOfflineError::Active)?;
+        Ok((
+            Pending {
+                remote: self.clone(),
+                armed: true,
+            },
+            permit,
+        ))
     }
     pub async fn listen(
         &self,
@@ -126,7 +141,12 @@ impl NativeOfflineRemote {
             NativeOfflineTransport::Quic => Listener::Quic(self.0.sdk.listen(address)?),
             NativeOfflineTransport::Tls => Listener::Tls(self.0.sdk.listen_tls(address).await?),
         };
-        Ok(NativeOfflineListener { listener, transport, pending, permit })
+        Ok(NativeOfflineListener {
+            listener,
+            transport,
+            pending,
+            permit,
+        })
     }
     pub async fn connect(
         &self,
@@ -139,7 +159,8 @@ impl NativeOfflineRemote {
             NativeOfflineTransport::Quic => self.0.sdk.connect(peer, lifecycle).await?,
             NativeOfflineTransport::Tls => self.0.sdk.connect_tls(peer, lifecycle).await?,
         };
-        let session = NativeOfflineSession::attach(self.clone(), runtime, transport, permit).await?;
+        let session =
+            NativeOfflineSession::attach(self.clone(), runtime, transport, permit).await?;
         pending.armed = false;
         Ok(session)
     }
@@ -153,13 +174,20 @@ impl NativeOfflineListener {
         })
     }
     pub async fn accept(self) -> Result<NativeOfflineSession, NativeOfflineError> {
-        let Self { listener, transport, mut pending, permit } = self;
+        let Self {
+            listener,
+            transport,
+            mut pending,
+            permit,
+        } = self;
         let lifecycle = nestlink_remote::SessionLifecycle::new(pending.remote.0.stop.subscribe());
         let runtime = match listener {
             Listener::Quic(listener) => listener.accept(lifecycle).await?,
             Listener::Tls(listener) => listener.accept(lifecycle).await?,
         };
-        let session = NativeOfflineSession::attach(pending.remote.clone(), runtime, transport, permit).await?;
+        let session =
+            NativeOfflineSession::attach(pending.remote.clone(), runtime, transport, permit)
+                .await?;
         pending.armed = false;
         Ok(session)
     }
@@ -195,11 +223,21 @@ struct Routes {
     input: Option<Arc<NativeInputRoute>>,
 }
 impl Routes {
-    fn attach(&mut self, shared: &Arc<Shared>, channels: &mut ChannelRuntime, key: &NativeSessionKey) -> io::Result<()> {
+    fn attach(
+        &mut self,
+        shared: &Arc<Shared>,
+        channels: &mut ChannelRuntime,
+        key: &NativeSessionKey,
+    ) -> io::Result<()> {
         let generation = shared.generation.load(Ordering::Acquire);
         let timing = SessionMediaTiming::default();
         if key.controller_view_authorized {
-            let receiver = VideoReceiver::attach_advertised_channel_timed(channels, key.connection_generation, timing.playout.clone()).map_err(io::Error::other)?;
+            let receiver = VideoReceiver::attach_advertised_channel_timed(
+                channels,
+                key.connection_generation,
+                timing.playout.clone(),
+            )
+            .map_err(io::Error::other)?;
             shared.set_native_video_presentation(Some(Arc::new(NativeVideoPresentationRoute {
                 request_id: key.request_id.clone(),
                 connection_generation: key.connection_generation,
@@ -209,22 +247,37 @@ impl Routes {
             self.video = Some(receiver);
         }
         if key.host_view_authorized {
-            shared.set_native_video_route(Some(NativeVideoRoute::attach(channels, key, timing.clone())));
+            shared.set_native_video_route(Some(NativeVideoRoute::attach(
+                channels,
+                key,
+                timing.clone(),
+            )));
         }
         if key.audio_authorized {
-            self.audio = Some(NativeAudioRoute::attach(shared, channels, key, generation, timing).map_err(io::Error::other)?);
+            self.audio = Some(
+                NativeAudioRoute::attach(shared, channels, key, generation, timing)
+                    .map_err(io::Error::other)?,
+            );
             shared.set_native_audio_route(self.audio.clone());
         }
         if key.clipboard_read_authorized || key.clipboard_write_authorized {
-            self.clipboard = Some(NativeClipboardRoute::attach(shared, channels, key, generation).map_err(io::Error::other)?);
+            self.clipboard = Some(
+                NativeClipboardRoute::attach(shared, channels, key, generation)
+                    .map_err(io::Error::other)?,
+            );
             shared.set_native_clipboard_route(self.clipboard.clone());
         }
         if key.file_read_authorized || key.file_write_authorized {
-            self.files = Some(NativeFilesRoute::attach(shared, channels, key, generation).map_err(io::Error::other)?);
+            self.files = Some(
+                NativeFilesRoute::attach(shared, channels, key, generation)
+                    .map_err(io::Error::other)?,
+            );
             shared.set_native_files_route(self.files.clone());
         }
         if key.input_authorized {
-            self.input = Some(NativeInputRoute::attach(channels, key, generation).map_err(io::Error::other)?);
+            self.input = Some(
+                NativeInputRoute::attach(channels, key, generation).map_err(io::Error::other)?,
+            );
             shared.set_native_input_route(self.input.clone());
         }
         if key.host_view_authorized || key.controller_view_authorized {
@@ -248,27 +301,42 @@ impl Routes {
             let outcome = route.shutdown(reason).await;
             cleanup_failed |= outcome.cleanup_failed;
             worker_failed |= outcome.worker_failed;
-            if outcome.owner_pending { shared.retain_native_audio_owner(route); }
+            if outcome.owner_pending {
+                shared.retain_native_audio_owner(route);
+            }
         }
         if let Some(route) = self.clipboard {
             let outcome = route.shutdown(reason).await;
             cleanup_failed |= outcome.cleanup_failed;
             worker_failed |= outcome.worker_failed;
-            if outcome.owner_pending { shared.retain_native_clipboard_owner(route); }
+            if outcome.owner_pending {
+                shared.retain_native_clipboard_owner(route);
+            }
         }
         if let Some(route) = self.files {
             let outcome = route.shutdown(reason).await;
             cleanup_failed |= outcome.cleanup_failed;
             worker_failed |= outcome.worker_failed;
-            if outcome.owner_pending { shared.retain_native_files_owner(route); }
+            if outcome.owner_pending {
+                shared.retain_native_files_owner(route);
+            }
         }
-        if let Some(route) = self.input { cleanup_failed |= route.shutdown().await.is_err(); }
+        if let Some(route) = self.input {
+            cleanup_failed |= route.shutdown().await.is_err();
+        }
         if let Some(mut receiver) = self.video {
             let (cleanup, worker) = tokio::task::spawn_blocking(move || {
                 let result = receiver.shutdown(reason);
                 let status = receiver.monitor().status();
-                (!matches!(result, Ok(nestlink_media_session::ShutdownReport::Joined)) || status.cleanup_timed_out || !status.finished, status.error.is_some())
-            }).await.unwrap_or((true, true));
+                (
+                    !matches!(result, Ok(nestlink_media_session::ShutdownReport::Joined))
+                        || status.cleanup_timed_out
+                        || !status.finished,
+                    status.error.is_some(),
+                )
+            })
+            .await
+            .unwrap_or((true, true));
             cleanup_failed |= cleanup;
             worker_failed |= worker;
         }
@@ -288,14 +356,22 @@ impl Routes {
 }
 
 impl NativeOfflineSession {
-    async fn attach(remote: NativeOfflineRemote, mut runtime: OfflineRemoteRuntime, transport: NativeOfflineTransport, permit: OwnedSemaphorePermit) -> Result<Self, NativeOfflineError> {
+    async fn attach(
+        remote: NativeOfflineRemote,
+        mut runtime: OfflineRemoteRuntime,
+        transport: NativeOfflineTransport,
+        permit: OwnedSemaphorePermit,
+    ) -> Result<Self, NativeOfflineError> {
         let scope = remote.binding()?;
         let initial_budget = remote.budget()?;
         let key = key(&scope);
         let shared = Shared::new(remote.0.limits);
         let mut routes = Routes::default();
         if let Err(error) = routes.attach(&shared, runtime.channels(), &key) {
-            let _ = runtime.channels().lease_control().stop(StopReason::PlatformChanged);
+            let _ = runtime
+                .channels()
+                .lease_control()
+                .stop(StopReason::PlatformChanged);
             let _ = runtime.wait_stopped().await;
             routes.shutdown(&shared, StopReason::PlatformChanged).await;
             return Err(error.into());
@@ -317,7 +393,12 @@ impl NativeOfflineSession {
         let (snapshots, watching) = watch::channel(Arc::new(snapshot.clone()));
         let (commands, mut requests) = mpsc::channel::<Envelope>(remote.0.limits.operations);
         let (controls, _) = mpsc::channel(1);
-        let data = CoreHandle { commands, controls, shared: shared.clone(), view: watching };
+        let data = CoreHandle {
+            commands,
+            controls,
+            shared: shared.clone(),
+            view: watching,
+        };
         let initial = NativeOfflineView {
             space_id: scope.space_id,
             bundle_id: scope.bundle_id,
@@ -388,7 +469,9 @@ impl NativeOfflineSession {
                     }
                 }
             };
-            let reason = stopped.as_ref().map_or(StopReason::PlatformChanged, |report| report.reason);
+            let reason = stopped
+                .as_ref()
+                .map_or(StopReason::PlatformChanged, |report| report.reason);
             let (cleanup_failed, worker_failed) = routes.shutdown(&shared, reason).await;
             // A timed-out platform join keeps its original owner in Shared.
             // Hold the single-lifecycle permit until that actual reaper ends;
@@ -399,42 +482,91 @@ impl NativeOfflineSession {
             {
                 tokio::time::sleep(Duration::from_millis(25)).await;
             }
-            let transport_failed = stopped.as_ref().map_or(true, |report| map_report_cleanup(report.cleanup) == NativeSessionCleanup::Failed);
-            let cleanup = if cleanup_failed || transport_failed { NativeSessionCleanup::Failed } else { NativeSessionCleanup::Succeeded };
-            let failure = (cleanup == NativeSessionCleanup::Failed || worker_failed).then(|| Failure::local(FailureKind::NativeSessionUnavailable));
-            let report = NativeOfflineStop { reason: map_stop_reason(reason), cleanup, failure: failure.clone() };
+            let transport_failed = stopped.as_ref().map_or(true, |report| {
+                map_report_cleanup(report.cleanup) == NativeSessionCleanup::Failed
+            });
+            let cleanup = if cleanup_failed || transport_failed {
+                NativeSessionCleanup::Failed
+            } else {
+                NativeSessionCleanup::Succeeded
+            };
+            let failure = (cleanup == NativeSessionCleanup::Failed || worker_failed)
+                .then(|| Failure::local(FailureKind::NativeSessionUnavailable));
+            let report = NativeOfflineStop {
+                reason: map_stop_reason(reason),
+                cleanup,
+                failure: failure.clone(),
+            };
             if let Some(session) = snapshot.native_session.data.as_ref() {
                 let mut session = session.as_ref().clone();
-                session.status = if failure.is_some() { NativeSessionStatus::Failed } else { NativeSessionStatus::Stopped };
+                session.status = if failure.is_some() {
+                    NativeSessionStatus::Failed
+                } else {
+                    NativeSessionStatus::Stopped
+                };
                 session.host_view_authorized = false;
                 session.stop_reason = Some(report.reason);
                 session.cleanup = Some(cleanup);
                 session.failure = failure.clone();
-                session.stop_effects = stopped.as_ref().ok().map(|report| map_report_effects(report.effects.cancel_channels, report.effects.release_inputs, report.effects.discard_queues, report.effects.close_allocations));
+                session.stop_effects = stopped.as_ref().ok().map(|report| {
+                    map_report_effects(
+                        report.effects.cancel_channels,
+                        report.effects.release_inputs,
+                        report.effects.discard_queues,
+                        report.effects.close_allocations,
+                    )
+                });
                 snapshot.native_session.replace(session);
             }
             snapshot.lifecycle = Lifecycle::Stopped;
             snapshot.revision += 1;
-            view.status = if failure.is_some() { NativeSessionStatus::Failed } else { NativeSessionStatus::Stopped };
-            if let Ok(budget) = original.budget() { view.budget = budget; }
+            view.status = if failure.is_some() {
+                NativeSessionStatus::Failed
+            } else {
+                NativeSessionStatus::Stopped
+            };
+            if let Ok(budget) = original.budget() {
+                view.budget = budget;
+            }
             view.stop_reason = Some(report.reason);
             view.cleanup = Some(cleanup);
             view.failure = failure;
             for request in stop_requests {
-                complete(&shared, &mut snapshot, request,
-                    if report.failure.is_some() { OperationStatus::Failed } else { OperationStatus::Succeeded },
-                    report.failure.clone(), original.0.limits.history);
+                complete(
+                    &shared,
+                    &mut snapshot,
+                    request,
+                    if report.failure.is_some() {
+                        OperationStatus::Failed
+                    } else {
+                        OperationStatus::Succeeded
+                    },
+                    report.failure.clone(),
+                    original.0.limits.history,
+                );
             }
             snapshot.native_offline = Some(view.clone());
             snapshots.send_replace(Arc::new(snapshot));
             views.send_replace(Arc::new(view));
             finished_sender.send_replace(Some(report));
         });
-        Ok(Self { remote, data, view, finished, task: Some(task) })
+        Ok(Self {
+            remote,
+            data,
+            view,
+            finished,
+            task: Some(task),
+        })
     }
-    pub fn handle(&self) -> CoreHandle { self.data.clone() }
-    pub fn view(&self) -> Arc<NativeOfflineView> { self.view.borrow().clone() }
-    pub fn observe(&self) -> watch::Receiver<Arc<NativeOfflineView>> { self.view.clone() }
+    pub fn handle(&self) -> CoreHandle {
+        self.data.clone()
+    }
+    pub fn view(&self) -> Arc<NativeOfflineView> {
+        self.view.borrow().clone()
+    }
+    pub fn observe(&self) -> watch::Receiver<Arc<NativeOfflineView>> {
+        self.view.clone()
+    }
     pub fn request_stop(&self) {
         self.data.shared.closing.store(true, Ordering::Release);
         self.remote.stop();
@@ -443,10 +575,14 @@ impl NativeOfflineSession {
         loop {
             let report = self.finished.borrow().clone();
             if let Some(report) = report {
-                if let Some(task) = self.task.take() { task.await.map_err(io::Error::other)?; }
+                if let Some(task) = self.task.take() {
+                    task.await.map_err(io::Error::other)?;
+                }
                 return Ok(report);
             }
-            self.finished.changed().await.map_err(|_| io::Error::other("offline product worker ended without a cleanup receipt"))?;
+            self.finished.changed().await.map_err(|_| {
+                io::Error::other("offline product worker ended without a cleanup receipt")
+            })?;
         }
     }
     pub async fn shutdown(&mut self, timeout: Duration) -> ShutdownState {
@@ -454,23 +590,47 @@ impl NativeOfflineSession {
         match tokio::time::timeout(timeout, self.wait_stopped()).await {
             Err(_) => ShutdownState::Pending,
             Ok(Err(_)) => ShutdownState::Failed,
-            Ok(Ok(report)) if report.cleanup == NativeSessionCleanup::Failed || report.failure.is_some() => ShutdownState::Failed,
+            Ok(Ok(report))
+                if report.cleanup == NativeSessionCleanup::Failed || report.failure.is_some() =>
+            {
+                ShutdownState::Failed
+            }
             Ok(Ok(_)) => ShutdownState::Complete,
         }
     }
 }
 
-fn complete(shared: &Shared, snapshot: &mut Snapshot, request: Envelope, status: OperationStatus, failure: Option<Failure>, history: usize) {
+fn complete(
+    shared: &Shared,
+    snapshot: &mut Snapshot,
+    request: Envelope,
+    status: OperationStatus,
+    failure: Option<Failure>,
+    history: usize,
+) {
     let result = request.result(status, RemoteEffect::None, failure, PublicOutput::None);
     snapshot.event_sequence += 1;
-    snapshot.events.push(Event { sequence: snapshot.event_sequence, result: result.clone() });
+    snapshot.events.push(Event {
+        sequence: snapshot.event_sequence,
+        result: result.clone(),
+    });
     snapshot.operations.push(result.clone());
-    if snapshot.events.len() > history { snapshot.events.remove(0); }
-    if snapshot.operations.len() > history { snapshot.operations.remove(0); }
-    let _ = request.reply.send(Completion { result, sensitive: None, generation: shared.generation.clone() });
+    if snapshot.events.len() > history {
+        snapshot.events.remove(0);
+    }
+    if snapshot.operations.len() > history {
+        snapshot.operations.remove(0);
+    }
+    let _ = request.reply.send(Completion {
+        result,
+        sensitive: None,
+        generation: shared.generation.clone(),
+    });
 }
 impl Drop for NativeOfflineSession {
     fn drop(&mut self) {
-        if self.finished.borrow().is_none() { self.request_stop(); }
+        if self.finished.borrow().is_none() {
+            self.request_stop();
+        }
     }
 }
