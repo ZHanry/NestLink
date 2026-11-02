@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "scope": "Exact-source Linux offline AppCore, strict resident commands and desktop regressions; original process HTTPS restoration failure retained separately",
+  "source_revision": "6cf496fcfee0241673521b051e37019c2c9f86e3",
+  "workflow": ".github/workflows/rust-core.yml",
+  "run_id": 41418876665,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41418876665",
+  "build_provenance": "The exact-source GitHub-hosted ubuntu-24.04 core job compiled the original offline AppCore, daemon unit, desktop and resident integration targets.",
+  "execution_provenance": "Actual Linux Actions execution passed both AppCore QUIC/TLS cases and all commands, guard and desktop cases in the independent offline step. The separately executed real resident integration compiled and failed all four cases before ready because protected recovery rejects its HTTP management origin.",
+  "targets": [
+    {
+      "target": "x86_64-unknown-linux-gnu",
+      "runner": "ubuntu-24.04",
+      "job_id": 125189337170,
+      "offline_step_conclusion": "success",
+      "app_core": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 41.48, "strict_clippy": "passed"},
+      "remote_daemon_unit": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 0.0},
+      "private_daemon_unit": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 2.06},
+      "entry_dispatch_unit": {"passed": 1, "failed": 0, "ignored": 0},
+      "desktop_layout": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 0.03},
+      "resident_step_conclusion": "failure",
+      "resident_process": {"passed": 0, "failed": 4, "ignored": 0, "elapsed_seconds": 7.56},
+      "artifact_id": 13129991682,
+      "artifact_digest_reported_by_github": "sha256:917df19916b57c8421263422b34e83f0fbfc48f024925b7a0eb7adbdd155895c",
+      "downloaded_logs": [
+        {"name": "nestlink-native-offline-tests.log", "bytes": 120440, "sha256": "eb3fbc9cf1d66cc0e53a5686dfe830c664a200c01045943bc5b13172fa72fe3a"},
+        {"name": "nestlink-native-offline-resident-tests.log", "bytes": 15789, "sha256": "b3704c7ad243dffa2b814708c9762979e1f9b594b2316dd7fa15bc968725e43f"}
+      ]
+    }
+  ],
+  "confirmed_repairs": [
+    "45d2d2c and 7d3afef strict empty command decoding and expanded authority-injection negatives passed through the actual daemon unit targets.",
+    "The actual private Secret Service readiness, key store/readback and original PAM environment fixture did not time out in any of the four resident cases on this run."
+  ],
+  "resident_failure": "NestLink user daemon stopped: sign in with protected login recovery before offline preparation",
+  "follow_up_implementation": "f4778ed reuses the frozen real public-PKI cloudflared fixture with cryptographically random credentials, scoped original routes, secure cookies and unchanged SDK trust. Its own exact-source hosted run is required before acceptance.",
+  "verification": "GitHub artifact digests and downloaded log fingerprints are distinct. No producer per-file hash inventory was supplied or claimed.",
+  "limitations": [
+    "This receipt currently covers Linux only. Windows source-matched results require their own completed step and artifact.",
+    "No real resident approval/consume, IPC, capture, files or management terminal-fence success is inferred from compilation or unit success.",
+    "No physical dual-device platform, advanced media, public NAT or mobile target acceptance is claimed."
+  ]
+}
