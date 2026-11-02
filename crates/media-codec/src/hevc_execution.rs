@@ -77,7 +77,7 @@ impl HevcExecutionTarget {
     pub fn driver_version(self) -> u64 {
         self.driver_version
     }
-    fn check_owner(self, owner: OwnerObservation) -> io::Result<()> {
+    pub(crate) fn check_owner(self, owner: OwnerObservation) -> io::Result<()> {
         if owner.resource_id == [0; 16]
             || owner.adapter_luid != Some(self.adapter_luid)
             || owner.driver_version != Some(self.driver_version)

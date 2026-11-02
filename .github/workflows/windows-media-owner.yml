@@ -99,6 +99,16 @@ jobs:
         run: |
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log"
           exit $LASTEXITCODE
+      - name: Verify exact provider, hardware target conversion and compressed IPC boundaries
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-session --lib hevc_negotiated_format:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/hevc-target-tests.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --lib compressed_video::tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/compressed-context-tests.log"
+          exit $LASTEXITCODE
       - name: Retain exact-source evidence including failures
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

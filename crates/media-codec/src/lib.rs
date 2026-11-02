@@ -24,6 +24,7 @@ mod windows_gpu_presenter;
 #[cfg(windows)]
 pub use windows_gpu_presenter::{
     GpuDecodeStep, GpuDecodedPicture, GpuH264Presenter, GpuVideoSurface, gpu_qpc,
+    GpuHevcPresenter, HevcGpuDecodeStep, HevcGpuSubmissionReceipt,
 };
 #[cfg(not(windows))]
 pub fn gpu_qpc() -> std::io::Result<(u64, u64)> {

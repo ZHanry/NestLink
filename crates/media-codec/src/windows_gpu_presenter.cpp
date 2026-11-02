@@ -69,6 +69,7 @@ struct Presenter;
 HRESULT black(Presenter& p);
 std::atomic<bool> nl_gpu_probe_owner_reserved{false};
 struct Presenter {
+    bool hevc=false;
     bool probe_owner_reserved=false; bool checked_shutdown=false;
     GUID observation_id{}; bool observation_initialized=false;
     bool probe_color_enabled=false; std::array<uint8_t,4> probe_expected{}; uint32_t probe_tolerance=0;
@@ -211,7 +212,7 @@ HRESULT configure(Presenter& p, UINT fps, UINT kbps) {
     UINT token=0;
     hr=MFCreateDXGIDeviceManager(&token,&p.manager); if (FAILED(hr)) return hr;
     hr=p.manager->ResetDevice(p.device.Get(),token); if (FAILED(hr)) return hr;
-    MFT_REGISTER_TYPE_INFO input{MFMediaType_Video,MFVideoFormat_H264};
+    MFT_REGISTER_TYPE_INFO input{MFMediaType_Video,p.hevc?MFVideoFormat_HEVC:MFVideoFormat_H264};
     MFT_REGISTER_TYPE_INFO output{MFMediaType_Video,MFVideoFormat_NV12};
     IMFActivate** choices=nullptr; UINT count=0;
     trace(p.surface,"decoder_enumerate_begin");
@@ -235,7 +236,7 @@ HRESULT configure(Presenter& p, UINT fps, UINT kbps) {
     ComPtr<IMFMediaType> type;
     hr=MFCreateMediaType(&type); if (FAILED(hr)) return hr;
     type->SetGUID(MF_MT_MAJOR_TYPE,MFMediaType_Video);
-    type->SetGUID(MF_MT_SUBTYPE,MFVideoFormat_H264);
+    type->SetGUID(MF_MT_SUBTYPE,p.hevc?MFVideoFormat_HEVC:MFVideoFormat_H264);
     type->SetUINT32(MF_MT_INTERLACE_MODE,MFVideoInterlace_Progressive);
     MFSetAttributeSize(type.Get(),MF_MT_FRAME_SIZE,p.width,p.height);
     MFSetAttributeRatio(type.Get(),MF_MT_FRAME_RATE,fps,1);
@@ -508,7 +509,7 @@ extern "C" int32_t nl_gpu_probe_surface(uint32_t width,uint32_t height,void** re
     return S_OK;
 }
 extern "C" void nl_gpu_surface_release(void* handle) noexcept { release(static_cast<Surface*>(handle)); }
-extern "C" int32_t nl_gpu_open(void* surface, uint32_t width, uint32_t height, uint32_t fps, uint32_t kbps, void** result) noexcept {
+static int32_t open_presenter(void* surface, uint32_t width, uint32_t height, uint32_t fps, uint32_t kbps, bool hevc, void** result) noexcept {
     if (!result) return E_POINTER; *result=nullptr;
     if(kbps<64 || kbps>100000)return E_INVALIDARG;
     auto* s=static_cast<Surface*>(surface);
@@ -522,7 +523,7 @@ extern "C" int32_t nl_gpu_open(void* surface, uint32_t width, uint32_t height, u
     }
     std::unique_ptr<Presenter> p(new(std::nothrow) Presenter());
     if(!p) { if(probe_reserved)nl_gpu_probe_owner_reserved.store(false);return E_OUTOFMEMORY; }
-    p->probe_owner_reserved=probe_reserved;
+    p->probe_owner_reserved=probe_reserved;p->hevc=hevc;
     ++s->references; p->surface=s; p->width=width; p->height=height;
     trace(s,"com_initialize_begin");
     HRESULT hr=CoInitializeEx(nullptr,COINIT_MULTITHREADED); if (FAILED(hr)) return hr; p->com=true;
@@ -532,6 +533,14 @@ extern "C" int32_t nl_gpu_open(void* surface, uint32_t width, uint32_t height, u
     hr=configure(*p,fps,kbps); if (FAILED(hr)) return hr;
     trace(s,"open_end");
     *result=p.release(); return S_OK;
+}
+extern "C" int32_t nl_gpu_open(void* surface, uint32_t width, uint32_t height, uint32_t fps, uint32_t kbps, void** result) noexcept {
+    return open_presenter(surface,width,height,fps,kbps,false,result);
+}
+extern "C" int32_t nl_gpu_open_hevc(void* surface, uint32_t width, uint32_t height, uint32_t fps, uint32_t kbps, void** result) noexcept {
+    if(!result)return E_POINTER;*result=nullptr;
+    if((width|height)&7)return E_INVALIDARG;
+    return open_presenter(surface,width,height,fps,kbps,true,result);
 }
 extern "C" int32_t nl_gpu_step(void* handle, const uint8_t* bytes, size_t length, uint64_t pts, uint64_t due, uint64_t expires,
     uint32_t* accepted, uint64_t* output_pts, uint64_t* qpc, uint32_t* submitted,uint32_t* converted) noexcept {

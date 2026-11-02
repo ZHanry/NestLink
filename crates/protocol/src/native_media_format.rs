@@ -253,6 +253,36 @@ mod tests {
         state.acknowledge(&second)?;
         Ok(())
     }
+    #[test]
+    fn exact_hevc_nlmf_preserves_all_ptl_bytes_and_rejects_changed_ack_and_legacy_set() -> Result<(), ContractError> {
+        let mut first = value()?;
+        let legacy = FormatSet::new(vec![first.format])?;
+        let mut ptl = [0; 12]; ptl[0] = 1; ptl[11] = 120;
+        first.format = VideoFormat::hevc_main8_observed(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
+        first.format_sha256 = first.format.digest()?;
+        let formats = FormatSet::new(vec![first.format])?;
+        let envelope = FormatEnvelope::Propose(first.clone());
+        let bytes = envelope.encode()?;
+        assert_eq!(FormatEnvelope::decode(&bytes)?, envelope);
+        for end in 0..bytes.len() { assert!(FormatEnvelope::decode(&bytes[..end]).is_err()); }
+        let mut tail = bytes.clone(); tail.push(0);
+        assert!(FormatEnvelope::decode(&tail).is_err());
+        let mut spoof = bytes.clone();
+        let format_start = spoof.len() - 69;
+        spoof[format_start + 1] = 2;
+        assert!(FormatEnvelope::decode(&spoof).is_err());
+        let mut state = FormatConfirmation::default();
+        assert!(state.stage(first.clone(), &first.display, &legacy).is_err());
+        state.stage(first.clone(), &first.display, &formats)?;
+        let mut changed = first.clone(); ptl[6] ^= 1;
+        changed.format = VideoFormat::hevc_main8_observed(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
+        changed.format_sha256 = changed.format.digest()?;
+        assert!(state.acknowledge(&changed).is_err());
+        assert!(state.confirmed().is_none());
+        state.acknowledge(&first)?;
+        assert_eq!(state.confirmed(), Some(&first));
+        Ok(())
+    }
 }
 /// Explicit outer discriminator; malformed recognized envelopes never fall back.
 #[derive(Clone, Debug, PartialEq)]
