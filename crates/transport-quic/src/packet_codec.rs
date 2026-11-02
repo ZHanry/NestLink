@@ -60,7 +60,13 @@ impl DirectPacketEndpoint {
         expected_peer: nestlink_protocol::network::PeerId,
         path: nestlink_platform_network::path::NetworkPathManager,
     ) -> crate::Result<Self> {
-        Self::bind_with_protocol(address, identity, expected_peer, path, PacketProtocol::CapabilitiesV2)
+        Self::bind_with_protocol(
+            address,
+            identity,
+            expected_peer,
+            path,
+            PacketProtocol::CapabilitiesV2,
+        )
     }
     pub fn bind_with_protocol(
         address: std::net::SocketAddr,
@@ -130,7 +136,9 @@ impl DirectPacketEndpoint {
     pub fn local_addr(&self) -> std::net::SocketAddr {
         self.address
     }
-    pub fn negotiated_capabilities(&self) -> Option<&nestlink_protocol::network::NegotiatedProtocol> {
+    pub fn negotiated_capabilities(
+        &self,
+    ) -> Option<&nestlink_protocol::network::NegotiatedProtocol> {
         self.capabilities.as_ref()
     }
     pub fn validate_underlay(&self) -> io::Result<()> {
@@ -190,7 +198,9 @@ impl DirectPacketEndpoint {
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
         }
         if self.protocol == PacketProtocol::CapabilitiesV2 {
-            use nestlink_protocol::network::{CapabilityOffer, CORE_CAPABILITY, NegotiatedProtocol, SCHEMA_VERSION};
+            use nestlink_protocol::network::{
+                CORE_CAPABILITY, CapabilityOffer, NegotiatedProtocol, SCHEMA_VERSION,
+            };
             let selected = crate::capability::exchange(
                 connection,
                 destination.is_some(),
@@ -206,12 +216,20 @@ impl DirectPacketEndpoint {
                     required: vec![CORE_CAPABILITY.into()],
                 },
                 deadline,
-            ).await?;
-            if selected != (NegotiatedProtocol::NetworkV1 { path_migration: false }) {
+            )
+            .await?;
+            if selected
+                != (NegotiatedProtocol::NetworkV1 {
+                    path_migration: false,
+                })
+            {
                 return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
             }
             self.validate_underlay()?;
-            if connection.max_datagram_size().is_none_or(|size| size < wire::HEADER + wire::FRAGMENT_BYTES) {
+            if connection
+                .max_datagram_size()
+                .is_none_or(|size| size < wire::HEADER + wire::FRAGMENT_BYTES)
+            {
                 return Err(io::Error::from(io::ErrorKind::InvalidData).into());
             }
             self.capabilities = Some(selected);
@@ -370,9 +388,15 @@ impl PacketAssembler {
 mod tests {
     use super::*;
     fn endpoints() -> crate::Result<(DirectPacketEndpoint, DirectPacketEndpoint)> {
-        endpoints_with_protocols(PacketProtocol::CapabilitiesV2, PacketProtocol::CapabilitiesV2)
+        endpoints_with_protocols(
+            PacketProtocol::CapabilitiesV2,
+            PacketProtocol::CapabilitiesV2,
+        )
     }
-    fn endpoints_with_protocols(first_protocol: PacketProtocol, second_protocol: PacketProtocol) -> crate::Result<(DirectPacketEndpoint, DirectPacketEndpoint)> {
+    fn endpoints_with_protocols(
+        first_protocol: PacketProtocol,
+        second_protocol: PacketProtocol,
+    ) -> crate::Result<(DirectPacketEndpoint, DirectPacketEndpoint)> {
         use nestlink_platform_network::path::{NetworkPathManager, RoutePolicy};
         let interface = NetworkPathManager::interfaces()?
             .into_iter()
@@ -424,8 +448,16 @@ mod tests {
         );
         left?;
         right?;
-        assert_eq!(first.negotiated_capabilities(), Some(&nestlink_protocol::network::NegotiatedProtocol::NetworkV1 { path_migration: false }));
-        assert_eq!(second.negotiated_capabilities(), first.negotiated_capabilities());
+        assert_eq!(
+            first.negotiated_capabilities(),
+            Some(&nestlink_protocol::network::NegotiatedProtocol::NetworkV1 {
+                path_migration: false
+            })
+        );
+        assert_eq!(
+            second.negotiated_capabilities(),
+            first.negotiated_capabilities()
+        );
         first
             .connection()?
             .send_datagram(b"actual packet carrier".to_vec().into())?;
@@ -448,38 +480,62 @@ mod tests {
     }
     #[tokio::test]
     async fn legacy_packet_proof_is_an_explicit_frozen_protocol_choice() -> crate::Result<()> {
-        let (mut first, mut second) = endpoints_with_protocols(PacketProtocol::LegacyProofV1, PacketProtocol::LegacyProofV1)?;
+        let (mut first, mut second) =
+            endpoints_with_protocols(PacketProtocol::LegacyProofV1, PacketProtocol::LegacyProofV1)?;
         let destination = second.local_addr();
         let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
         let (left, right) = tokio::join!(
-            first.establish(Some(destination), [7;32], [8;32], deadline),
-            second.establish(None, [7;32], [8;32], deadline)
+            first.establish(Some(destination), [7; 32], [8; 32], deadline),
+            second.establish(None, [7; 32], [8; 32], deadline)
         );
         left?;
         right?;
-        assert!(first.negotiated_capabilities().is_none() && second.negotiated_capabilities().is_none());
-        first.connection()?.send_datagram(b"explicit legacy".to_vec().into())?;
-        assert_eq!(tokio::time::timeout_at(deadline, second.connection()?.read_datagram()).await??.as_ref(), b"explicit legacy");
+        assert!(
+            first.negotiated_capabilities().is_none() && second.negotiated_capabilities().is_none()
+        );
+        first
+            .connection()?
+            .send_datagram(b"explicit legacy".to_vec().into())?;
+        assert_eq!(
+            tokio::time::timeout_at(deadline, second.connection()?.read_datagram())
+                .await??
+                .as_ref(),
+            b"explicit legacy"
+        );
         let cleanup = tokio::time::Instant::now() + Duration::from_secs(5);
-        let (left, right) = tokio::join!(first.close_and_wait(cleanup), second.close_and_wait(cleanup));
+        let (left, right) = tokio::join!(
+            first.close_and_wait(cleanup),
+            second.close_and_wait(cleanup)
+        );
         left?;
         right?;
         Ok(())
     }
     #[tokio::test]
     async fn new_packet_protocol_never_retries_a_legacy_alpn_after_failure() -> crate::Result<()> {
-        let (mut first, mut second) = endpoints_with_protocols(PacketProtocol::CapabilitiesV2, PacketProtocol::LegacyProofV1)?;
+        let (mut first, mut second) = endpoints_with_protocols(
+            PacketProtocol::CapabilitiesV2,
+            PacketProtocol::LegacyProofV1,
+        )?;
         let destination = second.local_addr();
         let deadline = tokio::time::Instant::now() + Duration::from_secs(3);
         let (left, right) = tokio::join!(
-            first.establish(Some(destination), [7;32], [8;32], deadline),
-            second.establish(None, [7;32], [8;32], deadline)
+            first.establish(Some(destination), [7; 32], [8; 32], deadline),
+            second.establish(None, [7; 32], [8; 32], deadline)
         );
         assert!(left.is_err() && right.is_err());
         assert!(first.connection().is_err() && second.connection().is_err());
-        assert!(first.establish(Some(destination), [7;32], [8;32], deadline).await.is_err());
+        assert!(
+            first
+                .establish(Some(destination), [7; 32], [8; 32], deadline)
+                .await
+                .is_err()
+        );
         let cleanup = tokio::time::Instant::now() + Duration::from_secs(5);
-        let (left, right) = tokio::join!(first.close_and_wait(cleanup), second.close_and_wait(cleanup));
+        let (left, right) = tokio::join!(
+            first.close_and_wait(cleanup),
+            second.close_and_wait(cleanup)
+        );
         left?;
         right?;
         Ok(())
