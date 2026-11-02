@@ -1,0 +1,59 @@
+name: Same-source 0.8 candidate and publication evidence policy
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Exact main source to verify without creating tags or releases
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          persist-credentials: false
+      - name: Exercise complete-source publication guards and candidate metadata without remote writes
+        shell: python
+        env:
+          EXPECTED_SOURCE: ${{ inputs.source_revision }}
+        run: |
+          import hashlib, json, os, pathlib, subprocess
+          source = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert source == os.environ['EXPECTED_SOURCE']
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          assert subprocess.check_output(['git','status','--porcelain=v1']) == b''
+          output = pathlib.Path(os.environ['RUNNER_TEMP'])/'release-policy'
+          output.mkdir()
+          receipt = {'source_revision':source,'workflow':os.environ['GITHUB_WORKFLOW_REF'],
+            'workflow_revision':os.environ['GITHUB_WORKFLOW_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
+            'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'runner_environment':os.environ['RUNNER_ENVIRONMENT'],
+            'cargo_lock_sha256':hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
+            'scope':'Synthetic publication protocol and metadata regressions only; no product/target acceptance, tags or releases.',
+            'passed':False,'commands':[]}
+          try:
+              for name in ['test_rc_publish.py','test_candidate_producer.py']:
+                  command = ['python3','-B','-m','unittest','discover','-s','tests/refactor','-p',name,'-v']
+                  with (output/(name+'.log')).open('wb') as stream:
+                      result = subprocess.run(command,stdout=stream,stderr=subprocess.STDOUT,timeout=300)
+                  receipt['commands'].append({'argv':command,'return_code':result.returncode})
+                  assert result.returncode == 0, name+' failed; no remote writes were attempted'
+              receipt['passed'] = True
+          except BaseException as error:
+              receipt['failure'] = repr(error)
+              raise
+          finally:
+              receipt['files'] = [{'path':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+                for p in sorted(output.iterdir()) if p.is_file()]
+              (output/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-policy-${{ inputs.source_revision }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/release-policy/
+          if-no-files-found: error
+          retention-days: 30

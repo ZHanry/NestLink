@@ -32,6 +32,7 @@ TAG = "v" + VERSION
 MAX_ASSET_BYTES = 2 * 1024**3
 MANIFEST_NAME = "candidate-build-manifest.json"
 REMEDIATION_NAME = "remediation-acceptance.zip"
+NETWORK_NAME = "network-rewrite-acceptance.zip"
 REPORT_SHA256 = "c6cac00cef64627e023eabf78fa77750b2093e9e1138567ad3ecad112c49905c"
 REMEDIATION_CASES = frozenset((
     "N01", "N02", "N03", "N04", "M01", "M02", "M03", "M04", "T01", "T02",
@@ -227,14 +228,17 @@ def clean_source(root, revision):
     require(value.get("workspace", {}).get("package", {}).get("version") == VERSION, "Clean source has the wrong public RC version")
 
 
-def remediation_acceptance(bundle, revision, manifest_sha256):
+def reviewed_acceptance(bundle, revision, manifest_sha256, *, name=REMEDIATION_NAME,
+                        kind="nestlink-remediation-acceptance", required_cases=REMEDIATION_CASES,
+                        bindings=None, metadata_fields=frozenset(), case_fields=frozenset()):
     """Check reviewed evidence binding, not the truth of a human measurement.
 
     Development bundles deliberately contain pending platform cases. Publishing
     additionally requires this independent, fully reviewed report evidence pack.
     It is never generated with passed statuses by the development producer.
     """
-    path = artifact(bundle, REMEDIATION_NAME)
+    bindings = {"report_sha256": REPORT_SHA256} if bindings is None else bindings
+    path = artifact(bundle, name)
     require(0 < regular(path).st_size <= MAX_REMEDIATION_BYTES, "Report evidence archive exceeds its byte budget")
     with path.open("rb") as stream:
         raw = stream.read(MAX_REMEDIATION_BYTES + 1)
@@ -255,16 +259,17 @@ def remediation_acceptance(bundle, revision, manifest_sha256):
                 require(total <= MAX_REMEDIATION_BYTES, "Expanded report evidence exceeds its byte budget")
                 folded.add(item.filename.casefold())
                 entries[item.filename] = item
-            metadata = "remediation-acceptance.json"
+            metadata = name.removesuffix(".zip") + ".json"
             require(metadata in entries and entries[metadata].file_size <= 1024**2, "Missing or oversized report acceptance metadata")
             value = json.loads(archive.read(metadata).decode("utf-8"), object_pairs_hook=unique_fields)
             fields = {"schema_version", "kind", "repository", "version", "source_revision", "manifest_sha256",
-                      "report_sha256", "status", "reviewer", "reviewed_at", "cases", "evidence"}
+                      "status", "reviewer", "reviewed_at", "cases", "evidence"} | set(bindings) | set(metadata_fields)
             require(isinstance(value, dict) and set(value) == fields, "Unexpected report acceptance fields")
             require(type(value["schema_version"]) is int and value["schema_version"] == 1
-                    and value["kind"] == "nestlink-remediation-acceptance" and value["repository"] == REPOSITORY
+                    and value["kind"] == kind and value["repository"] == REPOSITORY
                     and value["version"] == VERSION and value["source_revision"] == revision
-                    and value["manifest_sha256"] == manifest_sha256 and value["report_sha256"] == REPORT_SHA256,
+                    and value["manifest_sha256"] == manifest_sha256
+                    and all(value[key] == expected for key, expected in bindings.items()),
                     "Report acceptance does not bind this report and candidate")
             require(value["status"] == "passed", "All report acceptance cases must pass before RC publication")
             require(isinstance(value["reviewer"], str) and 1 <= len(value["reviewer"].strip()) <= 200
@@ -290,10 +295,10 @@ def remediation_acceptance(bundle, revision, manifest_sha256):
                 verified.add(name)
             require(set(entries) == verified | {metadata}, "Report archive contains undeclared evidence")
             cases, seen, referenced = value["cases"], set(), set()
-            require(isinstance(cases, list) and len(cases) == len(REMEDIATION_CASES), "All 25 report cases are required")
+            require(isinstance(cases, list) and len(cases) == len(required_cases), "All reviewed acceptance cases are required")
             for item in cases:
-                require(isinstance(item, dict) and set(item) == {"id", "status", "evidence"}
-                        and isinstance(item["id"], str) and item["id"] in REMEDIATION_CASES and item["id"] not in seen
+                require(isinstance(item, dict) and set(item) == {"id", "status", "evidence"} | set(case_fields)
+                        and isinstance(item["id"], str) and item["id"] in required_cases and item["id"] not in seen
                         and item["status"] == "passed", "Every report case must be unique and passed")
                 refs = item["evidence"]
                 require(isinstance(refs, list) and 0 < len(refs) <= len(verified)
@@ -301,23 +306,114 @@ def remediation_acceptance(bundle, revision, manifest_sha256):
                         and len(set(refs)) == len(refs), "Every report case requires verified evidence")
                 seen.add(item["id"])
                 referenced.update(refs)
-            require(seen == REMEDIATION_CASES and referenced == verified, "Report case/evidence coverage differs")
+            require(seen == required_cases and referenced == verified, "Report case/evidence coverage differs")
     except (zipfile.BadZipFile, NotImplementedError, RuntimeError, EOFError) as error:
         raise ValueError("Invalid report evidence archive") from error
-    return {"asset_name": REMEDIATION_NAME, "local_path": path, "role": "remediation-acceptance",
+    return {"asset_name": name, "local_path": path, "role": kind.removeprefix("nestlink-"),
             "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+
+
+def remediation_acceptance(bundle, revision, manifest_sha256):
+    return reviewed_acceptance(bundle, revision, manifest_sha256)
+
+
+def network_acceptance(bundle, revision, manifest_sha256, source_root, artifact_hashes):
+    """Verify reviewed full-scope binding; metadata never proves measurements.
+
+    Reuse the existing bounded archive/path/hash verifier. A separate archive
+    avoids a source-SHA cycle in progress.json and cannot substitute for the
+    inherited report gate or turn failed/not-run cases into passed evidence.
+    """
+    base = source_root / "docs/network-rewrite"
+    spec_path = base / "NESTLINK-REWRITE-SPEC.md"
+    tasks_path = base / "NESTLINK-TASKS.json"
+    for path in (spec_path, tasks_path, source_root / "Cargo.lock"):
+        absolute(path)
+        regular(path)
+    tasks = json.loads(tasks_path.read_text(encoding="utf-8"), object_pairs_hook=unique_fields)
+    cases = {item["id"]: item for item in tasks["acceptance_cases"]}
+    packages = {item["id"]: item for item in tasks["tasks"]}
+    require(len(tasks["acceptance_cases"]) == len(cases) == 70
+            and len(tasks["tasks"]) == len(packages) == 41
+            and set(cases) == {f"AC{index:02d}" for index in range(1, 71)}
+            and set(packages) == {f"W{index:02d}" for index in range(41)},
+            "The full 70-case/41-work-package network scope is required")
+    descriptor = reviewed_acceptance(
+        bundle, revision, manifest_sha256, name=NETWORK_NAME,
+        kind="nestlink-network-rewrite-acceptance", required_cases=frozenset(cases),
+        bindings={"specification_sha256": hashlib.sha256(spec_path.read_bytes()).hexdigest(),
+                  "tasks_sha256": hashlib.sha256(tasks_path.read_bytes()).hexdigest()},
+        metadata_fields={"work_packages"},
+        case_fields={"task_ids", "evidence_levels", "build_provenance", "execution_provenance"})
+    with zipfile.ZipFile(descriptor["local_path"]) as archive:
+        value = json.loads(archive.read("network-rewrite-acceptance.json"), object_pairs_hook=unique_fields)
+    work = value["work_packages"]
+    require(isinstance(work, list) and len(work) == len(packages), "Every network work package requires review")
+    seen = set()
+    for item in work:
+        require(isinstance(item, dict) and set(item) == {"id", "status"}
+                and isinstance(item["id"], str) and item["id"] in packages and item["id"] not in seen,
+                "Invalid or duplicate reviewed network work package")
+        required = packages[item["id"]]["required_evidence_levels"]
+        allowed = {"verified_target"} if set(required) & {"L3", "L4"} else {"verified_lab", "verified_target"}
+        require(item["status"] in allowed, "Unfinished network work package cannot qualify publication")
+        seen.add(item["id"])
+    lock = hashlib.sha256((source_root / "Cargo.lock").read_bytes()).hexdigest()
+    for item in value["cases"]:
+        expected = cases[item["id"]]
+        require(item["task_ids"] == expected["task_ids"], "Network case/work-package mapping differs")
+        levels = item["evidence_levels"]
+        require(isinstance(levels, list) and len(levels) == len(set(levels))
+                and set(levels) <= {"L0", "L1", "L2", "L3", "L4"}
+                and set(expected["required_evidence_levels"]) <= set(levels),
+                "Network case lacks its original required evidence levels")
+        build = item["build_provenance"]
+        fields = {"repository", "source_revision", "dependency_lock_sha256", "workflow", "workflow_revision",
+                  "run_id", "run_attempt", "job_id", "runner_environment", "artifact_sha256"}
+        require(isinstance(build, dict) and set(build) == fields
+                and build["repository"] == REPOSITORY and build["source_revision"] == revision
+                and build["dependency_lock_sha256"] == lock and build["workflow_revision"] == revision
+                and build["runner_environment"] == "github-hosted"
+                and isinstance(build["workflow"], str)
+                and re.fullmatch(r"\.github/workflows/[A-Za-z0-9_-]+\.ya?ml", build["workflow"])
+                and all(type(build[key]) is int and build[key] > 0 for key in ("run_id", "run_attempt", "job_id"))
+                and build["artifact_sha256"] in artifact_hashes,
+                "Network build provenance must bind the exact hosted candidate bytes")
+        executions = item["execution_provenance"]
+        require(isinstance(executions, list) and 0 < len(executions) <= 32,
+                "Network case requires actual execution provenance")
+        observed = set()
+        for execution in executions:
+            require(isinstance(execution, dict) and set(execution) == {
+                "kind", "source_revision", "artifact_sha256", "evidence_levels", "environment", "evidence"}
+                    and execution["kind"] in ("hosted_actions", "target_device")
+                    and execution["source_revision"] == revision
+                    and execution["artifact_sha256"] == build["artifact_sha256"]
+                    and isinstance(execution["environment"], dict) and execution["environment"],
+                    "Network execution provenance differs from its build")
+            actual = execution["evidence_levels"]
+            refs = execution["evidence"]
+            require(isinstance(actual, list) and actual and len(actual) == len(set(actual))
+                    and set(actual) <= set(levels)
+                    and (not set(actual) & {"L3", "L4"} or execution["kind"] == "target_device")
+                    and isinstance(refs, list) and refs and len(refs) == len(set(refs))
+                    and all(isinstance(ref, str) and ref in item["evidence"] for ref in refs),
+                    "Hosted builds cannot substitute for required target execution")
+            observed.update(actual)
+        require(observed == set(levels), "Network evidence level coverage differs from actual execution")
+    return descriptor
 
 
 def release_body(revision, checksum):
     return ("NestLink " + VERSION + " 开发候选版。\n\n"
-            "- Windows 媒体 socket 支持跟随系统、优先物理接口和指定接口；实际 ICE 与原生 QUIC 使用同一 socket 工厂。\n"
-            "- 直连能力协商启用累计 Trickle ICE；启动许可与运行短租约分离，30 秒启动预算仍受原授权截止约束。\n"
-            "- Windows 增加 DXGI 采集、GDI 降级恢复和按签名协商的 Media Foundation H.264 硬编硬解；VP8 保留兼容。\n"
-            "- 原生可靠视频加入发送截止、缓冲上界和本地码率/帧率调节；增加进入桌面、操作中心和脱敏实测诊断。\n"
-            "- 完整整改状态与验收边界：https://github.com/ZHanry/NestLink/blob/" + revision + "/docs/refactor/REMEDIATION-0.7.0-RC1.md\n\n"
+            "- 统一网络内核接入远控与四协议服务；空间成员、路径、业务和原始 IP 访问分别授权。\n"
+            "- 新增受管 TUN、子网/重叠映射、标准 WireGuard 接入、私有目录与 Web 网关、多入口 HA 和有限离线路径。\n"
+            "- Windows 媒体、实时队列、弱网策略、安装升级和撤销清理均按同源制品与适用目标设备证据核对。\n"
+            "- 完整范围、升级限制及证据边界：https://github.com/ZHanry/NestLink/blob/" + revision + "/docs/network-rewrite/RELEASE-0.8.0-RC.md\n\n"
             "报告验收：15 个研发工作包与 10 项体验门槛的审阅凭据随 remediation-acceptance.zip 发布，并绑定本候选清单摘要。适用硬件、网络、原始样本与限制以包内证据为准；发布脚本只核验证据结构和绑定，不代替实测或人工审阅。\n\n"
+            "网络重构验收：41 个工作包、70 组用例的独立审阅材料随 network-rewrite-acceptance.zip 发布。原始规格、任务映射、同源托管构建与实际执行来源分别绑定；未执行、失败或缺少必需现场证据不能取得发布资格。\n\n"
             "升级：请同时升级服务器、Web 和双方客户端。原生跨网络回退需管理员允许服务器转发及双方 relay；浏览器需可达 STUN，受限网络还需注册 TURN 节点并允许中继。升级不会自动放宽服务器策略，原生 WSS 不能替代浏览器 TURN。\n"
-            "数据库升级到 schema 24；升级前备份。schema 24 获准业务后须前向修复，禁止恢复旧授权数据库快照。恢复登录不会恢复屏幕、输入或文件授权。\n"
+            "升级将执行对应制品的数据库迁移；升级前备份。已写入新授权状态的数据库须前向修复，禁止恢复旧授权数据库快照。恢复登录不会恢复屏幕、输入或文件授权。\n"
             "部署与排障：https://github.com/ZHanry/NestLink/blob/" + revision + "/docs/REMOTE-CONNECTION.md\n\n"
             f"Source commit: {revision}. All {len(CURRENT_ROLES)} product artifacts are bound to this clean source commit.\n"
             "candidate-build-manifest.json SHA-256: " + checksum + ".\n\n"
@@ -357,7 +453,7 @@ def local_plan(args):
             "All 30 agreed RC acceptance cases must remain explicit and pending")
     products = value["artifacts"]
     require(isinstance(products, list) and len(products) == len(CURRENT_ROLES), "RC must contain every Windows/Web/backend artifact role")
-    uploads, roles, paths, names = [], set(), set(), {MANIFEST_NAME.casefold(), REMEDIATION_NAME.casefold()}
+    uploads, roles, paths, names = [], set(), set(), {MANIFEST_NAME.casefold(), REMEDIATION_NAME.casefold(), NETWORK_NAME.casefold()}
     for item in products:
         require(isinstance(item, dict) and set(item) == {"id", "role", "path", "bytes", "sha256", "source_revision"},
                 "Unexpected RC artifact fields")
@@ -381,6 +477,8 @@ def local_plan(args):
     checksum = hashlib.sha256(raw).hexdigest()
     uploads.append({"asset_name": MANIFEST_NAME, "local_path": manifest, "role": "candidate-build-manifest",
                     "bytes": len(raw), "sha256": checksum})
+    uploads.append(network_acceptance(bundle, revision, checksum, source_root,
+                                      {item["sha256"] for item in products}))
     uploads.append(remediation_acceptance(bundle, revision, checksum))
     clean_source(source_root, revision)
     return {"source_root": source_root, "source_revision": revision, "manifest_sha256": checksum,
@@ -393,6 +491,8 @@ def recheck_local(plan):
         absolute(item["local_path"])
         fixed_file(item["local_path"], item["bytes"], item["sha256"])
     remediation_acceptance(plan["uploads"][-1]["local_path"].parent, plan["source_revision"], plan["manifest_sha256"])
+    network_acceptance(plan["uploads"][-1]["local_path"].parent, plan["source_revision"], plan["manifest_sha256"],
+                       plan["source_root"], {item["sha256"] for item in plan["uploads"] if item["role"] in CURRENT_ROLES})
 
 
 def verify_tag(github, revision):
@@ -505,6 +605,8 @@ def promote(args, github=None):
                    "pending_acceptance_cases": len(REQUIRED_CASES), "repository_deletion_performed": False,
                    "report_remediation_acceptance": "passed", "report_acceptance_cases": len(REMEDIATION_CASES),
                    "report_evidence_sha256": plan["uploads"][-1]["sha256"],
+                   "network_rewrite_acceptance": "passed", "network_acceptance_cases": 70,
+                   "network_work_packages": 41, "network_evidence_sha256": plan["uploads"][-2]["sha256"],
                    "branch_deletion_performed": False}
     if args.action == "verify":
         recheck_local(plan)

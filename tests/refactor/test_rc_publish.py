@@ -143,6 +143,14 @@ class RCPublicationTests(unittest.TestCase):
                                               for name in sorted(P.REQUIRED_CASES)], "artifacts": products}
         self.write_manifest()
         self.write_report_acceptance()
+        # Synthetic fixtures qualify only the publication protocol tests. They
+        # are never copied into real candidate/target acceptance materials.
+        for name in ("Cargo.lock", "docs/network-rewrite/NESTLINK-REWRITE-SPEC.md",
+                     "docs/network-rewrite/NESTLINK-TASKS.json"):
+            target = source / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes((ROOT / name).read_bytes())
+        self.write_network_acceptance()
         self.clean = patch.object(P, "clean_source")
         self.clean.start()
         self.addCleanup(self.clean.stop)
@@ -169,6 +177,88 @@ class RCPublicationTests(unittest.TestCase):
             for name, content in entries or []:
                 archive.writestr(name, content)
 
+    def write_network_acceptance(self, mutate=None, entries=None):
+        source = self.args.source_root
+        tasks = json.loads((source / "docs/network-rewrite/NESTLINK-TASKS.json").read_text(encoding="utf-8"))
+        raw = b"Synthetic network release protocol fixture; no product measurements."
+        proof = "evidence/network-fixture.txt"
+        build = {"repository": P.REPOSITORY, "source_revision": REVISION,
+                 "dependency_lock_sha256": checksum((source / "Cargo.lock").read_bytes()),
+                 "workflow": ".github/workflows/v15-candidate-build.yml", "workflow_revision": REVISION,
+                 "run_id": 1, "run_attempt": 1, "job_id": 1, "runner_environment": "github-hosted",
+                 "artifact_sha256": self.manifest["artifacts"][0]["sha256"]}
+        cases = []
+        for case in tasks["acceptance_cases"]:
+            levels = case["required_evidence_levels"]
+            cases.append({"id": case["id"], "status": "passed", "evidence": [proof],
+                          "task_ids": case["task_ids"], "evidence_levels": levels,
+                          "build_provenance": copy.deepcopy(build),
+                          "execution_provenance": [{"kind": "target_device", "source_revision": REVISION,
+                              "artifact_sha256": build["artifact_sha256"], "evidence_levels": levels,
+                              "environment": {"synthetic_test_fixture": True}, "evidence": [proof]}]})
+        value = {"schema_version": 1, "kind": "nestlink-network-rewrite-acceptance", "repository": P.REPOSITORY,
+                 "version": P.VERSION, "source_revision": REVISION,
+                 "manifest_sha256": checksum(self.args.manifest.read_bytes()),
+                 "specification_sha256": checksum((source / "docs/network-rewrite/NESTLINK-REWRITE-SPEC.md").read_bytes()),
+                 "tasks_sha256": checksum((source / "docs/network-rewrite/NESTLINK-TASKS.json").read_bytes()),
+                 "status": "passed", "reviewer": "Synthetic protocol test only", "reviewed_at": "2026-10-20T00:00:00Z",
+                 "cases": cases, "work_packages": [{"id": item["id"], "status": "verified_target"} for item in tasks["tasks"]],
+                 "evidence": [{"path": proof, "bytes": len(raw), "sha256": checksum(raw)}]}
+        if mutate:
+            mutate(value)
+        with zipfile.ZipFile(self.args.bundle / P.NETWORK_NAME, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("network-rewrite-acceptance.json", json.dumps(value))
+            archive.writestr(proof, raw)
+            for name, content in entries or []:
+                archive.writestr(name, content)
+
+    def test_missing_network_acceptance_refuses_every_action_before_github(self):
+        (self.args.bundle / P.NETWORK_NAME).unlink()
+        for action in ("verify", "upload-draft", "publish"):
+            self.args.action = action
+            with self.subTest(action=action), self.assertRaises(OSError):
+                P.promote(self.args, self.github)
+            self.assertFalse(self.github.calls)
+
+    def test_network_failure_old_source_partial_scope_or_fake_target_cannot_publish(self):
+        mutations = [lambda v: v.update(status="failed"), lambda v: v.update(version="0.7.0-rc.1"),
+                     lambda v: v.update(source_revision="2" * 40), lambda v: v.update(tasks_sha256="0" * 64),
+                     lambda v: v.update(specification_sha256="0" * 64), lambda v: v["cases"].pop(),
+                     lambda v: v["work_packages"].pop(), lambda v: v["work_packages"][0].update(status="in_progress"),
+                     lambda v: v["cases"][46].update(status="failed"), lambda v: v["cases"][0].update(evidence_levels=[]),
+                     lambda v: v["cases"][0].update(task_ids=[]),
+                     lambda v: v["cases"][0]["build_provenance"].update(source_revision="2" * 40),
+                     lambda v: v["cases"][0]["build_provenance"].update(dependency_lock_sha256="0" * 64),
+                     lambda v: v["cases"][0]["build_provenance"].update(runner_environment="self-hosted"),
+                     lambda v: v["cases"][0]["build_provenance"].update(artifact_sha256="0" * 64),
+                     lambda v: v["cases"][0]["build_provenance"].update(job_id=True),
+                     lambda v: v["cases"][0].update(execution_provenance=[]),
+                     lambda v: v["cases"][0]["execution_provenance"][0].update(source_revision="2" * 40),
+                     lambda v: v["cases"][0]["execution_provenance"][0].update(environment={}),
+                     lambda v: v["cases"][0]["execution_provenance"][0].update(evidence=["evidence/absent.txt"]),
+                     lambda v: v["cases"][-1]["execution_provenance"][0].update(kind="hosted_actions")]
+        for index, mutate in enumerate(mutations):
+            self.write_network_acceptance(mutate)
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                P.promote(self.args, self.github)
+            self.assertFalse(self.github.calls)
+
+    def test_network_archive_reuses_bounded_path_hash_and_inventory_guards(self):
+        for name in ("../escape", "evidence/unlisted", "EVIDENCE/NETWORK-FIXTURE.TXT"):
+            self.write_network_acceptance(entries=[(name, b"unreviewed")])
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                P.promote(self.args, self.github)
+            self.assertFalse(self.github.calls)
+
+    def test_network_acceptance_changed_during_final_readback_keeps_draft(self):
+        path = self.args.bundle / P.NETWORK_NAME
+        def mutate(_github, _asset):
+            path.write_bytes(b"changed network evidence")
+        self.github.readback_hook = mutate
+        with self.assertRaises(ValueError):
+            P.promote(self.args, self.github)
+        self.assertTrue(self.github.release["draft"])
+
     def upload_draft(self):
         self.args.action = "upload-draft"
         return P.promote(self.args, self.github)
@@ -192,21 +282,21 @@ class RCPublicationTests(unittest.TestCase):
         self.args.action = "verify"
         result = P.promote(self.args, self.github)
         self.assertEqual(result["status"], "verified")
-        self.assertEqual(result["expected_assets"], len(P.CURRENT_ROLES) + 2)
+        self.assertEqual(result["expected_assets"], len(P.CURRENT_ROLES) + 3)
         self.assertEqual(result["existing_assets_verified"], 0)
         self.assertFalse(self.github.writes)
 
     def test_upload_then_publish_reuses_every_verified_asset(self):
         draft = self.upload_draft()
         self.assertEqual(draft["status"], "draft-uploaded")
-        self.assertEqual(len(self.github.assets), len(P.CURRENT_ROLES) + 2)
+        self.assertEqual(len(self.github.assets), len(P.CURRENT_ROLES) + 3)
         self.assertFalse(any(method == "PATCH" for method, _ in self.github.calls))
         before = len(self.github.writes)
         self.args.action = "publish"
         result = P.promote(self.args, self.github)
         self.assertEqual(result["status"], "published-prerelease")
         self.assertEqual(len(self.github.writes), before + 1)
-        self.assertEqual(len(result["uploads"]), len(P.CURRENT_ROLES) + 2)
+        self.assertEqual(len(result["uploads"]), len(P.CURRENT_ROLES) + 3)
         self.assertTrue(all(item["readback"] == "github-asset-id-sha256" for item in result["uploads"]))
         self.assertFalse(self.github.downloads)
         self.assertEqual(self.github.writes[-1], ("PATCH", BASE + "/releases/17"))
@@ -219,7 +309,7 @@ class RCPublicationTests(unittest.TestCase):
         self.args.action = "verify"
         result = P.promote(self.args, self.github)
         self.assertEqual(result["release_id"], 17)
-        self.assertEqual(result["existing_assets_verified"], len(P.CURRENT_ROLES) + 2)
+        self.assertEqual(result["existing_assets_verified"], len(P.CURRENT_ROLES) + 3)
         self.assertIn(("GET", BASE + "/releases"), self.github.calls)
         self.assertIn(("GET", BASE + "/releases/17"), self.github.calls)
         self.assertEqual(self.github.writes, [])
@@ -280,13 +370,13 @@ class RCPublicationTests(unittest.TestCase):
     def test_asset_id_metadata_is_read_even_when_upload_response_has_a_digest(self):
         result = P.promote(self.args, self.github)
         metadata_reads = [path for method, path in self.github.calls if path.startswith(BASE + "/releases/assets/")]
-        self.assertGreaterEqual(len(metadata_reads), 2 * (len(P.CURRENT_ROLES) + 2))
+        self.assertGreaterEqual(len(metadata_reads), 2 * (len(P.CURRENT_ROLES) + 3))
         self.assertTrue(result["remote_asset_readback_verified"])
 
     def test_missing_api_digest_uses_download_by_asset_id_only(self):
         self.github.digest_mode = "absent"
         result = P.promote(self.args, self.github)
-        self.assertEqual(len(set(self.github.downloads)), len(P.CURRENT_ROLES) + 2)
+        self.assertEqual(len(set(self.github.downloads)), len(P.CURRENT_ROLES) + 3)
         self.assertTrue(all(item["readback"] == "download-sha256" for item in result["uploads"]))
 
     def test_malformed_or_wrong_api_digest_keeps_release_draft(self):
@@ -320,7 +410,7 @@ class RCPublicationTests(unittest.TestCase):
         self.assertEqual(result["status"], "published-prerelease")
         self.assertEqual(first_ids, {name: self.github.assets[name]["id"] for name in first_ids})
         posts = [path for method, path in self.github.calls if method == "POST" and "/assets?name=" in path]
-        self.assertEqual(len(posts), len(P.CURRENT_ROLES) + 2)
+        self.assertEqual(len(posts), len(P.CURRENT_ROLES) + 3)
         self.assertFalse(any(method == "DELETE" for method, _ in self.github.calls))
 
     def test_wrong_repository_node_main_or_tag_blocks_every_write(self):
