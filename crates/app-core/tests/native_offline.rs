@@ -630,9 +630,10 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
                 nestlink_platform_files::FileRoots::new(vec![root])?,
             )
             .await?;
+        let second_output = directory.join("download-again");
         let (destination, _new_destination_consent) =
             nestlink_platform_files::download::LocalDownloadSelection::new(
-                &output,
+                &second_output,
                 "received-again.bin",
                 bytes.len() as u64,
             )?;
@@ -645,7 +646,7 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
         let downloaded =
             tokio::time::timeout(Duration::from_secs(5), new_task.wait_finished()).await?;
         assert_eq!(downloaded.phase, NativeFileTaskPhase::Completed);
-        assert_eq!(std::fs::read(output.join("received-again.bin"))?, bytes);
+        assert_eq!(std::fs::read(second_output.join("received-again.bin"))?, bytes);
         assert!(
             source.budget()?.remaining_bytes
                 < spent_before_rebuild.saturating_sub(bytes.len() as u64)
