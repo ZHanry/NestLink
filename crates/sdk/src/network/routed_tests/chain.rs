@@ -237,9 +237,12 @@ async fn transfer(controller_first: bool) -> Result {
     assert!(download.source_verified());
     assert_eq!(received, bytes);
     client.retire()?;
-    server.shutdown(StopReason::ExplicitExit).await?;
+    // Publish both explicit local stop decisions before awaiting either side.
+    // One side's awaited cleanup revokes its route synchronously, so the peer
+    // can correctly observe that revocation before a later local stop exists.
     controller.lease_control().stop(StopReason::ExplicitExit)?;
     host.lease_control().stop(StopReason::ExplicitExit)?;
+    server.shutdown(StopReason::ExplicitExit).await?;
     let cleanup = Instant::now() + Duration::from_secs(5);
     let (a_report, b_report) = tokio::time::timeout_at(cleanup, async {
         tokio::try_join!(controller.wait_stopped(), host.wait_stopped())
