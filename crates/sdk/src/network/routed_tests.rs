@@ -956,9 +956,15 @@ async fn required_peer_capability_rejection_never_opens_business_and_releases_or
     let cleanup = Instant::now() + Duration::from_secs(5);
     peer.close_and_wait(cleanup).await?;
     let forwarded = finish_mesh(relay_stop, forwarding, addresses, cleanup).await?;
-    assert!(result.is_err(), "required capability must not yield a ChannelRuntime");
+    assert!(
+        result.is_err(),
+        "required capability must not yield a ChannelRuntime"
+    );
     assert!(capability_rejected && business_blocked);
-    assert!(forwarded > 0, "the original real routed carrier must be exercised");
+    assert!(
+        forwarded > 0,
+        "the original real routed carrier must be exercised"
+    );
     Ok(())
 }
 
