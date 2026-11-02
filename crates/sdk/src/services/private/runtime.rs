@@ -29,6 +29,8 @@ use tokio::{
     sync::watch,
     task::{JoinHandle, JoinSet},
 };
+#[path = "multiplex.rs"]
+mod multiplex;
 
 pub struct PrivateServiceHostConfig {
     pub listen: SocketAddr,
@@ -41,6 +43,10 @@ pub struct PrivateServiceHostConfig {
 struct Hello {
     service_id: String,
     grant_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    version: Option<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    mode: Option<multiplex::Mode>,
 }
 
 pub struct PrivateServiceHost {
@@ -138,11 +144,21 @@ pub struct PrivateServiceConnection {
     replies: ServiceDatagramReplayWindow,
     runtime: tokio::runtime::Handle,
     closing: Option<JoinHandle<std::io::Result<()>>>,
+    multiplex: Option<multiplex::Client>,
 }
 impl PrivateServiceConnection {
+    pub fn is_multiplexed(&self) -> bool {
+        self.multiplex.is_some()
+    }
+    /// Open an independently signed TCP/HTTP(S) flow under this original lease.
+    /// Application workers retain their returned streams and must finish/drop
+    /// them before awaiting this carrier's physical close receipt.
+    pub async fn open_stream(&self, consumer: &DeviceIdentity) -> Result<BiStream, SdkError> {
+        multiplex::open_stream(self, consumer).await
+    }
     /// This stream carries bytes for the one locally approved TCP/HTTP target.
     pub fn stream(&mut self) -> Result<&mut BiStream, SdkError> {
-        if matches!(
+        if self.is_multiplexed() || matches!(
             self.lease.lease().claims().definition.requested_ingress,
             ServiceIngress::Udp { .. }
         ) {
@@ -155,7 +171,7 @@ impl PrivateServiceConnection {
     /// This connection remains the single carrier owner and must be physically
     /// closed after the worker and any upgraded streams have finished.
     pub(in crate::services) fn take_stream(&mut self) -> Result<BiStream, SdkError> {
-        if matches!(
+        if self.is_multiplexed() || matches!(
             self.lease.lease().claims().definition.requested_ingress,
             ServiceIngress::Udp { .. }
         ) {
@@ -373,6 +389,37 @@ impl Sdk {
         lease: VerifiedPrivateServiceLease,
         relay_policy: &PrivateServiceRelayPolicy,
     ) -> Result<PrivateServiceConnection, SdkError> {
+        self.connect_private_service_mode(consumer, lease, relay_policy, None).await
+    }
+    /// Explicit opt-in: one original lease/owner with independently admitted
+    /// application streams. This never renews authority or requests a grant.
+    pub async fn connect_private_service_multiplexed(
+        self: &Arc<Self>,
+        consumer: &DeviceIdentity,
+        lease: VerifiedPrivateServiceLease,
+    ) -> Result<PrivateServiceConnection, SdkError> {
+        self.connect_private_service_multiplexed_with_relay_policy(
+            consumer, lease, &PrivateServiceRelayPolicy::default(),
+        ).await
+    }
+    pub async fn connect_private_service_multiplexed_with_relay_policy(
+        self: &Arc<Self>,
+        consumer: &DeviceIdentity,
+        lease: VerifiedPrivateServiceLease,
+        relay_policy: &PrivateServiceRelayPolicy,
+    ) -> Result<PrivateServiceConnection, SdkError> {
+        self.connect_private_service_mode(consumer, lease, relay_policy, Some(self.clone())).await
+    }
+    async fn connect_private_service_mode(
+        &self,
+        consumer: &DeviceIdentity,
+        lease: VerifiedPrivateServiceLease,
+        relay_policy: &PrivateServiceRelayPolicy,
+        multiplex: Option<Arc<Sdk>>,
+    ) -> Result<PrivateServiceConnection, SdkError> {
+        if multiplex.is_some() && matches!(lease.lease().claims().definition.requested_ingress, ServiceIngress::Udp { .. }) {
+            return Err(SdkError::Invalid);
+        }
         let grant = usage_claims(&lease)?;
         let (bundle, current) = self
             .current_private_service_bundle(&grant.service_id, &grant.grant_id)
@@ -383,6 +430,7 @@ impl Sdk {
         {
             return Err(SdkError::Trust);
         }
+        let bundle_fingerprint = super::network::fingerprint(&bundle)?;
         let connected = if bundle.network.relay.is_some() {
             PrivateCarrier::Routed(Box::new(
                 super::network::connect(self, consumer, &bundle, relay_policy).await?,
@@ -414,6 +462,8 @@ impl Sdk {
                 &Hello {
                     service_id: grant.service_id.clone(),
                     grant_id: grant.grant_id.clone(),
+                    version: multiplex.as_ref().map(|_| multiplex::VERSION),
+                    mode: multiplex.as_ref().map(|_| multiplex::Mode::Control),
                 },
             )
             .await?;
@@ -422,6 +472,10 @@ impl Sdk {
             write_message(&mut send, &open).await?;
             let ready: PrivateServiceReady = read_message(&mut recv).await?;
             verify_private_service_ready(&lease, &open, &ready)?;
+            if multiplex.is_some() {
+                let accepted: multiplex::Accepted = read_message(&mut recv).await?;
+                accepted.validate()?;
+            }
             let (current, _) = self
                 .current_private_service_bundle(&grant.service_id, &grant.grant_id)
                 .await?;
@@ -449,6 +503,7 @@ impl Sdk {
             replies: ServiceDatagramReplayWindow::default(),
             runtime: tokio::runtime::Handle::current(),
             closing: None,
+            multiplex: multiplex.map(|sdk| multiplex::Client::new(sdk, bundle_fingerprint)),
         })
     }
 }
@@ -723,6 +778,7 @@ async fn serve_established_connection(
             .await
             .map_err(std::io::Error::other)?;
         let hello: Hello = read_message(&mut recv).await?;
+        let multiplex = multiplex::control_mode(&hello)?;
         if hello.service_id != presence.service_id || !valid_id(&hello.grant_id) {
             return Err(SdkError::Trust);
         }
@@ -731,6 +787,9 @@ async fn serve_established_connection(
             .await?;
         if lease.lease().claims().edge_runtime_id != presence.runtime_id {
             return Err(SdkError::Trust);
+        }
+        if multiplex && matches!(lease.lease().claims().definition.requested_ingress, ServiceIngress::Udp { .. }) {
+            return Err(SdkError::Invalid);
         }
         match expected {
             None if bundle.network.relay.is_none() => {}
@@ -746,7 +805,17 @@ async fn serve_established_connection(
             return Err(SdkError::Trust);
         }
         verify_private_service_open(&lease, &open)?;
-        Ok::<_, SdkError>((send, recv, lease, open, nonce))
+        if multiplex {
+            let (current, verified) = sdk
+                .current_private_service_bundle(&hello.service_id, &hello.grant_id)
+                .await?;
+            if verified.digest() != lease.digest()
+                || super::network::fingerprint(&current)? != super::network::fingerprint(&bundle)?
+            {
+                return Err(SdkError::Trust);
+            }
+        }
+        Ok::<_, SdkError>((send, recv, lease, open, nonce, multiplex, super::network::fingerprint(&bundle)?))
     });
     let admitted = tokio::select! {biased;
         _=stopped(&mut stop)=>return Ok(()),
@@ -754,7 +823,7 @@ async fn serve_established_connection(
     };
     // Unauthenticated/mismatched socket attempts are ordinary refusals. Once
     // a durable publication activates, every cleanup/report error is retained.
-    let Ok(Ok((send, recv, lease, open, nonce))) = admitted else {
+    let Ok(Ok((send, recv, lease, open, nonce, multiplex, fingerprint))) = admitted else {
         return Ok(());
     };
     let context = PublicationContext {
@@ -773,9 +842,18 @@ async fn serve_established_connection(
     )?;
     let ready = host.identity.private_service_ready(&lease, &open)?;
     let grant = usage_claims(&lease)?;
+    if multiplex && !target.accepts(lease.lease()) {
+        return Err(SdkError::Trust);
+    }
     let publication =
         PrivateServicePublication::new(lease.clone(), &context, Instant::now(), usage.clone())?;
     let mut stream = BiStream::new(send, recv);
+    if multiplex {
+        return multiplex::serve(
+            sdk, host, consent, usage, stop, connection, stream, ready,
+            lease, fingerprint, grant, publication, target,
+        ).await;
+    }
     let forward = async {
         let prepared = publication.prepare(&target, &open, nonce, &host.identity)?;
         write_message(stream.parts_mut().0, &ready).await?;

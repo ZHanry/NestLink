@@ -1,5 +1,7 @@
 //! Real management authorization, installation-pinned Quinn, fixed local
 //! HTTP/TCP/DNS targets, shared durable usage and physical listener release.
+#[path = "private_services/multiplex.rs"]
+mod multiplex;
 #[path = "private_services/offline.rs"]
 mod offline;
 #[cfg(target_os = "linux")]
