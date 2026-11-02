@@ -8,7 +8,7 @@ use nestlink_identity::{
 };
 use nestlink_protocol::{
     api::NetworkIssueRequest,
-    network::{Direction, IpPrefix, IpProtocol, NetworkRule},
+    network::{IpPrefix, NetworkRule},
     network_access::NetworkAccessRequest,
     spaces::{
         SpaceCreateRequest, SpaceDeviceJoin,
@@ -18,7 +18,10 @@ use nestlink_protocol::{
 use nestlink_sdk::{DeploymentTrust, DeviceIdentity, network_management::decode_network_grant};
 use nestlink_server::{AppState, router};
 use nestlink_storage::Store;
+#[cfg(windows)]
+use nestlink_protocol::network::{Direction, IpProtocol};
 
+#[cfg(windows)]
 mod https;
 
 struct Server(
@@ -46,7 +49,15 @@ pub(super) struct Fixture {
     pub origin: String,
 }
 impl Fixture {
+    #[cfg(windows)]
     pub async fn new(https_case: Option<&Path>) -> Result<Self> {
+        Self::with_rules(https_case, vec![NetworkRule {
+            protocol: IpProtocol::Udp,
+            direction: Direction::Inbound,
+            ports: Some([443, 443]),
+        }]).await
+    }
+    pub async fn with_rules(https_case: Option<&Path>, rules: Vec<NetworkRule>) -> Result<Self> {
         // Secrets and the management database never enter the uploaded public
         // evidence directory, including if the coordinator terminates us.
         let private = tempfile::Builder::new()
@@ -68,10 +79,16 @@ impl Fixture {
         let account = format!("lab-{}", random_id());
         store.bootstrap_admin(&account, password.expose())?;
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+        #[cfg(windows)]
         let (tunnel, origin) = if let Some(case) = https_case {
             let (tunnel, origin) = https::start(listener.local_addr()?, case).await?;
             (Some(tunnel), origin)
         } else {
+            (None, format!("http://{}", listener.local_addr()?))
+        };
+        #[cfg(target_os = "linux")]
+        let (tunnel, origin) = {
+            assert!(https_case.is_none(), "Linux combined mechanism fixture does not claim protected HTTPS CLI login");
             (None, format!("http://{}", listener.local_addr()?))
         };
         let app = router(AppState::new(
@@ -80,8 +97,9 @@ impl Fixture {
             signer,
             origin.clone(),
             https_case.is_some(),
-        )?)
-        .layer(axum::middleware::from_fn(https::fixture_scope));
+        )?);
+        #[cfg(windows)]
+        let app = app.layer(axum::middleware::from_fn(https::fixture_scope));
         let (shutdown, stopped) = tokio::sync::oneshot::channel();
         let server = Server(
             tokio::spawn(async move {
@@ -157,11 +175,7 @@ impl Fixture {
             expected_destination_address_epoch: target_address.address_epoch,
             source_prefixes: prefixes(&source_address)?,
             destination_prefixes: prefixes(&target_address)?,
-            rules: vec![NetworkRule {
-                protocol: IpProtocol::Udp,
-                direction: Direction::Inbound,
-                ports: Some([443, 443]),
-            }],
+            rules,
             byte_limit: 1024 * 1024,
             expires_at_unix_ms: system_wall_ms()? + 45_000,
         };

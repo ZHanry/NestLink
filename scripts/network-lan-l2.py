@@ -11,6 +11,7 @@ import os
 import pathlib
 import signal
 import subprocess
+import tempfile
 import time
 
 
@@ -25,7 +26,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=pathlib.Path, required=True)
     parser.add_argument("--game", choices=("teeworlds",))
+    parser.add_argument("--combined-tun", action="store_true")
     args = parser.parse_args()
+    assert not (args.game and args.combined_tun), "select one exact independent fixture"
     assert os.environ["RUNNER_ENVIRONMENT"] == "github-hosted"
     output = args.output.resolve()
     output.mkdir(mode=0o700, parents=True)
@@ -35,6 +38,7 @@ def main():
     links = []
     failure = None
     cleanup_errors = []
+    private = None
     source = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
     assert source == os.environ["GITHUB_SHA"]
     receipt = {
@@ -44,7 +48,9 @@ def main():
         "run_id": os.environ["GITHUB_RUN_ID"],
         "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
         "runner_environment": os.environ["RUNNER_ENVIRONMENT"],
-        "scope": "isolated hosted official Teeworlds real play and revocation; no physical-site acceptance" if args.game else "isolated dual LAN UDP DNS and DNS-SD mechanism; no game or target-site acceptance",
+        "scope": ("isolated hosted official Teeworlds real play and revocation; no physical-site acceptance" if args.game
+                  else "isolated actual Linux TUN and dual-LAN DNS on the original production composite device/packet loop; remote host packet witness, no virtual HTTP/CLI/target claim" if args.combined_tun
+                  else "isolated dual LAN UDP DNS and DNS-SD mechanism; no game or target-site acceptance"),
         "lock_sha256": sha256(pathlib.Path("Cargo.lock")),
         "commands": commands,
         "passed": False,
@@ -91,15 +97,18 @@ def main():
         strict = command("lan-strict", ["cargo", "clippy", "--locked", "-p", "nestlink-sdk", "-p",
                          "nestlink-daemon", "--all-targets", "--", "-D", "warnings"], check=False)
         receipt["strict_passed"] = strict.returncode == 0
-        build = command("original-network-access-build", ["cargo", "test", "--locked", "-p",
-                        "nestlink-sdk", "--test", "network_access", "--no-run", "--message-format=json"])
+        target = "nestlink-daemon" if args.combined_tun else "network_access"
+        build_args = (["-p", "nestlink-daemon", "--bin", target] if args.combined_tun
+                      else ["-p", "nestlink-sdk", "--test", target])
+        build = command("original-network-access-build", ["cargo", "test", "--locked", *build_args,
+                        "--no-run", "--message-format=json"])
         artifacts = []
         for line in build.stdout.decode(errors="replace").splitlines():
             if not line.startswith("{"):
                 continue
             item = json.loads(line)
             if (item.get("reason") == "compiler-artifact" and item.get("executable")
-                    and item.get("target", {}).get("name") == "network_access"
+                    and item.get("target", {}).get("name") == target
                     and item.get("profile", {}).get("test")):
                 artifacts.append(pathlib.Path(item["executable"]))
         assert len(artifacts) == 1, "exact original integration binary must be unambiguous"
@@ -112,6 +121,11 @@ def main():
             selector = "lan::actual_teeworlds_client_server_play_revoke_and_release_original_owner"
             env["NESTLINK_GAME_EVIDENCE"] = str(output / "actual-teeworlds")
             assert pathlib.Path(env["NESTLINK_GAME_PREPARED"]).is_dir()
+        if args.combined_tun:
+            selector = "network_tun_system::native_tests::combined::actual_tun_and_lan_share_original_online_owner_and_release_together"
+            private = tempfile.TemporaryDirectory(prefix="nestlink-combined-private-", dir=os.environ["RUNNER_TEMP"])
+            env["NESTLINK_TUN_NATIVE_LAB"] = "1"
+            env["NESTLINK_TUN_NATIVE_PRIVATE_PARENT"] = private.name
         env["NESTLINK_LAN_EVIDENCE"] = str(output / "actual-lan-execution.json")
         suffix = os.environ["GITHUB_RUN_ID"][-7:] + os.environ["GITHUB_RUN_ATTEMPT"]
         for index in range(2):
@@ -173,6 +187,8 @@ def main():
     except BaseException as error:
         failure = type(error).__name__ + ": " + str(error)
     finally:
+        if private is not None:
+            private.cleanup()
         for index, namespace in enumerate(reversed(namespaces)):
             try:
                 pids = ip("namespace-owned-pids-" + str(index), "netns", "pids", namespace).stdout.split()

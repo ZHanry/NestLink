@@ -8,6 +8,8 @@ use tokio::{
     time::Instant,
 };
 
+mod combined;
+
 const ROLE_TEST: &str = "network_tun_system::native_tests::hosted_native_role";
 const HELPER_ID: &str = "native-test-helper.json";
 

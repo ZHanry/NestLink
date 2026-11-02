@@ -2,12 +2,22 @@ name: Controlled dual LAN discovery mechanism
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Independent exact LAN or original TUN plus LAN qualification
+        type: choice
+        default: all
+        required: true
+        options: [all, lan, combined]
   push:
     branches: [main]
     paths:
       - "crates/sdk/src/network/lan*"
       - "crates/sdk/src/network/lan/**"
       - "apps/daemon/src/network_lan.rs"
+      - "apps/daemon/src/network_lan/**"
+      - "apps/daemon/src/network_tun_system/native_tests/**"
+      - "apps/daemon/src/network_tun_system/windows/native_tests/online/fixture.rs"
       - "crates/sdk/tests/network_access/lan.rs"
       - "scripts/network-lan-*.py"
       - ".github/workflows/network-lan.yml"
@@ -21,6 +31,7 @@ concurrency:
 
 jobs:
   actual-dual-lan:
+    if: ${{ inputs.mode != 'combined' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
@@ -58,5 +69,46 @@ jobs:
         with:
           name: network-lan-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/network-lan-evidence/
+          if-no-files-found: warn
+          retention-days: 30
+  actual-tun-lan:
+    if: ${{ inputs.mode != 'lan' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      RUST_BACKTRACE: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Set original combined host owner build paths
+        shell: bash
+        run: |
+          printf 'NESTLINK_CODEC_PREFIX=%s/nestlink-codecs/x86_64-unknown-linux-gnu\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'CARGO_TARGET_DIR=%s/nestlink-combined-target\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Install mature actual kernel and distribution DNS fixture inputs
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev iproute2 dnsmasq-base
+      - name: Build and verify original native codec inputs on GitHub
+        run: |
+          python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/nestlink-codec-sources" --work-dir "$RUNNER_TEMP/nestlink-codecs"
+          python3 scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "$NESTLINK_CODEC_PREFIX"
+      - name: Parse original independent LAN coordinator on GitHub
+        run: python3 -B -c 'import ast,pathlib; [ast.parse(path.read_text()) for path in map(pathlib.Path,["scripts/network-lan-l2.py","scripts/network-lan-client.py"])]'
+      - name: Actual TUN and dual LAN through one original production packet owner
+        run: python3 -B scripts/network-lan-l2.py --combined-tun --output "$RUNNER_TEMP/network-combined-evidence"
+      - name: Retain same-source actual kernel combined evidence and failures
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-combined-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/network-combined-evidence/
           if-no-files-found: warn
           retention-days: 30
