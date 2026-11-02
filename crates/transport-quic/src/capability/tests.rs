@@ -8,6 +8,8 @@ const ALPN: &[u8] = b"nestlink/network-capability-test/2";
 struct Pair {
     first_endpoint: quinn::Endpoint,
     second_endpoint: quinn::Endpoint,
+    first_released: tokio::sync::oneshot::Receiver<()>,
+    second_released: tokio::sync::oneshot::Receiver<()>,
     first: quinn::Connection,
     second: quinn::Connection,
     first_binding: CapabilityBinding,
@@ -24,7 +26,9 @@ impl Pair {
             quinn::crypto::rustls::QuicServerConfig::try_from(server_tls)?,
         ));
         server.transport_config(crate::transport());
-        let second_endpoint = quinn::Endpoint::server(server, "127.0.0.1:0".parse()?)?;
+        let (second_endpoint, second_released) =
+            crate::service::socket::client("127.0.0.1:0".parse()?)?;
+        second_endpoint.set_server_config(Some(server));
         let mut client_tls =
             crate::tls::client_config(&first_identity, second_identity.fingerprint())?;
         client_tls.alpn_protocols = vec![ALPN.to_vec()];
@@ -32,7 +36,8 @@ impl Pair {
             quinn::crypto::rustls::QuicClientConfig::try_from(client_tls)?,
         ));
         client.transport_config(crate::transport());
-        let mut first_endpoint = quinn::Endpoint::client("127.0.0.1:0".parse()?)?;
+        let (mut first_endpoint, first_released) =
+            crate::service::socket::client("127.0.0.1:0".parse()?)?;
         first_endpoint.set_default_client_config(client);
         let destination = second_endpoint.local_addr()?;
         let deadline = Instant::now() + Duration::from_secs(5);
@@ -53,6 +58,8 @@ impl Pair {
         Ok(Self {
             first_endpoint,
             second_endpoint,
+            first_released,
+            second_released,
             first: first?,
             second: second?,
             first_binding: CapabilityBinding {
@@ -81,7 +88,22 @@ impl Pair {
             )
         })
         .await?;
-        drop(self);
+        let Self {
+            first_endpoint,
+            second_endpoint,
+            first,
+            second,
+            first_released,
+            second_released,
+            ..
+        } = self;
+        drop((first, second, first_endpoint, second_endpoint));
+        tokio::time::timeout(Duration::from_secs(5), async {
+            first_released.await?;
+            second_released.await?;
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+        })
+        .await??;
         for address in addresses {
             drop(std::net::UdpSocket::bind(address)?);
         }
