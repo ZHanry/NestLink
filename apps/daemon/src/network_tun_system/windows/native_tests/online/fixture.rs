@@ -22,6 +22,7 @@ use nestlink_storage::Store;
 use nestlink_protocol::network::{Direction, IpProtocol};
 
 #[cfg(windows)]
+#[path = "fixture/https.rs"]
 mod https;
 
 struct Server(

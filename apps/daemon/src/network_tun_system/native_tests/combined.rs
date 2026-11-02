@@ -120,8 +120,8 @@ async fn exercise(f:&fixture::Fixture,plan:&TunPlan,device:&PacketDevice,state:&
     nestlink_platform_security::create_private(&policy_path,&bytes)?;
     let approval=URL_SAFE_NO_PAD.encode(nestlink_identity::digest(&bytes));
     let options=LanOptions::try_parse_from(["combined-lab","--lan-policy",policy_path.to_str().ok_or_else(||io::Error::other("policy path encoding"))?,"--approve-lan-policy",&approval])?;
-    let attached=options.options.prepare(&f.space)?.ok_or_else(||io::Error::other("explicit combined LAN approval missing"))?.bind(&source)?;
-    let bridge=LanBridge::bind(policies[1].clone(),&f.space,&target)?;
+    let attached=options.options.prepare(&f.space)?.ok_or_else(||io::Error::other("explicit combined LAN approval missing"))?.bind(source)?;
+    let bridge=LanBridge::bind(policies[1].clone(),&f.space,target)?;
     let interface=nestlink_platform_network::path::NetworkPathManager::interfaces()?.into_iter().find(|row|row.up && row.default_route && row.addresses.iter().any(IpAddr::is_ipv4)).ok_or_else(||io::Error::other("combined original physical underlay missing"))?;
     let bind=SocketAddr::new(*interface.addresses.iter().find(|ip|ip.is_ipv4()).ok_or_else(||io::Error::other("combined physical IPv4 missing"))?,0);
     let underlay=nestlink_platform_network::path::NetworkPathManager::new(nestlink_platform_network::path::RoutePolicy::Interface(interface.index))?;

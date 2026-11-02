@@ -316,12 +316,11 @@ pub(super) async fn configure(plan: &TunPlan) -> Result {
         "none",
     ])
     .await?;
-    for (family, local, remote, prefix) in [
-        ("-4", plan.local_hosts[0], plan.remote_hosts[0], 32),
-        ("-6", plan.local_hosts[1], plan.remote_hosts[1], 128),
+    for (family, local, prefix) in [
+        ("-4", plan.local_hosts[0], 32),
+        ("-6", plan.local_hosts[1], 128),
     ] {
         let host = format!("{local}/{prefix}");
-        let remote = format!("{remote}/{prefix}");
         let mut address = vec![
             family,
             "addr",
@@ -335,6 +334,16 @@ pub(super) async fn configure(plan: &TunPlan) -> Result {
             address.push("nodad");
         }
         ip(&address).await?;
+    }
+    // Linux rejects an IPv6 host route through an administratively down
+    // device. Configure both exact host addresses first, then enable this
+    // original ephemeral TUN before adding either reviewed remote route.
+    ip(&["link", "set", "dev", &name, "up"]).await?;
+    for (family, local, remote, prefix) in [
+        ("-4", plan.local_hosts[0], plan.remote_hosts[0], 32),
+        ("-6", plan.local_hosts[1], plan.remote_hosts[1], 128),
+    ] {
+        let remote = format!("{remote}/{prefix}");
         ip(&[
             family,
             "route",
@@ -351,7 +360,6 @@ pub(super) async fn configure(plan: &TunPlan) -> Result {
         ])
         .await?;
     }
-    ip(&["link", "set", "dev", &name, "up"]).await?;
     Ok(())
 }
 pub(super) fn verify(plan: &TunPlan, state: &TunState, complete: bool) -> Result {

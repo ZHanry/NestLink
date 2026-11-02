@@ -115,12 +115,27 @@ class Actors:
             if result.returncode == 0:
                 windows = result.stdout.decode().splitlines()
                 assert len(windows) == 1, "exact owned X server must expose one matching game window"
-                self.commands.append({"command": argv, "return_code": 0,
-                                      "attempts": attempts, "blocked_queries": blocked_queries,
-                                      "window_ids": windows})
-                actual = self.run(["xdotool", "getwindowname", windows[0]], env=env)
-                assert title in actual
-                return windows[0]
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    break
+                name_argv = ["xdotool", "getwindowname", windows[0]]
+                try:
+                    caption = subprocess.run(name_argv, env=env, stdout=subprocess.PIPE,
+                                             stderr=subprocess.STDOUT, timeout=min(2, remaining), check=False)
+                except subprocess.TimeoutExpired:
+                    blocked_queries += 1
+                    continue
+                assert caption.returncode in (0, 1), caption.stdout.decode(errors="replace")
+                actual = caption.stdout.decode(errors="replace")
+                # SDL maps its WM_CLASS before assigning the caption. Its
+                # exact observed title must become ready within the same
+                # original startup deadline before gameplay can begin.
+                if caption.returncode == 0 and title in actual:
+                    self.commands.append({"command": argv, "return_code": 0,
+                                          "attempts": attempts, "blocked_queries": blocked_queries,
+                                          "window_ids": windows})
+                    self.commands.append({"command": name_argv, "return_code": 0, "output": actual})
+                    return windows[0]
             time.sleep(min(0.1, max(0, deadline - time.monotonic())))
         self.commands.append({"command": argv, "attempts": attempts, "timed_out": True,
                               "blocked_queries": blocked_queries, "timeout_seconds": seconds})
