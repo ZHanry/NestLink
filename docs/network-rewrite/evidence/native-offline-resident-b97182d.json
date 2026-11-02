@@ -1,0 +1,834 @@
+{
+    "schema_version":  1,
+    "scope":  "Focused original offline AppCore/daemon/desktop tests and full original four-case resident integration; no full Rust-core, physical target, public NAT or advanced-media acceptance claim",
+    "source_revision":  "b97182d39a1512f57cea36b2a2a7e40c217363e1",
+    "workflow":  ".github/workflows/offline-resident.yml",
+    "run_id":  41437456388,
+    "run_attempt":  1,
+    "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41437456388",
+    "build_provenance":  "GitHub-hosted ubuntu-24.04 and windows-2022 built the exact source with locked dependencies and the frozen codec/tool receipts. Source Git revision, tree, clean status and Cargo.lock hashes were identical before and after on both systems.",
+    "execution_provenance":  "Original AppCore QUIC/TLS two-case integration, daemon remote/private/entry tests, desktop layout and AppCore strict clippy passed on both systems. Linux resident truly ran all four cases and failed all four; Windows resident truly ran all four and passed two. The Windows child used the original verified medium non-admin wrapper.",
+    "targets":  [
+                    {
+                        "platform":  "linux",
+                        "job_id":  125250725067,
+                        "runner_os":  "Linux",
+                        "runner_environment":  "github-hosted",
+                        "image_os":  "ubuntu24",
+                        "image_version":  "20261026.354.1",
+                        "execution_identity":  "original non-root hosted runner and original PAM desktop session",
+                        "conclusion":  "failure",
+                        "source_before":  {
+                                              "revision":  "b97182d39a1512f57cea36b2a2a7e40c217363e1",
+                                              "tree":  "529f7580a2ae8de3343c296b8ea0baf004610123",
+                                              "status":  "",
+                                              "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+                                          },
+                        "source_after":  {
+                                             "revision":  "b97182d39a1512f57cea36b2a2a7e40c217363e1",
+                                             "tree":  "529f7580a2ae8de3343c296b8ea0baf004610123",
+                                             "status":  "",
+                                             "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+                                         },
+                        "source_unchanged":  true,
+                        "https_tool_sha256_before":  "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872",
+                        "https_tool_sha256_after":  "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872",
+                        "https_tool_matches_frozen_receipt":  true,
+                        "commands":  [
+                                         {
+                                             "name":  "rustc-version",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  null,
+                                             "summaries":  null
+                                         },
+                                         {
+                                             "name":  "cargo-version",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  null,
+                                             "summaries":  null
+                                         },
+                                         {
+                                             "name":  "app-core",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ]
+                                         },
+                                         {
+                                             "name":  "daemon-remote-unit",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "offline_remote::tests::original_resident_entry_requires_an_explicit_direct_carrier_and_controller_peer",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "offline_remote::tests::original_resident_json_cannot_import_authority_or_enable_carrier_fallback",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ]
+                                         },
+                                         {
+                                             "name":  "daemon-private-unit",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "private_service_proxy::offline::tests::original_private_resident_empty_actions_reject_injected_authority_fields",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ]
+                                         },
+                                         {
+                                             "name":  "daemon-entry-unit",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "entry_tests::command_dispatch_keeps_the_windows_main_future_bounded",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ]
+                                         },
+                                         {
+                                             "name":  "desktop-layout",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "layout_tests::independent_offline_viewport_close_requires_exact_local_receipts_without_online_inspect_or_revoke",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "layout_tests::independent_offline_workspace_displays_finite_scope_without_management_login",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ]
+                                         },
+                                         {
+                                             "name":  "resident",
+                                             "passed":  false,
+                                             "exit_code":  101,
+                                             "cases":  [
+                                                           [
+                                                               "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                                                               "FAILED"
+                                                           ],
+                                                           [
+                                                               "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                                                               "FAILED"
+                                                           ],
+                                                           [
+                                                               "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                               "FAILED"
+                                                           ],
+                                                           [
+                                                               "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                               "FAILED"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "0",
+                                                                   "4",
+                                                                   "0"
+                                                               ]
+                                                           ]
+                                         },
+                                         {
+                                             "name":  "app-core-clippy",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  null,
+                                             "summaries":  null
+                                         },
+                                         {
+                                             "name":  "daemon-clippy",
+                                             "passed":  false,
+                                             "exit_code":  101,
+                                             "cases":  null,
+                                             "summaries":  null
+                                         },
+                                         {
+                                             "name":  "resident-clippy",
+                                             "passed":  false,
+                                             "exit_code":  101,
+                                             "cases":  null,
+                                             "summaries":  null
+                                         }
+                                     ],
+                        "resident":  {
+                                         "passed":  0,
+                                         "failed":  4,
+                                         "ignored":  0,
+                                         "elapsed_seconds":  162.5,
+                                         "observations":  [
+                                                              "Management fence: original controller ended before connected with stopped reason transport_lost, cleanup succeeded and failure null; stderr clipboard owner stopped is a downstream symptom of an already-closing original Core. The host cause is not yet known.",
+                                                              "Pending listener: original system DNS for the independent public-PKI QuickTunnel did not become ready inside 60 seconds; this case did not reach its listener assertions.",
+                                                              "QUIC data: original endpoints reached connected but native display reply contained state null; no resident pixels, successful file, rebuild or final cleanup is claimed.",
+                                                              "TLS data: actual test returned Elapsed(()); the former receipt has insufficient stage context. No resident data success is claimed."
+                                                          ]
+                                     },
+                        "artifact_id":  13137602737,
+                        "artifact_name":  "original-offline-resident-ubuntu-24.04-b97182d39a1512f57cea36b2a2a7e40c217363e1-1",
+                        "artifact_archive_bytes":  64713,
+                        "artifact_digest_reported_by_github":  "sha256:6343f05570816896b3496096eb044507a1c778e8bbe6302a77114d47a4e364b3",
+                        "downloaded_files":  [
+                                                 {
+                                                     "name":  "nestlink-native-offline-https-license.txt",
+                                                     "bytes":  11357,
+                                                     "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-native-offline-https-tool.json",
+                                                     "bytes":  871,
+                                                     "sha256":  "0b1b30fcb8087efaa09cedcd355b7bc2ffd6b1f526bfc56eea45847665851bcb"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-codecs/x86_64-unknown-linux-gnu/nestlink-codecs.json",
+                                                     "bytes":  20593,
+                                                     "sha256":  "e77b1300d42063f033554dfb066f6c5a184d288496cf524d5fd06716c930d8fe"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core-clippy.log",
+                                                     "bytes":  27573,
+                                                     "sha256":  "a4a24b84f1d7ad694c10d8def04f6c5bdcbe471cd0d71b3eb00a164f15ca4326"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core.log",
+                                                     "bytes":  43942,
+                                                     "sha256":  "739754d6ff813125d8697bebb0253674abd23594e1ed2c4c37627592f87ac50c"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/cargo-version.log",
+                                                     "bytes":  36,
+                                                     "sha256":  "b6ef6807dd96d18b833474ad68e7a23a29e562a29c67afa71a59fb9a73df0068"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-clippy.log",
+                                                     "bytes":  18218,
+                                                     "sha256":  "d38d682a237ebb53a8233bda9545b0b14df399c6959ba0ed59da03a41c8ab0e1"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-entry-unit.log",
+                                                     "bytes":  14228,
+                                                     "sha256":  "0999ada565ab14dd6455470db05c2ef966bb7ffd9524d020d9c864079cc2ea0c"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-private-unit.log",
+                                                     "bytes":  14450,
+                                                     "sha256":  "e49516dcf7a7139d742029001b6a2c870c130d3d3d256f06a65657fb5aeaff79"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-remote-unit.log",
+                                                     "bytes":  18556,
+                                                     "sha256":  "30c1cbe9329fc7a1b1a713022338fe71a9ee22190367d04afe688a22d40c44d1"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/desktop-layout.log",
+                                                     "bytes":  28085,
+                                                     "sha256":  "da51e52de0961a9ebb268c616fce28d1cc48cae63db70ca4e97ac41547392285"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-codecs.json",
+                                                     "bytes":  20593,
+                                                     "sha256":  "e77b1300d42063f033554dfb066f6c5a184d288496cf524d5fd06716c930d8fe"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
+                                                     "bytes":  11357,
+                                                     "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
+                                                     "bytes":  871,
+                                                     "sha256":  "0b1b30fcb8087efaa09cedcd355b7bc2ffd6b1f526bfc56eea45847665851bcb"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/receipt.json",
+                                                     "bytes":  12031,
+                                                     "sha256":  "9c7c2270598ac15a24ad98b9d544a7a10e61ff05d4a707c8ce0ba5bd76d86427"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/resident-clippy.log",
+                                                     "bytes":  18101,
+                                                     "sha256":  "e7c6c334baaa458a03708f8c000defc425002abe049953aac09e62d8f49da8e0"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/resident.log",
+                                                     "bytes":  15994,
+                                                     "sha256":  "95eb93e1a3d65f68f90d49dab5c489a9c8c7d701718e5836d4a9d35c00bb58c4"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/rustc-version.log",
+                                                     "bytes":  633,
+                                                     "sha256":  "c21d4eda194b86fd08d5f56a5a74a7753ac880789ca7703e9e18d8e899e8a408"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/source-after.json",
+                                                     "bytes":  222,
+                                                     "sha256":  "ce6be97ae676d2877db8d4a34bfd0592a8329973ccb00f3bb4aafc5a8fb2b605"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/source-before.json",
+                                                     "bytes":  222,
+                                                     "sha256":  "ce6be97ae676d2877db8d4a34bfd0592a8329973ccb00f3bb4aafc5a8fb2b605"
+                                                 }
+                                             ],
+                        "producer_inventory_comparison":  [
+                                                              {
+                                                                  "name":  "app-core-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "app-core.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "cargo-version.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-entry-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-private-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-remote-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "desktop-layout.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-codecs.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-native-offline-https-license.txt",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-native-offline-https-tool.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "resident-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "resident.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "rustc-version.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "source-after.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "source-before.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              }
+                                                          ],
+                        "independently_hashed_file_count":  20,
+                        "producer_inventory_matched_files":  16
+                    },
+                    {
+                        "platform":  "windows",
+                        "job_id":  125250725403,
+                        "runner_os":  "Windows",
+                        "runner_environment":  "github-hosted",
+                        "image_os":  "win22",
+                        "image_version":  "20261026.347.1",
+                        "execution_identity":  "verified original medium non-admin wrapper",
+                        "conclusion":  "failure",
+                        "source_before":  {
+                                              "revision":  "b97182d39a1512f57cea36b2a2a7e40c217363e1",
+                                              "tree":  "529f7580a2ae8de3343c296b8ea0baf004610123",
+                                              "status":  "",
+                                              "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+                                          },
+                        "source_after":  {
+                                             "revision":  "b97182d39a1512f57cea36b2a2a7e40c217363e1",
+                                             "tree":  "529f7580a2ae8de3343c296b8ea0baf004610123",
+                                             "status":  "",
+                                             "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+                                         },
+                        "source_unchanged":  true,
+                        "https_tool_sha256_before":  "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343",
+                        "https_tool_sha256_after":  "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343",
+                        "https_tool_matches_frozen_receipt":  true,
+                        "commands":  [
+                                         {
+                                             "name":  "rustc-version",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  null,
+                                             "summaries":  null
+                                         },
+                                         {
+                                             "name":  "cargo-version",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  null,
+                                             "summaries":  null
+                                         },
+                                         {
+                                             "name":  "app-core",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ]
+                                         },
+                                         {
+                                             "name":  "daemon-remote-unit",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "offline_remote::tests::original_resident_entry_requires_an_explicit_direct_carrier_and_controller_peer",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "offline_remote::tests::original_resident_json_cannot_import_authority_or_enable_carrier_fallback",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ]
+                                         },
+                                         {
+                                             "name":  "daemon-private-unit",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "private_service_proxy::offline::tests::original_private_resident_empty_actions_reject_injected_authority_fields",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ]
+                                         },
+                                         {
+                                             "name":  "daemon-entry-unit",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "entry_tests::command_dispatch_keeps_the_windows_main_future_bounded",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ]
+                                         },
+                                         {
+                                             "name":  "desktop-layout",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "layout_tests::independent_offline_viewport_close_requires_exact_local_receipts_without_online_inspect_or_revoke",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "layout_tests::independent_offline_workspace_displays_finite_scope_without_management_login",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ]
+                                         },
+                                         {
+                                             "name":  "resident",
+                                             "passed":  false,
+                                             "exit_code":  101,
+                                             "cases":  [
+                                                           [
+                                                               "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                               "FAILED"
+                                                           ],
+                                                           [
+                                                               "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                               "FAILED"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "2",
+                                                                   "0"
+                                                               ]
+                                                           ]
+                                         },
+                                         {
+                                             "name":  "app-core-clippy",
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  null,
+                                             "summaries":  null
+                                         },
+                                         {
+                                             "name":  "daemon-clippy",
+                                             "passed":  false,
+                                             "exit_code":  101,
+                                             "cases":  null,
+                                             "summaries":  null
+                                         },
+                                         {
+                                             "name":  "resident-clippy",
+                                             "passed":  false,
+                                             "exit_code":  101,
+                                             "cases":  null,
+                                             "summaries":  null
+                                         }
+                                     ],
+                        "resident":  {
+                                         "passed":  2,
+                                         "failed":  2,
+                                         "ignored":  0,
+                                         "elapsed_seconds":  281.22,
+                                         "observations":  [
+                                                              "Management fence passed all original cases, including success and failed HTTP commands.",
+                                                              "Pending listener passed all four original EOF/stop/logout/identity-change cases and actual socket cleanup.",
+                                                              "QUIC and TLS data both reached native display approval and the original actual VP8 frame assertions, then failed in the first real download task with local download storage failed: PermissionDenied. The precise OS operation and completed byte count were not exposed by this source.",
+                                                              "No successful resident file, explicit rebuild, second file, or data-case final cleanup is claimed. The protected fixture tool ACL repair enabled actual resident startup and is distinct from this later download-storage failure."
+                                                          ]
+                                     },
+                        "artifact_id":  13137208880,
+                        "artifact_name":  "original-offline-resident-windows-2022-b97182d39a1512f57cea36b2a2a7e40c217363e1-1",
+                        "artifact_archive_bytes":  67629,
+                        "artifact_digest_reported_by_github":  "sha256:431eaccf73f4618ccf6ab237cea528d850e99ebe7a09eba48e8e51e73884364e",
+                        "downloaded_files":  [
+                                                 {
+                                                     "name":  "nestlink-native-offline-https-license.txt",
+                                                     "bytes":  11357,
+                                                     "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-native-offline-https-tool.json",
+                                                     "bytes":  895,
+                                                     "sha256":  "c3a03288600654bfb32acf656e3bbd1d3af5542acee25862dbb6dfc2826602d3"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-codecs/x86_64-pc-windows-msvc/nestlink-codecs.json",
+                                                     "bytes":  23792,
+                                                     "sha256":  "2eab7255f141e6d1f07b10acd39b89f00a5fba329f76b9387f7183287a4c6a5c"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core-clippy.log",
+                                                     "bytes":  26978,
+                                                     "sha256":  "dcd972dda9cc8ebc5f0a353f9f7726fba50907e2cfba3497e41946ee4a58cd5d"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core.log",
+                                                     "bytes":  43126,
+                                                     "sha256":  "52cfd9fbc28e703fac8dcf61cc282c0095ef903ed1d91613053bc7d0ba00a56b"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/cargo-version.log",
+                                                     "bytes":  123,
+                                                     "sha256":  "d23c4c65b8674a054de5e636a3a8a764f439ce1ebffd9dc967c550b1298f9ed1"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-clippy.log",
+                                                     "bytes":  19129,
+                                                     "sha256":  "ea124609e9c6de069dcb038d66b8bb8b8b668673ac384ef7d84dbcfe59b739cc"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-entry-unit.log",
+                                                     "bytes":  14087,
+                                                     "sha256":  "8ab5ad090020e65380c3f862df030f454306720d53373c0aff0f94e1482eda93"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-private-unit.log",
+                                                     "bytes":  14308,
+                                                     "sha256":  "2c1ebb1ace5cf13b1116c55439afdc471e2fed4c6ab693290c76d47b04f36410"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-remote-unit.log",
+                                                     "bytes":  19813,
+                                                     "sha256":  "999da0ca9c422b7602263c2e4565acbe8b2feb77678cc35e87203eb0f2891d6e"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/desktop-layout.log",
+                                                     "bytes":  23398,
+                                                     "sha256":  "5aaf4699ac992ab7c9092d60dff2990288e347e88d4f9c4722398d23bc1b02e9"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-codecs.json",
+                                                     "bytes":  23792,
+                                                     "sha256":  "2eab7255f141e6d1f07b10acd39b89f00a5fba329f76b9387f7183287a4c6a5c"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
+                                                     "bytes":  11357,
+                                                     "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
+                                                     "bytes":  895,
+                                                     "sha256":  "c3a03288600654bfb32acf656e3bbd1d3af5542acee25862dbb6dfc2826602d3"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/receipt.json",
+                                                     "bytes":  14157,
+                                                     "sha256":  "7e0660d8c7de52f7a0db0887abbd1a6e0c35206d9e7862125ac54bf09db66571"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/resident-clippy.log",
+                                                     "bytes":  17825,
+                                                     "sha256":  "1f26cbefa2dcd0a0f3c2e824c48fe0ef7f4cf87dd168b18ed308e17d92a344fc"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/resident.log",
+                                                     "bytes":  15602,
+                                                     "sha256":  "01c4ef3c181dc062fdad18598244720c775b63411970dc1ec8aa2a9c8a24ed31"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/rustc-version.log",
+                                                     "bytes":  714,
+                                                     "sha256":  "28a4631a2b64df26ae9a4c2b585ab6d75e8c29ce917e588c8fdec54fc8f16c15"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/source-after.json",
+                                                     "bytes":  228,
+                                                     "sha256":  "47cc95618e90da6b43bc2041842e508a9d76998fb48841afa4b8bcb74e684452"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/source-before.json",
+                                                     "bytes":  228,
+                                                     "sha256":  "47cc95618e90da6b43bc2041842e508a9d76998fb48841afa4b8bcb74e684452"
+                                                 }
+                                             ],
+                        "producer_inventory_comparison":  [
+                                                              {
+                                                                  "name":  "app-core-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "app-core.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "cargo-version.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-entry-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-private-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-remote-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "desktop-layout.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-codecs.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-native-offline-https-license.txt",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-native-offline-https-tool.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "resident-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "resident.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "rustc-version.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "source-after.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "source-before.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              }
+                                                          ],
+                        "independently_hashed_file_count":  20,
+                        "producer_inventory_matched_files":  16
+                    }
+                ],
+    "verification":  "All 40 downloaded files, including duplicated tool/license/codec receipts and each producer receipt itself, were independently hashed. Each of the two producer inventories lists 16 payload files; all 32 entries match downloaded bytes and SHA-256. The two GitHub archive digests are reported separately and are not falsely represented as independently downloaded ZIP hashes.",
+    "strict_clippy_failure":  "Daemon and resident strict clippy both failed on both systems in original app-ipc compressed_video.rs:130 manual_range_patterns. The AppCore strict clippy passed. Parent owns the mechanical range-pattern correction.",
+    "follow_up":  {
+                      "diagnostic_commit":  "fc07235",
+                      "verification_status":  "implemented_unverified",
+                      "changes":  [
+                                      "Native capture now retains bounded original error kind, raw OS number and text; it still follows the original failure path.",
+                                      "Resident fixture continuously drains stderr while retaining at most 64 KiB, sanitizes last lifecycle observations, waits for both connected results, and reads each original endpoint IPC snapshot on failure. Data phases expose which original operation timed out.",
+                                      "Original persistent download callbacks retain the exact original io::Error and emit bounded stage/kind/OS diagnostics at original preparation, journal and publication operations. No ACL, share mode, permission gate, deadline, quota, assertion or per-case QuickTunnel isolation was changed."
+                                  ],
+                      "next":  "Use a new exact-source GitHub-hosted receipt to identify host capture/transport termination on Linux and the actual Windows storage syscall; repair only the confirmed cause and retain all original assertions."
+                  },
+    "limitations":  [
+                        "The frozen public-PKI fixture terminates management HTTPS at Cloudflare and forwards to the original disposable loopback HTTP upstream. It is not peer end-to-end or real-public-NAT qualification.",
+                        "A passed independent AppCore integration does not establish original resident pixel/file/rebuild completion.",
+                        "Linux independent QuickTunnel system DNS remained an actual external readiness failure in one original case; no insecure TLS, HTTP fallback, resolver bypass or external owner reuse was introduced.",
+                        "No physical two-device, GPU/Main10, public-NAT, mobile-client or target acceptance is established by these hosted results.",
+                        "fc07235 diagnostic changes were manually reviewed only and still require hosted formatting/compilation/execution. The existing original Luanti 25-second check and its failure status are unchanged."
+                    ]
+}
