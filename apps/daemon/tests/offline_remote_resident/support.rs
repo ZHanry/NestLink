@@ -207,11 +207,20 @@ impl Platform {
             }
             command
                 .arg("/usr/bin/python3")
-                .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/../../scripts/refactor-offline-resident-pam.py"))
+                .arg(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/../../scripts/refactor-offline-resident-pam.py"
+                ))
                 .arg("--uid")
                 .arg(rustix::process::geteuid().as_raw().to_string())
                 .arg("--display")
-                .arg(self.env.iter().find(|(name, _)| *name == "DISPLAY").map(|(_, value)| value.as_str()).unwrap_or_default())
+                .arg(
+                    self.env
+                        .iter()
+                        .find(|(name, _)| *name == "DISPLAY")
+                        .map(|(_, value)| value.as_str())
+                        .unwrap_or_default(),
+                )
                 .arg("--")
                 .arg(env!("CARGO_BIN_EXE_nestlink-daemon"));
             (command, Some(unit))

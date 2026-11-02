@@ -6,7 +6,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     use std::sync::atomic::AtomicBool;
     let args = std::env::args().skip(1).collect::<Vec<_>>();
     if args.len() != 6 {
-        return Err("usage: windows-hevc-direction-probe encode|decode main8|main10 WIDTH HEIGHT FPS KBPS".into());
+        return Err(
+            "usage: windows-hevc-direction-probe encode|decode main8|main10 WIDTH HEIGHT FPS KBPS"
+                .into(),
+        );
     }
     let direction = match args[0].as_str() {
         "encode" => ExecutionDirection::Encode,
@@ -29,26 +32,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let observed = contract.config();
     let owner = receipt.owner();
     owner.require_hardware_identity()?;
-    if (observed.width, observed.height, observed.fps, observed.bitrate_kbps)
-        != (config.width, config.height, config.fps, config.bitrate_kbps)
-        || contract.bit_depth() != depth || receipt.direction() != direction
-        || receipt.outputs() < 16 || !receipt.owner_closed() || !receipt.checked_flush()
+    if (
+        observed.width,
+        observed.height,
+        observed.fps,
+        observed.bitrate_kbps,
+    ) != (config.width, config.height, config.fps, config.bitrate_kbps)
+        || contract.bit_depth() != depth
+        || receipt.direction() != direction
+        || receipt.outputs() < 16
+        || !receipt.owner_closed()
+        || !receipt.checked_flush()
     {
         return Err("original HEVC direction receipt differs from requested workload".into());
     }
-    println!("{}", serde_json::json!({
-        "kind":"hevc-direction-functional-probe", "direction":args[0], "profile":args[1],
-        "width":config.width, "height":config.height, "fps_target":config.fps,
-        "kbps_ceiling":config.bitrate_kbps, "bit_depth":contract.bit_depth(),
-        "general_profile_tier_level":contract.general_profile_tier_level(),
-        "resource_id":owner.resource_id, "adapter_luid":owner.adapter_luid.map(|v|format!("{v:016x}")),
-        "driver_version":owner.driver_version.map(|v|format!("{v:016x}")),
-        "hardware_output":owner.hardware_output, "outputs":receipt.outputs(),
-        "owner_closed":receipt.owner_closed(), "checked_flush":receipt.checked_flush(),
-        "synthetic_input":true, "color":"BT709-limited-SDR", "desktop_capture":false,
-        "native_ten_bit_capture":false, "hdr_qualified":false,
-        "performance_qualified":false, "scanout_verified":false
-    }));
+    println!(
+        "{}",
+        serde_json::json!({
+            "kind":"hevc-direction-functional-probe", "direction":args[0], "profile":args[1],
+            "width":config.width, "height":config.height, "fps_target":config.fps,
+            "kbps_ceiling":config.bitrate_kbps, "bit_depth":contract.bit_depth(),
+            "general_profile_tier_level":contract.general_profile_tier_level(),
+            "resource_id":owner.resource_id, "adapter_luid":owner.adapter_luid.map(|v|format!("{v:016x}")),
+            "driver_version":owner.driver_version.map(|v|format!("{v:016x}")),
+            "hardware_output":owner.hardware_output, "outputs":receipt.outputs(),
+            "owner_closed":receipt.owner_closed(), "checked_flush":receipt.checked_flush(),
+            "synthetic_input":true, "color":"BT709-limited-SDR", "desktop_capture":false,
+            "native_ten_bit_capture":false, "hdr_qualified":false,
+            "performance_qualified":false, "scanout_verified":false
+        })
+    );
     Ok(())
 }
 #[cfg(not(windows))]
