@@ -296,8 +296,11 @@ impl Platform {
             let secret = zeroize::Zeroizing::new(URL_SAFE_NO_PAD.encode(*key));
             // This is the real Secret Service used by production SessionStore.
             // No plaintext fallback or test-only authentication path exists.
-            tokio::time::timeout(Duration::from_secs(10), async {
+            let mut attempts = 0_u32;
+            let mut last_status = None;
+            let stored = tokio::time::timeout(Duration::from_secs(10), async {
                 loop {
+                    attempts += 1;
                     let mut child = self
                         .command("secret-tool")
                         .args([
@@ -311,6 +314,7 @@ impl Platform {
                         .stdin(Stdio::piped())
                         .stdout(Stdio::null())
                         .stderr(Stdio::null())
+                        .kill_on_drop(true)
                         .spawn()?;
                     child
                         .stdin
@@ -318,14 +322,19 @@ impl Platform {
                         .ok_or_else(|| io::Error::other("secret input"))?
                         .write_all(secret.as_bytes())
                         .await?;
-                    if child.wait().await?.success() {
+                    let status = child.wait().await?;
+                    last_status = status.code();
+                    if status.success() {
                         return Ok::<_, io::Error>(());
                     }
                     tokio::time::sleep(Duration::from_millis(50)).await;
                 }
             })
-            .await
-            .map_err(|_| {
+            .await;
+            if stored.is_err() {
+                self.secret_service_diagnostics(attempts, last_status).await;
+            }
+            stored.map_err(|_| {
                 io::Error::new(
                     io::ErrorKind::TimedOut,
                     "original OS Secret Service rejected the protected-login key store",
@@ -362,6 +371,56 @@ impl Platform {
             &cipher,
         )?;
         Ok(())
+    }
+    #[cfg(target_os = "linux")]
+    async fn secret_service_diagnostics(&self, attempts: u32, last_status: Option<i32>) {
+        // This runs only after the unchanged key-store gate has failed. Read
+        // fixed service metadata, never a stored secret or raw helper output.
+        eprintln!("original_secret_service_store attempts={attempts} last_exit={last_status:?}");
+        for (index, child) in self.children.iter().enumerate() {
+            let state = if let Some(pid) = child.id() {
+                tokio::fs::read_to_string(format!("/proc/{pid}/stat"))
+                    .await
+                    .ok()
+                    .and_then(|stat| {
+                        stat.rsplit_once(')')
+                            .and_then(|(_, fields)| fields.split_whitespace().next())
+                            .and_then(|state| state.chars().next())
+                    })
+            } else {
+                None
+            };
+            eprintln!("original_secret_service_child index={index} state={state:?}");
+        }
+        let mut command = self.command("dbus-send");
+        command
+            .args([
+                "--session",
+                "--print-reply",
+                "--dest=org.freedesktop.secrets",
+                "/org/freedesktop/secrets/collection/login",
+                "org.freedesktop.DBus.Properties.Get",
+                "string:org.freedesktop.Secret.Collection",
+                "string:Locked",
+            ])
+            .kill_on_drop(true);
+        let metadata = tokio::time::timeout(Duration::from_secs(2), command.output()).await;
+        let (result, locked) = match metadata {
+            Ok(Ok(output)) => {
+                let text = String::from_utf8_lossy(&output.stdout);
+                let locked = if output.status.success() && text.contains("boolean true") {
+                    Some(true)
+                } else if output.status.success() && text.contains("boolean false") {
+                    Some(false)
+                } else {
+                    None
+                };
+                (if output.status.success() { "ok" } else { "rejected" }, locked)
+            }
+            Ok(Err(_)) => ("io", None),
+            Err(_) => ("timeout", None),
+        };
+        eprintln!("original_secret_service_collection result={result} locked={locked:?}");
     }
     pub async fn shutdown(mut self) {
         for child in self.children.iter_mut().rev() {

@@ -678,16 +678,14 @@ impl LocalProducts {
         let mut audio = crate::native_audio::spawn_native_audio(core.clone());
         let (stop, mut stopping) = watch::channel(false);
         let task = tokio::spawn(async move {
-            let first = tokio::select! { biased;
-                _ = stopping.changed() => Ok(()),
-                result = capture.wait() => result,
-                result = audio.wait() => result,
+            let (actor, first) = tokio::select! { biased;
+                _ = stopping.changed() => ("stop", Ok(())),
+                result = capture.wait() => ("capture", result),
+                result = audio.wait() => ("audio", result),
             };
-            // The offline Core keeps its final Running-lifecycle snapshot when
-            // its original carrier worker closes the observation channel. A
-            // normal capture/audio return can therefore precede the resident's
-            // explicit product join. Only the original successful transport
-            // cleanup receipt distinguishes that return from an actor failure.
+            // Route cleanup can precede the final Stopped snapshot. Record the
+            // original state observed by this actor; the final successful
+            // transport receipt alone distinguishes a completed carrier here.
             let snapshot = core.snapshot();
             let completed_carrier = snapshot.native_offline.as_ref().is_some_and(|view| {
                 view.status == NativeSessionStatus::Stopped
@@ -701,11 +699,21 @@ impl LocalProducts {
                         )
                     )
             });
-            if first.is_err()
+            let stop_owner = first.is_err()
                 || (!*stopping.borrow()
                     && snapshot.lifecycle == nestlink_app_core::Lifecycle::Running
-                    && !completed_carrier)
-            {
+                    && !completed_carrier);
+            eprintln!(
+                "offline_products_end actor={actor} result={} local_stop={} lifecycle={:?} native_status={:?} reason={:?} cleanup={:?} failure={:?} stop_owner={stop_owner}",
+                if first.is_ok() { "ok" } else { "error" },
+                *stopping.borrow(),
+                snapshot.lifecycle,
+                snapshot.native_offline.as_ref().map(|view| view.status),
+                snapshot.native_offline.as_ref().and_then(|view| view.stop_reason),
+                snapshot.native_offline.as_ref().and_then(|view| view.cleanup),
+                snapshot.native_offline.as_ref().and_then(|view| view.failure.as_ref()).map(|failure| failure.kind)
+            );
+            if stop_owner {
                 owner.stop();
             }
             capture.request_stop();

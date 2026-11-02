@@ -566,6 +566,16 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
         assert_eq!(downloaded.confirmed_bytes, bytes.len() as u64);
         assert_eq!(std::fs::read(output.join("received.bin"))?, bytes);
         assert!(source.budget()?.remaining_bytes < 1048576 - 262144);
+        assert!(
+            controller_handle
+                .snapshot()
+                .native_offline
+                .as_ref()
+                .ok_or("current offline snapshot budget")?
+                .budget
+                .remaining_bytes
+                < 1048576 - 262144
+        );
         let spent_before_rebuild = source.budget()?.remaining_bytes;
         let local_generation = controller_handle.snapshot().generation;
         controller_session.request_carrier_rebuild()?;
@@ -652,6 +662,16 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
         );
         assert!(
             source.budget()?.remaining_bytes
+                < spent_before_rebuild.saturating_sub(bytes.len() as u64)
+        );
+        assert!(
+            controller_handle
+                .snapshot()
+                .native_offline
+                .as_ref()
+                .ok_or("current rebuilt offline snapshot budget")?
+                .budget
+                .remaining_bytes
                 < spent_before_rebuild.saturating_sub(bytes.len() as u64)
         );
         if transport == NativeOfflineTransport::Quic {

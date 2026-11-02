@@ -107,6 +107,20 @@ impl NativeOfflineRemote {
             stopped: value.stopped,
         })
     }
+    // A direct read, including authenticated IPC Snapshot, must observe the
+    // original cumulative meter after a completed delivery. The periodic watch
+    // is only a notification cadence and cannot be the accounting read source.
+    pub(super) fn refresh_budget(&self, view: &mut NativeOfflineView) {
+        match self.budget() {
+            Ok(budget) => view.budget = budget,
+            Err(_) => {
+                view.budget.remaining_bytes = 0;
+                view.budget.remaining_file_write_bytes = 0;
+                view.budget.remaining_lifetime_ms = 0;
+                view.budget.stopped = true;
+            }
+        }
+    }
     pub fn stop(&self) {
         self.0.sdk.stop();
         self.0.stop.send_replace(Some(StopReason::ExplicitExit));
@@ -436,6 +450,7 @@ impl NativeOfflineSession {
             controls,
             shared: shared.clone(),
             view: watching,
+            offline: Some(remote.clone()),
         };
         let initial = NativeOfflineView {
             space_id: scope.space_id,
@@ -601,7 +616,9 @@ impl NativeOfflineSession {
         self.data.clone()
     }
     pub fn view(&self) -> Arc<NativeOfflineView> {
-        self.view.borrow().clone()
+        let mut view = self.view.borrow().clone();
+        self.remote.refresh_budget(Arc::make_mut(&mut view));
+        view
     }
     pub fn observe(&self) -> watch::Receiver<Arc<NativeOfflineView>> {
         self.view.clone()

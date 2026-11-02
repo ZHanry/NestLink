@@ -789,6 +789,7 @@ pub struct CoreHandle {
     controls: mpsc::Sender<Control>,
     shared: Arc<Shared>,
     view: watch::Receiver<Arc<Snapshot>>,
+    offline: Option<NativeOfflineRemote>,
 }
 impl CoreHandle {
     fn native_host_video_route(
@@ -831,7 +832,13 @@ impl CoreHandle {
     }
 
     pub fn snapshot(&self) -> Arc<Snapshot> {
-        self.view.borrow().clone()
+        let mut snapshot = self.view.borrow().clone();
+        if let Some(owner) = &self.offline
+            && let Some(view) = Arc::make_mut(&mut snapshot).native_offline.as_mut()
+        {
+            owner.refresh_budget(view);
+        }
+        snapshot
     }
 
     /// Return the exact browser proof binding only while this local install
@@ -1897,6 +1904,7 @@ impl AppCore {
             controls,
             shared: shared.clone(),
             view: watching,
+            offline: None,
         };
         let mut actor = Actor {
             automation: handle.clone(),

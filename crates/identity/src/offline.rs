@@ -285,8 +285,16 @@ pub struct OfflineProcess {
 #[derive(Clone)]
 pub struct OfflineProcessStop(Arc<AtomicBool>);
 impl OfflineProcessStop {
+    #[track_caller]
     pub fn stop(&self) {
-        self.0.store(true, Ordering::Release);
+        if !self.0.swap(true, Ordering::AcqRel) {
+            let caller = std::panic::Location::caller();
+            eprintln!(
+                "offline_process_stop category=local_guard source={}:{}",
+                caller.file(),
+                caller.line()
+            );
+        }
     }
 }
 impl OfflineProcess {
@@ -381,8 +389,16 @@ impl OfflineProcess {
     }
     /// Local exit/disable is terminal for all future activations in this process.
     /// Already activated admission owners observe this shared terminal flag.
+    #[track_caller]
     pub fn stop(&mut self) {
-        self.stopped.store(true, Ordering::Release);
+        if !self.stopped.swap(true, Ordering::AcqRel) {
+            let caller = std::panic::Location::caller();
+            eprintln!(
+                "offline_process_stop category=owner source={}:{}",
+                caller.file(),
+                caller.line()
+            );
+        }
     }
 }
 impl Drop for OfflineProcess {
@@ -436,11 +452,23 @@ impl OfflineAdmission {
     pub fn remaining_lifetime(&self) -> Duration {
         self.deadline.saturating_duration_since(Instant::now())
     }
+    #[track_caller]
     pub fn stop(&mut self) {
+        if !self.stopped {
+            let caller = std::panic::Location::caller();
+            eprintln!(
+                "offline_admission_stop category=terminal source={}:{}",
+                caller.file(),
+                caller.line()
+            );
+        }
         self.stopped = true;
     }
     fn check(&mut self, wall_ms: u64) -> Result<(), ContractError> {
         if self.is_stopped() {
+            if !self.stopped {
+                eprintln!("offline_admission_check category=process_stopped");
+            }
             self.stop();
             return Err(revoked("original offline owner is terminal"));
         }
@@ -448,6 +476,12 @@ impl OfflineAdmission {
             || wall_ms >= self.bundle.claims.expires_at_ms
             || Instant::now() >= self.deadline
         {
+            eprintln!(
+                "offline_admission_check category=expiry wall_rollback={} wall_expired={} monotonic_expired={}",
+                wall_ms < self.highest_wall_ms,
+                wall_ms >= self.bundle.claims.expires_at_ms,
+                Instant::now() >= self.deadline
+            );
             self.stop();
             return Err(expired());
         }

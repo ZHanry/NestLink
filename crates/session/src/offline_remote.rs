@@ -82,8 +82,17 @@ impl OfflineRemoteAuthority {
             stopped: owner.is_stopped(),
         })
     }
+    #[track_caller]
     pub fn stop(&self) {
         if let Ok(mut owner) = self.0.lock() {
+            if !owner.is_stopped() {
+                let caller = std::panic::Location::caller();
+                eprintln!(
+                    "offline_remote_authority_stop category=explicit source={}:{}",
+                    caller.file(),
+                    caller.line()
+                );
+            }
             owner.stop();
         }
     }

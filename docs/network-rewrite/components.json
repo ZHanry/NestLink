@@ -30,7 +30,7 @@
         "https://github.com/psychon/x11rb/blob/1b73245acc5dce4c4987c80dd7589e7b60af3532/x11rb-protocol/src/xauth.rs",
         "https://github.com/mirror/xserver/blob/a026972776b303fa640f54e5e8f0fc1abf879071/os/auth.c"
       ],
-      "maintenance_status": {"reviewed_at": "2026-11-02", "evidence": "Real source85 hosted failure and original systemd v255 PAM adapters reviewed. Source78 hosted execution actually registered original UID1001 X11 sessions, then exposed the missing Xauthority file. Libraries/tools remain hosted Ubuntu distribution dependencies, not vendored implementations."},
+      "maintenance_status": {"reviewed_at": "2026-11-02", "evidence": "Real source85 hosted failure and original systemd v255 PAM adapters reviewed. Source78 registered original UID1001 X11 sessions and exposed missing Xauthority. Exact sourcef570 run41455823431 now delivered original Linux green pixels/files on both carriers and TLS rebuilt pixels/second file. Full resident still failed; exact failures and independent payload hashes are in native-offline-resident-f570243.json. Libraries/tools remain hosted Ubuntu distribution dependencies, not vendored implementations."},
       "platforms": ["GitHub-hosted ubuntu-24.04 laboratory only"],
       "version": {"libpam": "Runner distribution libpam.so.0 ABI", "xauth": "Runner distribution xauth package; install provenance retained in Actions", "systemd_source_review": "v255 db11bab38ccf1ed257f310d29070843d4c58ea01"},
       "license": "Runner-provided Linux-PAM and X.Org xauth distribution notices; reviewed Linux-PAM v1.5.3 Copyright. No new library linkage or binary redistribution.",
@@ -38,7 +38,7 @@
       "adapter_boundary": "Privileged hosted fixture opens original login PAM session, sets actual Xvfb display, drops child to original UID/GID, retains and closes the real session. Distribution xauth writes one private random-cookie authority file for that owned Xvfb, supplied to actual server and clients; no product authentication bypass. Original product system-bus/PID/UID/active/display checks, protected login, permissions, assertions and deadlines remain in force.",
       "security_and_operations_cost": ["Exact original service cleanup and bounds retained", "Child credential drop, signal forwarding and parent-death fence", "No fake logind service or accepted facts", "Host execution must establish actual capture; pending-listener success is insufficient"],
       "work_packages": ["W27"],
-      "validation_status": "original_pam_session_registered_on_hosted_source78_capture_authority_repair_unverified",
+      "validation_status": "original_pam_xauthority_capture_and_files_verified_on_hosted_sourcef570_full_resident_failed",
       "decision_ref": "docs/adr/network/0068-real-pam-xdisplay-resident-fixture.md"
     },
     {

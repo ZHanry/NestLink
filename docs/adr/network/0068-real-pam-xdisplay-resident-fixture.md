@@ -103,3 +103,16 @@ No upstream code is copied by this adapter. Reviewed source snapshots:
   <https://github.com/psychon/x11rb/blob/1b73245acc5dce4c4987c80dd7589e7b60af3532/x11rb-protocol/src/xauth.rs>.
 - Xserver auth implementation commit `a026972776b303fa640f54e5e8f0fc1abf879071`,
   <https://github.com/mirror/xserver/blob/a026972776b303fa640f54e5e8f0fc1abf879071/os/auth.c>.
+
+Exact source `f570243c12e0390e963e373988fd76f5ec44b465`, hosted original run
+[41455823431](https://github.com/ZHanry/NestLink/actions/runs/41455823431),
+now passed the actual original Linux green-pixel checks and completed file
+delivery on QUIC and TLS. TLS also rebuilt, passed its original second pixel
+check and completed the second file. The suite still failed all four Linux
+cases: QUIC original authority stopped before rebuild, TLS failed the unchanged
+immediate cumulative-budget assertion, management case6 failed real Secret
+Service setup and pending case1 failed independent public-PKI DNS readiness.
+All42 matrix payload files and34 producer inventory entries were independently
+hashed in `native-offline-resident-f570243.json`. This establishes the exact
+PAM/Xauthority fixture progress only; full resident and target acceptance remain
+open. Further read-only Secret Service metadata cannot waive its original gate.
