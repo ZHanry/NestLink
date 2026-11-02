@@ -92,9 +92,14 @@ def main():
         _, final = blocks(lock.read_bytes())
         if {key: package for key, package, _ in final if key[2]} != {key: package for key, (package, _) in old_external.items()}:
             raise ValueError("External dependency checksum or edge changed")
+        harness = {"browser-native-fixture": "nestlink-browser-native-host-fixture",
+                   "security-fuzz": "nestlink-network-security-fuzz"}.get(args.scope)
+        if harness:
+            if [package["version"] for key, package, _ in final if not key[2] and package["name"] == harness] != ["0.0.0"]:
+                raise ValueError("The unpublished verification harness must retain its original 0.0.0 identity")
         product_packages = [package for key, package, _ in final
                             if not key[2] and package["name"].startswith("nestlink-")
-                            and package["name"] != "nestlink-network-security-fuzz"]
+                            and package["name"] != harness]
         if not product_packages or any(package["version"] != version for package in product_packages):
             raise ValueError("First-party product versions are not unified")
         receipt["product_packages"] = [package["name"] for package in product_packages]
