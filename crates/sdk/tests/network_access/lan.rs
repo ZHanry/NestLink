@@ -159,11 +159,14 @@ async fn game(f: &Fixture, grant: &str) -> TaskResult<serde_json::Value> {
         }).await??;
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     };
-    let (result, ()) = tokio::try_join!(async { Ok::<_,Box<dyn std::error::Error+Send+Sync>>(process.await?) }, revoke)?;
-    if !result.status.success() {
-        return Err(io::Error::other(format!("official Teeworlds failed: {} {}",
-            String::from_utf8_lossy(&result.stdout), String::from_utf8_lossy(&result.stderr))).into());
-    }
+    tokio::try_join!(async {
+        let result = process.await?;
+        if !result.status.success() {
+            return Err(io::Error::other(format!("official Teeworlds failed: {} {}",
+                String::from_utf8_lossy(&result.stdout), String::from_utf8_lossy(&result.stderr))).into());
+        }
+        Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
+    }, revoke)?;
     Ok(serde_json::from_slice(&std::fs::read(output.join("teeworlds-execution.json"))?)?)
 }
 async fn exercise_lan(game_mode: bool) -> Result {
@@ -328,8 +331,10 @@ async fn exercise_lan(game_mode: bool) -> Result {
     };
     let execution = if game_mode {
         let (owners, details) = tokio::join!(owner_pair, exercise);
-        assert!(owners.is_err(), "original online admission must stop on real management revocation");
-        details.map(|details| ((source.spent_bytes(), target.spent_bytes()), details))
+        details.map(|details| {
+            assert!(owners.is_err(), "original online admission must stop on real management revocation");
+            ((source.spent_bytes(), target.spent_bytes()), details)
+        })
     } else {
         tokio::try_join!(owner_pair, exercise)
     };

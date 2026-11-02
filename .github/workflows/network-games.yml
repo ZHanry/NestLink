@@ -51,6 +51,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: game-teeworlds-${{ github.sha }}-${{ github.run_attempt }}
+          include-hidden-files: true
           path: |
             ${{ runner.temp }}/network-game-evidence/
             ${{ runner.temp }}/nestlink-pinned-games/upstream-inputs.json
@@ -98,6 +99,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: game-luanti-${{ github.sha }}-${{ github.run_attempt }}
+          include-hidden-files: true
           path: |
             ${{ runner.temp }}/network-luanti-evidence/
             ${{ runner.temp }}/nestlink-pinned-luanti/upstream-inputs.json
