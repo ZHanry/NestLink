@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "source_revision": "122a1a9b946e0b2dce88e92c49d00afda988826e",
+  "workflow": ".github/workflows/network-games.yml",
+  "run_id": 41371682792,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41371682792",
+  "workflow_conclusion": "failure",
+  "passed": false,
+  "artifact": {
+    "id": 13109797400,
+    "name": "game-luanti-122a1a9b946e0b2dce88e92c49d00afda988826e-1",
+    "official_digest": "sha256:869bde3135377f44d5fb239e1843249148b12f7145a2b67547cc0c9fc4c735f9",
+    "downloaded_zip_sha256": "869bde3135377f44d5fb239e1843249148b12f7145a2b67547cc0c9fc4c735f9",
+    "outer_receipt_sha256": "ab2bbed4e2a30a20a614b9037f176aaacd145ab7b1f269b25400cbff933160d2",
+    "execution_receipt_sha256": "5a511bb5463673f4ffdb6b8c7ac1bf4e038f8a5fe3f333d70387fab994a0855e",
+    "retained_file_digest_and_size_entries_verified": 173
+  },
+  "observed": {
+    "actual_game_flow_passed": false,
+    "failure": "AssertionError: actual visible Luanti window did not appear within its startup bound",
+    "driver_actor_cleanup_errors": [],
+    "outer_failure": "AssertionError: actual-game-original-subnet-owner",
+    "actual_server_join": "NestLinkHosted [192.168.1.254] joins game at 01:27:39; original server listening 01:27:25",
+    "actual_visible_window": "0x400006 Luanti 5.13.0 [Multiplayer] [OpenGL 4.5], WM_CLASS luanti/luanti",
+    "legacy_title_search_attempts": 231,
+    "blocked_queries": 0,
+    "startup_bound_seconds": 25,
+    "gameplay_input_executed": false,
+    "failure_screenshot_sha256": "c4ff4081e3c9d183c60a5ba33358a3e0406c8daa8ca8e29531b192744cfb6683"
+  },
+  "scope": "Exact official Luanti and full Minetest Game real join and rendered game reached; legacy window-title search failed the original 25-second observation bound. No driver game input or stop/disconnect qualification.",
+  "candidate_correction": {
+    "source_commit": "011842f034d8bf5a0b96a2abd6cfc676a175a866",
+    "change": "Select the exact observed visible SDL WM_CLASS ^luanti$, still independently read and require the actual Luanti title. Keep original 25-second window bound, 35-second readiness, all 11 seconds of input and stop/disconnect bounds.",
+    "verification_status": "pending_same_source_actions"
+  }
+}

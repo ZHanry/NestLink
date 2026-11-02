@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "source_revision": "c82bd8d9d47165d14acaf7f1c3ed26c942bee10a",
+  "workflow": ".github/workflows/network-games.yml",
+  "run_id": 41372210583,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41372210583",
+  "workflow_conclusion": "failure",
+  "passed": false,
+  "artifact": {
+    "id": 13109782520,
+    "name": "game-teeworlds-c82bd8d9d47165d14acaf7f1c3ed26c942bee10a-1",
+    "official_digest": "sha256:fe53989b614f16d8c7a53e3beda4f5cac16677c9c21a6161066318a3fff7ffb4",
+    "downloaded_zip_sha256": "fe53989b614f16d8c7a53e3beda4f5cac16677c9c21a6161066318a3fff7ffb4",
+    "outer_receipt_sha256": "68f8882e3197fd48ec96913e1714b8a3f7af6e1a19ef97142632f0f52231d7ba",
+    "execution_receipt_sha256": "f0968c714e195bb89e6ab308cd9a5aebfa16538336fd8addd45206007ac297f7",
+    "retained_file_digest_and_size_entries_verified": 137
+  },
+  "observed": {
+    "actual_game_flow_passed": true,
+    "failure": null,
+    "driver_actor_cleanup_errors": [],
+    "outer_failure": "RuntimeError: strict SDK/daemon check failed; independent physical LAN execution and all logs retained",
+    "sustained_play_seconds": 10.288888062000012,
+    "client_offline_after_revocation_seconds": 11.139995656999986,
+    "official_client_exit_code": 0,
+    "demo_files": [
+      {
+        "path": "teeworlds-home/.local/share/teeworlds/demos/auto/autorecord_2026-11-02_01-26-59.demo",
+        "sha256": "dc28329b013b5c3611c1951f5609a7a79ec7fb2263e7e6900526289a5aac4e5e",
+        "bytes": 9317
+      }
+    ],
+    "actual_management_revocation": true,
+    "official_lan_browser_room_observed": true,
+    "strict_passed": false,
+    "execution_passed": true,
+    "outer_namespace_cleanup_errors": [],
+    "strict_failure": "E0308 crates/app-core/src/native_media_provider.rs:130: version expects u32; formats.canonical_version() returns u16. Actual independent game binary execution passed."
+  },
+  "scope": "Exact official Teeworlds complete hosted discovery/join/play/demo/live-management-revoke/ordinary-zero-exit flow passed. Whole workflow remains failed at the independent strict SDK/daemon check; physical sites and full W28 remain separate."
+}
