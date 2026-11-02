@@ -1274,7 +1274,7 @@ async fn run_shared_session(
                 if !prepared || frame.descriptor().context!=original || frame.check_current().is_err() {failed=true;break;}
                 if let Ok(mut queue)=shared.updates.lock() {
                     if queue.len()>=4 {failed=true;break;}
-                    queue.push_back(CompressedVideoUpdate::SharedFrame(frame));
+                    queue.push_back(CompressedVideoUpdate::SharedFrame(*frame));
                 } else {failed=true;break;}
             }
             Err(_)=>{failed=true;break;}

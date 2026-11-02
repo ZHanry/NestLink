@@ -7,7 +7,9 @@ use std::{path::Path,sync::{Arc,atomic::{AtomicBool,Ordering}},time::Duration};
 const AUTHORITY_MS:u64 = 100;
 const TRANSFER_BUDGET:Duration = Duration::from_millis(50);
 
-pub(crate) async fn open(connection:&LocalStream,core:&CoreHandle,binding:NativeVideoBinding) -> Result<(SharedVideoContext,SharedVideoConsumer),Error> {
+// Keep the original stream exclusively borrowed while the decoder owner opens.
+// LocalStream is Send, but its single-reader/single-writer transport is not Sync.
+pub(crate) async fn open(connection:&mut LocalStream,core:&CoreHandle,binding:NativeVideoBinding) -> Result<(SharedVideoContext,SharedVideoConsumer),Error> {
     if !video_binding_is_live(core,&binding) {return Err(Error::Protocol);}
     let peer = connection.verified_peer_process()?;
     if peer.runtime_id() != binding.runtime_id {return Err(Error::Protocol);}
@@ -104,7 +106,7 @@ impl ImportedSharedFrame {
 }
 pub enum SharedVideoMessage {
     Authority {not_after_qpc:u64},
-    Frame(ImportedSharedFrame),
+    Frame(Box<ImportedSharedFrame>),
 }
 pub struct SharedVideoClient {
     connection:LocalStream,
@@ -171,7 +173,7 @@ impl SharedVideoClient {
                 {return Err(Error::Protocol);}
                 self.last_sequence = descriptor.native_sequence; self.last_pts = descriptor.pts_90khz; self.last_token = descriptor.token;
                 self.last_keys[descriptor.slot as usize] = descriptor.acquire_key;
-                Ok(SharedVideoMessage::Frame(ImportedSharedFrame {descriptor,peer:self.peer.clone(),active:self.active.clone(),ring:self.ring.clone()}))
+                Ok(SharedVideoMessage::Frame(Box::new(ImportedSharedFrame {descriptor,peer:self.peer.clone(),active:self.active.clone(),ring:self.ring.clone()})))
             }
         }
     }

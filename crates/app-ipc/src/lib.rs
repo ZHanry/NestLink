@@ -469,7 +469,7 @@ async fn serve_requests(
                         let preparing=video::video_binding_is_live(&core,&binding)
                             && core.native_video_formats(&session).ok().flatten().is_some_and(|formats| formats.formats().iter().any(|format| format.codec==nestlink_protocol::media_format::Codec::Hevc))
                             && core.native_confirmed_video_format(&session).ok().flatten().is_none();
-                        if preparing {Reply::SharedVideoPreparing} else {match shared_video::open(&connection, &core, binding).await {
+                        if preparing {Reply::SharedVideoPreparing} else {match shared_video::open(&mut connection, &core, binding).await {
                             Ok((context, consumer)) => {
                                 shared_video_stream = Some((context.clone(), consumer));
                                 Reply::SharedVideoOpened {context}
