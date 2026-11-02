@@ -33,3 +33,11 @@ Healthy 检查也重置500ms调节截止时间，短拥塞恰好落入其间便�
 拥塞。保留实际变更间至少500ms和原4秒连续健康恢复。新增回归在
 健康轮询之间插入短拥塞，要求立即降档、冷却内不重复、冷却后下一
 真实拥塞继续降档。这不直接证明2秒物理阶跃，新版本仍需实测。
+
+同源验证：source09fee9572e77d72a522a35dfcdc33a90327426a1 的
+GitHub-hosted run41373125182 整轮success；原105媒体回归、严格lint与
+真实内核实验通过，13个receipt引用文件SHA逐项核验。实际阶跃前
+7.186Mbps，降档1134.747ms，输入dispatch p95分别596/570/453us，
+两次4MiB整文件校验、614个输入和持续呈现，原qdisc已清理。该结果
+仍限synthetic capture与dispatch observer，不是OS输入显示/Windows
+精确Core/GPU或整组AC53。详见media-real-impairment-09fee95.json。

@@ -47,3 +47,11 @@ loopback 上这两个端口的 IPv4 UDP 包。其他流量进入独立高带宽�
 大于5Mbps，未满足即失败。该速率仍只证明原队列真实输入，不冒充
 网络交付或显示帧率；原独立媒体回归和严格lint继续使用原构建口径。
 此构建调整不是对原失败的重新判定，新源码仍须同源实际执行。
+
+同源验证：source09fee9572e77d72a522a35dfcdc33a90327426a1 的
+GitHub-hosted run41373125182 整轮success；原105媒体回归、严格lint与
+真实内核实验通过，13个receipt引用文件SHA逐项核验。实际阶跃前
+7.186Mbps，降档1134.747ms，输入dispatch p95分别596/570/453us，
+两次4MiB整文件校验、614个输入和持续呈现，原qdisc已清理。该结果
+仍限synthetic capture与dispatch observer，不是OS输入显示/Windows
+精确Core/GPU或整组AC53。详见media-real-impairment-09fee95.json。

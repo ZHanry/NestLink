@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "task_ids": [
+    "W31"
+  ],
+  "acceptance_case_ids": [
+    "AC53"
+  ],
+  "scoped_passed": true,
+  "whole_task_passed": false,
+  "whole_acceptance_passed": false,
+  "release_qualification_claimed": false,
+  "build_provenance": {
+    "kind": "github_hosted_actions",
+    "workflow": ".github/workflows/media-impairment.yml",
+    "source_revision": "09fee9572e77d72a522a35dfcdc33a90327426a1",
+    "workflow_revision": "09fee9572e77d72a522a35dfcdc33a90327426a1",
+    "run_id": 41373125182,
+    "run_attempt": 1,
+    "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41373125182",
+    "job_id": 125047630235,
+    "runner_environment": "github-hosted",
+    "runner_os": "Linux",
+    "cargo_lock_sha256": "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+    "build_command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--release",
+      "-p",
+      "nestlink-media-session",
+      "--lib",
+      "--features",
+      "network-impairment-lab",
+      "--no-run",
+      "--message-format=json"
+    ],
+    "build_profile": "release",
+    "build_exit_code": 0,
+    "executable_sha256": "2fcb74232bf29c1e7f4d7c98ca6c6582a1cd049275566ad15cce60d10c5e7ad5",
+    "artifact_id": 13109807736,
+    "github_artifact_digest": "sha256:b5e6fdeb4c6c5e1de1dcda104f1b4c95bee3385cb2497439ee34539564e06fa2",
+    "receipt_sha256": "d1d84d5abaa70e831178114d1a7085e99da90db0e1a5ef049860be61c2372c06",
+    "all_referenced_file_hashes_verified": true,
+    "referenced_files": {
+      "build.jsonl": "c62616130a3caad4b430d7f4ef8295a96fe877880c33439adab4a2263b687df0",
+      "build.log": "762d9003c768acfd87704949124216dc231a045d79790c0257776a34e7acf2c7",
+      "configured": "084fe09c71b87a10131ae17355211acbbdbdbf7c229c499efdbe73171e8795a2",
+      "inventory.log": "ab16f75fc871931ced2593e87fce23e05a8c77e57d205a2d7d4583ddddb8753f",
+      "measurement.json": "818780c13c5ec7545c9c2a6cad795e074e4a5370019a9ce541f4ff19a9265479",
+      "payload.bin": "1daa308fc5875f51fdaf44c00f1aa3263930913fae2c405ece0272dac3cf6b9a",
+      "post-step-stats.txt": "9c52e9081c69746f285d45e42480bddf2090da4519d47ad35361b1be446faddc",
+      "pre-step-stats.txt": "0bad5414ac8f2b932f85b40ba114adc899a5ecd62024e1729f1812b92669e856",
+      "ready.json": "4bebd6317d71e9950baeb1a26096edfb40786f16d4c5e7c55a858f4faf63ac83",
+      "step-budget-observations.txt": "ae1f506dcac25112183aecbeff29d88a60c3a2a69aa68fcd184ed9e4eca6d77c",
+      "step-request": "8f144a181947338e011551e3534b29f8ac104f7f838dca5d9281f6383e409b5a",
+      "stepped": "c3cdc98ef2c39a8a15718e4c678c876eee75f9d4a2e88cdadb4e73b6186f1709",
+      "tests.log": "aca643cea6ad2a82044f9cc9907d645dbfd64ed87d4dbe5e63fd30d958111d77"
+    },
+    "strict_lint_conclusion": "success",
+    "original_regressions": {
+      "codec_passed": 41,
+      "session_passed": 64,
+      "failed": 0,
+      "ignored": 0,
+      "sha256": "3063a322eb00e0e523122f22bf31d5abeba7ed2c340052b915d34dcd344d2093"
+    }
+  },
+  "execution_provenance": {
+    "kind": "github_hosted_lab",
+    "execution_uid": 1001,
+    "command": [
+      "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_media_session-645d7f3158868926",
+      "tests::impairment::actual_tc_step_original_vp8_files_and_input",
+      "--exact",
+      "--nocapture",
+      "--test-threads=1",
+      "--color",
+      "never"
+    ],
+    "exit_code": 0,
+    "scope": "Real loopback kernel QUIC/mTLS, tc 1percent random loss and 20-to-5Mbps per-direction rate, original VP8 sender/receiver, original FileReadServer/client with actual disk file and SHA verification, original InputController dispatch observation. Capture is synthetic moving pixels; input observer has no OS effects. No OS input-to-display, Windows exact H264/Core, physical GPU, NAT, whole AC53 or target acceptance claim.",
+    "impairment_semantics": "Kernel netem configured random loss1percent, not an independently measured per-UDP-datagram loss probability. Loopback GSO/GRO state and exact qdisc/class counters are retained.",
+    "physical_step_to_downshift_ms": 1134.746621,
+    "baseline_input_dispatch_p95_us": 596,
+    "file_loaded_input_dispatch_p95_us": 570,
+    "impaired_file_input_dispatch_p95_us": 453,
+    "actual_input_dispatch_samples": 614,
+    "actual_pre_step_video_payload_bps": 7186390,
+    "presented_frames": [
+      108,
+      109,
+      68
+    ],
+    "verified_files": 2,
+    "file_bytes": 8388608,
+    "enqueued_video_bytes": 11662221,
+    "last_bitrate_kbps": 900,
+    "last_cadence_fps": 20,
+    "owned_qdisc_removed": true,
+    "original_failure": null,
+    "per_phase_at_least_100_samples_enforced": true,
+    "original_two_second_gate_enforced": true,
+    "original_p95_increase_ten_ms_gate_enforced": true
+  },
+  "production_change": "Only actual bitrate/fps changes consume the existing500ms adjustment cooldown; idle healthy polls cannot swallow short authenticated congestion. Receiver CPU pressure remains separate. The actual release-profile driver additionally requires measured pre-step video payload>5Mbps and retains all original gates.",
+  "limits": [
+    "Synthetic dynamic640x360 capture and InputController dispatch observer have no OS input or display effects.",
+    "No Windows exactH264/AppCore or physicalGPU/scanout qualification.",
+    "No independent NAT/target or completeAC53/W31 qualification.",
+    "Configured1percent netem loss is not independently measured per-datagram probability with loopbackGSO/GRO."
+  ],
+  "previous_failures": "docs/network-rewrite/evidence/media-real-impairment-failures.json"
+}
