@@ -209,6 +209,44 @@ pub(super) async fn start(
         }
     })
     .await??;
+    // Tunnel registration precedes public DNS publication. Wait on the real
+    // system resolver before the normal SDK's public-PKI health/proof checks;
+    // this disposable fixture has no alternate address or trust bypass.
+    let hostname = origin
+        .strip_prefix("https://")
+        .ok_or_else(|| io::Error::other("temporary HTTPS origin is not HTTPS"))?;
+    let deadline = Instant::now() + Duration::from_secs(60);
+    loop {
+        if child.try_wait()?.is_some() {
+            return Err(io::Error::other(
+                "temporary HTTPS fixture tool stopped before public DNS readiness",
+            )
+            .into());
+        }
+        let resolved = tokio::time::timeout_at(
+            deadline.into(),
+            tokio::net::lookup_host((hostname, 443)),
+        )
+        .await;
+        let diagnostic = match resolved {
+            Ok(Ok(mut addresses)) => {
+                if addresses.next().is_some() {
+                    break;
+                }
+                "system resolver returned no public HTTPS address".to_owned()
+            }
+            Ok(Err(error)) => error.to_string(),
+            Err(error) => error.to_string(),
+        };
+        if Instant::now() >= deadline {
+            return Err(io::Error::new(
+                io::ErrorKind::TimedOut,
+                format!("temporary public-PKI HTTPS fixture DNS was not ready: {diagnostic}"),
+            )
+            .into());
+        }
+        tokio::time::sleep(Duration::from_millis(250)).await;
+    }
     Ok((child, origin))
 }
 

@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "scope": "Exact-source original offline AppCore success and real public-PKI resident failures, separated by operating system and execution stage",
+  "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
+  "workflow": ".github/workflows/rust-core.yml",
+  "run_id": 41431396538,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41431396538",
+  "build_provenance": "GitHub-hosted ubuntu-24.04 and windows-2022 compiled and executed the exact-source AppCore offline integration and original resident integration target. Windows used the original wrapper's verified medium-integrity, non-elevated interactive user token.",
+  "execution_provenance": "Both original AppCore QUIC/TLS pixel and actual-file cases passed on both operating systems, as did their independent daemon unit and desktop checks. The pinned official HTTPS fixture tool and license were downloaded and SHA-256 checked on both hosted runners. Linux's original resident pending-listener test passed, but its other three resident tests failed. Windows resident execution reached four immediate OS access-denied failures.",
+  "targets": [
+    {
+      "target": "x86_64-unknown-linux-gnu",
+      "runner": "ubuntu-24.04",
+      "job_id": 125231192184,
+      "offline_step_conclusion": "success",
+      "app_core": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 41.67, "strict_clippy": "passed"},
+      "daemon_remote_unit": {"passed": 2, "failed": 0, "ignored": 0},
+      "daemon_private_unit": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 2.05},
+      "entry_dispatch_unit": {"passed": 1, "failed": 0, "ignored": 0},
+      "desktop_layout": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 0.05},
+      "https_tool_step_conclusion": "success",
+      "resident_step_conclusion": "failure",
+      "resident_process": {"passed": 1, "failed": 3, "ignored": 0, "elapsed_seconds": 159.16},
+      "resident_passed": [
+        "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket: four internal real pending cases cover QUIC EOF, TLS stop, QUIC logout and TLS identity change, including original protected login, real HTTP approval/one-use consume and original socket cleanup."
+      ],
+      "resident_failures": [
+        "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm: fixture SDK health request to the advertised public trycloudflare HTTPS origin failed system DNS lookup after the existing bounded retry; the management fence assertions were not reached.",
+        "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof: original resident ended before connected with stderr 'NestLink user daemon stopped: clipboard owner stopped'. No resident pixel/file/rebuild success was reached.",
+        "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit: original resident ended before connected with the same clipboard-owner-stopped diagnostic. No resident pixel/file/rebuild success was reached."
+      ],
+      "artifact_id": 13134913096,
+      "artifact_name": "early-native-offline-ubuntu-24.04-362f1b2a8cce330c14e2e7be11b6b75b36e3c01d-1",
+      "artifact_digest_reported_by_github": "sha256:95fb3c3657d82635e27084da18f0fe222610de3299f4f4396f33a1048c137838",
+      "downloaded_files": [
+        {"name": "nestlink-native-offline-tests.log", "bytes": 120440, "sha256": "abd22cfb8f5916c8330593e372fb0493de32bd215637f1f5e9f8a9c61e8d4a79"},
+        {"name": "nestlink-native-offline-resident-tests.log", "bytes": 15475, "sha256": "8295d6a14fefabba168c37989792cc75aa56fe3f1c97289df3d89fd6ecaec6fe"},
+        {"name": "nestlink-native-offline-https-tool.json", "bytes": 871, "sha256": "d6743ada626d588bdb5755e0aa23e639ba39ab4f725f9c4fcf694d4468f463a1"},
+        {"name": "nestlink-native-offline-https-license.txt", "bytes": 11357, "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"}
+      ]
+    },
+    {
+      "target": "x86_64-pc-windows-msvc",
+      "runner": "windows-2022",
+      "job_id": 125231192139,
+      "offline_step_conclusion": "success",
+      "app_core": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 44.88, "strict_clippy": "passed"},
+      "daemon_remote_unit": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 0.01},
+      "daemon_private_unit": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 2.13},
+      "entry_dispatch_unit": {"passed": 1, "failed": 0, "ignored": 0},
+      "desktop_layout": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 0.36},
+      "https_tool_step_conclusion": "success",
+      "resident_step_conclusion": "failure",
+      "resident_process": {"passed": 0, "failed": 4, "ignored": 0, "elapsed_seconds": 2.29},
+      "resident_failure": "Every actual resident test returned Os { code: 5, kind: PermissionDenied, message: Access is denied. }. This log does not identify the exact failing preparation operation; no protected resident startup or resident data assertion is claimed.",
+      "artifact_id": 13135094490,
+      "artifact_name": "early-native-offline-windows-2022-362f1b2a8cce330c14e2e7be11b6b75b36e3c01d-1",
+      "artifact_digest_reported_by_github": "sha256:f68d0e1698a2756383c5224e1a2d256bd7b6e02949356cd091ecbd45b3bc8826",
+      "downloaded_files": [
+        {"name": "nestlink-native-offline-tests.log", "bytes": 118503, "sha256": "48b1c107c12bdf014a14736d76e859d68c1cd09d6e0885c11e87b842f05ffb7a"},
+        {"name": "nestlink-native-offline-resident-tests.log", "bytes": 15330, "sha256": "94266ef890d4292478fed2983b1dc9cd75247ff82b7ae67f9fd66eefb310bc41"},
+        {"name": "nestlink-native-offline-https-tool.json", "bytes": 895, "sha256": "68f5323ad8bc2c6118d59b79e51df46f0011cb4960a2ceca4ad7ac23f8ce5c5a"},
+        {"name": "nestlink-native-offline-https-license.txt", "bytes": 11357, "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"}
+      ]
+    }
+  ],
+  "https_fixture": {
+    "tag": "2026.10.7",
+    "commit": "872b241f94871665c1c157adefcf90c11f0ead96",
+    "linux_executable_sha256": "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872",
+    "windows_executable_sha256": "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343",
+    "boundary": "Public PKI TLS terminates at Cloudflare; the disposable original management HTTP upstream is loopback-only. This is not end-to-end peer encryption. Normal SDK HTTPS/certificate checks remain in force."
+  },
+  "follow_up": [
+    "The disposable HTTPS fixture now waits for the real system DNS resolver after tunnel registration, before the original SDK health/proof and login. The existing product request, connection and cleanup deadlines remain unchanged.",
+    "The Windows fixture installer reuses the original acceptance tool directory's administrator/SYSTEM full-control and Users read/execute ACL; the child still must pass the actual medium, non-elevated process-identity check.",
+    "Fixture errors now identify protected-installation and HTTPS-startup stages. Resident event failures retain the last actual stdout event so terminal cleanup receipts are no longer discarded when connected is never reached.",
+    "The Linux clipboard symptom means clipboard factory installation observed an already-closing original Core or a poisoned factory mutex; it does not establish an unavailable OS clipboard grant. The original carrier terminal cause requires the next exact-source hosted receipt."
+  ],
+  "verification": "Every file downloaded from each of these two artifacts was independently hashed. GitHub artifact digests and downloaded file fingerprints are distinct; no producer per-file hash inventory was supplied or claimed.",
+  "limitations": [
+    "This is scoped early-job evidence, not a claim that the complete Rust workflow passed.",
+    "The fixture readiness/ACL repairs and richer terminal diagnostics require a new exact-source hosted compile and execution.",
+    "Original resident pixel/file/rebuild and management-fence acceptance remain failing or unreached. AppCore success does not establish resident success.",
+    "No physical dual-device, advanced-media, public-NAT or mobile-target acceptance is claimed."
+  ]
+}

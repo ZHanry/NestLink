@@ -12,6 +12,7 @@ import pathlib
 import stat
 import subprocess
 import urllib.request
+import uuid
 
 
 TAG = "2026.10.7"
@@ -36,8 +37,15 @@ def main():
     if os.environ.get("GITHUB_ACTIONS") != "true" or os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted":
         raise SystemExit("R02: fixture tool installation requires a GitHub-hosted Actions runner")
     name, digest = ASSETS[os.environ["RUNNER_OS"]]
-    directory = pathlib.Path(os.environ["RUNNER_TEMP"]) / "nestlink-offline-https-tool"
-    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    directory = pathlib.Path(os.environ["RUNNER_TEMP"]) / f"nestlink-offline-https-tool-{uuid.uuid4().hex}"
+    if os.name == "nt":
+        # Reuse the original Windows acceptance tool directory ACL. Python's
+        # 0700 directory can otherwise retain only the elevated runner's
+        # default owner, which the actual filtered child cannot execute from.
+        from network_rewrite_wfp_native import Native
+        Native().directory(directory, "O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FRFX;;;BU)")
+    else:
+        directory.mkdir(mode=0o700)
     tool = directory / name
     url = f"https://github.com/cloudflare/cloudflared/releases/download/{TAG}/{name}"
     fetch(url, tool, digest)
