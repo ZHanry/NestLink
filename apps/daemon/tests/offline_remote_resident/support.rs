@@ -26,7 +26,7 @@ use tokio::{
 mod https;
 #[cfg(target_os = "linux")]
 #[path = "../../src/session_store/secret_tool.rs"]
-mod secret_tool;
+pub(crate) mod secret_tool;
 
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 pub fn wall() -> Result<u64> {

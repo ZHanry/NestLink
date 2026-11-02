@@ -1,13 +1,12 @@
 //! Exercise the real CLI parser and original owned Secret Service, not a stub.
 #![cfg(target_os = "linux")]
 
-#[path = "../src/session_store/secret_tool.rs"]
-mod secret_tool;
 #[path = "offline_remote_resident/support.rs"]
 pub mod support;
 
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use std::{io, process::Stdio, time::Duration};
+use support::secret_tool;
 use tokio::io::AsyncWriteExt;
 
 #[tokio::test]
