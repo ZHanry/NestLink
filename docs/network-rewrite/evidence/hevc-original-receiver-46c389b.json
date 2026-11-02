@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "source_revision": "46c389bb07720df4bbfcaf131646c31dccca0fa4",
+  "work_packages": ["W32", "W33"],
+  "status": "qualified_lab_with_strict_lint_failure",
+  "build_provenance": {
+    "workflow": ".github/workflows/windows-media-owner.yml",
+    "workflow_revision": "03caf0835dc63294c9e01e2022ec62d9685f89b5",
+    "run_id": 41405046026,
+    "attempt": 1,
+    "job_id": 125145066288,
+    "runner": "windows-2025",
+    "runner_environment": "github-hosted",
+    "dependency_lock_sha256": "74f34a5902aee505d51f6dd6e615833a4db8602ea7eece8f53c13c5406514f6b",
+    "conclusion": "failure",
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41405046026"
+  },
+  "execution_provenance": {
+    "environment": "same-source GitHub-hosted Windows ordinary user token",
+    "physical_gpu_or_desktop_execution": false,
+    "target_acceptance_claimed": false,
+    "production_issuance_enabled": false
+  },
+  "artifact": {
+    "id": 13123961930,
+    "name": "windows-media-owner-46c389bb07720df4bbfcaf131646c31dccca0fa4-1",
+    "archive_sha256": "73bc47ff8397c46f3530c89cafc8aa6fd28f3f6f69da1080c2649ea443dae47d"
+  },
+  "passed_checks": [
+    {"log": "hevc-contract-tests.log", "tests_passed": 5, "sha256": "85ef40a22104a8cfe05dc513d70795b47b97f5ae60cd480e0e606b9fa8eb1a8f"},
+    {"log": "hevc-execution-tests.log", "tests_passed": 4, "sha256": "2bd08bb36f3ed56791efa9d13616fb48f53064ae15db16a0ce285d19cb2ae7b9"},
+    {"log": "hevc-target-tests.log", "tests_passed": 2, "sha256": "46b7b1d0b4d10cd2dbfcb7d5f9fc27f6c40be6535a5f660cca102a9cf10faed4"},
+    {"log": "media-provider-tests.log", "tests_passed": 10, "sha256": "602d90d16494622e0a4c0facc8fc975835144fe559ee32258d14401afb8e2005"},
+    {"log": "native-media-wire-tests.log", "tests_passed": 8, "sha256": "751582ff08b0206dff5d9917cab678762af8c0d395dbda0489dd59b587c7c71e"},
+    {"log": "compressed-context-tests.log", "tests_passed": 4, "sha256": "b36c0f4fbb71a06bc7dcea957fb8c02b3d57b5f4d9e411b5b3420dfe1c62b6cd"},
+    {"log": "readback-ipc-tests.log", "tests_passed": 13, "sha256": "bd386be289415f83466837c8db8380fd1d50ff7d8f9ed6d493ec68cd01f080b0"},
+    {"log": "presenter-tests.log", "tests_passed": 5, "sha256": "c4086f7c630143c92117d85541b18922da63df949bf01d46f0bb002f69cab3a4"},
+    {"log": "receiver-tests.log", "tests_passed": 9, "sha256": "3fbd3810743dfecf5e1277d7658f63207815d40c655e5a9956a2b0be2a529581"},
+    {"log": "signed-store-media-tests.log", "tests_passed": 9, "sha256": "35648facf7c011618a46575afdafaa8240a5e310f70b660a9bd9e4b33b4015f7"},
+    {"log": "hevc-clippy.log", "scope": "strict media-codec all targets", "sha256": "07bf0b0af8c52059c0b13601f252f39de7bd301212ce10445862003e40bb58c9"}
+  ],
+  "failure": {
+    "log": "desktop-clippy.log",
+    "sha256": "390966f91b9338b60b170e6692df729cf8388dafc46762a6d68a08a6ae756f39",
+    "reason": "clippy::nonminimal_bool in app-ipc video header validation",
+    "repair_revision": "3fd5fa21c702744644fafb33855bc172d5791af2",
+    "repair_scope": "Equivalent boolean simplification; no wire acceptance or lint threshold widened",
+    "repair_verified_by_this_run": false
+  },
+  "limits": [
+    "This source compiles the actual HEVC original decoder and adapter-selected D3D owner, but the hosted runner does not execute physical hardware HEVC capture/decode.",
+    "Later production capture/producer source 338e7a0 is not covered by this run.",
+    "Original readback receipts cannot attest to an independent desktop GPU owner. A verified join/fence handoff is still required before external HEVC ownership can replace original execution.",
+    "Opt-in target/provider/request wiring, physical GPU performance, high format matrix, hardware loss, weak network and target acceptance remain open.",
+    "The complete W32/W33 work packages and release gates are not satisfied by these qualified checks."
+  ]
+}
