@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "scope": "Exact 0.8-source AppCore rebuild success and first real protected HTTPS resident failures, separated by operating system and execution stage",
+  "source_revision": "e607483f3ea25692e0048f18c462ef363b163fcb",
+  "workflow": ".github/workflows/rust-core.yml",
+  "run_id": 41427339048,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41427339048",
+  "build_provenance": "GitHub-hosted ubuntu-24.04 and windows-2022 compiled and executed the exact-source original AppCore offline integration. Linux also compiled and executed the real resident target. Windows resident compilation failed through its original daemon binary dependency; Windows execution used the original ordinary-token wrapper.",
+  "execution_provenance": "Both actual AppCore QUIC/TLS cases passed on both operating systems. The pinned official HTTPS fixture executable and Apache-2.0 license were downloaded and independently SHA-256 checked on both hosted runners. Linux actual residents passed protected HTTPS login recovery, then failed startup at the original server's admin-only network policy authorization. Windows resident execution was not reached.",
+  "targets": [
+    {
+      "target": "x86_64-unknown-linux-gnu",
+      "runner": "ubuntu-24.04",
+      "job_id": 125217029576,
+      "offline_step_conclusion": "success",
+      "app_core": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 44.61, "strict_clippy": "passed"},
+      "daemon_remote_unit": {"passed": 2, "failed": 0, "ignored": 0},
+      "daemon_private_unit": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 2.04},
+      "entry_dispatch_unit": {"passed": 1, "failed": 0, "ignored": 0},
+      "desktop_layout": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 0.05},
+      "https_tool_step_conclusion": "success",
+      "resident_step_conclusion": "failure",
+      "resident_process": {"passed": 0, "failed": 4, "ignored": 0, "elapsed_seconds": 47.10},
+      "resident_failure": "ready: NestLink user daemon stopped: management operation rejected (403 Forbidden): PermissionRequired",
+      "artifact_id": 13132683733,
+      "artifact_digest_reported_by_github": "sha256:a60dcaf61e247deadc94c7ccdd61941c4f2ba1a7e423687276a306144e3f2e61",
+      "downloaded_files": [
+        {"name": "nestlink-native-offline-tests.log", "bytes": 120440, "sha256": "e2bb5740e5d2f6c50b5b6067a933dbdfb9e026aff2c05e8425af48e22eed7680"},
+        {"name": "nestlink-native-offline-resident-tests.log", "bytes": 15795, "sha256": "ffcf2966b0d4645b2d59cccca5e3122201e96f30211cddf2b82db16129db1ac3"},
+        {"name": "nestlink-native-offline-https-tool.json", "bytes": 871, "sha256": "2a40aa5c02d540e2ebdd6ffee95ce82ed8bcde0f49920174bb761131b10839f9"},
+        {"name": "nestlink-native-offline-https-license.txt", "bytes": 11357, "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"}
+      ]
+    },
+    {
+      "target": "x86_64-pc-windows-msvc",
+      "runner": "windows-2022",
+      "job_id": 125217029338,
+      "offline_step_conclusion": "failure_after_app_core_success",
+      "app_core": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 44.92, "strict_clippy": "passed"},
+      "daemon_unit_execution": "not_reached_binary_compilation_failed",
+      "https_tool_step_conclusion": "success",
+      "resident_step_conclusion": "failure",
+      "resident_execution": "not_reached_binary_compilation_failed",
+      "resident_failure": "E0277: dyn local_stream::StreamIo cannot be shared between threads safely. shared_video/native.rs::open(&LocalStream, ...) retained a non-Sync shared reference across await, making original daemon IPC futures non-Send for JoinSet::spawn.",
+      "artifact_id": 13134141426,
+      "artifact_digest_reported_by_github": "sha256:a8bdbf459f09eb897402bd559921ade751ea7f9f5c37ddf5f7792448c7c7c80c",
+      "downloaded_files": [
+        {"name": "nestlink-native-offline-tests.log", "bytes": 75459, "sha256": "3268ecaaf162d07c4ff7199d654757a070a935f78458a0363ff2fe0789eacdf8"},
+        {"name": "nestlink-native-offline-resident-tests.log", "bytes": 23332, "sha256": "550f706e93c9fadd047277b555042015086c6f76797894da50b24f8f68697f20"},
+        {"name": "nestlink-native-offline-https-tool.json", "bytes": 895, "sha256": "91a88f8881b0b34699d624328f02269bff6c4cc464c7e268b827d5981584eb1f"},
+        {"name": "nestlink-native-offline-https-license.txt", "bytes": 11357, "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"}
+      ]
+    }
+  ],
+  "https_fixture": {
+    "tag": "2026.10.7",
+    "commit": "872b241f94871665c1c157adefcf90c11f0ead96",
+    "linux_executable_sha256": "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872",
+    "windows_executable_sha256": "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343",
+    "boundary": "Public PKI TLS terminates at Cloudflare; disposable original management HTTP upstream is loopback-only. This is not end-to-end peer encryption. Production SDK HTTPS checks and certificate trust remain unchanged."
+  },
+  "follow_up": [
+    "14878b3 reuses authenticated product-space details for original authority discovery in both residents, retaining the existing admin-only legacy policy fallback. Its real fixture now creates a space, issues and accepts a targeted one-use invitation for the ordinary host, and joins each original device. It explicitly retains the host's admin-policy denial and Member role.",
+    "The Windows shared-video owner compilation error was reported to its original owner for correction; no unsafe Sync assertion or weakened Send requirement was introduced by this slice."
+  ],
+  "verification": "GitHub artifact digests and downloaded file fingerprints are distinct. No producer per-file hash inventory was supplied or claimed.",
+  "limitations": [
+    "No Linux resident approval/consume or native data acceptance was reached after the startup authorization denial. No Windows resident test ran.",
+    "The member authority repair requires a new exact-source hosted run; AppCore success does not establish original resident success.",
+    "No physical dual-device platform, advanced media, public NAT or mobile target acceptance is claimed."
+  ]
+}
