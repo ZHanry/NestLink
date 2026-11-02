@@ -45,11 +45,74 @@ requires actual hardware-output identity before returning bytes. Returned bytes
 and scratch storage are zeroized. The owner retains the existing MF pump and
 checked close; its caller must own approval, worker stop/join and signed epochs.
 
-This is an implemented lower codec boundary, not completed W33 production
-integration. Current v2 signed `VideoFormat`/NLMF/IPC and live execution receipts
-remain H264-only for executable media. The local HEVC contract digest is a
-separate domain and cannot be substituted for the current signed wire digest.
-Actual high-format provider announcements, signed exact PTL negotiation, live
-capture/decode/presenter execution owner binding, Main10/4:4:4 and required target
-GPU/driver/fallback evidence remain mandatory work. No probe, wrapper rename or
-codec enum switch closes those requirements.
+Exact HEVC format data now has its own v3 canonical encoding: 69 bytes, including
+all twelve general PTL bytes. The original v2/H264 57-byte encoding and digest
+domains remain unchanged. A v3 format set cannot mix canonical versions, and the
+signed announcement/permit uses its own `native-media-format-v3` marker. Store
+freezing, explicit SDK versioned requests, first approval and permit comparison
+retain that version. v3 approval has a separate signing domain; a valid old v2
+approval cannot approve it. NLMF carries the complete canonical format and exact
+ACK identity. The local codec contract hash remains a separate domain and cannot
+replace the signed canonical wire digest.
+
+`HardwareHevcExecution` now owns a dedicated actual native worker and sealed
+registration/AU/pixel receipts. Its source factory runs on that worker; original
+COM/device/texture pointers cannot be transferred from the caller. A fresh
+native UUID, monotonically increasing generation and the exact frozen original
+adapter/driver are checked around operations. Only actual hardware outputs with
+accepted exact AU admission receive output receipts. Byte, PTS, direction and
+generation changes are rejected. Both caller authority and original retirement
+invalidate copied receipts. The queue holds two commands, each with a 500ms
+budget; startup uses two seconds and checked close/join uses 250ms. Timed-out
+workers stay globally quarantined until actual thread join; failed native close
+poisons replacement. A dropped or expired ticket retires its original generation.
+
+`WindowsCaptureSource::start_hevc_encode` connects the factory to the real
+previously enumerated monitor, complete session/display/DPI snapshot and sticky
+OS observer. Source opening does not read pixels; explicit live commands capture
+same-device NV12 surfaces. There is no synthetic source, software encoder or
+implicit geometry replacement on this path. A platform/session/source change
+fences output and closes the original worker resources.
+
+Subsequent source additions implement an explicit single-target
+`NativeMediaProvider::gpu_hevc_main8` preparation route and a separate
+`GpuHevcPresenter` native HEVC subtype entry. The finite provider probe uses
+synthetic quadrant input, requires at least sixteen actual hardware encode,
+hardware decode and independent software decode outputs before EOS, checks exact
+PTS/color/PTL history, accounts for every accepted/output/drained frame and
+completes checked native close on the original worker. The announcement uses the
+actual UUID of its own direction and original adapter/driver. These remain
+closed historical capability observations, never live execution receipts or a
+screen/cadence pass. The GPU presenter reuses the original NV12 video processor
+and DXGI child surface with no CPU readback fallback; only actual successful
+submissions can create its sealed QPC/sequence/PTS receipt. Its receipt explicitly
+does not prove physical scanout or worker join. The new signed-target conversion
+compares complete v3 PTL, geometry, integer timing, bitrate and canonical digest
+against the live execution/submission target.
+
+The exact-source ordinary-token Actions run
+[41371616968](https://github.com/ZHanry/NestLink/actions/runs/41371616968), source
+`122a1a9b946e0b2dce88e92c49d00afda988826e`, passed nine receiver diagnostic tests,
+three existing presenter tests, five strict HEVC parser tests, four sealed HEVC
+execution lifecycle negatives and nine real Store media-authority tests. Protocol
+media tests, the three analyzer negatives and strict desktop/codec all-targets
+Clippy passed as well. The artifact digest is
+`5ff040351e75f98fef381aebd474b3b2ce816d5fa2eddf72bc52d67d1d8c5083`; the
+[retained source-bound evidence](evidence/windows-media-owner-qualified-41371616968.json)
+includes source/workflow/lock and downloaded log hashes. This verifies the source
+and lifecycle boundary through the original capture factory. Provider, HEVC GPU
+presentation and target-conversion additions after that source require their own
+new exact-source results. None of these hosted boundary tests constitutes actual
+physical GPU or independent target acceptance.
+
+W33 production integration remains incomplete. The daemon native producer and
+wire codec selection, app-core live format/generation registry, media receiver
+and desktop compressed consumer still route executable product media through
+their existing H264/VP8 paths. The current H264 IPC context explicitly rejects
+an HEVC descriptor even though its canonical byte container can preserve v3.
+The new HEVC owners are not permission to bypass that failure. Product routing
+must connect original live owners, signed exact format ACKs, epochs and renewal
+fences before HEVC is enabled. `PRODUCTION_ISSUANCE_ENABLED` remains false. Main10,
+4:4:4/HDR, physical GPU/driver fallback, sustained 1080p60, scanout and independent
+target evidence are still required. No closed probe, wrapper rename or codec
+enum switch closes those implementation or acceptance requirements.

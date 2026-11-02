@@ -1,0 +1,191 @@
+{
+    "schema_version":  1,
+    "scope":  "Windows actual media owner source and ordinary-token lifecycle verification",
+    "checked_on_utc":  "2026-11-02T01:30:59.1976609Z",
+    "qualification":  "source-boundary-only",
+    "runs":  [
+                 {
+                     "run_id":  "41369064258",
+                     "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41369064258",
+                     "conclusion":  "success",
+                     "source_revision":  "50df7ec1b5f9f898ce068ca26f3b30e918351361",
+                     "workflow_revision":  "b376928d40e24dbbfebc58a32b6c69685a59df0e",
+                     "artifact_id":  13108772926,
+                     "artifact_sha256":  "bd5aa59801ef76e9e012a9c7144e6b234a28f1802373cd880d45ae48940126fb",
+                     "dependency_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                     "passing_tests":  {
+                                           "diagnostics":  9,
+                                           "presenter":  3,
+                                           "analyzer":  3
+                                       },
+                     "strict_checks":  [
+                                           "ordinary-token diagnostics and presenter",
+                                           "desktop all-targets Clippy -D warnings"
+                                       ],
+                     "artifact_files":  [
+                                            {
+                                                "path":  "desktop-clippy.log",
+                                                "sha256":  "3667935d0ab5382b48fded50784d2ab52749aa7c59492f4255c6abdb0f7f7e25",
+                                                "bytes":  29132
+                                            },
+                                            {
+                                                "path":  "presenter-tests.log",
+                                                "sha256":  "5fe59fda591d59faca55f0d9ab4a37ba97898bc22c02892ba5052da342dcde1c",
+                                                "bytes":  14679
+                                            },
+                                            {
+                                                "path":  "receiver-tests.log",
+                                                "sha256":  "15232df662f9047d7318f61800395eca835716193f3e7d101c24576b646ed81e",
+                                                "bytes":  49603
+                                            },
+                                            {
+                                                "path":  "source-receipt.json",
+                                                "sha256":  "86e2f113c25e565928638565ed5519c8f9fc8eed389139de23c11fe81edb5d3c",
+                                                "bytes":  627
+                                            }
+                                        ]
+                 },
+                 {
+                     "run_id":  "41369702948",
+                     "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41369702948",
+                     "conclusion":  "success",
+                     "source_revision":  "151821877f64c9ce720ea3d7e3dc01f65352f26d",
+                     "workflow_revision":  "efec94fe20273f27a32ff0a64856315776f8ef7f",
+                     "artifact_id":  13109385195,
+                     "artifact_sha256":  "d75cb9fd192576238d2352390897e7e7f3855d72d42f4944baa83e81f9a243b4",
+                     "dependency_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                     "passing_tests":  {
+                                           "hevc_parser":  5,
+                                           "diagnostics":  9,
+                                           "presenter":  3,
+                                           "analyzer":  3
+                                       },
+                     "strict_checks":  [
+                                           "strict complete Main8 SPS and original parser negatives",
+                                           "desktop and codec all-targets Clippy -D warnings"
+                                       ],
+                     "artifact_files":  [
+                                            {
+                                                "path":  "desktop-clippy.log",
+                                                "sha256":  "8be56f2671bdac4cb97cbd9a766909c71c3809ba59bd39aadbd0349e871f4168",
+                                                "bytes":  29132
+                                            },
+                                            {
+                                                "path":  "hevc-clippy.log",
+                                                "sha256":  "77f5417f9f6cfc1f3d16a7996a5afa42fcbf2565e6e025830d3f630feed69325",
+                                                "bytes":  817
+                                            },
+                                            {
+                                                "path":  "hevc-contract-tests.log",
+                                                "sha256":  "aba4940faf19b7f504fe0e1a662a02909f30810ea125ca97b0da420baecb187c",
+                                                "bytes":  1700
+                                            },
+                                            {
+                                                "path":  "presenter-tests.log",
+                                                "sha256":  "fc4bd0118812fbefcfc5a12a367f07817c7308ce16a32d0f07a33ec4c1432913",
+                                                "bytes":  14679
+                                            },
+                                            {
+                                                "path":  "receiver-tests.log",
+                                                "sha256":  "34a1f268a1f473abeee4b04120ee033e80d7560f815ef55407309a6d7fd826e1",
+                                                "bytes":  49603
+                                            },
+                                            {
+                                                "path":  "source-receipt.json",
+                                                "sha256":  "1d0b4c9b15290563762ad25153cbdcd96db51496d3f79cf6e84326f14cea24c9",
+                                                "bytes":  627
+                                            }
+                                        ]
+                 },
+                 {
+                     "run_id":  "41371616968",
+                     "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41371616968",
+                     "conclusion":  "success",
+                     "source_revision":  "122a1a9b946e0b2dce88e92c49d00afda988826e",
+                     "workflow_revision":  "122a1a9b946e0b2dce88e92c49d00afda988826e",
+                     "artifact_id":  13110395662,
+                     "artifact_sha256":  "5ff040351e75f98fef381aebd474b3b2ce816d5fa2eddf72bc52d67d1d8c5083",
+                     "dependency_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                     "passing_tests":  {
+                                           "store_media_authority":  9,
+                                           "analyzer":  3,
+                                           "hevc_execution_lifecycle":  4,
+                                           "hevc_parser":  5,
+                                           "presenter":  3,
+                                           "diagnostics":  9
+                                       },
+                     "strict_checks":  [
+                                           "v2 and v3 protocol media tests",
+                                           "real Store signed media freeze/request/approval negatives",
+                                           "desktop and codec all-targets Clippy -D warnings"
+                                       ],
+                     "artifact_files":  [
+                                            {
+                                                "path":  "desktop-clippy.log",
+                                                "sha256":  "5c383e3a8a7f44f010e8f788a8a660547b063e1114c1db1ef3bdbfc879b97cb6",
+                                                "bytes":  29132
+                                            },
+                                            {
+                                                "path":  "hevc-clippy.log",
+                                                "sha256":  "f1f2096e14777b4f88ddb10b014864a5065157a99d6bf4c2100e8158b2b801d9",
+                                                "bytes":  817
+                                            },
+                                            {
+                                                "path":  "hevc-contract-tests.log",
+                                                "sha256":  "7bb0526a70b2eced7702d39451b6a8c76d078df453c3c8be2cbeb2fd8a1899f6",
+                                                "bytes":  1608
+                                            },
+                                            {
+                                                "path":  "hevc-execution-tests.log",
+                                                "sha256":  "aceacfe4df1f52d55854cb417ab638bef59d3709b05b2f87c392ce4107454452",
+                                                "bytes":  1121
+                                            },
+                                            {
+                                                "path":  "presenter-tests.log",
+                                                "sha256":  "fc4bd0118812fbefcfc5a12a367f07817c7308ce16a32d0f07a33ec4c1432913",
+                                                "bytes":  14679
+                                            },
+                                            {
+                                                "path":  "receiver-tests.log",
+                                                "sha256":  "f958d1e7a4555da9fe21d32c01c9e5f87cfef7b603321d6a18597d04133e79d0",
+                                                "bytes":  44531
+                                            },
+                                            {
+                                                "path":  "signed-store-media-tests.log",
+                                                "sha256":  "63c39e9d528f63b11d665cc27d5ff7f9ccefbf6357be5bad9fb56b493f24f3b9",
+                                                "bytes":  3809
+                                            },
+                                            {
+                                                "path":  "source-receipt.json",
+                                                "sha256":  "507bc42be38e3594220750b1b14ba0340f5a865a3b84a95ede9ac4dedcd2d452",
+                                                "bytes":  627
+                                            }
+                                        ]
+                 }
+             ],
+    "invalid_attempt":  {
+                            "run_id":  "41370450141",
+                            "source_revision":  "db9a7db3a9610e4e21377567f8f5aa89563c7846",
+                            "conclusion":  "failure",
+                            "reason":  "One protocol cargo step originally used the high token and created target/debug/.cargo-build-lock inaccessible to subsequent medium-token cargo; OS error 5 prevented later compilation. The workflow now uses the original ordinary-token wrapper for every cargo invocation; the successful exact 122a run verifies that correction."
+                        },
+    "implemented_at_verified_source":  [
+                                           "actual DXGI successful-submission cadence recorder and bounded analyzer",
+                                           "complete Main8 SPS/PTL parser and transactional admission",
+                                           "independent v3 canonical format and signing/Store freeze/approval domains",
+                                           "exact original device hardware encoder/decoder boundaries",
+                                           "bounded HEVC live execution worker, sealed byte/PTS receipts, authority fence and checked close/join quarantine",
+                                           "original enumerated Windows monitor/session/DPI capture source factory"
+                                       ],
+    "not_verified_by_these_runs":  [
+                                       "actual physical HEVC hardware workload",
+                                       "actual screen capture or GPU presentation from the new HEVC source path",
+                                       "newer provider, HEVC GPU presenter and signed-target additions after 122a source",
+                                       "Main10, 4:4:4, HDR",
+                                       "1080p60 sustained target cadence or scanout",
+                                       "complete daemon/native video/IPC/receiver HEVC product routing"
+                                   ],
+    "production_issuance_enabled":  false,
+    "hardware_acceptance_claimed":  false,
+    "W33_complete":  false
+}
