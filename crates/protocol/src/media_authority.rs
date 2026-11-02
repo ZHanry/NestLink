@@ -5,6 +5,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 pub const FORMAT_CAPABILITY: &str = "native-media-format-v2";
 pub const FORMAT_VERSION: u32 = 2;
+pub const HEVC_FORMAT_CAPABILITY: &str = "native-media-format-v3";
+pub const HEVC_FORMAT_VERSION: u32 = 3;
 /// Remains false until both direction probes, selection/ACK, IPC and producers
 /// enforce this scope. A catalog or successful test never enables issuance.
 pub const PRODUCTION_ISSUANCE_ENABLED: bool = false;
@@ -35,6 +37,12 @@ impl TryFrom<VideoFormat> for WireVideoFormat {
 
 /// Canonical sorted exact configurations; empty is only legal for withdrawal.
 pub fn decode_formats(wire: &[Vec<u8>], allow_empty: bool) -> Result<FormatSet> {
+    decode_formats_for_version(wire, allow_empty, FORMAT_VERSION)
+}
+pub fn decode_formats_for_version(wire: &[Vec<u8>], allow_empty: bool, version: u32) -> Result<FormatSet> {
+    if !matches!(version, FORMAT_VERSION | HEVC_FORMAT_VERSION) {
+        return Err(invalid("unsupported media catalog version"));
+    }
     if wire.len() > 64 || (!allow_empty && wire.is_empty()) {
         return Err(invalid("invalid media catalog count"));
     }
@@ -43,8 +51,11 @@ pub fn decode_formats(wire: &[Vec<u8>], allow_empty: bool) -> Result<FormatSet> 
             .map(|b| VideoFormat::decode(b))
             .collect::<Result<Vec<_>>>()?,
     )?;
-    // First authority release supports only actual Baseline 8-bit 420 SDR H264.
-    if set.formats().iter().any(|f| f.codec != Codec::H264) {
+    // v2 remains the exact existing H264 contract. v3 is an independent exact
+    // Main8/PTL contract, never a widening of a previously signed v2 request.
+    if set.formats().iter().any(|f| u32::from(f.canonical_version()) != version
+        || match version { FORMAT_VERSION => f.codec != Codec::H264,
+            HEVC_FORMAT_VERSION => f.codec != Codec::Hevc || f.hevc_ptl.is_none(), _ => true }) {
         return Err(invalid("authority codec not enabled"));
     }
     let encoded = set
@@ -63,7 +74,8 @@ pub fn permit_formats(claims: &PermitClaims) -> Result<Option<FormatSet>> {
         .iter()
         .filter(|s| s.as_str() == FORMAT_CAPABILITY)
         .count();
-    if markers == 0 {
+    let hevc_markers = claims.required_capabilities.iter().filter(|s| s.as_str() == HEVC_FORMAT_CAPABILITY).count();
+    if markers == 0 && hevc_markers == 0 {
         if claims.media_format_version != 0
             || !claims.media_formats.is_empty()
             || !claims.media_format_sha256.is_empty()
@@ -72,10 +84,11 @@ pub fn permit_formats(claims: &PermitClaims) -> Result<Option<FormatSet>> {
         }
         return Ok(None);
     }
-    if markers != 1 || claims.media_format_version != FORMAT_VERSION {
+    if !((markers == 1 && hevc_markers == 0 && claims.media_format_version == FORMAT_VERSION)
+        || (markers == 0 && hevc_markers == 1 && claims.media_format_version == HEVC_FORMAT_VERSION)) {
         return Err(invalid("unsupported media authority version"));
     }
-    let set = decode_formats(&claims.media_formats, false)?;
+    let set = decode_formats_for_version(&claims.media_formats, false, claims.media_format_version)?;
     if claims.media_format_sha256.as_slice() != set.digest() {
         return Err(invalid("media scope digest mismatch"));
     }
@@ -119,7 +132,7 @@ pub struct MediaAnnouncement {
 }
 impl MediaAnnouncement {
     pub fn validate(&self, now_ms: u64) -> Result<FormatSet> {
-        if self.version != FORMAT_VERSION
+        if !matches!(self.version, FORMAT_VERSION | HEVC_FORMAT_VERSION)
             || !crate::valid_id(&self.device_id)
             || self.revision == 0
             || self.revision > i64::MAX as u64
@@ -136,9 +149,16 @@ impl MediaAnnouncement {
                 if self.probe.adapter_luid.is_none() && self.probe.driver_version.is_none() => {}
             "cpu-hardware-readback" | "gpu-presenter"
                 if self.probe.adapter_luid.is_some() && self.probe.driver_version.is_some() => {}
+            "gpu-hevc-encoder" if self.version == HEVC_FORMAT_VERSION && self.direction == MediaDirection::Encode
+                && self.probe.adapter_luid.is_some() && self.probe.driver_version.is_some() => {}
+            "gpu-hevc-decoder" if self.version == HEVC_FORMAT_VERSION && self.direction == MediaDirection::Decode
+                && self.probe.adapter_luid.is_some() && self.probe.driver_version.is_some() => {}
             _ => return Err(invalid("unbound media backend identity")),
         }
-        decode_formats(&self.formats, true)
+        if self.version == HEVC_FORMAT_VERSION && !matches!(self.probe.backend.as_str(), "gpu-hevc-encoder" | "gpu-hevc-decoder") {
+            return Err(invalid("exact HEVC announcement requires its original hardware direction"));
+        }
+        decode_formats_for_version(&self.formats, true, self.version)
     }
 }
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -152,13 +172,13 @@ pub struct FrozenMediaScope {
 }
 impl FrozenMediaScope {
     pub fn validate(&self) -> Result<FormatSet> {
-        if self.version != FORMAT_VERSION
+        if !matches!(self.version, FORMAT_VERSION | HEVC_FORMAT_VERSION)
             || self.controller_revision == 0
             || self.host_revision == 0
         {
             return Err(invalid("invalid frozen media scope"));
         }
-        let set = decode_formats(&self.formats, false)?;
+        let set = decode_formats_for_version(&self.formats, false, self.version)?;
         if self.sha256.as_slice() != set.digest() {
             return Err(invalid("frozen media digest mismatch"));
         }
@@ -172,6 +192,40 @@ mod tests {
     use crate::media_format::FrameRate;
     fn format() -> Result<VideoFormat> {
         VideoFormat::legacy_h264(31, 320, 240, FrameRate::new(30, 1)?, 2000)
+    }
+    #[test]
+    fn exact_hevc_scope_has_its_own_marker_digest_and_original_direction() -> Result<()> {
+        let mut ptl = [0; 12]; ptl[0] = 1; ptl[11] = 120;
+        let format = VideoFormat::hevc_main8_observed(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
+        let set = FormatSet::new(vec![format])?;
+        let mut claims = PermitClaims { media_format_version: HEVC_FORMAT_VERSION,
+            media_formats: vec![format.encode()?], media_format_sha256: set.digest().to_vec(),
+            required_capabilities: vec![HEVC_FORMAT_CAPABILITY.into()], ..Default::default() };
+        assert_eq!(permit_formats(&claims)?, Some(set.clone()));
+        assert!(decode_formats(&claims.media_formats, false).is_err());
+        claims.required_capabilities.push(FORMAT_CAPABILITY.into());
+        assert!(permit_formats(&claims).is_err());
+        claims.required_capabilities = vec![FORMAT_CAPABILITY.into()];
+        assert!(permit_formats(&claims).is_err());
+        claims.required_capabilities = vec![HEVC_FORMAT_CAPABILITY.into()];
+        claims.media_format_version = FORMAT_VERSION;
+        assert!(permit_formats(&claims).is_err());
+        let mut announcement = MediaAnnouncement { version: HEVC_FORMAT_VERSION,
+            device_id: "12345678-1234-4234-8234-123456789abc".into(), direction: MediaDirection::Encode,
+            revision: 1, expires_at_unix_ms: 2000, probe: ProbeIdentity { generation: 1,
+                resource_id: "12345678-1234-4234-8234-123456789abd".into(),
+                backend: "gpu-hevc-encoder".into(), adapter_luid: Some(7), driver_version: Some(9) },
+            formats: vec![format.encode()?] };
+        assert_eq!(announcement.validate(1000)?, set);
+        announcement.direction = MediaDirection::Decode;
+        assert!(announcement.validate(1000).is_err());
+        announcement.probe.backend = "gpu-hevc-decoder".into();
+        assert!(announcement.validate(1000).is_ok());
+        announcement.probe.driver_version = None;
+        assert!(announcement.validate(1000).is_err());
+        // Data validation never enables issuance or attests that a probe ran.
+        assert!(!PRODUCTION_ISSUANCE_ENABLED);
+        Ok(())
     }
     fn claims() -> Result<PermitClaims> {
         let set = FormatSet::new(vec![format()?])?;

@@ -53,6 +53,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
         with:
           toolchain: "1.96.0"
+      - name: Verify independent exact format, signed scope and unchanged legacy contracts
+        run: cargo test --locked -p nestlink-protocol --lib media_ -- --show-output
       - id: msys
         uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
         with:
