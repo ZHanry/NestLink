@@ -23,6 +23,7 @@ mod network_membership_panel;
 mod node_relay_attributes_panel;
 mod service_quota_panel;
 mod services_panel;
+mod setup_panel;
 mod spaces_panel;
 
 #[derive(Clone, PartialEq, Eq)]
@@ -1100,6 +1101,7 @@ fn App() -> impl IntoView {
                                 </button>
                             </header>
                             <Feedback error notice />
+                            <setup_panel::SetupPanel api session_revision auth_failure load />
                             <Show when=move || section.get() == Section::Desktop>
                                 <DesktopWorkspace rows selected busy remote_target />
                             </Show>
