@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "source_revision": "c0fc249fc24c4bab389fe10690a2becb1b71257e",
+  "workflow": ".github/workflows/network-games.yml",
+  "run_id": 41236631501,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41236631501",
+  "passed": false,
+  "scope": "Retained initial actual hosted official game attempt. Neither game completed the required play/stop/revocation/cleanup receipt. Physical sites remain unqualified.",
+  "teeworlds": {
+    "job_id": 124641689305,
+    "artifact_id": 13055409086,
+    "artifact_name": "game-teeworlds-c0fc249fc24c4bab389fe10690a2becb1b71257e-1",
+    "official_digest": "sha256:9761fb1e03fe94db57cdad5fb9843b4f6e248fef688cf9d917d6482252fbb240",
+    "downloaded_zip_sha256": "9761fb1e03fe94db57cdad5fb9843b4f6e248fef688cf9d917d6482252fbb240",
+    "official_archive_client_server_map_license_hashes_matched": true,
+    "original_vendor_regression_and_sdk_lan_regressions_passed": true,
+    "real_game_play_passed": false,
+    "failure": "Official storage rejects absolute -f configuration paths. The real server used its unnamed defaults, and the real client showed its first-run language modal. Browser screenshot/OCR correctly refused the missing approved room.",
+    "driver_actor_cleanup_errors": [],
+    "corrected_by": "0d0c5618a3c32506419c506840e906c7bab4485e"
+  },
+  "luanti": {
+    "job_id": 124641689441,
+    "artifact_id": 13055712902,
+    "artifact_name": "game-luanti-c0fc249fc24c4bab389fe10690a2becb1b71257e-1",
+    "official_digest": "sha256:0675a17a5660b0ab61efffd326ce19c513eb5545f5f5093c167d1d920d608df1",
+    "downloaded_zip_sha256": "0675a17a5660b0ab61efffd326ce19c513eb5545f5f5093c167d1d920d608df1",
+    "exact_official_engine_and_complete_content_source_hashes_matched": true,
+    "official_sources_built_on_github": true,
+    "actual_luanti_client_sha256": "906ae48204a0ca641dd0f4c15888a235e48d3ff75d0de41d7c8c24a6a567e1bb",
+    "actual_luantiserver_sha256": "d371a402064fa736be31625a19a60662e34c856bc56a8978ac34a31a164c708b",
+    "actual_ordinary_uid": 1001,
+    "actual_client_packet_capture_bytes": 2974050,
+    "actual_server_join_log": "2026-10-31 20:14:36: ACTION[Server]: NestLinkHosted [192.168.1.254] joins game. List of players: NestLinkHosted",
+    "real_game_play_passed": false,
+    "failure": "The real game joined after the driver's ten-second window-caption wait had expired. No sustained-play or stop/disconnect receipt was completed. The original root helpers and carriers did execute their physical close; the overall game test remained failed.",
+    "driver_actor_cleanup_errors": [],
+    "corrected_by": "0d0c5618a3c32506419c506840e906c7bab4485e",
+    "correction_contract": "Wait for the actual post-media game window within 25 seconds while keeping the original 35-second ready bound; assert the existing LAN masquerade address; preserve official --go network-error exit code 1."
+  }
+}
