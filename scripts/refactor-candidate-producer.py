@@ -113,10 +113,10 @@ def clean_source(revision, version):
         require(actual == version, "Committed public RC version metadata is inconsistent")
 
 
-def execute(command, *, cwd=ROOT, env=None, timeout=5400):
+def execute(command, *, cwd=ROOT, env=None, timeout=5400, stdout=None, stderr=None, check=True):
     """Bound each build command and stop its descendants on timeout."""
     command = [str(value) for value in command]
-    process = subprocess.Popen(command, cwd=cwd, env=env,
+    process = subprocess.Popen(command, cwd=cwd, env=env, stdout=stdout, stderr=stderr,
                                start_new_session=os.name != "nt")
     try:
         code = process.wait(timeout=timeout)
@@ -129,7 +129,9 @@ def execute(command, *, cwd=ROOT, env=None, timeout=5400):
             os.killpg(process.pid, signal.SIGKILL)
         process.wait()
         raise
-    require(code == 0, "Candidate build command failed: " + Path(command[0]).name)
+    if check:
+        require(code == 0, "Candidate build command failed: " + Path(command[0]).name)
+    return code
 
 
 def outside(path):
@@ -389,7 +391,7 @@ def collect_native(args):
     write_json(evidence / (args.target + "-signing.json"), {"source_revision": value["source_revision"], "status": "not-configured", "production_update_eligible": False, "note": "Candidate installers are isolated and unsigned; formal installer and signed update verification remain mandatory for formal release."})
     if args.target == "windows-x64":
         installation = module("candidate_windows_installation", "scripts/refactor-windows-candidate-install.py")
-        installation.qualify(value, args.output, destination, installers, TOOLS)
+        installation.qualify(value, args.output, destination, installers, TOOLS, execute)
     # The explanatory file is part of the material inventory, not an executable.
     payload.append(record(args.output, destination / "README.candidate.txt", "native-" + args.target + "-readme", value["source_revision"]))
     part_receipt(args, args.target, artifacts, payload)

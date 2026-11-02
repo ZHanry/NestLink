@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import shutil
 import struct
+import sys
 import tempfile
 import textwrap
 from types import SimpleNamespace
@@ -242,6 +243,16 @@ class CandidateTests(unittest.TestCase):
             with patch.object(P, "execute", side_effect=lambda command: output.write_bytes(self.pe_fixture(machine=0x8664, magic=0x020b))):
                 with self.assertRaisesRegex(ValueError, "x86 PE32"):
                     P.setup_candidate(payload, output, role, P.VERSION, "owned-fixture-ISCC")
+
+    def test_original_command_owner_retains_exit_code_for_installation_diagnostics(self):
+        output = self.root / "candidate-command.log"
+        command = [sys.executable, "-c", "import sys; print('owned-candidate-output'); sys.exit(7)"]
+        with output.open("wb") as log:
+            code = P.execute(command, stdout=log, stderr=P.subprocess.STDOUT, timeout=10, check=False)
+        self.assertEqual(code, 7)
+        self.assertEqual(output.read_bytes().splitlines(), [b"owned-candidate-output"])
+        with self.assertRaisesRegex(ValueError, "Candidate build command failed"):
+            P.execute(command, stdout=P.subprocess.DEVNULL, stderr=P.subprocess.DEVNULL, timeout=10)
 
     def test_each_native_windows_payload_still_rejects_x86_before_packaging(self):
         inputs = self.root / "windows-input"

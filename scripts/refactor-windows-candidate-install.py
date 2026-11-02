@@ -31,7 +31,7 @@ def registered(role):
     return False
 
 
-def qualify(value, output, payload, installers, producer):
+def qualify(value, output, payload, installers, producer, execute):
     if os.name != "nt" or os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted":
         raise ValueError("candidate installer execution requires hosted Windows")
     evidence = output / "evidence"
@@ -53,12 +53,13 @@ def qualify(value, output, payload, installers, producer):
     def command(name, argv):
         path = evidence / ("windows-" + name + "-process.log")
         with path.open("wb") as log:
-            result = subprocess.run([str(item) for item in argv], stdin=subprocess.DEVNULL,
-                                    stdout=log, stderr=subprocess.STDOUT, timeout=120, check=False)
-            log.write(("\n[qualification process exit: " + str(result.returncode) + "]\n").encode())
-        report["commands"].append({"name": name, "return_code": result.returncode,
+            # Reuse the candidate producer's bounded command owner, including
+            # taskkill /T on Windows timeouts, so Inno descendants also stop.
+            code = execute(argv, stdout=log, stderr=subprocess.STDOUT, timeout=120, check=False)
+            log.write(("\n[qualification process exit: " + str(code) + "]\n").encode())
+        report["commands"].append({"name": name, "return_code": code,
                                     "log": path.name, "sha256": producer.digest(path)})
-        if result.returncode != 0:
+        if code != 0:
             raise ValueError("original candidate installer operation failed: " + name)
 
     try:
