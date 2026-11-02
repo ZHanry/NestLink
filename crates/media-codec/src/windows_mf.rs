@@ -977,6 +977,7 @@ mod gpu_input_tests {
 mod adapter_binding_tests {
     unsafe extern "C" {
         fn nl_mf_adapter_binding_contract() -> u32;
+        fn nl_mf_adapter_selection_contract() -> u32;
     }
     #[test]
     fn real_attributes_require_exact_luid_blob_and_both_adapter_parts() {
@@ -984,6 +985,13 @@ mod adapter_binding_tests {
         // It opens no device, encoder, window or capture resource.
         let passed = unsafe { nl_mf_adapter_binding_contract() };
         assert_eq!(passed, 511, "MF adapter binding bitmask: {passed:#x}");
+    }
+    #[test]
+    fn exact_scoped_enumeration_allows_only_absent_optional_activation_identity() {
+        // SAFETY: real native metadata and production selection decisions;
+        // no device, MFT enumeration, encoder or capture resource is opened.
+        let passed = unsafe { nl_mf_adapter_selection_contract() };
+        assert_eq!(passed, 255, "MF adapter selection bitmask: {passed:#x}");
     }
 }
 

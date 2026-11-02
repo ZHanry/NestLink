@@ -69,9 +69,32 @@ HRESULT set_adapter_request(IMFAttributes* attributes, const LUID& requested) no
     LUID actual{}; UINT32 bytes = 0;
     return match_adapter_luid(attributes, requested, &actual, &bytes);
 }
+struct AdapterEnumerationBinding {
+    bool scoped_enum2 = false;
+    HRESULT request = E_UNEXPECTED, enumeration = E_UNEXPECTED;
+};
+struct AdapterSelectionBinding {
+    HRESULT result;
+    const char* basis;
+};
+// MFTEnum2 returns transforms matching its input adapter search criterion. Its
+// activation objects need not repeat that input attribute. Only an absent
+// optional attribute can use that successful exact scope; an explicit conflict
+// or malformed attribute still fails the unchanged strict blob matcher.
+AdapterSelectionBinding select_adapter_binding(const AdapterEnumerationBinding& enumeration,
+    HRESULT activation_match) noexcept {
+    if (enumeration.enumeration != S_OK)
+        return {FAILED(enumeration.enumeration) ? enumeration.enumeration : E_UNEXPECTED, "rejected"};
+    if (enumeration.scoped_enum2 && enumeration.request != S_OK)
+        return {FAILED(enumeration.request) ? enumeration.request : E_UNEXPECTED, "rejected"};
+    if (activation_match == S_OK) return {S_OK, "activation_luid_blob"};
+    if (enumeration.scoped_enum2 && activation_match == MF_E_ATTRIBUTENOTFOUND)
+        return {S_OK, "mft_enum2_exact_adapter_scope"};
+    return {FAILED(activation_match) ? activation_match : E_UNEXPECTED, "rejected"};
+}
 void log_activation_identity(IMFActivate* activation, bool encoder, bool hevc,
     UINT32 index, const char* phase, HRESULT operation, bool binding_required,
-    HRESULT binding, const LUID& actual, UINT32 blob_bytes) noexcept {
+    HRESULT binding, const LUID& actual, UINT32 blob_bytes, const AdapterSelectionBinding& selection) noexcept {
     WCHAR name[160]{}; GUID clsid{}; WCHAR clsid_text[40]{};
     const HRESULT name_hr = activation->GetString(MFT_FRIENDLY_NAME_Attribute, name, 160, nullptr);
     const HRESULT clsid_hr = activation->GetGUID(MFT_TRANSFORM_CLSID_Attribute, &clsid);
@@ -79,6 +102,7 @@ void log_activation_identity(IMFActivate* activation, bool encoder, bool hevc,
     std::fprintf(stderr,
         "mf activation: codec=%s direction=%s owner_thread=%lu index=%u phase=%s hr=0x%08lx binding_required=%u "
         "adapter_binding_hr=0x%08lx adapter_blob_bytes=%u activation_adapter_known=%u activation_adapter=0x%016llx "
+        "selection_binding_hr=0x%08lx selection_binding_basis=%s "
         "name_hr=0x%08lx name=\"%.159ls\" clsid_hr=0x%08lx clsid=\"%ls\"\n",
         hevc ? "hevc" : "h264", encoder ? "encode" : "decode",
         static_cast<unsigned long>(GetCurrentThreadId()), index, phase,
@@ -86,6 +110,7 @@ void log_activation_identity(IMFActivate* activation, bool encoder, bool hevc,
         static_cast<unsigned long>(binding), blob_bytes,
         binding == S_OK || binding == DXGI_ERROR_UNSUPPORTED ? 1u : 0u,
         static_cast<unsigned long long>(adapter_luid_bits(actual)),
+        static_cast<unsigned long>(selection.result), selection.basis,
         static_cast<unsigned long>(name_hr), name_hr == S_OK ? name : L"unknown",
         static_cast<unsigned long>(clsid_hr), clsid_known ? clsid_text : L"unknown");
     std::fflush(stderr);
@@ -686,18 +711,21 @@ static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint3
     MFT_REGISTER_TYPE_INFO compressed{MFMediaType_Video, hevc ? MFVideoFormat_HEVC : MFVideoFormat_H264};
     IMFActivate** choices = nullptr; UINT32 count = 0;
     // Prefer adapter-targeted enumeration when supported by this Windows runtime.
-    // Both enumeration paths must independently prove the activation's exact
-    // adapter before accepting a supplied-device encoder. A device-manager Set
-    // succeeding alone does not prove that a foreign MFT uses that same adapter.
+    // A checked MFTEnum2 adapter input scopes every returned candidate to that
+    // adapter. EnumEx has no such scope and still needs an exact activation LUID.
+    // A device-manager Set alone is never evidence for a foreign adapter.
     using Enum2 = HRESULT (WINAPI*)(GUID, UINT32, const MFT_REGISTER_TYPE_INFO*, const MFT_REGISTER_TYPE_INFO*, IMFAttributes*, IMFActivate***, UINT32*);
     const auto enum2_address = GetProcAddress(GetModuleHandleW(L"mfplat.dll"),"MFTEnum2");
     Enum2 enum2 = nullptr;
     static_assert(sizeof(enum2) == sizeof(enum2_address), "Windows function pointer size");
     std::memcpy(&enum2, &enum2_address, sizeof(enum2));
+    AdapterEnumerationBinding enumeration_binding;
     if (binding_required && enum2) {
+        enumeration_binding.scoped_enum2 = true;
         ComPtr<IMFAttributes> attributes;
         hr = MFCreateAttributes(&attributes,1);
         if (hr == S_OK) hr = set_adapter_request(attributes.Get(), source_adapter);
+        enumeration_binding.request = hr;
         std::fprintf(stderr,
             "mf adapter request: codec=%s owner_thread=%lu requested_adapter=0x%016llx type=LUID_blob bytes=%u hr=0x%08lx enum=MFTEnum2\n",
             hevc ? "hevc" : "h264", static_cast<unsigned long>(state->thread),
@@ -716,9 +744,11 @@ static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint3
             MFT_ENUM_FLAG_SORTANDFILTER | (hardware_only ? MFT_ENUM_FLAG_HARDWARE : MFT_ENUM_FLAG_SYNCMFT),
             state->encoder ? &raw : &compressed, state->encoder ? &compressed : &raw, &choices, &count);
     }
-    std::fprintf(stderr, "mf enumeration: codec=%s direction=%s owner_thread=%lu hr=0x%08lx count=%u\n",
+    enumeration_binding.enumeration = hr;
+    std::fprintf(stderr, "mf enumeration: codec=%s direction=%s owner_thread=%lu hr=0x%08lx count=%u exact_adapter_scope=%u\n",
         hevc ? "hevc" : "h264", state->encoder ? "encode" : "decode",
-        static_cast<unsigned long>(state->thread), static_cast<unsigned long>(hr), count);
+        static_cast<unsigned long>(state->thread), static_cast<unsigned long>(hr), count,
+        enumeration_binding.scoped_enum2 && enumeration_binding.request == S_OK && hr == S_OK ? 1u : 0u);
     std::fflush(stderr);
     if (FAILED(hr)) return hr;
     // The system H.264 decoder is a synchronous MFT which becomes DXVA/D3D11
@@ -737,24 +767,26 @@ static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint3
             const HRESULT binding = binding_required
                 ? match_adapter_luid(choices[index], source_adapter, &activation_adapter, &blob_bytes)
                 : read_adapter_luid(choices[index], &activation_adapter, &blob_bytes);
+            const AdapterSelectionBinding selection = binding_required
+                ? select_adapter_binding(enumeration_binding, binding) : AdapterSelectionBinding{S_OK, "not_required"};
             log_activation_identity(choices[index], state->encoder, hevc, index, "candidate", S_OK,
-                binding_required, binding, activation_adapter, blob_bytes);
-            if (binding_required && binding != S_OK) {
-                // Missing/malformed identity is an explicit refusal, never an
-                // inferred match or an invitation to use another adapter/CPU.
-                last = binding;
+                binding_required, binding, activation_adapter, blob_bytes, selection);
+            if (selection.result != S_OK) {
+                // Unscoped missing identity, malformed attributes, conflicting
+                // adapters and unsuccessful scope creation remain refusals.
+                last = selection.result;
                 log_activation_identity(choices[index], true, hevc, index, "binding_rejected", last,
-                    true, binding, activation_adapter, blob_bytes);
+                    true, binding, activation_adapter, blob_bytes, selection);
             } else {
                 ComPtr<IMFTransform> transform;
                 last = choices[index]->ActivateObject(IID_PPV_ARGS(&transform));
                 log_activation_identity(choices[index], state->encoder, hevc, index, "activate", last,
-                    binding_required, binding, activation_adapter, blob_bytes);
+                    binding_required, binding, activation_adapter, blob_bytes, selection);
                 if (SUCCEEDED(last)) {
                     last = configure(*state, transform.Get(), kbps);
                     log_activation_identity(choices[index], state->encoder, hevc, index,
                         SUCCEEDED(last) ? "selected" : "configuration_rejected", last,
-                        binding_required, binding, activation_adapter, blob_bytes);
+                        binding_required, binding, activation_adapter, blob_bytes, selection);
                 }
                 if (FAILED(last)) { state->events.Reset(); state->transform.Reset(); state->manager.Reset(); if (!state->gpu_input) { state->context.Reset(); state->device.Reset(); } state->input_events = 0; state->output_events = 0; }
             }
@@ -1149,6 +1181,66 @@ extern "C" uint32_t nl_mf_adapter_binding_contract() noexcept {
                 set_adapter_request(attributes.Get(), expected) == S_OK &&
                 attributes->GetItemType(MFT_ENUM_ADAPTER_LUID, &type) == S_OK && type == MF_ATTRIBUTE_BLOB &&
                 match_adapter_luid(attributes.Get(), expected, &actual, &bytes) == S_OK) passed |= 256;
+        }
+    }
+    MFShutdown(); CoUninitialize(); return passed;
+}
+
+// Independent selection policy regression; the strict blob-reader contract
+// above remains unchanged. Enum HRESULTs model the production call receipts;
+// activation metadata uses real IMFAttributes and the production strict reader.
+extern "C" uint32_t nl_mf_adapter_selection_contract() noexcept {
+    uint32_t passed = 0;
+    const HRESULT com = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (FAILED(com)) return passed;
+    if (FAILED(MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET))) { CoUninitialize(); return passed; }
+    {
+        ComPtr<IMFAttributes> attributes;
+        if (MFCreateAttributes(&attributes, 1) == S_OK) {
+            const LUID expected{0x89abcdefu, -1234567};
+            const AdapterEnumerationBinding scoped{true, S_OK, S_OK};
+            const AdapterEnumerationBinding unscoped{false, E_UNEXPECTED, S_OK};
+            LUID actual{}; UINT32 bytes = 0;
+            const auto decide = [&](const AdapterEnumerationBinding& enumeration) {
+                return select_adapter_binding(enumeration,
+                    match_adapter_luid(attributes.Get(), expected, &actual, &bytes));
+            };
+            auto selected = decide(scoped);
+            if (match_adapter_luid(attributes.Get(), expected, &actual, &bytes) == MF_E_ATTRIBUTENOTFOUND &&
+                selected.result == S_OK && std::strcmp(selected.basis, "mft_enum2_exact_adapter_scope") == 0) passed |= 1;
+            if (set_adapter_request(attributes.Get(), expected) == S_OK) {
+                selected = decide(scoped);
+                if (selected.result == S_OK && std::strcmp(selected.basis, "activation_luid_blob") == 0) passed |= 2;
+            }
+            LUID foreign = expected; foreign.HighPart ^= 1;
+            if (set_adapter_request(attributes.Get(), foreign) == S_OK &&
+                decide(scoped).result == DXGI_ERROR_UNSUPPORTED && decide(unscoped).result == DXGI_ERROR_UNSUPPORTED) passed |= 4;
+            bool malformed = attributes->SetUINT64(MFT_ENUM_ADAPTER_LUID, adapter_luid_bits(expected)) == S_OK &&
+                FAILED(decide(scoped).result);
+            const BYTE short_blob[sizeof(LUID) - 1]{}, long_blob[sizeof(LUID) + 1]{};
+            malformed = malformed && attributes->SetBlob(MFT_ENUM_ADAPTER_LUID, short_blob, sizeof(short_blob)) == S_OK &&
+                FAILED(decide(scoped).result);
+            malformed = malformed && attributes->SetBlob(MFT_ENUM_ADAPTER_LUID, long_blob, sizeof(long_blob)) == S_OK &&
+                FAILED(decide(scoped).result);
+            if (malformed) passed |= 8;
+            if (set_adapter_request(attributes.Get(), expected) == S_OK) {
+                const AdapterEnumerationBinding failed_request{true, E_ACCESSDENIED, S_OK};
+                const AdapterEnumerationBinding inexact_request{true, S_FALSE, S_OK};
+                const AdapterEnumerationBinding conflicting_request{true, DXGI_ERROR_UNSUPPORTED, S_OK};
+                if (decide(failed_request).result == E_ACCESSDENIED && FAILED(decide(inexact_request).result) &&
+                    decide(conflicting_request).result == DXGI_ERROR_UNSUPPORTED) passed |= 16;
+                const AdapterEnumerationBinding failed_enum{true, S_OK, E_ACCESSDENIED};
+                const AdapterEnumerationBinding inexact_enum{true, S_OK, S_FALSE};
+                const AdapterEnumerationBinding failed_fallback{false, E_UNEXPECTED, E_ACCESSDENIED};
+                if (decide(failed_enum).result == E_ACCESSDENIED && FAILED(decide(inexact_enum).result) &&
+                    decide(failed_fallback).result == E_ACCESSDENIED) passed |= 32;
+                selected = decide(unscoped);
+                if (selected.result == S_OK && std::strcmp(selected.basis, "activation_luid_blob") == 0 &&
+                    attributes->DeleteAllItems() == S_OK && decide(unscoped).result == MF_E_ATTRIBUTENOTFOUND) passed |= 64;
+                if (decide(failed_request).result == E_ACCESSDENIED && decide(failed_enum).result == E_ACCESSDENIED &&
+                    select_adapter_binding(scoped, E_ACCESSDENIED).result == E_ACCESSDENIED &&
+                    FAILED(select_adapter_binding(scoped, S_FALSE).result)) passed |= 128;
+            }
         }
     }
     MFShutdown(); CoUninitialize(); return passed;

@@ -247,26 +247,49 @@ reading back its own request through the production identity reader.
 
 An adapter-targeted input request is not evidence that every returned activation
 publishes an adapter identity. The official enumeration contract does not make
-that output guarantee. The mature
+that output guarantee. It does guarantee that returned activation objects match
+the supplied search criteria, including the exact adapter LUID when the checked
+input blob and `MFT_ENUM_FLAG_HARDWARE` are supplied to `MFTEnum2`. The mature
 [Chromium implementation at 59017c5](https://github.com/chromium/chromium/blob/59017c54a7db7de13eff71f9fb71d34a9862e83e/media/gpu/windows/media_foundation_video_encode_accelerator_win.cc)
 reads the activation attribute as a blob, checks the exact `sizeof(LUID)` and
 both parts, and uses a separate resource-mapping path when they differ. It does
 not infer adapter agreement from successful device-manager installation.
-NestLink has no such cross-adapter resource-mapping path. Its supplied-device
-encoder now accepts a candidate only when that exact activation blob is present
-and matches the actual retained D3D source device. Missing, wrongly typed,
-short, oversized and mismatching identities explicitly reject that candidate
-before activation. This check also applies to `MFTEnumEx` when the runtime lacks
-`MFTEnum2`; failed targeted enumeration never retries a global/CPU route.
+That output-reader example does not add a mandatory output attribute to the
+official adapter-scoped enumeration contract.
+
+The first binding repair incorrectly required the activation LUID blob on both
+enumeration paths. The verified source `3e292c4` target run built by
+[41470127557](https://github.com/ZHanry/NestLink/actions/runs/41470127557)
+exposed this wrapper defect: the actual source was AMD Radeon Graphics,
+LUID `0x000000000000bcf6`; the exact eight-byte LUID request and `MFTEnum2` both
+returned `S_OK` with two `AMDh265Encoder` activation objects. Both optional LUID
+reads returned `MF_E_ATTRIBUTENOTFOUND` (`0xc00d36e6`). The wrapper refused both
+before activation. This attempt remains failed and does not prove codec or
+hardware failure.
+
+The corrected production selection decision now permits that specific absent
+attribute only when the exact request write/readback and adapter-scoped
+`MFTEnum2` call both returned `S_OK`. Its binding basis is then explicitly the
+enumeration's exact adapter scope. A present attribute still goes through the
+unchanged strict reader: wrongly typed, short, oversized or mismatching blobs
+reject the candidate even within a scoped result. Failed/inexact requests or
+enumeration cannot establish scope. `MFTEnumEx` when `MFTEnum2` is unavailable
+still requires a complete matching activation blob, otherwise it safely refuses.
+Failed targeted enumeration never retries a global/CPU route. The original
+supplied D3D device manager and same-device texture validation remain in force;
+NestLink introduces no cross-adapter resource mapping.
 
 The native diagnostics record the actual source D3D adapter LUID, description,
 vendor/device IDs and driver-query result before codec configuration. They then
 record the requested LUID and enumeration HRESULT/count, every attempted
 activation's LUID read/binding result and blob length, bounded friendly name and
-CLSID, and activation/configuration/selection results. Optional identity strings
+CLSID, and activation/configuration/selection results. The raw activation LUID
+status remains separate from the selection HRESULT and binding basis. A missing
+activation attribute stays unknown even when exact scoped enumeration provides
+the binding. Optional identity strings
 remain `unknown` when their attribute calls fail. A zero-valued but correctly
-typed LUID is a value, never a sentinel for a missing attribute. The earlier
-failed HEVC commands did not retain their actual source/activation identities;
+typed LUID is a value, never a sentinel for a missing attribute. The historical
+`2ffc870`/`b6b5520` failed HEVC commands did not retain their actual source/activation identities;
 a successful H.264 command's adapter does not identify those HEVC attempts, and
 their failure cannot be assigned to a GPU vendor.
 
@@ -279,6 +302,13 @@ These metadata tests open no device or encoder. Their exact-source hosted result
 and the original default physical commands still need a new build/rerun. No
 adapter-selection CLI, AU/SPS rewriting, relaxed colour/geometry assertion or
 GPU/performance/physical scanout qualification follows from this binding fix.
+The original nine-case strict blob contract and its `511` assertion remain
+unchanged. An additional independent production-selection regression uses real
+`IMFAttributes` with the same strict reader, plus explicit enumeration receipts,
+to cover exact scoped success, an absent attribute, matching/conflicting blobs,
+malformed attributes, failed/inexact requests and enumeration, and the strict
+unscoped fallback. Its `255` assertion is separate; neither metadata regression
+claims to execute a hardware enumeration or validate real codec output.
 
 The existing v4 Main10 SDR source now selects WGC with a
 `R16G16B16A16_FLOAT` frame pool and same-device retained RGB texture, followed by
