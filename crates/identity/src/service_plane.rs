@@ -102,6 +102,7 @@ impl PermitSigner {
 #[derive(Clone, Debug)]
 pub struct VerifiedServiceLease {
     claims: ServiceLeaseClaims,
+    usage: ServiceUsageBudgetGrantClaims,
     signed: SignedServiceLease,
     digest: [u8; 32],
     binding: [u8; 32],
@@ -110,6 +111,11 @@ pub struct VerifiedServiceLease {
 impl VerifiedServiceLease {
     pub fn claims(&self) -> &ServiceLeaseClaims {
         &self.claims
+    }
+    /// Exact typed claims returned by this lease's original usage verifier.
+    /// This immutable projection does not replace current-time or live checks.
+    pub fn usage(&self) -> &ServiceUsageBudgetGrantClaims {
+        &self.usage
     }
     pub fn signed(&self) -> &SignedServiceLease {
         &self.signed
@@ -140,13 +146,14 @@ pub fn verify_service_lease(
     )?;
     claims.validate()?;
     group::check_binding(&claims)?;
-    verify_service_usage_budget_grant(&claims.usage_grant, issuer)?;
+    let usage = verify_service_usage_budget_grant(&claims.usage_grant, issuer)?;
     if definition_digest(&claims.definition)? != claims.definition_sha256 {
         return Err(invalid());
     }
     let binding = publication_binding(&claims)?;
     Ok(VerifiedServiceLease {
         claims,
+        usage,
         signed: signed.clone(),
         digest: digest(&signed.claims),
         binding,

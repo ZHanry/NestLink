@@ -114,6 +114,7 @@ jobs:
               assert len(identities)==1, 'exact identity harness missing'
               receipt['identity_executable_sha256'] = hashlib.sha256(pathlib.Path(identities[0]).read_bytes()).hexdigest()
               execute_tests('delegation-verified-lease',[identities[0],'delegation_verified_lease_reuse_keeps_exact_issuer_scope_and_original_deadlines','--show-output'],60,1)
+              execute_tests('sealed-usage-claims',[identities[0],'sealed_usage_retains_exact_verified_claims_and_rejects_nested_substitution','--show-output'],60,1)
               snapshots = [item['executable'] for line in (output/'build-currentness.log').read_text().splitlines()
                 if (item:=json.loads(line)).get('reason')=='compiler-artifact'
                 and item.get('executable') and item['target']['name']=='network_policy']

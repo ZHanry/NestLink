@@ -1,10 +1,7 @@
 //! Private service network authority stays separate from remote-control permits.
 use super::*;
 use crate::services::private::VerifiedPrivateServiceLease;
-use nestlink_protocol::{
-    network_datagram,
-    service_plane::{SERVICE_USAGE_BYTES, ServiceUsageBudgetGrantClaims, decode_service_message},
-};
+use nestlink_protocol::network_datagram;
 
 fn denied() -> ContractError {
     ContractError::new(
@@ -124,10 +121,7 @@ pub fn verify_private_service_grant(
         VerifiedMembership::from_grant(decode(view)?, &context, installation, key, epoch)
     };
     let view = &grant.network;
-    let usage: ServiceUsageBudgetGrantClaims = decode_service_message(
-        &business.lease().claims().usage_grant.claims,
-        SERVICE_USAGE_BYTES,
-    )?;
+    let usage = business.lease().usage();
     if view.grant_id != usage.grant_id {
         return Err(denied());
     }
@@ -366,10 +360,7 @@ pub fn private_service_route_binding(
         return Err(denied());
     };
     path.check_route(context, &[forward.relay])?;
-    let usage: ServiceUsageBudgetGrantClaims = decode_service_message(
-        &business.lease().claims().usage_grant.claims,
-        SERVICE_USAGE_BYTES,
-    )?;
+    let usage = business.lease().usage();
     if forward.peers != peers
         || forward.transport_group != path.transport_group_id()
         || forward.previous != peers.first
@@ -436,10 +427,7 @@ pub fn private_service_chain_binding(
     {
         return Err(denied());
     }
-    let usage: ServiceUsageBudgetGrantClaims = decode_service_message(
-        &business.lease().claims().usage_grant.claims,
-        SERVICE_USAGE_BYTES,
-    )?;
+    let usage = business.lease().usage();
     for grant in [a, b] {
         if grant.peers != peers
             || grant.transport_group != path.transport_group_id()

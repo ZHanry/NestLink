@@ -237,11 +237,7 @@ impl Sdk {
         {
             return Err(SdkError::Trust);
         }
-        let usage: nestlink_protocol::service_plane::ServiceUsageBudgetGrantClaims =
-            nestlink_protocol::service_plane::decode_service_message(
-                &claims.usage_grant.claims,
-                nestlink_protocol::service_plane::SERVICE_USAGE_BYTES,
-            )?;
+        let usage = verified.lease().usage();
         if usage.byte_ceiling > request.maximum_bytes {
             return Err(SdkError::Trust);
         }
@@ -274,11 +270,7 @@ impl Sdk {
             .await?;
         let verified = self.verify_private_service_grant(&grant)?;
         let base = verified.lease().claims();
-        let usage: nestlink_protocol::service_plane::ServiceUsageBudgetGrantClaims =
-            nestlink_protocol::service_plane::decode_service_message(
-                &base.usage_grant.claims,
-                nestlink_protocol::service_plane::SERVICE_USAGE_BYTES,
-            )?;
+        let usage = verified.lease().usage();
         if base.service_id != id || usage.grant_id != reservation {
             return Err(SdkError::Trust);
         }
