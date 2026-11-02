@@ -64,9 +64,9 @@ def retained_package(output, architecture, producer):
 
 
 def payload_snapshot(root, digest):
-    if root.is_symlink():
-        raise ValueError("candidate payload root unexpectedly became a link")
-    snapshot = {}
+    if root.is_symlink() or not root.is_dir():
+        raise ValueError("candidate payload root is not its original directory")
+    snapshot = {".": {"type": "directory", "mode": root.stat().st_mode & 0o777}}
     for path in sorted(root.rglob("*")):
         if path.is_symlink() or not (path.is_dir() or path.is_file()):
             raise ValueError("candidate payload contains an unexpected linked/special file")
@@ -105,7 +105,24 @@ def interrupted_replacement(args, producer, architecture, version, sentinel, rec
             raise ValueError("upgrade did not reach the real unpacked new-payload state")
         barrier = private / "before-configure.py"
         marker = private / "actual-dpkg.json"
-        barrier.write_text('''import json,os,pathlib,signal,sys,time
+        barrier.write_text('''import json,os,pathlib,signal,sys
+def start(proc):
+    return (proc/'stat').read_text().split(') ',1)[1].split()[19]
+if len(sys.argv)==3 and sys.argv[1]=='--interrupt':
+    marker=pathlib.Path(sys.argv[2])
+    observed=json.loads(marker.read_text())
+    proc=pathlib.Path('/proc')/str(observed['dpkg_pid'])
+    hook=pathlib.Path('/proc')/str(observed['hook_pid'])
+    if (proc/'exe').resolve()!=pathlib.Path('/usr/bin/dpkg').resolve() or start(proc)!=observed['dpkg_start']:
+        raise RuntimeError('original dpkg image/start identity changed')
+    if (hook/'exe').resolve()!=pathlib.Path(sys.executable).resolve() or start(hook)!=observed['hook_start']:
+        raise RuntimeError('owned Python hook image/start identity changed')
+    if (hook/'cmdline').read_bytes().split(b'\\0')[1:]!=[str(pathlib.Path(__file__).resolve()).encode(),str(marker).encode(),b'']:
+        raise RuntimeError('owned hook arguments changed')
+    os.kill(observed['dpkg_pid'],signal.SIGKILL)
+    os.kill(observed['hook_pid'],signal.SIGTERM)
+    print(json.dumps({**observed,'original_image_and_start_verified':True,'actual_dpkg_sigkill':True}))
+    sys.exit(0)
 parent=os.getppid()
 for _ in range(8):
     proc=pathlib.Path('/proc')/str(parent)
@@ -114,8 +131,10 @@ for _ in range(8):
     parent=int((proc/'stat').read_text().split(') ',1)[1].split()[1])
 else:
     raise RuntimeError('original dpkg ancestor missing')
-start=(proc/'stat').read_text().split(') ',1)[1].split()[19]
-pathlib.Path(sys.argv[1]).write_text(json.dumps({'dpkg_pid':parent,'dpkg_start':start,'hook_pid':os.getpid()}))
+marker=pathlib.Path(sys.argv[1])
+pending=marker.with_suffix('.pending')
+pending.write_text(json.dumps({'dpkg_pid':parent,'dpkg_start':start(proc),'hook_pid':os.getpid(),'hook_start':start(pathlib.Path('/proc/self'))}))
+pending.replace(marker)
 signal.alarm(30)
 signal.pause()
 ''', encoding="utf-8")
@@ -131,11 +150,10 @@ signal.pause()
                     raise ValueError("real dpkg did not reach its bounded pre-configure crash point")
                 time.sleep(0.025)
             observed = json.loads(marker.read_text())
-            proc = Path("/proc") / str(observed["dpkg_pid"])
-            if (proc / "exe").resolve() != Path("/usr/bin/dpkg").resolve() or (proc / "stat").read_text().split(") ", 1)[1].split()[19] != observed["dpkg_start"]:
-                raise ValueError("crash fixture no longer owns the exact original dpkg process")
-            command("kill-exact-original-dpkg", ["sudo", "-n", "kill", "-KILL", str(observed["dpkg_pid"])])
-            command("stop-exact-owned-dpkg-hook", ["sudo", "-n", "kill", "-TERM", str(observed["hook_pid"])])
+            # Both original processes run as root. Keep the identity checks and
+            # signals together under the same explicit fixture privilege;
+            # ordinary users cannot inspect a root process's /proc/<pid>/exe.
+            command("verify-and-kill-exact-original-dpkg", ["sudo", "-n", "python3", barrier, "--interrupt", marker])
             output, _ = process.communicate(timeout=10)
             log_path.write_bytes(output)
             receipt["commands"].append({"name": "interrupted-real-dpkg-configure", "return_code": process.returncode,

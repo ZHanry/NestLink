@@ -1,0 +1,958 @@
+{
+  "schema_version": 1,
+  "source_revision": "2cb75d4d7e2a55ba703480fe2933e8fd46c95c74",
+  "workflow": ".github/workflows/linux-network-package.yml",
+  "workflow_conclusion": "failure",
+  "run_id": 41410131614,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41410131614",
+  "run_attempt": 1,
+  "passed": false,
+  "artifacts": [
+    {
+      "artifact_id": 13126135123,
+      "name": "linux-network-build-x86_64-unknown-linux-gnu-2cb75d4d7e2a55ba703480fe2933e8fd46c95c74-1",
+      "official_digest": "sha256:49b0df1b4d38ca860588510e3f4dd903a95ff24b10c018c4b76a552f49158f7b",
+      "downloaded_zip_sha256": "49b0df1b4d38ca860588510e3f4dd903a95ff24b10c018c4b76a552f49158f7b",
+      "zip_bytes": 9311,
+      "provenance": {
+        "source_revision": "2cb75d4d7e2a55ba703480fe2933e8fd46c95c74",
+        "workflow_revision": "2cb75d4d7e2a55ba703480fe2933e8fd46c95c74",
+        "workflow": "ZHanry/NestLink/.github/workflows/linux-network-package.yml@refs/heads/main",
+        "run_id": "41410131614",
+        "run_attempt": "1",
+        "target": "x86_64-unknown-linux-gnu",
+        "runner_environment": "github-hosted",
+        "machine": "x86_64",
+        "cargo_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+        "qualification_claimed": false
+      },
+      "files": [
+        {
+          "path": "cargo-build.log",
+          "bytes": 61271,
+          "sha256": "18ac79f2263f5b02fb1eeaf376de268056ddf2ac02852b89f2338e584e41d574"
+        },
+        {
+          "path": "provenance.json",
+          "bytes": 506,
+          "sha256": "9d210551ee098acfd89ca2bfaa5ce4c0f7957fa7144a390f3a68507c0b2d9166"
+        }
+      ]
+    },
+    {
+      "artifact_id": 13125926944,
+      "name": "linux-network-package-x86_64-unknown-linux-gnu-2cb75d4d7e2a55ba703480fe2933e8fd46c95c74-1",
+      "official_digest": "sha256:8cefcc451c8de68f97e46bc953d04297888f0c438ae0c5228ed1492ca115c1d2",
+      "downloaded_zip_sha256": "8cefcc451c8de68f97e46bc953d04297888f0c438ae0c5228ed1492ca115c1d2",
+      "zip_bytes": 63732720,
+      "receipt_sha256": "7dc5c006614b31030f0b1f92110f7104f6d697e26386a68cac969b0709c04e71",
+      "receipt_file_entries_verified": 37,
+      "receipt": {
+        "schema_version": 1,
+        "source_revision": "2cb75d4d7e2a55ba703480fe2933e8fd46c95c74",
+        "version": "0.7.0-rc.1",
+        "build_provenance": {
+          "workflow": "ZHanry/NestLink/.github/workflows/linux-network-package.yml@refs/heads/main",
+          "run_id": "41410131614",
+          "run_attempt": "1",
+          "target": "x86_64-unknown-linux-gnu",
+          "cargo_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+          "binary_sha256": "ed373c032da389458640ce14ff907d0672af06fc24b294cf6f6df9b21df69e0e",
+          "server_binary_sha256": "7a0819c0b6f67f18abc32d73a6a66f39bf33ae00f465be26022ad7624cc61f55"
+        },
+        "execution_provenance": {
+          "runner_environment": "github-hosted",
+          "machine": "x86_64",
+          "ordinary_uid": 1001,
+          "kernel": "7.0.0-1017-azure"
+        },
+        "status": "failed",
+        "commands": [
+          {
+            "name": "ordinary-install-refused",
+            "return_code": 2,
+            "log": "ordinary-install-refused.log",
+            "log_sha256": "a4b1b48c8d7c05be0963428783ecb11f0807964813f4462693261bc31c6a3463"
+          },
+          {
+            "name": "install",
+            "return_code": 0,
+            "log": "install.log",
+            "log_sha256": "41e3ba5700802b252d7f4d172a215d84377f4ecfabf89f64aff9cb0e13e1216c"
+          },
+          {
+            "name": "version",
+            "return_code": 0,
+            "log": "version.log",
+            "log_sha256": "0b859399d1202213b6ac05a3fa098a958d5bb3d5b9c02cf226d0a193d128820e"
+          },
+          {
+            "name": "help-network-tun",
+            "return_code": 0,
+            "log": "help-network-tun.log",
+            "log_sha256": "3a3fb5f2c702b89ad4f4018cc87b4501c109e5d1a0e2eba264008e03340bc8da"
+          },
+          {
+            "name": "help-network-tun-system",
+            "return_code": 0,
+            "log": "help-network-tun-system.log",
+            "log_sha256": "83613a4e51fef612ba370d08d9a43c11afe10d6f73b865ab4bc91120796c085d"
+          },
+          {
+            "name": "help-network-subnet",
+            "return_code": 0,
+            "log": "help-network-subnet.log",
+            "log_sha256": "82f75a12f3a6837998b9269f6ab6fb9f2eb755395f33423ead1d56bf32849129"
+          },
+          {
+            "name": "help-network-subnet-system",
+            "return_code": 0,
+            "log": "help-network-subnet-system.log",
+            "log_sha256": "24d137f79cf866757844d14f9376a016e82f4ff56d87979892c5c39a03b0e64a"
+          },
+          {
+            "name": "help-network-lan",
+            "return_code": 0,
+            "log": "help-network-lan.log",
+            "log_sha256": "cdba0b263bc2acd2d36d2b1463fc5455ad24fc15a5a9cea45205a69c0a36b221"
+          },
+          {
+            "name": "help-space-dns",
+            "return_code": 0,
+            "log": "help-space-dns.log",
+            "log_sha256": "56efcbcd814f5079e361e663d2f47d1e7bbd548c7eb8e32dffade5681b239cf0"
+          },
+          {
+            "name": "help-space-dns-system",
+            "return_code": 0,
+            "log": "help-space-dns-system.log",
+            "log_sha256": "9efe5e33800d48954c95dcd9b5f571f32ee517868cedf34beb4b068cff9b0550"
+          },
+          {
+            "name": "help-wireguard",
+            "return_code": 0,
+            "log": "help-wireguard.log",
+            "log_sha256": "65b7d90f9178dd58d2eaaf5d01667aab5d67d2ba84f478f2a200343d09daaf8a"
+          },
+          {
+            "name": "help-private-service-proxy",
+            "return_code": 0,
+            "log": "help-private-service-proxy.log",
+            "log_sha256": "b663651bc7ca316fba48f68c5d8881e5dffed295a1a562d73beef7b145f23e97"
+          },
+          {
+            "name": "help-private-web-gateway",
+            "return_code": 0,
+            "log": "help-private-web-gateway.log",
+            "log_sha256": "f70694f9a561c9d4f52a4bac2b4a68eee0f75f611c58a52da9adddf1c3e407b6"
+          },
+          {
+            "name": "help-maintenance",
+            "return_code": 0,
+            "log": "help-maintenance.log",
+            "log_sha256": "702edb813b773fcac550394f5b4c6c8ac19a9ea112cf2bfa733e63148806879a"
+          },
+          {
+            "name": "help-diagnostics",
+            "return_code": 0,
+            "log": "help-diagnostics.log",
+            "log_sha256": "0ffb37355897536988a3dab456f080f6b07ca100f8705e85c9e6793b30cc1bc0"
+          },
+          {
+            "name": "install-current-server",
+            "return_code": 0,
+            "log": "install-current-server.log",
+            "log_sha256": "c77cca8a091a93db6cbc410a92c70ff3b6eb96489b5697d281e34463f10e2803"
+          },
+          {
+            "name": "port-fixture-init",
+            "return_code": 0,
+            "log": "port-fixture-init.log",
+            "log_sha256": "99d7c019efd91dc8ede1b8ce7412d8586c66bbfc6845dc1305db99e76bea5cb5"
+          },
+          {
+            "name": "actual-installed-port-conflict-refused",
+            "return_code": 1,
+            "log": "actual-installed-port-conflict-refused.log",
+            "log_sha256": "ff7a4684ecf66c9ad75051dd507396885bf042fee0d56370b68309705a8db0bf"
+          },
+          {
+            "name": "uninstall-current-server-fixture",
+            "return_code": 0,
+            "log": "uninstall-current-server-fixture.log",
+            "log_sha256": "10f70433eaaebda092ebbe01f222be8fee37042d87c58b419aa7262151be3e90"
+          },
+          {
+            "name": "missing-login-refused",
+            "return_code": 1,
+            "log": "missing-login-refused.log",
+            "log_sha256": "7a4c908eedfaf463cd65642226996d1820b26aa4d8a412585dc5d03e6e697865"
+          },
+          {
+            "name": "root-runtime-refused",
+            "return_code": 1,
+            "log": "root-runtime-refused.log",
+            "log_sha256": "574e8c9046a28093c78f10e2cb48da648756aa66ba6c2c9b790e1f1bb9cc315a"
+          },
+          {
+            "name": "reinstall",
+            "return_code": 0,
+            "log": "reinstall.log",
+            "log_sha256": "c17e629ead81ba5f8edab29ccfc2185cc46f9733f69db222453a8b34ab5b976b"
+          },
+          {
+            "name": "incoming-fixture-deb-version",
+            "return_code": 0,
+            "log": "incoming-fixture-deb-version.log",
+            "log_sha256": "39266cf78c8220c296f6c1afca8e10229120fdbf5d0c45dc93dbe09e31ad2048"
+          },
+          {
+            "name": "retained-baseline-deb-version",
+            "return_code": 0,
+            "log": "retained-baseline-deb-version.log",
+            "log_sha256": "a6b795e26b24e7032fa609d412674f72f9c8145bb975906702a412f27ed0a8a8"
+          },
+          {
+            "name": "real-dpkg-upgrade-version-order",
+            "return_code": 0,
+            "log": "real-dpkg-upgrade-version-order.log",
+            "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "extract-retained-rollback-payload",
+            "return_code": 0,
+            "log": "extract-retained-rollback-payload.log",
+            "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "install-retained-rollback-baseline",
+            "return_code": 0,
+            "log": "install-retained-rollback-baseline.log",
+            "log_sha256": "f8074248032164458dd5a57cdd059c9f5c0736ecb35b11b4200f4b69657626e1"
+          },
+          {
+            "name": "unpack-real-incoming-upgrade",
+            "return_code": 0,
+            "log": "unpack-real-incoming-upgrade.log",
+            "log_sha256": "4b4bde0e887bf33bd140ba13d3c316b4a8af812136b51bb7dc92e2a7748d1bd9"
+          },
+          {
+            "name": "unpacked-upgrade-status",
+            "return_code": 0,
+            "log": "unpacked-upgrade-status.log",
+            "log_sha256": "e92435d0274e494f1e79ad74f29fa801f7ffc7e3f3d29ef82d6bf0174db1c8fd"
+          },
+          {
+            "name": "failed-install-cleanup",
+            "return_code": 0,
+            "log": "failed-install-cleanup.log",
+            "log_sha256": "bfb7c8fa2d629273fc9b776b1f225e27769c7132bc597b6376aa6f17a7c13e4f"
+          }
+        ],
+        "production_update_eligible": false,
+        "limitations": [
+          "Unsigned development package; no installed signed update or formal lifecycle claim",
+          "Actual unsigned DEB install/reinstall/uninstall, installed server TCP conflict and interrupted candidate package replacement; physical TUN, subnet, DNS and WireGuard have separate experiments",
+          "The +hosted.interruption.1 DEB is a failure-injection package revision, never a release or production update",
+          "No graphical Linux desktop, phone or physical ARM64 target acceptance"
+        ],
+        "package": {
+          "path": "NestLink-candidate-linux-amd64-network.deb",
+          "bytes": 14044984,
+          "sha256": "73e6998b8c6ab1a3fa4b6bab85774138146ed0c911f7536c02976f1418d8d927"
+        },
+        "actual_port_conflict": {
+          "passed": true,
+          "protocol": "TCP",
+          "ordinary_uid": 1001,
+          "installed_server_sha256": "7a0819c0b6f67f18abc32d73a6a66f39bf33ae00f465be26022ad7624cc61f55",
+          "package_sha256": "19a66cb28eb30bd120a93fbe0366b16075cf281c6fdccf3003c8613e28fbcad4",
+          "original_listener_retained": true,
+          "configuration_and_identity_unchanged": true,
+          "real_health_after_port_release": {
+            "alpn": "nestlink/1",
+            "api_base": "/api/v3",
+            "deployment_id": "fd0bfe83-3f2e-4a97-bab7-f537a4f107b8",
+            "native_ice_version": 1,
+            "node_policy_issuer": "jnAHi5bhwIdl6qYDD0vrAeusNYdBRGwifm6KMKimvF0",
+            "permit_issuer": "0u420Rqi3gsrPLJW8j5hhtOePVWT_xI2YquSv6Lyzq8",
+            "product": "NestLink",
+            "security_epoch": 4640721298387299214,
+            "version": "0.7.0-rc.1"
+          },
+          "normal_server_stop_and_port_rebind": true
+        },
+        "failure": "PermissionError: [Errno 13] Permission denied: '/proc/14435/exe'",
+        "files": [
+          {
+            "path": "HOSTED-FAULT-FIXTURE-linux-amd64-network.deb",
+            "bytes": 14045064,
+            "sha256": "275ebfd99feb515234fb647c70ef5d5fd4060d2000b7a86c6d1c1be5d79194dd"
+          },
+          {
+            "path": "NestLink-candidate-linux-amd64-network.deb",
+            "bytes": 14044984,
+            "sha256": "73e6998b8c6ab1a3fa4b6bab85774138146ed0c911f7536c02976f1418d8d927"
+          },
+          {
+            "path": "NestLink-candidate-linux-amd64-server.deb",
+            "bytes": 8082486,
+            "sha256": "19a66cb28eb30bd120a93fbe0366b16075cf281c6fdccf3003c8613e28fbcad4"
+          },
+          {
+            "path": "actual-installed-port-conflict-refused.log",
+            "bytes": 47,
+            "sha256": "ff7a4684ecf66c9ad75051dd507396885bf042fee0d56370b68309705a8db0bf"
+          },
+          {
+            "path": "extract-retained-rollback-payload.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "failed-install-cleanup.log",
+            "bytes": 141,
+            "sha256": "bfb7c8fa2d629273fc9b776b1f225e27769c7132bc597b6376aa6f17a7c13e4f"
+          },
+          {
+            "path": "help-diagnostics.log",
+            "bytes": 391,
+            "sha256": "0ffb37355897536988a3dab456f080f6b07ca100f8705e85c9e6793b30cc1bc0"
+          },
+          {
+            "path": "help-maintenance.log",
+            "bytes": 686,
+            "sha256": "702edb813b773fcac550394f5b4c6c8ac19a9ea112cf2bfa733e63148806879a"
+          },
+          {
+            "path": "help-network-lan.log",
+            "bytes": 990,
+            "sha256": "cdba0b263bc2acd2d36d2b1463fc5455ad24fc15a5a9cea45205a69c0a36b221"
+          },
+          {
+            "path": "help-network-subnet-system.log",
+            "bytes": 530,
+            "sha256": "24d137f79cf866757844d14f9376a016e82f4ff56d87979892c5c39a03b0e64a"
+          },
+          {
+            "path": "help-network-subnet.log",
+            "bytes": 1312,
+            "sha256": "82f75a12f3a6837998b9269f6ab6fb9f2eb755395f33423ead1d56bf32849129"
+          },
+          {
+            "path": "help-network-tun-system.log",
+            "bytes": 660,
+            "sha256": "83613a4e51fef612ba370d08d9a43c11afe10d6f73b865ab4bc91120796c085d"
+          },
+          {
+            "path": "help-network-tun.log",
+            "bytes": 1380,
+            "sha256": "3a3fb5f2c702b89ad4f4018cc87b4501c109e5d1a0e2eba264008e03340bc8da"
+          },
+          {
+            "path": "help-private-service-proxy.log",
+            "bytes": 1098,
+            "sha256": "b663651bc7ca316fba48f68c5d8881e5dffed295a1a562d73beef7b145f23e97"
+          },
+          {
+            "path": "help-private-web-gateway.log",
+            "bytes": 1348,
+            "sha256": "f70694f9a561c9d4f52a4bac2b4a68eee0f75f611c58a52da9adddf1c3e407b6"
+          },
+          {
+            "path": "help-space-dns-system.log",
+            "bytes": 687,
+            "sha256": "9efe5e33800d48954c95dcd9b5f571f32ee517868cedf34beb4b068cff9b0550"
+          },
+          {
+            "path": "help-space-dns.log",
+            "bytes": 656,
+            "sha256": "56efcbcd814f5079e361e663d2f47d1e7bbd548c7eb8e32dffade5681b239cf0"
+          },
+          {
+            "path": "help-wireguard.log",
+            "bytes": 754,
+            "sha256": "65b7d90f9178dd58d2eaaf5d01667aab5d67d2ba84f478f2a200343d09daaf8a"
+          },
+          {
+            "path": "incoming-fixture-deb-version.log",
+            "bytes": 33,
+            "sha256": "39266cf78c8220c296f6c1afca8e10229120fdbf5d0c45dc93dbe09e31ad2048"
+          },
+          {
+            "path": "install-current-server.log",
+            "bytes": 296,
+            "sha256": "c77cca8a091a93db6cbc410a92c70ff3b6eb96489b5697d281e34463f10e2803"
+          },
+          {
+            "path": "install-retained-rollback-baseline.log",
+            "bytes": 266,
+            "sha256": "f8074248032164458dd5a57cdd059c9f5c0736ecb35b11b4200f4b69657626e1"
+          },
+          {
+            "path": "install.log",
+            "bytes": 300,
+            "sha256": "41e3ba5700802b252d7f4d172a215d84377f4ecfabf89f64aff9cb0e13e1216c"
+          },
+          {
+            "path": "interrupted-real-dpkg-configure.log",
+            "bytes": 197,
+            "sha256": "95ae051852b0348f45a97d4e128f097f86f205e8993de91e4de6bbe21035b3de"
+          },
+          {
+            "path": "missing-login-refused.log",
+            "bytes": 100,
+            "sha256": "7a4c908eedfaf463cd65642226996d1820b26aa4d8a412585dc5d03e6e697865"
+          },
+          {
+            "path": "ordinary-install-refused.log",
+            "bytes": 62,
+            "sha256": "a4b1b48c8d7c05be0963428783ecb11f0807964813f4462693261bc31c6a3463"
+          },
+          {
+            "path": "port-fixture-init.log",
+            "bytes": 174,
+            "sha256": "99d7c019efd91dc8ede1b8ce7412d8586c66bbfc6845dc1305db99e76bea5cb5"
+          },
+          {
+            "path": "real-dpkg-upgrade-version-order.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "reinstall.log",
+            "bytes": 257,
+            "sha256": "c17e629ead81ba5f8edab29ccfc2185cc46f9733f69db222453a8b34ab5b976b"
+          },
+          {
+            "path": "retained-NestLink-candidate-linux-amd64-network.deb",
+            "bytes": 13763106,
+            "sha256": "1b4f138d8a1fa22a1c9f4ed4308aca152af4cf0c5154e90587132e1cdcc87f77"
+          },
+          {
+            "path": "retained-baseline-deb-version.log",
+            "bytes": 11,
+            "sha256": "a6b795e26b24e7032fa609d412674f72f9c8145bb975906702a412f27ed0a8a8"
+          },
+          {
+            "path": "retained-previous-artifact.zip",
+            "bytes": 13775307,
+            "sha256": "cfaef16fd89a66c5a211e9fd17eefe2235bd66d88683f115040b9df7b062c8f1"
+          },
+          {
+            "path": "root-runtime-refused.log",
+            "bytes": 66,
+            "sha256": "574e8c9046a28093c78f10e2cb48da648756aa66ba6c2c9b790e1f1bb9cc315a"
+          },
+          {
+            "path": "server-after-port-release.log",
+            "bytes": 46,
+            "sha256": "4918af7384f9bbab2b05ee7fc78bc3d468f0b9efe144694524ff77cfaf58352e"
+          },
+          {
+            "path": "uninstall-current-server-fixture.log",
+            "bytes": 118,
+            "sha256": "10f70433eaaebda092ebbe01f222be8fee37042d87c58b419aa7262151be3e90"
+          },
+          {
+            "path": "unpack-real-incoming-upgrade.log",
+            "bytes": 233,
+            "sha256": "4b4bde0e887bf33bd140ba13d3c316b4a8af812136b51bb7dc92e2a7748d1bd9"
+          },
+          {
+            "path": "unpacked-upgrade-status.log",
+            "bytes": 19,
+            "sha256": "e92435d0274e494f1e79ad74f29fa801f7ffc7e3f3d29ef82d6bf0174db1c8fd"
+          },
+          {
+            "path": "version.log",
+            "bytes": 27,
+            "sha256": "0b859399d1202213b6ac05a3fa098a958d5bb3d5b9c02cf226d0a193d128820e"
+          }
+        ]
+      }
+    },
+    {
+      "artifact_id": 13125841090,
+      "name": "linux-network-package-aarch64-unknown-linux-gnu-2cb75d4d7e2a55ba703480fe2933e8fd46c95c74-1",
+      "official_digest": "sha256:e08bc21c2edf1fcdf7201fe763fab54b20d3fe750766cc1e0b55542625177668",
+      "downloaded_zip_sha256": "e08bc21c2edf1fcdf7201fe763fab54b20d3fe750766cc1e0b55542625177668",
+      "zip_bytes": 60690488,
+      "receipt_sha256": "0666c7ef38bcd276e5fef5e5402a82d20052f5d1716abcb1162bede1ba8f9e95",
+      "receipt_file_entries_verified": 37,
+      "receipt": {
+        "schema_version": 1,
+        "source_revision": "2cb75d4d7e2a55ba703480fe2933e8fd46c95c74",
+        "version": "0.7.0-rc.1",
+        "build_provenance": {
+          "workflow": "ZHanry/NestLink/.github/workflows/linux-network-package.yml@refs/heads/main",
+          "run_id": "41410131614",
+          "run_attempt": "1",
+          "target": "aarch64-unknown-linux-gnu",
+          "cargo_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+          "binary_sha256": "8994ac5d141d9d015d64b3212d1d47af9494c888564f17f8826e53bcc2d9f778",
+          "server_binary_sha256": "b6cd9b906f6701a3b06ee6a74fde3531a3cd73160ad5e89a573358a8937cd5c1"
+        },
+        "execution_provenance": {
+          "runner_environment": "github-hosted",
+          "machine": "aarch64",
+          "ordinary_uid": 1001,
+          "kernel": "7.0.0-1017-azure"
+        },
+        "status": "failed",
+        "commands": [
+          {
+            "name": "ordinary-install-refused",
+            "return_code": 2,
+            "log": "ordinary-install-refused.log",
+            "log_sha256": "a4b1b48c8d7c05be0963428783ecb11f0807964813f4462693261bc31c6a3463"
+          },
+          {
+            "name": "install",
+            "return_code": 0,
+            "log": "install.log",
+            "log_sha256": "0fb3db03fa5b04bbde01b551bd85e8bbd051a429b234ea0acf93e637739b1ef9"
+          },
+          {
+            "name": "version",
+            "return_code": 0,
+            "log": "version.log",
+            "log_sha256": "0b859399d1202213b6ac05a3fa098a958d5bb3d5b9c02cf226d0a193d128820e"
+          },
+          {
+            "name": "help-network-tun",
+            "return_code": 0,
+            "log": "help-network-tun.log",
+            "log_sha256": "3a3fb5f2c702b89ad4f4018cc87b4501c109e5d1a0e2eba264008e03340bc8da"
+          },
+          {
+            "name": "help-network-tun-system",
+            "return_code": 0,
+            "log": "help-network-tun-system.log",
+            "log_sha256": "83613a4e51fef612ba370d08d9a43c11afe10d6f73b865ab4bc91120796c085d"
+          },
+          {
+            "name": "help-network-subnet",
+            "return_code": 0,
+            "log": "help-network-subnet.log",
+            "log_sha256": "82f75a12f3a6837998b9269f6ab6fb9f2eb755395f33423ead1d56bf32849129"
+          },
+          {
+            "name": "help-network-subnet-system",
+            "return_code": 0,
+            "log": "help-network-subnet-system.log",
+            "log_sha256": "24d137f79cf866757844d14f9376a016e82f4ff56d87979892c5c39a03b0e64a"
+          },
+          {
+            "name": "help-network-lan",
+            "return_code": 0,
+            "log": "help-network-lan.log",
+            "log_sha256": "cdba0b263bc2acd2d36d2b1463fc5455ad24fc15a5a9cea45205a69c0a36b221"
+          },
+          {
+            "name": "help-space-dns",
+            "return_code": 0,
+            "log": "help-space-dns.log",
+            "log_sha256": "56efcbcd814f5079e361e663d2f47d1e7bbd548c7eb8e32dffade5681b239cf0"
+          },
+          {
+            "name": "help-space-dns-system",
+            "return_code": 0,
+            "log": "help-space-dns-system.log",
+            "log_sha256": "9efe5e33800d48954c95dcd9b5f571f32ee517868cedf34beb4b068cff9b0550"
+          },
+          {
+            "name": "help-wireguard",
+            "return_code": 0,
+            "log": "help-wireguard.log",
+            "log_sha256": "65b7d90f9178dd58d2eaaf5d01667aab5d67d2ba84f478f2a200343d09daaf8a"
+          },
+          {
+            "name": "help-private-service-proxy",
+            "return_code": 0,
+            "log": "help-private-service-proxy.log",
+            "log_sha256": "b663651bc7ca316fba48f68c5d8881e5dffed295a1a562d73beef7b145f23e97"
+          },
+          {
+            "name": "help-private-web-gateway",
+            "return_code": 0,
+            "log": "help-private-web-gateway.log",
+            "log_sha256": "f70694f9a561c9d4f52a4bac2b4a68eee0f75f611c58a52da9adddf1c3e407b6"
+          },
+          {
+            "name": "help-maintenance",
+            "return_code": 0,
+            "log": "help-maintenance.log",
+            "log_sha256": "702edb813b773fcac550394f5b4c6c8ac19a9ea112cf2bfa733e63148806879a"
+          },
+          {
+            "name": "help-diagnostics",
+            "return_code": 0,
+            "log": "help-diagnostics.log",
+            "log_sha256": "0ffb37355897536988a3dab456f080f6b07ca100f8705e85c9e6793b30cc1bc0"
+          },
+          {
+            "name": "install-current-server",
+            "return_code": 0,
+            "log": "install-current-server.log",
+            "log_sha256": "65c5992dae36ac2c340ca8933d8a429303243ce1e15d3795f5e581cf5fa23a93"
+          },
+          {
+            "name": "port-fixture-init",
+            "return_code": 0,
+            "log": "port-fixture-init.log",
+            "log_sha256": "3ae7cf63a690ce7e849048369585cf691a08103be0d01563cccffcbdfe618bf7"
+          },
+          {
+            "name": "actual-installed-port-conflict-refused",
+            "return_code": 1,
+            "log": "actual-installed-port-conflict-refused.log",
+            "log_sha256": "ff7a4684ecf66c9ad75051dd507396885bf042fee0d56370b68309705a8db0bf"
+          },
+          {
+            "name": "uninstall-current-server-fixture",
+            "return_code": 0,
+            "log": "uninstall-current-server-fixture.log",
+            "log_sha256": "a280d4263b5c5c9e4943999fc37e7691787770a157cde0beff9e9b26b56adc78"
+          },
+          {
+            "name": "missing-login-refused",
+            "return_code": 1,
+            "log": "missing-login-refused.log",
+            "log_sha256": "7a4c908eedfaf463cd65642226996d1820b26aa4d8a412585dc5d03e6e697865"
+          },
+          {
+            "name": "root-runtime-refused",
+            "return_code": 1,
+            "log": "root-runtime-refused.log",
+            "log_sha256": "574e8c9046a28093c78f10e2cb48da648756aa66ba6c2c9b790e1f1bb9cc315a"
+          },
+          {
+            "name": "reinstall",
+            "return_code": 0,
+            "log": "reinstall.log",
+            "log_sha256": "7d161a9bbf73c70beaadad9ac263b59047c63e976561dba47dbbbad30574de52"
+          },
+          {
+            "name": "incoming-fixture-deb-version",
+            "return_code": 0,
+            "log": "incoming-fixture-deb-version.log",
+            "log_sha256": "39266cf78c8220c296f6c1afca8e10229120fdbf5d0c45dc93dbe09e31ad2048"
+          },
+          {
+            "name": "retained-baseline-deb-version",
+            "return_code": 0,
+            "log": "retained-baseline-deb-version.log",
+            "log_sha256": "a6b795e26b24e7032fa609d412674f72f9c8145bb975906702a412f27ed0a8a8"
+          },
+          {
+            "name": "real-dpkg-upgrade-version-order",
+            "return_code": 0,
+            "log": "real-dpkg-upgrade-version-order.log",
+            "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "extract-retained-rollback-payload",
+            "return_code": 0,
+            "log": "extract-retained-rollback-payload.log",
+            "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "install-retained-rollback-baseline",
+            "return_code": 0,
+            "log": "install-retained-rollback-baseline.log",
+            "log_sha256": "d33a52bf69a3b6dbc04431d557657a3a02c491b5c433841c90d634152b3923ad"
+          },
+          {
+            "name": "unpack-real-incoming-upgrade",
+            "return_code": 0,
+            "log": "unpack-real-incoming-upgrade.log",
+            "log_sha256": "e7427b02dd2e6113446c88f5577468c3f40cb1eb0f0ed75776ec6584784484eb"
+          },
+          {
+            "name": "unpacked-upgrade-status",
+            "return_code": 0,
+            "log": "unpacked-upgrade-status.log",
+            "log_sha256": "e92435d0274e494f1e79ad74f29fa801f7ffc7e3f3d29ef82d6bf0174db1c8fd"
+          },
+          {
+            "name": "failed-install-cleanup",
+            "return_code": 0,
+            "log": "failed-install-cleanup.log",
+            "log_sha256": "d6e47866bb0da9721427f94cc57a8bf8a6b63ab2edbf4356144814d4abb9a85b"
+          }
+        ],
+        "production_update_eligible": false,
+        "limitations": [
+          "Unsigned development package; no installed signed update or formal lifecycle claim",
+          "Actual unsigned DEB install/reinstall/uninstall, installed server TCP conflict and interrupted candidate package replacement; physical TUN, subnet, DNS and WireGuard have separate experiments",
+          "The +hosted.interruption.1 DEB is a failure-injection package revision, never a release or production update",
+          "No graphical Linux desktop, phone or physical ARM64 target acceptance"
+        ],
+        "package": {
+          "path": "NestLink-candidate-linux-arm64-network.deb",
+          "bytes": 13373912,
+          "sha256": "81fe5860b71a851dc0d69b18b071bf7fc4053c0b90e9c2a88c87dbea8d9d007f"
+        },
+        "actual_port_conflict": {
+          "passed": true,
+          "protocol": "TCP",
+          "ordinary_uid": 1001,
+          "installed_server_sha256": "b6cd9b906f6701a3b06ee6a74fde3531a3cd73160ad5e89a573358a8937cd5c1",
+          "package_sha256": "77b27cac4f72c82945f4230abaa42728dbd41837fc29ec061571d68861ed50fa",
+          "original_listener_retained": true,
+          "configuration_and_identity_unchanged": true,
+          "real_health_after_port_release": {
+            "alpn": "nestlink/1",
+            "api_base": "/api/v3",
+            "deployment_id": "1d5d353d-4f2a-433b-96e9-a55c9d21bc6e",
+            "native_ice_version": 1,
+            "node_policy_issuer": "RHlbwWK6ibWGXjYUgVda01K4i--6GF-c5KwyDbts0Tg",
+            "permit_issuer": "u2DXEF3qnJ13cCJE_yEOk1ZtPZioOkce8RNwILmAT-o",
+            "product": "NestLink",
+            "security_epoch": 1717224316404315916,
+            "version": "0.7.0-rc.1"
+          },
+          "normal_server_stop_and_port_rebind": true
+        },
+        "failure": "PermissionError: [Errno 13] Permission denied: '/proc/13040/exe'",
+        "files": [
+          {
+            "path": "HOSTED-FAULT-FIXTURE-linux-arm64-network.deb",
+            "bytes": 13373888,
+            "sha256": "db729476f84ee209c86e60ae98e72911a38b6b2cab2483ed97847725e8ca3543"
+          },
+          {
+            "path": "NestLink-candidate-linux-arm64-network.deb",
+            "bytes": 13373912,
+            "sha256": "81fe5860b71a851dc0d69b18b071bf7fc4053c0b90e9c2a88c87dbea8d9d007f"
+          },
+          {
+            "path": "NestLink-candidate-linux-arm64-server.deb",
+            "bytes": 7664610,
+            "sha256": "77b27cac4f72c82945f4230abaa42728dbd41837fc29ec061571d68861ed50fa"
+          },
+          {
+            "path": "actual-installed-port-conflict-refused.log",
+            "bytes": 47,
+            "sha256": "ff7a4684ecf66c9ad75051dd507396885bf042fee0d56370b68309705a8db0bf"
+          },
+          {
+            "path": "extract-retained-rollback-payload.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "failed-install-cleanup.log",
+            "bytes": 141,
+            "sha256": "d6e47866bb0da9721427f94cc57a8bf8a6b63ab2edbf4356144814d4abb9a85b"
+          },
+          {
+            "path": "help-diagnostics.log",
+            "bytes": 391,
+            "sha256": "0ffb37355897536988a3dab456f080f6b07ca100f8705e85c9e6793b30cc1bc0"
+          },
+          {
+            "path": "help-maintenance.log",
+            "bytes": 686,
+            "sha256": "702edb813b773fcac550394f5b4c6c8ac19a9ea112cf2bfa733e63148806879a"
+          },
+          {
+            "path": "help-network-lan.log",
+            "bytes": 990,
+            "sha256": "cdba0b263bc2acd2d36d2b1463fc5455ad24fc15a5a9cea45205a69c0a36b221"
+          },
+          {
+            "path": "help-network-subnet-system.log",
+            "bytes": 530,
+            "sha256": "24d137f79cf866757844d14f9376a016e82f4ff56d87979892c5c39a03b0e64a"
+          },
+          {
+            "path": "help-network-subnet.log",
+            "bytes": 1312,
+            "sha256": "82f75a12f3a6837998b9269f6ab6fb9f2eb755395f33423ead1d56bf32849129"
+          },
+          {
+            "path": "help-network-tun-system.log",
+            "bytes": 660,
+            "sha256": "83613a4e51fef612ba370d08d9a43c11afe10d6f73b865ab4bc91120796c085d"
+          },
+          {
+            "path": "help-network-tun.log",
+            "bytes": 1380,
+            "sha256": "3a3fb5f2c702b89ad4f4018cc87b4501c109e5d1a0e2eba264008e03340bc8da"
+          },
+          {
+            "path": "help-private-service-proxy.log",
+            "bytes": 1098,
+            "sha256": "b663651bc7ca316fba48f68c5d8881e5dffed295a1a562d73beef7b145f23e97"
+          },
+          {
+            "path": "help-private-web-gateway.log",
+            "bytes": 1348,
+            "sha256": "f70694f9a561c9d4f52a4bac2b4a68eee0f75f611c58a52da9adddf1c3e407b6"
+          },
+          {
+            "path": "help-space-dns-system.log",
+            "bytes": 687,
+            "sha256": "9efe5e33800d48954c95dcd9b5f571f32ee517868cedf34beb4b068cff9b0550"
+          },
+          {
+            "path": "help-space-dns.log",
+            "bytes": 656,
+            "sha256": "56efcbcd814f5079e361e663d2f47d1e7bbd548c7eb8e32dffade5681b239cf0"
+          },
+          {
+            "path": "help-wireguard.log",
+            "bytes": 754,
+            "sha256": "65b7d90f9178dd58d2eaaf5d01667aab5d67d2ba84f478f2a200343d09daaf8a"
+          },
+          {
+            "path": "incoming-fixture-deb-version.log",
+            "bytes": 33,
+            "sha256": "39266cf78c8220c296f6c1afca8e10229120fdbf5d0c45dc93dbe09e31ad2048"
+          },
+          {
+            "path": "install-current-server.log",
+            "bytes": 296,
+            "sha256": "65c5992dae36ac2c340ca8933d8a429303243ce1e15d3795f5e581cf5fa23a93"
+          },
+          {
+            "path": "install-retained-rollback-baseline.log",
+            "bytes": 266,
+            "sha256": "d33a52bf69a3b6dbc04431d557657a3a02c491b5c433841c90d634152b3923ad"
+          },
+          {
+            "path": "install.log",
+            "bytes": 300,
+            "sha256": "0fb3db03fa5b04bbde01b551bd85e8bbd051a429b234ea0acf93e637739b1ef9"
+          },
+          {
+            "path": "interrupted-real-dpkg-configure.log",
+            "bytes": 197,
+            "sha256": "7ab99734c25b423a339bc28b51e6a36b697d3c068d7de3c774030bf85fd29ad3"
+          },
+          {
+            "path": "missing-login-refused.log",
+            "bytes": 100,
+            "sha256": "7a4c908eedfaf463cd65642226996d1820b26aa4d8a412585dc5d03e6e697865"
+          },
+          {
+            "path": "ordinary-install-refused.log",
+            "bytes": 62,
+            "sha256": "a4b1b48c8d7c05be0963428783ecb11f0807964813f4462693261bc31c6a3463"
+          },
+          {
+            "path": "port-fixture-init.log",
+            "bytes": 174,
+            "sha256": "3ae7cf63a690ce7e849048369585cf691a08103be0d01563cccffcbdfe618bf7"
+          },
+          {
+            "path": "real-dpkg-upgrade-version-order.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "reinstall.log",
+            "bytes": 257,
+            "sha256": "7d161a9bbf73c70beaadad9ac263b59047c63e976561dba47dbbbad30574de52"
+          },
+          {
+            "path": "retained-NestLink-candidate-linux-arm64-network.deb",
+            "bytes": 13123688,
+            "sha256": "bc519b67affd1f45b437a4bc0dee8bbd50cd1e282931aeedaa923d0c1e2ac2f6"
+          },
+          {
+            "path": "retained-baseline-deb-version.log",
+            "bytes": 11,
+            "sha256": "a6b795e26b24e7032fa609d412674f72f9c8145bb975906702a412f27ed0a8a8"
+          },
+          {
+            "path": "retained-previous-artifact.zip",
+            "bytes": 13135544,
+            "sha256": "bde3779b2c60c9bfa7994b59a9bf1c9cab34f35681c99f7c39a07f045a3be21a"
+          },
+          {
+            "path": "root-runtime-refused.log",
+            "bytes": 66,
+            "sha256": "574e8c9046a28093c78f10e2cb48da648756aa66ba6c2c9b790e1f1bb9cc315a"
+          },
+          {
+            "path": "server-after-port-release.log",
+            "bytes": 46,
+            "sha256": "ecd46c0511cdfef5e8136b0c46f64aa1558d3940bd8d6f0d8ffc8e297f61c53e"
+          },
+          {
+            "path": "uninstall-current-server-fixture.log",
+            "bytes": 118,
+            "sha256": "a280d4263b5c5c9e4943999fc37e7691787770a157cde0beff9e9b26b56adc78"
+          },
+          {
+            "path": "unpack-real-incoming-upgrade.log",
+            "bytes": 233,
+            "sha256": "e7427b02dd2e6113446c88f5577468c3f40cb1eb0f0ed75776ec6584784484eb"
+          },
+          {
+            "path": "unpacked-upgrade-status.log",
+            "bytes": 19,
+            "sha256": "e92435d0274e494f1e79ad74f29fa801f7ffc7e3f3d29ef82d6bf0174db1c8fd"
+          },
+          {
+            "path": "version.log",
+            "bytes": 27,
+            "sha256": "0b859399d1202213b6ac05a3fa098a958d5bb3d5b9c02cf226d0a193d128820e"
+          }
+        ]
+      }
+    },
+    {
+      "artifact_id": 13125497518,
+      "name": "linux-network-build-aarch64-unknown-linux-gnu-2cb75d4d7e2a55ba703480fe2933e8fd46c95c74-1",
+      "official_digest": "sha256:6a6f7a6b90e181ddeeb1221f93d2113ffa3f19ab636c55f7c7ddd67a09238705",
+      "downloaded_zip_sha256": "6a6f7a6b90e181ddeeb1221f93d2113ffa3f19ab636c55f7c7ddd67a09238705",
+      "zip_bytes": 9260,
+      "provenance": {
+        "source_revision": "2cb75d4d7e2a55ba703480fe2933e8fd46c95c74",
+        "workflow_revision": "2cb75d4d7e2a55ba703480fe2933e8fd46c95c74",
+        "workflow": "ZHanry/NestLink/.github/workflows/linux-network-package.yml@refs/heads/main",
+        "run_id": "41410131614",
+        "run_attempt": "1",
+        "target": "aarch64-unknown-linux-gnu",
+        "runner_environment": "github-hosted",
+        "machine": "aarch64",
+        "cargo_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+        "qualification_claimed": false
+      },
+      "files": [
+        {
+          "path": "cargo-build.log",
+          "bytes": 61158,
+          "sha256": "89db4472d5671f909d3837639c9d48a3090aa2738d0cdce4594ebb42a2b87b02"
+        },
+        {
+          "path": "provenance.json",
+          "bytes": 508,
+          "sha256": "ce0f2a02d02e873fe76d0763f9637a8b368256990a60a95e070cdffa18be2ea8"
+        }
+      ]
+    }
+  ],
+  "observed": {
+    "both_native_builds_passed": true,
+    "both_hosted_script_parses_passed": true,
+    "both_actual_installed_server_port_conflicts_passed": true,
+    "original_listeners_and_deployment_identity_retained": true,
+    "both_actual_server_health_after_port_release_and_normal_stop_passed": true,
+    "both_actual_retained_baseline_and_higher_incoming_deb_unpack_completed": true,
+    "failure": "Ordinary coordinator incorrectly attempted /proc/<root dpkg pid>/exe identity inspection; kernel rejected it with PermissionError",
+    "target_dpkg_sigkill_executed": false,
+    "explicit_original_package_rollback_executed": false,
+    "failed_network_package_cleanup_passed": true,
+    "complete_package_receipt_file_entries_verified": 74
+  },
+  "limitations": [
+    "Actual port-conflict scope passed on both hosted architectures, but the full package job failed.",
+    "The interrupted-upgrade scenario remains unqualified; reaching unpacked state did not prove target SIGKILL or rollback.",
+    "No formal signed update, Windows target or physical ARM64 qualification is claimed."
+  ]
+}
