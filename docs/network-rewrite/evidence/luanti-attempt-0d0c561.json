@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "source_revision": "0d0c5618a3c32506419c506840e906c7bab4485e",
+  "workflow": ".github/workflows/network-games.yml",
+  "run_id": 41368655137,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41368655137",
+  "job_id": 125034162195,
+  "job_conclusion": "failure",
+  "passed": false,
+  "scope": "The exact official Luanti and complete Minetest Game sources built and the real client joined across the original kernel TUN/prefix NAT/QUIC. Sustained input, rendering and post-stop disconnect did not complete. No game acceptance or production login/one-use or physical-site acceptance is claimed.",
+  "artifact": {
+    "id": 13108137707,
+    "name": "game-luanti-0d0c5618a3c32506419c506840e906c7bab4485e-1",
+    "official_digest": "sha256:019f78108155f689356a34360ed0a4249f708a6d0ae68a82cea256a4f01786a6",
+    "downloaded_zip_sha256": "019f78108155f689356a34360ed0a4249f708a6d0ae68a82cea256a4f01786a6",
+    "outer_receipt_sha256": "de25f2551f05a11648bb4b3e925a9fa2c6a2e7219c72ce14bbf6f6bb25e378ac",
+    "execution_receipt_sha256": "8e6e4c451d0f7fdcac7bb85e7411917b0acfae78d956c72cfa7af1f5dc680bef"
+  },
+  "observed": {
+    "actual_luanti_client_sha256": "906ae48204a0ca641dd0f4c15888a235e48d3ff75d0de41d7c8c24a6a567e1bb",
+    "actual_luantiserver_sha256": "d371a402064fa736be31625a19a60662e34c856bc56a8978ac34a31a164c708b",
+    "actual_ordinary_uid": 1001,
+    "actual_client_packet_capture_bytes": 3183038,
+    "actual_client_packet_capture_sha256": "05e079b9c8b40f2823c07894b5ae55775e5cbfa3945c83d4da2b63e8ff8c9acd",
+    "actual_server_join_log": "2026-11-02 00:52:25: ACTION[Server]: NestLinkHosted [192.168.1.254] joins game. List of players: NestLinkHosted",
+    "failure": "xdotool search --sync --onlyvisible --name Luanti timed out after 25 seconds",
+    "driver_actor_cleanup_errors": [],
+    "original_carrier_physical_close_observed": true,
+    "ready_stop_and_disconnect_receipt_completed": false
+  },
+  "candidate_correction": {
+    "source_commit": "a67b6b3",
+    "change": "Poll the current X window state within the same 25-second startup bound, accepting only one actual matching Luanti window and retaining its actual title. Preserve a failure screenshot and complete owned X window tree before teardown, and enable the official client's --info logging.",
+    "verification_status": "pending_separate_same_source_actions_run",
+    "unchanged_gates": "Original 35-second native ready bound, actual player join, eleven seconds of real input, original finite signed quota, carrier/helper stop, official disconnect and physical cleanup."
+  }
+}
