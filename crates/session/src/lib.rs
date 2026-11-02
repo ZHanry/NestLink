@@ -754,6 +754,12 @@ impl Session {
             StopReason::TransportLost | StopReason::NetworkChanged
         ) && let Some(offline) = &self.offline
         {
+            if offline.status().is_ok_and(|status| !status.stopped) {
+                eprintln!(
+                    "offline_session_stop reason={reason:?} previous_state={:?}",
+                    self.state
+                );
+            }
             offline.stop();
         }
         if !matches!(self.state, SessionState::Stopped(_)) {
