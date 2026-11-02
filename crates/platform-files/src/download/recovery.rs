@@ -514,14 +514,17 @@ impl DownloadRecoveryStore {
         let bytes = encode(ledger)?;
         let mut create = options(true);
         create.create_new(true);
-        let mut file = self.directory.open_with(PENDING, &create)
+        let mut file = self
+            .directory
+            .open_with(PENDING, &create)
             .inspect_err(|error| storage_error("journal.create_pending", error))?;
         file.write_all(&bytes)
             .inspect_err(|error| storage_error("journal.write_pending", error))?;
         file.sync_all()
             .inspect_err(|error| storage_error("journal.sync_pending", error))?;
         drop(file);
-        self.directory.rename(PENDING, &self.directory, LEDGER)
+        self.directory
+            .rename(PENDING, &self.directory, LEDGER)
             .inspect_err(|error| storage_error("journal.rename_pending", error))?;
         self.directory
             .open_with(LEDGER, &options(true))
@@ -1326,7 +1329,8 @@ impl FileDestination for PersistentDestination {
                 open_directory(
                     area.parent()
                         .ok_or_else(|| invalid("missing local area parent"))?,
-                ).inspect_err(|error| storage_error("prepare.open_parent", error))?;
+                )
+                .inspect_err(|error| storage_error("prepare.open_parent", error))?;
                 self.disk = Some(disk);
                 self.disk()?.prepare(authorized)?;
                 let disk = self.disk()?;

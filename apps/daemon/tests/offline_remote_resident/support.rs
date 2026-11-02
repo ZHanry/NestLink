@@ -762,18 +762,31 @@ impl Resident {
         }
     }
     fn process_diagnostic(&mut self) -> Value {
-        let stderr = self.stderr.lock().map(|bytes| String::from_utf8_lossy(&bytes).into_owned()).unwrap_or_default();
-        let last_event = self.last_event.lock().map(|event| event.clone()).unwrap_or(Value::Null);
+        let stderr = self
+            .stderr
+            .lock()
+            .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
+            .unwrap_or_default();
+        let last_event = self
+            .last_event
+            .lock()
+            .map(|event| event.clone())
+            .unwrap_or(Value::Null);
         json!({"role":self.role,"transport":self.transport,"process":format!("{:?}",self.child.try_wait()),"last_event":last_event,"stderr":stderr})
     }
     pub async fn diagnostic(&mut self) -> Value {
         let mut value = self.process_diagnostic();
         let observation = tokio::time::timeout(Duration::from_secs(2), async {
             let mut client = nestlink_app_ipc::Client::connect(&self.directory).await?;
-            client.request(0, nestlink_app_ipc::wire::Command::Snapshot).await
-        }).await;
+            client
+                .request(0, nestlink_app_ipc::wire::Command::Snapshot)
+                .await
+        })
+        .await;
         value["ipc"] = match observation {
-            Ok(Ok(reply)) => json!({"generation":reply.snapshot.generation,"lifecycle":reply.snapshot.lifecycle,"native_session":reply.snapshot.native_session,"native_offline":reply.snapshot.native_offline}),
+            Ok(Ok(reply)) => {
+                json!({"generation":reply.snapshot.generation,"lifecycle":reply.snapshot.lifecycle,"native_session":reply.snapshot.native_session,"native_offline":reply.snapshot.native_offline})
+            }
             Ok(Err(error)) => json!({"unavailable":error.to_string()}),
             Err(error) => json!({"unavailable":error.to_string()}),
         };
@@ -802,7 +815,10 @@ impl Resident {
 }
 impl Drop for Resident {
     fn drop(&mut self) {
-        eprintln!("resident endpoint at teardown: {}", self.process_diagnostic());
+        eprintln!(
+            "resident endpoint at teardown: {}",
+            self.process_diagnostic()
+        );
         if let Some(unit) = self.unit.take() {
             // Error/panic cleanup retains the exact service identity. Killing
             // only systemd-run would leave its original service and stdin open.
@@ -879,7 +895,8 @@ pub async fn start(source: &mut Resident, host: &mut Resident) -> Result {
     host.request(json!({"command":"start"}), "listening")
         .await?;
     source.send(json!({"command":"start"})).await?;
-    let (source_result, host_result) = tokio::join!(source.event("connected"), host.event("connected"));
+    let (source_result, host_result) =
+        tokio::join!(source.event("connected"), host.event("connected"));
     if source_result.is_err() || host_result.is_err() {
         let source_diagnostic = source.diagnostic().await;
         let host_diagnostic = host.diagnostic().await;

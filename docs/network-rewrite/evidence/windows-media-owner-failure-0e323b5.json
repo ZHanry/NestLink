@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "scope": "Original Windows media-owner hosted contract, admission, cleanup and strict-lint execution; no physical GPU or target qualification.",
+  "passed": false,
+  "build_provenance": {
+    "source_revision": "0e323b5da5999f809b6f50e2decb7df963d8d9fc",
+    "workflow_revision": "0e323b5da5999f809b6f50e2decb7df963d8d9fc",
+    "run_id": "41439628849",
+    "attempt": "1",
+    "runner_environment": "github-hosted",
+    "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+    "hardware_or_target_acceptance_claimed": false,
+    "tool_sources": {
+      "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+      "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+    }
+  },
+  "artifact": {
+    "id": 13140591709,
+    "name": "windows-media-owner-0e323b5da5999f809b6f50e2decb7df963d8d9fc-1",
+    "sha256": "cbcca1e97c145daa443d74a6c3904ad3ae9dff9c42a18ef790580e75b44c5321",
+    "official_zip_digest_verified": true
+  },
+  "logs": [
+    {
+      "path": "daemon-hevc-selection-tests.log",
+      "bytes": 14603,
+      "sha256": "f2f758c7f57be53c8a1f8d4a847da65c9a50b240ca1882c2db36a6847f16fe53",
+      "test_results": [
+        {
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "path": "daemon-media-clippy.log",
+      "bytes": 20919,
+      "sha256": "b587d958c2c4c428e8c614bd5876bdb88e535d8ccea0c16ee0cc31702bcdcf0b",
+      "test_results": [],
+      "errors": [
+        "error[E0599]: no method named `config` found for struct `nestlink_media_codec::HevcExecutionTarget` in the current scope",
+        "error[E0599]: no method named `config` found for struct `nestlink_media_codec::HevcExecutionTarget` in the current scope",
+        "error[E0599]: no method named `config` found for struct `nestlink_media_codec::HevcExecutionTarget` in the current scope",
+        "error: could not compile `nestlink-media-session` (lib test) due to 3 previous errors"
+      ]
+    },
+    {
+      "path": "desktop-clippy.log",
+      "bytes": 29729,
+      "sha256": "2d6d13b04e41d946eacbd4422d1bf5aaa99e2830f61cdf2fffaff69f8c29ec7a",
+      "test_results": [],
+      "errors": [
+        "error: this OR pattern can be rewritten using a range",
+        "error: could not compile `nestlink-app-ipc` (lib) due to 1 previous error"
+      ]
+    },
+    {
+      "path": "hevc-contract-tests.log",
+      "bytes": 2746,
+      "sha256": "d15dd5ee8091ce6ad65c86fef6c01ad447b913c8c4951c1749e39df7733f0d65",
+      "test_results": [
+        {
+          "status": "FAILED",
+          "passed": 7,
+          "failed": 1,
+          "ignored": 0
+        }
+      ],
+      "errors": [
+        "Error: Custom { kind: Other, error: \"invalid SPS accepted\" }",
+        "error: test failed, to rerun pass `-p nestlink-media-codec --lib`"
+      ]
+    },
+    {
+      "path": "hevc-target-tests.log",
+      "bytes": 3705,
+      "sha256": "3064a13a023c5731f93b992ec0f4112a6cc7de18195d373689cf813addaf59ac",
+      "test_results": [],
+      "errors": [
+        "error[E0599]: no method named `config` found for struct `HevcExecutionTarget` in the current scope",
+        "error[E0599]: no method named `config` found for struct `HevcExecutionTarget` in the current scope",
+        "error[E0599]: no method named `config` found for struct `HevcExecutionTarget` in the current scope",
+        "error: could not compile `nestlink-media-session` (lib test) due to 3 previous errors"
+      ]
+    },
+    {
+      "path": "media-opt-in-approval-tests.log",
+      "bytes": 14586,
+      "sha256": "b7c0fcf9d73dfe807a7783cf62949c2b1b7078818f9a105d5caaf313a04a7e5e",
+      "test_results": [
+        {
+          "status": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "path": "media-opt-in-cli-tests.log",
+      "bytes": 20373,
+      "sha256": "94fa3ec75127bba31c501ecbe677c2f1dc31b71613a5e4e6fd0c7a2f32f1bac4",
+      "test_results": [
+        {
+          "status": "ok",
+          "passed": 3,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "path": "media-opt-in-config-tests.log",
+      "bytes": 15354,
+      "sha256": "240782b44a334fef0d3776e6d6fe2eb89adc2dea84e4ce877033e3cb93e1165b",
+      "test_results": [
+        {
+          "status": "ok",
+          "passed": 6,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "path": "media-opt-in-http-tests.log",
+      "bytes": 14897,
+      "sha256": "86c9c5aae2c0a7bf20b9b8b1ffd631a46570f2cfe753413c2fb01578803d0676",
+      "test_results": [
+        {
+          "status": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "path": "media-provider-tests.log",
+      "bytes": 22113,
+      "sha256": "a913c7886d3ec981a103a981358d5bc20e31418fb930476b817f2e0845eb3886",
+      "test_results": [
+        {
+          "status": "ok",
+          "passed": 12,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "path": "presenter-tests.log",
+      "bytes": 15055,
+      "sha256": "b17594a547db2820ccd91485ec84d9bda9911261762ea32e82c4a7f6c06f26da",
+      "test_results": [
+        {
+          "status": "ok",
+          "passed": 5,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "path": "receiver-tests.log",
+      "bytes": 44531,
+      "sha256": "6df4987d6a77de46379ea5ba8a151c36683119acc5be96962633959f7cccf4ef",
+      "test_results": [
+        {
+          "status": "ok",
+          "passed": 9,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "path": "signed-store-media-tests.log",
+      "bytes": 4044,
+      "sha256": "f6b817321ba2be35fc6ce0a5fd424a79b66b442ae7d32ddd20e85fbf06992bf9",
+      "test_results": [
+        {
+          "status": "ok",
+          "passed": 10,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "errors": []
+    }
+  ],
+  "failures_preserved": [
+    "Original restricted SPS diagnostic accepted level156 after advanced parser changes; original invalid-SPS assertion failed. Repaired by retaining restricted-mode levels while keeping explicit complete-SPS advanced path.",
+    "Exact 4K144 conversion test called nonexistent HevcExecutionTarget.config; repaired using original contract().config() with same asserted values.",
+    "Strict desktop/daemon lint rejected manual_range_patterns in IPC; repaired with equivalent2..=4 expression."
+  ],
+  "fix_revisions": [
+    "f83439ea4efe1e9e1d60e42701fe33fc48d36365",
+    "8a35c4ec59faf604002cedf947563037d8bf7883"
+  ],
+  "next_run": {
+    "run_id": 41442724948,
+    "source_revision": "6f46f3820c7cee61e01061c0ca80b45d298b8d28",
+    "state": "running"
+  },
+  "whole_task_or_release_qualification": false
+}

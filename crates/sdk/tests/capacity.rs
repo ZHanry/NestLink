@@ -201,7 +201,11 @@ async fn run_capacity(multiplexed: bool, shared_origin_ramp: bool) -> Result {
         .with_ansi(false)
         .try_init()
         .map_err(|error| std::io::Error::other(error.to_string()))?;
-    tokio::time::timeout(Duration::from_secs(600), capacity(multiplexed, shared_origin_ramp)).await??;
+    tokio::time::timeout(
+        Duration::from_secs(600),
+        capacity(multiplexed, shared_origin_ramp),
+    )
+    .await??;
     Ok(())
 }
 
