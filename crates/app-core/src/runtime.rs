@@ -1118,11 +1118,7 @@ impl CoreHandle {
     ) -> Result<(), NativeVideoError> {
         let route = self.native_host_video_route(binding)?;
         route.retire();
-        route
-            .lease
-            .stop(StopReason::PlatformChanged)
-            .map_err(|_| NativeVideoError::Transport)?;
-        Ok(())
+        notify_native_capture_failure(&route.lease)
     }
     /// Register actual capture cleanup with this proved host session. The
     /// platform supplies its locally approved display, including logical
@@ -1800,6 +1796,18 @@ impl CoreHandle {
         ))
     }
 }
+
+fn notify_native_capture_failure(lease: &LeaseControl) -> Result<(), NativeVideoError> {
+    // An old producer can observe terminal authorization before the Core has
+    // published its carrier-cleanup receipt. This is not a new platform change.
+    // A failure while the original lease is active still stops that lease.
+    lease
+        .stop_if_running(StopReason::PlatformChanged)
+        .map_err(|_| NativeVideoError::Transport)
+}
+
+#[cfg(test)]
+mod native_capture_failure_tests;
 fn send_error<T>(error: mpsc::error::TrySendError<T>) -> SubmitError {
     match error {
         mpsc::error::TrySendError::Full(_) => SubmitError::Capacity,

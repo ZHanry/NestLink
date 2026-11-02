@@ -37,6 +37,13 @@ The original Luanti 25-second check and its failure status remain unchanged.
   assertion failed. Windows management, pending-listener and entire TLS cases
   passed. Both original QUIC rebuild cases still failed with stopped authority.
   See `evidence/native-offline-resident-f570243.json`.
+- Source `1dd4efd03b201d31744a716b4f99d73fd0d9c657`, original focused run
+  [41461596961](https://github.com/ZHanry/NestLink/actions/runs/41461596961):
+  Windows job125331747712 completed. All scoped commands and strict clippy
+  passed; original resident3/4, with management8/pending4/full TLS passed and
+  QUIC original rebuild failed. All21 downloaded Windows files independently
+  hashed; all17 producer inventory entries match. Linux is still running.
+  See `evidence/native-offline-resident-1dd4efd-windows.json`.
 
 ## Confirmed changes and remaining failures
 
@@ -60,6 +67,15 @@ The original Luanti 25-second check and its failure status remain unchanged.
    Bounded fixed-category original supervisor/authority diagnostics are next.
    No rollback tolerance, authority/deadline/quota renewal or attempt refund
    is justified by the current evidence.
+   Source1dd Windows now identifies the actual extra termination:
+   `PlatformChanged previous_state=Stopped(TransportLost)`. The original
+   products supervisor observed the final Stopped/successful-cleanup receipt
+   and `stop_owner=false`. There was no expiry/rollback category in this failure.
+   During original transport cleanup, the host Core can still have its prior
+   connected snapshot. The old capture worker observes terminal authorization,
+   then its exact-route failure notification unconditionally stops that already
+   stopped lease with PlatformChanged, terminating the original offline owner.
+   This observed call path supersedes the former supervisor hypothesis.
 4. Windows management-fence source78 reached the fourth independent fixture,
    then protected login recovery failed before ready. SessionStore previously
    folded every restoration failure into None. New diagnostics preserve the
@@ -99,6 +115,29 @@ source location and fixed rollback/wall-expiry/monotonic-expiry categories only.
 Original rollback, expiry, quota, process-stop and revocation checks are intact.
 No QUIC authority repair is claimed until the next actual run identifies it.
 
+The source1dd Windows diagnostic now identifies the path described above. The
+new capture-failure notification delegates to existing
+`LeaseControl::stop_if_running(PlatformChanged)` after retiring the exact bound
+route. An active capture failure still stops immediately. A stopped producer's
+terminal-authorization observation cannot change recovery eligibility or revoke
+the retained original offline meter. A fresh explicit platform change, actual
+cleanup failure, process stop, revocation or expiry retains its original path.
+Compared with ignoring PlatformChanged generally or checking a cached Core
+snapshot, this reuses the original atomic lease-state boundary and preserves
+real live failures. No Session/authority check or original resident assertion,
+deadline, HTTPS owner or byte quota is changed by this repair.
+
+The focused coordinator adds one AppCore library regression that calls this
+same private production notification on real signed, bilaterally proved
+LeaseControl owners. After TransportLost, it requires the historical reason
+and actual reconnection eligibility to remain; the old unconditional stop
+retains that historical reason but makes recovery_forbidden true, so the
+eligibility assertion detects the defect. A new explicit PlatformChanged must
+still forbid recovery, and the same notification on a running proved lease
+must produce PlatformChanged and forbid recovery. The original full offline
+resident suite still establishes actual independent-owner/pixel/file/rebuild
+behavior; this library regression alone cannot do so. New source is unverified.
+
 After the original Secret Service store gate fails, a bounded read-only probe
 records original helper states, store attempts/exit status and login-collection
 Locked metadata. It never reads a secret or prints raw command output. The
@@ -126,7 +165,8 @@ readback/diagnostic commit `c0bb7ac` and the additional original Session::stop
 reason/previous-state diagnostic `54ba6cf`. The main task pushed it and started
 the complete original focused matrix as
 [41461596961](https://github.com/ZHanry/NestLink/actions/runs/41461596961).
-Linux job125331747406 and Windows job125331747712 are pending here. The main
+Linux job125331747406 is still running; Windows job125331747712 completed with
+the original3/4 failure above. The main
 task separately owns the source1dd hosted formatter run41461476335. No newer
 source compilation, runtime or formatting success is claimed until receipts
 are downloaded and checked.
