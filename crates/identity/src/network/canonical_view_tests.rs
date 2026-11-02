@@ -57,6 +57,24 @@ fn private_network_view_reuse_preserves_original_canonical_and_live_checks()
     assert_eq!(verified.claims(), original.claims());
     assert_eq!(verified.digest(), original.digest());
     assert_eq!(verified.issuer(), original.issuer());
+    let candidate = DecodedNetworkGrant::decode(&signed)?;
+    assert_eq!(candidate.claims(), &claims);
+    assert_eq!(candidate.verify(&context)?.digest(), original.digest());
+    // A different, still canonical claims object cannot borrow this signature.
+    // The public candidate's only constructor binds its private fields to bytes.
+    let mut other_claims = claims.clone();
+    if let GrantClaims::Membership(member) = &mut other_claims {
+        member.scope.grant_id = "30000000-0000-4000-8000-000000000005".into();
+    }
+    let mismatched = SignedNetworkGrant {
+        claims: other_claims.canonical_bytes()?,
+        signature: signed.signature.clone(),
+    };
+    let candidate = DecodedNetworkGrant::decode(&mismatched)?;
+    assert_eq!(candidate.claims(), &other_claims);
+    assert!(
+        matches!(candidate.verify(&context), Err(error) if error.code == ErrorCode::IdentityMismatch)
+    );
     let standalone = remote::signed(&envelope)?;
     assert_eq!(standalone.claims, signed.claims);
     assert_eq!(standalone.signature, signed.signature);

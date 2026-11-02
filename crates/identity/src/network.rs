@@ -119,9 +119,10 @@ pub struct SignedNetworkGrant {
     pub signature: Vec<u8>,
 }
 
-/// An internal canonical candidate tied to the exact immutable signed bytes.
+/// A canonical candidate tied to the exact immutable signed bytes.
 /// It carries no authority until signature and current-context verification.
-struct DecodedNetworkGrant<'a> {
+/// Private fields prevent pairing caller-supplied claims with different bytes.
+pub struct DecodedNetworkGrant<'a> {
     signed: &'a SignedNetworkGrant,
     claims: GrantClaims,
 }
@@ -467,14 +468,19 @@ pub fn verify_network_grant(
 }
 
 impl<'a> DecodedNetworkGrant<'a> {
-    fn decode(signed: &'a SignedNetworkGrant) -> Result<Self, ContractError> {
+    pub fn decode(signed: &'a SignedNetworkGrant) -> Result<Self, ContractError> {
         Ok(Self {
             signed,
             claims: GrantClaims::decode_canonical(&signed.claims)?,
         })
     }
 
-    fn verify(
+    /// Canonical metadata only; reading it does not verify or authorize a grant.
+    pub fn claims(&self) -> &GrantClaims {
+        &self.claims
+    }
+
+    pub fn verify(
         self,
         context: &NetworkVerification<'_>,
     ) -> Result<VerifiedNetworkGrant, ContractError> {

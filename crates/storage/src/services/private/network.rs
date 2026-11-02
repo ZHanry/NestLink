@@ -2,8 +2,8 @@
 //! and signed path policies. No remote-control permit is created or borrowed.
 use super::*;
 use nestlink_identity::network::{
-    NetworkAuthoritySigner, SignedNetworkGrant, VerifiedNetworkPath, private_service_path_peers,
-    verify_network_grant,
+    DecodedNetworkGrant, NetworkAuthoritySigner, SignedNetworkGrant, VerifiedNetworkPath,
+    private_service_path_peers, verify_network_grant,
 };
 use nestlink_protocol::network::{
     ConnectivityClaims, GrantClaims, GrantScope, MembershipClaims, PathClaims, PathPolicy, PeerId,
@@ -19,7 +19,7 @@ pub(super) fn view(signed: SignedNetworkGrant) -> Result<NetworkGrantView, Stora
         signature: URL_SAFE_NO_PAD.encode(signed.signature),
     })
 }
-pub(super) fn signed(view: &NetworkGrantView) -> Result<SignedNetworkGrant, StorageError> {
+fn decode_view_bytes(view: &NetworkGrantView) -> Result<SignedNetworkGrant, StorageError> {
     let decode = |value: &str| -> Result<Vec<u8>, StorageError> {
         let bytes = URL_SAFE_NO_PAD
             .decode(value)
@@ -29,17 +29,35 @@ pub(super) fn signed(view: &NetworkGrantView) -> Result<SignedNetworkGrant, Stor
         }
         Ok(bytes)
     };
-    let signed = SignedNetworkGrant {
+    Ok(SignedNetworkGrant {
         claims: decode(&view.claims)?,
         signature: decode(&view.signature)?,
-    };
-    let claims = GrantClaims::decode_canonical(&signed.claims)?;
+    })
+}
+fn check_view_metadata(view: &NetworkGrantView, claims: &GrantClaims) -> Result<(), StorageError> {
     if view.schema_version != nestlink_protocol::network::SCHEMA_VERSION
         || view.grant_id != claims.scope().grant_id
     {
         return Err(StorageError::Forbidden);
     }
+    Ok(())
+}
+pub(super) fn signed(view: &NetworkGrantView) -> Result<SignedNetworkGrant, StorageError> {
+    let signed = decode_view_bytes(view)?;
+    let claims = GrantClaims::decode_canonical(&signed.claims)?;
+    check_view_metadata(view, &claims)?;
     Ok(signed)
+}
+fn with_decoded<T>(
+    view: &NetworkGrantView,
+    verify: impl FnOnce(DecodedNetworkGrant<'_>) -> Result<T, StorageError>,
+) -> Result<T, StorageError> {
+    let signed = decode_view_bytes(view)?;
+    let candidate = DecodedNetworkGrant::decode(&signed)?;
+    // Preserve envelope validation before member lookup, signature and live
+    // context checks. The candidate borrows these exact bytes only for this call.
+    check_view_metadata(view, candidate.claims())?;
+    verify(candidate)
 }
 pub(super) fn verify(
     snapshot: &crate::network_policy::TrustedNetworkPolicySnapshot,
@@ -53,21 +71,19 @@ pub(super) fn verify(
     if grant.grant_id != view.grant_id {
         return Err(StorageError::Forbidden);
     }
-    let consumer = snapshot.verify_member(
-        &signed(&view.consumer_membership)?,
-        &lease.claims().consumer_device_id,
-    )?;
-    let host = snapshot.verify_member(
-        &signed(&view.host_membership)?,
-        &lease.lease().claims().definition.host_device_id,
-    )?;
+    let consumer = with_decoded(&view.consumer_membership, |candidate| {
+        snapshot.verify_decoded_member(candidate, &lease.claims().consumer_device_id)
+    })?;
+    let host = with_decoded(&view.host_membership, |candidate| {
+        snapshot.verify_decoded_member(candidate, &lease.lease().claims().definition.host_device_id)
+    })?;
     let context = snapshot.verification();
-    let connection = verify_network_grant(&signed(&view.connectivity)?, &context)?;
+    let connection = with_decoded(&view.connectivity, |candidate| Ok(candidate.verify(&context)?))?;
     let path = VerifiedNetworkPath::from_grants(
         &context,
         [consumer, host],
         connection.clone(),
-        verify_network_grant(&signed(&view.path)?, &context)?,
+        with_decoded(&view.path, |candidate| Ok(candidate.verify(&context)?))?,
         lease.digest(),
     )?;
     private_service_path_peers(&context, &path, &connection, lease)?;
@@ -77,7 +93,7 @@ pub(super) fn verify(
             let transits = route
                 .transits
                 .iter()
-                .map(|v| Ok(verify_network_grant(&signed(v)?, &context)?))
+                .map(|view| with_decoded(view, |candidate| Ok(candidate.verify(&context)?)))
                 .collect::<Result<Vec<_>, StorageError>>()?;
             if transits.len() == 1 {
                 nestlink_identity::network::private_service_route_binding(

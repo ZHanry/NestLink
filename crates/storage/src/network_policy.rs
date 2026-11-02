@@ -5,8 +5,8 @@ use crate::{StorageError, Store, accounts::Principal, audit, auditing, require_i
 use nestlink_identity::{
     digest,
     network::{
-        NetworkAuthoritySigner, NetworkVerification, SignedNetworkGrant, VerifiedMembership,
-        verify_network_grant,
+        DecodedNetworkGrant, NetworkAuthoritySigner, NetworkVerification, SignedNetworkGrant,
+        VerifiedMembership, VerifiedNetworkGrant, verify_network_grant,
     },
 };
 use nestlink_protocol::network::{
@@ -167,12 +167,30 @@ impl TrustedNetworkPolicySnapshot {
         signed: &SignedNetworkGrant,
         installation_id: &str,
     ) -> Result<VerifiedMembership, StorageError> {
+        self.verify_member_with(installation_id, |context| {
+            Ok(verify_network_grant(signed, context)?)
+        })
+    }
+    pub(crate) fn verify_decoded_member(
+        &self,
+        candidate: DecodedNetworkGrant<'_>,
+        installation_id: &str,
+    ) -> Result<VerifiedMembership, StorageError> {
+        self.verify_member_with(installation_id, |context| Ok(candidate.verify(context)?))
+    }
+    fn verify_member_with(
+        &self,
+        installation_id: &str,
+        verify: impl FnOnce(&NetworkVerification<'_>) -> Result<VerifiedNetworkGrant, StorageError>,
+    ) -> Result<VerifiedMembership, StorageError> {
+        // Both entry points keep this fresh member gate before cryptographic
+        // verification; the view caller has already checked its envelope.
         let member = self
             .members
             .get(installation_id)
             .filter(|m| m.active)
             .ok_or(StorageError::Forbidden)?;
-        let verified = verify_network_grant(signed, &self.verification())?;
+        let verified = verify(&self.verification())?;
         let bound = VerifiedMembership::from_grant(
             verified,
             &self.verification(),

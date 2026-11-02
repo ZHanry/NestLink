@@ -193,6 +193,11 @@ fn combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_a
     let mut signature = URL_SAFE_NO_PAD.decode(&corrupt_path.path.signature)?;
     signature[0] ^= 1;
     corrupt_path.path.signature = URL_SAFE_NO_PAD.encode(signature);
+    let mut mismatched_claims = path.clone();
+    mismatched_claims.consumer_membership.claims = path.host_membership.claims.clone();
+    mismatched_claims.consumer_membership.grant_id = path.host_membership.grant_id.clone();
+    let mut wrong_member = path.clone();
+    wrong_member.consumer_membership = path.host_membership.clone();
     let mut foreign_reservation = path.clone();
     foreign_reservation.grant_id = random_id();
     // The original database constraint rejects malformed JSON before it can
@@ -213,6 +218,8 @@ fn combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_a
         None,
         Some("{}".to_owned()),
         Some(serde_json::to_string(&corrupt_path)?),
+        Some(serde_json::to_string(&mismatched_claims)?),
+        Some(serde_json::to_string(&wrong_member)?),
         Some(serde_json::to_string(&foreign_reservation)?),
     ] {
         f.store.connection.execute(
@@ -242,6 +249,30 @@ fn combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_a
                 )
                 .is_err()
         );
+    }
+    // Even with a corrupt signature, invalid envelope metadata must retain the
+    // original Forbidden result before signature verification is attempted.
+    for field in 0..2 {
+        let mut changed = corrupt_path.clone();
+        if field == 0 {
+            changed.path.schema_version += 1;
+        } else {
+            changed.path.grant_id = random_id();
+        }
+        f.store.connection.execute(
+            "UPDATE private_service_leases SET network_json=?1 WHERE grant_id=?2",
+            params![serde_json::to_string(&changed)?, usage.grant_id],
+        )?;
+        assert!(matches!(
+            f.store.private_service_current_authority(
+                &f.creator,
+                &f.view.id,
+                &usage.grant_id,
+                &f.service_signer,
+                now()?,
+            ),
+            Err(StorageError::Forbidden)
+        ));
     }
     f.store.connection.execute(
         "UPDATE private_service_leases SET network_json=?1 WHERE grant_id=?2",
