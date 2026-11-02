@@ -1,0 +1,342 @@
+{
+  "schema_version": 1,
+  "task_ids": [
+    "W33"
+  ],
+  "status": "failed_original_target_commands",
+  "whole_task_qualified": false,
+  "build_provenance": {
+    "source_revision": "3e292c4564f503b35e20e7821f92f8519bda79f7",
+    "run_id": 41470127557,
+    "artifact_id": 13155201327,
+    "official_artifact_digest": "sha256:d1cf9ca3a8050d95da53360fcef06395ec535577bad609add7e8ab287fbd52a0",
+    "official_archive_and_all_160_receipt_payloads_verified": true,
+    "receipt_without_payload_inventory": {
+      "source_revision": "3e292c4564f503b35e20e7821f92f8519bda79f7",
+      "workflow_revision": "3e292c4564f503b35e20e7821f92f8519bda79f7",
+      "workflow": "ZHanry/NestLink/.github/workflows/windows-media-target-tools.yml@refs/heads/main",
+      "run_id": "41470127557",
+      "run_attempt": "1",
+      "runner_environment": "github-hosted",
+      "runner_os": "Windows",
+      "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+      "scope": "Finite original native direction workloads with synthetic input. No desktop capture, transport, scanout, sustained performance, HDR or native ten-bit capture qualification.",
+      "target_execution_performed": false,
+      "commands": [
+        {
+          "name": "build",
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked",
+            "-p",
+            "nestlink-media-codec",
+            "--examples"
+          ],
+          "return_code": 0
+        },
+        {
+          "name": "strict",
+          "argv": [
+            "cargo",
+            "clippy",
+            "--release",
+            "--locked",
+            "-p",
+            "nestlink-media-codec",
+            "--examples",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "return_code": 0
+        }
+      ],
+      "passed": true
+    }
+  },
+  "execution_environment": {
+    "platform": "Windows 11 Pro",
+    "build": "26300",
+    "version": "10.0.26300",
+    "token": "Existing ordinary interactive user",
+    "adapters": [
+      {
+        "name": "AMD Radeon(TM) Graphics",
+        "driver": "30.0.13040.13"
+      },
+      {
+        "name": "NVIDIA GeForce GTX 1650",
+        "driver": "32.0.16.2101"
+      },
+      {
+        "name": "GameViewer Virtual Display Adapter",
+        "driver": "15.6.5.199"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "case": "encode-main8",
+      "execution_attempt": "target-hevc-3e292c4",
+      "execution_provenance": {
+        "argv": [
+          "windows-hevc-direction-probe.exe",
+          "encode",
+          "main8",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "exit_code": null,
+        "started_at": "2026-11-02T15:38:46.5957182+00:00",
+        "ended_at": "2026-11-02T15:38:48.5906754+00:00"
+      },
+      "passed": false,
+      "logs": {
+        "stdout": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "content": ""
+        },
+        "stderr": {
+          "bytes": 2027,
+          "sha256": "989c427a5796c1ae4eb8be3b282b4dc32c78e8ef8148563942fec298eb12fdc3",
+          "content": "mf source device: codec=hevc direction=encode owner_thread=36268 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=encode owner_thread=36268 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=1\r\nmf adapter request: codec=hevc owner_thread=36268 requested_adapter=0x000000000000bcf6 type=LUID_blob bytes=8 hr=0x00000000 enum=MFTEnum2\r\nmf enumeration: codec=hevc direction=encode owner_thread=36268 hr=0x00000000 count=2\r\nmf activation: codec=hevc direction=encode owner_thread=36268 index=0 phase=candidate hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=36268 index=0 phase=binding_rejected hr=0xc00d36e6 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=36268 index=1 phase=candidate hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=36268 index=1 phase=binding_rejected hr=0xc00d36e6 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nError: Custom { kind: Other, error: \"Media Foundation H.264 HEVC creation failed (0xc00d36e6)\" }\n"
+        }
+      }
+    },
+    {
+      "case": "decode-main8",
+      "execution_attempt": "target-hevc-3e292c4",
+      "execution_provenance": {
+        "argv": [
+          "windows-hevc-direction-probe.exe",
+          "decode",
+          "main8",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "exit_code": null,
+        "started_at": "2026-11-02T15:40:28.1732980+00:00",
+        "ended_at": "2026-11-02T15:40:29.4587329+00:00"
+      },
+      "passed": false,
+      "logs": {
+        "stdout": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "content": ""
+        },
+        "stderr": {
+          "bytes": 2027,
+          "sha256": "7f3bedb8e0460a44faad1c66ed80640e04c381fbbd3ca24865f5908b64ee6530",
+          "content": "mf source device: codec=hevc direction=encode owner_thread=44472 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=encode owner_thread=44472 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=1\r\nmf adapter request: codec=hevc owner_thread=44472 requested_adapter=0x000000000000bcf6 type=LUID_blob bytes=8 hr=0x00000000 enum=MFTEnum2\r\nmf enumeration: codec=hevc direction=encode owner_thread=44472 hr=0x00000000 count=2\r\nmf activation: codec=hevc direction=encode owner_thread=44472 index=0 phase=candidate hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=44472 index=0 phase=binding_rejected hr=0xc00d36e6 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=44472 index=1 phase=candidate hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=44472 index=1 phase=binding_rejected hr=0xc00d36e6 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nError: Custom { kind: Other, error: \"Media Foundation H.264 HEVC creation failed (0xc00d36e6)\" }\n"
+        }
+      }
+    },
+    {
+      "case": "encode-main10",
+      "execution_attempt": "target-hevc-3e292c4",
+      "execution_provenance": {
+        "argv": [
+          "windows-hevc-direction-probe.exe",
+          "encode",
+          "main10",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "exit_code": null,
+        "started_at": "2026-11-02T15:40:29.5580554+00:00",
+        "ended_at": "2026-11-02T15:40:30.0111199+00:00"
+      },
+      "passed": false,
+      "logs": {
+        "stdout": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "content": ""
+        },
+        "stderr": {
+          "bytes": 637,
+          "sha256": "cb590ea2c302e85949d52fad296d7f455b6774b9fc6723f9b910d64acaf0503e",
+          "content": "mf source device: codec=hevc direction=encode owner_thread=44724 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=encode owner_thread=44724 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=1\r\nmf adapter request: codec=hevc owner_thread=44724 requested_adapter=0x000000000000bcf6 type=LUID_blob bytes=8 hr=0x00000000 enum=MFTEnum2\r\nmf enumeration: codec=hevc direction=encode owner_thread=44724 hr=0x00000000 count=0\r\nError: Custom { kind: Other, error: \"Media Foundation H.264 HEVC creation failed (0xc00d5212)\" }\n"
+        }
+      }
+    },
+    {
+      "case": "decode-main10",
+      "execution_attempt": "target-hevc-3e292c4",
+      "execution_provenance": {
+        "argv": [
+          "windows-hevc-direction-probe.exe",
+          "decode",
+          "main10",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "exit_code": null,
+        "started_at": "2026-11-02T15:40:30.0145404+00:00",
+        "ended_at": "2026-11-02T15:40:30.3822418+00:00"
+      },
+      "passed": false,
+      "logs": {
+        "stdout": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "content": ""
+        },
+        "stderr": {
+          "bytes": 637,
+          "sha256": "488a3ef30fd934108d2eb695e00a4c0ab28c96d487333c924d314efa5e5287ce",
+          "content": "mf source device: codec=hevc direction=encode owner_thread=27972 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=encode owner_thread=27972 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=1\r\nmf adapter request: codec=hevc owner_thread=27972 requested_adapter=0x000000000000bcf6 type=LUID_blob bytes=8 hr=0x00000000 enum=MFTEnum2\r\nmf enumeration: codec=hevc direction=encode owner_thread=27972 hr=0x00000000 count=0\r\nError: Custom { kind: Other, error: \"Media Foundation H.264 HEVC creation failed (0xc00d5212)\" }\n"
+        }
+      }
+    },
+    {
+      "case": "encode-main8",
+      "execution_attempt": "target-hevc-3e292c4-repeat",
+      "execution_provenance": {
+        "argv": [
+          "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261102\\tools-3e292c4\\files\\windows-hevc-direction-probe.exe",
+          "encode",
+          "main8",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "exit_code": 1,
+        "started_at": "2026-11-02T15:55:06.304102+00:00",
+        "ended_at": "2026-11-02T15:55:07.644748+00:00",
+        "wall_seconds": 1.3429999999934807
+      },
+      "passed": false,
+      "logs": {
+        "stdout": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "content": ""
+        },
+        "stderr": {
+          "bytes": 2027,
+          "sha256": "243be8cf153f44d407029e57634a881e997695ec58319ac41c5dfc8d3599fb5d",
+          "content": "mf source device: codec=hevc direction=encode owner_thread=44500 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=encode owner_thread=44500 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=1\r\nmf adapter request: codec=hevc owner_thread=44500 requested_adapter=0x000000000000bcf6 type=LUID_blob bytes=8 hr=0x00000000 enum=MFTEnum2\r\nmf enumeration: codec=hevc direction=encode owner_thread=44500 hr=0x00000000 count=2\r\nmf activation: codec=hevc direction=encode owner_thread=44500 index=0 phase=candidate hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=44500 index=0 phase=binding_rejected hr=0xc00d36e6 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=44500 index=1 phase=candidate hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=44500 index=1 phase=binding_rejected hr=0xc00d36e6 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nError: Custom { kind: Other, error: \"Media Foundation H.264 HEVC creation failed (0xc00d36e6)\" }\n"
+        }
+      }
+    },
+    {
+      "case": "decode-main8",
+      "execution_attempt": "target-hevc-3e292c4-repeat",
+      "execution_provenance": {
+        "argv": [
+          "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261102\\tools-3e292c4\\files\\windows-hevc-direction-probe.exe",
+          "decode",
+          "main8",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "exit_code": 1,
+        "started_at": "2026-11-02T15:55:07.645872+00:00",
+        "ended_at": "2026-11-02T15:55:08.000670+00:00",
+        "wall_seconds": 0.3600000000442378
+      },
+      "passed": false,
+      "logs": {
+        "stdout": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "content": ""
+        },
+        "stderr": {
+          "bytes": 2027,
+          "sha256": "99d41ce98b2e848de3a82e6f1857ad677b3e7e0c5f130962153d79a77deabcee",
+          "content": "mf source device: codec=hevc direction=encode owner_thread=36724 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=encode owner_thread=36724 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=1\r\nmf adapter request: codec=hevc owner_thread=36724 requested_adapter=0x000000000000bcf6 type=LUID_blob bytes=8 hr=0x00000000 enum=MFTEnum2\r\nmf enumeration: codec=hevc direction=encode owner_thread=36724 hr=0x00000000 count=2\r\nmf activation: codec=hevc direction=encode owner_thread=36724 index=0 phase=candidate hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=36724 index=0 phase=binding_rejected hr=0xc00d36e6 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=36724 index=1 phase=candidate hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=36724 index=1 phase=binding_rejected hr=0xc00d36e6 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nError: Custom { kind: Other, error: \"Media Foundation H.264 HEVC creation failed (0xc00d36e6)\" }\n"
+        }
+      }
+    },
+    {
+      "case": "encode-main10",
+      "execution_attempt": "target-hevc-3e292c4-repeat",
+      "execution_provenance": {
+        "argv": [
+          "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261102\\tools-3e292c4\\files\\windows-hevc-direction-probe.exe",
+          "encode",
+          "main10",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "exit_code": 1,
+        "started_at": "2026-11-02T15:55:08.000670+00:00",
+        "ended_at": "2026-11-02T15:55:08.442425+00:00",
+        "wall_seconds": 0.4369999999762513
+      },
+      "passed": false,
+      "logs": {
+        "stdout": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "content": ""
+        },
+        "stderr": {
+          "bytes": 637,
+          "sha256": "574e931687ac0ea5bdbb72cf723635911a676b924d8f961be3d0170eaf75ff0f",
+          "content": "mf source device: codec=hevc direction=encode owner_thread=39180 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=encode owner_thread=39180 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=1\r\nmf adapter request: codec=hevc owner_thread=39180 requested_adapter=0x000000000000bcf6 type=LUID_blob bytes=8 hr=0x00000000 enum=MFTEnum2\r\nmf enumeration: codec=hevc direction=encode owner_thread=39180 hr=0x00000000 count=0\r\nError: Custom { kind: Other, error: \"Media Foundation H.264 HEVC creation failed (0xc00d5212)\" }\n"
+        }
+      }
+    },
+    {
+      "case": "decode-main10",
+      "execution_attempt": "target-hevc-3e292c4-repeat",
+      "execution_provenance": {
+        "argv": [
+          "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261102\\tools-3e292c4\\files\\windows-hevc-direction-probe.exe",
+          "decode",
+          "main10",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "exit_code": 1,
+        "started_at": "2026-11-02T15:55:08.443428+00:00",
+        "ended_at": "2026-11-02T15:55:08.840695+00:00",
+        "wall_seconds": 0.40700000000651926
+      },
+      "passed": false,
+      "logs": {
+        "stdout": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "content": ""
+        },
+        "stderr": {
+          "bytes": 637,
+          "sha256": "11fbf99a89a6967d80dd624f3478f845cc18cac92bc3882525e9c7c4276c2064",
+          "content": "mf source device: codec=hevc direction=encode owner_thread=41284 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=encode owner_thread=41284 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=1\r\nmf adapter request: codec=hevc owner_thread=41284 requested_adapter=0x000000000000bcf6 type=LUID_blob bytes=8 hr=0x00000000 enum=MFTEnum2\r\nmf enumeration: codec=hevc direction=encode owner_thread=41284 hr=0x00000000 count=0\r\nError: Custom { kind: Other, error: \"Media Foundation H.264 HEVC creation failed (0xc00d5212)\" }\n"
+        }
+      }
+    }
+  ],
+  "findings": [
+    "Main8 encode and decode commands both first construct the synthetic source encoder; exact scoped MFTEnum2 returned two AMD candidates, both rejected before activation for missing optional activation LUID attribute.",
+    "Main10 encode and decode commands returned no matching encoder on the exact requested adapter. There is no decoder or rendering qualification from either failure.",
+    "c7b7683 repairs only the unsupported mandatory-output assumption. New hosted and target results are required; old SPS, color and creation failures remain recorded."
+  ],
+  "limitations": [
+    "The first PowerShell execution did not capture native exit codes; these original observations are preserved with null exit codes and their error logs. A separately recorded unchanged-command repetition explicitly captured exit code 1 for all four cases.",
+    "Finite synthetic input only; no desktop capture, actual ten-bit content, HDR, 4:4:4, sustained frame-rate or whole W33 qualification."
+  ]
+}

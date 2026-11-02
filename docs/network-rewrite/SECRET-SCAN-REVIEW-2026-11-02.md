@@ -31,6 +31,13 @@ hash expression or credential rule is excluded. A changed value in the same
 file and the same value in a different file remain subject to default scanning.
 The original three independently recomputed test-vector exclusions remain.
 
+The corrected source `319a5aff229841732817bffb8fcd55a20c01e483` passed hosted
+run [41475995927](https://github.com/ZHanry/NestLink/actions/runs/41475995927).
+Gitleaks 8.30.1 reported 758 scanned commits and no leaks. The official SARIF
+archive digest was verified and its report contains zero results. The evidence
+is `evidence/secret-scan-319a5af.json`; this scoped scanner result does not
+complete the independent security/lifecycle work package.
+
 The workflow explicitly selects Gitleaks 8.30.1; the configuration states the
-8.25.0 minimum for its existing syntax. These edits require a fresh hosted scan
-before a success claim. No scanner or automated check is executed locally.
+8.25.0 minimum for its existing syntax. No scanner or automated check is
+executed locally.

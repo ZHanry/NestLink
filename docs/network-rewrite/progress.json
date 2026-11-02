@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "c9ba19425f413cec1820ce217dce1dcd7b1f5507",
-  "checkpoint_kind": "source_bound_failure_preserving_continuation",
+  "source_revision": "7de4463463d115643e75ce59a92c0382a58d137f",
+  "checkpoint_kind": "original_failures_preserved_new_mature_conversion_requires_hosted_validation",
   "active_tasks": [
     "W00",
     "W02",
@@ -91,12 +91,18 @@
     }
   ],
   "next_steps": [
-    "Finish original source91509d1 resident matrix and its exact-source regressions; retain all originals.",
-    "Push reviewed source5797def LUID blob/activation binding and run hosted original owner matrix plus exact-source target tools; verify official ZIP and each payload before unchanged target commands.",
-    "Profile unchanged original release capacity on hosted Actions with mature perf; preserve no-sampling default, full live checks, original failed load and all deadlines.",
-    "After implementation stabilizes, complete remaining advanced native media, product/E2E, target and same-source release requirements; never promote partial diagnostics to whole acceptance or publish before original gates."
+    "Push and validate7de same-archive libyuv conversion: original native supplier, strict lint, all unchanged VP8/PSNR tests, boundary sanitizer, prefix/notice/SBOM and full original resident cases on hosted Actions; import only reviewed hosted formatter patches.",
+    "Read original3cac owner workflow and preserve9f Windows2022 keyframe timeout. Actual3cac Main8 now activates but still original SPS primaries0!=1; Main10 exact AMD scope haszero encoder. Compare mature AMF options without changing original assertions or claim.",
+    "Read explicit efebb7b perf-phases41476929737. Preserve e226 original800ready/403failure and all previous load failures; phase diagnostics cannot qualifyAC68 or replace original currentness/deadlines.",
+    "Continue remaining mandatory product, advanced media, full E2E, paired target, mobile, public-ingress, cross-day soak and same-source release requirements. Luanti25s failure remains unchanged; do not publish before original gates."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/windows-hevc-target-3cac12f.json",
+    "docs/adr/network/0073-reuse-bundled-libyuv-vp8-conversion.md",
+    "docs/network-rewrite/evidence/perf-e226eec.json",
+    "docs/network-rewrite/evidence/secret-scan-319a5af.json",
+    "docs/network-rewrite/evidence/windows-hevc-target-3e292c4.json",
+    "docs/network-rewrite/evidence/windows-media-owner-3e292c4.json",
     "docs/network-rewrite/evidence/format-f570243.json",
     "docs/network-rewrite/offline-resident-checkpoint.md",
     "docs/network-rewrite/evidence/native-offline-resident-78a7cb4.json",
@@ -751,10 +757,51 @@
       "source_revision": "af59a9496161a5faca8915134ce01d92663cb67a",
       "state": "running_windows2022_failed_strict_compile_peer_jobs_passed",
       "whole_task_passed": false
+    },
+    "resident_9f": {
+      "run_id": 41473579543,
+      "source_revision": "9f00b068a67e5db9d1ed5285e7bda90afe004600",
+      "state": "linux_failed_original_https_fixture_dns_windows_pending",
+      "whole_task_passed": false
+    },
+    "owner_9f": {
+      "run_id": 41473508147,
+      "source_revision": "9f00b068a67e5db9d1ed5285e7bda90afe004600",
+      "state": "failed_original_windows2022_compressed_keyframe_recovery_deadline_windows2025_passed",
+      "whole_task_passed": false
+    },
+    "owner_3cac": {
+      "run_id": 41475594482,
+      "source_revision": "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+      "state": "running",
+      "whole_task_passed": false
+    },
+    "tools_3cac": {
+      "run_id": 41475588450,
+      "source_revision": "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+      "state": "hosted_build_and_strict_passed_official_zip_and_160_payloads_verified_original_four_target_commands_failed",
+      "whole_task_passed": false
+    },
+    "format_3cac": {
+      "run_id": 41475600603,
+      "source_revision": "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+      "state": "success_empty_patch_three_receipt_payloads_verified"
+    },
+    "secret_scan_319": {
+      "run_id": 41475995927,
+      "source_revision": "319a5aff229841732817bffb8fcd55a20c01e483",
+      "state": "success_758_commits_zero_findings_official_sarif_verified",
+      "whole_task_passed": false
+    },
+    "capacity_perf_phases": {
+      "run_id": 41476929737,
+      "source_revision": "efebb7b6a07545f92b421481ab6fb9b9ada55bc5",
+      "state": "running_original_load_unchanged",
+      "whole_task_passed": false
     }
   },
   "branch_inventory": {
-    "verified_at": "2026-11-02T14:16:39.545Z",
+    "verified_at": "2026-11-02T16:03:34.104118+00:00",
     "local": [
       "main"
     ],
@@ -826,31 +873,68 @@
       "source_revision": "af59a9496161a5faca8915134ce01d92663cb67a",
       "state": "running_windows2022_failed_strict_compile_peer_jobs_passed",
       "whole_task_passed": false
+    },
+    "resident_9f": {
+      "run_id": 41473579543,
+      "source_revision": "9f00b068a67e5db9d1ed5285e7bda90afe004600",
+      "state": "linux_failed_original_https_fixture_dns_windows_pending",
+      "whole_task_passed": false
+    },
+    "owner_9f": {
+      "run_id": 41473508147,
+      "source_revision": "9f00b068a67e5db9d1ed5285e7bda90afe004600",
+      "state": "failed_original_windows2022_compressed_keyframe_recovery_deadline_windows2025_passed",
+      "whole_task_passed": false
+    },
+    "owner_3cac": {
+      "run_id": 41475594482,
+      "source_revision": "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+      "state": "running",
+      "whole_task_passed": false
+    },
+    "tools_3cac": {
+      "run_id": 41475588450,
+      "source_revision": "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+      "state": "hosted_build_and_strict_passed_official_zip_and_160_payloads_verified_original_four_target_commands_failed",
+      "whole_task_passed": false
+    },
+    "format_3cac": {
+      "run_id": 41475600603,
+      "source_revision": "3cac12ff6166cc979005c5078824c13c09bd8a8c",
+      "state": "success_empty_patch_three_receipt_payloads_verified"
+    },
+    "secret_scan_319": {
+      "run_id": 41475995927,
+      "source_revision": "319a5aff229841732817bffb8fcd55a20c01e483",
+      "state": "success_758_commits_zero_findings_official_sarif_verified",
+      "whole_task_passed": false
+    },
+    "capacity_perf_phases": {
+      "run_id": 41476929737,
+      "source_revision": "efebb7b6a07545f92b421481ab6fb9b9ada55bc5",
+      "state": "running_original_load_unchanged",
+      "whole_task_passed": false
     }
   },
   "continuation_checkpoint": {
-    "at": "2026-11-02T15:02:59.027Z",
-    "source_revision": "5797def05d72706dffff78b0e428fa82f68e561d",
-    "verified_scopes": [
-      "670c662 / 41457044725 original Windows tools build + strict clippy passed; official ZIP and all 160 receipt payloads verified. Original actual-target GPU command passed with accepted 24, decoded / color_verified / submitted 17, checked_flush + owner_closed; seven pending decodes discarded, eos_complete=false. No desktop, throughput or scanout qualification.",
-      "0f8d9a3 / 41455441207 Windows 2025 original native_compressed test passed 2 real TLS connections / 12 decoded frames / credit reuse / join before receipt; full three-job owner workflow succeeded. Earlier Windows 2022 failure retained.",
-      "670c662 / 41457038066 strict contract clippy, contract tests and 25 receipt tests passed; original workflow failed on formatting, whose reviewed patch was imported in 6f8ed35.",
-      "Independent parameter-only FFmpeg 6.1.1 / 41463941177 confirms the original colour_primaries=0 rejection; official artifact and all 13 receipt payloads verified. ffprobe 0 / trace_headers 234 (no picture) retained; no acceptance claimed.",
-      "10d6224 / 41463310874 original Windows2022 and2025 two-TLS compressed IPC both pass12decoded/credit reuse/join before receipt; both original full owner jobs and both peer jobs succeeded. Source5797def adapter binding remains unverified."
-    ],
-    "retained_failures": [
-      "User explicitly retains original Luanti 25-second disconnect check and its failed status.",
-      "9df4140 / 41454242981 original 100-installation / 20-pair / 1000-flow / 3-wave capacity failed at 798 flow_ready events with 403 PermissionRequired; no complete 1000-live-flow wave.",
-      "f570243 / 41455823431 resident whole-platform cases failed: Windows 3/4, Linux 0/4. Real TLS rebuild and both files completed before Linux immediate budget readback assertion; original QUIC early owner termination remains.",
-      "Original Main8 SPS primaries 0 != 1 and Main10 MF creation 0x8000ffff remain unresolved.",
-      "b6b5520 / 41460661662 verified tools executed both original Main8 target commands; still original SPS color rejection with all eight standard properties unsupported.",
-      "1dd4efd / 41461482144 original release capacity still failed at 798 flow_ready events despite all regressions passing; no complete wave.",
-      "10d6224 / 41463305754 original capacity failed after800 flow_ready, carrier connection lost wave0/pair0/flow46. All prior/current canonical/currentness/strict regressions passed; no complete1000-live-flow wave.",
-      "1dd4efd / 41461596961 resident original Windows3/4 Linux1/4. TLS whole real data/rebuild/immediate budget/Exit passes both; QUIC PlatformChanged historical stop bug repaired in91509d1 and original rerun41466485538 pending. Linux independent fixture Invalid/DNS failures require fixed stage diagnostics."
-    ],
+    "at": "2026-11-02T16:03:34.104118+00:00",
+    "source_revision": "7de4463463d115643e75ce59a92c0382a58d137f",
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
-    "branch_inventory": "Local refs/heads and GitHub branches API rechecked: main only."
+    "user_decision": "Keep original Luanti25-second disconnect-display check and failed status.",
+    "verified_scopes": [
+      "3e292c4/41470134063 original four-job Windows2022/2025 owner and bothOS peer workflow passed; all four official archives verified,52ownerfiles inventoried and4peerreceipt payloads verified. This source predates Float16 and c7 repairs.",
+      "3cac12f/41475588450 official target-toolsZIP and160payloads verified. Original four finite HEVC commands on actual ordinary Windows target all exit1: Main8 original SPSprimaries0 after successfulactivation, Main10zero exactscopeencoder. No desktop/HDR/precision/performance qualification.",
+      "319a5af/41475995927 Gitleaks8.30.1 fullhistory758commits, zeroresults; officialSARIFZIP verified. Original failed scans retained. No whole independentsecurity qualification."
+    ],
+    "retained_failures": [
+      "Original Luanti25s deadline and failedstatus by explicituserdecision.",
+      "e226eec/41470546001 original100/20/1000/3wave load failed after800ready with403PermissionRequired. 50payloads andofficialZIP verified. Flat1474samples coverwholelifecycle including244.900s setup; no phaseorcallgraph attribution.",
+      "9f00b06/41473508147 Win2022 originalcompressedIPC failed atkeyframerecoverydeadline; otherthreejobs passed. 9f Linuxresident originalEOFcase hitpublicfixtureDNStimeout; fullresidentpending.",
+      "Main8 originalSPSprimaries0 andMain10 noexactAMDencoder remainfailed on3cac physicaltarget. No assertedoutputpatch,globalfallback,clockorassertionchanges."
+    ],
+    "unverified_source": "7de libyuv direct originalplanes-to-BGRA conversion andcomplete bundledsource/license/SBOM records require fresh hosted validation; all original40ms/60ms/PTS/quality/lifecycle gates unchanged.",
+    "branch_inventory": "Local and GitHub branches API both main only; no branch deletion needed."
   },
   "dispatch_corrections": [
     {
