@@ -116,12 +116,43 @@ mod tests {
         let start = Instant::now();
         let mut quality = VideoQuality::new(30, 8000, start);
         assert_eq!(quality.observe(start, Duration::ZERO, Duration::ZERO), None);
-        assert_eq!(quality.observe_with_receiver(start + Duration::from_millis(100), Duration::ZERO, Duration::ZERO, ReceiverCondition::Congested), Some(6000));
-        assert_eq!(quality.observe_with_receiver(start + Duration::from_millis(200), Duration::ZERO, Duration::ZERO, ReceiverCondition::Congested), None);
-        assert_eq!(quality.bitrate_kbps(),6000);
-        assert_eq!(quality.observe(start + Duration::from_millis(600), Duration::ZERO, Duration::ZERO), None);
-        assert_eq!(quality.observe_with_receiver(start + Duration::from_millis(650), Duration::ZERO, Duration::ZERO, ReceiverCondition::Congested), Some(4500));
-        assert_eq!(quality.fps(),30);
+        assert_eq!(
+            quality.observe_with_receiver(
+                start + Duration::from_millis(100),
+                Duration::ZERO,
+                Duration::ZERO,
+                ReceiverCondition::Congested
+            ),
+            Some(6000)
+        );
+        assert_eq!(
+            quality.observe_with_receiver(
+                start + Duration::from_millis(200),
+                Duration::ZERO,
+                Duration::ZERO,
+                ReceiverCondition::Congested
+            ),
+            None
+        );
+        assert_eq!(quality.bitrate_kbps(), 6000);
+        assert_eq!(
+            quality.observe(
+                start + Duration::from_millis(600),
+                Duration::ZERO,
+                Duration::ZERO
+            ),
+            None
+        );
+        assert_eq!(
+            quality.observe_with_receiver(
+                start + Duration::from_millis(650),
+                Duration::ZERO,
+                Duration::ZERO,
+                ReceiverCondition::Congested
+            ),
+            Some(4500)
+        );
+        assert_eq!(quality.fps(), 30);
     }
     #[test]
     fn actual_decoder_pressure_reduces_cadence_without_inventing_network_congestion() {

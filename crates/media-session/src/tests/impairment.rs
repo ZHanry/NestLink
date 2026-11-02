@@ -370,12 +370,18 @@ async fn actual_tc_step_original_vp8_files_and_input() -> Result {
     let loaded_elapsed = loaded_started.elapsed();
     let loaded_end = sequence;
     let loaded_stats = video.stats();
-    let loaded_video_bps = u128::from(loaded_stats.enqueued_video_bytes.saturating_sub(baseline_stats.enqueued_video_bytes))
-        * 8_000_000_000 / loaded_elapsed.as_nanos().max(1);
+    let loaded_video_bps = u128::from(
+        loaded_stats
+            .enqueued_video_bytes
+            .saturating_sub(baseline_stats.enqueued_video_bytes),
+    ) * 8_000_000_000
+        / loaded_elapsed.as_nanos().max(1);
     eprintln!("actual file-loaded producer: {loaded_stats:?}");
     fs::write(
         root.join("pre-step-stats.txt"),
-        format!("baseline={baseline_stats:?}\nfile_loaded={loaded_stats:?}\nactual_loaded_video_bps={loaded_video_bps}\n"),
+        format!(
+            "baseline={baseline_stats:?}\nfile_loaded={loaded_stats:?}\nactual_loaded_video_bps={loaded_video_bps}\n"
+        ),
     )?;
     assert!(
         loaded_frames > 20,
@@ -394,7 +400,10 @@ async fn actual_tc_step_original_vp8_files_and_input() -> Result {
             > 5000,
         "producer was already below step rate before physical change"
     );
-    assert!(loaded_video_bps > 5_000_000, "actual video payload must exceed5Mbps before the physical step, measured={loaded_video_bps}");
+    assert!(
+        loaded_video_bps > 5_000_000,
+        "actual video payload must exceed5Mbps before the physical step, measured={loaded_video_bps}"
+    );
     fs::write(root.join("step-request"), b"20-to-5Mbps\n")?;
     marker(&root, "stepped").await?;
     let step = Instant::now();
