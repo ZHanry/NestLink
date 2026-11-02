@@ -74,6 +74,7 @@ jobs:
               assert len(artifacts)==1, artifacts
               executable = pathlib.Path(artifacts[0])
               receipt['executable_sha256'] = hashlib.sha256(executable.read_bytes()).hexdigest()
+              execute('native-http-backpressure',['cargo','test','--locked','-p','nestlink-sdk','--lib','http_admission::tests::','--','--show-output','--test-threads=1'],180)
               if mode == 'multiplexed':
                   execute('explicit-negotiation',['cargo','test','--locked','-p','nestlink-sdk','--lib','explicit_negotiation_preserves_legacy_wire_and_old_host_refusal','--','--show-output'],300)
                   execute('multiplex-original-owners',['cargo','test','--locked','-p','nestlink-sdk','--test','private_services','multiplex::','--','--show-output','--test-threads=1'],300)

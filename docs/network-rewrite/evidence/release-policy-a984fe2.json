@@ -1,0 +1,71 @@
+{
+    "schema_version":  1,
+    "repository":  "ZHanry/NestLink",
+    "source_revision":  "a984fe2786f2aaaed41bf0eb3e130fc02aa02ca0",
+    "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41429487678",
+    "artifact_id":  13133781985,
+    "artifact_sha256":  "26b650bd781e5249d8e6e27fdd148602c739a0c116ef627798f6bbd040d7978f",
+    "receipt":  {
+                    "source_revision":  "a984fe2786f2aaaed41bf0eb3e130fc02aa02ca0",
+                    "workflow":  "ZHanry/NestLink/.github/workflows/network-release-policy.yml@refs/heads/main",
+                    "workflow_revision":  "a984fe2786f2aaaed41bf0eb3e130fc02aa02ca0",
+                    "run_id":  "41429487678",
+                    "run_attempt":  "1",
+                    "runner_environment":  "github-hosted",
+                    "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+                    "scope":  "Synthetic publication protocol and metadata regressions only; no product/target acceptance, tags or releases.",
+                    "passed":  true,
+                    "commands":  [
+                                     {
+                                         "argv":  [
+                                                      "python3",
+                                                      "-B",
+                                                      "-m",
+                                                      "unittest",
+                                                      "discover",
+                                                      "-s",
+                                                      "tests/refactor",
+                                                      "-p",
+                                                      "test_rc_publish.py",
+                                                      "-v"
+                                                  ],
+                                         "return_code":  0
+                                     },
+                                     {
+                                         "argv":  [
+                                                      "python3",
+                                                      "-B",
+                                                      "-m",
+                                                      "unittest",
+                                                      "discover",
+                                                      "-s",
+                                                      "tests/refactor",
+                                                      "-p",
+                                                      "test_candidate_producer.py",
+                                                      "-v"
+                                                  ],
+                                         "return_code":  0
+                                     }
+                                 ],
+                    "files":  [
+                                  {
+                                      "path":  "test_candidate_producer.py.log",
+                                      "bytes":  4328,
+                                      "sha256":  "2a36c8c8769e6b726b4b1429faf88cd68a15cd5ff7aa66b26572c694a3098095"
+                                  },
+                                  {
+                                      "path":  "test_rc_publish.py.log",
+                                      "bytes":  7646,
+                                      "sha256":  "5c6a23767d45b7f544f2ffc183e79c3837b88d425397a3ff6d70248ab08fb18b"
+                                  }
+                              ]
+                },
+    "scope":  "45 synthetic RC publication protocol cases and 21 synthetic candidate metadata/real DEB packaging cases passed. Exact 0.8.0~rc.1 metadata is required. No product/target case is qualified by this policy run.",
+    "original_failed_run":  41427328240,
+    "all_receipt_log_sizes_and_hashes_verified":  true,
+    "limitations":  [
+                        "Synthetic temporary all-passed acceptance data does not enter product records.",
+                        "Luanti original 25-second disconnect-display check and failed status remain.",
+                        "No new release, tag, source acceptance or target acceptance was produced."
+                    ]
+}
