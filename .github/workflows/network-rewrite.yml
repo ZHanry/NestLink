@@ -161,6 +161,13 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-transport-quic --lib service:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-service-carrier-tests.log"
+      - name: Exercise authenticated bounded capabilities and explicit packet protocol compatibility
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-transport-quic --lib capability:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-capability-tests.log"
+          cargo test --locked -p nestlink-transport-quic --lib packet_codec:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-packet-capability-tests.log"
       - name: Exercise node report authority, cancellation and original deadlines
         if: ${{ !cancelled() }}
         shell: bash
@@ -192,6 +199,8 @@ jobs:
             ${{ runner.temp }}/network-host-prefix-tests.log
             ${{ runner.temp }}/network-chain-carrier-tests.log
             ${{ runner.temp }}/network-service-carrier-tests.log
+            ${{ runner.temp }}/network-capability-tests.log
+            ${{ runner.temp }}/network-packet-capability-tests.log
             ${{ runner.temp }}/network-path-observation-policy-tests.log
             ${{ runner.temp }}/network-continuation-policy-tests.log
             ${{ runner.temp }}/network-path-observation-quic-tests.log

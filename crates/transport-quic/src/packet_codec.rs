@@ -8,7 +8,24 @@ use std::{
     time::{Duration, Instant},
 };
 
-pub const ALPN: &[u8] = b"nestlink/network-packet/1";
+pub const ALPN: &[u8] = b"nestlink/network-packet/2";
+pub const LEGACY_ALPN: &[u8] = b"nestlink/network-packet/1";
+
+/// A deliberate local protocol choice. Each endpoint advertises only the
+/// selected ALPN; negotiation errors never retry the other protocol.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PacketProtocol {
+    CapabilitiesV2,
+    LegacyProofV1,
+}
+impl PacketProtocol {
+    fn alpn(self) -> &'static [u8] {
+        match self {
+            Self::CapabilitiesV2 => ALPN,
+            Self::LegacyProofV1 => LEGACY_ALPN,
+        }
+    }
+}
 
 // Keep the connection private until both grant/path proofs complete. Closing
 // on drop also covers cancellation of the establishing future by its owner.
@@ -31,6 +48,8 @@ pub struct DirectPacketEndpoint {
     path: nestlink_platform_network::path::NetworkPathManager,
     address: std::net::SocketAddr,
     expected_peer: nestlink_protocol::network::PeerId,
+    protocol: PacketProtocol,
+    capabilities: Option<nestlink_protocol::network::NegotiatedProtocol>,
     attempted: bool,
     close_deadline: Option<tokio::time::Instant>,
 }
@@ -40,6 +59,15 @@ impl DirectPacketEndpoint {
         identity: &nestlink_identity::InstallationIdentity,
         expected_peer: nestlink_protocol::network::PeerId,
         path: nestlink_platform_network::path::NetworkPathManager,
+    ) -> crate::Result<Self> {
+        Self::bind_with_protocol(address, identity, expected_peer, path, PacketProtocol::CapabilitiesV2)
+    }
+    pub fn bind_with_protocol(
+        address: std::net::SocketAddr,
+        identity: &nestlink_identity::InstallationIdentity,
+        expected_peer: nestlink_protocol::network::PeerId,
+        path: nestlink_platform_network::path::NetworkPathManager,
+        protocol: PacketProtocol,
     ) -> crate::Result<Self> {
         use quinn::{
             Runtime,
@@ -62,14 +90,14 @@ impl DirectPacketEndpoint {
         let transport = Arc::new(transport);
         let mut server_tls =
             nestlink_transport_stream::tls::server_config(identity, expected_peer.0)?;
-        server_tls.alpn_protocols = vec![ALPN.to_vec()];
+        server_tls.alpn_protocols = vec![protocol.alpn().to_vec()];
         let mut server =
             quinn::ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(server_tls)?));
         server.transport_config(transport.clone());
         server.migration(false);
         let mut client_tls =
             nestlink_transport_stream::tls::client_config(identity, expected_peer.0)?;
-        client_tls.alpn_protocols = vec![ALPN.to_vec()];
+        client_tls.alpn_protocols = vec![protocol.alpn().to_vec()];
         let mut client =
             quinn::ClientConfig::new(Arc::new(QuicClientConfig::try_from(client_tls)?));
         client.transport_config(transport);
@@ -93,12 +121,17 @@ impl DirectPacketEndpoint {
             path,
             address,
             expected_peer,
+            protocol,
+            capabilities: None,
             attempted: false,
             close_deadline: None,
         })
     }
     pub fn local_addr(&self) -> std::net::SocketAddr {
         self.address
+    }
+    pub fn negotiated_capabilities(&self) -> Option<&nestlink_protocol::network::NegotiatedProtocol> {
+        self.capabilities.as_ref()
     }
     pub fn validate_underlay(&self) -> io::Result<()> {
         self.path.validate_bound(self.address)
@@ -156,6 +189,37 @@ impl DirectPacketEndpoint {
         if crate::routed::authenticated_peer_fingerprint(connection)? != self.expected_peer.0 {
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
         }
+        if self.protocol == PacketProtocol::CapabilitiesV2 {
+            use nestlink_protocol::network::{CapabilityOffer, CORE_CAPABILITY, NegotiatedProtocol, SCHEMA_VERSION};
+            let selected = crate::capability::exchange(
+                connection,
+                destination.is_some(),
+                ALPN,
+                &crate::capability::CapabilityBinding {
+                    expected_peer: self.expected_peer,
+                    business_digest,
+                    transport_group,
+                },
+                &CapabilityOffer {
+                    schema_version: SCHEMA_VERSION,
+                    supported: vec![CORE_CAPABILITY.into()],
+                    required: vec![CORE_CAPABILITY.into()],
+                },
+                deadline,
+            ).await?;
+            if selected != (NegotiatedProtocol::NetworkV1 { path_migration: false }) {
+                return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
+            }
+            self.validate_underlay()?;
+            if connection.max_datagram_size().is_none_or(|size| size < wire::HEADER + wire::FRAGMENT_BYTES) {
+                return Err(io::Error::from(io::ErrorKind::InvalidData).into());
+            }
+            self.capabilities = Some(selected);
+            self.connection = pending.0.take();
+            return Ok(());
+        }
+        // Frozen /1 uses exactly its original 64-byte mutual proof. It does
+        // not claim capabilities and is reached only by explicit local policy.
         let mut binding = [0; 64];
         binding[..32].copy_from_slice(&business_digest);
         binding[32..].copy_from_slice(&transport_group);
@@ -306,6 +370,9 @@ impl PacketAssembler {
 mod tests {
     use super::*;
     fn endpoints() -> crate::Result<(DirectPacketEndpoint, DirectPacketEndpoint)> {
+        endpoints_with_protocols(PacketProtocol::CapabilitiesV2, PacketProtocol::CapabilitiesV2)
+    }
+    fn endpoints_with_protocols(first_protocol: PacketProtocol, second_protocol: PacketProtocol) -> crate::Result<(DirectPacketEndpoint, DirectPacketEndpoint)> {
         use nestlink_platform_network::path::{NetworkPathManager, RoutePolicy};
         let interface = NetworkPathManager::interfaces()?
             .into_iter()
@@ -329,17 +396,19 @@ mod tests {
         let first = nestlink_identity::InstallationIdentity::generate();
         let second = nestlink_identity::InstallationIdentity::generate();
         Ok((
-            DirectPacketEndpoint::bind(
+            DirectPacketEndpoint::bind_with_protocol(
                 (address, 0).into(),
                 &first,
                 nestlink_protocol::network::PeerId(second.fingerprint()),
                 path.clone(),
+                first_protocol,
             )?,
-            DirectPacketEndpoint::bind(
+            DirectPacketEndpoint::bind_with_protocol(
                 (address, 0).into(),
                 &second,
                 nestlink_protocol::network::PeerId(first.fingerprint()),
                 path,
+                second_protocol,
             )?,
         ))
     }
@@ -355,6 +424,8 @@ mod tests {
         );
         left?;
         right?;
+        assert_eq!(first.negotiated_capabilities(), Some(&nestlink_protocol::network::NegotiatedProtocol::NetworkV1 { path_migration: false }));
+        assert_eq!(second.negotiated_capabilities(), first.negotiated_capabilities());
         first
             .connection()?
             .send_datagram(b"actual packet carrier".to_vec().into())?;
@@ -373,6 +444,44 @@ mod tests {
         right?;
         assert!(first.connection().is_err());
         assert!(second.connection().is_err());
+        Ok(())
+    }
+    #[tokio::test]
+    async fn legacy_packet_proof_is_an_explicit_frozen_protocol_choice() -> crate::Result<()> {
+        let (mut first, mut second) = endpoints_with_protocols(PacketProtocol::LegacyProofV1, PacketProtocol::LegacyProofV1)?;
+        let destination = second.local_addr();
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+        let (left, right) = tokio::join!(
+            first.establish(Some(destination), [7;32], [8;32], deadline),
+            second.establish(None, [7;32], [8;32], deadline)
+        );
+        left?;
+        right?;
+        assert!(first.negotiated_capabilities().is_none() && second.negotiated_capabilities().is_none());
+        first.connection()?.send_datagram(b"explicit legacy".to_vec().into())?;
+        assert_eq!(tokio::time::timeout_at(deadline, second.connection()?.read_datagram()).await??.as_ref(), b"explicit legacy");
+        let cleanup = tokio::time::Instant::now() + Duration::from_secs(5);
+        let (left, right) = tokio::join!(first.close_and_wait(cleanup), second.close_and_wait(cleanup));
+        left?;
+        right?;
+        Ok(())
+    }
+    #[tokio::test]
+    async fn new_packet_protocol_never_retries_a_legacy_alpn_after_failure() -> crate::Result<()> {
+        let (mut first, mut second) = endpoints_with_protocols(PacketProtocol::CapabilitiesV2, PacketProtocol::LegacyProofV1)?;
+        let destination = second.local_addr();
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(3);
+        let (left, right) = tokio::join!(
+            first.establish(Some(destination), [7;32], [8;32], deadline),
+            second.establish(None, [7;32], [8;32], deadline)
+        );
+        assert!(left.is_err() && right.is_err());
+        assert!(first.connection().is_err() && second.connection().is_err());
+        assert!(first.establish(Some(destination), [7;32], [8;32], deadline).await.is_err());
+        let cleanup = tokio::time::Instant::now() + Duration::from_secs(5);
+        let (left, right) = tokio::join!(first.close_and_wait(cleanup), second.close_and_wait(cleanup));
+        left?;
+        right?;
         Ok(())
     }
     #[tokio::test]

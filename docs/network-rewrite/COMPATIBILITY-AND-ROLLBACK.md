@@ -4,7 +4,7 @@
 
 | 端点或制品组合 | 明确行为 | 当前证据边界 |
 | --- | --- | --- |
-| 双方都支持 `network-core-v1` | 双边校验后可选择新网络契约；迁移还要求双方都支持 `path-migration-v1` | 契约协商函数及反例已实现，生产统一能力握手尚待接线 |
+| 双方都支持 `network-core-v1` | 双边校验后可选择新网络契约；迁移还要求双方都支持 `path-migration-v1` | 生产 raw-IP `/2` 已接入受限 TLS 内能力握手；其他入口分别接线和验证，不由纯契约测试代替 |
 | 新端与不支持新契约的端 | 只有双方无必需新能力时，契约允许选择原有 v15 业务；这不授权空间、TUN、转发、子网或任何新业务 | 生产入口当前使用明确的本地按空间/设备配置和签名授权，不应把纯契约测试称为完整混合节点验收 |
 | 任一端要求对方不支持的新能力、未来能力或未知 schema | 拒绝，不能在握手失败后自动改用旧授权 | `network_contract` 与 Session 授权反例覆盖未知必需能力；实际旧新节点矩阵待验证 |
 | 原始 0.7 RC 服务端与当前 SQLite schema | 旧可执行文件拒绝读取未知较新 schema | `network-upgrade.yml` 用公开保留的旧 DEB 实际执行，结果按对应 SHA 记录 |
@@ -27,3 +27,9 @@ nestlink-server migrate --config <绝对私有部署>/server.toml --from-schema 
 按空间/设备的本地显式灰度不能扩大中心签发范围。回退时只切换到仍具备有效授权的旧路径；direct-only、撤销、终态和原预算优先。TUN、DNS、LAN、WireGuard 分别等待自身 owner 真实释放/恢复之后再回退或卸载。缺少新能力时，控制台应明确显示不可用。
 
 W35 尚欠统一生产能力协商、Windows/Web/节点全组合和受核验签名包的目标升级回滚矩阵。纯函数协商、托管 Linux CLI 实验和既有历史迁移通过分别记录；没有对应执行证据的组合保持待验证。
+
+原始 raw-IP 载体的 `nestlink/network-packet/1` 固定为原有 64 字节业务摘要与传输组证明。当前 `DirectPacketEndpoint::bind` 只声明新的 `nestlink/network-packet/2`；只有显式调用 `bind_with_protocol(..., PacketProtocol::LegacyProofV1)` 才选择旧载体，且不会声明新能力。双方协议不一致会在 TLS ALPN 阶段失败，连接或握手失败后不自动重试旧版本。
+
+`/2` 在暴露任何业务 datagram 前复用 `CapabilityOffer::validate/negotiate`。同一个受固定证书约束的 QUIC 连接核对对端身份、已选择 ALPN、原业务摘要及原传输组；双方 envelope 上限 8192 字节，拒绝额外字段、未知 schema、缺失必需能力和不匹配的摘要。当前 raw-IP 入口只声明并要求 `network-core-v1`，没有声明路径迁移。协商错误、绝对超时和 future 取消都会关闭原连接，物理资源仍由原 owner 观察并等待释放。能力声明不代替原网络权限、源地址、ACL 或累计预算检查。
+
+`network-rewrite.yml` 为该真实 TLS 交换保留专门日志，覆盖新双方选择、可选能力交集、缺失必需及未来能力、未知 schema、另一个业务/组、错误身份/ALPN、过长/畸形/额外字段、超时/取消和原 socket 释放；raw-IP 回归还验证显式旧版及新旧不匹配拒绝。实现提交后的对应托管执行结果单独记入证据，源码新增本身不视为已通过。
