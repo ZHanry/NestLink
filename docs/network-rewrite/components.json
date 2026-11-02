@@ -15,6 +15,54 @@
   "research_runtime_exclusion": "EasyTier is idea_reference only; no executable, library, FFI, forked core or adapted code is selected.",
   "components": [
     {
+      "id": "C26",
+      "purpose": "Real hosted kernel media impairment with original business scheduling",
+      "existing_implementation": [
+        "Existing Quinn congestion control and stream priorities",
+        "Original signed Session, VP8 sender/receiver, FileRead protocol and InputController",
+        "GitHub-hosted Linux HTB/netem/fq_codel"
+      ],
+      "candidates": [
+        "Kernel tc from distribution iproute2 (selected; actual queue/rate/loss)",
+        "User-space packet proxy (rejected for this scope: would not exercise physical kernel queues)",
+        "Handwritten congestion/loss emulator (rejected duplicate common mechanism)"
+      ],
+      "official_sources": [
+        "https://www.kernel.org/pub/linux/utils/net/iproute2/",
+        "https://man7.org/linux/man-pages/man8/tc-netem.8.html",
+        "https://man7.org/linux/man-pages/man8/tc-htb.8.html",
+        "https://man7.org/linux/man-pages/man8/tc-fq_codel.8.html"
+      ],
+      "maintenance_status": {
+        "reviewed_at": "2026-11-02",
+        "evidence": "Actual hosted run41368961040 retained tc iproute2-6.1.0/libbpf1.3.0, offload state and kernel qdisc counters. This is source/tool provenance, not media acceptance."
+      },
+      "platforms": [
+        "GitHub-hosted ubuntu-24.04 laboratory only"
+      ],
+      "version": {
+        "iproute2": "Distribution6.1.0 in recorded runner; actual version retained each run",
+        "kernel": "GitHub-hosted runner kernel; actual execution provenance retained",
+        "ethtool": "Distribution package, read-only loopback offload inventory"
+      },
+      "license": "iproute2 GPL-2.0 and Linux kernel GPL-2.0; ethtool GPL-2.0. External Actions validation tools only, no product linking or binary redistribution introduced.",
+      "selection_reason": "Use mature kernel rate, random loss and fair queue implementations; avoid replacement congestion-control code.",
+      "adapter_boundary": "Exact authenticated original loopback UDP ports classified into owned20-to5Mbps classes. Onlytc needs sudo; builds and business retain ordinary UID. Original product budgets and assertions unchanged.",
+      "self_implementation_gap_if_any": "Small marker/receipt orchestration to coordinate physical kernel step with original business owners; bounded observational producer statistics.",
+      "security_and_operations_cost": [
+        "Refuse any existing non-noqueue root and remove only verified owned qdisc",
+        "Configured1percent random loss is not independent per-datagram loss measurement under GSO/GRO",
+        "Actual synthetic moving capture and input dispatch observation do not qualify OS input-to-display or target GPU",
+        "No local compilation or automatic project checks"
+      ],
+      "work_packages": [
+        "W31",
+        "W36"
+      ],
+      "validation_status": "Compiles and strict lint pass; actual b376 runtime failed pre-step>5Mbps producer condition. Diagnostic rerun pending; wholeW31/AC53 remain open.",
+      "decision_ref": "docs/adr/network/0060-real-kernel-media-impairment.md"
+    },
+    {
       "id": "C25",
       "purpose": "Finite offline complete authority, exact endpoint consent and one-process cumulative meter",
       "existing_implementation": [

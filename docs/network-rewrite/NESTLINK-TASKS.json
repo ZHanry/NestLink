@@ -2199,7 +2199,7 @@
       ],
       "status": "in_progress",
       "implementation_status": "in_progress",
-      "verification_status": "not_run",
+      "verification_status": "running",
       "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
       "owned_paths_to_review": [
         "crates/network-overlay",
@@ -2243,10 +2243,11 @@
         "docs/network-rewrite/evidence/packet-parser-fixture-lock-79add64.json",
         "docs/network-rewrite/evidence/wintun-native-normal-crash-peer-41219154119.json",
         "docs/network-rewrite/evidence/wintun-official-pin-native-41220079226.json",
-        "docs/network-rewrite/evidence/wintun-online-faults-native-41224496857.json"
+        "docs/network-rewrite/evidence/wintun-online-faults-native-41224496857.json",
+        "docs/network-rewrite/evidence/wintun-product-cli-qualified-41236273780.json"
       ],
       "blockers": [],
-      "implementation_notes": "Hosted Windows actual pinned Wintun normal/crash/raw-peer and four driver provenance negatives passed. Sourcef45b41a online HTTP/SQLite one-use packet access, original QUIC packet loop, IPv4/IPv6 1280-byte traffic and three install fault stages passed; online physical cleanup793ms. That workflow failed strict fixture lint, repaired subsequently; clean2d1c2d2 native/lint run remains pending. Production protected-login CLI, two independent machines and VPN coexistence remain mandatory.",
+      "implementation_notes": "Source1e7b236 run41236273780 fully passed hosted ordinary IPC, 1016-byte main future and original8 process cases, original9 native cases including non-test product HTTPS protected-login restore, actual CLI/Clap, one-use HTTP/SQLite QUIC IPv4/IPv6 traffic, authenticated DELETE/403 revoke and814ms physical TUN/UDP cleanup. Independent live Wintun snapshots preserved throughout; its separate owner cleanup1500ms. Strict Clippy passed. Independent target TCP/full third-party VPN and complete system acceptance remain open.",
       "partial_verification": {
         "scoped_passed": true,
         "whole_task_passed": false,
@@ -2561,7 +2562,7 @@
       ],
       "status": "in_progress",
       "implementation_status": "in_progress",
-      "verification_status": "not_run",
+      "verification_status": "running",
       "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
       "owned_paths_to_review": [
         "crates/identity",
@@ -2607,7 +2608,9 @@
         "docs/network-rewrite/evidence/offline-primitives-b313dbf.json",
         "docs/network-rewrite/evidence/offline-management-94bbe13.json",
         "docs/network-rewrite/evidence/offline-carrier-97541a2.json",
-        "docs/network-rewrite/evidence/offline-resident-091686c.json"
+        "docs/network-rewrite/evidence/offline-resident-091686c.json",
+        "docs/network-rewrite/evidence/offline-media-b166d8b.json",
+        "docs/network-rewrite/evidence/offline-remote-tls-55de3cd.json"
       ],
       "blockers": [],
       "partial_verification": {
@@ -2619,7 +2622,7 @@
           "docs/network-rewrite/evidence/offline-resident-091686c.json"
         ]
       },
-      "implementation_notes": "3f1eb6b run41233619081 passed authenticated-reservation authority negatives, 7 primitive/3 identity/2 Session cases, 8+5 offline storage and all274 storage regressions with strict authority/storage lint. Actual HTTP SDK approval/consume and online remote signed budget/QUIC business passed; finite offline remote after online expiry reached actual View and process stop but failed physical UDP rebind. b166d8b adds original tracked socket/poller cleanup owner and repairs while-let strict lint; run41234465272 pending. Complete native AppCore media/input/file OS adapters, finite offline UI, TLS fallback and multiple-resident lifecycle remain mandatory implementation work. Evidence: offline-authority-storage-3f1eb6b.json and ADR0058; no whole W27 claim."
+      "implementation_notes": "Sourceb166d8b fully passed offline authority/storage/HTTP-SDK and physical socket/poller cleanup, including original independent remote QUIC after online expiry. Source55de3cd run41235596155 all jobs success adds explicitly approved mutual TLS1.3 remote business concurrently with QUIC, original shared attempts/bytes, Input refusal, process-stop and UDP/TCP listener release. Complete native AppCore capture/input/file OS adapters, finite offline UI and multiple-resident lifecycle remain implementation work; no wholeW27 claim."
     },
     {
       "id": "W28",
@@ -2674,8 +2677,11 @@
         "证据绑定本任务源码和制品，并区分构建来源和实际执行来源",
         "无未标明的外部验证缺口"
       ],
-      "evidence_refs": [],
-      "blockers": []
+      "evidence_refs": [
+        "docs/adr/network/0054-controlled-lan-discovery-adapter.md"
+      ],
+      "blockers": [],
+      "implementation_notes": "Original same-owner LAN UDP broadcast/unicast and DNS-SD binary TXT/virtual IP/socket cleanup fully passed exact4a2d7a0 run41235534909. Production optional TUN+LAN shares original authority, packet loop/root helper and cleanup; actual combined path still requires evidence. Pinned official Teeworlds0.7.5 and Luanti5.13+MinetestGame5.8 real client/server pipelines execute original carriers; initial official storage/window/limited-broadcast fixture failures retained. Current real-game reruns pending; no two-site or completeW28 acceptance."
     },
     {
       "id": "W29",
@@ -2877,10 +2883,12 @@
         "docs/network-rewrite/evidence/media-receiver-4794698.json",
         "docs/adr/network/0053-finite-probed-media-budget-switch.md",
         "docs/network-rewrite/evidence/media-receiver-actual-mtls-5cde425.json",
-        "docs/network-rewrite/evidence/media-and-native-files-2494ab3.json"
+        "docs/network-rewrite/evidence/media-and-native-files-2494ab3.json",
+        "docs/network-rewrite/evidence/offline-media-b166d8b.json",
+        "docs/adr/network/0060-real-kernel-media-impairment.md"
       ],
       "blockers": [],
-      "implementation_notes": "Earlier actual loopback TCP/mutually pinned TLS1.3 and kernel QUIC regressions remain scoped evidence; source4794698 in-memory branch is not TCP evidence. Source3f1eb6b run41233636239 passed ordinary-token MF/Core spatial resolution/fps/bitrate downshift with exact source geometry, current-output receipts, ordinary explicit finite-candidate Session activation, proposal/ACK and real encoder/decoder owner replacement (2/2) plus provider9/9. Linux run41233633137 passed both original singleton and explicit3-format HTTP approval/renewal and exact-set policy tests. Both whole workflows failed SDK while-let strict lint; fixed b166d8b with runs41234566427/41234569423 pending. Evidence media-finite-resolution-3f1eb6b.json, ADR0055/0057. Actual20-to5Mbps/1percent loss plus files/input, original2s downshift and input p95+10ms thresholds remain mandatory open work; no whole W31/target claim.",
+      "implementation_notes": "Sourceb166d8b Linux41234566427 and ordinary Windows MF/Core41234569423 both fully passed strict original media/candidate HTTP approval+renewal/proposal+ACK/spatial-resolution owner replacement within their recorded scope. New actual kernel HTB/netem/fq_codel 1percent-loss20-to5Mbps experiment uses original QUIC/mTLS VP8, actual4MiB disk FileRead protocol and InputController observation. First69a failed original15s lease validation (strict compile passed); b376 run41368961040 reached real decode/file traffic and failed pre-step-budget>5Mbps, so2s downshift and p95+10ms are NOT qualified. efec diagnostic rerun41369633024 pending; no OS input/display, Windows H264 or fullAC53 claim.",
       "partial_verification": {
         "scoped_passed": true,
         "whole_task_passed": false,
@@ -2905,9 +2913,9 @@
         "F22",
         "F25"
       ],
-      "status": "not_started",
-      "implementation_status": "not_started",
-      "verification_status": "not_run",
+      "status": "in_progress",
+      "implementation_status": "in_progress",
+      "verification_status": "running",
       "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
       "owned_paths_to_review": [
         "crates/platform-capture",
@@ -2948,7 +2956,8 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [],
-      "blockers": []
+      "blockers": [],
+      "implementation_notes": "Existing production Windows capture H264 and same-device GPU presenter are retained. Source50df7ec adds bounded actual DXGI-submit QPC cadence and exact original-owner target analyzer; hosted source50 workflow41369064258 and source1518218 workflow41369702948 running. Submit cadence is not scanout or complete GPU/58fps/p95 qualification; full target chain remains open."
     },
     {
       "id": "W33",
@@ -2962,9 +2971,9 @@
         "F22",
         "F25"
       ],
-      "status": "not_started",
-      "implementation_status": "not_started",
-      "verification_status": "not_run",
+      "status": "in_progress",
+      "implementation_status": "in_progress",
+      "verification_status": "running",
       "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
       "owned_paths_to_review": [
         "crates/protocol/media*",
@@ -3004,7 +3013,8 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [],
-      "blockers": []
+      "blockers": [],
+      "implementation_notes": "Sourcebc52249/1518218 adds strict actual Main8 complete96bit PTL/geometry/VUI output validation and original-GPU-NV12 MF encoder owner boundary. Source7a53a28 adds independentv3 canonical69-byte format while preservingv2 H26457-byte contract; signed authority/NLMF/IPC/provider/capture/presenter production integration remains in progress. Synthetic HEVC probes do not complete this task; advanced444/10bit/HDR/high-frame fallback remains mandatory work."
     },
     {
       "id": "W34",
@@ -3026,9 +3036,9 @@
         "F21",
         "F26"
       ],
-      "status": "not_started",
-      "implementation_status": "not_started",
-      "verification_status": "not_run",
+      "status": "in_progress",
+      "implementation_status": "in_progress",
+      "verification_status": "running",
       "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
       "owned_paths_to_review": [
         "packaging",
@@ -3067,8 +3077,11 @@
         "证据绑定本任务源码和制品，并区分构建来源和实际执行来源",
         "无未标明的外部验证缺口"
       ],
-      "evidence_refs": [],
-      "blockers": []
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/linux-package-upgrade-index.json"
+      ],
+      "blockers": [],
+      "implementation_notes": "Exactc0fc249 run41236630410 x64+ARM64 Linux headless network/gateway DEB matrix success, with actual daemon install/reinstall/upgrade/uninstall, port-error cleanup and candidate-integrity/Python checks; every retained receipt/hash checked. Candidate producer adds both Linux network roles,16 artifact roles and21 installation cases. Full same-source release candidate, Windows signing/production update and target matrix still required; Linux desktop remains retired."
     },
     {
       "id": "W35",
@@ -3087,9 +3100,9 @@
         "F23",
         "F26"
       ],
-      "status": "not_started",
-      "implementation_status": "not_started",
-      "verification_status": "not_run",
+      "status": "in_progress",
+      "implementation_status": "in_progress",
+      "verification_status": "running",
       "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
       "owned_paths_to_review": [
         "compatibility.json",
@@ -3128,8 +3141,12 @@
         "证据绑定本任务源码和制品，并区分构建来源和实际执行来源",
         "无未标明的外部验证缺口"
       ],
-      "evidence_refs": [],
-      "blockers": []
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/linux-package-upgrade-index.json",
+        "docs/adr/network/0061-bound-production-capability-exchange.md"
+      ],
+      "blockers": [],
+      "implementation_notes": "Exact2871a02 run41236371694 x64+ARM64 actual retainedv0.7.0-rc.1 old/native server and new server schema admission/encrypted migration/rollback/fence experiment success. Old source82f1c8d actual schema25 frozen (historical release-body24 was inaccurate). Production bounded authenticated capability exchange now wired into explicit packet/2 and network-remote/1 routed remote, original permit/group/peer binding, legacy explicit protocol, no silent downgrade; sourceefec full network41369688849 pending. Complete mixed client/server/node and target rollback matrix remains mandatory."
     },
     {
       "id": "W36",
