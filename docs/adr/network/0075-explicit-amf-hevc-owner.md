@@ -82,12 +82,28 @@ Four same-device GPU textures retain each accepted input until the runtime's
 release observer marks its atomic flag free. The callback touches no owner or
 D3D state. Copy completion retains the original 16ms bound; an incomplete copy
 retires the owner so a pending texture cannot be reused. There is no CPU map or
-pixel conversion in this adapter. Original frame/aggregate/packet bounds and a
+pixel conversion in this adapter. The original EVENT query remains retained
+after any timeout/query failure. Close reads it once with DONOTFLUSH; S_FALSE
+or error returns failed cleanup and retains query, original source texture,
+context, input slots and module
+in the original sticky quarantine. Releasing COM references alone never counts
+as physical copy completion, and no second wait extends the original bound.
+The query is created and retained before CopyResource, so query-allocation
+failure cannot leave an unobserved submitted copy. The original borrowed source
+also has a retained COM reference until this EVENT completes. Original
+frame/aggregate/packet bounds and a
 16-entry PTS ledger remain. AMF 100ns timestamps are checked against the exact
 accepted 90kHz ledger. Submit-full is unaccepted input; output always retires
 the original entry before any simultaneous new acceptance. Drain retries a
 full queue; EOF requires the ledger empty. Original compressed bytes pass to
 the existing SPS/contract parser unchanged.
+
+The Microsoft [EVENT query contract](https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_query)
+states that S_OK means GPU command completion. The
+[GetData contract](https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-getdata)
+allows a null output and zero bytes for a status check and defines S_FALSE as
+unavailable data. The adapter requires S_OK and retains all resources on any
+other status; it does not infer completion from observer release or COM Drop.
 
 Cancel/error close explicitly flushes, terminates and checks surface release,
 context termination and module unload. Any unknown close permanently retains

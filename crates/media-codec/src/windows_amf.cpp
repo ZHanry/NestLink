@@ -69,6 +69,8 @@ struct Encoder {
     amf::AMFComponentPtr component;
     ComPtr<ID3D11Device> device;
     ComPtr<ID3D11DeviceContext> context;
+    ComPtr<ID3D11Query> pending_copy;
+    ComPtr<ID3D11Texture2D> pending_source;
     std::array<ComPtr<ID3D11Texture2D>, 4> slots;
     std::shared_ptr<ReleaseState> released;
     std::array<std::unique_ptr<Released>, 4> observers;
@@ -87,6 +89,17 @@ HRESULT current(Encoder& state) noexcept {
 
 HRESULT close_native(Encoder& state) noexcept {
     if (state.thread != GetCurrentThreadId()) return E_UNEXPECTED;
+    // Releasing D3D references does not prove an earlier timed-out copy has
+    // completed. Keep its EVENT and all owners until the GPU confirms it. This
+    // is one non-flushing observation, not another wait/copy budget.
+    if (state.pending_copy) {
+        const HRESULT hr = state.context->GetData(state.pending_copy.Get(), nullptr, 0,
+            D3D11_ASYNC_GETDATA_DONOTFLUSH);
+        if (hr == S_FALSE) return E_PENDING;
+        if (hr != S_OK) return FAILED(hr) ? hr : E_UNEXPECTED;
+        state.pending_copy.Reset();
+        state.pending_source.Reset();
+    }
     // Flush is an explicit discard on cancellation/error, not evidence that EOS
     // completed. Functional probes separately require EOF and exact accounting.
     if (state.component) {
@@ -414,6 +427,7 @@ HRESULT output(Encoder& state, uint8_t* destination, size_t capacity, size_t* le
 
 HRESULT input(Encoder& state, ID3D11Texture2D* source, uint64_t pts, bool keyframe, bool* accepted) {
     if (state.draining || (state.has_input && pts <= state.last_input)) return E_INVALIDARG;
+    if (state.pending_copy) return E_UNEXPECTED;
     if (state.pending.size() >= 16) return S_OK;
     D3D11_TEXTURE2D_DESC desc{};
     source->GetDesc(&desc);
@@ -434,11 +448,13 @@ HRESULT input(Encoder& state, ID3D11Texture2D* source, uint64_t pts, bool keyfra
         if (!surface) state.released->busy[slot].store(false, std::memory_order_release);
         return checked(result == AMF_OK ? AMF_FAIL : result, "wrap-original-device-slot");
     }
-    state.context->CopyResource(state.slots[slot].Get(), source);
     D3D11_QUERY_DESC query_desc{D3D11_QUERY_EVENT, 0};
     ComPtr<ID3D11Query> query;
     HRESULT hr = state.device->CreateQuery(&query_desc, &query);
     if (FAILED(hr)) return hr;
+    state.pending_copy = query;
+    state.pending_source = source;
+    state.context->CopyResource(state.slots[slot].Get(), source);
     state.context->End(query.Get()); state.context->Flush();
     const ULONGLONG deadline = GetTickCount64() + 16;
     do { hr = state.context->GetData(query.Get(), nullptr, 0, 0); if (hr == S_FALSE) Sleep(0); }
@@ -446,7 +462,9 @@ HRESULT input(Encoder& state, ID3D11Texture2D* source, uint64_t pts, bool keyfra
     // An incomplete copy must not release and reuse its slot as another input.
     // Retire this owner instead of acknowledging an unaccepted retryable frame.
     if (hr == S_FALSE) { ++state.copy_pending; return HRESULT_FROM_WIN32(ERROR_TIMEOUT); }
-    if (FAILED(hr)) return hr;
+    if (hr != S_OK) return FAILED(hr) ? hr : E_UNEXPECTED;
+    state.pending_copy.Reset();
+    state.pending_source.Reset();
     surface->SetPts(static_cast<amf_pts>(pts * 1000 / 9));
     surface->SetDuration(AMF_SECOND / state.fps);
     if (keyframe) {
@@ -532,9 +550,9 @@ extern "C" int32_t nl_amf_close(void* handle) noexcept {
     auto* state = static_cast<Encoder*>(handle);
     if (!state) return E_POINTER;
     const HRESULT hr = close_native(*state);
-    std::fprintf(stderr, "amf close hr=0x%08lx accepted=%llu outputs=%llu pending=%zu pool_full=%llu copy_pending=%llu eof=%u\n",
+    std::fprintf(stderr, "amf close hr=0x%08lx accepted=%llu outputs=%llu pending=%zu pool_full=%llu copy_pending=%llu eof=%u copy_query_retained=%u\n",
         static_cast<unsigned long>(hr), static_cast<unsigned long long>(state->accepted), static_cast<unsigned long long>(state->outputs), state->pending.size(),
-        static_cast<unsigned long long>(state->pool_full), static_cast<unsigned long long>(state->copy_pending), state->eof ? 1u : 0u);
+        static_cast<unsigned long long>(state->pool_full), static_cast<unsigned long long>(state->copy_pending), state->eof ? 1u : 0u, state->pending_copy ? 1u : 0u);
     std::fflush(stderr);
     if (FAILED(hr)) { quarantined.store(true, std::memory_order_release); return hr; }
     delete state;
