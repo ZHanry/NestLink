@@ -49,11 +49,21 @@ jobs:
           python3 -B -m unittest discover -s tests/refactor -p test_candidate_producer.py
           python3 -B -m unittest discover -s tests/refactor -p test_product_scope.py
           python3 -B -m unittest discover -s tests/refactor -p test_rc_publish.py
+      - name: Record exact native build provenance before compilation
+        env:
+          NESTLINK_PACKAGE_TARGET: ${{ matrix.target }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/linux-network-build-evidence"
+          python3 -B - <<'PY'
+          import hashlib,json,os,pathlib,platform
+          record = {"source_revision":os.environ["GITHUB_SHA"],"workflow_revision":os.environ["GITHUB_WORKFLOW_SHA"],"workflow":os.environ["GITHUB_WORKFLOW_REF"],"run_id":os.environ["GITHUB_RUN_ID"],"run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],"target":os.environ["NESTLINK_PACKAGE_TARGET"],"runner_environment":os.environ["RUNNER_ENVIRONMENT"],"machine":platform.machine(),"cargo_lock_sha256":hashlib.sha256(pathlib.Path("Cargo.lock").read_bytes()).hexdigest(),"qualification_claimed":False}
+          (pathlib.Path(os.environ["RUNNER_TEMP"])/"linux-network-build-evidence/provenance.json").write_text(json.dumps(record,indent=2)+"\n")
+          PY
       - name: Build locked codecs and exact native headless daemon on GitHub
         run: |
           python3 -B scripts/refactor-native-codecs.py build --target ${{ matrix.target }} --cache-dir "${{ runner.temp }}/codec-sources" --work-dir "${{ runner.temp }}/network-codecs"
           python3 -B scripts/refactor-native-codecs.py verify --target ${{ matrix.target }} --prefix "$NESTLINK_CODEC_PREFIX"
-          cargo build --locked --release -p nestlink-daemon -p nestlink-server
+          cargo build --locked --release -p nestlink-daemon -p nestlink-server 2>&1 | tee "$RUNNER_TEMP/linux-network-build-evidence/cargo-build.log"
       - name: Parse original package coordinator and fault fixtures on GitHub
         run: python3 -B -c 'import ast,pathlib; [ast.parse(path.read_text()) for path in map(pathlib.Path,["scripts/refactor-linux-network-package.py","scripts/refactor-linux-package-faults.py"])]'
       - name: Install exact bytes, require explicit authority and remove only package files
@@ -61,10 +71,18 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 -B scripts/refactor-linux-network-package.py --binary "$CARGO_TARGET_DIR/release/nestlink-daemon" --server "$CARGO_TARGET_DIR/release/nestlink-server" --output "${{ runner.temp }}/linux-network-package"
       - name: Retain native package, exact hashes and actual installation logs
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && hashFiles(format('{0}/linux-network-package/linux-network-package.json', runner.temp)) != '' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: linux-network-package-${{ matrix.target }}-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/linux-network-package
+          if-no-files-found: error
+          retention-days: 30
+      - name: Retain same-source build evidence including pre-install failures
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: linux-network-build-${{ matrix.target }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/linux-network-build-evidence
           if-no-files-found: error
           retention-days: 30
