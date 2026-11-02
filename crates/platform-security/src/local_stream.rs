@@ -21,6 +21,9 @@ mod windows;
 pub use windows::{Listener, connect};
 #[cfg(windows)]
 pub use windows::{VerifiedPeerProcess, VerifiedProcessExportTarget, endpoint_for};
+#[cfg(all(windows, feature = "native-process-test-support"))]
+#[allow(unsafe_code)]
+pub mod process_handle_test_support;
 
 trait StreamIo: AsyncRead + AsyncWrite + Unpin + Send {}
 impl<T: AsyncRead + AsyncWrite + Unpin + Send> StreamIo for T {}

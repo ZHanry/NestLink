@@ -5,6 +5,9 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
+[features]
+native-process-test-support = []
+
 [dependencies]
 zeroize.workspace = true
 tokio = { workspace = true, features = ["process"] }
