@@ -7,6 +7,14 @@ use nestlink_identity::{
 };
 use nestlink_protocol::offline::*;
 
+#[test]
+fn original_private_resident_empty_actions_reject_injected_authority_fields() {
+    for command in ["help", "policy", "begin", "status", "recover", "stop"] {
+        assert!(serde_json::from_value::<Command>(serde_json::json!({"command":command})).is_ok());
+        assert!(serde_json::from_value::<Command>(serde_json::json!({"command":command,"authority":"saved transferable owner"})).is_err());
+    }
+}
+
 fn authority() -> Result<(OfflineProcess, OfflineProcess, OfflineAdmission)> {
     let source = DeviceIdentity::generate();
     let host = DeviceIdentity::generate();

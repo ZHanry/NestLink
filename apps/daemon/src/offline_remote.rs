@@ -915,6 +915,10 @@ mod tests {
         ));
         approved["online_permit"] = serde_json::json!("untrusted saved permit");
         assert!(serde_json::from_value::<Command>(approved).is_err());
+        for command in ["help", "policy", "begin", "start", "rebuild", "status", "recover", "stop"] {
+            assert!(serde_json::from_value::<Command>(serde_json::json!({"command":command})).is_ok());
+            assert!(serde_json::from_value::<Command>(serde_json::json!({"command":command,"authority":"saved transferable owner"})).is_err());
+        }
         assert!(
             serde_json::from_value::<Command>(
                 serde_json::json!({"command":"start", "transport":"tls"})

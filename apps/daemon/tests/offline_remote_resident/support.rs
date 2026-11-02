@@ -50,7 +50,15 @@ impl Platform {
         let mut value = value;
         #[cfg(target_os = "linux")]
         {
-            let mut dbus = Command::new("dbus-daemon")
+            for (name, directory) in [
+                ("XDG_DATA_HOME", "keyring-data"),
+                ("XDG_RUNTIME_DIR", "runtime"),
+            ] {
+                let path = area.join(directory);
+                nestlink_platform_security::new_private_directory(&path)?;
+                value.env.push((name, path.to_string_lossy().into_owned()));
+            }
+            let mut dbus = value.command("dbus-daemon")
                 .args(["--session", "--nofork", "--print-address=1"])
                 .stdout(Stdio::piped())
                 .stderr(Stdio::null())
@@ -90,20 +98,12 @@ impl Platform {
             let _: u16 = display.trim().parse()?;
             value.env.push(("DISPLAY", format!(":{}", display.trim())));
             value.children.push(x);
-            for (name, directory) in [
-                ("XDG_DATA_HOME", "keyring-data"),
-                ("XDG_RUNTIME_DIR", "runtime"),
-            ] {
-                let path = area.join(directory);
-                nestlink_platform_security::new_private_directory(&path)?;
-                value.env.push((name, path.to_string_lossy().into_owned()));
-            }
             let mut keyring = value.command("gnome-keyring-daemon");
             let mut keyring = keyring
                 .args(["--foreground", "--unlock", "--components=secrets"])
                 .stdin(Stdio::piped())
                 .stdout(Stdio::null())
-                .stderr(Stdio::null())
+                .stderr(Stdio::inherit())
                 .spawn()?;
             keyring
                 .stdin
@@ -112,6 +112,19 @@ impl Platform {
                 .write_all(b"resident-keyring-test-password\n")
                 .await?;
             value.children.push(keyring);
+            tokio::time::timeout(Duration::from_secs(10),async {
+                loop {
+                    let observed = value.command("dbus-send").args([
+                        "--session","--print-reply","--dest=org.freedesktop.DBus",
+                        "/org/freedesktop/DBus","org.freedesktop.DBus.NameHasOwner",
+                        "string:org.freedesktop.secrets",
+                    ]).output().await?;
+                    if observed.status.success() && String::from_utf8_lossy(&observed.stdout).contains("boolean true") {
+                        return Ok::<_,io::Error>(());
+                    }
+                    tokio::time::sleep(Duration::from_millis(25)).await;
+                }
+            }).await.map_err(|_|io::Error::new(io::ErrorKind::TimedOut,"original OS Secret Service did not register"))??;
             let status = value
                 .command("xsetroot")
                 .args(["-solid", "#00ff00"])
@@ -161,7 +174,12 @@ impl Platform {
             for (name, value) in &self.env {
                 command.arg(format!("--setenv={name}={value}"));
             }
-            command.arg("--").arg(env!("CARGO_BIN_EXE_nestlink-daemon"));
+            // pam_systemd can set the per-user bus/runtime environment. Restore
+            // this test's actual private Secret Service after PAM registers the
+            // real login session, without changing any original session facts.
+            command.args(["--","/usr/bin/env","--unset=WAYLAND_DISPLAY"]);
+            for (name,value) in &self.env { command.arg(format!("{name}={value}")); }
+            command.arg(env!("CARGO_BIN_EXE_nestlink-daemon"));
             (command, Some(unit))
         }
         #[cfg(windows)]
@@ -210,7 +228,12 @@ impl Platform {
                     tokio::time::sleep(Duration::from_millis(50)).await;
                 }
             })
-            .await??;
+            .await.map_err(|_|io::Error::new(io::ErrorKind::TimedOut,"original OS Secret Service rejected the protected-login key store"))??;
+            let lookup = self.command("secret-tool").args(["lookup","application","NestLink","instance",&binding]).output().await?;
+            assert!(lookup.status.success(),"actual Secret Service lookup failed after store");
+            let saved = zeroize::Zeroizing::new(lookup.stdout);
+            let decoded = zeroize::Zeroizing::new(URL_SAFE_NO_PAD.decode(std::str::from_utf8(&saved)?.trim())?);
+            assert!(decoded.as_slice()==key.as_slice(),"original OS key store did not retain this private binding");
         }
         let login = sdk
             .export_login()?
