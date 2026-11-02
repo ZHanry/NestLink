@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "scope": "Exact-source Linux offline AppCore, strict resident commands and desktop regressions; original process HTTPS restoration failure retained separately",
+  "scope": "Exact-source Linux and Windows offline AppCore, strict resident commands and desktop regressions; original process HTTPS restoration failures retained separately",
   "source_revision": "6cf496fcfee0241673521b051e37019c2c9f86e3",
   "workflow": ".github/workflows/rust-core.yml",
   "run_id": 41418876665,
   "run_attempt": 1,
   "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41418876665",
-  "build_provenance": "The exact-source GitHub-hosted ubuntu-24.04 core job compiled the original offline AppCore, daemon unit, desktop and resident integration targets.",
-  "execution_provenance": "Actual Linux Actions execution passed both AppCore QUIC/TLS cases and all commands, guard and desktop cases in the independent offline step. The separately executed real resident integration compiled and failed all four cases before ready because protected recovery rejects its HTTP management origin.",
+  "build_provenance": "The exact-source GitHub-hosted ubuntu-24.04 and windows-2022 core jobs compiled the original offline AppCore, daemon unit, desktop and resident integration targets. Windows tests used the original ordinary-token wrapper.",
+  "execution_provenance": "Actual Linux and Windows Actions execution passed both AppCore QUIC/TLS cases and all commands, guard and desktop cases in the independent offline step. The separately executed real resident integration compiled and failed all four cases on each operating system before ready because protected recovery rejects its HTTP management origin.",
   "targets": [
     {
       "target": "x86_64-unknown-linux-gnu",
@@ -27,6 +27,25 @@
         {"name": "nestlink-native-offline-tests.log", "bytes": 120440, "sha256": "eb3fbc9cf1d66cc0e53a5686dfe830c664a200c01045943bc5b13172fa72fe3a"},
         {"name": "nestlink-native-offline-resident-tests.log", "bytes": 15789, "sha256": "b3704c7ad243dffa2b814708c9762979e1f9b594b2316dd7fa15bc968725e43f"}
       ]
+    },
+    {
+      "target": "x86_64-pc-windows-msvc",
+      "runner": "windows-2022",
+      "job_id": 125189337398,
+      "offline_step_conclusion": "success",
+      "app_core": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 43.45, "strict_clippy": "passed"},
+      "remote_daemon_unit": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 0.01},
+      "private_daemon_unit": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 2.13},
+      "entry_dispatch_unit": {"passed": 1, "failed": 0, "ignored": 0},
+      "desktop_layout": {"passed": 2, "failed": 0, "ignored": 0, "elapsed_seconds": 0.28},
+      "resident_step_conclusion": "failure",
+      "resident_process": {"passed": 0, "failed": 4, "ignored": 0, "elapsed_seconds": 8.46},
+      "artifact_id": 13129644356,
+      "artifact_digest_reported_by_github": "sha256:3b21f7fd35a8f9c23a15c8ba6212f11b026b104e4abd71cc728fd637e9deaf11",
+      "downloaded_logs": [
+        {"name": "nestlink-native-offline-tests.log", "bytes": 118230, "sha256": "a4e76ccf57c7a985c43fc49f7799aa42b3119f7591177169ccb0fcb395d10749"},
+        {"name": "nestlink-native-offline-resident-tests.log", "bytes": 15982, "sha256": "2e0a87b042723402a16ae8388573f2efce7bb319d5029cb336f2065a4e9a453e"}
+      ]
     }
   ],
   "confirmed_repairs": [
@@ -37,7 +56,7 @@
   "follow_up_implementation": "f4778ed reuses the frozen real public-PKI cloudflared fixture with cryptographically random credentials, scoped original routes, secure cookies and unchanged SDK trust. Its own exact-source hosted run is required before acceptance.",
   "verification": "GitHub artifact digests and downloaded log fingerprints are distinct. No producer per-file hash inventory was supplied or claimed.",
   "limitations": [
-    "This receipt currently covers Linux only. Windows source-matched results require their own completed step and artifact.",
+    "Both operating systems passed this scoped offline regression step; the whole workflow and original resident process step are not reported as passed.",
     "No real resident approval/consume, IPC, capture, files or management terminal-fence success is inferred from compilation or unit success.",
     "No physical dual-device platform, advanced media, public NAT or mobile target acceptance is claimed."
   ]
