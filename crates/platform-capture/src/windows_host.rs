@@ -209,7 +209,9 @@ impl GpuCapture {
         } else {
             "gdi_surface_or_system_wgc"
         };
-        eprintln!("host_gpu_adapter_luid={luid:016x} same_device=true cursor={cursor} driver_internal_readback=unknown");
+        eprintln!(
+            "host_gpu_adapter_luid={luid:016x} same_device=true cursor={cursor} driver_internal_readback=unknown"
+        );
         Ok(device)
     }
     fn frame(&mut self, repeated: bool) -> io::Result<Option<NonNull<c_void>>> {
