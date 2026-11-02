@@ -1,7 +1,7 @@
 //! Scalar observations from the real receiver worker, never synthetic probes.
 mod cadence;
-pub(super) use cadence::SubmissionCadence;
 use crate::bridge::CompressedContext;
+pub(super) use cadence::SubmissionCadence;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::VecDeque,
