@@ -36,7 +36,10 @@ pub(crate) async fn authority(sdk: &nestlink_sdk::Sdk, space: &str) -> Result<[u
                 || details.space.archived
                 || details.space.deployment_id != sdk.health().deployment_id
             {
-                return Err(invalid("space authority differs from this live authenticated deployment").into());
+                return Err(invalid(
+                    "space authority differs from this live authenticated deployment",
+                )
+                .into());
             }
             details.space.authority_public_key
         }
@@ -45,7 +48,9 @@ pub(crate) async fn authority(sdk: &nestlink_sdk::Sdk, space: &str) -> Result<[u
         }
         Err(error) => return Err(error.into()),
     };
-    URL_SAFE_NO_PAD.decode(encoded)?.try_into()
+    URL_SAFE_NO_PAD
+        .decode(encoded)?
+        .try_into()
         .map_err(|_| invalid("network authority key length").into())
 }
 pub(crate) fn emit(event: &str, value: impl Serialize) -> Result<()> {

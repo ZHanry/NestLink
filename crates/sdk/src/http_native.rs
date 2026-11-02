@@ -14,11 +14,17 @@ pub(super) async fn request<R: DeserializeOwned>(
     let deadline = tokio::time::Instant::now() + Duration::from_secs(15);
     let operation = async {
         let _admission = http_admission::acquire(origin, &method).await?;
-        let remaining = deadline.checked_duration_since(tokio::time::Instant::now())
-            .filter(|remaining| !remaining.is_zero()).ok_or(SdkError::Timeout)?;
-        let url = origin.join(&format!("{API_BASE}{path}")).map_err(|_| SdkError::Invalid)?;
-        let mut request = client.request(method, url)
-            .header("Origin", origin.origin().ascii_serialization()).timeout(remaining);
+        let remaining = deadline
+            .checked_duration_since(tokio::time::Instant::now())
+            .filter(|remaining| !remaining.is_zero())
+            .ok_or(SdkError::Timeout)?;
+        let url = origin
+            .join(&format!("{API_BASE}{path}"))
+            .map_err(|_| SdkError::Invalid)?;
+        let mut request = client
+            .request(method, url)
+            .header("Origin", origin.origin().ascii_serialization())
+            .timeout(remaining);
         if let Some(token) = token {
             request = request.bearer_auth(token);
         }
@@ -41,5 +47,7 @@ pub(super) async fn request<R: DeserializeOwned>(
         }
         decode_response(status, &bytes)
     };
-    tokio::time::timeout_at(deadline, operation).await.map_err(|_| SdkError::Timeout)?
+    tokio::time::timeout_at(deadline, operation)
+        .await
+        .map_err(|_| SdkError::Timeout)?
 }

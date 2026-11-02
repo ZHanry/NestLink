@@ -23,9 +23,9 @@ pub use windows_mf::{MfH264Decoder, MfH264Encoder};
 mod windows_gpu_presenter;
 #[cfg(windows)]
 pub use windows_gpu_presenter::{
-    GpuDecodeStep, GpuDecodedPicture, GpuH264Presenter, GpuHevcPresenter, GpuVideoSurface,
-    HevcGpuDecodeStep, HevcGpuSubmissionReceipt, gpu_qpc,
-    GpuSharedPresenter, GpuSharedConsumption, SharedGpuSubmissionReceipt,
+    GpuDecodeStep, GpuDecodedPicture, GpuH264Presenter, GpuHevcPresenter, GpuSharedConsumption,
+    GpuSharedPresenter, GpuVideoSurface, HevcGpuDecodeStep, HevcGpuSubmissionReceipt,
+    SharedGpuSubmissionReceipt, gpu_qpc,
 };
 #[cfg(not(windows))]
 pub fn gpu_qpc() -> std::io::Result<(u64, u64)> {
@@ -50,12 +50,14 @@ mod windows_hevc_owner;
 #[cfg(windows)]
 mod windows_shared_output;
 #[cfg(windows)]
-pub use windows_shared_output::{SharedDecodedFrame, SharedFrameDescriptor, SharedRingDescriptor, TransferredSurfaceRing};
-#[cfg(windows)]
 pub use nestlink_platform_security::local_stream::VerifiedProcessExportTarget;
 #[cfg(windows)]
 pub use windows_hevc_owner::{
     HevcDecodedOutput, HevcOwnerOutput, MfHevcHardwareDecoder, MfHevcTextureEncoder,
+};
+#[cfg(windows)]
+pub use windows_shared_output::{
+    SharedDecodedFrame, SharedFrameDescriptor, SharedRingDescriptor, TransferredSurfaceRing,
 };
 
 #[cfg(windows)]

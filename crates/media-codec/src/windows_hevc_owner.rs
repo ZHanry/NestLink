@@ -101,23 +101,41 @@ impl MfHevcHardwareDecoder {
                 "HEVC original decode resource/adapter/driver identity changed",
             ));
         }
-        if let Some(shared) = &self.shared { shared.check()?; }
+        if let Some(shared) = &self.shared {
+            shared.check()?;
+        }
         Ok(())
     }
-    pub fn enable_shared_output(&mut self, peer: nestlink_platform_security::local_stream::VerifiedProcessExportTarget) -> io::Result<crate::SharedRingDescriptor> {
+    pub fn enable_shared_output(
+        &mut self,
+        peer: nestlink_platform_security::local_stream::VerifiedProcessExportTarget,
+    ) -> io::Result<crate::SharedRingDescriptor> {
         self.check()?;
-        if self.shared.is_some() { return Err(io::Error::other("original shared consumer already configured")); }
-        let shared = crate::windows_shared_output::SharedOutput::enable(&self.inner, self.target.config(), peer, self.authority.clone())?;
+        if self.shared.is_some() {
+            return Err(io::Error::other(
+                "original shared consumer already configured",
+            ));
+        }
+        let shared = crate::windows_shared_output::SharedOutput::enable(
+            &self.inner,
+            self.target.config(),
+            peer,
+            self.authority.clone(),
+        )?;
         let descriptor = shared.descriptor();
         if Some(descriptor.adapter_luid) != self.identity.adapter_luid {
             self.failed = true;
-            return Err(io::Error::other("shared ring changed the original decoder adapter"));
+            return Err(io::Error::other(
+                "shared ring changed the original decoder adapter",
+            ));
         }
         self.shared = Some(shared);
         Ok(descriptor)
     }
     fn reap_shared(&mut self) -> io::Result<()> {
-        if let Some(shared) = &mut self.shared { shared.reap(&self.inner)?; }
+        if let Some(shared) = &mut self.shared {
+            shared.reap(&self.inner)?;
+        }
         Ok(())
     }
     fn finish(&mut self, output: Option<(usize, u64)>) -> io::Result<Option<HevcDecodedOutput>> {
@@ -134,7 +152,12 @@ impl MfHevcHardwareDecoder {
             let owner = observation(&self.inner)?;
             owner.require_hardware_identity()?;
             self.check()?;
-            let shared = self.shared.as_mut().map(|shared| shared.output(&self.inner, pts_90khz)).transpose()?.flatten();
+            let shared = self
+                .shared
+                .as_mut()
+                .map(|shared| shared.output(&self.inner, pts_90khz))
+                .transpose()?
+                .flatten();
             Ok(Some(HevcDecodedOutput {
                 pts_90khz,
                 bgra: Zeroizing::new(self.scratch[..size].to_vec()),

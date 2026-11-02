@@ -423,7 +423,8 @@ async fn multiplex_control_fin_closes_two_flows_and_replayed_stream_proof_is_ref
             let connection = connected.connection.clone();
             let lease = lease.clone();
             opening.spawn(async move {
-                let (send, recv, _) = raw_challenge(&connection, &lease, "multiplex-stream").await?;
+                let (send, recv, _) =
+                    raw_challenge(&connection, &lease, "multiplex-stream").await?;
                 // Retain a real stream after receiving its nonce, without
                 // sending the consumer proof or reserving a backend flow.
                 Ok::<_, Box<dyn std::error::Error + Send + Sync>>(BiStream::new(send, recv))
@@ -446,7 +447,8 @@ async fn multiplex_control_fin_closes_two_flows_and_replayed_stream_proof_is_ref
         ended(&mut streams).await?;
         for stream in &mut pending {
             let mut byte = [0; 1];
-            let result = tokio::time::timeout(Duration::from_secs(3), stream.read(&mut byte)).await?;
+            let result =
+                tokio::time::timeout(Duration::from_secs(3), stream.read(&mut byte)).await?;
             assert!(matches!(result, Ok(0) | Err(_)));
         }
         drop(streams);

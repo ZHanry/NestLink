@@ -244,8 +244,21 @@ async fn monitor(context: &FlowContext, usage: &ServiceUsageStore) -> Result<(),
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     loop {
         tick.tick().await;
-        current(&context.sdk, &context.lease, context.fingerprint, &context.grant).await?;
-        flush_report(&context.sdk, usage, &context.host, &context.grant.grant_id, false).await?;
+        current(
+            &context.sdk,
+            &context.lease,
+            context.fingerprint,
+            &context.grant,
+        )
+        .await?;
+        flush_report(
+            &context.sdk,
+            usage,
+            &context.host,
+            &context.grant.grant_id,
+            false,
+        )
+        .await?;
     }
 }
 

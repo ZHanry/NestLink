@@ -35,12 +35,12 @@ pub use receiver_qos::ReceiverReportTracker;
 mod video;
 mod worker;
 pub use audio::{AudioReceiver, AudioSender, AudioStats, AudioStream};
+#[cfg(windows)]
+pub use receiver::SharedVideoConsumer;
 pub use receiver::{
     DecodedVideo, ExternalVideoCleanup, VideoLayout, VideoPresentation, VideoReceiver,
     VideoReceiverStats,
 };
-#[cfg(windows)]
-pub use receiver::SharedVideoConsumer;
 pub use video::{ProducerBudgetObservation, VideoSender, VideoSenderStats, VideoStream};
 pub use worker::{ShutdownReport, WorkerMonitor, WorkerStatus};
 

@@ -23,14 +23,16 @@ mod session_displays;
 pub use browser_host::*;
 #[cfg(not(target_arch = "wasm32"))]
 pub use native_session::*;
+#[cfg(windows)]
+pub use nestlink_media_codec::{
+    SharedFrameDescriptor, SharedRingDescriptor, TransferredSurfaceRing,
+};
+#[cfg(windows)]
+pub use nestlink_media_session::SharedVideoConsumer;
 #[cfg(not(target_arch = "wasm32"))]
 pub use nestlink_media_session::{
     DecodedExportLedger, DecodedFrameExport, DecodedVideo, VideoLayout,
 };
-#[cfg(windows)]
-pub use nestlink_media_session::SharedVideoConsumer;
-#[cfg(windows)]
-pub use nestlink_media_codec::{SharedFrameDescriptor, SharedRingDescriptor, TransferredSurfaceRing};
 #[cfg(not(target_arch = "wasm32"))]
 pub use runtime::*;
 

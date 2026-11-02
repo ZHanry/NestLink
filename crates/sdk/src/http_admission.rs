@@ -52,11 +52,21 @@ impl Admission {
             Err(TryAcquireError::NoPermits) => {
                 // No request body, credential or task is handed to the HTTP
                 // client until one of these finite waiting slots is admitted.
-                let _waiting = waiting.clone().try_acquire_owned().map_err(|_| capacity())?;
-                active.clone().acquire_owned().await.map_err(|_| capacity())?
+                let _waiting = waiting
+                    .clone()
+                    .try_acquire_owned()
+                    .map_err(|_| capacity())?;
+                active
+                    .clone()
+                    .acquire_owned()
+                    .await
+                    .map_err(|_| capacity())?
             }
         };
-        Ok(Permit { _active: permit, _owner: self })
+        Ok(Permit {
+            _active: permit,
+            _owner: self,
+        })
     }
 }
 
@@ -91,13 +101,19 @@ impl Registry {
 }
 
 fn capacity() -> SdkError {
-    SdkError::Api(StatusCode::TOO_MANY_REQUESTS, nestlink_protocol::ErrorCode::CapacityExceeded)
+    SdkError::Api(
+        StatusCode::TOO_MANY_REQUESTS,
+        nestlink_protocol::ErrorCode::CapacityExceeded,
+    )
 }
 
 pub(super) async fn acquire(origin: &Url, method: &Method) -> Result<Permit, SdkError> {
     static ORIGINS: OnceLock<Mutex<Registry>> = OnceLock::new();
-    let owner = ORIGINS.get_or_init(|| Mutex::new(Registry::default()))
-        .lock().map_err(|_| capacity())?.get(origin)?;
+    let owner = ORIGINS
+        .get_or_init(|| Mutex::new(Registry::default()))
+        .lock()
+        .map_err(|_| capacity())?
+        .get(origin)?;
     owner.acquire(*method == Method::DELETE).await
 }
 

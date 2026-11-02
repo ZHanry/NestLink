@@ -448,8 +448,11 @@ async fn capacity(multiplexed: bool) -> Result {
                         // Respect the original finite negotiation window. The
                         // full 1000 live TCP targets remain an exact assertion.
                         let _opening = opening_window.acquire_owned().await?;
-                        Flow::Multiplexed(owner.open_stream(&consumer).await
-                            .map_err(|error| std::io::Error::other(format!("wave {wave} pair {index} flow {flow} open_stream: {error}")))?)
+                        Flow::Multiplexed(owner.open_stream(&consumer).await.map_err(|error| {
+                            std::io::Error::other(format!(
+                                "wave {wave} pair {index} flow {flow} open_stream: {error}"
+                            ))
+                        })?)
                     } else {
                         let lease = sdk.request_private_service(&service, request).await?;
                         Flow::Independent(Box::new(

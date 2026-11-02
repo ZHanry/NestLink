@@ -463,32 +463,67 @@ impl Fixture {
             )
             .await?;
         }
-        let created = source_sdk.create_space(SpaceCreateRequest { name: "Original resident protected HTTPS space".into() }).await?;
+        let created = source_sdk
+            .create_space(SpaceCreateRequest {
+                name: "Original resident protected HTTPS space".into(),
+            })
+            .await?;
         let space = created.space_id;
-        pinned_space.set(space.clone()).map_err(|_| io::Error::other("fixture space was already pinned"))?;
-        let invitation = source_sdk.invite_to_space(&space, SpaceInvitationRequest {
-            expected_revision: created.revision,
-            role: SpaceRole::Member,
-            target_account_id: Some(host_sdk.principal().ok_or("host principal")?.account_id.clone()),
-            expires_at_unix_ms: wall()? + 120_000,
-        }).await?;
-        let accepted = host_sdk.accept_space_invitation(&space, &invitation.invitation.invitation_id,
-            SpaceInvitationAcceptance { token: invitation.token }).await?;
+        pinned_space
+            .set(space.clone())
+            .map_err(|_| io::Error::other("fixture space was already pinned"))?;
+        let invitation = source_sdk
+            .invite_to_space(
+                &space,
+                SpaceInvitationRequest {
+                    expected_revision: created.revision,
+                    role: SpaceRole::Member,
+                    target_account_id: Some(
+                        host_sdk
+                            .principal()
+                            .ok_or("host principal")?
+                            .account_id
+                            .clone(),
+                    ),
+                    expires_at_unix_ms: wall()? + 120_000,
+                },
+            )
+            .await?;
+        let accepted = host_sdk
+            .accept_space_invitation(
+                &space,
+                &invitation.invitation.invitation_id,
+                SpaceInvitationAcceptance {
+                    token: invitation.token,
+                },
+            )
+            .await?;
         assert_eq!(accepted.role, SpaceRole::Member);
         let mut revision = accepted.revision;
         for (sdk, identity) in [(&source_sdk, &source_identity), (&host_sdk, &host_identity)] {
-            revision = sdk.join_space_device(&space, SpaceDeviceJoin {
-                expected_revision: revision,
-                expected_membership_epoch: 0,
-                installation_id: identity.device_id.clone(),
-            }).await?.revision;
+            revision = sdk
+                .join_space_device(
+                    &space,
+                    SpaceDeviceJoin {
+                        expected_revision: revision,
+                        expected_membership_epoch: 0,
+                        installation_id: identity.device_id.clone(),
+                    },
+                )
+                .await?
+                .revision;
         }
-        assert!(matches!(host_sdk.network_policy(&space).await,
+        assert!(
+            matches!(host_sdk.network_policy(&space).await,
             Err(nestlink_sdk::SdkError::Api(status, _)) if status.as_u16() == 403),
-            "the actual host account must retain the original admin-only policy denial");
+            "the actual host account must retain the original admin-only policy denial"
+        );
         let member_view = host_sdk.space_details(&space).await?.space;
         assert_eq!(member_view.role, SpaceRole::Member);
-        assert_eq!(member_view.authority_public_key, created.authority_public_key);
+        assert_eq!(
+            member_view.authority_public_key,
+            created.authority_public_key
+        );
         let request = |id| RemoteRequest {
             id,
             controller_device_id: source_identity.device_id.clone(),

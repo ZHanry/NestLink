@@ -58,9 +58,13 @@ pub struct DecodedVideo {
 impl DecodedVideo {
     #[cfg(windows)]
     pub fn shared_surface(&self) -> io::Result<Option<&nestlink_media_codec::SharedDecodedFrame>> {
-        let Some(frame) = &self.shared else { return Ok(None); };
+        let Some(frame) = &self.shared else {
+            return Ok(None);
+        };
         let Some(crate::LiveExecutionReceipt::Hevc(execution)) = &self.execution else {
-            return Err(io::Error::other("shared surface lacks original HEVC execution"));
+            return Err(io::Error::other(
+                "shared surface lacks original HEVC execution",
+            ));
         };
         execution.check_shared(frame)?;
         Ok(Some(frame))
@@ -1131,10 +1135,18 @@ impl VideoPresentation {
             .map_err(|_| io::Error::other("media output poisoned"))?;
         #[cfg(windows)]
         {
-            let claim=self.output.shared_claim.lock().map_err(|_| io::Error::other("shared consumer poisoned"))?;
-            let reserved=claim.as_ref().is_some_and(|execution| !execution.retired_joined());
+            let claim = self
+                .output
+                .shared_claim
+                .lock()
+                .map_err(|_| io::Error::other("shared consumer poisoned"))?;
+            let reserved = claim
+                .as_ref()
+                .is_some_and(|execution| !execution.retired_joined());
             if reserved != shared_consumer {
-                return Err(io::Error::other("original shared surface consumer exclusively owns this output"));
+                return Err(io::Error::other(
+                    "original shared surface consumer exclusively owns this output",
+                ));
             }
         }
         if state.closed {

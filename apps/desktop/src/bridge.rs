@@ -103,8 +103,8 @@ pub use nestlink_app_ipc::compressed_video::{
 pub enum CompressedVideoUpdate {
     #[cfg(windows)]
     SharedPreparing {
-        context:nestlink_app_ipc::shared_video::SharedVideoContext,
-        ring:nestlink_app_core::TransferredSurfaceRing,
+        context: nestlink_app_ipc::shared_video::SharedVideoContext,
+        ring: nestlink_app_core::TransferredSurfaceRing,
     },
     #[cfg(windows)]
     SharedFrame(nestlink_app_ipc::shared_video::ImportedSharedFrame),
@@ -1080,7 +1080,12 @@ async fn run_compressed_session(
     feedback: &mut tokio::sync::mpsc::Receiver<CompressedVideoFeedback>,
 ) {
     #[cfg(windows)]
-    if run_shared_session(directory,snapshot,runtime_id,displays,target,interested,stopped,context,shared,feedback).await {
+    if run_shared_session(
+        directory, snapshot, runtime_id, displays, target, interested, stopped, context, shared,
+        feedback,
+    )
+    .await
+    {
         return;
     }
     use nestlink_app_ipc::compressed_video::{
@@ -1220,40 +1225,62 @@ async fn run_compressed_session(
 #[cfg(windows)]
 #[allow(clippy::too_many_arguments)]
 async fn run_shared_session(
-    directory:&Path,
-    snapshot:&Arc<Mutex<Arc<Snapshot>>>,
-    runtime_id:&Arc<Mutex<Option<String>>>,
-    displays:&SharedDisplays,
-    target:&VideoTarget,
-    interested:&tokio::sync::watch::Receiver<bool>,
-    stopped:&mut tokio::sync::watch::Receiver<bool>,
-    context:&egui::Context,
-    shared:&Arc<CompressedBridgeState>,
-    feedback:&mut tokio::sync::mpsc::Receiver<CompressedVideoFeedback>,
-)->bool {
-    use nestlink_app_ipc::shared_video::{SharedVideoClient,SharedVideoMessage};
-    let binding=NativeVideoBinding {runtime_id:target.runtime_id.clone(),ui_generation:target.ui_generation,request_id:target.request_id.clone(),connection_generation:target.connection_generation,source:target.source};
-    let prepare_deadline=tokio::time::Instant::now()+Duration::from_secs(2);
-    let mut client=loop {
-        if *stopped.borrow() || !*shared.enabled.borrow() || video_target(snapshot,runtime_id,*interested.borrow(),displays).as_ref()!=Some(target) {return true;}
-        match SharedVideoClient::open(directory,binding.clone()).await {
-            Ok(Some(client))=>break client,
-            Ok(None) if tokio::time::Instant::now()<prepare_deadline=>tokio::time::sleep(Duration::from_millis(25)).await,
-            _=>return false,
+    directory: &Path,
+    snapshot: &Arc<Mutex<Arc<Snapshot>>>,
+    runtime_id: &Arc<Mutex<Option<String>>>,
+    displays: &SharedDisplays,
+    target: &VideoTarget,
+    interested: &tokio::sync::watch::Receiver<bool>,
+    stopped: &mut tokio::sync::watch::Receiver<bool>,
+    context: &egui::Context,
+    shared: &Arc<CompressedBridgeState>,
+    feedback: &mut tokio::sync::mpsc::Receiver<CompressedVideoFeedback>,
+) -> bool {
+    use nestlink_app_ipc::shared_video::{SharedVideoClient, SharedVideoMessage};
+    let binding = NativeVideoBinding {
+        runtime_id: target.runtime_id.clone(),
+        ui_generation: target.ui_generation,
+        request_id: target.request_id.clone(),
+        connection_generation: target.connection_generation,
+        source: target.source,
+    };
+    let prepare_deadline = tokio::time::Instant::now() + Duration::from_secs(2);
+    let mut client = loop {
+        if *stopped.borrow()
+            || !*shared.enabled.borrow()
+            || video_target(snapshot, runtime_id, *interested.borrow(), displays).as_ref()
+                != Some(target)
+        {
+            return true;
+        }
+        match SharedVideoClient::open(directory, binding.clone()).await {
+            Ok(Some(client)) => break client,
+            Ok(None) if tokio::time::Instant::now() < prepare_deadline => {
+                tokio::time::sleep(Duration::from_millis(25)).await
+            }
+            _ => return false,
         }
     };
-    let original=client.context.clone();
-    let ring=client.ring();
-    let mut prepared=false;
-    let mut seen_authority=false;
-    let mut failed=false;
+    let original = client.context.clone();
+    let ring = client.ring();
+    let mut prepared = false;
+    let mut seen_authority = false;
+    let mut failed = false;
     'session: loop {
         while feedback.try_recv().is_ok() {} // No text message refunds a GPU slot.
-        let receive=client.receive();tokio::pin!(receive);
-        let message=loop {
-            let target_live=video_target(snapshot,runtime_id,*interested.borrow(),displays).as_ref()==Some(target);
-            let expired=seen_authority && nestlink_app_ipc::compressed_video::qpc().map_or(true,|(now,_)|now>=shared.deadline.load(Ordering::Acquire));
-            if *stopped.borrow() || !*shared.enabled.borrow() || !target_live || expired {break 'session;}
+        let receive = client.receive();
+        tokio::pin!(receive);
+        let message = loop {
+            let target_live = video_target(snapshot, runtime_id, *interested.borrow(), displays)
+                .as_ref()
+                == Some(target);
+            let expired = seen_authority
+                && nestlink_app_ipc::compressed_video::qpc().map_or(true, |(now, _)| {
+                    now >= shared.deadline.load(Ordering::Acquire)
+                });
+            if *stopped.borrow() || !*shared.enabled.borrow() || !target_live || expired {
+                break 'session;
+            }
             tokio::select! {biased;
                 changed=stopped.changed()=>{if changed.is_err() || *stopped.borrow(){break 'session;}}
                 result=&mut receive=>break result,
@@ -1261,29 +1288,54 @@ async fn run_shared_session(
             }
         };
         match message {
-            Ok(SharedVideoMessage::Authority {not_after_qpc})=>{
-                shared.deadline.store(not_after_qpc,Ordering::Release);seen_authority=true;
+            Ok(SharedVideoMessage::Authority { not_after_qpc }) => {
+                shared.deadline.store(not_after_qpc, Ordering::Release);
+                seen_authority = true;
                 if !prepared {
-                    if let Ok(mut queue)=shared.updates.lock() {
-                        queue.clear();queue.push_back(CompressedVideoUpdate::SharedPreparing {context:original.clone(),ring:ring.clone()});
-                    } else {failed=true;break;}
-                    prepared=true;
+                    if let Ok(mut queue) = shared.updates.lock() {
+                        queue.clear();
+                        queue.push_back(CompressedVideoUpdate::SharedPreparing {
+                            context: original.clone(),
+                            ring: ring.clone(),
+                        });
+                    } else {
+                        failed = true;
+                        break;
+                    }
+                    prepared = true;
                 }
             }
-            Ok(SharedVideoMessage::Frame(frame))=>{
-                if !prepared || frame.descriptor().context!=original || frame.check_current().is_err() {failed=true;break;}
-                if let Ok(mut queue)=shared.updates.lock() {
-                    if queue.len()>=4 {failed=true;break;}
+            Ok(SharedVideoMessage::Frame(frame)) => {
+                if !prepared
+                    || frame.descriptor().context != original
+                    || frame.check_current().is_err()
+                {
+                    failed = true;
+                    break;
+                }
+                if let Ok(mut queue) = shared.updates.lock() {
+                    if queue.len() >= 4 {
+                        failed = true;
+                        break;
+                    }
                     queue.push_back(CompressedVideoUpdate::SharedFrame(*frame));
-                } else {failed=true;break;}
+                } else {
+                    failed = true;
+                    break;
+                }
             }
-            Err(_)=>{failed=true;break;}
+            Err(_) => {
+                failed = true;
+                break;
+            }
         }
         context.request_repaint();
     }
     drop(client); // Revokes all queued frame leases and this exact native peer.
     shared.stop();
-    if failed {shared.enabled.send_replace(false);}
+    if failed {
+        shared.enabled.send_replace(false);
+    }
     context.request_repaint();
     true
 }

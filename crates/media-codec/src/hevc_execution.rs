@@ -178,8 +178,12 @@ struct State {
 }
 impl State {
     fn is_active(&self) -> bool {
-        self.active.load(Ordering::Acquire) && self.authority.load(Ordering::Acquire)
-            && self.shared_peer.get().is_none_or(|peer| peer.check_current().is_ok())
+        self.active.load(Ordering::Acquire)
+            && self.authority.load(Ordering::Acquire)
+            && self
+                .shared_peer
+                .get()
+                .is_none_or(|peer| peer.check_current().is_ok())
     }
     fn retire(&self) {
         let _guard = self
@@ -198,8 +202,15 @@ impl Drop for ExitFence {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Kind {
     Registration,
-    Encoded { pts: u64, digest: [u8; 32] },
-    Decoded { pts: u64, digest: [u8; 32], surface: Option<[u8; 32]> },
+    Encoded {
+        pts: u64,
+        digest: [u8; 32],
+    },
+    Decoded {
+        pts: u64,
+        digest: [u8; 32],
+        surface: Option<[u8; 32]>,
+    },
 }
 /// Only this actual worker seals an output after hardware identity and complete
 /// AU admission. Copies share the original generation's revocation/join fence.
@@ -282,27 +293,54 @@ impl HevcExecutionReceipt {
         frame.check_current()?;
         let ring = frame.ring();
         let config = self.target().contract().config();
-        if self.identity()?.direction != ExecutionDirection::Decode || ring.adapter_luid != self.target().adapter_luid()
+        if self.identity()?.direction != ExecutionDirection::Decode
+            || ring.adapter_luid != self.target().adapter_luid()
             || (ring.width, ring.height) != (config.width, config.height)
             || !matches!(self.kind, Kind::Decoded {pts, surface: Some(expected), ..} if pts == frame.descriptor().pts_90khz && expected == frame.fingerprint())
-        { return Err(io::Error::other("shared surface differs from original sealed decoded output")); }
+        {
+            return Err(io::Error::other(
+                "shared surface differs from original sealed decoded output",
+            ));
+        }
         Ok(())
     }
-    pub fn enable_shared_output(&self, peer: nestlink_platform_security::local_stream::VerifiedProcessExportTarget) -> io::Result<HevcExecutionTicket> {
+    pub fn enable_shared_output(
+        &self,
+        peer: nestlink_platform_security::local_stream::VerifiedProcessExportTarget,
+    ) -> io::Result<HevcExecutionTicket> {
         self.check_current()?;
-        if self.identity()?.direction != ExecutionDirection::Decode { return Err(io::Error::other("shared output requires original decoder")); }
+        if self.identity()?.direction != ExecutionDirection::Decode {
+            return Err(io::Error::other("shared output requires original decoder"));
+        }
         self.submit_operation(Operation::ShareOutput(peer))
     }
     fn submit_operation(&self, operation: Operation) -> io::Result<HevcExecutionTicket> {
         self.check_current()?;
         let (reply, receive) = mpsc::sync_channel(1);
         let deadline = Instant::now() + COMMAND_BUDGET;
-        self.state.commands.get().ok_or_else(|| io::Error::other("HEVC original command owner absent"))?
-            .try_send(Command {deadline, operation, reply}).map_err(|error| match error {
-                mpsc::TrySendError::Full(_) => io::Error::new(io::ErrorKind::WouldBlock, "HEVC execution queue full"),
-                mpsc::TrySendError::Disconnected(_) => io::Error::other("HEVC execution worker disconnected"),
+        self.state
+            .commands
+            .get()
+            .ok_or_else(|| io::Error::other("HEVC original command owner absent"))?
+            .try_send(Command {
+                deadline,
+                operation,
+                reply,
+            })
+            .map_err(|error| match error {
+                mpsc::TrySendError::Full(_) => {
+                    io::Error::new(io::ErrorKind::WouldBlock, "HEVC execution queue full")
+                }
+                mpsc::TrySendError::Disconnected(_) => {
+                    io::Error::other("HEVC execution worker disconnected")
+                }
             })?;
-        Ok(HevcExecutionTicket {reply: receive, deadline, state: self.state.clone(), completed: false})
+        Ok(HevcExecutionTicket {
+            reply: receive,
+            deadline,
+            state: self.state.clone(),
+            completed: false,
+        })
     }
 }
 #[derive(Default)]
@@ -662,7 +700,10 @@ fn decoded(
                 kind: Kind::Decoded {
                     pts: picture.pts_90khz,
                     digest: Sha256::digest(picture.bgra.as_slice()).into(),
-                    surface: picture.shared.as_ref().map(crate::SharedDecodedFrame::fingerprint),
+                    surface: picture
+                        .shared
+                        .as_ref()
+                        .map(crate::SharedDecodedFrame::fingerprint),
                 },
             };
             Ok((picture, receipt))
@@ -791,7 +832,10 @@ where
                 }
                 (Engine::Decode(owner), Operation::ShareOutput(peer)) => {
                     let descriptor = owner.enable_shared_output(peer.clone())?;
-                    state.shared_peer.set(peer).map_err(|_| io::Error::other("original shared peer already registered"))?;
+                    state
+                        .shared_peer
+                        .set(peer)
+                        .map_err(|_| io::Error::other("original shared peer already registered"))?;
                     HevcExecutionOutput::SharedOutput(descriptor)
                 }
                 _ => {

@@ -192,7 +192,10 @@ impl CompressedContext {
             connection_generation: self.binding.connection_generation,
         }
     }
-    pub(crate) fn from_domain(binding: &NativeVideoBinding, c: VideoSinkContext) -> Result<Self, Error> {
+    pub(crate) fn from_domain(
+        binding: &NativeVideoBinding,
+        c: VideoSinkContext,
+    ) -> Result<Self, Error> {
         let context = Self {
             ipc_version: if c
                 .format

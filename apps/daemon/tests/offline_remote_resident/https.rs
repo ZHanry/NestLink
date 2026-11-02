@@ -46,10 +46,30 @@ impl Scope {
             | (&Method::POST, ["api", "v3", "remote", "trusted"]) => setup,
             (&Method::POST, ["api", "v3", "network", "spaces"]) => setup && own_space.is_none(),
             (&Method::GET, ["api", "v3", "network", "spaces", space]) => Some(*space) == own_space,
-            (&Method::POST, ["api", "v3", "network", "spaces", space, "devices" | "invitations"])
-            | (&Method::POST, ["api", "v3", "network", "spaces", space, "invitations", _, "accept"]) => {
-                setup && Some(*space) == own_space
-            }
+            (
+                &Method::POST,
+                [
+                    "api",
+                    "v3",
+                    "network",
+                    "spaces",
+                    space,
+                    "devices" | "invitations",
+                ],
+            )
+            | (
+                &Method::POST,
+                [
+                    "api",
+                    "v3",
+                    "network",
+                    "spaces",
+                    space,
+                    "invitations",
+                    _,
+                    "accept",
+                ],
+            ) => setup && Some(*space) == own_space,
             (&Method::POST, ["api", "v3", "remote", session, "approval" | "trust"]) => {
                 setup && self.sessions.iter().any(|id| id.as_str() == *session)
             }
