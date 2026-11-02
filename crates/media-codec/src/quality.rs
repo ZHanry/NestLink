@@ -108,13 +108,29 @@ mod tests {
     fn actual_decoder_pressure_reduces_cadence_without_inventing_network_congestion() {
         let start = Instant::now();
         let mut quality = VideoQuality::new(60, 8000, start);
-        assert_eq!(quality.observe_with_receiver(start,Duration::from_millis(2),Duration::ZERO,ReceiverCondition::DecoderLimited),None);
-        assert_eq!((quality.fps(),quality.bitrate_kbps()),(45,8000));
+        assert_eq!(
+            quality.observe_with_receiver(
+                start,
+                Duration::from_millis(2),
+                Duration::ZERO,
+                ReceiverCondition::DecoderLimited
+            ),
+            None
+        );
+        assert_eq!((quality.fps(), quality.bitrate_kbps()), (45, 8000));
         for step in 1..=2 {
-            quality.observe_with_receiver(start+Duration::from_millis(step*500),Duration::from_millis(2),Duration::ZERO,ReceiverCondition::Congested);
+            quality.observe_with_receiver(
+                start + Duration::from_millis(step * 500),
+                Duration::from_millis(2),
+                Duration::ZERO,
+                ReceiverCondition::Congested,
+            );
         }
-        assert_eq!(quality.fps(),45);
-        assert!(quality.bitrate_kbps()<=5000,"real transport pressure still lowers bitrate within original2s");
+        assert_eq!(quality.fps(), 45);
+        assert!(
+            quality.bitrate_kbps() <= 5000,
+            "real transport pressure still lowers bitrate within original2s"
+        );
     }
     #[test]
     fn remote_congestion_reduces_without_local_pressure_and_missing_feedback_never_upgrades() {
