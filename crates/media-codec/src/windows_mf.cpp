@@ -641,24 +641,24 @@ static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint3
     LUID source_adapter{};
     const bool binding_required = supplied_device && state->encoder;
     if (supplied_device) {
-        ComPtr<IDXGIDevice> dxgi; ComPtr<IDXGIAdapter> adapter; DXGI_ADAPTER_DESC desc{};
+        ComPtr<IDXGIDevice> dxgi; ComPtr<IDXGIAdapter> adapter; DXGI_ADAPTER_DESC source_desc{};
         hr = supplied_device->QueryInterface(IID_PPV_ARGS(&dxgi));
         if (hr == S_OK) hr = dxgi->GetAdapter(&adapter);
-        if (hr == S_OK) hr = adapter->GetDesc(&desc);
+        if (hr == S_OK) hr = adapter->GetDesc(&source_desc);
         std::fprintf(stderr, "mf source device: codec=%s direction=%s owner_thread=%lu adapter_hr=0x%08lx\n",
             hevc ? "hevc" : "h264", state->encoder ? "encode" : "decode",
             static_cast<unsigned long>(state->thread), static_cast<unsigned long>(hr));
         std::fflush(stderr);
         if (hr != S_OK) return FAILED(hr) ? hr : E_UNEXPECTED;
-        source_adapter = desc.AdapterLuid;
+        source_adapter = source_desc.AdapterLuid;
         LARGE_INTEGER driver{};
         const HRESULT driver_hr = adapter->CheckInterfaceSupport(__uuidof(IDXGIDevice), &driver);
         std::fprintf(stderr,
             "mf source identity: codec=%s direction=%s owner_thread=%lu adapter=0x%016llx vendor=0x%04x device=0x%04x description=\"%.127ls\" "
             "driver_hr=0x%08lx driver=0x%016llx binding_required=%u\n",
             hevc ? "hevc" : "h264", state->encoder ? "encode" : "decode", static_cast<unsigned long>(state->thread),
-            static_cast<unsigned long long>(adapter_luid_bits(source_adapter)), desc.VendorId, desc.DeviceId,
-            desc.Description, static_cast<unsigned long>(driver_hr),
+            static_cast<unsigned long long>(adapter_luid_bits(source_adapter)), source_desc.VendorId, source_desc.DeviceId,
+            source_desc.Description, static_cast<unsigned long>(driver_hr),
             static_cast<unsigned long long>(driver_hr == S_OK ? driver.QuadPart : 0), binding_required ? 1u : 0u);
         std::fflush(stderr);
         state->gpu_input = state->encoder; state->device = supplied_device;
