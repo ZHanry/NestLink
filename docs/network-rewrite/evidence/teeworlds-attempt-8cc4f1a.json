@@ -15,7 +15,7 @@
     "downloaded_zip_sha256": "c6db9586b9b7bd55d6e97b8c9a30300706667b4b2b2bb48393eb025a931cff89",
     "outer_receipt_sha256": "81c9bf799cc76ece1d23cc8c539f4ef122eba444ab32bd585ae92a0a5b1b3a8e",
     "execution_receipt_sha256": "1844147bc226ce1c176a73491f72a77ce15f9b6917f6eb89833975bfa350960f",
-    "client_pcap_sha256": "ef83044287bab96bccf0ff007f30df61ba83ab8714bcdeffd0edc6acf881c907f",
+    "client_pcap_sha256": "ef83044287bab96bccf0ff007f30df61ba83ab8714bcdefd0edc6acf881c907f",
     "server_pcap_sha256": "68c8cdbdfb897b481344b67a442f542ae766af106da48e4b6a366567a39d53de",
     "playing_screenshot_sha256": "cc6e0e29d94b2169e924b75fc57b6622a44420dec134e986c662a39cd6447d26",
     "revoked_screenshot_sha256": "211e6a4b654e645ff435e7793375654b0b072fd34dae13e6ef4d98db21ff4166"
