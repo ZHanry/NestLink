@@ -69,7 +69,10 @@ fn reject_wrong_target_source_features_and_untracked_files() -> io::Result<()> {
         ("/crt", json!("static")),
         ("/features/vp9", json!(true)),
         ("/sources/0/commit", json!("another-commit")),
-        ("/bundled_components/0/commit", json!("another-bundled-commit")),
+        (
+            "/bundled_components/0/commit",
+            json!("another-bundled-commit"),
+        ),
         ("/files/0/path", json!("../outside.a")),
     ] {
         let mut changed = receipt.clone();
