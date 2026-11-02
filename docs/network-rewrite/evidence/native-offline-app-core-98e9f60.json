@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "scope": "Independent finite offline AppCore owner: actual QUIC/TLS native pixels, approved OS file read and cleanup after unchanged online permit expiry",
+  "source_revision": "98e9f608a11f187d9616f49d2388ac6009d9dbcf",
+  "workflow": ".github/workflows/rust-core.yml",
+  "run_id": 41402345286,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41402345286",
+  "build_provenance": "The exact-source GitHub-hosted core jobs compiled native_offline integration tests and strict clippy.",
+  "execution_provenance": "The same GitHub-hosted jobs actually executed both integration cases. The Windows command used refactor-windows-normal-user.py with the ordinary process token.",
+  "tests": [
+    "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+    "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry"
+  ],
+  "targets": [
+    {
+      "target": "x86_64-unknown-linux-gnu",
+      "runner": "ubuntu-24.04",
+      "job_id": 125136704759,
+      "offline_step_number": 26,
+      "offline_step_conclusion": "success",
+      "tests_passed": 2,
+      "tests_failed": 0,
+      "tests_ignored": 0,
+      "test_elapsed_seconds": 34.14,
+      "strict_clippy_conclusion": "success",
+      "artifact_id": 13122294873,
+      "artifact_name": "nestlink-sdk-routed-tests-x86_64-unknown-linux-gnu",
+      "artifact_digest_reported_by_github": "sha256:bcb85297f5fad4d7ec44499c6aa9aea94db1d95e3431a748a5246fb29c0bd0f3",
+      "downloaded_log": "nestlink-native-offline-tests.log",
+      "downloaded_log_bytes": 46762,
+      "downloaded_log_sha256": "6554a63888f8f888178c539633f2bc523065a4beed77f53333d8fec0e267c3af"
+    },
+    {
+      "target": "x86_64-pc-windows-msvc",
+      "runner": "windows-2022",
+      "job_id": 125136704652,
+      "offline_step_number": 26,
+      "offline_step_conclusion": "success",
+      "tests_passed": 2,
+      "tests_failed": 0,
+      "tests_ignored": 0,
+      "test_elapsed_seconds": 33.98,
+      "strict_clippy_conclusion": "success",
+      "artifact_id": 13123285712,
+      "artifact_name": "nestlink-sdk-routed-tests-x86_64-pc-windows-msvc",
+      "artifact_digest_reported_by_github": "sha256:3812083ee5ba65cb65090fac065748fa94a43f3b89514bfb6c8efb9680912c16",
+      "downloaded_log": "nestlink-native-offline-tests.log",
+      "downloaded_log_bytes": 46504,
+      "downloaded_log_sha256": "56d4abbdc081580be9329f97f292fdcd70fb26463b758d6b0468d0af29e911d3"
+    }
+  ],
+  "actual_assertions_at_this_source": [
+    "Real two-account enrollment, trusted remote approval, complete offline bundle review/approval and online consumption by both original process nonces",
+    "Management TCP listener stopped and physically rebound before waiting beyond the original online permit deadline",
+    "Original independent authority over separately selected direct QUIC and TLS with the existing business ChannelRuntime",
+    "Product Snapshot remains Authentication::Disconnected with no server or principal",
+    "Actual display negotiation, VP8 encode/decode and green pixel delivery through the existing native View data route",
+    "Actual handle-relative 262144-byte source OS file read into a private no-clobber LocalDownloadSelection, with exact disk-byte verification",
+    "Narrower offline View/FileRead scope denies Input and FileWrite despite broader original online metadata permissions",
+    "Original cumulative byte budget decreases after delivery",
+    "Exact local StopNativeSession completion and original process stop fence stale data delivery",
+    "Original capture reset and physical host UDP/TCP listener rebinding after successful resource cleanup"
+  ],
+  "verification": "Downloaded artifact log sizes and SHA-256 hashes were retained. These artifacts provide no producer per-file hash inventory, so the log hashes are download fingerprints and are not a claimed producer inventory comparison.",
+  "limitations": [
+    "Scoped positive evidence only. Linux core job failed elsewhere, including the strict routed chain paired-stop fixture race and formatting. The full run is not accepted by this record.",
+    "Later source adds a real failed carrier attempt followed by original-owner retry; that assertion is absent at this source and requires its own Actions evidence.",
+    "The resident CLI and desktop offline workspace were implemented after this source and are not validated by these two cases.",
+    "No physical dual-device screen, input, audio, clipboard, GPU, public NAT, mobile, release or installation qualification is claimed."
+  ]
+}
