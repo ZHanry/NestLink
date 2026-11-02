@@ -1058,14 +1058,26 @@
       "scripts/refactor-native-codecs.py",
       "docs/refactor/native-codecs.lock.json"
     ],
-    "first_party": "Independent Apache-2.0 Rust ownership/conversion/stream code and small C bridges using official libvpx and Opus APIs. No legacy remote-desktop codec integration copied or translated.",
+    "first_party": "Independent Apache-2.0 Rust ownership/encoder-conversion/stream code and small C bridges using official libvpx, bundled libyuv and Opus APIs. Decoder color conversion reuses the attributed upstream implementation; no clean-room claim is made for that supplier. No legacy remote-desktop codec integration copied or translated.",
     "lock": "docs/refactor/native-codecs.lock.json",
     "sources": [
       {
         "name": "libvpx",
         "version": "1.16.0",
         "license": "BSD-3-Clause; ISC x86inc assembly helper; upstream PATENTS grant",
-        "enabled": "VP8 encoder and decoder, static, realtime-only; VP9/libyuv/libwebm/tools/tests off"
+        "enabled": "VP8 encoder and decoder, static, realtime-only; VP9/libwebm/tools/tests off. libvpx's example-only libyuv toggle remains off; the same archive's fixed bundled libyuv conversion closure is built as a separate static yuv target."
+      },
+      {
+        "name": "libyuv",
+        "version": "1711",
+        "commit": "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1",
+        "license": "BSD-3-Clause",
+        "source": "third_party/libyuv in the unchanged pinned libvpx 1024874c5919305883187e2953de8fcb4c3d7fa6 archive; parent archive SHA256 274c00c0b21f03a9152e324b1989f73b74268aa8545b39ef5faccc50fdb56393",
+        "enabled": "Static Release I420ToARGB conversion with original positive libvpx plane strides; BT.601 limited to BGRA bytes/opaque alpha. Fixed 17-file upstream source closure in the native lock; no new download archive, worker or global ISA flag.",
+        "embedded_modifications": "Original README.libvpx identifies disabled ARGBToRGB24Row_AVX512VBMI and rearranged directories/removed umbrella and compare_row headers. NestLink does not modify the extracted supplier source.",
+        "build_gap": "Embedded snapshot has no CMakeLists.txt. Supplier generates one fixed static yuv target in its fresh work/project directory, using existing CMake/Ninja and verified native C++ compiler; original source digest remains checked before and after.",
+        "verification": "Implementation and manual source review only; new exact-source hosted builds, original color/odd/PSNR tests, boundary sanitizer and original resident matrix are required. This record does not assert performance acceptance.",
+        "decision": "docs/adr/network/0073-reuse-bundled-libyuv-vp8-conversion.md"
       },
       {
         "name": "Opus",
@@ -1077,6 +1089,25 @@
     "version_selection": "Opus 1.6.1 includes upstream packet-extension overflow/OOB-read and malformed-bitstream fixes after 1.5.2; this records version selection and does not assert a NestLink exploit or assigned CVE.",
     "review": "Read complete top-level licenses, patent/contributor notices, x86inc license and distinct per-file license conditions. Original notices retained; extra Opus notice collection covers optional source files as well and does not enable them.",
     "notices": [
+      {
+        "package": "libyuv",
+        "version": "1711",
+        "commit": "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1",
+        "parent_archive_commit": "1024874c5919305883187e2953de8fcb4c3d7fa6",
+        "upstream_file": "third_party/libyuv/LICENSE",
+        "path": "packaging/notices/libyuv-1711-LICENSE.txt",
+        "sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f",
+        "transform": "none"
+      },
+      {
+        "package": "libyuv",
+        "version": "1711",
+        "parent_archive_commit": "1024874c5919305883187e2953de8fcb4c3d7fa6",
+        "upstream_file": "third_party/libyuv/README.libvpx",
+        "path": "packaging/notices/libyuv-1711-README.libvpx.txt",
+        "sha256": "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814",
+        "transform": "none"
+      },
       {
         "package": "libvpx",
         "version": "1.16.0",

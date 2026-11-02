@@ -151,14 +151,14 @@ class NativeSupplyTests(unittest.TestCase):
             file = prefix / relative
             file.parent.mkdir(parents=True, exist_ok=True)
             file.write_bytes(static_archive(machine or 62))
-        for relative in ("include/vpx/vpx_encoder.h", "include/vpx/vpx_decoder.h", "include/opus/opus.h", "include/opus/opus_defines.h"):
+        for relative in ("include/vpx/vpx_encoder.h", "include/vpx/vpx_decoder.h", "include/opus/opus.h", "include/opus/opus_defines.h", "include/libyuv/convert_argb.h", "include/libyuv/version.h", "share/licenses/libvpx/third_party/libyuv/LICENSE", "share/licenses/libvpx/third_party/libyuv/README.libvpx"):
             file = prefix / relative
             file.parent.mkdir(parents=True, exist_ok=True)
             file.write_bytes(b"fixture-header")
         receipt = {"schema_version": 1, "kind": "nestlink-native-codecs", "target": target,
                    "profile": "release", "linkage": "static", "crt": target_spec["crt"],
                    "lock_sha256": SUPPLY.file_sha256(SUPPLY.DEFAULT_LOCK), "features": lock["features"],
-                   "libraries": libraries, "sources": [],
+                   "libraries": libraries, "sources": [], "bundled_components": lock["bundled_components"],
                    "validation": {"archive_architectures": {
                        name: SUPPLY.inspect_elf_archive(prefix / relative, machine)
                        for name, relative in libraries.items()
@@ -175,7 +175,7 @@ class NativeSupplyTests(unittest.TestCase):
             prefix = Path(scratch)
             receipt = self.prefix(prefix)
             SUPPLY.verify_receipt(prefix, TARGET, SUPPLY.DEFAULT_LOCK)
-            for field, value in [("target", "x86_64-pc-windows-msvc"), ("crt", "static"), ("lock_sha256", "0" * 64)]:
+            for field, value in [("target", "x86_64-pc-windows-msvc"), ("crt", "static"), ("lock_sha256", "0" * 64), ("bundled_components", [])]:
                 changed = {**receipt, field: value}
                 SUPPLY.write_json(prefix / SUPPLY.RECEIPT, changed)
                 with self.subTest(field=field), self.assertRaises(SUPPLY.SupplyError):

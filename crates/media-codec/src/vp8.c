@@ -3,6 +3,7 @@
 #include <vpx/vp8dx.h>
 #include <vpx/vpx_decoder.h>
 #include <vpx/vpx_encoder.h>
+#include <libyuv/convert_argb.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -144,11 +145,26 @@ void nl_vp8_decoder_destroy(void *handle) {
     vpx_codec_destroy(&decoder->codec);
     free(decoder);
 }
+/* Positive plane strides and geometry are checked before the mature converter
+ * sees them. Callers own each complete plane span for this synchronous call.
+ * libyuv's I420ToARGB is BT.601 limited and writes B,G,R,255 byte order. */
+int nl_vp8_i420_to_bgra(uint32_t width, uint32_t height,
+                        const uint8_t *y, int y_stride,
+                        const uint8_t *u, int u_stride,
+                        const uint8_t *v, int v_stride,
+                        uint8_t *bgra, size_t output_length) {
+    if (!nl_geometry(width, height) || !y || !u || !v || !bgra
+        || y_stride < (int)width || u_stride < (int)((width + 1) / 2)
+        || v_stride < (int)((width + 1) / 2)
+        || output_length != (size_t)width * height * 4) return NL_INVALID;
+    return I420ToARGB(y, y_stride, u, u_stride, v, v_stride,
+                      bgra, (int)(width * 4), (int)width, (int)height) ? NL_OUTPUT : NL_OK;
+}
 int nl_vp8_decode(void *handle, const uint8_t *packet, size_t length,
-                  uint8_t *i420, size_t output_length) {
+                  uint8_t *bgra, size_t output_length) {
     struct nl_vp8_decoder *decoder = handle;
-    if (!decoder || !packet || length < 3 || length > NL_PACKET_LIMIT || !i420
-        || output_length != nl_i420_size(decoder->width, decoder->height)
+    if (!decoder || !packet || length < 3 || length > NL_PACKET_LIMIT || !bgra
+        || output_length != (size_t)decoder->width * decoder->height * 4
         || !(packet[0] & 0x10)) return NL_INVALID;
     int keyframe = !(packet[0] & 1);
     size_t header = keyframe ? 10 : 3;
@@ -174,16 +190,16 @@ int nl_vp8_decode(void *handle, const uint8_t *packet, size_t length,
     vpx_image_t *image = vpx_codec_get_frame(&decoder->codec, &iterator);
     if (!image || image->fmt != VPX_IMG_FMT_I420 || image->bit_depth != 8
         || image->d_w != decoder->width || image->d_h != decoder->height) return NL_OUTPUT;
-    size_t offset = 0;
     for (unsigned int plane = 0; plane < 3; ++plane) {
         uint32_t width = plane ? (decoder->width + 1) / 2 : decoder->width;
-        uint32_t height = plane ? (decoder->height + 1) / 2 : decoder->height;
         if (!image->planes[plane] || image->stride[plane] < (int)width) return NL_OUTPUT;
-        for (uint32_t row = 0; row < height; ++row) {
-            memcpy(i420 + offset, image->planes[plane] + (size_t)row * image->stride[plane], width);
-            offset += width;
-        }
     }
+    /* Convert while libvpx still owns these exact planes. No plane pointer
+     * escapes, no packed I420 staging allocation and no second frame copy. */
+    int converted = nl_vp8_i420_to_bgra(decoder->width, decoder->height,
+        image->planes[0], image->stride[0], image->planes[1], image->stride[1],
+        image->planes[2], image->stride[2], bgra, output_length);
+    if (converted) return NL_OUTPUT;
     if (vpx_codec_get_frame(&decoder->codec, &iterator)) return NL_OUTPUT;
     decoder->have_keyframe = 1;
     return NL_OK;

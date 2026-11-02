@@ -15,6 +15,23 @@
   "research_runtime_exclusion": "EasyTier is idea_reference only; no executable, library, FFI, forked core or adapted code is selected.",
   "components": [
     {
+      "id": "C30",
+      "purpose": "Mature I420 to BGRA conversion directly from the existing VP8 decoder planes",
+      "existing_implementation": ["Existing pinned libvpx 1.16.0 archive already contains libyuv 1711", "Original Rust VP8 scalar conversion and wiping frame owners", "Existing packed-BGRA scaler does not implement I420 conversion"],
+      "candidates": ["Pinned same-archive libyuv I420ToARGB (selected)", "Existing Windows NV12 BT.709 conversion (different color contract and platform scope)", "New scalar/SIMD conversion implementation (unnecessary mature-code duplication)"],
+      "official_sources": ["https://github.com/webmproject/libvpx/tree/1024874c5919305883187e2953de8fcb4c3d7fa6/third_party/libyuv", "https://chromium.googlesource.com/libyuv/libyuv/+/a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1"],
+      "maintenance_status": {"reviewed_at": "2026-11-02", "evidence": "Original bundled README/version header, conversion/row/CPU/planar and parent build lists read. Snapshot is the existing parent archive's older libyuv revision; this is not a latest-version or security certification claim. Exact-source hosted qualification is pending."},
+      "platforms": ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"],
+      "version": {"libyuv": "1711", "upstream_commit": "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1", "parent_libvpx_commit": "1024874c5919305883187e2953de8fcb4c3d7fa6", "parent_archive_sha256": "274c00c0b21f03a9152e324b1989f73b74268aa8545b39ef5faccc50fdb56393"},
+      "license": "BSD-3-Clause; exact LICENSE and original README.libvpx with embedded modifications retained in prefix and packaging/notices",
+      "selection_reason": "Reuse the already pinned mature converter and SIMD dispatch; remove packed-I420 staging and unoptimized Rust per-pixel decode conversion without a new source archive.",
+      "adapter_boundary": "Positive original libvpx planes/strides convert synchronously into exact bounded BGRA output. Existing packet/keyframe/corruption/image/single-frame checks, zeroizing output owner, PTS, validated-ingress anchor, late threshold, deadlines, leases and original assertions remain. No borrowed plane escapes. Embedded snapshot lacks CMakeLists; one fixed 17-file static target is generated only in fresh work/project, using existing tools and unchanged upstream source.",
+      "security_and_operations_cost": ["Additional statically linked bundled native component is explicit in lock, receipt and both SPDX producers", "Original BSD/source-modification notices retained", "Exact native compiler/profile/CRT/source-unit and archive byte checks", "Integer approximation is BT.601 limited but not bit-exact with retired scalar formula", "New hosted native/color/boundary/resident qualification required"],
+      "work_packages": ["W27"],
+      "validation_status": "implemented_pending_exact_source_hosted_native_and_original_resident_qualification",
+      "decision_ref": "docs/adr/network/0073-reuse-bundled-libyuv-vp8-conversion.md"
+    },
+    {
       "id": "C29",
       "purpose": "Actual logind X11 login for the original hosted offline resident capture fixture",
       "existing_implementation": ["Original runner libpam.so.0/login stack, systemd/logind, Xvfb, distribution xauth, Secret Service and native capture validation", "Existing scripts/refactor-x11-input.py authenticated Xvfb fixture boundary"],

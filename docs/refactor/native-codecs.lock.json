@@ -16,7 +16,9 @@
       "license_files": [
         "LICENSE",
         "PATENTS",
-        "third_party/x86inc/LICENSE"
+        "third_party/x86inc/LICENSE",
+        "third_party/libyuv/LICENSE",
+        "third_party/libyuv/README.libvpx"
       ]
     },
     {
@@ -36,6 +38,36 @@
       ]
     }
   ],
+  "bundled_components": [
+    {
+      "name": "libyuv",
+      "version": "1711",
+      "commit": "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1",
+      "repository": "https://chromium.googlesource.com/libyuv/libyuv",
+      "parent_source": "libvpx",
+      "path": "third_party/libyuv",
+      "license": "BSD-3-Clause",
+      "source_files": [
+        "convert_argb.cc",
+        "cpu_id.cc",
+        "planar_functions.cc",
+        "row_any.cc",
+        "row_common.cc",
+        "row_gcc.cc",
+        "row_win.cc",
+        "row_neon.cc",
+        "row_neon64.cc",
+        "row_msa.cc",
+        "scale_any.cc",
+        "scale_common.cc",
+        "scale_gcc.cc",
+        "scale_win.cc",
+        "scale_neon.cc",
+        "scale_neon64.cc",
+        "scale_msa.cc"
+      ]
+    }
+  ],
   "targets": {
     "x86_64-pc-windows-msvc": {
       "os": "windows",
@@ -44,7 +76,8 @@
       "vpx_target": "x86_64-win64-vs17",
       "libraries": {
         "vpx": "lib/vpx.lib",
-        "opus": "lib/opus.lib"
+        "opus": "lib/opus.lib",
+        "yuv": "lib/yuv.lib"
       }
     },
     "x86_64-unknown-linux-gnu": {
@@ -54,7 +87,8 @@
       "vpx_target": "x86_64-linux-gcc",
       "libraries": {
         "vpx": "lib/libvpx.a",
-        "opus": "lib/libopus.a"
+        "opus": "lib/libopus.a",
+        "yuv": "lib/libyuv.a"
       }
     },
     "aarch64-unknown-linux-gnu": {
@@ -64,7 +98,8 @@
       "vpx_target": "arm64-linux-gcc",
       "libraries": {
         "vpx": "lib/libvpx.a",
-        "opus": "lib/libopus.a"
+        "opus": "lib/libopus.a",
+        "yuv": "lib/libyuv.a"
       }
     }
   },
@@ -75,6 +110,7 @@
     "vp8_encoder": true,
     "vp8_decoder": true,
     "vp9": false,
+    "libyuv_i420_to_bgra": true,
     "opus_float": true,
     "opus_fixed_point": false,
     "opus_dred": false,

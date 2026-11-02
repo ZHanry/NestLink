@@ -11,5 +11,6 @@ trap 'rm -f -- "$binary"' EXIT
   -I"$NESTLINK_CODEC_PREFIX/include" \
   "$repo_root/crates/media-codec/src/vp8.c" \
   "$repo_root/crates/media-codec/tests/vp8-boundary-sanitizer.c" \
-  "$NESTLINK_CODEC_PREFIX/lib/libvpx.a" -lm -lpthread -o "$binary"
+  "$NESTLINK_CODEC_PREFIX/lib/libvpx.a" "$NESTLINK_CODEC_PREFIX/lib/libyuv.a" \
+  -lstdc++ -lm -lpthread -o "$binary"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$binary"

@@ -49,6 +49,19 @@ unsafe extern "C" {
         output: *mut u8,
         output_length: usize,
     ) -> i32;
+    #[cfg(test)]
+    fn nl_vp8_i420_to_bgra(
+        width: u32,
+        height: u32,
+        y: *const u8,
+        y_stride: i32,
+        u: *const u8,
+        u_stride: i32,
+        v: *const u8,
+        v_stride: i32,
+        output: *mut u8,
+        output_length: usize,
+    ) -> i32;
 }
 fn invalid(message: &'static str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
@@ -253,6 +266,8 @@ pub struct Vp8Decoder {
     width: u32,
     height: u32,
     failed: bool,
+    #[cfg(debug_assertions)]
+    diagnostic_frames: u8,
 }
 // SAFETY: the context moves as a single owner and is only used through &mut self.
 unsafe impl Send for Vp8Decoder {}
@@ -272,6 +287,8 @@ impl Vp8Decoder {
             width,
             height,
             failed: false,
+            #[cfg(debug_assertions)]
+            diagnostic_frames: 0,
         })
     }
     pub fn decode(&mut self, packet: &[u8]) -> io::Result<Vec<u8>> {
@@ -286,24 +303,49 @@ impl Vp8Decoder {
                 "VP8 packet exceeds encoded frame budget",
             ));
         }
-        let (_, length) = geometry(self.width, self.height)?;
-        let mut i420 = Zeroizing::new(bytes(length)?);
-        // SAFETY: C borrows this immutable packet and the exact writable I420
-        // span for this call. It validates keyframe dimensions before decoding.
+        #[cfg(debug_assertions)]
+        let started = (self.diagnostic_frames < 3).then(std::time::Instant::now);
+        let (length, _) = geometry(self.width, self.height)?;
+        #[cfg(debug_assertions)]
+        let checked_at = started.map(|_| std::time::Instant::now());
+        let mut bgra = Zeroizing::new(bytes(length)?);
+        #[cfg(debug_assertions)]
+        let allocated_at = started.map(|_| std::time::Instant::now());
+        // SAFETY: C borrows this immutable packet and the exact writable BGRA
+        // span for this call. It validates keyframe dimensions before decoding
+        // and synchronously converts the still-owned original libvpx planes.
         let code = unsafe {
             nl_vp8_decode(
                 self.handle.as_ptr(),
                 packet.as_ptr(),
                 packet.len(),
-                i420.as_mut_ptr(),
-                i420.len(),
+                bgra.as_mut_ptr(),
+                bgra.len(),
             )
         };
+        #[cfg(debug_assertions)]
+        if let (Some(started), Some(checked_at), Some(allocated_at)) =
+            (started, checked_at, allocated_at)
+        {
+            let finished = std::time::Instant::now();
+            self.diagnostic_frames += 1;
+            eprintln!(
+                "vp8_decode_stage frame={} first={} geometry_us={} allocation_us={} ffi_us={} total_us={} status={code}",
+                self.diagnostic_frames,
+                self.diagnostic_frames == 1,
+                checked_at.duration_since(started).as_micros(),
+                allocated_at.duration_since(checked_at).as_micros(),
+                finished.duration_since(allocated_at).as_micros(),
+                finished.duration_since(started).as_micros(),
+            );
+        }
         if code != 0 {
             self.failed = true;
             return Err(bridge_error("decoding", code));
         }
-        i420_to_bgra(self.width, self.height, &i420)
+        // Failed calls keep the Zeroizing owner. Successful output moves to
+        // the existing DecodedVideo owner, whose Drop wipes the frame.
+        Ok(std::mem::take(&mut *bgra))
     }
 }
 impl Drop for Vp8Decoder {
@@ -354,6 +396,7 @@ fn bgra_to_i420(width: u32, height: u32, bgra: &[u8]) -> io::Result<Vec<u8>> {
     }
     Ok(output)
 }
+#[cfg(test)]
 fn i420_to_bgra(width: u32, height: u32, i420: &[u8]) -> io::Result<Vec<u8>> {
     let (raw, packed) = geometry(width, height)?;
     if i420.len() != packed {
@@ -362,23 +405,27 @@ fn i420_to_bgra(width: u32, height: u32, i420: &[u8]) -> io::Result<Vec<u8>> {
     let (w, h) = (width as usize, height as usize);
     let cw = w.div_ceil(2);
     let chroma = cw * h.div_ceil(2);
-    let mut output = bytes(raw)?;
-    for y in 0..h {
-        for x in 0..w {
-            let index = (y / 2) * cw + x / 2;
-            let c = (i32::from(i420[y * w + x]) - 16).max(0);
-            let d = i32::from(i420[w * h + index]) - 128;
-            let e = i32::from(i420[w * h + chroma + index]) - 128;
-            let pixel = [
-                ((298 * c + 516 * d + 128) >> 8).clamp(0, 255) as u8,
-                ((298 * c - 100 * d - 208 * e + 128) >> 8).clamp(0, 255) as u8,
-                ((298 * c + 409 * e + 128) >> 8).clamp(0, 255) as u8,
-                255,
-            ];
-            output[(y * w + x) * 4..(y * w + x + 1) * 4].copy_from_slice(&pixel);
-        }
+    let mut output = Zeroizing::new(bytes(raw)?);
+    // SAFETY: checked packed I420 contains full positive-stride Y/U/V planes;
+    // the converter borrows them and this exact writable BGRA span for the call.
+    let code = unsafe {
+        nl_vp8_i420_to_bgra(
+            width,
+            height,
+            i420.as_ptr(),
+            width as i32,
+            i420[w * h..].as_ptr(),
+            cw as i32,
+            i420[w * h + chroma..].as_ptr(),
+            cw as i32,
+            output.as_mut_ptr(),
+            output.len(),
+        )
+    };
+    if code != 0 {
+        return Err(bridge_error("test I420 conversion", code));
     }
-    Ok(output)
+    Ok(std::mem::take(&mut *output))
 }
 
 #[cfg(test)]

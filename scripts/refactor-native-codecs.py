@@ -34,7 +34,8 @@ SUPPORTED = (
     "x86_64-unknown-linux-gnu",
     "aarch64-unknown-linux-gnu",
 )
-FEATURES = {"vp8": True, "vp8_encoder": True, "vp8_decoder": True, "vp9": False, "opus_float": True, "opus_fixed_point": False, "opus_dred": False, "opus_deep_plc": False, "opus_osce": False, "opus_custom_modes": False, "opus_nonthreadsafe_pseudostack": False}
+FEATURES = {"vp8": True, "vp8_encoder": True, "vp8_decoder": True, "vp9": False, "libyuv_i420_to_bgra": True, "opus_float": True, "opus_fixed_point": False, "opus_dred": False, "opus_deep_plc": False, "opus_osce": False, "opus_custom_modes": False, "opus_nonthreadsafe_pseudostack": False}
+LIBYUV = {"name": "libyuv", "version": "1711", "commit": "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1", "repository": "https://chromium.googlesource.com/libyuv/libyuv", "parent_source": "libvpx", "path": "third_party/libyuv", "license": "BSD-3-Clause", "source_files": ["convert_argb.cc", "cpu_id.cc", "planar_functions.cc", "row_any.cc", "row_common.cc", "row_gcc.cc", "row_win.cc", "row_neon.cc", "row_neon64.cc", "row_msa.cc", "scale_any.cc", "scale_common.cc", "scale_gcc.cc", "scale_win.cc", "scale_neon.cc", "scale_neon64.cc", "scale_msa.cc"]}
 HASH = re.compile(r"[0-9a-f]{64}\Z")
 POISON_FLAGS = ("CFLAGS", "CXXFLAGS", "CPPFLAGS", "LDFLAGS", "ASFLAGS", "CC", "CXX", "LD", "AR", "AS", "CROSS", "CL", "_CL_", "CMAKE_ARGS", "CMAKE_TOOLCHAIN_FILE", "CMAKE_PROJECT_INCLUDE", "CMAKE_PROJECT_INCLUDE_BEFORE")
 
@@ -93,10 +94,11 @@ def load_lock(path):
     require(data["profile"] == "release" and data["linkage"] == "static", "Unsupported build profile")
     require(all(type(value) is bool for value in data["features"].values()), "Feature settings must be booleans")
     require(data["features"] == FEATURES, "Lock requests features not implemented by this supplier")
+    require(data.get("bundled_components") == [LIBYUV], "Lock must identify the reviewed same-archive libyuv source closure")
     for target in SUPPORTED:
         windows = target.endswith("windows-msvc")
         arm64 = target == "aarch64-unknown-linux-gnu"
-        expected = {"os": "windows" if windows else "linux", "arch": "aarch64" if arm64 else "x86_64", "crt": "dynamic" if windows else "system", "vpx_target": "x86_64-win64-vs17" if windows else "arm64-linux-gcc" if arm64 else "x86_64-linux-gcc", "libraries": {"vpx": "lib/vpx.lib" if windows else "lib/libvpx.a", "opus": "lib/opus.lib" if windows else "lib/libopus.a"}}
+        expected = {"os": "windows" if windows else "linux", "arch": "aarch64" if arm64 else "x86_64", "crt": "dynamic" if windows else "system", "vpx_target": "x86_64-win64-vs17" if windows else "arm64-linux-gcc" if arm64 else "x86_64-linux-gcc", "libraries": {"vpx": "lib/vpx.lib" if windows else "lib/libvpx.a", "opus": "lib/opus.lib" if windows else "lib/libopus.a", "yuv": "lib/yuv.lib" if windows else "lib/libyuv.a"}}
         require(data["targets"][target] == expected, "Lock target configuration is not implemented by this supplier")
     require(isinstance(data.get("cross_compilation_policy"), str), "Missing cross-target policy")
     return data
@@ -283,10 +285,13 @@ def prepare_tools(args, work, target):
             env["PATH"] = str(args.msys_bin.resolve()) + os.pathsep + env["PATH"]
         tools["msbuild"] = find_tool("MSBuild.exe", env, installation / "MSBuild/Current/Bin/MSBuild.exe")
         tools["cc"] = find_tool("cl.exe", env)
+        tools["cxx"] = tools["cc"]
         tools["lib"] = find_tool("lib.exe", env)
     else:
         tools["cc"] = find_tool("gcc", env, args.cc)
         verify_native_compiler(target, capture([tools["cc"], "-dumpmachine"], env))
+        tools["cxx"] = find_tool("g++", env, args.cxx)
+        verify_native_compiler(target, capture([tools["cxx"], "-dumpmachine"], env))
         tools["ar"] = find_tool("ar", env)
     if target.startswith("x86_64"):
         tools["nasm"] = find_tool("nasm", env, args.nasm)
@@ -305,7 +310,7 @@ def prepare_tools(args, work, target):
         env["CC"] = str(tools["cc"])
     versions = []
     for name, path in tools.items():
-        if name == "cc" and windows:
+        if name in {"cc", "cxx"} and windows:
             # cl can return 2 for its expected missing-input diagnostic.
             version = capture([path], env, accepted=(0, 2))
             require("Microsoft" in version and "x64" in version, "Expected native x64 MSVC compiler banner")
@@ -449,7 +454,7 @@ def verify_receipt(prefix, target, lock_path):
     receipt_path = prefix / RECEIPT
     require(receipt_path.is_file() and not is_link(receipt_path), "Missing regular native codec receipt")
     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
-    expected = {"schema_version": 1, "kind": "nestlink-native-codecs", "target": target, "profile": "release", "linkage": "static", "crt": lock["targets"][target]["crt"], "lock_sha256": file_sha256(lock_path), "features": lock["features"], "libraries": lock["targets"][target]["libraries"]}
+    expected = {"schema_version": 1, "kind": "nestlink-native-codecs", "target": target, "profile": "release", "linkage": "static", "crt": lock["targets"][target]["crt"], "lock_sha256": file_sha256(lock_path), "bundled_components": lock["bundled_components"], "features": lock["features"], "libraries": lock["targets"][target]["libraries"]}
     for key, value in expected.items():
         require(receipt.get(key) == value, f"Native receipt mismatch: {key}")
     require(all(type(value) is bool for value in receipt["features"].values()), "Receipt feature values must be booleans")
@@ -462,7 +467,7 @@ def verify_receipt(prefix, target, lock_path):
     records = receipt.get("files", [])
     require(records == install_manifest(prefix, expected["libraries"], target), "Installed files differ from receipt (missing, extra, modified, or invalid entry)")
     paths = {record["path"] for record in records}
-    required = set(expected["libraries"].values()) | {"include/vpx/vpx_encoder.h", "include/vpx/vpx_decoder.h", "include/opus/opus.h", "include/opus/opus_defines.h"}
+    required = set(expected["libraries"].values()) | {"include/vpx/vpx_encoder.h", "include/vpx/vpx_decoder.h", "include/opus/opus.h", "include/opus/opus_defines.h", "include/libyuv/convert_argb.h", "include/libyuv/version.h", "share/licenses/libvpx/third_party/libyuv/LICENSE", "share/licenses/libvpx/third_party/libyuv/README.libvpx"}
     require(required <= paths, "Required native library/header missing")
     machine = target_machine(target)
     if machine is not None:
@@ -470,6 +475,55 @@ def verify_receipt(prefix, target, lock_path):
         actual = {name: inspect_elf_archive(prefix / relative, machine) for name, relative in expected["libraries"].items()}
         require(reported == actual, "Native archive architecture evidence differs from installed ELF objects")
     return receipt
+
+
+def build_libyuv(source, work, prefix, args, tools, run):
+    """Build only the reviewed conversion closure already in the libvpx archive."""
+    upstream = source / LIBYUV["path"]
+    require(not (upstream / "CMakeLists.txt").exists(), "Bundled libyuv build layout changed; review its upstream build before extending this adapter")
+    require("Version: " + LIBYUV["commit"] in (upstream / "README.libvpx").read_text(encoding="utf-8"), "Bundled libyuv upstream identity differs")
+    require(re.search(r"^#define\s+LIBYUV_VERSION\s+1711\s*$", (upstream / "include/libyuv/version.h").read_text(encoding="utf-8"), re.M), "Bundled libyuv version differs")
+    for filename in LIBYUV["source_files"]:
+        require((upstream / "source" / filename).is_file(), "Bundled libyuv conversion source missing: " + filename)
+    # This embedded revision contains no CMakeLists. Generate a single fixed
+    # static target beside the build, leaving the verified source tree intact.
+    project = work / "projects/libyuv"
+    project.mkdir(parents=True)
+    source_list = "\n".join('  "${LIBYUV_SOURCE}/source/' + filename + '"' for filename in LIBYUV["source_files"])
+    (project / "CMakeLists.txt").write_text(
+        'cmake_minimum_required(VERSION 3.15)\n'
+        'cmake_policy(SET CMP0091 NEW)\n'
+        'project(nestlink_bundled_libyuv LANGUAGES CXX)\n'
+        'add_library(yuv STATIC\n' + source_list + '\n)\n'
+        'target_include_directories(yuv PUBLIC "${LIBYUV_SOURCE}/include")\n'
+        'set_target_properties(yuv PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_STANDARD 11 CXX_STANDARD_REQUIRED ON)\n'
+        'install(TARGETS yuv ARCHIVE DESTINATION lib)\n'
+        'install(DIRECTORY "${LIBYUV_SOURCE}/include/libyuv" DESTINATION include FILES_MATCHING PATTERN "*.h")\n',
+        encoding="utf-8", newline="\n")
+    build_dir = work / "build/libyuv"
+    options = ["-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_INSTALL_PREFIX=" + str(prefix), "-DCMAKE_CXX_COMPILER=" + tools["cxx"].as_posix(), "-DCMAKE_MAKE_PROGRAM=" + tools["ninja"].as_posix(), "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON", "-DLIBYUV_SOURCE=" + upstream.as_posix()]
+    if args.target.endswith("windows-msvc"):
+        options.append("-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL")
+    run([tools["cmake"], "-S", project, "-B", build_dir, "-G", "Ninja", *options], work, "yuv-configure")
+    run([tools["cmake"], "--build", build_dir, "--config", "Release", "--parallel", str(args.jobs)], work, "yuv-build")
+    run([tools["cmake"], "--install", build_dir, "--config", "Release"], work, "yuv-install")
+    cache = parse_cache((build_dir / "CMakeCache.txt").read_text(encoding="utf-8"))
+    require(cache.get("CMAKE_BUILD_TYPE") == "Release" and cache.get("CMAKE_CXX_COMPILER") == tools["cxx"].as_posix(), "libyuv compiler/profile differs from the preflight")
+    if args.target.endswith("windows-msvc"):
+        require(cache.get("CMAKE_MSVC_RUNTIME_LIBRARY") == "MultiThreadedDLL", "libyuv must use the dynamic MSVC runtime")
+    compile_path = build_dir / "compile_commands.json"
+    compiled = json.loads(compile_path.read_text(encoding="utf-8"))
+    expected_files = {(upstream / "source" / filename).resolve() for filename in LIBYUV["source_files"]}
+    require(isinstance(compiled, list) and len(compiled) == len(expected_files), "libyuv compilation differs from the fixed source closure")
+    require({Path(entry["file"]).resolve() for entry in compiled} == expected_files, "Unexpected or missing libyuv compilation unit")
+    for entry in compiled:
+        command = entry.get("command") or " ".join(entry.get("arguments", []))
+        if args.target.endswith("windows-msvc"):
+            require(re.search(r"(?:^|\s)[/-]MD(?:\s|$)", command) and not re.search(r"(?:^|\s)[/-](?:MTd?|MDd)(?:\s|$)", command), "libyuv compilation does not use release dynamic MSVC CRT")
+            require(re.search(r"(?:^|\s)[/-]O2(?:\s|$)", command), "libyuv compilation lacks Release optimization")
+        else:
+            require(re.search(r"(?:^|\s)-O3(?:\s|$)", command), "libyuv compilation lacks Release optimization")
+    return {"options": options, "source_files": LIBYUV["source_files"], "compile_command_count": len(compiled), "cmake_project_sha256": file_sha256(project / "CMakeLists.txt"), "compile_commands_sha256": file_sha256(compile_path)}
 
 
 def build(args, lock):
@@ -547,6 +601,7 @@ def build(args, lock):
             destination = prefix / "share/licenses" / spec["name"] / filename
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source / filename, destination)
+    configuration["libyuv"] = build_libyuv(source_paths["libvpx"], work, prefix, args, tools, run)
     for record in sources:
         require(tree_digest(tree_manifest(source_paths[record["name"]])) == record["source_tree_sha256"], "Build modified fresh upstream source tree; receipt refused")
     vpx_config = work / "build/libvpx/vpx_config.h"
@@ -562,7 +617,7 @@ def build(args, lock):
     write_json(config_dir / "checked-configuration.json", checked)
     machine = target_machine(args.target)
     archive_architectures = {name: inspect_elf_archive(prefix / relative, machine) for name, relative in lock["targets"][args.target]["libraries"].items()} if machine is not None else {}
-    receipt = {"schema_version": 1, "kind": "nestlink-native-codecs", "target": args.target, "profile": "release", "linkage": "static", "crt": lock["targets"][args.target]["crt"], "lock_sha256": file_sha256(args.lock), "sources": sources, "features": lock["features"], "libraries": lock["targets"][args.target]["libraries"], "configuration": configuration, "tools": tool_records, "supplier": {"script_sha256": file_sha256(Path(__file__)), "python_version": platform.python_version(), "python_executable": sys.executable}, "commands": commands, "validation": {"fresh_source_verified_before_and_after_build": True, "configured_features_verified": True, "archive_architectures": archive_architectures, "native_runtime_tests_run": False}, "files": install_manifest(prefix, lock["targets"][args.target]["libraries"], args.target)}
+    receipt = {"schema_version": 1, "kind": "nestlink-native-codecs", "target": args.target, "profile": "release", "linkage": "static", "crt": lock["targets"][args.target]["crt"], "lock_sha256": file_sha256(args.lock), "sources": sources, "bundled_components": lock["bundled_components"], "features": lock["features"], "libraries": lock["targets"][args.target]["libraries"], "configuration": configuration, "tools": tool_records, "supplier": {"script_sha256": file_sha256(Path(__file__)), "python_version": platform.python_version(), "python_executable": sys.executable}, "commands": commands, "validation": {"fresh_source_verified_before_and_after_build": True, "configured_features_verified": True, "archive_architectures": archive_architectures, "native_runtime_tests_run": False}, "files": install_manifest(prefix, lock["targets"][args.target]["libraries"], args.target)}
     write_json(prefix / RECEIPT, receipt)
     verify_receipt(prefix, args.target, args.lock)
     print("NESTLINK_CODEC_PREFIX=" + str(prefix), flush=True)
@@ -586,6 +641,7 @@ def main():
     supply.add_argument("--nasm", type=Path, help="Explicit NASM executable; otherwise resolve PATH")
     supply.add_argument("--vswhere", type=Path, help="Explicit Visual Studio discovery executable")
     supply.add_argument("--cc", type=Path, help="Explicit native GNU/Linux C compiler matching the requested architecture")
+    supply.add_argument("--cxx", type=Path, help="Explicit native GNU/Linux C++ compiler matching the requested architecture")
     verify = sub.add_parser("verify", help="Verify receipt, source pins, features and every installed byte")
     verify.add_argument("--prefix", type=Path, required=True)
     verify.add_argument("--target", required=True, choices=SUPPORTED)

@@ -730,12 +730,20 @@ def metadata(args):
                          "downloadLocation": item["url"], "filesAnalyzed": False, "licenseConcluded": "NOASSERTION",
                          "licenseDeclared": "BSD-3-Clause", "checksums": [{"algorithm": "SHA256", "checksumValue": item["archive_sha256"]}],
                          "sourceInfo": "Pinned source commit " + item["commit"] + "; complete upstream license/patent notices are in the license archive."})
+    relationships = []
+    for item in native_lock.get("bundled_components", []):
+        parent = next(source for source in native_lock["sources"] if source["name"] == item["parent_source"])
+        identifier = "SPDXRef-Bundled-" + item["name"]
+        packages.append({"SPDXID": identifier, "name": item["name"], "versionInfo": item["version"],
+                         "downloadLocation": "NOASSERTION", "filesAnalyzed": False, "licenseConcluded": "NOASSERTION", "licenseDeclared": item["license"],
+                         "sourceInfo": "Bundled at " + item["path"] + " in " + parent["url"] + "; parent archive SHA256 " + parent["archive_sha256"] + "; upstream " + item["repository"] + " commit " + item["commit"] + ". Embedded modifications and complete BSD notice are retained in the license archive; this is not a separately downloaded source archive."})
+        relationships.append({"spdxElementId": "SPDXRef-Native-" + parent["name"], "relationshipType": "CONTAINS", "relatedSpdxElement": identifier})
     # OS packages and image-bound system notices are added by the final cohort
     # owner, after both real architecture OCI images are available.
     sbom = {"spdxVersion": "SPDX-2.3", "dataLicense": "CC0-1.0", "SPDXID": "SPDXRef-DOCUMENT",
             "name": "NestLink-" + cohort["version"], "documentNamespace": "https://github.com/ZHanry/NestLink/sbom/" + cohort["source_revision"] + "/" + str(cohort["run_id"]) + "-" + str(cohort["run_attempt"]),
             "creationInfo": {"created": __import__("datetime").datetime.fromtimestamp(cohort["source_epoch"], __import__("datetime").timezone.utc).isoformat().replace("+00:00", "Z"), "creators": ["Tool: nestlink-release-producer-v1"]},
-            "packages": packages, "comment": "Cargo/native exact dependency inventory. OCI system packages are added by the final owner. NOASSERTION records never assert a missing license review passed."}
+            "packages": packages, "relationships": relationships, "comment": "Cargo/native exact dependency inventory. OCI system packages are added by the final owner. NOASSERTION records never assert a missing license review passed."}
     create_json(args.output / "NestLink-build-sbom.spdx.json", sbom)
     with tempfile.TemporaryDirectory(prefix="nestlink-notices-", dir=args.output) as scratch:
         notices = Path(scratch)

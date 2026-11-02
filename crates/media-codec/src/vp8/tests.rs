@@ -64,6 +64,29 @@ fn bt601_limited_matrix_and_odd_chroma_edges_have_known_values() -> io::Result<(
 }
 
 #[test]
+fn mature_i420_conversion_preserves_bgra_order_alpha_and_studio_range() -> io::Result<()> {
+    // Pinned libyuv uses its own integer approximation of BT.601 limited.
+    // The chromatic vector intentionally differs by one blue unit from the
+    // retired scalar Rust approximation (243); it is not bit-exact reuse.
+    for (i420, expected) in [
+        ([16, 128, 128], [0, 0, 0, 255]),
+        ([235, 128, 128], [255, 255, 255, 255]),
+        ([100, 200, 128], [242, 70, 98, 255]),
+        ([82, 90, 240], [1, 1, 255, 255]),
+    ] {
+        assert_eq!(i420_to_bgra(1, 1, &i420)?, expected);
+    }
+    // A full SIMD row plus an odd right/bottom tail must have identical bytes.
+    let mut packed = vec![100; 17 * 3];
+    packed.extend_from_slice(&[200; 9 * 2]);
+    packed.extend_from_slice(&[128; 9 * 2]);
+    let output = i420_to_bgra(17, 3, &packed)?;
+    assert_eq!(output.len(), 17 * 3 * 4);
+    assert!(output.chunks_exact(4).all(|p| p == [242, 70, 98, 255]));
+    Ok(())
+}
+
+#[test]
 fn real_vp8_roundtrip_keyframes_deltas_odd_sizes_and_color_quality() -> io::Result<()> {
     for (width, height) in [(64, 48), (17, 19), (1, 1)] {
         let mut encoder = Vp8Encoder::new(config(width, height))?;

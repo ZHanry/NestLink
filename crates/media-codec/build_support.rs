@@ -27,6 +27,7 @@ struct Lock {
     schema_version: u32,
     kind: String,
     sources: Vec<Source>,
+    bundled_components: Value,
     targets: BTreeMap<String, Target>,
     profile: String,
     linkage: String,
@@ -49,6 +50,7 @@ struct Receipt {
     crt: String,
     lock_sha256: String,
     sources: Vec<Source>,
+    bundled_components: Value,
     features: Value,
     libraries: BTreeMap<String, String>,
     files: Vec<InstalledFile>,
@@ -156,6 +158,7 @@ pub fn verify(prefix: &Path, lock_bytes: &[u8], target: &str) -> io::Result<Vec<
         || receipt.libraries != expected.libraries
         || receipt.sources.len() != lock.sources.len()
         || receipt.sources.is_empty()
+        || receipt.bundled_components != lock.bundled_components
         || receipt.files.len() > 2047
     {
         return Err(invalid(
@@ -237,6 +240,8 @@ pub fn verify(prefix: &Path, lock_bytes: &[u8], target: &str) -> io::Result<Vec<
         "include/vpx/vpx_encoder.h",
         "include/vpx/vpx_decoder.h",
         "include/opus/opus.h",
+        "include/libyuv/convert_argb.h",
+        "include/libyuv/version.h",
     ] {
         if declared.get(header).map(|v| v.as_str()) != Some("header") {
             return Err(invalid("missing pinned native header"));

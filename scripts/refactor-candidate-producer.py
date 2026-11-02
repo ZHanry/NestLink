@@ -453,7 +453,15 @@ def metadata(args):
     codec_lock = read_json(ROOT / "docs/refactor/native-codecs.lock.json")
     for item in codec_lock["sources"]:
         packages.append({"SPDXID": "SPDXRef-Native-" + item["name"], "name": item["name"], "versionInfo": item["version"], "downloadLocation": item["url"], "filesAnalyzed": False, "licenseConcluded": "NOASSERTION", "licenseDeclared": "BSD-3-Clause", "checksums": [{"algorithm": "SHA256", "checksumValue": item["archive_sha256"]}], "sourceInfo": "Pinned source commit " + item["commit"]})
-    sbom = {"spdxVersion": "SPDX-2.3", "dataLicense": "CC0-1.0", "SPDXID": "SPDXRef-DOCUMENT", "name": "NestLink-development-candidate", "documentNamespace": "https://github.com/ZHanry/NestLink/candidate-sbom/" + value["source_revision"] + "/" + str(value["run_id"]) + "-" + str(value["run_attempt"]), "creationInfo": {"created": datetime.fromtimestamp(value["source_epoch"], timezone.utc).isoformat().replace("+00:00", "Z"), "creators": ["Tool: nestlink-development-candidate-v1"]}, "packages": packages, "comment": "Dependency inventory, not an assertion of formal license or platform acceptance. OCI OS inventory is appended at freeze."}
+    relationships = []
+    for item in codec_lock.get("bundled_components", []):
+        parent = next(source for source in codec_lock["sources"] if source["name"] == item["parent_source"])
+        identifier = "SPDXRef-Bundled-" + item["name"]
+        packages.append({"SPDXID": identifier, "name": item["name"], "versionInfo": item["version"],
+                         "downloadLocation": "NOASSERTION", "filesAnalyzed": False, "licenseConcluded": "NOASSERTION", "licenseDeclared": item["license"],
+                         "sourceInfo": "Bundled at " + item["path"] + " in " + parent["url"] + "; parent archive SHA256 " + parent["archive_sha256"] + "; upstream " + item["repository"] + " commit " + item["commit"] + ". Embedded modifications and complete BSD notice are retained in the license archive; this is not a separately downloaded source archive."})
+        relationships.append({"spdxElementId": "SPDXRef-Native-" + parent["name"], "relationshipType": "CONTAINS", "relatedSpdxElement": identifier})
+    sbom = {"spdxVersion": "SPDX-2.3", "dataLicense": "CC0-1.0", "SPDXID": "SPDXRef-DOCUMENT", "name": "NestLink-development-candidate", "documentNamespace": "https://github.com/ZHanry/NestLink/candidate-sbom/" + value["source_revision"] + "/" + str(value["run_id"]) + "-" + str(value["run_attempt"]), "creationInfo": {"created": datetime.fromtimestamp(value["source_epoch"], timezone.utc).isoformat().replace("+00:00", "Z"), "creators": ["Tool: nestlink-development-candidate-v1"]}, "packages": packages, "relationships": relationships, "comment": "Dependency inventory, not an assertion of formal license or platform acceptance. OCI OS inventory is appended at freeze."}
     sbom_path = files / "NestLink-candidate-sbom-input.spdx.json"
     write_json(sbom_path, sbom)
     with tempfile.TemporaryDirectory(prefix="candidate-notices-") as scratch:

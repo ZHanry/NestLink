@@ -73,10 +73,12 @@ fn main() -> io::Result<()> {
     println!("cargo:rustc-link-search=native={}", library.display());
     println!("cargo:rustc-link-lib=static=vpx");
     println!("cargo:rustc-link-lib=static=opus");
+    println!("cargo:rustc-link-lib=static=yuv");
     if target != "windows" {
         println!("cargo:rustc-link-lib=m");
     }
     if target == "linux" {
+        println!("cargo:rustc-link-lib=stdc++");
         println!("cargo:rustc-link-lib=pthread");
     }
     for path in ["src/vp8.c", "src/opus.c"] {

@@ -36,7 +36,9 @@ class ReleaseNoticeIntegrationTests(unittest.TestCase):
             root.mkdir()
             inputs = {'LICENSE': b'fixture product license', 'Cargo.toml': b'fixture',
                       'rust-toolchain.toml': b'fixture', 'docs/refactor/source-ledger.json': b'{}',
-                      'docs/refactor/native-codecs.lock.json': b'{"sources":[]}',
+                      'docs/refactor/native-codecs.lock.json': (ROOT / 'docs/refactor/native-codecs.lock.json').read_bytes(),
+                      'packaging/notices/libyuv-1711-LICENSE.txt': (ROOT / 'packaging/notices/libyuv-1711-LICENSE.txt').read_bytes(),
+                      'packaging/notices/libyuv-1711-README.libvpx.txt': (ROOT / 'packaging/notices/libyuv-1711-README.libvpx.txt').read_bytes(),
                       'docs/refactor/cargo-notice-supplements.json': b'{"schema_version":1,"packages":[]}',
                       'scripts/refactor-cargo-notices.py': (ROOT / 'scripts/refactor-cargo-notices.py').read_bytes(),
                       'config/release-producer.json': b'{}',
@@ -87,6 +89,13 @@ class ReleaseNoticeIntegrationTests(unittest.TestCase):
             sbom = json.loads((output / 'NestLink-build-sbom.spdx.json').read_bytes())
             self.assertEqual(sbom['packages'][0]['licenseDeclared'], 'Apache-2.0 OR MIT')
             self.assertIn('Apache-2.0/MIT', sbom['packages'][0]['sourceInfo'])
+            bundled = next(item for item in sbom['packages'] if item['name'] == 'libyuv')
+            self.assertEqual(bundled['licenseDeclared'], 'BSD-3-Clause')
+            self.assertEqual(bundled['downloadLocation'], 'NOASSERTION')
+            self.assertIn('third_party/libyuv', bundled['sourceInfo'])
+            self.assertIn('a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1', bundled['sourceInfo'])
+            self.assertNotIn('checksums', bundled)
+            self.assertIn({'spdxElementId': 'SPDXRef-Native-libvpx', 'relationshipType': 'CONTAINS', 'relatedSpdxElement': bundled['SPDXID']}, sbom['relationships'])
             self.assertEqual(index['packages'][0]['license_declared'], 'Apache-2.0/MIT')
             if missing:
                 self.assertEqual(index['status'], 'incomplete')
@@ -98,6 +107,8 @@ class ReleaseNoticeIntegrationTests(unittest.TestCase):
                 with tarfile.open(output / 'NestLink-build-licenses.tar.gz', 'r:gz') as stream:
                     self.assertEqual(stream.extractfile('cargo/demo-1.2.3/LICENSE-MIT').read(), original_license)
                     self.assertEqual(json.loads(stream.extractfile('cargo/index.json').read()), index)
+                    for name in ('libyuv-1711-LICENSE.txt', 'libyuv-1711-README.libvpx.txt'):
+                        self.assertEqual(stream.extractfile('notices/' + name).read(), (ROOT / 'packaging/notices' / name).read_bytes())
                 receipt = json.loads((output / 'parts/metadata.json').read_bytes())
                 self.assertTrue(any(p['role'] == 'cargo-notice-index' for p in receipt['evidence']))
 
