@@ -63,6 +63,18 @@ struct Inner {
 /// Retain this original in-memory owner across stopped carriers. Every attempt
 /// and both delivery directions keep its same finite cumulative reservation.
 pub struct OfflineRemoteOwner(Arc<Inner>);
+/// Read-only scope of the original consumed offline authority. It carries no
+/// signature, process key, online permit or transferable admission.
+#[derive(Clone, Debug)]
+pub struct OfflineRemoteBinding {
+    pub space_id: String,
+    pub bundle_id: String,
+    pub session_id: String,
+    pub connection_generation: u64,
+    pub lease_sequence: u64,
+    pub role: EndpointRole,
+    pub operations: Vec<nestlink_protocol::offline::OfflineRemoteOperation>,
+}
 pub struct OfflineRemoteListener {
     owner: Arc<Inner>,
     socket: SocketOwner,
@@ -165,6 +177,22 @@ impl Sdk {
     }
 }
 impl OfflineRemoteOwner {
+    pub fn binding(&self) -> Result<OfflineRemoteBinding, SdkError> {
+        let claims = self.0.authority.claims()?;
+        let OfflineBusiness::RemoteControl { operations, .. } = claims.business else {
+            return Err(SdkError::Trust);
+        };
+        let original = self.0.original.claims();
+        Ok(OfflineRemoteBinding {
+            space_id: claims.space_id,
+            bundle_id: claims.bundle_id,
+            session_id: original.session_id.clone(),
+            connection_generation: original.connection_generation,
+            lease_sequence: original.lease_sequence,
+            role: self.0.role,
+            operations,
+        })
+    }
     pub fn status(&self) -> Result<OfflineRemoteStatus, SdkError> {
         Ok(self.0.authority.status()?)
     }

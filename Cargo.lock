@@ -3684,6 +3684,7 @@ dependencies = [
  "nestlink-media-session",
  "nestlink-node",
  "nestlink-platform-clipboard",
+ "nestlink-platform-files",
  "nestlink-platform-network",
  "nestlink-platform-security",
  "nestlink-policy",

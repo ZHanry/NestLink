@@ -15,6 +15,9 @@ use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 mod native_channel;
 #[path = "runtime/native_direct.rs"]
 mod native_direct;
+#[path = "runtime/native_offline.rs"]
+mod native_offline;
+pub use native_offline::*;
 #[path = "runtime/native_inbox.rs"]
 mod native_inbox;
 #[path = "runtime/native_network_control.rs"]
@@ -307,6 +310,29 @@ struct Shared {
     native_files_owners: Mutex<Vec<Arc<NativeFilesRoute>>>,
     native_file_budget: Arc<NativeFileBudget>,
 }
+impl Shared {
+    fn new(limits: Limits) -> Arc<Self> {
+        Arc::new(Self {
+            closing: Arc::new(AtomicBool::new(false)),
+            next_id: AtomicU64::new(1),
+            generation: Arc::new(AtomicU64::new(1)),
+            operations: Arc::new(Semaphore::new(limits.operations)),
+            controls: Arc::new(Semaphore::new(limits.controls)),
+            native_video: Mutex::new(None),
+            native_displays: Mutex::new(None),
+            native_video_presentation: Mutex::new(None),
+            native_input: Mutex::new(None),
+            native_audio: Mutex::new(None),
+            native_audio_owners: Mutex::new(Vec::new()),
+            native_clipboard: Mutex::new(None),
+            native_clipboard_owners: Mutex::new(Vec::new()),
+            native_clipboard_factory: Mutex::new(None),
+            native_files: Mutex::new(None),
+            native_files_owners: Mutex::new(Vec::new()),
+            native_file_budget: NativeFileBudget::new(limits.native_downloads),
+        })
+    }
+}
 #[derive(Debug, thiserror::Error)]
 pub enum NativeVideoError {
     #[error("no connected host View session is authorized")]
@@ -580,6 +606,23 @@ struct NativeVideoRoute {
     send_order: AsyncMutex<()>,
     cursor: Mutex<NativeVideoCursor>,
     timing: SessionMediaTiming,
+}
+impl NativeVideoRoute {
+    fn attach(channels: &mut ChannelRuntime, key: &NativeSessionKey, timing: SessionMediaTiming) -> Arc<Self> {
+        Arc::new(Self {
+            receiver_qos: Mutex::new(nestlink_media_session::ReceiverReportTracker::default()),
+            execution: Mutex::new(None),
+            request_id: key.request_id.clone(),
+            connection_generation: key.connection_generation,
+            sender: channels.sender(),
+            lease: channels.lease_control(),
+            gate: Arc::new(HostVideoGate { state: Mutex::new(HostVideoGateState::default()) }),
+            format_gate: Arc::new(HostVideoGate { state: Mutex::new(HostVideoGateState { active: true, ..HostVideoGateState::default() }) }),
+            send_order: AsyncMutex::new(()),
+            cursor: Mutex::new(NativeVideoCursor { keyframe_pending: true, ..NativeVideoCursor::default() }),
+            timing,
+        })
+    }
 }
 struct NativeVideoDeliveryGuard {
     execution: Option<nestlink_media_codec::ExecutionReceipt>,
@@ -1733,25 +1776,7 @@ impl AppCore {
             return Err(StartError::NativeSessionConfig);
         }
         let runtime = tokio::runtime::Handle::try_current().map_err(|_| StartError::Runtime)?;
-        let shared = Arc::new(Shared {
-            closing: Arc::new(AtomicBool::new(false)),
-            next_id: AtomicU64::new(1),
-            generation: Arc::new(AtomicU64::new(1)),
-            operations: Arc::new(Semaphore::new(limits.operations)),
-            controls: Arc::new(Semaphore::new(limits.controls)),
-            native_video: Mutex::new(None),
-            native_displays: Mutex::new(None),
-            native_video_presentation: Mutex::new(None),
-            native_input: Mutex::new(None),
-            native_audio: Mutex::new(None),
-            native_audio_owners: Mutex::new(Vec::new()),
-            native_clipboard: Mutex::new(None),
-            native_clipboard_owners: Mutex::new(Vec::new()),
-            native_clipboard_factory: Mutex::new(None),
-            native_files: Mutex::new(None),
-            native_files_owners: Mutex::new(Vec::new()),
-            native_file_budget: NativeFileBudget::new(limits.native_downloads),
-        });
+        let shared = Shared::new(limits);
         let (commands, incoming) = mpsc::channel(limits.operations);
         let (controls, controlling) = mpsc::channel(limits.controls);
         let mut view = Snapshot {
@@ -5053,31 +5078,7 @@ impl Actor {
                         })
                     }));
                 let video_route = if accepted && key.host_view_authorized {
-                    Some(Arc::new(NativeVideoRoute {
-                        receiver_qos: Mutex::new(
-                            nestlink_media_session::ReceiverReportTracker::default(),
-                        ),
-                        execution: Mutex::new(None),
-                        request_id: key.request_id.clone(),
-                        connection_generation: key.connection_generation,
-                        sender: established.session.channels().sender(),
-                        lease: established.session.channels().lease_control(),
-                        gate: Arc::new(HostVideoGate {
-                            state: Mutex::new(HostVideoGateState::default()),
-                        }),
-                        format_gate: Arc::new(HostVideoGate {
-                            state: Mutex::new(HostVideoGateState {
-                                active: true,
-                                ..HostVideoGateState::default()
-                            }),
-                        }),
-                        send_order: AsyncMutex::new(()),
-                        cursor: Mutex::new(NativeVideoCursor {
-                            keyframe_pending: true,
-                            ..NativeVideoCursor::default()
-                        }),
-                        timing: media_timing.clone(),
-                    }))
+                    Some(NativeVideoRoute::attach(established.session.channels(), &key, media_timing.clone()))
                 } else {
                     None
                 };

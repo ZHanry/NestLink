@@ -232,6 +232,19 @@ jobs:
           $metadataLog = Join-Path $env:RUNNER_TEMP 'nestlink-node-relay-metadata-tests.log'
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage -p nestlink-sdk --test node_relay_attributes --no-fail-fast -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $metadataLog
           exit $LASTEXITCODE
+      - name: Check independent offline AppCore pixels and actual files after online expiry
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          $offlineLog = Join-Path $env:RUNNER_TEMP 'nestlink-native-offline-tests.log'
+          if ($IsWindows) {
+            python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --test native_offline -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog
+          } else {
+            cargo test --locked -p nestlink-app-core --test native_offline -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo clippy --locked -p nestlink-app-core --test native_offline -- -D warnings 2>&1 | Tee-Object -FilePath $offlineLog -Append
+          exit $LASTEXITCODE
       - name: Check original-session quality projection and old IPC compatibility
         if: ${{ !cancelled() }}
         shell: pwsh
@@ -432,6 +445,7 @@ jobs:
           name: nestlink-sdk-routed-tests-${{ matrix.target }}
           path: |
             ${{ runner.temp }}/nestlink-sdk-routed-tests.log
+            ${{ runner.temp }}/nestlink-native-offline-tests.log
             ${{ runner.temp }}/nestlink-sdk-routed-tests.json
             ${{ runner.temp }}/nestlink-sdk-network-relay-tests.log
             ${{ runner.temp }}/nestlink-node-relay-metadata-tests.log

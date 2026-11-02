@@ -186,6 +186,47 @@ pub enum NativeSessionCleanup {
     Failed,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NativeOfflineTransport {
+    Quic,
+    Tls,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct NativeOfflineBudget {
+    pub remaining_bytes: u64,
+    pub remaining_file_write_bytes: u64,
+    pub connection_attempts: u32,
+    pub remaining_lifetime_ms: u64,
+    pub stopped: bool,
+}
+
+/// Sanitized facts of one independent offline authority. This does not carry
+/// its signature, process key, original online permit or transferable admission.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct NativeOfflineView {
+    pub space_id: String,
+    pub bundle_id: String,
+    pub request_id: String,
+    pub connection_generation: u64,
+    pub is_host: bool,
+    pub operations: Vec<nestlink_protocol::offline::OfflineRemoteOperation>,
+    pub transport: NativeOfflineTransport,
+    pub status: NativeSessionStatus,
+    pub budget: NativeOfflineBudget,
+    pub stop_reason: Option<NativeSessionStopReason>,
+    pub cleanup: Option<NativeSessionCleanup>,
+    pub failure: Option<Failure>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct NativeOfflineStop {
+    pub reason: NativeSessionStopReason,
+    pub cleanup: NativeSessionCleanup,
+    pub failure: Option<Failure>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NativeSessionEffects {
     pub cancel_channels: bool,
@@ -526,6 +567,8 @@ pub struct Snapshot {
     #[serde(default)]
     pub selected_media_scope: Section<Option<nestlink_protocol::media_authority::FrozenMediaScope>>,
     pub native_session: Section<NativeSessionView>,
+    #[serde(default)]
+    pub native_offline: Option<NativeOfflineView>,
     /// This installation's explicit local dialing consent; never server data.
     pub native_network: crate::NativeNetworkSettings,
     /// Independent CAS fence for this installation's local network approval.
@@ -573,6 +616,7 @@ impl Default for Snapshot {
             selected_request: Section::default(),
             selected_media_scope: Section::default(),
             native_session: Section::default(),
+            native_offline: None,
             native_network: crate::NativeNetworkSettings::default(),
             native_network_revision: 0,
             native_network_durable: None,
