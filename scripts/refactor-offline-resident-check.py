@@ -132,6 +132,7 @@ def main():
             ("app-core", ["-p", "nestlink-app-core", "--test", "native_offline"], 2, CORE_TESTS),
             ("daemon-remote-unit", ["-p", "nestlink-daemon", "--bin", "nestlink-daemon", "offline_remote::tests::"], 2, None),
             ("daemon-private-unit", ["-p", "nestlink-daemon", "--bin", "nestlink-daemon", "private_service_proxy::offline::tests::"], 2, None),
+            ("daemon-download-consent-unit", ["-p", "nestlink-daemon", "--bin", "nestlink-daemon", "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke"], 1, None),
             ("daemon-entry-unit", ["-p", "nestlink-daemon", "--bin", "nestlink-daemon", "entry_tests::"], 1, None),
             ("desktop-layout", ["-p", "nestlink-desktop", "--lib", "layout_tests::independent_offline_"], 2, None),
             ("resident", ["-p", "nestlink-daemon", "--test", "offline_remote_resident"], 4, RESIDENT_TESTS),

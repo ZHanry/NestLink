@@ -459,15 +459,30 @@ impl FileWriteDestination for OwnedWrite {
 
 struct DownloadSelection {
     selection: PersistentDownloadSelection,
-    owner: LocalDownloadConsent,
+    owner: Arc<LocalDownloadConsent>,
     approval: Arc<Approval>,
+}
+struct DownloadApproval {
+    consent: Arc<dyn FileReadConsent>,
+    approval: Arc<Approval>,
+    // A successful disk worker drops its destination after sending its ACK.
+    // Its original async waiter must still be able to check local consent
+    // while consuming that ACK. Explicit session/root revocation stays live.
+    _owner: Arc<LocalDownloadConsent>,
+}
+impl FileReadConsent for DownloadApproval {
+    fn check(&self) -> io::Result<()> {
+        self.approval.check()?;
+        self.consent.check()
+    }
 }
 impl FileDestinationFactory for DownloadSelection {
     fn consent(&self) -> Arc<dyn FileReadConsent> {
-        Arc::new(ReadApproval(
-            self.selection.consent(),
-            self.approval.clone(),
-        ))
+        Arc::new(DownloadApproval {
+            consent: self.selection.consent(),
+            approval: self.approval.clone(),
+            _owner: self.owner.clone(),
+        })
     }
     fn build(
         self: Box<Self>,
@@ -483,7 +498,7 @@ impl FileDestinationFactory for DownloadSelection {
 }
 struct OwnedDownload {
     destination: Box<dyn FileDestination>,
-    _owner: LocalDownloadConsent,
+    _owner: Arc<LocalDownloadConsent>,
     approval: Arc<Approval>,
 }
 impl FileDestination for OwnedDownload {
@@ -838,7 +853,7 @@ impl LocalFiles {
                         facts,
                         DownloadSelection {
                             selection,
-                            owner,
+                            owner: Arc::new(owner),
                             approval: session.approval(),
                         },
                     )
@@ -1130,7 +1145,7 @@ impl LocalFiles {
                         request,
                         DownloadSelection {
                             selection,
-                            owner,
+                            owner: Arc::new(owner),
                             approval: session.approval(),
                         },
                     )
@@ -1272,6 +1287,40 @@ fn task_view(task: NativeFileTaskStatus) -> FileTaskView {
 mod tests {
     use super::*;
     use std::path::Path;
+
+    #[test]
+    fn download_consent_outlives_the_destination_ack_and_still_honors_session_revoke()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let temporary = tempfile::tempdir()?;
+        let state = temporary.path().join("state");
+        nestlink_platform_security::new_private_directory(&state)?;
+        let store = DownloadRecoveryStore::open(&state, FILE_SIZE_BYTES, 4)?;
+        let (selection, owner) = PersistentDownloadSelection::new(
+            store,
+            &nestlink_auth::random_id(),
+            &temporary.path().join("selected"),
+            "received.bin",
+        )?;
+        let active = Arc::new(AtomicBool::new(true));
+        let selection = DownloadSelection {
+            selection,
+            owner: Arc::new(owner),
+            approval: Arc::new(Approval(vec![active.clone()])),
+        };
+        // This is the original guard obtained by FileDownloadWorker before it
+        // consumes the factory. Releasing the destination must not revoke the
+        // async waiter's own still-unconsumed success acknowledgement.
+        let awaiting_ack = selection.consent();
+        awaiting_ack.check()?;
+        drop(selection);
+        awaiting_ack.check()?;
+        active.store(false, Ordering::Release);
+        assert_eq!(
+            awaiting_ack.check().err().map(|error| error.kind()),
+            Some(io::ErrorKind::PermissionDenied)
+        );
+        Ok(())
+    }
 
     fn read_entry(
         path: &Path,
