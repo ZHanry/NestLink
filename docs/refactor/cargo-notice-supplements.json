@@ -839,6 +839,30 @@
       ]
     },
     {
+      "name": "etherparse",
+      "version": "0.21.0",
+      "archive_sha256": "17304d06addb3283cdc4bd528e42dd95e73c8ee2d6492ffce415e93660885449",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "70f72bee542ae49efebb8d2106bde64f84f02a43",
+      "review_basis": "Full original root MIT and Apache-2.0 terms at the exact Git revision recorded by the locked crate .cargo_vcs_info.json (path_in_vcs etherparse). The published crate omits both root license files. Bytes downloaded through the upstream Git blob API and verified against exact tree blob identities; no license text synthesized and no compatibility waiver.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/JulianSchmid/etherparse/70f72bee542ae49efebb8d2106bde64f84f02a43/LICENSE-APACHE",
+          "sha256": "affcd3a3acd2a70d6405c6a5088413da8f97b91f5074ae313fbaa2ec4b45b19f",
+          "upstream_url": "https://raw.githubusercontent.com/JulianSchmid/etherparse/70f72bee542ae49efebb8d2106bde64f84f02a43/LICENSE-APACHE",
+          "git_blob_sha1": "4c889c70f896419182b65118caa1753f9f960b5a",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/JulianSchmid/etherparse/70f72bee542ae49efebb8d2106bde64f84f02a43/LICENSE-MIT",
+          "sha256": "4be7e6a9b3e7293807bbebfd081941c2d87fa445733e1ad0a9fc6efbc4f3029a",
+          "upstream_url": "https://raw.githubusercontent.com/JulianSchmid/etherparse/70f72bee542ae49efebb8d2106bde64f84f02a43/LICENSE-MIT",
+          "git_blob_sha1": "5f9b3332ed7952b2306944ab9b0d3af7431c0fa0",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
       "name": "gl_generator",
       "version": "0.14.0",
       "archive_sha256": "1a95dfc23a2b4a9a2f5ab41d194f8bfda3cabec42af4e39f08c339eb2a0c124d",
