@@ -1,0 +1,81 @@
+name: Network authorized service capacity
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capacity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      RUST_BACKTRACE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Prepare original locked native components on GitHub
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin
+          echo "NESTLINK_CODEC_PREFIX=$RUNNER_TEMP/capacity-codecs/x86_64-unknown-linux-gnu" >> "$GITHUB_ENV"
+          python3 -B scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/codec-sources" --work-dir "$RUNNER_TEMP/capacity-codecs"
+          python3 -B scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "$RUNNER_TEMP/capacity-codecs/x86_64-unknown-linux-gnu"
+      - name: Build and attempt original authorized service capacity with complete failure records
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, subprocess, time
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          output = pathlib.Path(os.environ['RUNNER_TEMP'])/'network-capacity'
+          output.mkdir()
+          source = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert source == os.environ['GITHUB_SHA']
+          assert subprocess.check_output(['git','status','--porcelain=v1','--untracked-files=all']) == b''
+          receipt = {'source_revision':source,'workflow':os.environ['GITHUB_WORKFLOW_REF'],
+            'workflow_revision':os.environ['GITHUB_WORKFLOW_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
+            'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'runner_environment':os.environ['RUNNER_ENVIRONMENT'],
+            'runner_os':os.environ['RUNNER_OS'],'kernel':list(os.uname()),
+            'cargo_lock_sha256':hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
+            'offered_load':{'registered_installations_in_one_space':100,'active_pairs':20,'simultaneous_flows':1000,'reconnect_waves':3},
+            'scope':'Original HTTP management and signed grants, actual kernel QUIC/TCP targets, original limits and four-scope durable accounting. One independent management login per active consumer, unchanged original rate limits.',
+            'limitations':['one hosted process; not physical nodes or independently deployed relay runtimes',
+              'short-run samples cannot qualify cross-day soak, complete E2E or all bounded queues'],
+            'passed':False,'commands':[]}
+          def execute(name, command, timeout):
+              started = time.monotonic()
+              with (output/(name+'.log')).open('wb') as stream:
+                  result = subprocess.run(command,stdout=stream,stderr=subprocess.STDOUT,timeout=timeout)
+              receipt['commands'].append({'name':name,'argv':command,'return_code':result.returncode,'seconds':time.monotonic()-started})
+              assert result.returncode == 0, name+' failed; original failure retained'
+          try:
+              os.environ['NESTLINK_CAPACITY_SAMPLES'] = str(output/'samples.jsonl')
+              execute('build',['cargo','test','--locked','-p','nestlink-sdk','--test','capacity','--no-run','--message-format=json-render-diagnostics'],1200)
+              artifacts = [item['executable'] for line in (output/'build.log').read_text().splitlines()
+                if (item:=json.loads(line)).get('reason')=='compiler-artifact' and item.get('target',{}).get('name')=='capacity' and item.get('executable')]
+              assert len(artifacts)==1, artifacts
+              executable = pathlib.Path(artifacts[0])
+              receipt['executable_sha256'] = hashlib.sha256(executable.read_bytes()).hexdigest()
+              execute('execution',[str(executable),'--exact','hundred_enrolled_nodes_twenty_pairs_thousand_simultaneous_authorized_streams','--ignored','--nocapture','--test-threads=1'],660)
+              execute('strict-capacity',['cargo','clippy','--locked','-p','nestlink-sdk','--test','capacity','--','-D','warnings'],300)
+              receipt['passed'] = True
+          except BaseException as error:
+              receipt['failure'] = repr(error)
+              raise
+          finally:
+              receipt['files'] = [{'path':str(p.relative_to(output)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+                for p in sorted(output.rglob('*')) if p.is_file()]
+              (output/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+      - name: Retain same-source provenance, actual samples and failures
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-capacity-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/network-capacity/
+          if-no-files-found: error
+          retention-days: 30
