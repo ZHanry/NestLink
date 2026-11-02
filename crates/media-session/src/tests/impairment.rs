@@ -396,6 +396,8 @@ async fn actual_tc_step_original_vp8_files_and_input() -> Result {
     let mut downshift_unix_ns = None;
     let end = step + Duration::from_secs(5);
     let mut step_frames = 0;
+    let mut observations = String::new();
+    let mut previous_observation = None;
     while Instant::now() < end {
         step_frames += phase(
             Duration::from_millis(25),
@@ -405,8 +407,16 @@ async fn actual_tc_step_original_vp8_files_and_input() -> Result {
             &mut sequence,
         )
         .await?;
+        let actual = video.stats();
+        if let Some(budget) = actual.last_budget
+            && previous_observation != Some(budget.observed_at)
+        {
+            previous_observation = Some(budget.observed_at);
+            observations.push_str(&format!("elapsed_us={} stats={actual:?}\n", step.elapsed().as_micros()));
+            fs::write(root.join("step-budget-observations.txt"), &observations)?;
+        }
         if downshift_unix_ns.is_none()
-            && video
+            && actual
                 .stats()
                 .last_budget
                 .is_some_and(|budget| budget.observed_at >= step && budget.bitrate_kbps <= 5000)
