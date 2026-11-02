@@ -51,6 +51,48 @@
     "strict_clippy_failures": ["protocol/media_format.rs:228 collapsible_if", "protocol/media_authority.rs:227 assertion on constant value"],
     "format_check_return_code": 1
   },
+  "linux_contract_commands": {
+    "job_id": 125038551543,
+    "job_conclusion": "failure",
+    "artifact_id": 13109950198,
+    "artifact_digest": "sha256:9e1268458663dbc1985f276f76756f7029923e4728c4cdb561ea65901ea8f151",
+    "verified_inventory_files": 12,
+    "all_contract_tests_return_code": 0,
+    "all_contract_tests_log_sha256": "ee877a896ba557a2793ace6ce96c9c248e56affd907c490f7ee1e79408469320",
+    "ci_evidence_tests_return_code": 0,
+    "strict_clippy_return_code": 101,
+    "strict_clippy_log_sha256": "ad39dc5b37df2d2309fb3a2fe89748d2ee6942eabdfb33ac0992fde13b00f39e",
+    "strict_clippy_failures": ["protocol/media_format.rs:228 collapsible_if", "protocol/media_authority.rs:227 assertion on constant value"],
+    "format_check_return_code": 1
+  },
+  "actual_sdk_and_product_commands": {
+    "job_id": 125038551690,
+    "job_name": "native-ice-kernel-nat-slice",
+    "job_conclusion": "failure",
+    "only_failed_step": "NAT driver strict lint before any NAT scenario; protocol/media_format.rs:228 collapsible_if",
+    "artifact_id": 13110185164,
+    "artifact_digest": "sha256:bff52cc34448c9d6ef8ba6c1a9ed9f7bad3a0decdc3cf4b8ccd5bf323c61d877",
+    "all_13_remaining_sdk_and_product_steps": "success",
+    "total_passed_tests": 72,
+    "total_failed_tests": 0,
+    "ignored_dedicated_fixture_roles": 5,
+    "commands": [
+      {"log": "network-chain-sdk-tests.log", "passed": 2, "sha256": "036bb514fcfc2dda02119420005f093e8d073878223da7aa4c536eb9f57a2e4c", "scope": "Four-node approved actual OS file read, host-initiated inner QUIC and controller file permission after the new required-core exchange and original business proof"},
+      {"log": "network-chain-registered-tests.log", "passed": 4, "sha256": "d7b6d249f6a9331649bb5c60b089aaa60db5602967d02704532e84a9e37f593d", "scope": "Registered nodes admitted through management and original production listener"},
+      {"log": "network-route-set-sdk-tests.log", "passed": 6, "sha256": "d6a12e17824a297f985338dacec9e5cd0b0508ec43fe3b0943cba7b702ad1356"},
+      {"log": "network-space-address-sdk-tests.log", "passed": 1, "sha256": "3a6c56b9f9428fa8363b1f62ca948db34cebedecc11051f5566991077c9c2e6b"},
+      {"log": "network-signed-direct-sdk-tests.log", "passed": 3, "sha256": "cec3c8987b91dbd8ed0775bb20645d25cb8a93c338c205702d3fcd2acdc0d788"},
+      {"log": "network-private-service-sdk-tests.log", "passed": 26, "ignored": 5, "sha256": "777a76cc11c8f4a3448836c4bf83941cb98d5bf5149359aaf2f468615454c8ca", "ignored_scope": "Four raw nftables/helper cooperation roles and one Caddy/Chrome role require their dedicated hosted experiments; not counted as passed"},
+      {"log": "network-route-set-product-tests.log", "passed": 2, "sha256": "55ec914131385dce06c501c16b7d967a80e40dc77553df1bb5b6ec18abdeb46d"},
+      {"log": "network-service-publication-owner-tests.log", "passed": 11, "sha256": "c87d05c27c6063991c2e2bc792e0259ab153a8124fecd975bce6bfdac5ec9020"},
+      {"log": "network-service-publication-sdk-tests.log", "passed": 2, "sha256": "cc1e997f1cb769daa4bc3197c73c6f3cc70ad769cef02d03225dbd66d6d9c486"},
+      {"log": "network-service-start-cancellation-tests.log", "passed": 1, "sha256": "706b01f498fb9bfdf9d9572e6d080d57f3301dface0c5727ba62b94ad50b4551"},
+      {"log": "network-local-proxy-tests.log", "passed": 7, "sha256": "1086790a9beb7819241974fe11ada0d9b75f7b57082462a000047b016ba036db"},
+      {"log": "network-product-owner-tests.log", "passed": 3, "sha256": "1ec064a78390ff650976e58edba06dc81b2803fb0765d77cffe33fec4d70b17b"},
+      {"log": "network-node-admission-tests.log", "passed": 4, "sha256": "6456bf2a7197784a963b8f51674800e1912d1361c14be84436c845dc49181dab"}
+    ],
+    "scope_limitation": "This source's SDK lib filter includes chain only. Root routed malicious-offer and business-proof timeout/stop/cancel fixtures await the full Rust matrix or the later broadened workflow."
+  },
   "verification": "Downloaded the successful hosted job artifact, read each complete command log and retained its SHA256. Source is the run's exact checkout and artifact identity. No local project compilation, formatter, lint or tests ran.",
   "related_failed_jobs": {
     "quinn_carrier_replacement": 125038551164,
@@ -60,7 +102,7 @@
   },
   "limitations": [
     "This is a successful job and scoped test suites, not a successful complete workflow or release qualification.",
-    "The SDK routed remote production integration and its malicious required-offer/timeout/cancel fixtures require their own later hosted results.",
+    "SDK routed remote production chain and registered route-set happy paths passed here; its root malicious required-offer/timeout/cancel fixtures require their own later hosted results.",
     "No migration capability is advertised by production packet or routed remote admission; common-feature tests do not qualify path migration.",
     "No physical target, retained published client, signed installation or full mixed Windows/Web/node matrix acceptance is claimed."
   ]
