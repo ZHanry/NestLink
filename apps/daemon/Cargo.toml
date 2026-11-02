@@ -12,6 +12,7 @@ nestlink-auth.workspace = true
 nestlink-identity.workspace = true
 nestlink-local-ipc.workspace = true
 nestlink-protocol.workspace = true
+nestlink-policy.workspace = true
 nestlink-platform-security.workspace = true
 nestlink-media-codec.workspace = true
 nestlink-media-session.workspace = true

@@ -338,6 +338,24 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
         assert!(wall()? >= original.claims().expires_at_unix_ms);
         let source = NativeOfflineRemote::new(source, Limits::default())?;
         let target = NativeOfflineRemote::new(target, Limits::default())?;
+        let original_bundle = source.binding()?.bundle_id;
+        let original_lifetime = source.budget()?.remaining_lifetime_ms;
+        // A real silent peer consumes one signed attempt. Returning that error
+        // must release the original carrier and preserve this same authority,
+        // rather than stop it or create a new budget for the next explicit try.
+        let silent_udp = std::net::UdpSocket::bind("127.0.0.1:0")?;
+        let silent_tcp = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+        let silent_peer = match transport {
+            NativeOfflineTransport::Quic => silent_udp.local_addr()?,
+            NativeOfflineTransport::Tls => silent_tcp.local_addr()?,
+        };
+        assert!(source.connect(transport, silent_peer).await.is_err());
+        drop(silent_udp);
+        drop(silent_tcp);
+        assert!(!source.budget()?.stopped);
+        assert_eq!(source.binding()?.bundle_id, original_bundle);
+        assert_eq!(source.budget()?.connection_attempts, 1);
+        assert!(source.budget()?.remaining_lifetime_ms < original_lifetime);
         let listener = target.listen(transport, "127.0.0.1:0".parse()?).await?;
         let peer = listener.address()?;
         assert!(matches!(
@@ -367,7 +385,7 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
                     OfflineRemoteOperation::FileRead
                 ]
             );
-            assert_eq!(offline.budget.connection_attempts, 1);
+            assert_eq!(offline.budget.connection_attempts, if offline.is_host { 1 } else { 2 });
             assert!(handle.native_input_layout().is_err());
             assert!(handle.native_audio_binding().is_none());
         }

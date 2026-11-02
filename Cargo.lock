@@ -3781,6 +3781,7 @@ dependencies = [
  "nestlink-platform-network",
  "nestlink-platform-security",
  "nestlink-platform-session",
+ "nestlink-policy",
  "nestlink-privileged",
  "nestlink-protocol",
  "nestlink-remote",

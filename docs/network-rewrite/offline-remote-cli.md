@@ -1,0 +1,55 @@
+# 有限离线远控：原进程驻留入口
+
+`nestlink-daemon offline-remote` 复用已注册安装的本机 IPC、平台采集和输入、音频、剪贴板及文件选择入口。双方在线审核并消费独立签名的有限离线包后，保持这两个原进程运行，再通过明确选择的 QUIC 或 TLS 直连。界面和事件始终显示“离线仅直连”。
+
+先在普通桌面入口完成设备注册、受信设备批准、允许记住登录，以及本次远控的真实在线批准。关闭该安装的普通守护进程，释放同一用户目录的单实例锁。两个角色均使用各自现有安装目录，以普通用户启动；不能通过重新启动恢复进程 nonce 或消费过的离线包。
+
+```text
+nestlink-daemon offline-remote --state-dir <本机已有私有目录> --space <空间ID> --session <已批准的远控会话ID> --role host --transport quic --listen <本机明确直连IP>:<端口>
+nestlink-daemon offline-remote --state-dir <本机已有私有目录> --space <空间ID> --session <同一远控会话ID> --role controller --transport quic --peer <主机明确直连IP>:<端口>
+```
+
+TLS 同样使用双方明确的 `--transport tls`。没有自动降级、中继或任意地址发现。必须使用签名包允许的承载；`--listen` 不支持未指定地址或多播地址。`127.0.0.1` 只适合本机实验，跨机器应选择可达的本机地址。双方各自持有原安装私钥、保护登录、进程 nonce 和本次消费结果；这些资料不能从聊天、文件或另一进程导入为权限。
+
+命令从标准输入逐行读取 JSON，最大每行 65536 字节。输出是逐行的 `{"event":...,"data":...}`。在任一方输入 `{"command":"help"}` 可查看命令。准备过程需要管理端在线，步骤如下。
+
+1. `{"command":"policy"}` 读取空间当前离线开关。需要时由空间管理员使用真实当前版本执行 `{"command":"enable","expected_revision":<版本>,"enabled":true}`。默认关闭，不隐式开启。
+2. 双方各输入 `{"command":"begin"}`，各自记下 `process` 事件中的 `process_nonce`。这个 nonce 只属于仍在运行的原进程。
+3. 控制端输入 `draft`，完整请求见下例。`process_nonces[0]` 是控制端，`[1]` 是主机。版本、代次和许可序号必须来自这次真实批准，不能拿旧值试探扩权。权限须为原批准的子集且包含 `view`，额度和期限有限。
+4. 双方分别输入 `{"command":"review","bundle_id":"<draft返回的包ID>"}`。各自在本机核对完整 `complete_bundle_review`：空间、双方安装与账户、公钥、进程 nonce、原资源和能力摘要、操作、承载、绝对期限、累计字节、文件写入及连接尝试额度。`draft_digest` 是 32 个整数的数组。
+5. 双方在各自审核完成后输入 `{"command":"approve","draft_digest":[<完整32字节摘要>]}`。只能批准本进程刚审核的完整摘要。
+6. 双方各输入 `{"command":"activate","draft_digest":[<相同摘要>]}`。它重新获取完整当前包，再在线一次性消费。消费响应丢失也不重试以创建第二个 owner；此驻留进程记录已经尝试过消费。应重新审核新包，而不是复制旧签名到新进程。
+7. 激活和启动数据承载是分开的。双方激活成功后，可使管理端不可达，再由主机输入 `{"command":"start"}`，收到 `listening` 后由控制端输入同一命令。`connected` 才表示原独立离线证明与实际业务通道已建立。
+
+```json
+{
+  "command": "draft",
+  "request": {
+    "session_id": "<同一远控会话ID>",
+    "expected_policy_revision": 3,
+    "expected_connection_generation": 1,
+    "expected_lease_sequence": 1,
+    "process_nonces": [["<控制端32个整数>"], ["<主机32个整数>"]],
+    "operations": ["view", "file_read"],
+    "direct_transports": ["quic"],
+    "maximum_bytes": 1048576,
+    "maximum_file_write_bytes": 0,
+    "maximum_connections": 4,
+    "expires_at_ms": 0
+  }
+}
+```
+
+此示例展示字段结构；把 nonce 占位符替换成完整整数数组，并将 `expires_at_ms` 设为服务允许范围内的真实未来 UTC 毫秒期限。不能原样提交示例中的零期限。
+
+`{"command":"status"}` 显示当前阶段、累计连接尝试、剩余总字节、剩余文件写入字节、剩余期限和停止结果。一次失败尝试也消耗原连接额度；普通返回失败在清理原承载后可以再次显式 `start`，沿用同一 owner、原绝对期限和已消耗额度。自然断线必须先清理上一会话及平台 actors，才接受新的 `start`。不重放旧输入、剪贴板写入、音频、视频或文件消息。
+
+连接后，使用同一安装目录启动桌面即可附着原 IPC。在离线面板查看有限范围、选择主机屏幕、打开独立远控窗口，并使用已有的文件根目录批准和下载选择器。界面不创建管理登录或在线 principal。单实例锁保证另一守护进程不能同时读取保护登录或打开第二个配额账本。
+
+`{"command":"stop"}`、标准输入关闭、退出信号、本机注销/登录变化、安装身份变化或维护请求，都会停止原权限并等待真实资源清理。桌面“停止会话”和关闭远控窗口同样是本机终止；完成回执须在通道、输入释放、媒体、文件及承载清理之后发出。`cleanup_pending` 表示原 owner 仍被保留并继续等待，不能解释为已经释放。
+
+`{"command":"recover"}` 先停止离线传输，再联网读取最新包。恢复在线使用需要普通在线入口的新授权，不续期这次离线期限。`{"command":"revoke","bundle_id":"<包ID>"}` 通过在线管理端撤销。管理端失联时不能即时收到中心撤销；本机停止、原期限和有限额度仍持续约束。驻留运行时一旦重新读到当前管理状态，会终止离线 owner。
+
+首版驻留入口接受原 VP8/H264 普通远控 scope。携带高阶格式的原批准需要其原生 live media execution binding；尚未接入的高阶 scope 会明确拒绝，不降级为没有对应授权的媒体。实际平台能力、主机本机屏幕选择、输入提升和文件根目录批准仍按原产品入口执行，不由离线包绕过。
+
+实现和自动化验收受 R02 约束：只在 GitHub 托管 Actions 编译及执行。`native_offline` 同源集成覆盖真实双方在线消费、停止管理端、原在线许可过期后的 QUIC/TLS 业务、真实 VP8 像素、实际 262144 字节文件读、本机停止和物理主机端口重绑定。普通用户 daemon 回归覆盖入口、严格命令边界和共享注销/身份/维护 fence。真实双设备屏幕、输入、音频和公网穿透必须另有目标设备执行证据，不能用这些实验代替。

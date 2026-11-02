@@ -136,10 +136,17 @@ impl NativeOfflineRemote {
         transport: NativeOfflineTransport,
         address: std::net::SocketAddr,
     ) -> Result<NativeOfflineListener, NativeOfflineError> {
-        let (pending, permit) = self.pending()?;
+        let (mut pending, permit) = self.pending()?;
         let listener = match transport {
-            NativeOfflineTransport::Quic => Listener::Quic(self.0.sdk.listen(address)?),
-            NativeOfflineTransport::Tls => Listener::Tls(self.0.sdk.listen_tls(address).await?),
+            NativeOfflineTransport::Quic => self.0.sdk.listen(address).map(Listener::Quic),
+            NativeOfflineTransport::Tls => self.0.sdk.listen_tls(address).await.map(Listener::Tls),
+        };
+        let listener = match listener {
+            Ok(listener) => listener,
+            Err(error) => {
+                pending.armed = false;
+                return Err(error.into());
+            }
         };
         Ok(NativeOfflineListener {
             listener,
@@ -156,8 +163,17 @@ impl NativeOfflineRemote {
         let (mut pending, permit) = self.pending()?;
         let lifecycle = nestlink_remote::SessionLifecycle::new(self.0.stop.subscribe());
         let runtime = match transport {
-            NativeOfflineTransport::Quic => self.0.sdk.connect(peer, lifecycle).await?,
-            NativeOfflineTransport::Tls => self.0.sdk.connect_tls(peer, lifecycle).await?,
+            NativeOfflineTransport::Quic => self.0.sdk.connect(peer, lifecycle).await,
+            NativeOfflineTransport::Tls => self.0.sdk.connect_tls(peer, lifecycle).await,
+        };
+        let runtime = match runtime {
+            Ok(runtime) => runtime,
+            Err(error) => {
+                // Returned setup failures have released their original carrier.
+                // Cancellation still drops an armed guard and ends authority.
+                pending.armed = false;
+                return Err(error.into());
+            }
         };
         let session =
             NativeOfflineSession::attach(self.clone(), runtime, transport, permit).await?;
@@ -182,8 +198,15 @@ impl NativeOfflineListener {
         } = self;
         let lifecycle = nestlink_remote::SessionLifecycle::new(pending.remote.0.stop.subscribe());
         let runtime = match listener {
-            Listener::Quic(listener) => listener.accept(lifecycle).await?,
-            Listener::Tls(listener) => listener.accept(lifecycle).await?,
+            Listener::Quic(listener) => listener.accept(lifecycle).await,
+            Listener::Tls(listener) => listener.accept(lifecycle).await,
+        };
+        let runtime = match runtime {
+            Ok(runtime) => runtime,
+            Err(error) => {
+                pending.armed = false;
+                return Err(error.into());
+            }
         };
         let session =
             NativeOfflineSession::attach(pending.remote.clone(), runtime, transport, permit)

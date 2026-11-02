@@ -244,6 +244,16 @@ jobs:
           }
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo clippy --locked -p nestlink-app-core --test native_offline -- -D warnings 2>&1 | Tee-Object -FilePath $offlineLog -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $residentTests = @('offline_remote::tests::', 'private_service_proxy::offline::tests::', 'entry_tests::')
+          foreach ($filter in $residentTests) {
+            if ($IsWindows) {
+              python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon $filter -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog -Append
+            } else {
+              cargo test --locked -p nestlink-daemon --bin nestlink-daemon $filter -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog -Append
+            }
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
           exit $LASTEXITCODE
       - name: Check original-session quality projection and old IPC compatibility
         if: ${{ !cancelled() }}

@@ -77,7 +77,7 @@ pub struct OfflineRemoteBinding {
 }
 pub struct OfflineRemoteListener {
     owner: Arc<Inner>,
-    socket: SocketOwner,
+    socket: SocketSetup,
 }
 struct SocketOwner(nestlink_transport_quic::direct::DirectEndpoint);
 impl SocketOwner {
@@ -94,6 +94,49 @@ impl nestlink_remote::TransportOwner for SocketOwner {
         deadline: tokio::time::Instant,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = io::Result<()>> + Send + '_>> {
         Box::pin(self.0.close_and_wait(deadline))
+    }
+}
+/// A failed setup returns only after its original physical release receipt.
+/// Cancellation terminates authority and retains the endpoint in a reaper;
+/// dropping a future itself never reports a completed cleanup.
+struct SocketSetup {
+    socket: Option<SocketOwner>,
+    authority: OfflineRemoteAuthority,
+}
+impl SocketSetup {
+    fn new(socket: SocketOwner, authority: OfflineRemoteAuthority) -> Self {
+        Self { socket: Some(socket), authority }
+    }
+    fn socket(&self) -> Result<&SocketOwner, SdkError> {
+        self.socket.as_ref().ok_or(SdkError::Invalid)
+    }
+    fn transfer(&mut self) -> Result<SocketOwner, SdkError> {
+        self.socket.take().ok_or(SdkError::Invalid)
+    }
+    async fn complete<T>(mut self, result: Result<T, SdkError>) -> Result<T, SdkError> {
+        if result.is_err() && let Some(socket) = self.socket.as_mut() {
+            socket.0.close_and_wait(tokio::time::Instant::now() + Duration::from_secs(5)).await?;
+            self.socket.take();
+        }
+        result
+    }
+}
+impl Drop for SocketSetup {
+    fn drop(&mut self) {
+        if let Some(mut socket) = self.socket.take() {
+            self.authority.stop();
+            socket.0.request_close();
+            if let Ok(runtime) = tokio::runtime::Handle::try_current() {
+                runtime.spawn(async move {
+                    loop {
+                        match socket.0.close_and_wait(tokio::time::Instant::now() + Duration::from_secs(2)).await {
+                            Err(error) if error.kind() == io::ErrorKind::TimedOut => continue,
+                            _ => break,
+                        }
+                    }
+                });
+            }
+        }
     }
 }
 pub struct OfflineRemoteRuntime {
@@ -231,7 +274,7 @@ impl OfflineRemoteOwner {
         .map_err(SdkError::NodeQuic)?;
         Ok(OfflineRemoteListener {
             owner: self.0.clone(),
-            socket: SocketOwner(endpoint),
+            socket: SocketSetup::new(SocketOwner(endpoint), self.0.authority.clone()),
         })
     }
     pub async fn connect(
@@ -263,23 +306,26 @@ impl OfflineRemoteOwner {
             digest(&key),
         )
         .map_err(SdkError::NodeQuic)?;
-        let socket = SocketOwner(endpoint);
-        let connection =
-            nestlink_transport_quic::connect(socket.endpoint()?, peer, self.0.budget()?)
+        let mut socket = SocketSetup::new(SocketOwner(endpoint), self.0.authority.clone());
+        let result = async {
+            let connection = nestlink_transport_quic::connect(socket.socket()?.endpoint()?, peer, self.0.budget()?)
                 .await
                 .map_err(SdkError::NodeQuic)?;
-        self.0.finish(connection, socket, lifecycle).await
+            self.0.finish(connection, &mut socket, lifecycle).await
+        }.await;
+        socket.complete(result).await
     }
 }
 impl OfflineRemoteListener {
     pub fn address(&self) -> Result<SocketAddr, SdkError> {
-        Ok(self.socket.endpoint()?.local_addr()?)
+        Ok(self.socket.socket()?.endpoint()?.local_addr()?)
     }
     pub async fn accept(
-        self,
+        mut self,
         lifecycle: SessionLifecycle,
     ) -> Result<OfflineRemoteRuntime, SdkError> {
-        let incoming = tokio::time::timeout(self.owner.budget()?, self.socket.endpoint()?.accept())
+        let result = async {
+        let incoming = tokio::time::timeout(self.owner.budget()?, self.socket.socket()?.endpoint()?.accept())
             .await
             .map_err(|_| SdkError::Timeout)?
             .ok_or(SdkError::Invalid)?;
@@ -290,7 +336,9 @@ impl OfflineRemoteListener {
             .await
             .map_err(|_| SdkError::Timeout)?
             .map_err(io::Error::other)?;
-        self.owner.finish(connection, self.socket, lifecycle).await
+        self.owner.finish(connection, &mut self.socket, lifecycle).await
+        }.await;
+        self.socket.complete(result).await
     }
 }
 impl Inner {
@@ -305,7 +353,7 @@ impl Inner {
     async fn finish(
         self: &Arc<Self>,
         connection: quinn::Connection,
-        socket: SocketOwner,
+        socket: &mut SocketSetup,
         lifecycle: SessionLifecycle,
     ) -> Result<OfflineRemoteRuntime, SdkError> {
         let index = match self.role {
@@ -361,10 +409,10 @@ impl Inner {
             self.authority.clone(),
             clock.sample()?,
         )?;
-        let local_address = socket.endpoint()?.local_addr()?;
+        let local_address = socket.socket()?.endpoint()?.local_addr()?;
         let channels = nestlink_remote::quic::authorize(
             connection,
-            Some(socket.endpoint()?.clone()),
+            Some(socket.socket()?.endpoint()?.clone()),
             SessionSetup {
                 session,
                 path: Path::Direct,
@@ -376,7 +424,7 @@ impl Inner {
             &peer,
         )
         .await?
-        .with_transport_owner(socket);
+        .with_transport_owner(socket.transfer()?);
         Ok(self.runtime(channels, local_address))
     }
     fn runtime(

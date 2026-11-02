@@ -11,6 +11,8 @@ mod native_files;
 #[cfg(windows)]
 mod native_gpu_diagnostics;
 mod native_video;
+mod offline_remote;
+mod offline_resident;
 #[cfg(any(target_os = "linux", windows))]
 mod network_lan;
 #[cfg(any(target_os = "linux", windows))]
@@ -86,6 +88,9 @@ struct Args {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Keep a consumed finite offline remote authority in its original process.
+    /// Local desktop data uses the existing authenticated user IPC endpoint.
+    OfflineRemote(offline_remote::OfflineRemoteArgs),
     /// Administrator helper for an explicit ordinary-user loopback gate.
     /// It never loads installation keys, management login or service authority.
     #[cfg(any(target_os = "linux", windows))]
@@ -479,6 +484,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Their inline union can overflow the Windows main stack before the
     // selected command (including a synchronous quota inspection) even starts.
     match args.command.take() {
+        Some(Command::OfflineRemote(command)) => return Box::pin(offline_remote::run(command)).await,
         #[cfg(any(target_os = "linux", windows))]
         Some(Command::LocalPortGate(command)) => {
             return Box::pin(local_port_gate::run(command)).await;
