@@ -1,0 +1,96 @@
+name: Build original Windows media direction tools for target diagnostics
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Exact main revision; these diagnostic tools are not release candidates
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  tools:
+    runs-on: windows-2025
+    timeout-minutes: 40
+    env:
+      CARGO_INCREMENTAL: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      EXPECTED_SOURCE: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - id: msys
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
+        with:
+          msystem: MSYS
+          install: make perl diffutils gawk sed grep coreutils nasm
+          cache: false
+      - name: Select original locked codec prefix
+        shell: pwsh
+        run: |
+          $codecRoot = Join-Path $env:RUNNER_TEMP 'target-tools-codecs/x86_64-pc-windows-msvc'
+          "NESTLINK_CODEC_PREFIX=$codecRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Build and verify original native components on GitHub
+        run: |
+          python scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir "${{ runner.temp }}/codec-sources" --work-dir "${{ runner.temp }}/target-tools-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-native-codecs.py verify --target x86_64-pc-windows-msvc --prefix "$env:NESTLINK_CODEC_PREFIX"
+          exit $LASTEXITCODE
+      - name: Build bounded original direction tools and retain exact executable hashes
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, re, shutil, subprocess
+          expected = os.environ['EXPECTED_SOURCE']
+          assert re.fullmatch('[0-9a-f]{40}', expected)
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip() == expected
+          subprocess.run(['git','merge-base','--is-ancestor',expected,'origin/main'],check=True)
+          assert subprocess.check_output(['git','status','--porcelain=v1','--untracked-files=all']) == b''
+          output = pathlib.Path(os.environ['RUNNER_TEMP'])/'windows-media-target-tools'
+          output.mkdir()
+          receipt = {'source_revision':expected,'workflow_revision':os.environ['GITHUB_WORKFLOW_SHA'],
+            'workflow':os.environ['GITHUB_WORKFLOW_REF'],'run_id':os.environ['GITHUB_RUN_ID'],
+            'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'runner_environment':os.environ['RUNNER_ENVIRONMENT'],
+            'runner_os':os.environ['RUNNER_OS'],'cargo_lock_sha256':hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
+            'scope':'Finite original native direction workloads with synthetic input. No desktop capture, transport, scanout, sustained performance, HDR or native ten-bit capture qualification.',
+            'target_execution_performed':False,'commands':[],'passed':False}
+          try:
+              for name,args in [
+                ('build',['cargo','build','--release','--locked','-p','nestlink-media-codec','--examples']),
+                ('strict',['cargo','clippy','--release','--locked','-p','nestlink-media-codec','--examples','--','-D','warnings'])]:
+                  with (output/(name+'.log')).open('wb') as stream:
+                      result = subprocess.run(args,stdout=stream,stderr=subprocess.STDOUT,timeout=1200)
+                  receipt['commands'].append({'name':name,'argv':args,'return_code':result.returncode})
+                  assert result.returncode == 0, name+' failed'
+              names = ['windows-cpu-direction-probe','windows-controller-direction-probe','windows-hevc-direction-probe']
+              for name in names:
+                  shutil.copyfile(pathlib.Path('target/release/examples')/(name+'.exe'),output/(name+'.exe'))
+              shutil.copyfile('LICENSE',output/'LICENSE')
+              shutil.copyfile('Cargo.lock',output/'Cargo.lock')
+              shutil.copyfile('docs/refactor/native-codecs.lock.json',output/'native-codecs.lock.json')
+              shutil.copyfile('docs/network-rewrite/WINDOWS-MEDIA-TARGET-TOOLS.md',output/'README.md')
+              shutil.copytree('packaging/notices',output/'notices')
+              shutil.copyfile(pathlib.Path(os.environ['NESTLINK_CODEC_PREFIX'])/'nestlink-codecs.json',output/'nestlink-codecs.json')
+              shutil.copytree(pathlib.Path(os.environ['NESTLINK_CODEC_PREFIX'])/'share/licenses',output/'native-licenses')
+              receipt['passed'] = True
+          finally:
+              receipt['files'] = [{'path':p.relative_to(output).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+                for p in sorted(output.rglob('*')) if p.is_file()]
+              (output/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: windows-media-target-tools-${{ inputs.source_revision }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/windows-media-target-tools/
+          if-no-files-found: error
+          retention-days: 30

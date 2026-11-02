@@ -71,3 +71,20 @@ archive and eleven receipt files were verified; the failure remains recorded.
 ADR 0066 removes redundant work within one production readback without caching
 authority or changing any original deadline or currentness requirement. Its
 new source and original workloads still require hosted validation.
+
+Run 41447173194 at f3cfb45 executed the original release pair-window scenario
+with ADR 0066. Its exact-byte/tamper/expiry/ACL regression, original seven HTTP,
+one negotiation and six multiplex regressions passed. All twenty controls and
+1000 application flows reported readiness. The original assertion after the
+two-second full-load hold then observed zero actual live targets instead of
+1000 as the original authority expired. No wave_live sample or completed wave
+exists. The official ZIP and all receipt files were verified. This result is
+failed; a thousand readiness events do not establish a surviving full-load wave.
+
+ADR 0067 additionally reuses rusqlite's existing bounded compiled statements
+for each full current policy snapshot and all original revocation collectors.
+Only SQL compilation is reused; rows, signatures and authorization decisions
+are read or verified again. The next exact-source original pair-window run is
+41449447897 at d7e735d. It also executes the existing external-change, persisted
+revocation/restart and clock-rollback/restore storage regressions. All prior
+failures and every original deadline, bound and load assertion remain in force.
