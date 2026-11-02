@@ -92,22 +92,34 @@ class Actors:
         argv = ["xdotool", "search", "--onlyvisible", "--name", title]
         deadline = time.monotonic() + seconds
         attempts = 0
+        blocked_queries = 0
         while time.monotonic() < deadline:
-            result = subprocess.run(argv, env=env, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, timeout=2, check=False)
             attempts += 1
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            try:
+                result = subprocess.run(argv, env=env, stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT, timeout=min(2, remaining), check=False)
+            except subprocess.TimeoutExpired:
+                # Initial software GL setup can hold the X server briefly.
+                # A blocked individual observation is still pending startup;
+                # it consumes the same absolute bound, never an added retry.
+                blocked_queries += 1
+                continue
             assert result.returncode in (0, 1), result.stdout.decode(errors="replace")
             if result.returncode == 0:
                 windows = result.stdout.decode().splitlines()
                 assert len(windows) == 1, "exact owned X server must expose one matching game window"
                 self.commands.append({"command": argv, "return_code": 0,
-                                      "attempts": attempts, "window_ids": windows})
+                                      "attempts": attempts, "blocked_queries": blocked_queries,
+                                      "window_ids": windows})
                 actual = self.run(["xdotool", "getwindowname", windows[0]], env=env)
                 assert title in actual
                 return windows[0]
-            time.sleep(0.1)
+            time.sleep(min(0.1, max(0, deadline - time.monotonic())))
         self.commands.append({"command": argv, "attempts": attempts, "timed_out": True,
-                              "timeout_seconds": seconds})
+                              "blocked_queries": blocked_queries, "timeout_seconds": seconds})
         raise AssertionError("actual visible " + title + " window did not appear within its startup bound")
 
     def observe_failure(self, prefix, env):
