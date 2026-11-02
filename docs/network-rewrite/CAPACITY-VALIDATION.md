@@ -115,3 +115,37 @@ timings and is not a pure opening phase. Setup wall time includes the original
 ZIP digest, all 58 verified payloads, exact producer inventory, independently
 checked realtime boundaries and original failure. No thousand-live hold,
 completed wave, AC68 or soak qualification follows from diagnostic success.
+
+The perf-phases run 41483686808 at 4ec2c3c completed the original release
+pair-window workload in 275.065 seconds under its unchanged 660-second budget.
+All 14 sampler regressions, all 22 executed Rust tests and both strict Clippy
+commands passed. The exact sample inventory contains 3000 unique wave/pair/flow
+tuples: three waves, twenty pairs and fifty flows per pair. Each wave has twenty
+original leases and multiplex controls, 1000 simultaneously active real TCP
+targets, the original two-second hold and a subsequent drain. The original
+resource-scope readback asserts each pair's cumulative 1600/3200/4800 bytes,
+zero outstanding bytes and zero active grants. These are passed Rust assertions;
+the event file does not contain separate numeric receipts for every quota scope.
+All owned UDP and TCP listener addresses were rebound after shutdown. Final
+process FD count is 27, so physical owner cleanup does not imply zero process
+descriptors or allocations.
+
+The official ZIP digest and all 60 receipt payloads were independently verified.
+All 29 producers returned zero, with complete output and test inventories.
+The 277 clock anchors have a maximum 16284 ns uncertainty and zero observed
+offset span. Independently recomputed windows match their original perf --time
+arguments; their 29, 32 and 3269 samples total all 3330 captured samples, with
+zero lost samples. The final 30.1028-second window includes every successful
+wave, hold, drain and cleanup; it is not a pure opening phase. Its symbol-name
+groups include curve25519 732, serde 528 and sqlite3-prefixed 554 samples.
+
+This runner used an AMD EPYC 9V45 with four online CPUs; the prior efebb7b run
+used an EPYC 7763 with four online CPUs and failed during a roughly 9.0547-second
+final window. Different hardware, outcomes and exposure prevent causal speedup
+claims or direct sample-percentage comparisons. Setup still includes the original
+244 seconds of rate-limit waits, and attachment can miss early target work.
+`evidence/perf-4ec2c3c.json` records the complete verified inventories and limits.
+The diagnostic receipt retains original_workload_passed=true and
+diagnostic_passed=true, but passed=false and ac68_passed=false. An exact-source
+sampling=none qualification remains separate. Every historical failure remains
+recorded, and this short hosted process does not qualify AC68 or cross-day soak.
