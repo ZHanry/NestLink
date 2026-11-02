@@ -52,20 +52,29 @@ impl DecodedVideo {
     pub(crate) fn export_execution(&self) -> io::Result<Option<crate::LiveExecutionReceipt>> {
         let Some(execution) = &self.execution else {
             if self.codec > nestlink_protocol::NativeVideoCodec::H264Baseline as u8 {
-                return Err(io::Error::other("HEVC export lacks original sealed decoder output"));
+                return Err(io::Error::other(
+                    "HEVC export lacks original sealed decoder output",
+                ));
             }
             return Ok(None);
         };
         execution.check_decoded(self.pts_90khz, &self.pixels)?;
         let config = execution.target().config();
         let codec_matches = match execution {
-            crate::LiveExecutionReceipt::H264(_) => self.codec == nestlink_protocol::NativeVideoCodec::H264Baseline as u8
-                && self.hardware_decode == execution.identity()?.adapter_luid().is_some(),
+            crate::LiveExecutionReceipt::H264(_) => {
+                self.codec == nestlink_protocol::NativeVideoCodec::H264Baseline as u8
+                    && self.hardware_decode == execution.identity()?.adapter_luid().is_some()
+            }
             #[cfg(windows)]
-            crate::LiveExecutionReceipt::Hevc(_) => self.codec == nestlink_protocol::NativeVideoCodec::HevcMain8 as u8 && self.hardware_decode,
+            crate::LiveExecutionReceipt::Hevc(_) => {
+                self.codec == nestlink_protocol::NativeVideoCodec::HevcMain8 as u8
+                    && self.hardware_decode
+            }
         };
         if !codec_matches || (config.width, config.height) != (self.width, self.height) {
-            return Err(io::Error::other("decoded export differs from original execution target"));
+            return Err(io::Error::other(
+                "decoded export differs from original execution target",
+            ));
         }
         Ok(Some(execution.clone()))
     }

@@ -24,7 +24,9 @@ pub use browser_host::*;
 #[cfg(not(target_arch = "wasm32"))]
 pub use native_session::*;
 #[cfg(not(target_arch = "wasm32"))]
-pub use nestlink_media_session::{DecodedExportLedger, DecodedFrameExport, DecodedVideo, VideoLayout};
+pub use nestlink_media_session::{
+    DecodedExportLedger, DecodedFrameExport, DecodedVideo, VideoLayout,
+};
 #[cfg(not(target_arch = "wasm32"))]
 pub use runtime::*;
 

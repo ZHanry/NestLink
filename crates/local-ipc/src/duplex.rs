@@ -13,7 +13,9 @@ struct Shared {
 impl Shared {
     fn fence_peer(&self) {
         #[cfg(windows)]
-        if let Some(peer) = &self.peer { peer.fence(); }
+        if let Some(peer) = &self.peer {
+            peer.fence();
+        }
     }
 }
 pub struct LocalRead {

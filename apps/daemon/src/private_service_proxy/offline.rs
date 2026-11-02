@@ -387,7 +387,10 @@ impl Resident {
                 // its original authority. The SDK's pause/resume synchronization
                 // requires a live authority, so read the same authenticated
                 // bundle directly and never attempt to resume this owner.
-                let view = self.sdk.offline_bundle(&self.args.space, &bundle_id).await?;
+                let view = self
+                    .sdk
+                    .offline_bundle(&self.args.space, &bundle_id)
+                    .await?;
                 self.check_review(&view)?;
                 emit("online_state", view)?;
                 self.status()?;

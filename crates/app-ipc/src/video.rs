@@ -2,7 +2,9 @@
 //! never used for pixels; one authenticated TLS connection switches to a
 //! binary-only stream after a session-bound OpenNativeVideo request.
 use crate::wire::{Command, Reply, Request, Response};
-use nestlink_app_core::{CoreHandle, DecodedExportLedger, DecodedFrameExport, NativeSessionStatus, VideoLayout};
+use nestlink_app_core::{
+    CoreHandle, DecodedExportLedger, DecodedFrameExport, NativeSessionStatus, VideoLayout,
+};
 use nestlink_local_ipc::{
     Error as LocalError, LocalStream, VIDEO_CHUNK_BYTES, VIDEO_HEADER_BYTES, VIDEO_PAYLOAD_BYTES,
 };
@@ -532,7 +534,9 @@ async fn send_frame_monitored(
         }
     }
     for chunk in pixels.chunks(VIDEO_CHUNK_BYTES) {
-        if export.check_current().is_err() || !frame_authority_is_live(core, binding, expected_layout) {
+        if export.check_current().is_err()
+            || !frame_authority_is_live(core, binding, expected_layout)
+        {
             return Err(crate::Error::Protocol);
         }
         let sending = connection.send_video_payload_chunk(chunk);
