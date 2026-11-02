@@ -148,6 +148,28 @@ class EvidenceTests(unittest.TestCase):
             self.assertEqual(result["log_bytes"], len(raw))
         self.assertEqual(len(records), 2)
 
+    def test_windows_legacy_console_cannot_abort_unicode_failure_receipt(self):
+        records = []
+        destination = io.BytesIO()
+        console = io.TextIOWrapper(destination, encoding="cp1252", errors="strict")
+        try:
+            with contextlib.redirect_stdout(console):
+                result = CI.run_command(
+                    "unicode-failure", [sys.executable, "-B", "-c",
+                        "import sys; sys.stdout.buffer.write(bytes.fromhex('e4b8ade69687ff')); raise SystemExit(19)"],
+                    self.root, self.root, records, timeout=30,
+                )
+            console.flush()
+            shown = destination.getvalue().decode("utf-8")
+            self.assertIn("中文\ufffd", shown)
+            self.assertEqual(result["return_code"], 19)
+            raw = (self.root / "unicode-failure.log").read_bytes()
+            self.assertIn(bytes.fromhex("e4b8ade69687ff"), raw)
+            self.assertEqual(result["log_sha256"], hashlib.sha256(raw).hexdigest())
+            self.assertEqual(len(records), 1)
+        finally:
+            console.detach()
+
 
 if __name__ == "__main__":
     unittest.main()

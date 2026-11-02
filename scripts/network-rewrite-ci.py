@@ -185,7 +185,18 @@ def run_command(name: str, arguments: list[str], source: Path, output: Path,
             record["log_sha256"] = sha256_file(log_path)
             with log_path.open("rb") as log:
                 log.seek(max(0, record["log_bytes"] - 16 * 1024))
-                print(log.read().decode("utf-8", errors="replace"), flush=True)
+                tail = log.read().decode("utf-8", errors="replace") + "\n"
+                # GitHub consumes UTF-8 bytes. A normal Windows account may
+                # have a cp1252 stdout wrapper even when a formatter emits
+                # Chinese source lines or invalid-byte replacement characters.
+                # Console presentation must not terminate the remaining checks.
+                binary_stdout = getattr(sys.stdout, "buffer", None)
+                if binary_stdout is not None:
+                    sys.stdout.flush()
+                    binary_stdout.write(tail.encode("utf-8"))
+                    binary_stdout.flush()
+                else:
+                    print(tail, end="", flush=True)
         print(json.dumps(record, sort_keys=True), flush=True)
     return record
 

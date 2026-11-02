@@ -49,8 +49,8 @@ jobs:
             'passed':False,'commands':[]}
           def execute(name, command, timeout):
               started = time.monotonic()
-              with (output/(name+'.log')).open('wb') as stream:
-                  result = subprocess.run(command,stdout=stream,stderr=subprocess.STDOUT,timeout=timeout)
+              with (output/(name+'.log')).open('wb') as stream, (output/(name+'.stderr.log')).open('wb') as errors:
+                  result = subprocess.run(command,stdout=stream,stderr=errors,timeout=timeout)
               receipt['commands'].append({'name':name,'argv':command,'return_code':result.returncode,'seconds':time.monotonic()-started})
               assert result.returncode == 0, name+' failed; original failure retained'
           try:

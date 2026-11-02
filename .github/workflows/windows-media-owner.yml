@@ -113,6 +113,18 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --lib video::tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/readback-ipc-tests.log"
           exit $LASTEXITCODE
+      - name: Verify explicit GPU intent and exact local approval refusal boundaries
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib sdk_call::media_approval_tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-approval-tests.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --test media_opt_in -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-http-tests.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon media_cli_tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-cli-tests.log"
+          exit $LASTEXITCODE
       - name: Verify production HEVC selection and strict original daemon cleanup boundaries
         if: ${{ !cancelled() }}
         shell: pwsh

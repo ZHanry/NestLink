@@ -13,8 +13,12 @@ use nestlink_protocol::{
 };
 
 fuzz_target!(|input: &[u8]| {
-    let Some((&selector, bytes)) = input.split_first() else { return; };
-    if bytes.len() > 65_536 { return; }
+    let Some((&selector, bytes)) = input.split_first() else {
+        return;
+    };
+    if bytes.len() > 65_536 {
+        return;
+    }
     match selector % 8 {
         0 => {
             if let Ok(fragment) = v1::decode(bytes) {
@@ -48,9 +52,15 @@ fuzz_target!(|input: &[u8]| {
                     assert_eq!(next.payload, fragment.payload);
                     let mut expected = bytes.to_vec();
                     expected[5] -= 1;
-                    assert_eq!(forwarded, expected, "forwarding changed more than the hop byte");
+                    assert_eq!(
+                        forwarded, expected,
+                        "forwarding changed more than the hop byte"
+                    );
                 }
-                let reverse = match direction { Direction::FirstToSecond => Direction::SecondToFirst, Direction::SecondToFirst => Direction::FirstToSecond };
+                let reverse = match direction {
+                    Direction::FirstToSecond => Direction::SecondToFirst,
+                    Direction::SecondToFirst => Direction::FirstToSecond,
+                };
                 let mut rejected = bytes.to_vec();
                 assert!(v2::forward(&mut rejected, binding, reverse, hops).is_err());
                 assert_eq!(rejected, bytes);
@@ -59,7 +69,9 @@ fuzz_target!(|input: &[u8]| {
         2 => {
             if let Ok(value) = VideoFormat::decode(bytes) {
                 assert_eq!(value.encode().expect("accepted format must encode"), bytes);
-                value.digest().expect("accepted format has a canonical digest");
+                value
+                    .digest()
+                    .expect("accepted format has a canonical digest");
             }
         }
         3 => {
@@ -69,12 +81,20 @@ fuzz_target!(|input: &[u8]| {
         }
         4 => {
             if let Ok(value) = GrantClaims::decode_canonical(bytes) {
-                assert_eq!(value.canonical_bytes().expect("accepted grant must encode"), bytes);
+                assert_eq!(
+                    value.canonical_bytes().expect("accepted grant must encode"),
+                    bytes
+                );
             }
         }
         5 => {
             if let Ok(value) = OfflineGrantBundleClaims::decode_canonical(bytes) {
-                assert_eq!(value.canonical_bytes().expect("accepted offline claims must encode"), bytes);
+                assert_eq!(
+                    value
+                        .canonical_bytes()
+                        .expect("accepted offline claims must encode"),
+                    bytes
+                );
             }
         }
         6 => {
@@ -87,8 +107,13 @@ fuzz_target!(|input: &[u8]| {
         }
         _ => {
             if let Ok(value) = NativeVideo::decode_validated(bytes) {
-                let encoded = value.encode_validated().expect("accepted video must encode");
-                assert_eq!(NativeVideo::decode_validated(&encoded).expect("re-encoded video"), value);
+                let encoded = value
+                    .encode_validated()
+                    .expect("accepted video must encode");
+                assert_eq!(
+                    NativeVideo::decode_validated(&encoded).expect("re-encoded video"),
+                    value
+                );
             }
         }
     }
