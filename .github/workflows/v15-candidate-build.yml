@@ -116,6 +116,7 @@ jobs:
     env:
       CANDIDATE_PART: ${{ matrix.part }}
       RUST_TARGET: ${{ matrix.target }}
+      CANDIDATE_SOURCE: ${{ inputs.source_revision }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -133,6 +134,18 @@ jobs:
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as stream:
               stream.write("CARGO_TARGET_DIR=" + str(scratch / "rust-build") + "\n")
               stream.write("NESTLINK_CODEC_PREFIX=" + str(scratch / "native-codecs" / os.environ["RUST_TARGET"]) + "\n")
+      - name: Preserve exact native source and build provenance before tool installation
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, platform, subprocess
+          evidence = pathlib.Path(os.environ["RUNNER_TEMP"]) / "native-source-lock-evidence"
+          evidence.mkdir()
+          source = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          record = {"source_revision": source, "requested_source_revision": os.environ["CANDIDATE_SOURCE"], "workflow_revision": os.environ["GITHUB_WORKFLOW_SHA"], "workflow": os.environ["GITHUB_WORKFLOW_REF"], "run_id": os.environ["GITHUB_RUN_ID"], "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"], "target": os.environ["RUST_TARGET"], "runner_environment": os.environ["RUNNER_ENVIRONMENT"], "platform": platform.platform(), "cargo_lock_sha256": hashlib.sha256(pathlib.Path("Cargo.lock").read_bytes()).hexdigest(), "qualification_claimed": False}
+          (evidence / "provenance.json").write_text(json.dumps(record, indent=2) + "\n")
+          if source != os.environ["CANDIDATE_SOURCE"]:
+              raise SystemExit("Native checkout differs from the requested candidate source")
+          subprocess.run(["python", "-B", "scripts/refactor-candidate-source-readback.py", "--phase", "candidate-native-checkout"], check=True, timeout=60)
       - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
         with:
           toolchain: "1.96.0"
@@ -166,17 +179,31 @@ jobs:
           command = ["cargo", "build", "--release", "--locked", "--target", os.environ["RUST_TARGET"]]
           for package in packages:
               command.extend(["-p", package])
-          subprocess.run(command, check=True, timeout=4800)
+          evidence = scratch / "native-source-lock-evidence"
+          guarded = ["python", "-B", "scripts/refactor-candidate-source-readback.py", "--phase", "candidate-native-build", "--lock-evidence-dir", str(evidence), "--metadata-preflight", "--"] + command
+          with (evidence / "native-build.log").open("wb") as log:
+              result = subprocess.run(guarded, stdout=log, stderr=subprocess.STDOUT, timeout=4900)
+          print((evidence / "native-build.log").read_bytes()[-256*1024:].decode("utf-8", "replace"), flush=True)
+          result.check_returncode()
           collect = ["python", "-B", "scripts/refactor-candidate-producer.py", "collect-native", "--cohort", str(scratch / "candidate-cohort/candidate-cohort.json"), "--input", str(scratch / "rust-build" / os.environ["RUST_TARGET"] / "release"), "--output", str(scratch / "part"), "--target", os.environ["CANDIDATE_PART"], "--codec-prefix", os.environ["NESTLINK_CODEC_PREFIX"]]
           if os.name == "nt":
               compiler = next(pathlib.Path(os.environ[key]) / "Inno Setup 6/ISCC.exe" for key in ("ProgramFiles(x86)", "ProgramFiles") if (pathlib.Path(os.environ[key]) / "Inno Setup 6/ISCC.exe").is_file())
               collect += ["--iscc", str(compiler)]
-          subprocess.run(collect, check=True, timeout=600)
+          subprocess.run(collect, check=True, timeout=900)
+      - name: Retain native source, lock and build failures
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: candidate-native-source-lock-evidence-${{ matrix.part }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/native-source-lock-evidence
+          if-no-files-found: warn
+          retention-days: 30
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
         with:
           name: rc-development-part-${{ matrix.part }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/part
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 90
 
   web-and-metadata:

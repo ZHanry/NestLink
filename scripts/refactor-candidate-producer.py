@@ -79,6 +79,7 @@ EVIDENCE = {
     **{name: {name + "-readback.json", name + "-system-notices.tar.gz", name + "-tools.json"}
        for name in ("oci-x64", "oci-arm64")},
 }
+EVIDENCE["windows-x64"].add("windows-candidate-installation.json")
 SIGNING = {"windows": "not-configured", "linux_update": "not-configured", "oci": "not-configured"}
 require = TOOLS.require
 digest = TOOLS.digest
@@ -369,11 +370,13 @@ def collect_native(args):
     files.mkdir()
     (destination / "README.candidate.txt").write_text(candidate_readme(value), encoding="utf-8")
     artifacts = []
+    installers = {}
     for role in ("desktop", "privileged") if args.target == "windows-x64" else ("server", "network"):
         suffix = "windows-x64" + ("-privileged" if role == "privileged" else "") if args.target == "windows-x64" else args.target + "-" + role
         path = files / ("NestLink-candidate-" + suffix + (".exe" if args.target == "windows-x64" else ".deb"))
         if args.target == "windows-x64":
             setup_candidate(destination, path, role, value["version"], args.iscc)
+            installers[role] = path
             artifact_role = "windows-x64-privileged-setup" if role == "privileged" else "windows-x64-setup"
         else:
             deb_candidate(destination, path, role, "arm64" if args.target == "linux-arm64" else "amd64", value)
@@ -384,6 +387,9 @@ def collect_native(args):
     copy_fixed(args.codec_prefix / supplier.RECEIPT, evidence / (args.target + "-codecs.json"))
     write_json(evidence / (args.target + "-tools.json"), TOOLS.tool_facts((("rustc", "--version", "--verbose"), ("cargo", "--version"))))
     write_json(evidence / (args.target + "-signing.json"), {"source_revision": value["source_revision"], "status": "not-configured", "production_update_eligible": False, "note": "Candidate installers are isolated and unsigned; formal installer and signed update verification remain mandatory for formal release."})
+    if args.target == "windows-x64":
+        installation = module("candidate_windows_installation", "scripts/refactor-windows-candidate-install.py")
+        installation.qualify(value, args.output, destination, installers, TOOLS)
     # The explanatory file is part of the material inventory, not an executable.
     payload.append(record(args.output, destination / "README.candidate.txt", "native-" + args.target + "-readme", value["source_revision"]))
     part_receipt(args, args.target, artifacts, payload)
@@ -594,7 +600,7 @@ def freeze(args):
                 copy_fixed(verify_record(args.bundle, item, value["source_revision"]), target)
                 if name in NATIVE and item["role"].startswith("native-") and not item["role"].endswith("-readme") and name != "windows-x64":
                     target.chmod(0o755)
-        for name in ("scripts/refactor-candidate-producer.py", ".github/workflows/v15-candidate-build.yml", "config/candidate-producer.json", "config/product-scope.json", "packaging/candidate/windows.iss", "packaging/candidate/Dockerfile"):
+        for name in ("scripts/refactor-candidate-producer.py", "scripts/refactor-windows-candidate-install.py", ".github/workflows/v15-candidate-build.yml", "config/candidate-producer.json", "config/product-scope.json", "packaging/candidate/windows.iss", "packaging/candidate/Dockerfile"):
             copy_fixed(ROOT / name, materials / "build-sources" / name)
         zip_tree(materials, files / "NestLink-candidate-materials.zip", value["source_epoch"])
     artifacts.append(record(args.output, files / "NestLink-candidate-materials.zip", "materials", value["source_revision"]))
