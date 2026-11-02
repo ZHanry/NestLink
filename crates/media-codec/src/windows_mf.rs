@@ -974,6 +974,20 @@ mod gpu_input_tests {
 }
 
 #[cfg(test)]
+mod adapter_binding_tests {
+    unsafe extern "C" {
+        fn nl_mf_adapter_binding_contract() -> u32;
+    }
+    #[test]
+    fn real_attributes_require_exact_luid_blob_and_both_adapter_parts() {
+        // SAFETY: the routine owns and closes all COM/MF metadata objects.
+        // It opens no device, encoder, window or capture resource.
+        let passed = unsafe { nl_mf_adapter_binding_contract() };
+        assert_eq!(passed, 511, "MF adapter binding bitmask: {passed:#x}");
+    }
+}
+
+#[cfg(test)]
 mod hevc_color_tests {
     unsafe extern "C" {
         fn nl_hevc_color_contract() -> u32;

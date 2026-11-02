@@ -31,6 +31,65 @@ using Microsoft::WRL::ComPtr;
 namespace {
 constexpr size_t raw_limit = 64 * 1024 * 1024;
 constexpr size_t packet_limit = 8 * 1024 * 1024;
+constexpr UINT32 adapter_luid_bytes = sizeof(LUID);
+uint64_t adapter_luid_bits(const LUID& luid) noexcept {
+    return static_cast<uint64_t>(static_cast<uint32_t>(luid.HighPart)) << 32 | luid.LowPart;
+}
+bool same_adapter_luid(const LUID& left, const LUID& right) noexcept {
+    return left.HighPart == right.HighPart && left.LowPart == right.LowPart;
+}
+// MFT_ENUM_ADAPTER_LUID is a LUID blob, not a UINT64 attribute. Use this exact
+// reader for the enumeration request, activation identity and metadata tests.
+HRESULT read_adapter_luid(IMFAttributes* attributes, LUID* result, UINT32* blob_bytes) noexcept {
+    if (!attributes || !result || !blob_bytes) return E_POINTER;
+    *result = LUID{}; *blob_bytes = 0;
+    HRESULT hr = attributes->GetBlobSize(MFT_ENUM_ADAPTER_LUID, blob_bytes);
+    if (hr != S_OK) return FAILED(hr) ? hr : E_UNEXPECTED;
+    if (*blob_bytes != adapter_luid_bytes) return E_INVALIDARG;
+    LUID value{}; UINT32 received = 0;
+    hr = attributes->GetBlob(MFT_ENUM_ADAPTER_LUID, reinterpret_cast<UINT8*>(&value),
+        adapter_luid_bytes, &received);
+    *blob_bytes = received;
+    if (hr != S_OK) return FAILED(hr) ? hr : E_UNEXPECTED;
+    if (received != adapter_luid_bytes) return E_UNEXPECTED;
+    *result = value;
+    return S_OK;
+}
+HRESULT match_adapter_luid(IMFAttributes* attributes, const LUID& requested,
+    LUID* actual, UINT32* blob_bytes) noexcept {
+    const HRESULT hr = read_adapter_luid(attributes, actual, blob_bytes);
+    if (hr != S_OK) return hr;
+    return same_adapter_luid(*actual, requested) ? S_OK : DXGI_ERROR_UNSUPPORTED;
+}
+HRESULT set_adapter_request(IMFAttributes* attributes, const LUID& requested) noexcept {
+    if (!attributes) return E_POINTER;
+    HRESULT hr = attributes->SetBlob(MFT_ENUM_ADAPTER_LUID,
+        reinterpret_cast<const UINT8*>(&requested), adapter_luid_bytes);
+    if (hr != S_OK) return FAILED(hr) ? hr : E_UNEXPECTED;
+    LUID actual{}; UINT32 bytes = 0;
+    return match_adapter_luid(attributes, requested, &actual, &bytes);
+}
+void log_activation_identity(IMFActivate* activation, bool encoder, bool hevc,
+    UINT32 index, const char* phase, HRESULT operation, bool binding_required,
+    HRESULT binding, const LUID& actual, UINT32 blob_bytes) noexcept {
+    WCHAR name[160]{}; GUID clsid{}; WCHAR clsid_text[40]{};
+    const HRESULT name_hr = activation->GetString(MFT_FRIENDLY_NAME_Attribute, name, 160, nullptr);
+    const HRESULT clsid_hr = activation->GetGUID(MFT_TRANSFORM_CLSID_Attribute, &clsid);
+    const bool clsid_known = clsid_hr == S_OK && StringFromGUID2(clsid, clsid_text, 40) != 0;
+    std::fprintf(stderr,
+        "mf activation: codec=%s direction=%s owner_thread=%lu index=%u phase=%s hr=0x%08lx binding_required=%u "
+        "adapter_binding_hr=0x%08lx adapter_blob_bytes=%u activation_adapter_known=%u activation_adapter=0x%016llx "
+        "name_hr=0x%08lx name=\"%.159ls\" clsid_hr=0x%08lx clsid=\"%ls\"\n",
+        hevc ? "hevc" : "h264", encoder ? "encode" : "decode",
+        static_cast<unsigned long>(GetCurrentThreadId()), index, phase,
+        static_cast<unsigned long>(operation), binding_required ? 1u : 0u,
+        static_cast<unsigned long>(binding), blob_bytes,
+        binding == S_OK || binding == DXGI_ERROR_UNSUPPORTED ? 1u : 0u,
+        static_cast<unsigned long long>(adapter_luid_bits(actual)),
+        static_cast<unsigned long>(name_hr), name_hr == S_OK ? name : L"unknown",
+        static_cast<unsigned long>(clsid_hr), clsid_known ? clsid_text : L"unknown");
+    std::fflush(stderr);
+}
 struct BufferedOutput {
     std::unique_ptr<uint8_t[]> bytes;
     size_t length = 0, capacity = 0;
@@ -579,7 +638,29 @@ static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint3
     state->mf = true; state->encoder = encoder != 0; state->hardware = hardware_only != 0; state->hevc=hevc;state->main10=main10;
     state->width = width; state->height = height; state->fps = fps; state->level = level;
     state->output_height = height; state->output_pitch = width*(main10?2u:1u);
+    LUID source_adapter{};
+    const bool binding_required = supplied_device && state->encoder;
     if (supplied_device) {
+        ComPtr<IDXGIDevice> dxgi; ComPtr<IDXGIAdapter> adapter; DXGI_ADAPTER_DESC desc{};
+        hr = supplied_device->QueryInterface(IID_PPV_ARGS(&dxgi));
+        if (hr == S_OK) hr = dxgi->GetAdapter(&adapter);
+        if (hr == S_OK) hr = adapter->GetDesc(&desc);
+        std::fprintf(stderr, "mf source device: codec=%s direction=%s owner_thread=%lu adapter_hr=0x%08lx\n",
+            hevc ? "hevc" : "h264", state->encoder ? "encode" : "decode",
+            static_cast<unsigned long>(state->thread), static_cast<unsigned long>(hr));
+        std::fflush(stderr);
+        if (hr != S_OK) return FAILED(hr) ? hr : E_UNEXPECTED;
+        source_adapter = desc.AdapterLuid;
+        LARGE_INTEGER driver{};
+        const HRESULT driver_hr = adapter->CheckInterfaceSupport(__uuidof(IDXGIDevice), &driver);
+        std::fprintf(stderr,
+            "mf source identity: codec=%s direction=%s owner_thread=%lu adapter=0x%016llx vendor=0x%04x device=0x%04x description=\"%.127ls\" "
+            "driver_hr=0x%08lx driver=0x%016llx binding_required=%u\n",
+            hevc ? "hevc" : "h264", state->encoder ? "encode" : "decode", static_cast<unsigned long>(state->thread),
+            static_cast<unsigned long long>(adapter_luid_bits(source_adapter)), desc.VendorId, desc.DeviceId,
+            desc.Description, static_cast<unsigned long>(driver_hr),
+            static_cast<unsigned long long>(driver_hr == S_OK ? driver.QuadPart : 0), binding_required ? 1u : 0u);
+        std::fflush(stderr);
         state->gpu_input = state->encoder; state->device = supplied_device;
         supplied_device->GetImmediateContext(&state->context);
         ComPtr<ID3D10Multithread> protection;
@@ -605,27 +686,40 @@ static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint3
     MFT_REGISTER_TYPE_INFO compressed{MFMediaType_Video, hevc ? MFVideoFormat_HEVC : MFVideoFormat_H264};
     IMFActivate** choices = nullptr; UINT32 count = 0;
     // Prefer adapter-targeted enumeration when supported by this Windows runtime.
+    // Both enumeration paths must independently prove the activation's exact
+    // adapter before accepting a supplied-device encoder. A device-manager Set
+    // succeeding alone does not prove that a foreign MFT uses that same adapter.
     using Enum2 = HRESULT (WINAPI*)(GUID, UINT32, const MFT_REGISTER_TYPE_INFO*, const MFT_REGISTER_TYPE_INFO*, IMFAttributes*, IMFActivate***, UINT32*);
     const auto enum2_address = GetProcAddress(GetModuleHandleW(L"mfplat.dll"),"MFTEnum2");
     Enum2 enum2 = nullptr;
     static_assert(sizeof(enum2) == sizeof(enum2_address), "Windows function pointer size");
     std::memcpy(&enum2, &enum2_address, sizeof(enum2));
-    if (supplied_device && state->encoder && enum2) {
-        ComPtr<IDXGIDevice> dxgi; ComPtr<IDXGIAdapter> adapter; DXGI_ADAPTER_DESC desc{};
-        hr = supplied_device->QueryInterface(IID_PPV_ARGS(&dxgi));
-        if (SUCCEEDED(hr)) hr = dxgi->GetAdapter(&adapter);
-        if (SUCCEEDED(hr)) hr = adapter->GetDesc(&desc);
+    if (binding_required && enum2) {
         ComPtr<IMFAttributes> attributes;
-        if (SUCCEEDED(hr)) hr = MFCreateAttributes(&attributes,1);
-        const UINT64 luid = static_cast<UINT64>(static_cast<UINT32>(desc.AdapterLuid.HighPart)) << 32 | desc.AdapterLuid.LowPart;
-        if (SUCCEEDED(hr)) hr = attributes->SetUINT64(MFT_ENUM_ADAPTER_LUID,luid);
-        if (SUCCEEDED(hr)) hr = enum2(MFT_CATEGORY_VIDEO_ENCODER,MFT_ENUM_FLAG_SORTANDFILTER|MFT_ENUM_FLAG_HARDWARE,
+        hr = MFCreateAttributes(&attributes,1);
+        if (hr == S_OK) hr = set_adapter_request(attributes.Get(), source_adapter);
+        std::fprintf(stderr,
+            "mf adapter request: codec=%s owner_thread=%lu requested_adapter=0x%016llx type=LUID_blob bytes=%u hr=0x%08lx enum=MFTEnum2\n",
+            hevc ? "hevc" : "h264", static_cast<unsigned long>(state->thread),
+            static_cast<unsigned long long>(adapter_luid_bits(source_adapter)), adapter_luid_bytes,
+            static_cast<unsigned long>(hr));
+        std::fflush(stderr);
+        if (hr != S_OK) return FAILED(hr) ? hr : E_UNEXPECTED;
+        hr = enum2(MFT_CATEGORY_VIDEO_ENCODER,MFT_ENUM_FLAG_SORTANDFILTER|MFT_ENUM_FLAG_HARDWARE,
             &raw,&compressed,attributes.Get(),&choices,&count);
     } else {
-    hr = MFTEnumEx(state->encoder ? MFT_CATEGORY_VIDEO_ENCODER : MFT_CATEGORY_VIDEO_DECODER,
-        MFT_ENUM_FLAG_SORTANDFILTER | (hardware_only ? MFT_ENUM_FLAG_HARDWARE : MFT_ENUM_FLAG_SYNCMFT),
-        state->encoder ? &raw : &compressed, state->encoder ? &compressed : &raw, &choices, &count);
+        if (binding_required) std::fprintf(stderr,
+            "mf adapter request: codec=%s owner_thread=%lu requested_adapter=0x%016llx enum=MFTEnumEx activation_binding_required=1\n",
+            hevc ? "hevc" : "h264", static_cast<unsigned long>(state->thread),
+            static_cast<unsigned long long>(adapter_luid_bits(source_adapter)));
+        hr = MFTEnumEx(state->encoder ? MFT_CATEGORY_VIDEO_ENCODER : MFT_CATEGORY_VIDEO_DECODER,
+            MFT_ENUM_FLAG_SORTANDFILTER | (hardware_only ? MFT_ENUM_FLAG_HARDWARE : MFT_ENUM_FLAG_SYNCMFT),
+            state->encoder ? &raw : &compressed, state->encoder ? &compressed : &raw, &choices, &count);
     }
+    std::fprintf(stderr, "mf enumeration: codec=%s direction=%s owner_thread=%lu hr=0x%08lx count=%u\n",
+        hevc ? "hevc" : "h264", state->encoder ? "encode" : "decode",
+        static_cast<unsigned long>(state->thread), static_cast<unsigned long>(hr), count);
+    std::fflush(stderr);
     if (FAILED(hr)) return hr;
     // The system H.264 decoder is a synchronous MFT which becomes DXVA/D3D11
     // accelerated when given a device manager. It is not listed as a hardware
@@ -639,10 +733,31 @@ static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint3
     HRESULT last = MF_E_TOPO_CODEC_NOT_FOUND;
     for (UINT32 index = 0; index < count; ++index) {
         if (!state->transform) {
-            ComPtr<IMFTransform> transform;
-            last = choices[index]->ActivateObject(IID_PPV_ARGS(&transform));
-            if (SUCCEEDED(last)) last = configure(*state, transform.Get(), kbps);
-            if (FAILED(last)) { state->events.Reset(); state->transform.Reset(); state->manager.Reset(); if (!state->gpu_input) { state->context.Reset(); state->device.Reset(); } state->input_events = 0; state->output_events = 0; }
+            LUID activation_adapter{}; UINT32 blob_bytes = 0;
+            const HRESULT binding = binding_required
+                ? match_adapter_luid(choices[index], source_adapter, &activation_adapter, &blob_bytes)
+                : read_adapter_luid(choices[index], &activation_adapter, &blob_bytes);
+            log_activation_identity(choices[index], state->encoder, hevc, index, "candidate", S_OK,
+                binding_required, binding, activation_adapter, blob_bytes);
+            if (binding_required && binding != S_OK) {
+                // Missing/malformed identity is an explicit refusal, never an
+                // inferred match or an invitation to use another adapter/CPU.
+                last = binding;
+                log_activation_identity(choices[index], true, hevc, index, "binding_rejected", last,
+                    true, binding, activation_adapter, blob_bytes);
+            } else {
+                ComPtr<IMFTransform> transform;
+                last = choices[index]->ActivateObject(IID_PPV_ARGS(&transform));
+                log_activation_identity(choices[index], state->encoder, hevc, index, "activate", last,
+                    binding_required, binding, activation_adapter, blob_bytes);
+                if (SUCCEEDED(last)) {
+                    last = configure(*state, transform.Get(), kbps);
+                    log_activation_identity(choices[index], state->encoder, hevc, index,
+                        SUCCEEDED(last) ? "selected" : "configuration_rejected", last,
+                        binding_required, binding, activation_adapter, blob_bytes);
+                }
+                if (FAILED(last)) { state->events.Reset(); state->transform.Reset(); state->manager.Reset(); if (!state->gpu_input) { state->context.Reset(); state->device.Reset(); } state->input_events = 0; state->output_events = 0; }
+            }
         }
         choices[index]->Release();
     }
@@ -988,6 +1103,55 @@ extern "C" uint32_t nl_mf_gpu_pool_contract() noexcept {
         callback.Reset();
         return weak.expired() ? 1 : 0;
     } catch (...) { return 0; }
+}
+
+// Real IMFAttributes exercise the production request writer and identity reader.
+// No device, MFT enumeration, encoder, capture or GPU resource is opened here.
+extern "C" uint32_t nl_mf_adapter_binding_contract() noexcept {
+    uint32_t passed = 0;
+    const HRESULT com = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (FAILED(com)) return passed;
+    if (FAILED(MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET))) { CoUninitialize(); return passed; }
+    {
+        ComPtr<IMFAttributes> attributes;
+        if (MFCreateAttributes(&attributes, 1) == S_OK) {
+            const LUID expected{0x89abcdefu, -1234567};
+            LUID actual{}; UINT32 bytes = 0; MF_ATTRIBUTE_TYPE type{};
+            if (set_adapter_request(attributes.Get(), expected) == S_OK &&
+                attributes->GetItemType(MFT_ENUM_ADAPTER_LUID, &type) == S_OK && type == MF_ATTRIBUTE_BLOB &&
+                match_adapter_luid(attributes.Get(), expected, &actual, &bytes) == S_OK &&
+                bytes == adapter_luid_bytes && same_adapter_luid(actual, expected)) passed |= 1;
+            if (attributes->DeleteAllItems() == S_OK &&
+                FAILED(match_adapter_luid(attributes.Get(), expected, &actual, &bytes))) passed |= 2;
+            if (attributes->SetUINT64(MFT_ENUM_ADAPTER_LUID, adapter_luid_bits(expected)) == S_OK &&
+                FAILED(match_adapter_luid(attributes.Get(), expected, &actual, &bytes))) passed |= 4;
+            const BYTE short_blob[sizeof(LUID) - 1]{};
+            if (attributes->SetBlob(MFT_ENUM_ADAPTER_LUID, short_blob, sizeof(short_blob)) == S_OK &&
+                FAILED(match_adapter_luid(attributes.Get(), expected, &actual, &bytes)) &&
+                bytes == sizeof(short_blob)) passed |= 8;
+            const BYTE long_blob[sizeof(LUID) + 1]{};
+            if (attributes->SetBlob(MFT_ENUM_ADAPTER_LUID, long_blob, sizeof(long_blob)) == S_OK &&
+                FAILED(match_adapter_luid(attributes.Get(), expected, &actual, &bytes)) &&
+                bytes == sizeof(long_blob)) passed |= 16;
+            LUID foreign = expected; foreign.LowPart ^= 1;
+            if (set_adapter_request(attributes.Get(), foreign) == S_OK &&
+                match_adapter_luid(attributes.Get(), expected, &actual, &bytes) == DXGI_ERROR_UNSUPPORTED &&
+                same_adapter_luid(actual, foreign)) passed |= 32;
+            foreign = expected; foreign.HighPart ^= 1;
+            if (set_adapter_request(attributes.Get(), foreign) == S_OK &&
+                match_adapter_luid(attributes.Get(), expected, &actual, &bytes) == DXGI_ERROR_UNSUPPORTED &&
+                same_adapter_luid(actual, foreign)) passed |= 64;
+            const LUID zero{};
+            if (set_adapter_request(attributes.Get(), zero) == S_OK &&
+                match_adapter_luid(attributes.Get(), zero, &actual, &bytes) == S_OK &&
+                bytes == adapter_luid_bytes && same_adapter_luid(actual, zero)) passed |= 128;
+            if (attributes->SetUINT64(MFT_ENUM_ADAPTER_LUID, adapter_luid_bits(expected)) == S_OK &&
+                set_adapter_request(attributes.Get(), expected) == S_OK &&
+                attributes->GetItemType(MFT_ENUM_ADAPTER_LUID, &type) == S_OK && type == MF_ATTRIBUTE_BLOB &&
+                match_adapter_luid(attributes.Get(), expected, &actual, &bytes) == S_OK) passed |= 256;
+        }
+    }
+    MFShutdown(); CoUninitialize(); return passed;
 }
 
 // Same property decision path used by the real encoder, plus actual MF types.

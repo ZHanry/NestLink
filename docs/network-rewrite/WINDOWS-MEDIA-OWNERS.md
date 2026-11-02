@@ -217,6 +217,65 @@ The small extractor reads only FFmpeg's textual field results; it does not parse
 SPS bits. FFmpeg trace positions retain its own convention and must not be
 equated directly with the local validator's `rbsp_bit` convention. Parameter-only
 input contains no picture: exit codes and metadata extraction are retained as
-diagnostics, with product/decode/GPU acceptance false. This independent hosted
-comparison is pending; it must establish any parser discrepancy before changing
-the original strict parser or attributing the failure to the encoder.
+diagnostics, with product/decode/GPU acceptance false. At introduction, this
+independent hosted comparison remained pending and had to establish any parser
+discrepancy before changing the original strict parser or attributing the failure
+to the encoder.
+
+The independently retained run
+[41463941177](https://github.com/ZHanry/NestLink/actions/runs/41463941177), source
+`3b4970f0cfa189dc54a46a709672c15896ebdb90`, has since compared the original
+fixture bytes with both failed command logs. FFmpeg reports the same 1920x1088
+coded extent, 1920x1080 conformance display, limited range, primaries 0,
+transfer 1 and matrix 2. Its primaries start bit 271 includes the 16-bit NAL
+header; removing that header and advancing through the eight-bit value yields
+the original validator's `rbsp_bit=263`. This provides no evidence of a parser
+offset defect. The parameter-only FFmpeg/ffprobe diagnostics provide no picture
+decode or product acceptance. The unchanged exact HEVC contract independently
+rejects the coded/display crop and colour values.
+
+A separate, proven adapter request defect used `SetUINT64` for
+`MFT_ENUM_ADAPTER_LUID`. The official
+[`MFT_ENUM_ADAPTER_LUID` contract](https://learn.microsoft.com/en-us/windows/win32/medfound/mft-enum-adapter-luid)
+specifies data type `LUID`, and the official
+[`MFTEnum2` encoder example](https://learn.microsoft.com/en-us/windows/win32/api/mfapi/nf-mfapi-mftenum2)
+uses `SetBlob(..., &adapterLuid, sizeof(LUID))`. The mature
+[GStreamer implementation at 4a12497](https://github.com/GStreamer/gstreamer/blob/4a12497f066b3c02466800da6f19cbb8f409604e/subprojects/gst-plugins-bad/sys/mediafoundation/gstmftransform.cpp)
+also writes a checked LUID blob. The thin native adapter now follows that
+documented input representation and checks the exact blob type/size/value by
+reading back its own request through the production identity reader.
+
+An adapter-targeted input request is not evidence that every returned activation
+publishes an adapter identity. The official enumeration contract does not make
+that output guarantee. The mature
+[Chromium implementation at 59017c5](https://github.com/chromium/chromium/blob/59017c54a7db7de13eff71f9fb71d34a9862e83e/media/gpu/windows/media_foundation_video_encode_accelerator_win.cc)
+reads the activation attribute as a blob, checks the exact `sizeof(LUID)` and
+both parts, and uses a separate resource-mapping path when they differ. It does
+not infer adapter agreement from successful device-manager installation.
+NestLink has no such cross-adapter resource-mapping path. Its supplied-device
+encoder now accepts a candidate only when that exact activation blob is present
+and matches the actual retained D3D source device. Missing, wrongly typed,
+short, oversized and mismatching identities explicitly reject that candidate
+before activation. This check also applies to `MFTEnumEx` when the runtime lacks
+`MFTEnum2`; failed targeted enumeration never retries a global/CPU route.
+
+The native diagnostics record the actual source D3D adapter LUID, description,
+vendor/device IDs and driver-query result before codec configuration. They then
+record the requested LUID and enumeration HRESULT/count, every attempted
+activation's LUID read/binding result and blob length, bounded friendly name and
+CLSID, and activation/configuration/selection results. Optional identity strings
+remain `unknown` when their attribute calls fail. A zero-valued but correctly
+typed LUID is a value, never a sentinel for a missing attribute. The earlier
+failed HEVC commands did not retain their actual source/activation identities;
+a successful H.264 command's adapter does not identify those HEVC attempts, and
+their failure cannot be assigned to a GPU vendor.
+
+The ordinary-token owner workflow now exercises real `IMFAttributes` using the
+same production request writer, strict blob reader and adapter comparison. Its
+nine boundaries cover the signed high LUID part, missing identity, the former
+UINT64 representation, short/oversized blobs, independent low/high mismatches,
+an explicit zero LUID and replacement of an existing wrongly typed attribute.
+These metadata tests open no device or encoder. Their exact-source hosted result
+and the original default physical commands still need a new build/rerun. No
+adapter-selection CLI, AU/SPS rewriting, relaxed colour/geometry assertion or
+GPU/performance/physical scanout qualification follows from this binding fix.
