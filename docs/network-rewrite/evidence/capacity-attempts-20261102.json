@@ -246,6 +246,191 @@
           "stage": "all_hosts_ready"
         }
       ]
+    },
+    {
+      "run_id": 41422340154,
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41422340154",
+      "artifact_id": 13130383640,
+      "artifact_sha256": "f276339a2a398ac2653d270e2a6ddfb6a23abfa31b8b6d0872b31292e4638b53",
+      "receipt": {
+        "source_revision": "bed0f2652e884c6b4682ef00873e4a0070151bdc",
+        "workflow": "ZHanry/NestLink/.github/workflows/network-capacity.yml@refs/heads/main",
+        "workflow_revision": "bed0f2652e884c6b4682ef00873e4a0070151bdc",
+        "run_id": "41422340154",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Linux",
+        "kernel": [
+          "Linux",
+          "runnervm48cm3",
+          "7.0.0-1017-azure",
+          "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+          "x86_64"
+        ],
+        "cargo_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+        "offered_load": {
+          "registered_installations_in_one_space": 100,
+          "active_pairs": 20,
+          "simultaneous_flows": 1000,
+          "reconnect_waves": 3,
+          "management_logins_per_active_consumer": 1,
+          "streams_per_pair": 50,
+          "same_lease_control_owners_per_wave": 20
+        },
+        "scope": "Original HTTP management and signed grants, actual kernel QUIC/TCP targets, original limits and four-scope durable accounting. One independent management login per active consumer, unchanged original rate limits.",
+        "limitations": [
+          "one hosted process; not physical nodes or independently deployed relay runtimes",
+          "short-run samples cannot qualify cross-day soak, complete E2E or all bounded queues"
+        ],
+        "passed": false,
+        "commands": [
+          {
+            "name": "build",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-sdk",
+              "--test",
+              "capacity",
+              "--no-run",
+              "--message-format=json-render-diagnostics"
+            ],
+            "return_code": 0,
+            "seconds": 135.282757052
+          },
+          {
+            "name": "explicit-negotiation",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-sdk",
+              "--lib",
+              "explicit_negotiation_preserves_legacy_wire_and_old_host_refusal",
+              "--",
+              "--show-output"
+            ],
+            "return_code": 0,
+            "seconds": 22.537323893999996
+          },
+          {
+            "name": "multiplex-original-owners",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-sdk",
+              "--test",
+              "private_services",
+              "multiplex::",
+              "--",
+              "--show-output",
+              "--test-threads=1"
+            ],
+            "return_code": 0,
+            "seconds": 19.965713706000003
+          },
+          {
+            "name": "execution",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/debug/deps/capacity-8abe3ed8c40bf2db",
+              "--exact",
+              "hundred_enrolled_nodes_twenty_pairs_thousand_multiplexed_authorized_streams",
+              "--ignored",
+              "--nocapture",
+              "--test-threads=1"
+            ],
+            "return_code": 101,
+            "seconds": 256.457316323
+          }
+        ],
+        "load_mode": "multiplexed",
+        "executable_sha256": "b86068b0fb793472c6c1ea75644e9624f1f189abdc2d99a1f609b1aadd905f8c",
+        "failure": "AssertionError('execution failed; original failure retained')",
+        "files": [
+          {
+            "path": "build.log",
+            "bytes": 438729,
+            "sha256": "0668794033d8566d99ce339ac25ca29a387cde6e7462cfaca00e4ae36a2b9123"
+          },
+          {
+            "path": "build.stderr.log",
+            "bytes": 60126,
+            "sha256": "5f699a731d0e44cc1b8eed3b0fd62b45ec794f67ea4e2a559c57071eb62c344e"
+          },
+          {
+            "path": "execution.log",
+            "bytes": 312,
+            "sha256": "c8c009ba018791a12b8f772e32c75b3314631a588260130728e72095528c7de1"
+          },
+          {
+            "path": "execution.stderr.log",
+            "bytes": 34,
+            "sha256": "c6e75403f60c14c59deb974033fe58abfb3512616bebfc4aa6cec15b0012df6b"
+          },
+          {
+            "path": "explicit-negotiation.log",
+            "bytes": 374,
+            "sha256": "b690b3cb738e3e9cea1604c15f0c4bf492a00be3444862dc98afe3c4feb2df2c"
+          },
+          {
+            "path": "explicit-negotiation.stderr.log",
+            "bytes": 20045,
+            "sha256": "28f401bb23390c369ae9ab99e79ab66619c1ecbc86c5cfe77844ee9b84e45854"
+          },
+          {
+            "path": "multiplex-original-owners.log",
+            "bytes": 1007,
+            "sha256": "f648e3403bc6bb115cc6308cf0b660398a955128f803fca2cfa80a7fb29042a6"
+          },
+          {
+            "path": "multiplex-original-owners.stderr.log",
+            "bytes": 20053,
+            "sha256": "42819845226b0208ad714e249e90a2283f4e7955cfd4b9d83afb67de1d738877"
+          },
+          {
+            "path": "samples.jsonl",
+            "bytes": 509,
+            "sha256": "32215542b1d4add23e054367fc2910c50eed211955f371d8e22c23843fb5f13f"
+          }
+        ]
+      },
+      "failure_observation": "Build, negotiation unit and five original multiplex regressions passed. Capacity execution failed Api(429, CapacityExceeded); no flow_ready sample. One grant per consumer; insufficient logs to identify original rate versus bounded database admission. Next source adds pair/stage and existing database tracing without changing limits.",
+      "samples": [
+        {
+          "at_unix_ms": 1793612549835,
+          "open_descriptors": 10,
+          "process_status": [
+            "VmHWM:\t   12760 kB",
+            "VmRSS:\t   12760 kB",
+            "Threads:\t6"
+          ],
+          "stage": "before_setup"
+        },
+        {
+          "active_pairs": 20,
+          "management_logins_per_consumer": 1,
+          "multiplexed": true,
+          "original_rate_lease_quota_rules": true,
+          "registered_installations": 100,
+          "simultaneous_actual_tcp_targets": 1000,
+          "stage": "load_mode"
+        },
+        {
+          "at_unix_ms": 1793612806194,
+          "open_descriptors": 158,
+          "process_status": [
+            "VmHWM:\t  109972 kB",
+            "VmRSS:\t  109972 kB",
+            "Threads:\t8"
+          ],
+          "stage": "all_hosts_ready"
+        }
+      ]
     }
   ],
   "next_implementation": "Use explicit negotiated bounded multiple streams inside one original authorized owner, preserving each nonce, signed proof, shared usage gate and original expiry. Do not add extra logins or enlarge original limits.",

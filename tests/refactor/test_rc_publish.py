@@ -617,6 +617,7 @@ class RCPublicationTests(unittest.TestCase):
         first["bytes"] = P.MAX_ASSET_BYTES
         self.write_manifest()
         self.write_report_acceptance()
+        self.write_network_acceptance()
         with patch.object(P, "fixed_file"):
             self.assertEqual(P.local_plan(self.args)["uploads"][0]["bytes"], P.MAX_ASSET_BYTES)
 
@@ -716,7 +717,8 @@ class RCPublicationTests(unittest.TestCase):
         self.clean.stop()
         source = self.args.source_root
         subprocess.run(["git", "init", "--initial-branch=main", str(source)], check=True, capture_output=True)
-        subprocess.run(["git", "-C", str(source), "add", "Cargo.toml"], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(source), "add", "Cargo.toml", "Cargo.lock", "docs/network-rewrite"],
+                       check=True, capture_output=True)
         subprocess.run(["git", "-C", str(source), "-c", "user.name=RC Test", "-c", "user.email=rc-test@example.invalid",
                         "commit", "-m", "Owned publication fixture"], check=True, capture_output=True)
         revision = P.git(source, "rev-parse", "HEAD")

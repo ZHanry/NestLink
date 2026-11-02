@@ -1,0 +1,974 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+  "run_id": 41413605406,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+  "workflow": ".github/workflows/network-rewrite.yml",
+  "workflow_conclusion": "failure",
+  "whole_task_passed": false,
+  "release_qualification_claimed": false,
+  "jobs": [
+    {
+      "conclusion": "success",
+      "id": 125172372232,
+      "name": "production-socket-slice"
+    },
+    {
+      "conclusion": "success",
+      "id": 125172372422,
+      "name": "topology-journal"
+    },
+    {
+      "conclusion": "success",
+      "id": 125172372449,
+      "name": "routed-kernel-nat-slice"
+    },
+    {
+      "conclusion": "success",
+      "id": 125172372496,
+      "name": "topology-carrier"
+    },
+    {
+      "conclusion": "failure",
+      "id": 125172372498,
+      "name": "contract (ubuntu-24.04)"
+    },
+    {
+      "conclusion": "failure",
+      "id": 125172372530,
+      "name": "contract (windows-2022)"
+    },
+    {
+      "conclusion": "success",
+      "id": 125172372572,
+      "name": "native-ice-kernel-nat-slice"
+    },
+    {
+      "conclusion": "success",
+      "id": 125172372652,
+      "name": "quinn-carrier-replacement-feasibility"
+    },
+    {
+      "conclusion": "success",
+      "id": 125172372675,
+      "name": "independent-vectors"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_id": 13127725555,
+      "artifact_name": "network-chain-business-136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d-1",
+      "github_archive_sha256": "bbd16ebe0becf45757264dd2098beee23a06a6a5ddfc796a7bc7e6ea52e5bf86",
+      "retained_files": 13,
+      "inventory_sha256": "6a260183c173ca3c9db944054ecba95f083c0f7c2c800f9e2f4015fe4b56c813",
+      "receipt_summaries": []
+    },
+    {
+      "artifact_id": 13127525658,
+      "artifact_name": "network-topology-carrier-136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d-1",
+      "github_archive_sha256": "b394ef6b6bc32049730155a54d0d884db911aa3d298e68b2e61f67c2ec1b2b11",
+      "retained_files": 13,
+      "inventory_sha256": "1961da2603f6973e0d4a828f1c3a089487caae1519ca6452cc0207a339b25cb5",
+      "receipt_summaries": []
+    },
+    {
+      "artifact_id": 13127446371,
+      "artifact_name": "network-native-ice-136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d-1",
+      "github_archive_sha256": "96d6acf6aa1b273ae951b63ba3136d36fec45efe208c9b63a805cf8b76f3d8f9",
+      "retained_files": 643,
+      "inventory_sha256": "f587533a59cd3c33d6ed0960a6bbfe5e93a0a1f2d92bf4e06adc02d59fac7d0a",
+      "receipt_summaries": [
+        {
+          "receipt": "network-native-ice-evidence.json",
+          "receipt_sha256": "5ebd5f94bc24f7ad9b0a841b5c703214a28144bee9584a3b1ad7d23f259511b8",
+          "status": null,
+          "passed": true,
+          "scope": "signed SDK native ICE and FileRead across two real Linux 1:1 UDP NAT gateways, plus forced destination-dependent port-change rejection",
+          "build_provenance": {
+            "repository": "ZHanry/NestLink",
+            "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "workflow": "Network rewrite contract checks",
+            "workflow_path": ".github/workflows/network-rewrite.yml",
+            "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+            "workflow_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "job": "native-ice-kernel-nat-slice",
+            "run_id": "41413605406",
+            "run_attempt": "1",
+            "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+            "runner": {
+              "environment": "github-hosted",
+              "name": "GitHub Actions 1000011438",
+              "os": "Linux",
+              "architecture": "X64"
+            },
+            "source_before": {
+              "expected_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "exact_source": true,
+              "clean": true,
+              "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "status_raw_bytes": 0,
+              "status": [],
+              "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7"
+            },
+            "source_after": {
+              "expected_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "exact_source": true,
+              "clean": true,
+              "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "status_raw_bytes": 0,
+              "status": [],
+              "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7"
+            },
+            "executable": {
+              "path": "target/debug/deps/network_native_ice-0e5d197fafaddfca",
+              "sha256": "282ba14d7a71d0ac254bb54737f45e2423779aacff0c4fbb6b6c3c9cd081fa68",
+              "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7"
+            }
+          },
+          "execution_provenance": {
+            "repository": "ZHanry/NestLink",
+            "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "workflow": "Network rewrite contract checks",
+            "workflow_path": ".github/workflows/network-rewrite.yml",
+            "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+            "workflow_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "job": "native-ice-kernel-nat-slice",
+            "run_id": "41413605406",
+            "run_attempt": "1",
+            "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+            "runner": {
+              "environment": "github-hosted",
+              "name": "GitHub Actions 1000011438",
+              "os": "Linux",
+              "architecture": "X64"
+            },
+            "environment": "github-hosted-linux-network-namespaces",
+            "process_uid": 1001
+          },
+          "limitations": [
+            "Successful business scope is owned Linux 1:1 UDP address mappings with peer-restricted ingress; the forced destination-dependent case proves refusal only, without external-router, general symmetric NAT, CGNAT or IPv6 NAT qualification",
+            "Actual signed remote SessionPermit, SDK signaling, bilateral ICE and pinned Quinn run; no screen, input injection, audio or installed Windows acceptance",
+            "FileRead frames carry a complete owned random 256KiB payload in both directions; no file browser, filesystem grant, download/resume or file worker claim",
+            "Both original legacy and ICE physical sockets must be rebound after explicit owner cleanup; success cannot fall back to legacy",
+            "Management uses unchanged loopback-only HTTP development policy with namespace-local transparent TCP forwarders; no SDK TLS rules changed",
+            "Credentials, identities, ICE passwords and signaling payloads remain in private temporary storage outside artifacts; captures contain UDP only"
+          ],
+          "cases": [
+            {
+              "name": "success",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            },
+            {
+              "name": "blackhole",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            },
+            {
+              "name": "cancel",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            },
+            {
+              "name": "port_change",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "artifact_id": 13127295948,
+      "artifact_name": "network-route-set-directory-136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d-1",
+      "github_archive_sha256": "f07fb040bfab2f0e0bb2ddc184fb4f8de4e1825147cca320109a0e962c0cedf3",
+      "retained_files": 3,
+      "inventory_sha256": "090a90d9b51de3a1c3396c65bd0067b19739ae6fade47dfa5a0b7c08d002b017",
+      "receipt_summaries": []
+    },
+    {
+      "artifact_id": 13127226261,
+      "artifact_name": "network-socket-136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d-1",
+      "github_archive_sha256": "a6b56de9495734969da3d89eb5ef30c1db3195d2d9494f0bc7413b47334b97c6",
+      "retained_files": 168,
+      "inventory_sha256": "6a06d21336eebb389c68e78f8426825a1d259f0b1a3153584aa73b89d44d44f9",
+      "receipt_summaries": [
+        {
+          "receipt": "network-socket-evidence.json",
+          "receipt_sha256": "bd17d66f5bb80177aae3bbe2df0a18dfb9f6ccf438b67d653e8a02c5c7314fb2",
+          "status": null,
+          "passed": true,
+          "scope": "partial production socket development experiment; two endpoints, zero relays, no NAT",
+          "build_provenance": {
+            "repository": "ZHanry/NestLink",
+            "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "workflow": "Network rewrite contract checks",
+            "workflow_path": ".github/workflows/network-rewrite.yml",
+            "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+            "workflow_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "job": "production-socket-slice",
+            "run_id": "41413605406",
+            "run_attempt": "1",
+            "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+            "runner": {
+              "environment": "github-hosted",
+              "name": "GitHub Actions 1000011432",
+              "os": "Linux",
+              "architecture": "X64"
+            },
+            "source_before": {
+              "expected_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "exact_source": true,
+              "clean": true,
+              "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "status_raw_bytes": 0,
+              "status": [],
+              "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7"
+            },
+            "source_after": {
+              "expected_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "exact_source": true,
+              "clean": true,
+              "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "status_raw_bytes": 0,
+              "status": [],
+              "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7"
+            },
+            "executable": {
+              "path": "target/debug/deps/network_socket-32085377721123ec",
+              "sha256": "15a45909952cfded627631e7523ebf4bc66ea695b8d4819dfeec8f87f041adf3",
+              "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7"
+            }
+          },
+          "execution_provenance": {
+            "repository": "ZHanry/NestLink",
+            "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "workflow": "Network rewrite contract checks",
+            "workflow_path": ".github/workflows/network-rewrite.yml",
+            "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+            "workflow_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "job": "production-socket-slice",
+            "run_id": "41413605406",
+            "run_attempt": "1",
+            "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+            "runner": {
+              "environment": "github-hosted",
+              "name": "GitHub Actions 1000011432",
+              "os": "Linux",
+              "architecture": "X64"
+            },
+            "environment": "github-hosted-linux-network-namespaces",
+            "endpoint_uid": 1001,
+            "host_namespace": "net:[4026531833]"
+          },
+          "limitations": [
+            "No two-relay or NAT topology, real LAN or target device qualification",
+            "No SDK signaling/discovery, TLS/WSS fallback, new network routing or migration qualification",
+            "FileRead uses production client/server with a fixture adapter approving one real file",
+            "Success/cancel isolate teardown packets to measure independent local ExplicitExit; peer-close separately verifies unisolated code-0 close maps to host Revoked",
+            "No screen capture, OS input injection, installation, performance, 24h or UU acceptance",
+            "Environment guards prevent accidental local execution; GitHub run/job/artifact records remain authoritative"
+          ],
+          "cases": [
+            {
+              "name": "success",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            },
+            {
+              "name": "blackhole",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            },
+            {
+              "name": "cancel",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            },
+            {
+              "name": "peer-close",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "artifact_id": 13127026574,
+      "artifact_name": "network-reference-136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d-1",
+      "github_archive_sha256": "31111312099bb792f2f7f11403a8bed631516313686a972dab04190fcaa62b6c",
+      "retained_files": 3,
+      "inventory_sha256": "977c4d6ea26532aae8e832cf53dcebcca72fb4f465347acc3f7954e617d5a4de",
+      "receipt_summaries": []
+    },
+    {
+      "artifact_id": 13126768912,
+      "artifact_name": "network-rewrite-ubuntu-24.04-136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d-1",
+      "github_archive_sha256": "2ecbed465bb99841e557734d393ff45fcfbf9af3ca538f4f1728f07337325538",
+      "retained_files": 13,
+      "inventory_sha256": "c9a1a19c7941068d7e26013adda2e764d9461be3ca97c20a2219e9840ef98c62",
+      "receipt_summaries": [
+        {
+          "receipt": "network-rewrite-evidence.json",
+          "receipt_sha256": "20c735ff6e9a7ea06e914b6154b1756aa2a797b6d4cf654b7248159994a9f355",
+          "status": "failed",
+          "passed": null,
+          "scope": null,
+          "build_provenance": {
+            "repository": "ZHanry/NestLink",
+            "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "workflow": "Network rewrite contract checks",
+            "workflow_path": ".github/workflows/network-rewrite.yml",
+            "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+            "workflow_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "job": "contract",
+            "run_id": "41413605406",
+            "run_attempt": "1",
+            "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+            "runner": {
+              "environment": "github-hosted",
+              "name": "GitHub Actions 1000011441",
+              "os": "Linux",
+              "architecture": "X64"
+            },
+            "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+            "artifact_kind": "validation-logs-and-formatter-patch",
+            "artifact_files": [
+              {
+                "path": "ci-evidence-tests.log",
+                "bytes": 4442,
+                "sha256": "7d4ad1cbf9289b726c14867ca3ad9741ca3b55ccfe7a69e3b5bcaa127e89404d"
+              },
+              {
+                "path": "contract-clippy.log",
+                "bytes": 29016,
+                "sha256": "e944e5eea90b2cce7831d62a4cd4bdf575a4c72a3cfff9f9536848914462817d"
+              },
+              {
+                "path": "contract-tests.log",
+                "bytes": 98292,
+                "sha256": "26bfd869774a5df458bab3ac47b5aa2338690b6f384b8e24c39e9148aa3048cd"
+              },
+              {
+                "path": "format-check-commands.json",
+                "bytes": 5797,
+                "sha256": "24c135880b6cb006244cd43a5518ea7fc19d9043aaea81b3de90f1e9ad314449"
+              },
+              {
+                "path": "format-check.log",
+                "bytes": 55158,
+                "sha256": "8e8e7332c9ee64a1327a233e41e0862fb97b64ec40290c1d0adb0f554ed28250"
+              },
+              {
+                "path": "format-patch-commands.json",
+                "bytes": 5764,
+                "sha256": "7e5380bdaba55b3263e59d5ca7ecd68200d41f0f842a4d59e6d251b39890d665"
+              },
+              {
+                "path": "format-patch-generate.log",
+                "bytes": 5870,
+                "sha256": "2166e0c43a9310a6555f87e9228930a326f019040db3b943567e174029026311"
+              },
+              {
+                "path": "format-worktree-create.log",
+                "bytes": 332,
+                "sha256": "e6abd42d35d1c60d846b65c7ec3fceef5f88221d68c5e463c054f6173d66d143"
+              },
+              {
+                "path": "format-worktree-remove.log",
+                "bytes": 168,
+                "sha256": "7275b9807062f41c0e7f7a8e1e8a750d697465b53474ba279ab96360447686e3"
+              },
+              {
+                "path": "format-worktree-status.json",
+                "bytes": 311,
+                "sha256": "d6480ac13cec5f6e042f6c88ef959212e3ff5af68d80ca443602297193d6a2e2"
+              },
+              {
+                "path": "rust-toolchain.log",
+                "bytes": 280,
+                "sha256": "d846ca6a48ba3ee6a1b18de3c3705622f9551e00d9fd3c6979a8fffd8b96d2b6"
+              },
+              {
+                "path": "rustfmt.patch",
+                "bytes": 47543,
+                "sha256": "03a5a18236ed1637b94d7d79d5f9fc68d56c3a3598cd4b5fad61bd0745e884ea"
+              }
+            ],
+            "receipt_digest_source": "GitHub Actions upload-artifact digest; self-hash excluded"
+          },
+          "execution_provenance": {
+            "kind": "github_actions",
+            "repository": "ZHanry/NestLink",
+            "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "workflow": "Network rewrite contract checks",
+            "workflow_path": ".github/workflows/network-rewrite.yml",
+            "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+            "workflow_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "job": "contract",
+            "run_id": "41413605406",
+            "run_attempt": "1",
+            "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+            "runner": {
+              "environment": "github-hosted",
+              "name": "GitHub Actions 1000011441",
+              "os": "Linux",
+              "architecture": "X64"
+            },
+            "executed_commands": [
+              "rust-toolchain",
+              "format-check",
+              "format-worktree-create",
+              "format-patch-generate",
+              "format-worktree-remove",
+              "contract-clippy",
+              "contract-tests",
+              "ci-evidence-tests"
+            ],
+            "target_device_acceptance": false,
+            "l2_network_experiment": false
+          },
+          "limitations": [
+            "L0/L1 contract and CI receipt checks only; AC04 production-socket fault experiments have not run here.",
+            "No target GPU, phone, physical NAT, TUN, public HA, game or cross-day acceptance is claimed.",
+            "A formatting patch is review material; failing source is not replaced or counted as passing."
+          ],
+          "cases": [],
+          "commands": [
+            {
+              "name": "rust-toolchain",
+              "return_code": 0,
+              "log": "rust-toolchain.log",
+              "log_sha256": "d846ca6a48ba3ee6a1b18de3c3705622f9551e00d9fd3c6979a8fffd8b96d2b6",
+              "log_bytes": 280
+            },
+            {
+              "name": "format-check",
+              "return_code": 1,
+              "log": "format-check.log",
+              "log_sha256": "8e8e7332c9ee64a1327a233e41e0862fb97b64ec40290c1d0adb0f554ed28250",
+              "log_bytes": 55158
+            },
+            {
+              "name": "format-worktree-create",
+              "return_code": 0,
+              "log": "format-worktree-create.log",
+              "log_sha256": "e6abd42d35d1c60d846b65c7ec3fceef5f88221d68c5e463c054f6173d66d143",
+              "log_bytes": 332
+            },
+            {
+              "name": "format-patch-generate",
+              "return_code": 0,
+              "log": "format-patch-generate.log",
+              "log_sha256": "2166e0c43a9310a6555f87e9228930a326f019040db3b943567e174029026311",
+              "log_bytes": 5870
+            },
+            {
+              "name": "format-worktree-remove",
+              "return_code": 0,
+              "log": "format-worktree-remove.log",
+              "log_sha256": "7275b9807062f41c0e7f7a8e1e8a750d697465b53474ba279ab96360447686e3",
+              "log_bytes": 168
+            },
+            {
+              "name": "contract-clippy",
+              "return_code": 0,
+              "log": "contract-clippy.log",
+              "log_sha256": "e944e5eea90b2cce7831d62a4cd4bdf575a4c72a3cfff9f9536848914462817d",
+              "log_bytes": 29016
+            },
+            {
+              "name": "contract-tests",
+              "return_code": 0,
+              "log": "contract-tests.log",
+              "log_sha256": "26bfd869774a5df458bab3ac47b5aa2338690b6f384b8e24c39e9148aa3048cd",
+              "log_bytes": 98292
+            },
+            {
+              "name": "ci-evidence-tests",
+              "return_code": 0,
+              "log": "ci-evidence-tests.log",
+              "log_sha256": "7d4ad1cbf9289b726c14867ca3ad9741ca3b55ccfe7a69e3b5bcaa127e89404d",
+              "log_bytes": 4442
+            }
+          ],
+          "failure": "format-check returned1; contract-clippy, contract-tests and ci-evidence-tests returned0",
+          "contract_counts": {
+            "passed": 742,
+            "failed": 0,
+            "ignored": 15,
+            "binaries": 53
+          }
+        }
+      ]
+    },
+    {
+      "artifact_id": 13126753030,
+      "artifact_name": "network-migration-feasibility-136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d-1",
+      "github_archive_sha256": "88be467736c4e8cd46f57c129877602c5da538ab1311dd92b38fdd2e6dbdf6c5",
+      "retained_files": 310,
+      "inventory_sha256": "cd2e076f6bf533da824146b6eccf5741d2bdc43cd48272519eeaf87f44bbefff",
+      "receipt_summaries": [
+        {
+          "receipt": "network-migration-evidence.json",
+          "receipt_sha256": "2ad54312c3d44661fbf9a5a8986e5682541c0630376d8259ca2747f8c19c6789",
+          "status": null,
+          "passed": true,
+          "scope": null,
+          "build_provenance": {
+            "repository": "ZHanry/NestLink",
+            "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "workflow": "Network rewrite contract checks",
+            "workflow_path": ".github/workflows/network-rewrite.yml",
+            "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+            "workflow_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "job": "quinn-carrier-replacement-feasibility",
+            "run_id": "41413605406",
+            "run_attempt": "1",
+            "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+            "runner": {
+              "environment": "github-hosted",
+              "name": "GitHub Actions 1000011439",
+              "os": "Linux",
+              "architecture": "X64"
+            },
+            "source_before": {
+              "expected_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "exact_source": true,
+              "clean": true,
+              "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "status_raw_bytes": 0,
+              "status": [],
+              "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7"
+            },
+            "source_after": {
+              "expected_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "exact_source": true,
+              "clean": true,
+              "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "status_raw_bytes": 0,
+              "status": [],
+              "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7"
+            },
+            "executable": {
+              "path": "target/debug/deps/nestlink_transport_quic-7503ceb5f6a1af96",
+              "sha256": "bb27b44d26b49fa8fc0bf0350cb508f9ab672766f467b3a9cc4b66a578768c69",
+              "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+              "explicit_test_filter_prefix": "routed::migration_experiment::"
+            }
+          },
+          "execution_provenance": {
+            "repository": "ZHanry/NestLink",
+            "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "workflow": "Network rewrite contract checks",
+            "workflow_path": ".github/workflows/network-rewrite.yml",
+            "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+            "workflow_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "job": "quinn-carrier-replacement-feasibility",
+            "run_id": "41413605406",
+            "run_attempt": "1",
+            "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+            "runner": {
+              "environment": "github-hosted",
+              "name": "GitHub Actions 1000011439",
+              "os": "Linux",
+              "architecture": "X64"
+            },
+            "environment": "github-hosted-linux-network-namespaces",
+            "process_uid": 1001,
+            "ignored_roles_explicitly_executed_per_case": 5,
+            "cases": [
+              "switch",
+              "cancel"
+            ]
+          },
+          "limitations": [
+            "Private cfg(test,Linux) prototype uses Quinn rebind_abstract after out-of-band fixture agreement; no production migration negotiation",
+            "Production path epoch remains one; no simultaneous proposal, lost ACK, bounded epoch drain, grant renewal or old-v15 semantic change",
+            "Same original PathGrant, Permit and transport group; each real preauthenticated relay has its own signed TransitGrant and unchanged deadlines/quotas",
+            "Fresh phase-tagged OS file bytes traverse one pinned inner QUIC stream after all old physical sockets release and old interfaces are down",
+            "No business endpoint SessionPermit proof, actual FileRead worker, input/media/TCP recovery, SDK signaling or full AC22 qualification",
+            "RTT, congestion and logical PLPMTUD trajectories are observations; Quinn local_address_changed changes CID and sends ping without resetting these estimates",
+            "NRD fragmentation adapts logical packets up to 1400 bytes onto outer QUIC fixed at 1200 bytes; logical PMTU is not physical dynamic PMTU convergence",
+            "Four isolated kernel namespaces and actual netem loss/delay/rate, no NAT/public Internet/installed device acceptance; private credentials are excluded from artifacts"
+          ],
+          "cases": [
+            {
+              "name": "switch",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            },
+            {
+              "name": "cancel",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "artifact_id": 13126596999,
+      "artifact_name": "network-routed-136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d-1",
+      "github_archive_sha256": "caecccc2fec05127b7e321fb9365880c1784a2cc0cbe69219236bb6162267bed",
+      "retained_files": 465,
+      "inventory_sha256": "ce92526bd0480b335579ed90a4832d9f6fcacf196ad2934b92f11a6868c431ca",
+      "receipt_summaries": [
+        {
+          "receipt": "network-routed-evidence.json",
+          "receipt_sha256": "335e8ce2e50a12a134021a609fe91fdb78fc12dfbdf00bccc3bd811c9d0fdee6",
+          "status": null,
+          "passed": true,
+          "scope": "two endpoints, one authenticated relay, two actual Linux SNAT gateways; raw routed transport only",
+          "build_provenance": {
+            "repository": "ZHanry/NestLink",
+            "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "workflow": "Network rewrite contract checks",
+            "workflow_path": ".github/workflows/network-rewrite.yml",
+            "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+            "workflow_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "job": "routed-kernel-nat-slice",
+            "run_id": "41413605406",
+            "run_attempt": "1",
+            "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+            "runner": {
+              "environment": "github-hosted",
+              "name": "GitHub Actions 1000011433",
+              "os": "Linux",
+              "architecture": "X64"
+            },
+            "source_before": {
+              "expected_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "exact_source": true,
+              "clean": true,
+              "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "status_raw_bytes": 0,
+              "status": [],
+              "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7"
+            },
+            "source_after": {
+              "expected_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "exact_source": true,
+              "clean": true,
+              "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "status_raw_bytes": 0,
+              "status": [],
+              "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7"
+            },
+            "executable": {
+              "path": "target/debug/deps/network_routed_socket-0b7bf3f9d519682b",
+              "sha256": "01e3a9871d3b1e163fb89fbaa4a2a5cd5a1e43bdfe5cdda054a54a568c443977",
+              "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+              "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7"
+            }
+          },
+          "execution_provenance": {
+            "repository": "ZHanry/NestLink",
+            "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "workflow": "Network rewrite contract checks",
+            "workflow_path": ".github/workflows/network-rewrite.yml",
+            "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+            "workflow_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "job": "routed-kernel-nat-slice",
+            "run_id": "41413605406",
+            "run_attempt": "1",
+            "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+            "runner": {
+              "environment": "github-hosted",
+              "name": "GitHub Actions 1000011433",
+              "os": "Linux",
+              "architecture": "X64"
+            },
+            "environment": "github-hosted-linux-network-namespaces",
+            "process_uid": 1001
+          },
+          "limitations": [
+            "No bilateral ICE/STUN nomination, consent or same-socket hole-punching qualification",
+            "No public/external NAT, dual relay, multi-hop discovery or path migration",
+            "Inner QUIC handshakes and complete 1280-byte IPv6-shaped payloads run through the production routed adapter; no TUN injection",
+            "No business SessionPermit endpoint proof, actual FileRead worker or SDK signaling; framed bytes are transport checks only",
+            "Physical captures show encrypted outer UDP and actual SNAT tuples; they do not decrypt inner Initial packets",
+            "Credentials/seeds remain in an owned temporary fixture outside artifact output; no installed-device or full acceptance qualification"
+          ],
+          "cases": [
+            {
+              "name": "success",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            },
+            {
+              "name": "blackhole",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            },
+            {
+              "name": "cancel",
+              "passed": true,
+              "failure": null,
+              "cleanup_failures": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "artifact_id": 13126519443,
+      "artifact_name": "network-rewrite-windows-2022-136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d-1",
+      "github_archive_sha256": "6e847c119d99216ef2b87b2d6448034e7ea63bc06bc624aecbef4fed5d665aca",
+      "retained_files": 14,
+      "inventory_sha256": "589c32419782610d9bfecfcdaa0f84e63c221a143dd2b536ebee77ddc8aabd44",
+      "receipt_summaries": [
+        {
+          "receipt": "network-rewrite-evidence.json",
+          "receipt_sha256": "82e10227d43c859cc5348aa5884a191d0e898bc035b31b2fbb7688cae2413073",
+          "status": "failed",
+          "passed": null,
+          "scope": null,
+          "build_provenance": {
+            "repository": "ZHanry/NestLink",
+            "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "workflow": "Network rewrite contract checks",
+            "workflow_path": ".github/workflows/network-rewrite.yml",
+            "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+            "workflow_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "job": "contract",
+            "run_id": "41413605406",
+            "run_attempt": "1",
+            "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+            "runner": {
+              "environment": "github-hosted",
+              "name": "GitHub Actions 1000011435",
+              "os": "Windows",
+              "architecture": "X64"
+            },
+            "dependency_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+            "artifact_kind": "validation-logs-and-formatter-patch",
+            "artifact_files": [
+              {
+                "path": "ci-evidence-tests.log",
+                "bytes": 5158,
+                "sha256": "9223d3c9849d97936c86c5257c3f6f4cc3797be50ceae4f9d7e80f7f21c50540"
+              },
+              {
+                "path": "contract-clippy.log",
+                "bytes": 28925,
+                "sha256": "d87322b229bb7afb1b35675f8e03c5de65dc26550e92f7c6c762c674dd9ac94e"
+              },
+              {
+                "path": "contract-tests.log",
+                "bytes": 97095,
+                "sha256": "5dd22797d5597c390091e080363d2e768b0662013ddfc58fd10d3c59a45bfa5c"
+              },
+              {
+                "path": "format-check-commands.json",
+                "bytes": 6041,
+                "sha256": "b440d8e43703b6bcdd1c5a49cf6c39e0d15d05c598c42cfee207c791f01373b3"
+              },
+              {
+                "path": "format-check.log",
+                "bytes": 61292,
+                "sha256": "c66f0c9655d919f36558fc37433dffdeda3f5c10dffbeb4d92bb0714506d62fb"
+              },
+              {
+                "path": "format-patch-commands.json",
+                "bytes": 6006,
+                "sha256": "3a1311b054ba0e5bb98c28ae6a9c2e801d02fb9813e8cb9a7068ecd7ad0d533d"
+              },
+              {
+                "path": "format-patch-generate.log",
+                "bytes": 5911,
+                "sha256": "d687060c413e237911b1868b1c5e7164f3ddceec37a7ef82e4ce0cbed835d3c3"
+              },
+              {
+                "path": "format-worktree-create.log",
+                "bytes": 323,
+                "sha256": "0fd5aae3cb5ade6c231599c14aaebf887e4e8878c7aa275da6936aef5c54b22f"
+              },
+              {
+                "path": "format-worktree-remove.log",
+                "bytes": 159,
+                "sha256": "06a268517c929c91ad780242a1cefd76c0a7156a56c10996fb28b6dbf673685f"
+              },
+              {
+                "path": "format-worktree-status.json",
+                "bytes": 321,
+                "sha256": "44b2a45be0778374b768065a3603271982243e0613cd2e61de1cdf1b49e5894e"
+              },
+              {
+                "path": "ordinary-windows-token.log",
+                "bytes": 464,
+                "sha256": "8b8c45771ed6e6c8a058db3e0ae7c76fca7861a2eb9a8d6dbe8c849c068a923e"
+              },
+              {
+                "path": "rust-toolchain.log",
+                "bytes": 278,
+                "sha256": "699f2cd2618ff31ec2e206d4fd19ea5ac86c7614021ae780ac563d4721002392"
+              },
+              {
+                "path": "rustfmt.patch",
+                "bytes": 47543,
+                "sha256": "03a5a18236ed1637b94d7d79d5f9fc68d56c3a3598cd4b5fad61bd0745e884ea"
+              }
+            ],
+            "receipt_digest_source": "GitHub Actions upload-artifact digest; self-hash excluded"
+          },
+          "execution_provenance": {
+            "kind": "github_actions",
+            "repository": "ZHanry/NestLink",
+            "source_revision": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "workflow": "Network rewrite contract checks",
+            "workflow_path": ".github/workflows/network-rewrite.yml",
+            "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+            "workflow_sha": "136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d",
+            "job": "contract",
+            "run_id": "41413605406",
+            "run_attempt": "1",
+            "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41413605406",
+            "runner": {
+              "environment": "github-hosted",
+              "name": "GitHub Actions 1000011435",
+              "os": "Windows",
+              "architecture": "X64"
+            },
+            "executed_commands": [
+              "ordinary-windows-token",
+              "rust-toolchain",
+              "format-check",
+              "format-worktree-create",
+              "format-patch-generate",
+              "format-worktree-remove",
+              "contract-clippy",
+              "contract-tests",
+              "ci-evidence-tests"
+            ],
+            "target_device_acceptance": false,
+            "l2_network_experiment": false
+          },
+          "limitations": [
+            "L0/L1 contract and CI receipt checks only; AC04 production-socket fault experiments have not run here.",
+            "No target GPU, phone, physical NAT, TUN, public HA, game or cross-day acceptance is claimed.",
+            "A formatting patch is review material; failing source is not replaced or counted as passing."
+          ],
+          "cases": [],
+          "commands": [
+            {
+              "name": "ordinary-windows-token",
+              "return_code": 0,
+              "log": "ordinary-windows-token.log",
+              "log_sha256": "8b8c45771ed6e6c8a058db3e0ae7c76fca7861a2eb9a8d6dbe8c849c068a923e",
+              "log_bytes": 464
+            },
+            {
+              "name": "rust-toolchain",
+              "return_code": 0,
+              "log": "rust-toolchain.log",
+              "log_sha256": "699f2cd2618ff31ec2e206d4fd19ea5ac86c7614021ae780ac563d4721002392",
+              "log_bytes": 278
+            },
+            {
+              "name": "format-check",
+              "return_code": 1,
+              "log": "format-check.log",
+              "log_sha256": "c66f0c9655d919f36558fc37433dffdeda3f5c10dffbeb4d92bb0714506d62fb",
+              "log_bytes": 61292
+            },
+            {
+              "name": "format-worktree-create",
+              "return_code": 0,
+              "log": "format-worktree-create.log",
+              "log_sha256": "0fd5aae3cb5ade6c231599c14aaebf887e4e8878c7aa275da6936aef5c54b22f",
+              "log_bytes": 323
+            },
+            {
+              "name": "format-patch-generate",
+              "return_code": 0,
+              "log": "format-patch-generate.log",
+              "log_sha256": "d687060c413e237911b1868b1c5e7164f3ddceec37a7ef82e4ce0cbed835d3c3",
+              "log_bytes": 5911
+            },
+            {
+              "name": "format-worktree-remove",
+              "return_code": 0,
+              "log": "format-worktree-remove.log",
+              "log_sha256": "06a268517c929c91ad780242a1cefd76c0a7156a56c10996fb28b6dbf673685f",
+              "log_bytes": 159
+            },
+            {
+              "name": "contract-clippy",
+              "return_code": 0,
+              "log": "contract-clippy.log",
+              "log_sha256": "d87322b229bb7afb1b35675f8e03c5de65dc26550e92f7c6c762c674dd9ac94e",
+              "log_bytes": 28925
+            },
+            {
+              "name": "contract-tests",
+              "return_code": 0,
+              "log": "contract-tests.log",
+              "log_sha256": "5dd22797d5597c390091e080363d2e768b0662013ddfc58fd10d3c59a45bfa5c",
+              "log_bytes": 97095
+            },
+            {
+              "name": "ci-evidence-tests",
+              "return_code": 0,
+              "log": "ci-evidence-tests.log",
+              "log_sha256": "9223d3c9849d97936c86c5257c3f6f4cc3797be50ceae4f9d7e80f7f21c50540",
+              "log_bytes": 5158
+            }
+          ],
+          "failure": "format-check returned1; contract-clippy, contract-tests and ci-evidence-tests returned0",
+          "contract_counts": {
+            "passed": 742,
+            "failed": 0,
+            "ignored": 2,
+            "binaries": 53
+          }
+        }
+      ]
+    },
+    {
+      "artifact_id": 13125949696,
+      "artifact_name": "network-topology-136dc7d3f1b5f0fe630fdeb2bebf7281a598a33d-1",
+      "github_archive_sha256": "cffb326f741fdbebd1ed172cbcbf54ef746150e61b35ab0a9d863bf5c7df3d17",
+      "retained_files": 7,
+      "inventory_sha256": "9b5acce863db37a9c2b1162fb2470c19a55423b8d6382e25916bacdbf2fab184",
+      "receipt_summaries": []
+    }
+  ],
+  "limitations": [
+    "Seven topology/carrier/NAT jobs succeeded; both contract jobs failed only the first-party formatter. No whole workflow pass.",
+    "Hosted namespace and synthetic OS adapters do not qualify independent public/NAT target, production migration, GPU, phone or complete E2E acceptance.",
+    "Old-source scoped evidence cannot qualify the current 0.8 candidate."
+  ],
+  "verification": {
+    "official_zip_digests_checked": 11,
+    "receipt_file_digests_checked": 1582,
+    "command_log_digests_checked": 1429,
+    "all_retained_inventory_files": 1652
+  }
+}
