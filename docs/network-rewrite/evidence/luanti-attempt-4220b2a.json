@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "source_revision": "4220b2a05afe25f30b473bbd6bb8916a5cf8dd49",
+  "workflow": ".github/workflows/network-games.yml",
+  "run_id": 41370125423,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41370125423",
+  "job_id": 125038610767,
+  "passed": false,
+  "scope": "Failed Luanti startup observer attempt. Exact official binaries and complete content built; this attempt stopped before the actual client joined and qualifies no gameplay or post-stop disconnect.",
+  "artifact": {
+    "id": 13108229477,
+    "name": "game-luanti-4220b2a05afe25f30b473bbd6bb8916a5cf8dd49-1",
+    "official_digest": "sha256:f78a38ba2774472f025bad777c3b850fb28e353dd184d2acc5ac48a29de2bc2e",
+    "downloaded_zip_sha256": "f78a38ba2774472f025bad777c3b850fb28e353dd184d2acc5ac48a29de2bc2e"
+  },
+  "observed": {
+    "actual_luanti_client_sha256": "906ae48204a0ca641dd0f4c15888a235e48d3ff75d0de41d7c8c24a6a567e1bb",
+    "actual_luantiserver_sha256": "d371a402064fa736be31625a19a60662e34c856bc56a8978ac34a31a164c708b",
+    "failure": "The first individual xdotool current-state query blocked for two seconds during software OpenGL startup; the observer incorrectly treated that individual query timeout as a terminal startup error.",
+    "actual_x_window_tree": "root 0x21f, no name, zero children",
+    "failure_screenshot_sha256": "00d7d2037518ebad04c98c1f0a96d222ef48e98eceec63f571387c9a860e54d2",
+    "actual_client_packet_capture_bytes": 24,
+    "official_info_log": "01:10:58 Trying video driver OpenGL; 01:11:03 SDL 2.30.0; 01:11:04 renderer OpenGL 4.5 llvmpipe (LLVM 20.1.2, 256 bits): Mesa",
+    "driver_actor_cleanup_errors": [],
+    "failure_observation_errors": []
+  },
+  "candidate_correction": {
+    "source_commit": "9188ee3",
+    "change": "Treat an individually blocked X query as pending, count it explicitly and retry only inside the original shared 25-second absolute startup deadline. Each subprocess timeout is capped by the remaining deadline; no additional retry lifetime is granted.",
+    "verification_status": "pending_separate_same_source_actions_run"
+  }
+}
