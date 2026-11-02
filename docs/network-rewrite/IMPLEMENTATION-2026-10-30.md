@@ -575,3 +575,15 @@ expired their artificial topology before setup; the production observation
 owner replaces this fixture. Clippy/module ordering and an original-expiry clock
 fixture also require same-source revalidation. Evidence retains these failures
 separately from the passed scopes; no release qualification is claimed.
+
+The exact745c05a hosted network run41479920172 completed eight successful jobs
+and one failed job. Both OS contract/format/strict lint passed; real signed
+native ICE and FileRead across two kernel NATs, routed SNAT, production socket
+faults, topology and the explicit inner-Quinn rebind feasibility cases passed.
+The later original private-service suite failed its two-relay UDP case with
+Elapsed (31 passed,1 failed,5 dedicated cooperation/root/browser roles ignored).
+This source predates ccf3aa5 fixed-stage diagnostics and establishes no pending
+operation or cause. Original25s/3s bounds remain. All11 official ZIP digests,
+1642 downloaded payloads and1599 producer inventory entries were independently
+verified; complete records are production-carriers-745c05a.json. This is not
+full production migration, complete W/AC, physical-target or release evidence.
