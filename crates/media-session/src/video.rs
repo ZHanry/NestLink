@@ -1,6 +1,8 @@
 use crate::worker::{self, Worker};
 use crate::{ShutdownReport, WorkerMonitor};
-use nestlink_media_codec::{ReceiverCondition, VideoCodec, VideoConfig, VideoEncoder, VideoQuality};
+use nestlink_media_codec::{
+    ReceiverCondition, VideoCodec, VideoConfig, VideoEncoder, VideoQuality,
+};
 use nestlink_protocol::{
     NativeVideo, NativeVideoFeedback, SCHEMA_VERSION, VIDEO_KEYFRAME_INTERVAL_MS,
 };

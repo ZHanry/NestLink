@@ -369,7 +369,10 @@ async fn actual_tc_step_original_vp8_files_and_input() -> Result {
     let loaded_end = sequence;
     let loaded_stats = video.stats();
     eprintln!("actual file-loaded producer: {loaded_stats:?}");
-    fs::write(root.join("pre-step-stats.txt"),format!("baseline={baseline_stats:?}\nfile_loaded={loaded_stats:?}\n"))?;
+    fs::write(
+        root.join("pre-step-stats.txt"),
+        format!("baseline={baseline_stats:?}\nfile_loaded={loaded_stats:?}\n"),
+    )?;
     assert!(
         loaded_frames > 20,
         "file concurrency froze actual presented video"

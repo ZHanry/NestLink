@@ -265,7 +265,9 @@ async fn authorize_remote_observed<'a>(
     // The original owner remains retained through negotiation and proof.
     let capability_initiator = matches!(setup.role, EndpointRole::Controller);
     let capability = async {
-        use nestlink_protocol::network::{CapabilityOffer, CORE_CAPABILITY, NegotiatedProtocol, PeerId, REMOTE_CAPABILITY_ALPN};
+        use nestlink_protocol::network::{
+            CORE_CAPABILITY, CapabilityOffer, NegotiatedProtocol, PeerId, REMOTE_CAPABILITY_ALPN,
+        };
         use nestlink_transport_quic::capability::{CapabilityBinding, exchange};
         let selected = exchange(
             &connection,
@@ -274,7 +276,12 @@ async fn authorize_remote_observed<'a>(
             &CapabilityBinding {
                 expected_peer: PeerId(digest(peer_key)),
                 business_digest: observation_binding.business_grant_digest,
-                transport_group: observation_binding.transport_group.ok_or_else(|| io::Error::new(io::ErrorKind::PermissionDenied,"missing original signed transport group"))?,
+                transport_group: observation_binding.transport_group.ok_or_else(|| {
+                    io::Error::new(
+                        io::ErrorKind::PermissionDenied,
+                        "missing original signed transport group",
+                    )
+                })?,
             },
             &CapabilityOffer {
                 schema_version: nestlink_protocol::network::SCHEMA_VERSION,
@@ -282,9 +289,19 @@ async fn authorize_remote_observed<'a>(
                 required: vec![CORE_CAPABILITY.into()],
             },
             setup_deadline,
-        ).await.map_err(io::Error::other)?;
-        if selected != (NegotiatedProtocol::NetworkV1 { path_migration: false }) {
-            return Err(io::Error::new(io::ErrorKind::PermissionDenied,"unsupported routed remote capability selection").into());
+        )
+        .await
+        .map_err(io::Error::other)?;
+        if selected
+            != (NegotiatedProtocol::NetworkV1 {
+                path_migration: false,
+            })
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "unsupported routed remote capability selection",
+            )
+            .into());
         }
         nestlink_remote::quic::authorize(connection, None, setup, &local.identity, peer_key).await
     };
