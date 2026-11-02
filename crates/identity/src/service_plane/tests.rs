@@ -472,6 +472,55 @@ fn delegation_requires_the_pinned_policy_issuer_realm_and_current_time() -> Resu
     Ok(())
 }
 #[test]
+fn delegation_verified_lease_reuse_keeps_exact_issuer_scope_and_original_deadlines()
+-> Result<(), ContractError> {
+    let f = Fixture::new()?;
+    let claims = ServiceIssuerDelegation {
+        schema_version: SCHEMA_VERSION,
+        deployment_id: f.claims.deployment_id.clone(),
+        security_epoch: f.claims.security_epoch,
+        policy_revision: f.claims.policy_revision,
+        service_issuer: f.service.public_key(),
+        issued_at_unix_ms: 9000,
+        expires_at_unix_ms: 30000,
+    };
+    let signed = f.policy.sign_service_issuer_delegation(&claims)?;
+    let delegated = verify_service_issuer_delegation(
+        &signed, &f.policy.public_key(), &f.claims.deployment_id, 10000,
+    )?;
+    let lease = f.verified()?;
+    delegated.check_verified_lease(&lease, 10000)?;
+    assert!(delegated.check_verified_lease(&lease, 8999).is_err());
+    assert!(delegated.check_verified_lease(&lease, 9999).is_err());
+    assert!(delegated.check_verified_lease(&lease, 30000).is_err());
+    assert!(delegated.check_verified_lease(&lease, f.claims.expires_at_unix_ms).is_err());
+
+    let other = PermitSigner::from_seed([72; 32]).service_lease_signer()?;
+    let mut wrong_issuer = f.claims.clone();
+    let usage = decode(&wrong_issuer.usage_grant.claims, SERVICE_USAGE_BYTES)?;
+    wrong_issuer.usage_grant = other.sign_usage_budget_grant(&usage)?;
+    let wrong_issuer = verify_service_lease(&other.sign(&wrong_issuer)?, &other.public_key())?;
+    assert!(delegated.check_verified_lease(&wrong_issuer, 10000).is_err());
+    for field in 0..5 {
+        let mut wrong = claims.clone();
+        match field {
+            0 => wrong.deployment_id = id(99),
+            1 => wrong.security_epoch += 1,
+            2 => wrong.policy_revision += 1,
+            3 => wrong.issued_at_unix_ms = f.claims.issued_at_unix_ms + 1,
+            _ => wrong.expires_at_unix_ms = f.claims.expires_at_unix_ms - 1,
+        }
+        let at = wrong.issued_at_unix_ms.max(10000);
+        let delegated = verify_service_issuer_delegation(
+            &f.policy.sign_service_issuer_delegation(&wrong)?,
+            &f.policy.public_key(), &wrong.deployment_id, at,
+        )?;
+        assert!(delegated.check_verified_lease(&lease, at).is_err());
+    }
+    Ok(())
+}
+
+#[test]
 fn attachment_proof_cannot_be_reused_as_visitor_authority_or_at_another_nonce()
 -> Result<(), ContractError> {
     let f = Fixture::new()?;

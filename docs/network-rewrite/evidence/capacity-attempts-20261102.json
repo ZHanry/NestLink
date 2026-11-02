@@ -1834,9 +1834,335 @@
         "flow_ready": 1000
       },
       "failure_observation": "Original release pair-windows scenario after single-transaction currentness passed exact-byte/tamper/expiry/ACL regression and all original 7 HTTP/1 negotiation/6 multiplex regressions. Twenty controls and 1000 application-flow readiness observations completed; after original two-second hold the actual live-target assertion was 0 versus 1000 due to original authority expiry. No wave_live sample or completed wave exists; remains failed. No original limit or deadline changed."
+    },
+    {
+      "run_id": 41449447897,
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41449447897",
+      "artifact_id": 13144534428,
+      "artifact_bytes": 67801,
+      "artifact_sha256": "4c8225ef96c7adfc41982499b432155cfc61e44af00dc88708a02618451042e7",
+      "official_archive_and_all_receipt_files_verified": true,
+      "receipt": {
+        "source_revision": "d7e735dc4aedc7028413b565b82596e9192b0fa1",
+        "workflow": "ZHanry/NestLink/.github/workflows/network-capacity.yml@refs/heads/main",
+        "workflow_revision": "d7e735dc4aedc7028413b565b82596e9192b0fa1",
+        "run_id": "41449447897",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Linux",
+        "kernel": [
+          "Linux",
+          "runnervm48cm3",
+          "7.0.0-1017-azure",
+          "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+          "x86_64"
+        ],
+        "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+        "offered_load": {
+          "registered_installations_in_one_space": 100,
+          "active_pairs": 20,
+          "simultaneous_flows": 1000,
+          "reconnect_waves": 3,
+          "management_logins_per_active_consumer": 1,
+          "streams_per_pair": 50,
+          "same_lease_control_owners_per_wave": 20
+        },
+        "scope": "Original HTTP management and signed grants, actual kernel QUIC/TCP targets, original limits and four-scope durable accounting. One independent management login per active consumer, unchanged original rate limits.",
+        "limitations": [
+          "one hosted process; not physical nodes or independently deployed relay runtimes",
+          "short-run samples cannot qualify cross-day soak, complete E2E or all bounded queues"
+        ],
+        "passed": false,
+        "commands": [
+          {
+            "name": "build-currentness",
+            "argv": [
+              "cargo",
+              "test",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-storage",
+              "--lib",
+              "--test",
+              "network_policy",
+              "--no-run",
+              "--message-format=json-render-diagnostics"
+            ],
+            "timeout_seconds": 1200,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 137.834112612
+          },
+          {
+            "name": "currentness-authority",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_storage-cc6cebbc49068ba8",
+              "combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_and_revoke",
+              "--show-output"
+            ],
+            "timeout_seconds": 60,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 0.16425643100001253
+          },
+          {
+            "name": "snapshot-live-rows",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/network_policy-6a0a1e7e33cf2e97",
+              "--exact",
+              "external_device_revocation_expiry_and_key_corruption_enter_the_live_snapshot",
+              "--show-output"
+            ],
+            "timeout_seconds": 60,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 0.7154592699999966
+          },
+          {
+            "name": "snapshot-restart-revocation",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/network_policy-6a0a1e7e33cf2e97",
+              "--exact",
+              "signed_membership_and_revocation_survive_restart_without_reissuing_the_id",
+              "--show-output"
+            ],
+            "timeout_seconds": 60,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 0.21440566900000135
+          },
+          {
+            "name": "snapshot-clock-and-restore",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/network_policy-6a0a1e7e33cf2e97",
+              "--exact",
+              "restart_cannot_roll_the_authorization_clock_back_and_restore_fences_old_spaces",
+              "--show-output"
+            ],
+            "timeout_seconds": 60,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 0.2644542129999934
+          },
+          {
+            "name": "build",
+            "argv": [
+              "cargo",
+              "test",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-sdk",
+              "--lib",
+              "--test",
+              "capacity",
+              "--test",
+              "private_services",
+              "--no-run",
+              "--message-format=json-render-diagnostics"
+            ],
+            "timeout_seconds": 1200,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 561.1384276389999
+          },
+          {
+            "name": "native-http-backpressure",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_sdk-64cea9a381569b15",
+              "http_admission::tests::",
+              "--show-output",
+              "--test-threads=1"
+            ],
+            "timeout_seconds": 180,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 16.007627930000012
+          },
+          {
+            "name": "explicit-negotiation",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_sdk-64cea9a381569b15",
+              "explicit_negotiation_preserves_legacy_wire_and_old_host_refusal",
+              "--show-output"
+            ],
+            "timeout_seconds": 300,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 0.0037661759999991773
+          },
+          {
+            "name": "multiplex-original-owners",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/private_services-989ec0830865331e",
+              "multiplex::",
+              "--show-output",
+              "--test-threads=1"
+            ],
+            "timeout_seconds": 300,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 12.546407292000026
+          },
+          {
+            "name": "execution",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/capacity-501e3b83170da29c",
+              "--exact",
+              "hundred_enrolled_nodes_twenty_pairs_thousand_multiplexed_authorized_streams",
+              "--ignored",
+              "--nocapture",
+              "--test-threads=1"
+            ],
+            "timeout_seconds": 660,
+            "return_code": 101,
+            "timed_out": false,
+            "seconds": 255.07713477400011
+          }
+        ],
+        "build_profile": "release",
+        "opening_schedule": "pair-windows",
+        "original_assertions_and_deadlines_preserved": true,
+        "load_mode": "multiplexed",
+        "currentness_executable_sha256": "33679fce6d39f5ce28e409ec61f2d3438af10440e8b88346f10d459b6a409d24",
+        "snapshot_executable_sha256": "42ab680da10696e592b5a7ec9754b3be68c20b3178eeafeec54804ea398c9083",
+        "test_executables": {
+          "nestlink_sdk": {
+            "path": "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_sdk-64cea9a381569b15",
+            "sha256": "a4705b3e530857cb773deaa786df74a4a3c2033e9f283c3467aaf9e9435bb1c9"
+          },
+          "capacity": {
+            "path": "/home/runner/work/NestLink/NestLink/target/release/deps/capacity-501e3b83170da29c",
+            "sha256": "8d0d3e6a54ac05dae06ba3d6ee1de185c87e7551bf17830cce201c944f365b2c"
+          },
+          "private_services": {
+            "path": "/home/runner/work/NestLink/NestLink/target/release/deps/private_services-989ec0830865331e",
+            "sha256": "811c3404708b08e7cfa8367eec876c0517681b15ed631b022a9ce008ad4b9352"
+          }
+        },
+        "executable_sha256": "8d0d3e6a54ac05dae06ba3d6ee1de185c87e7551bf17830cce201c944f365b2c",
+        "failure": "AssertionError('execution failed; original failure retained')",
+        "files": [
+          {
+            "path": "build-currentness.log",
+            "bytes": 159152,
+            "sha256": "d6171660e7786da353091d359eb675714b58c352b6b8c752907e820efca7dffe"
+          },
+          {
+            "path": "build-currentness.stderr.log",
+            "bytes": 13775,
+            "sha256": "2a98d793ceb387af4fa12f00b8d0eaae3a9fbc1e31d3613029d38f8592afc264"
+          },
+          {
+            "path": "build.log",
+            "bytes": 460083,
+            "sha256": "f93c434f7e61ef45089e1dbbd8fa74fe36b8ce82139aebf46de7f0320646a764"
+          },
+          {
+            "path": "build.stderr.log",
+            "bytes": 51257,
+            "sha256": "2fa3956fea0de0946e61f2c2aec5c0852808a5b542fb1da9b9eca91a1adbeadd"
+          },
+          {
+            "path": "currentness-authority.log",
+            "bytes": 419,
+            "sha256": "6f01933337df8dd96b5d019027fb984b1c3ba8d4ca7f0f8113a7c1e919f96577"
+          },
+          {
+            "path": "currentness-authority.stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "execution.log",
+            "bytes": 312,
+            "sha256": "825b4f920722807318a48f0631095eb292ea35e8d914e691071e7196027b7756"
+          },
+          {
+            "path": "execution.stderr.log",
+            "bytes": 142,
+            "sha256": "c5e90abe85a9b76ceda326b9e88a1d15ac4850378ced2ee63c8070bc65cb2668"
+          },
+          {
+            "path": "explicit-negotiation.log",
+            "bytes": 374,
+            "sha256": "d70a340704109595a9e8ed79f0488ae9061a901ffd7107d3622bd40b220d93c1"
+          },
+          {
+            "path": "explicit-negotiation.stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "multiplex-original-owners.log",
+            "bytes": 1201,
+            "sha256": "445ec0b25cbae350b6655962affca950b8e5742e478923f3274ad95265e73efd"
+          },
+          {
+            "path": "multiplex-original-owners.stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "native-http-backpressure.log",
+            "bytes": 1570,
+            "sha256": "826d48df80c17405d42d91a97785b88dca471e48497c7eedfe1f819133122d7f"
+          },
+          {
+            "path": "native-http-backpressure.stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "samples.jsonl",
+            "bytes": 64022,
+            "sha256": "b437953bb849ddf11647e3cb1efe8698a8eb45bc9e6d2e857fcf7073f3a49cf1"
+          },
+          {
+            "path": "snapshot-clock-and-restore.log",
+            "bytes": 311,
+            "sha256": "8598fe44c0af4fa5ae23779084ee907617c1c6bfe25842bf0d017e8a7b06ada5"
+          },
+          {
+            "path": "snapshot-clock-and-restore.stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "snapshot-live-rows.log",
+            "bytes": 307,
+            "sha256": "fa5c2688fd66ac5803266eb4b4ecf58e74a3593e85f8fea7f1ce687dbc99f4c7"
+          },
+          {
+            "path": "snapshot-live-rows.stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "snapshot-restart-revocation.log",
+            "bytes": 301,
+            "sha256": "5d150e3401265de9504a64237630e954ad2f61a02e03c96208d685a5edcf38cb"
+          },
+          {
+            "path": "snapshot-restart-revocation.stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      "stage_counts": {
+        "before_setup": 1,
+        "load_mode": 1,
+        "all_hosts_ready": 1,
+        "multiplex_lease_issued": 20,
+        "multiplex_control_ready": 20,
+        "flow_ready": 751
+      },
+      "failure_observation": "Original release pair-windows failed at wave0/pair13/flow39 with management403 PermissionRequired near original signed deadline, after751readiness samples. All currentness,external-change,persistedrevocation/restart,clockrestore and original7HTTP/1negotiation/6multiplex regressions passed. No completed1000live wave or capacity qualification. Original authority and every bound retained."
     }
   ],
-  "next_implementation": "Source68bdfdc reuses existing bounded SQLite compiled statements while every snapshot still rereads current policy rows and all revocation collectors. Exact-sourced7e735d original pair-windows/release run41449447897 pending; original failures, limits, deadlines and all assertions retained.",
+  "next_implementation": "ADR0069 removes duplicate verification of the exact same immutable service lease and nested usage-grant signatures in a single SDK verifier invocation. Original full private-envelope and delegated issuer/scope/time checks remain. New sealed-wrong-issuer/scope/time negatives and all prior regressions plus original load require hosted validation.",
   "limitations": [
     "One hosted process with enrolled installations; not 100 physical machines. No achieved 1000 simultaneous flow claim, no queue stability or 24h soak claim."
   ]

@@ -99,11 +99,11 @@ pub fn verify_private_service_grant(
         deployment,
         now,
     )?;
-    delegation.verify_lease(&grant.lease.service_lease, now)?;
     let business = crate::services::private::verify_private_service_lease(
         &grant.lease,
         &delegation.claims().service_issuer,
     )?;
+    delegation.check_verified_lease(business.lease(), now)?;
     let binding = business.claims();
     let revoked = BTreeSet::new();
     let context = NetworkVerification {

@@ -101,13 +101,19 @@ jobs:
               assert summaries == [(str(expected),'0','0')], name+' exact executed inventory differs'
           try:
               os.environ['NESTLINK_CAPACITY_SAMPLES'] = str(output/'samples.jsonl')
-              execute('build-currentness',['cargo','test',*cargo_profile,'--locked','-p','nestlink-storage','--lib','--test','network_policy','--no-run','--message-format=json-render-diagnostics'],1200)
+              execute('build-currentness',['cargo','test',*cargo_profile,'--locked','-p','nestlink-storage','-p','nestlink-identity','--lib','--test','network_policy','--no-run','--message-format=json-render-diagnostics'],1200)
               currentness = [item['executable'] for line in (output/'build-currentness.log').read_text().splitlines()
                 if (item:=json.loads(line)).get('reason')=='compiler-artifact'
                 and item.get('executable') and item['target']['name']=='nestlink_storage']
               assert len(currentness)==1, 'exact currentness harness missing'
               receipt['currentness_executable_sha256'] = hashlib.sha256(pathlib.Path(currentness[0]).read_bytes()).hexdigest()
               execute_tests('currentness-authority',[currentness[0],'combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_and_revoke','--show-output'],60,1)
+              identities = [item['executable'] for line in (output/'build-currentness.log').read_text().splitlines()
+                if (item:=json.loads(line)).get('reason')=='compiler-artifact'
+                and item.get('executable') and item['target']['name']=='nestlink_identity']
+              assert len(identities)==1, 'exact identity harness missing'
+              receipt['identity_executable_sha256'] = hashlib.sha256(pathlib.Path(identities[0]).read_bytes()).hexdigest()
+              execute_tests('delegation-verified-lease',[identities[0],'delegation_verified_lease_reuse_keeps_exact_issuer_scope_and_original_deadlines','--show-output'],60,1)
               snapshots = [item['executable'] for line in (output/'build-currentness.log').read_text().splitlines()
                 if (item:=json.loads(line)).get('reason')=='compiler-artifact'
                 and item.get('executable') and item['target']['name']=='network_policy']

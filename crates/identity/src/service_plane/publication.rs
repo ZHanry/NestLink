@@ -28,8 +28,19 @@ impl VerifiedServiceIssuerDelegation {
         now_ms: u64,
     ) -> Result<VerifiedServiceLease, ContractError> {
         let lease = verify_service_lease(signed, &self.claims.service_issuer)?;
+        self.check_verified_lease(&lease, now_ms)?;
+        Ok(lease)
+    }
+    /// Reuse only an already sealed lease with this exact verified issuer.
+    /// Scope and both original deadlines are checked on every invocation.
+    pub fn check_verified_lease(
+        &self,
+        lease: &VerifiedServiceLease,
+        now_ms: u64,
+    ) -> Result<(), ContractError> {
         let c = lease.claims();
-        if c.deployment_id != self.claims.deployment_id
+        if lease.issuer() != self.claims.service_issuer
+            || c.deployment_id != self.claims.deployment_id
             || c.security_epoch != self.claims.security_epoch
             || c.policy_revision != self.claims.policy_revision
             || now_ms < self.claims.issued_at_unix_ms
@@ -41,7 +52,7 @@ impl VerifiedServiceIssuerDelegation {
         {
             return Err(invalid());
         }
-        Ok(lease)
+        Ok(())
     }
 }
 pub fn verify_service_issuer_delegation(
