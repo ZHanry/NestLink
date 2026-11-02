@@ -85,6 +85,69 @@
         "owned_qdisc_removed": true,
         "scope_failure": "Baseline actual target8000kbps, loaded6000kbps; actual tc step executed but original producer did not downshift<=5000kbps during5s. This fails original2s gate; no p95+10ms qualification.",
         "actual_pre_step_stats": "baseline=VideoSenderStats { receiver_reports: 7, feedback_requests: 0, duplicate_requests: 0, keyframes_encoded: 1, last_budget: Some(ProducerBudgetObservation { source: 42, cadence_fps: 30, bitrate_kbps: 8000, observed_at: Instant { tv_sec: 115, tv_nsec: 85843052 }, encoding_time: 22.02504ms, enqueue_time: 37.515µs, receiver_condition: Some(Healthy) }), enqueued_video_bytes: 1904615 }\nfile_loaded=VideoSenderStats { receiver_reports: 14, feedback_requests: 0, duplicate_requests: 0, keyframes_encoded: 2, last_budget: Some(ProducerBudgetObservation { source: 42, cadence_fps: 30, bitrate_kbps: 6000, observed_at: Instant { tv_sec: 119, tv_nsec: 108459647 }, encoding_time: 22.148092ms, enqueue_time: 28.261µs, receiver_condition: Some(Healthy) }), enqueued_video_bytes: 3286452 }\n"
+      },
+      {
+        "source_revision": "adef4826c5e6d2ba52f40aab2ca70a39d4deb2f8",
+        "run_id": 41370354628,
+        "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41370354628",
+        "job_id": 125039301376,
+        "artifact_id": 13108104510,
+        "github_artifact_digest": "sha256:4fd7a77cc9a3efcf63d2661f22d64b160295005692ef94291283a3e3ab95ae3d",
+        "workflow_conclusion": "failure",
+        "strict_lint_conclusion": "success",
+        "receipt_sha256": "0057acb4ed0dcb7402811899ac3484b41d463a742e2b1d8e3a37a5f57e205433",
+        "all_referenced_file_hashes_verified": true,
+        "files": {
+          "build.jsonl": "b2cfb06ba43123eb64227de91736b3f6e5da6534dbc857049392082586f7aa98",
+          "build.log": "bc6b1e8a7890e1a7a3669d769142ea5adceb236091417bf7dce864b709254037",
+          "configured": "084fe09c71b87a10131ae17355211acbbdbdbf7c229c499efdbe73171e8795a2",
+          "inventory.log": "ab16f75fc871931ced2593e87fce23e05a8c77e57d205a2d7d4583ddddb8753f",
+          "payload.bin": "1daa308fc5875f51fdaf44c00f1aa3263930913fae2c405ece0272dac3cf6b9a",
+          "pre-step-stats.txt": "1224e9edf940c0162b4630782f19b520514d669103e226f655c6656b44d05a91",
+          "ready.json": "811c8797de8264143861918529f2df868ebf4862e753e554fceee3a8794c2979",
+          "tests.log": "f224b258693454fb40507d71c9b23d82cc99464bef15ad5a1ed588520791efa1"
+        },
+        "build_exit_code": 0,
+        "original_failure": "AssertionError('original test ended before step-request; see tests.log')",
+        "owned_qdisc_removed": true,
+        "scope_failure": "Cadence fix exposed actual encoder/decoder CPU pressure; baseline target4500kbps and file-loaded800kbps failed unchanged pre-step>5000 assertion. No downshift or input-p95 qualification.",
+        "actual_pre_step_stats": "baseline=VideoSenderStats { receiver_reports: 6, feedback_requests: 0, duplicate_requests: 0, keyframes_encoded: 2, last_budget: Some(ProducerBudgetObservation { source: 42, cadence_fps: 30, bitrate_kbps: 4500, observed_at: Instant { tv_sec: 132, tv_nsec: 189496136 }, encoding_time: 34.010811ms, enqueue_time: 53.149µs, receiver_condition: Some(Congested) }), enqueued_video_bytes: 2393918 }\nfile_loaded=VideoSenderStats { receiver_reports: 14, feedback_requests: 0, duplicate_requests: 0, keyframes_encoded: 3, last_budget: Some(ProducerBudgetObservation { source: 42, cadence_fps: 22, bitrate_kbps: 800, observed_at: Instant { tv_sec: 136, tv_nsec: 212929057 }, encoding_time: 42.535508ms, enqueue_time: 50.434µs, receiver_condition: Some(Healthy) }), enqueued_video_bytes: 4096131 }\n"
+      },
+      {
+        "source_revision": "122a1a9b946e0b2dce88e92c49d00afda988826e",
+        "run_id": 41371534957,
+        "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41371534957",
+        "job_id": 125042848677,
+        "artifact_id": 13109646136,
+        "github_artifact_digest": "sha256:66ec14446d19bac9c6bbe3f68d04f1eadd136dd8629c801ab52be5af94cac97c",
+        "workflow_conclusion": "failure",
+        "strict_lint_conclusion": "success",
+        "receipt_sha256": "95de4458a648638deb4f7bd4f5bf1f459d9d7a1c9e92c835995805cc4498f598",
+        "all_referenced_file_hashes_verified": true,
+        "files": {
+          "build.jsonl": "f9709c1c3b68a289636c59ff4593f96f232d343b9a3b65609c096e79abb071c1",
+          "build.log": "934ae5c38171dedd2f3ef9fbfecc1cd5f117f259d5328c904b2eb5528e2bb796",
+          "configured": "084fe09c71b87a10131ae17355211acbbdbdbf7c229c499efdbe73171e8795a2",
+          "inventory.log": "ab16f75fc871931ced2593e87fce23e05a8c77e57d205a2d7d4583ddddb8753f",
+          "payload.bin": "1daa308fc5875f51fdaf44c00f1aa3263930913fae2c405ece0272dac3cf6b9a",
+          "pre-step-stats.txt": "642471a921cc9b812174332a3e8888b21b8c658e19f85d66fe7f9f24bca49557",
+          "ready.json": "73a777707bc88c7f9b70d7e11d399e2a49e2044df8bba8220ad7522c588e565c",
+          "step-request": "8f144a181947338e011551e3534b29f8ac104f7f838dca5d9281f6383e409b5a",
+          "stepped": "c3cdc98ef2c39a8a15718e4c678c876eee75f9d4a2e88cdadb4e73b6186f1709",
+          "tests.log": "2219a1fb5e9d3cc4508c42d8f623f11a552d27af49cf146b688216f9e9e2399c"
+        },
+        "build_exit_code": 0,
+        "original_failure": "AssertionError()",
+        "owned_qdisc_removed": true,
+        "scope_failure": "Actual baseline and file-loaded producer8000kbps/30fps Healthy after decoder-pressure classification fix. Physical20-to5Mbps step executed; actual downshift exceeded original2s, so original assertion failed. All original codec/media lib regressions and strict lint passed; no fullW31 or input-p95 qualification.",
+        "actual_pre_step_stats": "baseline=VideoSenderStats { receiver_reports: 7, feedback_requests: 0, duplicate_requests: 0, keyframes_encoded: 2, last_budget: Some(ProducerBudgetObservation { source: 42, cadence_fps: 30, bitrate_kbps: 8000, observed_at: Instant { tv_sec: 100, tv_nsec: 975789135 }, encoding_time: 17.736469ms, enqueue_time: 14.232µs, receiver_condition: Some(Healthy) }), enqueued_video_bytes: 3168117 }\nfile_loaded=VideoSenderStats { receiver_reports: 15, feedback_requests: 0, duplicate_requests: 0, keyframes_encoded: 4, last_budget: Some(ProducerBudgetObservation { source: 42, cadence_fps: 30, bitrate_kbps: 8000, observed_at: Instant { tv_sec: 104, tv_nsec: 980311102 }, encoding_time: 15.003561ms, enqueue_time: 20.211µs, receiver_condition: Some(Healthy) }), enqueued_video_bytes: 6237402 }\n",
+        "original_media_regressions": {
+          "sha256": "1ad86b6d89e17e45dc515348223732f33df5a3f251648f88867b24807bccfea9",
+          "summaries": [
+            "test result: ok. 40 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s",
+            "test result: ok. 64 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.26s"
+          ]
+        }
       }
     ]
   },
@@ -99,9 +162,9 @@
     ]
   },
   "followup": {
-    "source_revision": "adef4826c5e6d2ba52f40aab2ca70a39d4deb2f8",
-    "run_id": 41370354628,
-    "state": "pending",
-    "change": "Actual production cadence now includes encoding/enqueue elapsed time instead of adding another full frame period; preserve no catch-up bursts and original approval ceilings."
+    "source_revision": "62bdafad60dc128823bea1905e128a129a3f611f",
+    "run_id": 41372314200,
+    "state": "running",
+    "change": "Preserve actual per-budget observations before the unchanged2s assertion, to distinguish measured receiver CPU cost, enqueue pressure and report lag. No gate changed."
   }
 }

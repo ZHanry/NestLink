@@ -412,7 +412,10 @@ async fn actual_tc_step_original_vp8_files_and_input() -> Result {
             && previous_observation != Some(budget.observed_at)
         {
             previous_observation = Some(budget.observed_at);
-            observations.push_str(&format!("elapsed_us={} stats={actual:?}\n", step.elapsed().as_micros()));
+            observations.push_str(&format!(
+                "elapsed_us={} stats={actual:?}\n",
+                step.elapsed().as_micros()
+            ));
             fs::write(root.join("step-budget-observations.txt"), &observations)?;
         }
         if downshift_unix_ns.is_none()
