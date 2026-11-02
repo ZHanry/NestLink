@@ -181,6 +181,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --lib video::tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/readback-ipc-tests.log"
           exit $LASTEXITCODE
+      - name: Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --test native_compressed -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/compressed-native-tests.log"
+          exit $LASTEXITCODE
       - name: Verify explicit GPU intent and exact local approval refusal boundaries
         if: ${{ !cancelled() }}
         shell: pwsh

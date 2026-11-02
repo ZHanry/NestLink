@@ -38,9 +38,17 @@ async fn bounded<T>(
     stage: &'static str,
     action: impl std::future::Future<Output = Result<T>>,
 ) -> Result<T> {
-    tokio::time::timeout(STAGE_LIMIT, action)
+    let started = Instant::now();
+    eprintln!("compressed IPC stage started: {stage}");
+    let result = tokio::time::timeout(STAGE_LIMIT, action)
         .await
-        .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, stage))?
+        .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, stage))?;
+    eprintln!(
+        "compressed IPC stage finished: {stage}; elapsed_ms={}; error={:?}",
+        started.elapsed().as_millis(),
+        result.as_ref().err().map(ToString::to_string)
+    );
+    result
 }
 
 async fn join_finished<T: Send + 'static>(
@@ -450,6 +458,7 @@ async fn two_tls_connections_reuse_decoded_credit_and_release_only_after_owner_j
     .await?;
 
     for (index, packet) in packets.into_iter().enumerate() {
+        eprintln!("compressed IPC frame started: {}", index + 1);
         bounded("real AU delivery and decoded credit", async {
             let pts = host_handle.native_video_capture_pts(&binding, Instant::now())?;
             host_handle
