@@ -71,7 +71,7 @@ async fn displays(
     client: &mut Client,
     generation: u64,
     binding: &NativeSessionBinding,
-) -> Result<NativeDisplayState> {
+) -> Result<Option<NativeDisplayState>> {
     match client
         .request(
             generation,
@@ -82,9 +82,7 @@ async fn displays(
         .await?
         .result
     {
-        Reply::NativeDisplays {
-            state: Some(state), ..
-        } => Ok(state),
+        Reply::NativeDisplays { state, .. } => Ok(state),
         other => Err(io::Error::other(format!(
             "display state: {}",
             serde_json::to_string(&other)?
@@ -102,8 +100,12 @@ async fn approve_capture(
     let scope = binding(&host_snapshot)?;
     let state = tokio::time::timeout(Duration::from_secs(10), async {
         loop {
-            let state = displays(host, generation, &scope).await?;
-            if !state.displays.is_empty() {
+            // The original capture owner starts after connected is emitted.
+            // A missing first catalog is pending within this same deadline;
+            // only an actual published display can satisfy the assertions.
+            if let Some(state) = displays(host, generation, &scope).await?
+                && !state.displays.is_empty()
+            {
                 return Ok::<_, Box<dyn std::error::Error + Send + Sync>>(state);
             }
             tokio::time::sleep(Duration::from_millis(20)).await;
@@ -136,10 +138,12 @@ async fn approve_capture(
     tokio::time::timeout(Duration::from_secs(10), async {
         loop {
             let state = displays(source, source_snapshot.generation, &scope).await?;
-            if state
-                .selected
-                .as_ref()
-                .is_some_and(|selection| selection.source == source_id)
+            if state.is_some_and(|state| {
+                state
+                    .selected
+                    .as_ref()
+                    .is_some_and(|selection| selection.source == source_id)
+            })
             {
                 return Ok::<_, Box<dyn std::error::Error + Send + Sync>>(());
             }
