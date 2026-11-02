@@ -1,0 +1,325 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
+  "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+  "scoped_workflow_passed": true,
+  "whole_acceptance_groups_passed": false,
+  "release_state": "not_ready",
+  "scope": "Hosted release Web build and original Chrome/Edge production Web-to-native VP8/Opus/input/file/UI/cleanup scenes. Firefox and actual Windows/external-site/GPU acceptance remain separate.",
+  "build_provenance": {
+    "kind": "github-hosted",
+    "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d"
+  },
+  "execution_provenance": {
+    "kind": "github-hosted",
+    "physical_target_acceptance": false
+  },
+  "run_id": 41431401722,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41431401722",
+  "run_attempt": 1,
+  "workflow": ".github/workflows/web-build.yml",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 125230585542,
+      "name": "release-site",
+      "conclusion": "success"
+    },
+    {
+      "id": 125230585927,
+      "name": "Browser runner and observer contracts",
+      "conclusion": "success"
+    },
+    {
+      "id": 125235033038,
+      "name": "Production Web to native host (chrome)",
+      "conclusion": "success"
+    },
+    {
+      "id": 125235033048,
+      "name": "Production Web to native host (edge)",
+      "conclusion": "success"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13134058265,
+      "name": "nestlink-browser-contracts-362f1b2a8cce330c14e2e7be11b6b75b36e3c01d-1",
+      "sha256": "d3c4d84c5f872389711a8d88c463df302fd744997d2c04fc59da06a3204a92e1",
+      "bytes": 3780,
+      "official_archive_digest_verified": true,
+      "files": [
+        {
+          "path": "nestlink-browser-contracts-node.log",
+          "bytes": 15318,
+          "sha256": "34ba0c0f1267dca0d2fe4a9481e24f8238bc7ab4074cae24b192c66e4b861705"
+        },
+        {
+          "path": "nestlink-browser-contracts-python.log",
+          "bytes": 120,
+          "sha256": "93c68f947c1d9878f2075005152b672c255cf145ac202befb07bc93ed0e17656"
+        }
+      ],
+      "receipts": {},
+      "rust_test_results": [],
+      "recorded_command_logs_verified": []
+    },
+    {
+      "id": 13134488874,
+      "name": "release-web-source-lock-evidence-1",
+      "sha256": "dc9a4ba35391204a51d1ed267a7757a2af5f12c070656ea3b823ef6300c42ab9",
+      "bytes": 145822,
+      "official_archive_digest_verified": true,
+      "files": [
+        {
+          "path": "Cargo.lock.diff",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "after-metadata.lock",
+          "bytes": 209772,
+          "sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+        },
+        {
+          "path": "after.lock",
+          "bytes": 209772,
+          "sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+        },
+        {
+          "path": "before.lock",
+          "bytes": 209772,
+          "sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+        },
+        {
+          "path": "lock-evidence.json",
+          "bytes": 608,
+          "sha256": "b4a654c76c0610c822a87a9c98dd69eabcff3bdd4c66a3ab5ed61a330fd2a8ac"
+        }
+      ],
+      "receipts": {
+        "lock-evidence.json": {}
+      },
+      "rust_test_results": [],
+      "recorded_command_logs_verified": []
+    },
+    {
+      "id": 13134784917,
+      "name": "nestlink-browser-native-evidence-edge",
+      "sha256": "d33689b1c867d7a57871f4ed49f149bdb5049bcc867a8733a7e86a624bce93bd",
+      "bytes": 250090,
+      "official_archive_digest_verified": true,
+      "files": [
+        {
+          "path": "browser-report-progress.jsonl",
+          "bytes": 3127,
+          "sha256": "3b1e8ca7194a3a3d7913155de4219bf48a50b8c16e90d4293382841b40f34eea"
+        },
+        {
+          "path": "browser-report-remote-narrow.png",
+          "bytes": 27402,
+          "sha256": "528aab9e299a46608713ac414cef79ff148eac40dfb75a853d7833d516d202b4"
+        },
+        {
+          "path": "browser-report-tunnel-editor.png",
+          "bytes": 78019,
+          "sha256": "bf96427db6904ec45ea74ad5fbc6161244c0918b4b240a30210e05d3c2b245a6"
+        },
+        {
+          "path": "browser-report-video.png",
+          "bytes": 8303,
+          "sha256": "6a09162bf494693dceb62ee8878836777341d54a71851a6ea235040a0604a075"
+        },
+        {
+          "path": "browser-report-workspace.png",
+          "bytes": 113154,
+          "sha256": "91c7fa95f5b0511792c335eefdfc8503254462571483ea1ef9c72f8e7f1fc55b"
+        },
+        {
+          "path": "browser-report.json",
+          "bytes": 994329,
+          "sha256": "78cec76572e96a681b2ee2f053c2d6a6bb2842407b21b92cdeea2991db84e919"
+        },
+        {
+          "path": "connected.json",
+          "bytes": 24,
+          "sha256": "eb6aca21988bbfb247e8090439a12f31fa3d6d73aa8e601a292f6557d506c06e"
+        },
+        {
+          "path": "data-result.json",
+          "bytes": 2731,
+          "sha256": "5cbe7617d337d2ebe11ed4f907a663b01e1f3c96dfb8c46fec444d5f00ea49db"
+        },
+        {
+          "path": "database-cleanup.json",
+          "bytes": 297,
+          "sha256": "bc7665d7004a905fd6a0b7d73ff9b61fea7fe4c21a01df9df10974b61411ace5"
+        },
+        {
+          "path": "host-result.json",
+          "bytes": 617,
+          "sha256": "1ef4697eb056074e0d941c2c7b352b5c053e9883b5b6a4d787ea590707f2ac4f"
+        },
+        {
+          "path": "host-start-gate.json",
+          "bytes": 144,
+          "sha256": "3cb69c5a27e1ea6da7cbc5f16b02854f580e1e6e9d873f10ad7d5cc3a58f34d3"
+        },
+        {
+          "path": "input-records.jsonl",
+          "bytes": 1053,
+          "sha256": "9fd9ead293bf675a786b792e6c8762b236147f3ee815e1fbc29d6e15ae8b852d"
+        },
+        {
+          "path": "management-stages.jsonl",
+          "bytes": 78427,
+          "sha256": "14472760da902af2c1e696d674edca3e82f0710c1e8f703888f15cded4a51e44"
+        },
+        {
+          "path": "negotiation-events.jsonl",
+          "bytes": 1512,
+          "sha256": "8765018f00d8165237f3aec26ae25e8fe8139da227bedac67d3a403807d1237b"
+        },
+        {
+          "path": "runner-result.json",
+          "bytes": 1146,
+          "sha256": "73f8811f6cec09f3fac5fa25c48ae73eef8a94ad6b8b57df0f3e9e95faf2cef3"
+        }
+      ],
+      "receipts": {
+        "browser-report.json": {
+          "passed": true,
+          "scope": "Production Web UI to native Core, real local WebRTC/VP8 and management renewal; owned synthetic capture, not installed-platform acceptance",
+          "browser_version": "Edg/156.0.4314.56",
+          "browser_product": "edge"
+        },
+        "runner-result.json": {
+          "passed": true,
+          "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+          "github_sha": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
+          "browser_product": "edge",
+          "cleanup": {
+            "browser_forced": false,
+            "native_forced": false,
+            "process_errors": [],
+            "owned_processes_stopped": true,
+            "download_directory_empty_after_probe": true,
+            "private_directory_removed": true
+          }
+        }
+      },
+      "rust_test_results": [],
+      "recorded_command_logs_verified": []
+    },
+    {
+      "id": 13135581514,
+      "name": "nestlink-browser-native-evidence-chrome",
+      "sha256": "3313bfabb2b8bf07daa0e0dd00c9bc4c6b73df478a4395ece9a7f33eb2b5e856",
+      "bytes": 250085,
+      "official_archive_digest_verified": true,
+      "files": [
+        {
+          "path": "browser-report-progress.jsonl",
+          "bytes": 3139,
+          "sha256": "35b3b9b369e437d8088b704ff735dc6355d8e9f24fb7bbc671d01188bf834a51"
+        },
+        {
+          "path": "browser-report-remote-narrow.png",
+          "bytes": 28749,
+          "sha256": "d1eeceb098771de501833040d5ddc9eec5bab79a4d1ac9bec501cbbe9617d9ab"
+        },
+        {
+          "path": "browser-report-tunnel-editor.png",
+          "bytes": 78001,
+          "sha256": "47b55beb2ae123e9355bb75acbaa138a8867f136a53ffbdb649f58936ce80a5c"
+        },
+        {
+          "path": "browser-report-video.png",
+          "bytes": 8303,
+          "sha256": "6a09162bf494693dceb62ee8878836777341d54a71851a6ea235040a0604a075"
+        },
+        {
+          "path": "browser-report-workspace.png",
+          "bytes": 113600,
+          "sha256": "e3a75dad1974f5c356fdd8cac1d4a865ac7b51b5216a5a8880135e6ed0b516d3"
+        },
+        {
+          "path": "browser-report.json",
+          "bytes": 937823,
+          "sha256": "7f310ef19ae069c732406fdf05eb3c3f67004ab258fa987f6fa8ce078c457632"
+        },
+        {
+          "path": "connected.json",
+          "bytes": 24,
+          "sha256": "eb6aca21988bbfb247e8090439a12f31fa3d6d73aa8e601a292f6557d506c06e"
+        },
+        {
+          "path": "data-result.json",
+          "bytes": 2731,
+          "sha256": "5cbe7617d337d2ebe11ed4f907a663b01e1f3c96dfb8c46fec444d5f00ea49db"
+        },
+        {
+          "path": "database-cleanup.json",
+          "bytes": 297,
+          "sha256": "bc7665d7004a905fd6a0b7d73ff9b61fea7fe4c21a01df9df10974b61411ace5"
+        },
+        {
+          "path": "host-result.json",
+          "bytes": 617,
+          "sha256": "274bfb987e391e8a48b10046e7940213e4facd2a60dc5ecc348cac5846b46f91"
+        },
+        {
+          "path": "host-start-gate.json",
+          "bytes": 144,
+          "sha256": "b4edc201ed3bac82e4b8d629b1b25708a5f1540294096930bb3c70f34e3765ce"
+        },
+        {
+          "path": "input-records.jsonl",
+          "bytes": 1053,
+          "sha256": "9fd9ead293bf675a786b792e6c8762b236147f3ee815e1fbc29d6e15ae8b852d"
+        },
+        {
+          "path": "management-stages.jsonl",
+          "bytes": 77567,
+          "sha256": "d56c362801f3e0f0c319e1206d95be6abfeb7af2c16de81a1d98086ac4b74a52"
+        },
+        {
+          "path": "negotiation-events.jsonl",
+          "bytes": 1512,
+          "sha256": "1983ae0e355b8c9971781cd70d24f453e857f72c1e2fc91d14f947fa1c4e8cd7"
+        },
+        {
+          "path": "runner-result.json",
+          "bytes": 1148,
+          "sha256": "79efd5bd63f29eab0a1f528fde3aef0b000d66602c13066a382cc2536f3f05ff"
+        }
+      ],
+      "receipts": {
+        "browser-report.json": {
+          "passed": true,
+          "scope": "Production Web UI to native Core, real local WebRTC/VP8 and management renewal; owned synthetic capture, not installed-platform acceptance",
+          "browser_version": "Chrome/156.0.8078.47",
+          "browser_product": "chrome"
+        },
+        "runner-result.json": {
+          "passed": true,
+          "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+          "github_sha": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
+          "browser_product": "chrome",
+          "cleanup": {
+            "browser_forced": false,
+            "native_forced": false,
+            "process_errors": [],
+            "owned_processes_stopped": true,
+            "download_directory_empty_after_probe": true,
+            "private_directory_removed": true
+          }
+        }
+      },
+      "rust_test_results": [],
+      "recorded_command_logs_verified": []
+    }
+  ]
+}
