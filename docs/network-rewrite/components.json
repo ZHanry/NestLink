@@ -15,6 +15,49 @@
   "research_runtime_exclusion": "EasyTier is idea_reference only; no executable, library, FFI, forked core or adapted code is selected.",
   "components": [
     {
+      "id": "C27",
+      "purpose": "Coverage-guided ASan mutation of original network/offline/media protocol boundaries",
+      "existing_implementation": [
+        "Production nestlink-protocol decoders and canonical encoders",
+        "Existing strict contract/real session and lifecycle tests"
+      ],
+      "candidates": [
+        "LLVM libFuzzer via rust-fuzz adapters (selected)",
+        "Handwritten pseudo-random mutation loop (rejected: duplicates general engine without coverage feedback)"
+      ],
+      "official_sources": [
+        "https://crates.io/crates/cargo-fuzz/0.13.2",
+        "https://crates.io/crates/libfuzzer-sys/0.4.13",
+        "https://rust-fuzz.github.io/book/cargo-fuzz.html",
+        "https://llvm.org/docs/LibFuzzer.html"
+      ],
+      "maintenance_status": {
+        "reviewed_at": "2026-11-02",
+        "evidence": "Published versions2026-06-09/2026-06-04 non-yanked; crates.io API checksum/license and upstream adapter options/project source reviewed. This is provenance, not passing fuzz or security evidence."
+      },
+      "platforms": [
+        "GitHub-hosted ubuntu-24.04 ASan laboratory"
+      ],
+      "version": {
+        "cargo_fuzz": "=0.13.2",
+        "libfuzzer_sys": "=0.4.13",
+        "nightly": "nightly-2026-10-25"
+      },
+      "license": "cargo-fuzz MIT OR Apache-2.0; libfuzzer-sys (MIT OR Apache-2.0) AND NCSA",
+      "selection_reason": "Reuse coverage-guided engine and sanitizers rather than implementing generic fuzz machinery",
+      "adapter_boundary": "Test-only separate workspace calls actual production parsers; structural corpus is not signed authority or actual media output",
+      "security_and_operations_cost": [
+        "Separate reviewed fuzz lock is Actions-derived; record both locks and preserve exact source",
+        "Bounded120s run cannot close wholeW36/AC62 or target qualification",
+        "Keep every crash, property and sanitizer failure; no waived assertions"
+      ],
+      "work_packages": [
+        "W36"
+      ],
+      "validation_status": "source_prepared_hosted_lock_and_fuzz_pending",
+      "decision_ref": "docs/adr/network/0063-coverage-guided-network-parsers.md"
+    },
+    {
       "id": "C26",
       "purpose": "Real hosted kernel media impairment with original business scheduling",
       "existing_implementation": [

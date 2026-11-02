@@ -1,0 +1,89 @@
+name: Network security parser properties
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Exact main SHA to derive the fuzz lock or execute
+        required: true
+        type: string
+      mode:
+        type: choice
+        options: [derive-lock, fuzz]
+        default: fuzz
+permissions:
+  contents: read
+jobs:
+  security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      EXPECTED_SOURCE: ${{ inputs.source_revision }}
+      SECURITY_MODE: ${{ inputs.mode }}
+      CARGO_INCREMENTAL: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: nightly-2026-10-25
+          components: rust-src
+      - name: Derive lock or execute bounded sanitizer fuzzing on the exact source
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, re, subprocess, time
+          expected = os.environ['EXPECTED_SOURCE']
+          assert re.fullmatch('[0-9a-f]{40}', expected)
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip() == expected
+          subprocess.run(['git','merge-base','--is-ancestor',expected,'origin/main'],check=True)
+          assert subprocess.check_output(['git','status','--porcelain=v1','--untracked-files=all']) == b''
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'network-security'
+          output.mkdir()
+          project = pathlib.Path('tests/security/fuzz')
+          lock = project / 'Cargo.lock'
+          receipt = {'source_revision':expected,'workflow':os.environ['GITHUB_WORKFLOW_REF'],
+            'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+            'runner_environment':os.environ['RUNNER_ENVIRONMENT'],'runner_os':os.environ['RUNNER_OS'],
+            'mode':os.environ['SECURITY_MODE'],'passed':False,'commands':[],
+            'scope':'Coverage-guided libFuzzer+ASan parser and canonicalization properties. No signed authority issuance, live-session lifecycle, target or whole W36 acceptance claim.'}
+          receipt['product_cargo_lock_sha256'] = hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest()
+          def execute(name, args, timeout=900, env=None):
+              with (output/(name+'.log')).open('wb') as stream:
+                  result = subprocess.run(args,stdout=stream,stderr=subprocess.STDOUT,timeout=timeout,env=env)
+              receipt['commands'].append({'name':name,'argv':args,'return_code':result.returncode})
+              assert result.returncode == 0, name+' failed'
+          try:
+              execute('rust-version',['rustc','-vV'])
+              if receipt['mode'] == 'derive-lock':
+                  execute('derive-lock',['cargo','generate-lockfile','--manifest-path',str(project/'Cargo.toml')])
+                  (output/'Cargo.lock').write_bytes(lock.read_bytes())
+              else:
+                  before = lock.read_bytes()
+                  receipt['cargo_lock_sha256'] = hashlib.sha256(before).hexdigest()
+                  execute('fetch-locked',['cargo','fetch','--locked','--manifest-path',str(project/'Cargo.toml')])
+                  execute('install-fuzzer',['cargo','install','cargo-fuzz','--version','=0.13.2','--locked'])
+                  offline = dict(os.environ, CARGO_NET_OFFLINE='true')
+                  corpus = output/'corpus'
+                  execute('seed-corpus',['cargo','run','--locked','--manifest-path',str(project/'Cargo.toml'),'--bin','seed_network','--',str(corpus)],env=offline)
+                  execute('fuzz',['cargo','fuzz','run','--fuzz-dir',str(project),'network_wire',str(corpus),'--',
+                    '-max_total_time=120','-rss_limit_mb=2048','-timeout=5','-max_len=65537','-print_final_stats=1',
+                    '-artifact_prefix='+str(output/'crash-')],timeout=600,env=offline)
+                  assert lock.read_bytes() == before, 'fuzzer changed the reviewed dependency lock'
+              receipt['passed'] = True
+          except BaseException as error:
+              receipt['failure'] = repr(error)
+              raise
+          finally:
+              receipt['files'] = [{'path':str(p.relative_to(output)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+                for p in sorted(output.rglob('*')) if p.is_file()]
+              (output/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-security-${{ inputs.mode }}-${{ inputs.source_revision }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/network-security/
+          if-no-files-found: error
+          retention-days: 30
