@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "source_revision": "e2e3657a671578441ccf67ca472c508e482ee7e1",
+  "run_id": 41373576378,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41373576378",
+  "workflow": ".github/workflows/network-lan.yml",
+  "workflow_conclusion": "failure",
+  "passed": false,
+  "artifact": {
+    "id": 13110666040,
+    "official_digest": "sha256:be3de520191fa0def1d0fb8d6ef446d54c5580b0f1ad3893c4efdea1a722995c",
+    "downloaded_zip_sha256": "be3de520191fa0def1d0fb8d6ef446d54c5580b0f1ad3893c4efdea1a722995c",
+    "outer_receipt_sha256": "f50fc4505be979c5d51152801ab210590ac1cd915d8d008be7b127e7d14d740b",
+    "retained_file_digest_and_size_entries_verified": 33
+  },
+  "observed": {
+    "strict_passed": false,
+    "strict_failure": "Two clippy::needless_borrow expressions in combined.rs; no warning suppression used.",
+    "execution_passed": false,
+    "execution_failure": "Original Linux root helper IPv6 route add failed: Device for nexthop is not up. Combined owner failed before TUN admission; subsequent helper-cleanup assertion also failed.",
+    "outer_failure": "RuntimeError: actual-original-owner-lan failed; same-run log retained",
+    "outer_namespace_cleanup_errors": []
+  },
+  "candidate_correction": {
+    "commit": "6b5d3f74b995600a33f38cc2554240721da6d73c",
+    "change": "Remove both needless borrows. Configure both exact addresses, activate the original still-ephemeral TUN, then add exact remote host routes. Keep original strict checks, deadlines, journal identity and cleanup assertions.",
+    "verification_status": "pending_same_source_actions"
+  },
+  "scope": "Failed first hosted actual source-TUN plus LAN candidate. No actual TCP/HTTP, combined execution or full W28 qualification."
+}
