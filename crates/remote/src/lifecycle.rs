@@ -768,19 +768,29 @@ impl LeaseControl {
     ) -> Result<Option<nestlink_protocol::media_authority::HardwareMediaTarget>, RemoteError> {
         let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
-        managed.session.authorize(Permission::View, self.inner.path,
-            self.inner.clock.monotonic_ms())?;
+        managed.session.authorize(
+            Permission::View,
+            self.inner.path,
+            self.inner.clock.monotonic_ms(),
+        )?;
         match managed.session.local_media_binding() {
             Some(binding) if binding.local_direction() == direction => {
                 match (binding.adapter_luid(), binding.driver_version()) {
                     (Some(adapter_luid), Some(driver_version)) => Ok(Some(
-                        nestlink_protocol::media_authority::HardwareMediaTarget { adapter_luid, driver_version })),
+                        nestlink_protocol::media_authority::HardwareMediaTarget {
+                            adapter_luid,
+                            driver_version,
+                        },
+                    )),
                     (None, None) => Ok(None),
                     _ => Err(io::Error::other("incomplete local hardware media target").into()),
                 }
             }
-            Some(_) => Err(io::Error::new(io::ErrorKind::PermissionDenied,
-                "local hardware media direction differs").into()),
+            Some(_) => Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "local hardware media direction differs",
+            )
+            .into()),
             None => Ok(None),
         }
     }

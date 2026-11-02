@@ -2,7 +2,9 @@
 use crate::bridge::CompressedContext;
 use crate::gpu_diagnostics::{ReceiverObservation, TerminalSink};
 use eframe::egui;
-use nestlink_media_codec::{GpuDecodeStep, GpuH264Presenter, GpuHevcPresenter, GpuVideoSurface, VideoConfig};
+use nestlink_media_codec::{
+    GpuDecodeStep, GpuH264Presenter, GpuHevcPresenter, GpuVideoSurface, VideoConfig,
+};
 use std::{
     collections::VecDeque,
     io,
@@ -404,8 +406,11 @@ impl Presenter {
         {
             surface.detach();
         }
-        self.worker.is_none() && self.observation.lock().is_ok_and(|value|
-            !value.decoder_opened || value.native_cleanup_completed)
+        self.worker.is_none()
+            && self
+                .observation
+                .lock()
+                .is_ok_and(|value| !value.decoder_opened || value.native_cleanup_completed)
     }
 }
 impl Drop for Presenter {
@@ -471,54 +476,102 @@ fn record_join(
 }
 enum PresenterDecoder {
     H264(Box<GpuH264Presenter>),
-    Hevc { decoder: Box<GpuHevcPresenter>, target: nestlink_media_codec::HevcExecutionTarget },
+    Hevc {
+        decoder: Box<GpuHevcPresenter>,
+        target: nestlink_media_codec::HevcExecutionTarget,
+    },
 }
 impl PresenterDecoder {
-    fn open(surface: &GpuVideoSurface, config: VideoConfig, context: &CompressedContext,
-        authority: Arc<AtomicBool>) -> io::Result<Self> {
+    fn open(
+        surface: &GpuVideoSurface,
+        config: VideoConfig,
+        context: &CompressedContext,
+        authority: Arc<AtomicBool>,
+    ) -> io::Result<Self> {
         match context.video_format().map_err(io::Error::other)? {
             Some(format) if format.codec == nestlink_protocol::media_format::Codec::Hevc => {
-                let hardware = context.decoder_hardware
-                    .ok_or_else(|| io::Error::other("HEVC presenter platform absent from exact IPC"))?;
+                let hardware = context.decoder_hardware.ok_or_else(|| {
+                    io::Error::other("HEVC presenter platform absent from exact IPC")
+                })?;
                 let target = nestlink_media_codec::HevcExecutionTarget::new(
-                    nestlink_app_core::hevc_main8_contract(format)?, format.digest().map_err(io::Error::other)?,
-                    hardware.adapter_luid, hardware.driver_version)?;
-                Ok(Self::Hevc { decoder: Box::new(GpuHevcPresenter::with_target(surface, target, authority)?), target })
+                    nestlink_app_core::hevc_main8_contract(format)?,
+                    format.digest().map_err(io::Error::other)?,
+                    hardware.adapter_luid,
+                    hardware.driver_version,
+                )?;
+                Ok(Self::Hevc {
+                    decoder: Box::new(GpuHevcPresenter::with_target(surface, target, authority)?),
+                    target,
+                })
             }
-            _ => Ok(Self::H264(Box::new(GpuH264Presenter::with_config(surface, config)?))),
+            _ => Ok(Self::H264(Box::new(GpuH264Presenter::with_config(
+                surface, config,
+            )?))),
         }
     }
-    fn checked_hevc_step(value: nestlink_media_codec::HevcGpuDecodeStep,
-        target: nestlink_media_codec::HevcExecutionTarget) -> io::Result<GpuDecodeStep> {
-        let actual = value.step.picture.and_then(|p| p.submitted_qpc.map(|qpc| (p.sequence, p.pts_90khz, qpc)));
+    fn checked_hevc_step(
+        value: nestlink_media_codec::HevcGpuDecodeStep,
+        target: nestlink_media_codec::HevcExecutionTarget,
+    ) -> io::Result<GpuDecodeStep> {
+        let actual = value
+            .step
+            .picture
+            .and_then(|p| p.submitted_qpc.map(|qpc| (p.sequence, p.pts_90khz, qpc)));
         match (actual, value.submitted) {
             (Some((sequence, pts, qpc)), Some(receipt)) => {
                 receipt.check_current()?;
-                if receipt.target() != target || receipt.sequence() != sequence
-                    || receipt.pts_90khz() != pts || receipt.submitted_qpc() != qpc {
-                    return Err(io::Error::other("HEVC DXGI receipt differs from its exact submitted output"));
+                if receipt.target() != target
+                    || receipt.sequence() != sequence
+                    || receipt.pts_90khz() != pts
+                    || receipt.submitted_qpc() != qpc
+                {
+                    return Err(io::Error::other(
+                        "HEVC DXGI receipt differs from its exact submitted output",
+                    ));
                 }
             }
             (None, None) => {}
-            _ => return Err(io::Error::other("HEVC DXGI submission lacks its original receipt")),
+            _ => {
+                return Err(io::Error::other(
+                    "HEVC DXGI submission lacks its original receipt",
+                ));
+            }
         }
         Ok(value.step)
     }
     fn submit_scheduled(&mut self, unit: &AccessUnit) -> io::Result<GpuDecodeStep> {
         match self {
-            Self::H264(decoder) => decoder.submit_scheduled(unit.native_sequence, unit.pts_90khz,
-                &unit.payload, unit.due_qpc, unit.not_after_qpc),
-            Self::Hevc { decoder, target } => Self::checked_hevc_step(decoder.submit_scheduled(
-                unit.native_sequence, unit.pts_90khz, &unit.payload, unit.due_qpc, unit.not_after_qpc)?, *target),
+            Self::H264(decoder) => decoder.submit_scheduled(
+                unit.native_sequence,
+                unit.pts_90khz,
+                &unit.payload,
+                unit.due_qpc,
+                unit.not_after_qpc,
+            ),
+            Self::Hevc { decoder, target } => Self::checked_hevc_step(
+                decoder.submit_scheduled(
+                    unit.native_sequence,
+                    unit.pts_90khz,
+                    &unit.payload,
+                    unit.due_qpc,
+                    unit.not_after_qpc,
+                )?,
+                *target,
+            ),
         }
     }
-    fn poll(&mut self) -> io::Result<GpuDecodeStep> { match self {
-        Self::H264(decoder) => decoder.poll(),
-        Self::Hevc { decoder, target } => Self::checked_hevc_step(decoder.poll()?, *target),
-    }}
-    fn close(self) -> io::Result<()> { match self {
-        Self::H264(decoder) => decoder.close(), Self::Hevc { decoder, .. } => decoder.close(),
-    }}
+    fn poll(&mut self) -> io::Result<GpuDecodeStep> {
+        match self {
+            Self::H264(decoder) => decoder.poll(),
+            Self::Hevc { decoder, target } => Self::checked_hevc_step(decoder.poll()?, *target),
+        }
+    }
+    fn close(self) -> io::Result<()> {
+        match self {
+            Self::H264(decoder) => decoder.close(),
+            Self::Hevc { decoder, .. } => decoder.close(),
+        }
+    }
 }
 fn run(
     surface: GpuVideoSurface,
@@ -544,99 +597,103 @@ fn run(
         .ok()
         .map(|(_, frequency)| frequency);
     let outcome = (|| {
-    events
-        .try_send(Event::Prepared)
-        .map_err(|_| io::Error::other("GPU event owner unavailable"))?;
-    let mut front = None;
-    let mut pending = VecDeque::new();
-    let mut progress = Instant::now();
-    while !cancel.load(Ordering::Acquire) {
-        if front.is_none() {
-            front = input.try_recv().ok();
-        }
-        let step = if let Some(unit) = &front {
-            if unit.context != owner_context {
-                return Err(io::Error::other(
-                    "GPU input belongs to another format owner",
+        events
+            .try_send(Event::Prepared)
+            .map_err(|_| io::Error::other("GPU event owner unavailable"))?;
+        let mut front = None;
+        let mut pending = VecDeque::new();
+        let mut progress = Instant::now();
+        while !cancel.load(Ordering::Acquire) {
+            if front.is_none() {
+                front = input.try_recv().ok();
+            }
+            let step = if let Some(unit) = &front {
+                if unit.context != owner_context {
+                    return Err(io::Error::other(
+                        "GPU input belongs to another format owner",
+                    ));
+                }
+                decoder.submit_scheduled(unit)?
+            } else {
+                decoder.poll()?
+            };
+            if step.accepted
+                && let Some(unit) = front.take()
+            {
+                if pending.is_empty() {
+                    progress = Instant::now();
+                }
+                observed.accepted = observed.accepted.saturating_add(1);
+                observed.last_accepted_pts = Some(unit.pts_90khz);
+                pending.push_back((
+                    unit.delivery_sequence,
+                    unit.native_sequence,
+                    unit.payload.len() as u64,
                 ));
             }
-            decoder.submit_scheduled(unit)?
-        } else {
-            decoder.poll()?
-        };
-        if step.accepted
-            && let Some(unit) = front.take()
-        {
-            if pending.is_empty() {
+            if let Some((sequence, pts_90khz)) = step.decoded {
+                let Some((delivery_sequence, native_sequence, length)) = pending.pop_front() else {
+                    return Err(io::Error::other("unbound GPU output"));
+                };
+                if native_sequence != sequence {
+                    return Err(io::Error::other("GPU output sequence mismatch"));
+                }
+                observed.decoded = observed.decoded.saturating_add(1);
+                observed.last_decoded_pts = Some(pts_90khz);
+                bytes.fetch_sub(length, Ordering::AcqRel);
+                units.fetch_sub(1, Ordering::AcqRel);
+                events
+                    .try_send(Event::Decoded {
+                        delivery_sequence,
+                        native_sequence,
+                        pts_90khz,
+                    })
+                    .map_err(|_| io::Error::other("GPU event queue exhausted"))?;
                 progress = Instant::now();
             }
-            observed.accepted = observed.accepted.saturating_add(1);
-            observed.last_accepted_pts = Some(unit.pts_90khz);
-            pending.push_back((
-                unit.delivery_sequence,
-                unit.native_sequence,
-                unit.payload.len() as u64,
-            ));
-        }
-        if let Some((sequence, pts_90khz)) = step.decoded {
-            let Some((delivery_sequence, native_sequence, length)) = pending.pop_front() else {
-                return Err(io::Error::other("unbound GPU output"));
-            };
-            if native_sequence != sequence {
-                return Err(io::Error::other("GPU output sequence mismatch"));
+            if let Some(picture) = step.picture {
+                observed.retired = observed.retired.saturating_add(1);
+                observed.last_retired_pts = Some(picture.pts_90khz);
+                if picture.gpu_converted {
+                    observed.converted = observed.converted.saturating_add(1);
+                }
+                if let Some(qpc) = picture.submitted_qpc {
+                    observed.submitted = observed.submitted.saturating_add(1);
+                    observed.submission_cadence.record(qpc);
+                    observed.last_submitted_qpc = Some(qpc);
+                    observed.last_submitted_pts = Some(picture.pts_90khz);
+                }
+                events
+                    .try_send(Event::Presented {
+                        submitted_qpc: picture.submitted_qpc,
+                        gpu_converted: picture.gpu_converted,
+                    })
+                    .map_err(|_| io::Error::other("GPU event queue exhausted"))?;
             }
-            observed.decoded = observed.decoded.saturating_add(1);
-            observed.last_decoded_pts = Some(pts_90khz);
-            bytes.fetch_sub(length, Ordering::AcqRel);
-            units.fetch_sub(1, Ordering::AcqRel);
-            events
-                .try_send(Event::Decoded {
-                    delivery_sequence,
-                    native_sequence,
-                    pts_90khz,
-                })
-                .map_err(|_| io::Error::other("GPU event queue exhausted"))?;
-            progress = Instant::now();
-        }
-        if let Some(picture) = step.picture {
-            observed.retired = observed.retired.saturating_add(1);
-            observed.last_retired_pts = Some(picture.pts_90khz);
-            if picture.gpu_converted {
-                observed.converted = observed.converted.saturating_add(1);
+            // Diagnostic contention never blocks media or changes delivery credit.
+            if let Ok(mut value) = observation.try_lock() {
+                *value = observed.clone();
             }
-            if let Some(qpc) = picture.submitted_qpc {
-                observed.submitted = observed.submitted.saturating_add(1);
-                observed.submission_cadence.record(qpc);
-                observed.last_submitted_qpc = Some(qpc);
-                observed.last_submitted_pts = Some(picture.pts_90khz);
+            if (!pending.is_empty() || front.is_some())
+                && progress.elapsed() > Duration::from_secs(2)
+            {
+                return Err(io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "GPU decoder progress deadline",
+                ));
             }
-            events
-                .try_send(Event::Presented {
-                    submitted_qpc: picture.submitted_qpc,
-                    gpu_converted: picture.gpu_converted,
-                })
-                .map_err(|_| io::Error::other("GPU event queue exhausted"))?;
+            thread::sleep(Duration::from_millis(1));
         }
-        // Diagnostic contention never blocks media or changes delivery credit.
-        if let Ok(mut value) = observation.try_lock() {
-            *value = observed.clone();
-        }
-        if (!pending.is_empty() || front.is_some()) && progress.elapsed() > Duration::from_secs(2) {
-            return Err(io::Error::new(
-                io::ErrorKind::TimedOut,
-                "GPU decoder progress deadline",
-            ));
-        }
-        thread::sleep(Duration::from_millis(1));
-    }
-    Ok(())
+        Ok(())
     })();
     surface.revoke();
     let cleanup = decoder.close();
     observed.native_cleanup_completed = cleanup.is_ok();
     match (outcome, cleanup) {
         (Err(error), Ok(())) | (Ok(()), Err(error)) => Err(error),
-        (Err(error), Err(cleanup)) => Err(io::Error::other(format!("{error}; GPU checked cleanup failed: {cleanup}"))),
+        (Err(error), Err(cleanup)) => Err(io::Error::other(format!(
+            "{error}; GPU checked cleanup failed: {cleanup}"
+        ))),
         (Ok(()), Ok(())) => Ok(()),
     }
 }
@@ -672,20 +729,28 @@ mod tests {
     use super::*;
     #[test]
     fn explicit_hevc_gpu_configuration_requires_exact_v3_and_frozen_platform()
-        -> Result<(), Box<dyn std::error::Error>> {
+    -> Result<(), Box<dyn std::error::Error>> {
         use nestlink_app_ipc::compressed_video::WireVideoFormat;
         use nestlink_protocol::media_format::{FrameRate, VideoFormat};
-        let mut ptl = [0; 12]; ptl[0] = 1; ptl[11] = 120;
+        let mut ptl = [0; 12];
+        ptl[0] = 1;
+        ptl[11] = 120;
         let format = VideoFormat::hevc_main8_observed(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
         let mut context = test_context();
-        context.ipc_version = 3; context.format_epoch = 1;
-        context.format_sha256 = format.digest()?; context.format = Some(WireVideoFormat::new(format)?);
+        context.ipc_version = 3;
+        context.format_epoch = 1;
+        context.format_sha256 = format.digest()?;
+        context.format = Some(WireVideoFormat::new(format)?);
         assert!(gpu_config(&context, 640, 480).is_err());
         context.decoder_hardware = Some(nestlink_protocol::media_authority::HardwareMediaTarget {
-            adapter_luid: 7, driver_version: 9,
+            adapter_luid: 7,
+            driver_version: 9,
         });
         let config = gpu_config(&context, 640, 480)?;
-        assert_eq!((config.width, config.height, config.fps, config.bitrate_kbps), (640, 480, 30, 4000));
+        assert_eq!(
+            (config.width, config.height, config.fps, config.bitrate_kbps),
+            (640, 480, 30, 4000)
+        );
         assert!(gpu_config(&context, 648, 480).is_err());
         context.ipc_version = 2;
         assert!(gpu_config(&context, 640, 480).is_err());
@@ -814,17 +879,29 @@ mod tests {
     }
     #[test]
     fn joined_rust_worker_cannot_release_a_failed_native_owner() -> io::Result<()> {
-        let mut presenter = Presenter::new(gpu_config(&test_context(), 640, 480)?, 1, test_context());
+        let mut presenter =
+            Presenter::new(gpu_config(&test_context(), 640, 480)?, 1, test_context());
         presenter.worker = Some(thread::spawn(|| ReceiverObservation {
-            worker_started: true, decoder_opened: true, failed: true,
-            native_cleanup_completed: false, ..ReceiverObservation::default()
+            worker_started: true,
+            decoder_opened: true,
+            failed: true,
+            native_cleanup_completed: false,
+            ..ReceiverObservation::default()
         }));
         presenter.stop();
         let deadline = Instant::now() + Duration::from_secs(1);
-        while presenter.worker.as_ref().is_some_and(|worker| !worker.is_finished())
-            && Instant::now() < deadline { thread::sleep(Duration::from_millis(1)); }
+        while presenter
+            .worker
+            .as_ref()
+            .is_some_and(|worker| !worker.is_finished())
+            && Instant::now() < deadline
+        {
+            thread::sleep(Duration::from_millis(1));
+        }
         assert!(!presenter.join_if_finished());
-        let final_value = presenter.observation().ok_or_else(|| io::Error::other("cleanup observation unavailable"))?;
+        let final_value = presenter
+            .observation()
+            .ok_or_else(|| io::Error::other("cleanup observation unavailable"))?;
         assert!(final_value.worker_joined && final_value.failed);
         assert!(!final_value.native_cleanup_completed);
         assert!(!presenter.join_if_finished());

@@ -766,23 +766,46 @@ impl nestlink_remote::native_renewal::NativeExecutionFence for NativeExecutionFe
         self.0.with_current(operation)
     }
 }
-fn check_execution_platform(lease: &LeaseControl, execution: &nestlink_media_session::LiveExecutionReceipt,
-    direction: nestlink_protocol::media_authority::MediaDirection) -> io::Result<()> {
+fn check_execution_platform(
+    lease: &LeaseControl,
+    execution: &nestlink_media_session::LiveExecutionReceipt,
+    direction: nestlink_protocol::media_authority::MediaDirection,
+) -> io::Result<()> {
     use nestlink_protocol::media_authority::MediaDirection;
     let identity = execution.identity()?;
-    let expected_direction = match direction { MediaDirection::Encode => nestlink_media_codec::ExecutionDirection::Encode,
-        MediaDirection::Decode => nestlink_media_codec::ExecutionDirection::Decode };
+    let expected_direction = match direction {
+        MediaDirection::Encode => nestlink_media_codec::ExecutionDirection::Encode,
+        MediaDirection::Decode => nestlink_media_codec::ExecutionDirection::Decode,
+    };
     if identity.direction() != expected_direction
-        || lease.local_media_backend(direction).map_err(io::Error::other)?.as_deref() != Some(identity.backend()) {
-        return Err(denied("actual execution direction/backend differs from frozen local evidence"));
+        || lease
+            .local_media_backend(direction)
+            .map_err(io::Error::other)?
+            .as_deref()
+            != Some(identity.backend())
+    {
+        return Err(denied(
+            "actual execution direction/backend differs from frozen local evidence",
+        ));
     }
     let platform = match (identity.adapter_luid(), identity.driver_version()) {
-        (Some(adapter_luid), Some(driver_version)) => Some(nestlink_protocol::media_authority::HardwareMediaTarget { adapter_luid, driver_version }),
+        (Some(adapter_luid), Some(driver_version)) => {
+            Some(nestlink_protocol::media_authority::HardwareMediaTarget {
+                adapter_luid,
+                driver_version,
+            })
+        }
         (None, None) => None,
         _ => return Err(denied("actual execution hardware platform is incomplete")),
     };
-    if platform != lease.local_media_hardware_target(direction).map_err(io::Error::other)? {
-        return Err(denied("actual execution original hardware platform differs from local evidence"));
+    if platform
+        != lease
+            .local_media_hardware_target(direction)
+            .map_err(io::Error::other)?
+    {
+        return Err(denied(
+            "actual execution original hardware platform differs from local evidence",
+        ));
     }
     execution.check_current()
 }
@@ -929,7 +952,11 @@ impl CoreHandle {
             .copied()
             .ok_or_else(|| denied("execution target outside signed scope"))?;
         execution.matches_format(format)?;
-        check_execution_platform(&route.lease, &execution, nestlink_protocol::media_authority::MediaDirection::Encode)?;
+        check_execution_platform(
+            &route.lease,
+            &execution,
+            nestlink_protocol::media_authority::MediaDirection::Encode,
+        )?;
         let video = route.video()?;
         let _send_order = video.ordered_send().await.map_err(io::Error::other)?;
         let mut registered = video
@@ -972,9 +999,12 @@ impl CoreHandle {
             .local_media_backend(nestlink_protocol::media_authority::MediaDirection::Encode)
             .map_err(io::Error::other)
     }
-    pub fn native_video_encoder_hardware_target(&self, binding: &NativeSessionBinding)
-        -> io::Result<Option<nestlink_protocol::media_authority::HardwareMediaTarget>> {
-        self.display_route(binding)?.lease
+    pub fn native_video_encoder_hardware_target(
+        &self,
+        binding: &NativeSessionBinding,
+    ) -> io::Result<Option<nestlink_protocol::media_authority::HardwareMediaTarget>> {
+        self.display_route(binding)?
+            .lease
             .local_media_hardware_target(nestlink_protocol::media_authority::MediaDirection::Encode)
             .map_err(io::Error::other)
     }

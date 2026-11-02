@@ -1,8 +1,8 @@
 //! Exact independently-versioned HEVC target conversion. No legacy codec mapping,
 //! probe substitution, software fallback or implicit authority is introduced.
-use nestlink_media_codec::{HevcMain8Contract, VideoConfig};
 #[cfg(windows)]
 use nestlink_media_codec::HevcExecutionTarget;
+use nestlink_media_codec::{HevcMain8Contract, VideoConfig};
 use nestlink_protocol::media_format::{Codec, Geometry, HEVC_FORMAT_VERSION, VideoFormat};
 use std::io;
 
@@ -29,8 +29,11 @@ pub fn hevc_main8_contract(format: VideoFormat) -> io::Result<HevcMain8Contract>
     HevcMain8Contract::from_exact_target(ptl.general_bytes(), config)
 }
 #[cfg(windows)]
-pub fn hevc_execution_target(format: VideoFormat, adapter_luid: u64,
-    driver_version: u64) -> io::Result<HevcExecutionTarget> {
+pub fn hevc_execution_target(
+    format: VideoFormat,
+    adapter_luid: u64,
+    driver_version: u64,
+) -> io::Result<HevcExecutionTarget> {
     HevcExecutionTarget::new(
         hevc_main8_contract(format)?,
         format.digest().map_err(io::Error::other)?,

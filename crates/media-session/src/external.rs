@@ -34,7 +34,9 @@ pub struct VideoSinkContext {
 impl VideoSinkContext {
     pub fn validate_format(&self) -> io::Result<()> {
         if self.format.is_some_and(|f| f.codec == Codec::Hevc) != self.decoder_hardware.is_some() {
-            return Err(io::Error::other("HEVC compressed context requires its frozen decoder platform"));
+            return Err(io::Error::other(
+                "HEVC compressed context requires its frozen decoder platform",
+            ));
         }
         match (self.format_epoch, self.format) {
             (0, None) if self.format_sha256 == [0; 32] => Ok(()),
@@ -44,7 +46,9 @@ impl VideoSinkContext {
                     && self.catalog_sha256 != [0; 32]
                     && format.digest().map_err(io::Error::other)? == self.format_sha256 =>
             {
-                if format.codec == Codec::Hevc { crate::hevc_main8_contract(format)?; }
+                if format.codec == Codec::Hevc {
+                    crate::hevc_main8_contract(format)?;
+                }
                 Ok(())
             }
             _ => Err(io::Error::other("invalid compressed format context")),
@@ -88,7 +92,10 @@ struct Pending {
 }
 enum ExternalPrepare {
     H264(LegacyPrepare),
-    Hevc { admission: nestlink_media_codec::HevcMain8Admission, surface: crate::LegacySurface },
+    Hevc {
+        admission: nestlink_media_codec::HevcMain8Admission,
+        surface: crate::LegacySurface,
+    },
 }
 impl ExternalPrepare {
     fn new(context: &VideoSinkContext, width: u32, height: u32) -> io::Result<Self> {
@@ -96,29 +103,58 @@ impl ExternalPrepare {
             if format.codec == Codec::Hevc {
                 let contract = crate::hevc_main8_contract(format)?;
                 if format.width != width || format.height != height {
-                    return Err(io::Error::other("HEVC external geometry differs from frozen format"));
+                    return Err(io::Error::other(
+                        "HEVC external geometry differs from frozen format",
+                    ));
                 }
-                return Ok(Self::Hevc { admission: nestlink_media_codec::HevcMain8Admission::new(contract),
-                    surface: crate::LegacySurface { codec: Codec::Hevc, width, height,
-                        color: format.color, chroma: format.chroma, bit_depth: format.bit_depth } });
+                return Ok(Self::Hevc {
+                    admission: nestlink_media_codec::HevcMain8Admission::new(contract),
+                    surface: crate::LegacySurface {
+                        codec: Codec::Hevc,
+                        width,
+                        height,
+                        color: format.color,
+                        chroma: format.chroma,
+                        bit_depth: format.bit_depth,
+                    },
+                });
             }
             let (codec, _) = crate::negotiated_format::format_target(format, width, height, false)?;
             if codec != VideoCodec::H264Baseline {
-                return Err(io::Error::other("external consumer has no configured codec"));
+                return Err(io::Error::other(
+                    "external consumer has no configured codec",
+                ));
             }
         }
-        Ok(Self::H264(LegacyPrepare::new(VideoCodec::H264Baseline, width, height)?))
+        Ok(Self::H264(LegacyPrepare::new(
+            VideoCodec::H264Baseline,
+            width,
+            height,
+        )?))
     }
-    fn surface(&self) -> crate::LegacySurface { match self {
-        Self::H264(prepare) => prepare.surface(), Self::Hevc { surface, .. } => *surface,
-    }}
-    fn validate(&mut self, context: &VideoSinkContext, payload: &[u8], keyframe: bool) -> io::Result<()> {
+    fn surface(&self) -> crate::LegacySurface {
+        match self {
+            Self::H264(prepare) => prepare.surface(),
+            Self::Hevc { surface, .. } => *surface,
+        }
+    }
+    fn validate(
+        &mut self,
+        context: &VideoSinkContext,
+        payload: &[u8],
+        keyframe: bool,
+    ) -> io::Result<()> {
         match self {
             Self::H264(prepare) => {
                 let sps = prepare.validate(payload, keyframe)?;
                 if let Some(format) = context.format {
                     let surface = prepare.surface();
-                    let (_, config) = crate::negotiated_format::format_target(format, surface.width, surface.height, false)?;
+                    let (_, config) = crate::negotiated_format::format_target(
+                        format,
+                        surface.width,
+                        surface.height,
+                        false,
+                    )?;
                     crate::negotiated_format::receipt_matches(prepare, config, sps, format)?;
                 }
                 Ok(())
@@ -126,7 +162,9 @@ impl ExternalPrepare {
             Self::Hevc { admission, .. } => {
                 // This exact Main8 implementation accepts one complete IDR per
                 // AU; no inter-frame flag may bypass the original strict parser.
-                if !keyframe { return Err(io::Error::other("HEVC Main8 input is not an IDR")); }
+                if !keyframe {
+                    return Err(io::Error::other("HEVC Main8 input is not an IDR"));
+                }
                 admission.validate(payload)
             }
         }
@@ -414,28 +452,67 @@ mod tests {
         Ok(())
     }
     #[test]
-    fn exact_hevc_external_owner_preserves_platform_and_rejects_bad_au_before_credit() -> io::Result<()> {
+    fn exact_hevc_external_owner_preserves_platform_and_rejects_bad_au_before_credit()
+    -> io::Result<()> {
         use nestlink_protocol::media_format::{FrameRate, VideoFormat};
-        let mut ptl = [0; 12]; ptl[0] = 1; ptl[11] = 120;
-        let format = VideoFormat::hevc_main8_observed(ptl, 640, 480,
-            FrameRate::new(30, 1).map_err(io::Error::other)?, 4000).map_err(io::Error::other)?;
+        let mut ptl = [0; 12];
+        ptl[0] = 1;
+        ptl[11] = 120;
+        let format = VideoFormat::hevc_main8_observed(
+            ptl,
+            640,
+            480,
+            FrameRate::new(30, 1).map_err(io::Error::other)?,
+            4000,
+        )
+        .map_err(io::Error::other)?;
         let mut context = sink()?.context;
-        context.catalog_sha256 = [1; 32]; context.format_epoch = 1;
+        context.catalog_sha256 = [1; 32];
+        context.format_epoch = 1;
         context.format_sha256 = format.digest().map_err(io::Error::other)?;
         context.format = Some(format);
         assert!(ExternalSink::new(context.clone(), 640, 480).is_err());
-        context.decoder_hardware = Some(HardwareMediaTarget { adapter_luid: 7, driver_version: 8 });
+        context.decoder_hardware = Some(HardwareMediaTarget {
+            adapter_luid: 7,
+            driver_version: 8,
+        });
         assert!(ExternalSink::new(context.clone(), 638, 480).is_err());
         let mut owned = ExternalSink::new(context.clone(), 640, 480)?;
         assert_eq!(owned.surface().codec, Codec::Hevc);
         owned.feedback(&context, VideoSinkFeedback::Prepared)?;
         let now = Instant::now();
-        assert!(owned.push(1, 3000, true, false, now,
-            Zeroizing::new(vec![0, 0, 0, 1, 0x26, 1, 0x80]), now).is_err());
-        assert_eq!((owned.delivery, owned.bytes, owned.pending.len(), owned.queued.len()), (0, 0, 0, 0));
+        assert!(
+            owned
+                .push(
+                    1,
+                    3000,
+                    true,
+                    false,
+                    now,
+                    Zeroizing::new(vec![0, 0, 0, 1, 0x26, 1, 0x80]),
+                    now
+                )
+                .is_err()
+        );
+        assert_eq!(
+            (
+                owned.delivery,
+                owned.bytes,
+                owned.pending.len(),
+                owned.queued.len()
+            ),
+            (0, 0, 0, 0)
+        );
         let mut foreign = context.clone();
-        foreign.decoder_hardware = Some(HardwareMediaTarget { adapter_luid: 7, driver_version: 9 });
-        assert!(owned.feedback(&foreign, VideoSinkFeedback::Prepared).is_err());
+        foreign.decoder_hardware = Some(HardwareMediaTarget {
+            adapter_luid: 7,
+            driver_version: 9,
+        });
+        assert!(
+            owned
+                .feedback(&foreign, VideoSinkFeedback::Prepared)
+                .is_err()
+        );
         owned.feedback(&context, VideoSinkFeedback::Fence)?;
         assert!(!owned.push(1, 3000, true, false, now, Zeroizing::new(vec![1]), now)?);
         Ok(())

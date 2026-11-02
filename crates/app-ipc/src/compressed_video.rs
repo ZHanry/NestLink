@@ -119,15 +119,24 @@ impl TryFrom<RawCompressedContext> for CompressedContext {
 impl CompressedContext {
     fn access_magic(&self) -> Result<[u8; 8], Error> {
         self.validate()?;
-        match self.ipc_version { 2 => Ok(*b"NLCMP002"), 3 => Ok(*b"NLCMP003"), _ => Err(Error::Protocol) }
+        match self.ipc_version {
+            2 => Ok(*b"NLCMP002"),
+            3 => Ok(*b"NLCMP003"),
+            _ => Err(Error::Protocol),
+        }
     }
     pub fn validate(&self) -> Result<(), Error> {
         if !matches!(self.ipc_version, 2 | 3) || self.format_epoch > i64::MAX as u64 {
             return Err(Error::Protocol);
         }
         match &self.format {
-            None if self.ipc_version == 2 && self.decoder_hardware.is_none()
-                && self.format_epoch == 0 && self.format_sha256 == [0; 32] => Ok(()),
+            None if self.ipc_version == 2
+                && self.decoder_hardware.is_none()
+                && self.format_epoch == 0
+                && self.format_sha256 == [0; 32] =>
+            {
+                Ok(())
+            }
             Some(wire)
                 if self.format_epoch > 0
                     && self.catalog_sha256 != [0; 32]
@@ -136,8 +145,9 @@ impl CompressedContext {
                 let format = wire.decode()?;
                 let allowed = match (self.ipc_version, format.codec, self.decoder_hardware) {
                     (2, nestlink_protocol::media_format::Codec::H264, None) => true,
-                    (3, nestlink_protocol::media_format::Codec::Hevc, Some(_)) =>
-                        nestlink_app_core::hevc_main8_contract(format).is_ok(),
+                    (3, nestlink_protocol::media_format::Codec::Hevc, Some(_)) => {
+                        nestlink_app_core::hevc_main8_contract(format).is_ok()
+                    }
                     _ => false,
                 };
                 if !allowed || format.digest().map_err(|_| Error::Protocol)? != self.format_sha256 {
@@ -184,7 +194,14 @@ impl CompressedContext {
     }
     fn from_domain(binding: &NativeVideoBinding, c: VideoSinkContext) -> Result<Self, Error> {
         let context = Self {
-            ipc_version: if c.format.is_some_and(|f| f.codec == nestlink_protocol::media_format::Codec::Hevc) { 3 } else { 2 },
+            ipc_version: if c
+                .format
+                .is_some_and(|f| f.codec == nestlink_protocol::media_format::Codec::Hevc)
+            {
+                3
+            } else {
+                2
+            },
             catalog_sha256: c.catalog_sha256,
             format_epoch: c.format_epoch,
             format_sha256: c.format_sha256,
@@ -1128,11 +1145,15 @@ mod tests {
         let mut exact = context;
         exact.ipc_version = 3;
         exact.decoder_hardware = Some(nestlink_protocol::media_authority::HardwareMediaTarget {
-            adapter_luid: 7, driver_version: 9,
+            adapter_luid: 7,
+            driver_version: 9,
         });
         exact.validate()?;
         assert_eq!(exact.access_magic()?, *b"NLCMP003");
-        assert_eq!(serde_json::from_value::<CompressedContext>(serde_json::to_value(&exact)?)?, exact);
+        assert_eq!(
+            serde_json::from_value::<CompressedContext>(serde_json::to_value(&exact)?)?,
+            exact
+        );
         assert_eq!(exact.domain()?.decoder_hardware, exact.decoder_hardware);
         for changed in 0..4 {
             let mut wrong = exact.clone();
@@ -1140,14 +1161,25 @@ mod tests {
                 0 => wrong.ipc_version = 2,
                 1 => wrong.decoder_hardware = None,
                 2 => wrong.format_sha256[0] ^= 1,
-                _ => { wrong.format = None; wrong.format_epoch = 0; wrong.format_sha256 = [0; 32]; },
+                _ => {
+                    wrong.format = None;
+                    wrong.format_epoch = 0;
+                    wrong.format_sha256 = [0; 32];
+                }
             }
             assert!(wrong.validate().is_err());
         }
-        let binding = NativeVideoBinding { runtime_id: exact.binding.runtime_id.clone(),
-            ui_generation: exact.binding.ui_generation, request_id: exact.binding.request_id.clone(),
-            connection_generation: exact.binding.connection_generation, source: exact.binding.source };
-        assert_eq!(CompressedContext::from_domain(&binding, exact.domain()?)?, exact);
+        let binding = NativeVideoBinding {
+            runtime_id: exact.binding.runtime_id.clone(),
+            ui_generation: exact.binding.ui_generation,
+            request_id: exact.binding.request_id.clone(),
+            connection_generation: exact.binding.connection_generation,
+            source: exact.binding.source,
+        };
+        assert_eq!(
+            CompressedContext::from_domain(&binding, exact.domain()?)?,
+            exact
+        );
         Ok(())
     }
 }

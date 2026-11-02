@@ -444,9 +444,15 @@ async fn prepare_capture(
             .into_iter()
             .filter(|source| approval.approved_sources.contains(&source.display().source))
             .collect::<Vec<_>>();
-        let use_hevc = core.native_video_formats(identity).map_err(PrepareError::Capture)?
-            .is_some_and(|formats| formats.formats().iter()
-                .all(|format| format.codec == nestlink_protocol::media_format::Codec::Hevc));
+        let use_hevc = core
+            .native_video_formats(identity)
+            .map_err(PrepareError::Capture)?
+            .is_some_and(|formats| {
+                formats
+                    .formats()
+                    .iter()
+                    .all(|format| format.codec == nestlink_protocol::media_format::Codec::Hevc)
+            });
         let displays = selected
             .iter()
             .map(|source| source.display())
@@ -469,9 +475,16 @@ async fn prepare_capture(
         let diagnostics = crate::native_gpu_diagnostics::observer(connection_generation);
         let (device, input, hevc) = tokio::task::spawn_blocking(move || {
             let hevc = use_hevc.then(|| hevc::Capture::new(selected.clone()));
-            let mut device = if let Some(hevc) = &hevc { ErasedCapture(Box::new(hevc.clone())) }
-                else { ErasedCapture(Box::new(nestlink_platform_capture::WindowsHostCapture::open_with_observer(
-                    selected, Some(diagnostics))?)) };
+            let mut device = if let Some(hevc) = &hevc {
+                ErasedCapture(Box::new(hevc.clone()))
+            } else {
+                ErasedCapture(Box::new(
+                    nestlink_platform_capture::WindowsHostCapture::open_with_observer(
+                        selected,
+                        Some(diagnostics),
+                    )?,
+                ))
+            };
             let input = if input_enabled {
                 let opened = privileged
                     .open(
