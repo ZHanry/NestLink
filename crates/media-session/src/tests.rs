@@ -2,9 +2,9 @@ use crate::{ShutdownReport, VideoReceiver, VideoSender, VideoStream};
 mod advertised;
 mod dynamic;
 mod feedback;
-mod receiver_qos;
 #[cfg(all(target_os = "linux", feature = "network-impairment-lab"))]
 mod impairment;
+mod receiver_qos;
 use nestlink_auth::random_id;
 use nestlink_identity::{InstallationIdentity, PermitSigner, verify_permit};
 use nestlink_media_codec::{VideoConfig, Vp8Encoder};
