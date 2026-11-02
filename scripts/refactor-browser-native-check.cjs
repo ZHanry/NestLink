@@ -13,6 +13,7 @@ const { preparePermitResponseObservation } = require('./lib/refactor-browser-res
 const ownedData = require('./lib/refactor-browser-owned-data.cjs');
 const workspaceUi = require('./lib/refactor-browser-workspace-ui.cjs');
 const edgeNamespaceUi = require('./lib/refactor-browser-edge-namespace.cjs');
+const setupUi = require('./lib/refactor-browser-setup.cjs');
 const networkMembershipUi = require('./lib/refactor-browser-network-membership.cjs');
 const relayAttributesUi = require('./lib/refactor-browser-relay-attributes.cjs');
 const spacesUi = require('./lib/refactor-browser-spaces.cjs');
@@ -52,6 +53,7 @@ report.network_damage_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-
 report.response_observer_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-response-observer.cjs'));
 report.workspace_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-workspace-ui.cjs'));
 report.edge_namespace_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-edge-namespace.cjs'));
+report.setup_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-setup.cjs'));
 report.network_membership_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-network-membership.cjs'));
 report.relay_attributes_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-relay-attributes.cjs'));
 report.spaces_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-spaces.cjs'));
@@ -342,6 +344,7 @@ async function main() {
       await sibling.close();
     }
     await edgeNamespaceUi.run(page, ready, report);
+    await setupUi.run(page, ready, report);
     await networkMembershipUi.run(page, ready, report, { engine: args.engine, disconnectedEvent: CDPSessionEvent.Disconnected });
     await relayAttributesUi.run(page, ready, report, { engine: args.engine, disconnectedEvent: CDPSessionEvent.Disconnected });
     await spacesUi.run(page, ready, report, { engine: args.engine, disconnectedEvent: CDPSessionEvent.Disconnected });

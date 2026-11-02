@@ -130,7 +130,7 @@ pub(super) fn SetupPanel(
         });
     });
     view! {
-        <details class="policy-form" aria-label=move || t("配置向导", "Setup guide")>
+        <details class="setup-guide" aria-label=move || t("配置向导", "Setup guide")>
             <summary>{move || t("配置向导与实际状态", "Setup guide and actual state")}</summary>
             <section class="form-stack" aria-busy=move || busy.get().to_string()>
                 <p class="muted">{move || t("选择用途，再读取当前状态。这里使用已验证的管理连接；读取配置不会启用中继、虚拟网卡或公网发布。", "Choose a purpose, then read current state. Checks use the verified management connection. Reading configuration does not enable relays, virtual adapters or public publishing.")}</p>
@@ -149,7 +149,7 @@ pub(super) fn SetupPanel(
                 <button class="secondary" type="button" disabled=move || busy.get() on:click=move |_| read.run(())>{move || if busy.get() { t("正在读取…", "Reading…") } else { t("读取当前状态", "Read current state") }}</button>
                 <p role="alert" hidden=move || problem.get().is_empty()>{move || problem.get()}</p>
                 <ul aria-label=move || t("实际读取结果", "Actual readback results")>
-                    {move || reports.get().into_iter().map(|check| view! { <li><strong>{check.title.get()}</strong><p class:danger=check.failed>{check.detail.get()}</p></li> }).collect_view()}
+                    {move || reports.get().into_iter().map(|check| view! { <li><strong>{check.title.current()}</strong><p class:danger=check.failed>{check.detail.current()}</p></li> }).collect_view()}
                 </ul>
                 <p class="muted">{move || t("结果来自最近一次读取，不代表持续健康。尚未测试的连通性保持未知；保存、主机批准、建立连接和公网可达分别确认。", "Results reflect the last read, not continuous health. Untested reachability remains unknown. Saving, host approval, connection establishment and public reachability are confirmed separately.")}</p>
                 {move || match purpose.get() {

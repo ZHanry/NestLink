@@ -300,6 +300,16 @@ def validate_receipts(browser, host, data, database, exit_codes, expected_browse
     require(browser.get("edge_namespace_ui_helper_sha256") ==
             sha256((ROOT / "scripts/lib/refactor-browser-edge-namespace.cjs").read_bytes()),
             "edge-namespace-helper-source")
+    setup = browser.get("setup_guide_ui", {})
+    for field in ("passed", "read_only", "existing_space_and_remote_navigation", "collapsed_after_checks"):
+        require(isinstance(setup, dict) and setup.get(field) is True, "setup-guide-" + field)
+    modes = setup.get("modes", []) if isinstance(setup, dict) else []
+    require(isinstance(modes, list) and len(modes) == 4
+            and [mode.get("mode") for mode in modes if isinstance(mode, dict)] == ["remote", "private", "public", "network"]
+            and all(isinstance(mode, dict) and mode.get("actual_readback") is True for mode in modes),
+            "setup-guide-all-modes")
+    require(browser.get("setup_ui_helper_sha256") ==
+            sha256((ROOT / "scripts/lib/refactor-browser-setup.cjs").read_bytes()), "setup-guide-helper-source")
     membership = browser.get("network_membership_ui", {})
     for field in MEMBERSHIP_UI_FIELDS:
         require(isinstance(membership, dict) and membership.get(field) is True, "network-membership-" + field)

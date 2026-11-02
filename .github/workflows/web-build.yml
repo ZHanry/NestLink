@@ -65,6 +65,7 @@ jobs:
           node --check scripts/lib/refactor-browser-owned-data.cjs
           node --check scripts/lib/refactor-browser-workspace-ui.cjs
           node --check scripts/lib/refactor-browser-edge-namespace.cjs
+          node --check scripts/lib/refactor-browser-setup.cjs
           node --check scripts/lib/refactor-browser-network-membership.cjs
           node --check scripts/lib/refactor-browser-relay-attributes.cjs
           node --check scripts/lib/refactor-browser-spaces.cjs

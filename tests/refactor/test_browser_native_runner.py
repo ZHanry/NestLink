@@ -53,6 +53,10 @@ def completed_receipts():
             "slow_old_response_ignored", "node_switch_clears_draft")},
         "edge_namespace_ui_helper_sha256": RUNNER.sha256(
             (ROOT / "scripts/lib/refactor-browser-edge-namespace.cjs").read_bytes()),
+        "setup_guide_ui": {"passed": True, "read_only": True, "existing_space_and_remote_navigation": True,
+            "collapsed_after_checks": True, "modes": [{"mode": mode, "actual_readback": True}
+                for mode in ("remote", "private", "public", "network")]},
+        "setup_ui_helper_sha256": RUNNER.sha256((ROOT / "scripts/lib/refactor-browser-setup.cjs").read_bytes()),
         "network_membership_ui": {field: True for field in RUNNER.MEMBERSHIP_UI_FIELDS},
         "network_authority_ui": {field: True for field in RUNNER.AUTHORITY_UI_FIELDS},
         "network_membership_ui_helper_sha256": RUNNER.sha256(
@@ -187,6 +191,22 @@ class NativeRunnerTests(unittest.TestCase):
         receipts = completed_receipts()
         receipts[0]["edge_namespace_ui_helper_sha256"] = "0" * 64
         self.assertIn("edge-namespace-helper-source", RUNNER.validate_receipts(*receipts))
+
+    def test_setup_evidence_requires_all_actual_modes_and_read_only_operation(self):
+        for replacement in (None, {}, {"passed": True}):
+            receipts = completed_receipts()
+            receipts[0]["setup_guide_ui"] = replacement
+            self.assertIn("setup-guide-all-modes", RUNNER.validate_receipts(*receipts))
+        for field in ("read_only", "existing_space_and_remote_navigation", "collapsed_after_checks"):
+            receipts = completed_receipts()
+            receipts[0]["setup_guide_ui"][field] = False
+            self.assertIn("setup-guide-" + field, RUNNER.validate_receipts(*receipts))
+        receipts = completed_receipts()
+        receipts[0]["setup_guide_ui"]["modes"].pop()
+        self.assertIn("setup-guide-all-modes", RUNNER.validate_receipts(*receipts))
+        receipts = completed_receipts()
+        receipts[0]["setup_ui_helper_sha256"] = "0" * 64
+        self.assertIn("setup-guide-helper-source", RUNNER.validate_receipts(*receipts))
 
     def test_response_observer_and_actual_session_cleanup_cannot_be_skipped(self):
         for replacement in (None, {}, {"passed": True}):
