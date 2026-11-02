@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "source_revision": "0d0c5618a3c32506419c506840e906c7bab4485e",
+  "workflow": ".github/workflows/network-games.yml",
+  "run_id": 41368655137,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41368655137",
+  "job_id": 125034162450,
+  "job_conclusion": "failure",
+  "passed": false,
+  "scope": "Actual official Teeworlds follow-up attempt; the LAN room was not discovered and no gameplay or revocation acceptance is claimed. This record does not describe the separate Luanti job.",
+  "artifact": {
+    "id": 13108661527,
+    "name": "game-teeworlds-0d0c5618a3c32506419c506840e906c7bab4485e-1",
+    "official_digest": "sha256:a9b7eb020fb5bac7030ec9047cea18aee109aa5f0bc18ea43669d2334de0cf3d",
+    "downloaded_zip_sha256": "a9b7eb020fb5bac7030ec9047cea18aee109aa5f0bc18ea43669d2334de0cf3d",
+    "outer_receipt_sha256": "67fb848b2d644682eb054478e716019f961f8ecf183c87ae39a0087ccb23bb55",
+    "execution_receipt_sha256": "4b95b96a858171f361dda1db613fc0d6ae4c01f91e5863ce947b3007c1736427",
+    "lan_browser_screenshot_sha256": "e46eefb6eaebcc18e5450262f4c5b1cea7be4ab24c2a7e6f998c6d57813e9f40"
+  },
+  "observed": {
+    "exact_official_client_server_map_license_hashes_matched": true,
+    "original_vendor_and_five_sdk_lan_regressions_passed": true,
+    "strict_sdk_and_daemon_clippy_passed": true,
+    "relative_official_configuration_loaded": true,
+    "actual_server_name": "NestLink W28 real room",
+    "actual_client_local_browser_open": true,
+    "actual_browser_room_count": 0,
+    "gameplay_passed": false,
+    "failure": "AssertionError: real LAN room missing from official browser",
+    "driver_actor_cleanup_errors": [],
+    "outer_namespace_cleanup_errors": []
+  },
+  "candidate_correction": {
+    "source_commit": "3fb944a",
+    "evidence": "The exact upstream system.c sends INADDR_BROADCAST for IPv4 LAN discovery. The isolated namespace only had its connected subnet route and no default route. The retained client capture contains game IPv6 multicast and IPv4 mDNS, but no emitted IPv4 game broadcast.",
+    "change": "Add and read back one broadcast 255.255.255.255/32 route to each exact game namespace LAN interface. No default or Internet route is added.",
+    "verification_status": "pending_separate_same_source_actions_run"
+  }
+}
