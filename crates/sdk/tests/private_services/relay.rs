@@ -643,12 +643,17 @@ async fn single_relay_tcp_fixed_target_expiry_closes_backend_without_a_local_sto
 }
 
 async fn udp(hops: usize) -> Result {
-    tokio::time::timeout(Duration::from_secs(25), async {
+    // Preserve the original deadlines and observations. A failed broad run
+    // returned only Elapsed, which did not identify the pending original owner.
+    let mut stage = "fixture";
+    let outcome = tokio::time::timeout(Duration::from_secs(25), async {
         let backend = UdpSocket::bind("127.0.0.1:0").await?;
         let f = Fixture::with_path_policy("udp", backend.local_addr()?, "relay_only").await?;
+        stage = "relays";
         let mut relays = Relays::start(&f, hops).await?;
         let request = f.request(&f.consumer);
         let policy = PrivateServiceRelayPolicy::from_local_choice(&[], true)?;
+        stage = "host";
         let mut host = f
             .sdk
             .start_private_service_host_with_relay_policy(
@@ -662,50 +667,75 @@ async fn udp(hops: usize) -> Result {
                 policy.clone(),
             )
             .await?;
+        stage = "request";
         let lease = relays
             .request(&f.sdk, &f.view.id, request, &f.consumer)
             .await?;
         let grant = usage_grant(&lease)?;
+        stage = "connect";
         let mut connection = f
             .sdk
             .connect_private_service_with_relay_policy(&f.consumer, lease, &policy)
             .await?;
         let mut bytes = [0; 128];
         for payload in [&b""[..], &b"original private UDP"[..]] {
+            stage = "send";
             connection.send_datagram(payload)?;
+            stage = if payload.is_empty() {
+                "backend_empty"
+            } else {
+                "backend_payload"
+            };
             let (length, peer) =
                 tokio::time::timeout(Duration::from_secs(3), backend.recv_from(&mut bytes))
                     .await??;
             assert_eq!(&bytes[..length], payload);
             backend.send_to(payload, peer).await?;
+            stage = if payload.is_empty() {
+                "consumer_empty"
+            } else {
+                "consumer_payload"
+            };
             assert_eq!(
                 tokio::time::timeout(Duration::from_secs(3), connection.receive_datagram())
                     .await??,
                 payload
             );
         }
+        stage = "resources";
         relays.assert_private_resources(&grant.grant_id).await?;
+        stage = "revoke";
         f.sdk
             .revoke_private_service(&f.view.id, &f.rule, f.exposure.revision)
             .await?;
+        stage = "stopped";
         assert!(
             tokio::time::timeout(Duration::from_secs(3), connection.receive_datagram())
                 .await?
                 .is_err()
         );
+        stage = "released";
         relays.assert_released().await?;
+        stage = "revoked_backend";
         let _ = connection.send_datagram(b"revoked UDP cannot reach the backend");
         assert!(
             tokio::time::timeout(Duration::from_millis(200), backend.recv_from(&mut bytes))
                 .await
                 .is_err()
         );
+        stage = "connection_close";
         connection.close().await?;
+        stage = "host_close";
         close_host(&mut host, &f.usage).await?;
+        stage = "relays_close";
         relays.finish().await?;
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     })
-    .await??;
+    .await;
+    if !matches!(&outcome, Ok(Ok(()))) {
+        eprintln!("private_udp_original_failure stage={stage} hops={hops}");
+    }
+    outcome??;
     Ok(())
 }
 #[tokio::test]
