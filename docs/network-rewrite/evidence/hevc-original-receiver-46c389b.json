@@ -6,6 +6,8 @@
   "build_provenance": {
     "workflow": ".github/workflows/windows-media-owner.yml",
     "workflow_revision": "03caf0835dc63294c9e01e2022ec62d9685f89b5",
+    "workflow_dispatch_revision": "03caf0835dc63294c9e01e2022ec62d9685f89b5",
+    "checkout_input_revision": "46c389bb07720df4bbfcaf131646c31dccca0fa4",
     "run_id": 41405046026,
     "attempt": 1,
     "job_id": 125145066288,
