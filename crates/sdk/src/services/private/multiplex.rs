@@ -178,24 +178,15 @@ pub(super) async fn serve(
     let mut failed = false;
     let admitted = tokio::select! {biased;
         _=stopped(&mut stop)=>false,
+        _=tokio::time::sleep_until(deadline)=>false,
+        _=connection.closed()=>false,
         result=tokio::time::timeout(Duration::from_secs(3), async {
             write_message(control.parts_mut().0, &ready).await?;
             write_message(control.parts_mut().0, &Accepted { version: VERSION, mode: Mode::Control }).await
         })=>matches!(result,Ok(Ok(()))),
     };
     if admitted {
-        let monitor = async {
-            let mut tick = tokio::time::interval(Duration::from_secs(1));
-            tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-            loop {
-                tick.tick().await;
-                if let Err(error) = current(&sdk, &context.lease, fingerprint, &context.grant).await
-                {
-                    return Err::<(), SdkError>(error);
-                }
-                flush_report(&sdk, &usage, &host, &context.grant.grant_id, false).await?;
-            }
-        };
+        let monitor = monitor(&context, &usage);
         tokio::pin!(monitor);
         let mut byte = [0u8; 1];
         loop {
@@ -246,6 +237,16 @@ pub(super) async fn serve(
         return Err(SdkError::Trust);
     }
     Ok(())
+}
+
+async fn monitor(context: &FlowContext, usage: &ServiceUsageStore) -> Result<(), SdkError> {
+    let mut tick = tokio::time::interval(Duration::from_secs(1));
+    tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    loop {
+        tick.tick().await;
+        current(&context.sdk, &context.lease, context.fingerprint, &context.grant).await?;
+        flush_report(&context.sdk, usage, &context.host, &context.grant.grant_id, false).await?;
+    }
 }
 
 async fn forward(

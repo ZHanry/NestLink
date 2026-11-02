@@ -15,6 +15,8 @@ const REQUEST: &[u8] =
 const BODY: &str = "Independent HTTP through the original private target";
 const HELD_RESPONSE: &[u8] =
     b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n4\r\nheld\r\n";
+const KEEPALIVE_CHUNK: &[u8] = b"1\r\nx\r\n";
+const KEEPALIVE_CHUNKS: usize = 4;
 
 async fn start_host(
     sdk: &Arc<Sdk>,
@@ -41,7 +43,7 @@ async fn finish_host(mut host: PrivateServiceHost, usage: &Path, owner_failure: 
     if owner_failure {
         // The original duplicate durable-owner error remains visible after all
         // original workers and the physical listener have actually completed.
-        assert!(result.is_err());
+        assert!(matches!(result, Err(nestlink_sdk::SdkError::Trust)));
     } else {
         result?;
     }
@@ -171,6 +173,10 @@ async fn multiplex_real_http_shares_one_grant_and_refuses_fifth_original_flow() 
 // A real, valid HTTP response remains in progress. EOF on the real backend
 // socket proves cancellation reached the original local forwarding owners.
 async fn held_http_backend() -> Result<(SocketAddr, Abort<io::Result<()>>)> {
+    held_http_backend_chunks(0).await
+}
+
+async fn held_http_backend_chunks(chunks: usize) -> Result<(SocketAddr, Abort<io::Result<()>>)> {
     let listener = TcpListener::bind("127.0.0.1:0").await?;
     let address = listener.local_addr()?;
     let backend = Abort(tokio::spawn(async move {
@@ -185,6 +191,11 @@ async fn held_http_backend() -> Result<(SocketAddr, Abort<io::Result<()>>)> {
                 }
                 stream.write_all(HELD_RESPONSE).await?;
                 stream.flush().await?;
+                for _ in 0..chunks {
+                    tokio::time::sleep(Duration::from_secs(2)).await;
+                    stream.write_all(KEEPALIVE_CHUNK).await?;
+                    stream.flush().await?;
+                }
                 let mut byte = [0; 1];
                 if stream.read(&mut byte).await? != 0 {
                     return Err(io::Error::other("unexpected byte after held HTTP request"));
@@ -257,6 +268,60 @@ async fn multiplex_acl_revocation_drains_every_original_flow_and_actual_usage() 
     Ok(())
 }
 
+#[tokio::test]
+async fn multiplex_original_lease_expiry_ends_active_http_before_original_idle_timeout() -> Result {
+    tokio::time::timeout(Duration::from_secs(25), async {
+        let (address, mut backend) = held_http_backend_chunks(KEEPALIVE_CHUNKS).await?;
+        let f = Fixture::new("http", address).await?;
+        let request = f.request(&f.consumer);
+        let host = start_host(&f.sdk, f.host.clone(), f.consent, &f.usage).await?;
+        let lease = f.sdk.request_private_service(&f.view.id, request).await?;
+        let digest = lease.digest();
+        let expires = lease.lease().claims().expires_at_unix_ms;
+        // The fresh host presence may shorten this business lease by the
+        // original issuance latency. It can never extend the ten-second cap.
+        assert!(
+            expires - lease.lease().claims().issued_at_unix_ms
+                <= nestlink_protocol::service_plane::SERVICE_LEASE_MS
+        );
+        let mut owner = f
+            .sdk
+            .connect_private_service_multiplexed(&f.consumer, lease)
+            .await?;
+        let mut streams = two_held_streams(&owner, &f.consumer).await?;
+        // Four valid chunks, two seconds apart, keep both actual forwarding
+        // owners active beyond eight seconds. Their original five-second idle
+        // timers cannot explain a close at the original signed lease end.
+        for stream in &mut streams {
+            for _ in 0..KEEPALIVE_CHUNKS {
+                let mut chunk = vec![0; KEEPALIVE_CHUNK.len()];
+                stream.read_exact(&mut chunk).await?;
+                assert_eq!(chunk, KEEPALIVE_CHUNK);
+            }
+        }
+        assert!(wall_ms()? < expires);
+        assert_eq!(owner.lease().digest(), digest);
+        assert_eq!(owner.lease().lease().claims().expires_at_unix_ms, expires);
+        tokio::time::sleep(Duration::from_millis(
+            expires.saturating_sub(wall_ms()?) + 50,
+        ))
+        .await;
+        ended(&mut streams).await?;
+        tokio::time::timeout(Duration::from_secs(3), &mut backend.0).await???;
+        // The original monitor interval is already longer than the fixed
+        // deadline's wakeup. An idle-only close would occur after this bound.
+        assert!(wall_ms()? <= expires + 1000);
+        assert!(owner.open_stream(&f.consumer).await.is_err());
+        drop(streams);
+        owner.close().await?;
+        let spent = HELD_SPENT + (2 * KEEPALIVE_CHUNKS * KEEPALIVE_CHUNK.len()) as u64;
+        terminal_usage(&f.sdk, &f.view.id, &f.host.device_id, spent).await?;
+        finish_host(host, &f.usage, false).await
+    })
+    .await??;
+    Ok(())
+}
+
 async fn raw_open(
     connection: &quinn::Connection,
     lease: &VerifiedPrivateServiceLease,
@@ -264,6 +329,25 @@ async fn raw_open(
     mode: &str,
     replay: Option<&PrivateServiceOpen>,
 ) -> Result<(BiStream, PrivateServiceOpen)> {
+    let (mut send, mut recv, nonce) = raw_challenge(connection, lease, mode).await?;
+    let open = match replay {
+        Some(open) => {
+            assert_ne!(open.nonce, nonce);
+            open.clone()
+        }
+        None => consumer.identity.private_service_open(lease, nonce)?,
+    };
+    write_message(&mut send, &open).await?;
+    let ready: PrivateServiceReady = read_message(&mut recv).await?;
+    verify_private_service_ready(lease, &open, &ready)?;
+    Ok((BiStream::new(send, recv), open))
+}
+
+async fn raw_challenge(
+    connection: &quinn::Connection,
+    lease: &VerifiedPrivateServiceLease,
+    mode: &str,
+) -> Result<(quinn::SendStream, quinn::RecvStream, [u8; 32])> {
     let grant: ServiceUsageBudgetGrantClaims = decode_service_message(
         &lease.lease().claims().usage_grant.claims,
         SERVICE_USAGE_BYTES,
@@ -278,17 +362,7 @@ async fn raw_open(
     )
     .await?;
     let nonce: [u8; 32] = read_message(&mut recv).await?;
-    let open = match replay {
-        Some(open) => {
-            assert_ne!(open.nonce, nonce);
-            open.clone()
-        }
-        None => consumer.identity.private_service_open(lease, nonce)?,
-    };
-    write_message(&mut send, &open).await?;
-    let ready: PrivateServiceReady = read_message(&mut recv).await?;
-    verify_private_service_ready(lease, &open, &ready)?;
-    Ok((BiStream::new(send, recv), open))
+    Ok((send, recv, nonce))
 }
 
 #[tokio::test]
@@ -344,11 +418,39 @@ async fn multiplex_control_fin_closes_two_flows_and_replayed_stream_proof_is_ref
         .await?;
         tokio::try_join!(hold_http(&mut first), hold_http(&mut second))?;
         let mut streams = [first, second];
+        let mut opening = JoinSet::new();
+        for _ in 0..8 {
+            let connection = connected.connection.clone();
+            let lease = lease.clone();
+            opening.spawn(async move {
+                let (send, recv, _) = raw_challenge(&connection, &lease, "multiplex-stream").await?;
+                // Retain a real stream after receiving its nonce, without
+                // sending the consumer proof or reserving a backend flow.
+                Ok::<_, Box<dyn std::error::Error + Send + Sync>>(BiStream::new(send, recv))
+            });
+        }
+        let mut pending = Vec::new();
+        while let Some(opened) = opening.join_next().await {
+            pending.push(opened??);
+        }
+        assert_eq!(pending.len(), 8);
+        assert!(
+            raw_challenge(&connected.connection, &lease, "multiplex-stream")
+                .await
+                .is_err()
+        );
         // FIN only the authenticated control stream while retaining this real
-        // Quinn carrier and both application streams at the consumer.
+        // Quinn carrier, both application streams and all eight incomplete
+        // handshakes. The owner's stop must join both kinds of real worker.
         control.shutdown().await?;
         ended(&mut streams).await?;
+        for stream in &mut pending {
+            let mut byte = [0; 1];
+            let result = tokio::time::timeout(Duration::from_secs(3), stream.read(&mut byte)).await?;
+            assert!(matches!(result, Ok(0) | Err(_)));
+        }
         drop(streams);
+        drop(pending);
         drop(control);
         tokio::time::timeout(Duration::from_secs(3), &mut backend.0).await???;
         terminal_usage(&f.sdk, &f.view.id, &f.host.device_id, HELD_SPENT).await?;
