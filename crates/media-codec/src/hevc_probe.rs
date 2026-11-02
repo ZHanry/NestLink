@@ -610,9 +610,15 @@ pub(crate) mod tests {
 
     #[cfg(windows)]
     pub(crate) fn main8_fixture() -> io::Result<HevcMain8Contract> {
-        HevcMain8Contract::observe(&access_unit(fixture(false, 0, 1), &[0x28, 1, 0xb0]), VideoConfig {
-            width: 640, height: 480, fps: 30, bitrate_kbps: 4000,
-        })
+        HevcMain8Contract::observe(
+            &access_unit(fixture(false, 0, 1), &[0x28, 1, 0xb0]),
+            VideoConfig {
+                width: 640,
+                height: 480,
+                fps: 30,
+                bitrate_kbps: 4000,
+            },
+        )
     }
 
     fn replace_ptl(mut rbsp: Vec<u8>, byte: usize, mask: u8) -> Vec<u8> {

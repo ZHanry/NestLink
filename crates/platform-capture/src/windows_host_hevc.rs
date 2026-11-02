@@ -2,8 +2,9 @@
 //! Opening a source does not read desktop pixels. Capture begins only on an
 //! explicit command of the caller's already-authorized live execution.
 use super::*;
-use nestlink_media_codec::{ExecutionDirection, HardwareHevcExecution, HevcExecutionTarget,
-    HevcTextureSource};
+use nestlink_media_codec::{
+    ExecutionDirection, HardwareHevcExecution, HevcExecutionTarget, HevcTextureSource,
+};
 
 struct HevcMonitorSource {
     capture: Option<GpuCapture>,
@@ -18,11 +19,17 @@ struct HevcMonitorSource {
 unsafe impl HevcTextureSource for HevcMonitorSource {
     fn device(&self) -> io::Result<*mut c_void> {
         self.check_current()?;
-        self.capture.as_ref().ok_or_else(|| denied("HEVC capture already closed"))?.device()
+        self.capture
+            .as_ref()
+            .ok_or_else(|| denied("HEVC capture already closed"))?
+            .device()
     }
     fn capture(&mut self, repeated: bool) -> io::Result<Option<NonNull<c_void>>> {
         self.check_current()?;
-        let capture = self.capture.as_mut().ok_or_else(|| denied("HEVC capture already closed"))?;
+        let capture = self
+            .capture
+            .as_mut()
+            .ok_or_else(|| denied("HEVC capture already closed"))?;
         let next = match capture.frame(false)? {
             Some(texture) => Some(texture),
             None if repeated => capture.frame(true)?,
@@ -49,12 +56,17 @@ impl WindowsCaptureSource {
     /// Exact approved source only: no source IDs from remote packets, implicit
     /// resizing, software fallback or synthetic replacement can enter this path.
     /// The returned worker remains owned until successful checked close and join.
-    pub fn start_hevc_encode(&self, target: HevcExecutionTarget, authority: Arc<AtomicBool>)
-        -> io::Result<HardwareHevcExecution> {
+    pub fn start_hevc_encode(
+        &self,
+        target: HevcExecutionTarget,
+        authority: Arc<AtomicBool>,
+    ) -> io::Result<HardwareHevcExecution> {
         let config = target.contract().config();
         let display = self.display();
         if (config.width, config.height) != (display.logical.width, display.logical.height) {
-            return Err(denied("HEVC signed target differs from approved monitor geometry"));
+            return Err(denied(
+                "HEVC signed target differs from approved monitor geometry",
+            ));
         }
         let selection = self.clone();
         HardwareHevcExecution::start(ExecutionDirection::Encode, target, authority, move || {
@@ -66,16 +78,27 @@ impl WindowsCaptureSource {
                 if invalidated.load(Ordering::Acquire) || context()? != *selection.original {
                     return Err(denied("HEVC approved capture selection is stale"));
                 }
-                let monitor = selection.original.monitors.get(selection.index)
+                let monitor = selection
+                    .original
+                    .monitors
+                    .get(selection.index)
                     .ok_or_else(|| denied("HEVC approved monitor absent"))?;
                 GpuCapture::open_target(monitor, config.width, config.height, config.fps)
             })();
             let capture = match result {
                 Ok(capture) => capture,
-                Err(error) => { observer.close()?; return Err(error); }
+                Err(error) => {
+                    observer.close()?;
+                    return Err(error);
+                }
             };
-            let owner = HevcMonitorSource { capture: Some(capture), observer, invalidated,
-                original: selection.original, _dpi: dpi };
+            let owner = HevcMonitorSource {
+                capture: Some(capture),
+                observer,
+                invalidated,
+                original: selection.original,
+                _dpi: dpi,
+            };
             owner.check_current()?;
             Ok(Box::new(owner) as Box<dyn HevcTextureSource>)
         })

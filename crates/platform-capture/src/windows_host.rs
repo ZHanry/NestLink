@@ -91,15 +91,7 @@ impl GpuCapture {
     fn open_target(monitor: &Monitor, width: u32, height: u32, fps: u32) -> io::Result<Self> {
         let mut handle = null_mut();
         // SAFETY: exact enumerated approved HMONITOR, bounded config, out pointer.
-        let hr = unsafe {
-            nl_capture_gpu_open(
-                monitor.handle,
-                width,
-                height,
-                fps,
-                &mut handle,
-            )
-        };
+        let hr = unsafe { nl_capture_gpu_open(monitor.handle, width, height, fps, &mut handle) };
         if hr < 0 {
             return Err(bridge("open", hr));
         }

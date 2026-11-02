@@ -53,8 +53,10 @@ pub use windows_hevc_owner::{
 #[cfg(windows)]
 mod hevc_execution;
 #[cfg(windows)]
-pub use hevc_execution::{HardwareHevcExecution, HevcExecutionIdentity, HevcExecutionOutput,
-    HevcExecutionReceipt, HevcExecutionTarget, HevcExecutionTicket, HevcTextureSource};
+pub use hevc_execution::{
+    HardwareHevcExecution, HevcExecutionIdentity, HevcExecutionOutput, HevcExecutionReceipt,
+    HevcExecutionTarget, HevcExecutionTicket, HevcTextureSource,
+};
 
 #[cfg(windows)]
 mod owner_observation;
