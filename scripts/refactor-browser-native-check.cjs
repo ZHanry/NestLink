@@ -344,10 +344,11 @@ async function main() {
       await sibling.close();
     }
     await edgeNamespaceUi.run(page, ready, report);
-    await setupUi.run(page, ready, report);
     await networkMembershipUi.run(page, ready, report, { engine: args.engine, disconnectedEvent: CDPSessionEvent.Disconnected });
     await relayAttributesUi.run(page, ready, report, { engine: args.engine, disconnectedEvent: CDPSessionEvent.Disconnected });
-    await spacesUi.run(page, ready, report, { engine: args.engine, disconnectedEvent: CDPSessionEvent.Disconnected });
+    await spacesUi.run(page, ready, report, { engine: args.engine,
+      disconnectedEvent: CDPSessionEvent.Disconnected,
+      duringRateWindow: () => setupUi.runInDedicatedPage(page, ready, report) });
     await workspaceUi.workspaces(page, args, report);
     check(await page.$$eval('button.record', nodes => nodes.length) === 1, 'Fixture must initially expose only its own native host');
     await page.locator('button.record').click();

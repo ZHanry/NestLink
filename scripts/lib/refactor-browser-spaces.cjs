@@ -69,7 +69,7 @@ async function signIn(page, ready, username, link) {
   await page.waitForSelector('.workspace', { visible: true });
   await page.waitForFunction(() => document.querySelector('.refresh-button')?.disabled === false);
 }
-async function run(page, ready, report, { engine, disconnectedEvent } = {}) {
+async function run(page, ready, report, { engine, disconnectedEvent, duringRateWindow } = {}) {
   const facts = report.spaces_ui = { passed: false, failures: [], scope: 'Production account/space controls, isolated recipient browser context, real HTTP and SQLite' };
   active = { base: null, failures: facts.failures, observers: new Map() };
   const observe = async (target, name) => {
@@ -186,6 +186,10 @@ async function run(page, ready, report, { engine, disconnectedEvent } = {}) {
     // Each UI action reads back the current listing and details, so this long
     // sequence must wait for the original window instead of raising the limit
     // or accepting 429 as a successful mutation.
+    // Use the existing mandatory rate-window wait for independent read-only
+    // onboarding checks in another real page. This page's space state, bearer
+    // and original 61-second rate rule remain unchanged.
+    if (duringRateWindow) await duringRateWindow();
     await new Promise(resolve => setTimeout(resolve, Math.max(0, 61_000 - (Date.now() - windowStarted))));
     await page.bringToFront(); await read(page, name);
     await action(page, 'Revoke invitation', 'DELETE', active.base + '/invitations/' + delegated.body.invitation.invitation_id);

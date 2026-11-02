@@ -114,4 +114,17 @@ async function run(page, ready, report) {
     page.off('request', observe);
   }
 }
-module.exports = { run };
+async function runInDedicatedPage(controller, ready, report) {
+  const page = await controller.browserContext().newPage();
+  page.setDefaultTimeout(12000);
+  page.on('pageerror', error => report.page_errors.push(String(error.message).slice(0, 500)));
+  try {
+    await signIn(page, ready);
+    await run(page, ready, report);
+  } finally {
+    await page.close();
+    if (report.setup_guide_ui) report.setup_guide_ui.dedicated_page_closed = page.isClosed();
+    await controller.bringToFront();
+  }
+}
+module.exports = { run, runInDedicatedPage };
