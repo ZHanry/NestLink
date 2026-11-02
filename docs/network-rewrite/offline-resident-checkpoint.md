@@ -52,6 +52,19 @@ The original Luanti 25-second check and its failure status remain unchanged.
   files independently hashed; all34 producer inventory entries match. See
   `evidence/native-offline-resident-1dd4efd.json`; the earlier Windows-only
   evidence is preserved.
+- Source `91509d13f8aa52fff19f31e2fb77c5c702da0dc1`, original focused run
+  [41466485538](https://github.com/ZHanry/NestLink/actions/runs/41466485538):
+  Linux job125348643070 passed; Windows job125348642149 failed. All scoped
+  AppCore/daemon/desktop tests, download-consent and new real signed/proved
+  capture-terminal regressions, and all three strict clippy commands passed
+  on both OS. Original resident Linux4/4, Windows2/4. The complete original
+  QUIC actual-pixels/two-files/rebuild/EOF case now passed on both systems,
+  confirming the observed late-capture repair case. Linux all management8,
+  pending4 and full TLS passed. Windows management8 passed; pending case1
+  independent setup returned Invalid, and TLS rebuilt-pixel IPC timed out
+  while both real sessions remained Connected with live finite budgets.
+  All44 downloaded files independently hashed; all36 producer inventory
+  byte/SHA entries match. See `evidence/native-offline-resident-91509d1.json`.
 
 ## Confirmed changes and remaining failures
 
@@ -84,6 +97,11 @@ The original Luanti 25-second check and its failure status remain unchanged.
    then its exact-route failure notification unconditionally stops that already
    stopped lease with PlatformChanged, terminating the original offline owner.
    This observed call path supersedes the former supervisor hypothesis.
+   Source915's existing original atomic stop_if_running repair is now verified
+   by the complete original QUIC resident case on both OS and its new real
+   signed/proved-lease regression. No late PlatformChanged revocation appears
+   in these exact original QUIC rebuilds. This establishes this repair, not
+   full resident completion on Windows or whole-release acceptance.
 4. Windows management-fence source78 reached the fourth independent fixture,
    then protected login recovery failed before ready. SessionStore previously
    folded every restoration failure into None. New diagnostics preserve the
@@ -113,8 +131,23 @@ The original Luanti 25-second check and its failure status remain unchanged.
    cases0/1 completed, and independent case2 then failed its original60-second
    public-PKI system-DNS readiness. No retry, shared tunnel or DNS fallback is
    introduced.
+   On source915 Linux all original management/pending cases passed. Windows
+   management8 passed, pending case0 completed and case1 independent setup
+   returned Invalid. Source4031432's diagnostic-only fixed-operation stages
+   are newer than915 and await the next exact-source run. No root-cause claim
+   is made for the earlier intermittent setup failures.
+6. Source915 Windows TLS initial pixels/first completed file passed, both
+   original carriers cleaned up and rebuilt into Connected sessions, and the
+   same finite meter still had about72 seconds left with stopped=false. The
+   original rebuilt-pixel IPC then timed out: actual dxgi capture remained
+   live and the controller decoded VP8 frames, but the first rebuilt frames
+   were dropped at queue-admission about40..65ms late. No original second
+   file or IPC Exit success is claimed. This differs from the confirmed old
+   authority-stop defect and requires read-only original PTS/clock/playout
+   diagnosis before a repair. The original frame, IPC and test time bounds
+   remain unchanged.
 
-## New source, awaiting hosted verification
+## Repairs and exact-source verification
 
 Direct CoreHandle snapshots and NativeOfflineSession views now read the same
 original cumulative authority meter, rather than returning the last250 ms
@@ -158,7 +191,9 @@ eligibility assertion detects the defect. A new explicit PlatformChanged must
 still forbid recovery, and the same notification on a running proved lease
 must produce PlatformChanged and forbid recovery. The original full offline
 resident suite still establishes actual independent-owner/pixel/file/rebuild
-behavior; this library regression alone cannot do so. New source is unverified.
+behavior; this library regression alone cannot do so. Source915 now passed
+this regression on both OS, plus the complete original QUIC resident case on
+both systems; Windows's independent setup and TLS-pixel failures remain gates.
 
 After the original Secret Service store gate fails, a bounded read-only probe
 records original helper states, store attempts/exit status and login-collection
@@ -188,13 +223,14 @@ complete run41461596961 is now downloaded and verified as above. The new source
 repair and real lease regression. The main task pushed it and dispatched the
 complete original focused matrix as
 [41466485538](https://github.com/ZHanry/NestLink/actions/runs/41466485538).
-Windows job125348642149 and Linux job125348643070 are currently executing the
-original compile/lint/test step. The main task separately owns its hosted
-formatter run41466479064 and formatter patch review. No new source runtime
-success is claimed until receipts are downloaded and checked.
+Both original jobs are now downloaded and independently verified with results
+above. The main task owns newer diagnostic-only source4031432, subsequent
+formatter review and same-source full workflow dispatch. Source4031432 is
+newer than these receipts and has no runtime success claim from source915.
 Require all four original resident tests to execute and pass before marking
 resident completion. Follow the real protected-login stage and pending-case
-operation, and repair only confirmed failures. Preserve every failed receipt,
+operation, plus Windows's original TLS rebuilt-video PTS/playout path, and
+repair only confirmed failures. Preserve every failed receipt,
 all original assertions and deadlines, independent HTTPS owners and strict
 clippy. The same-source full workflow and physical-target gates remain
 separate; this log does not change their status.
