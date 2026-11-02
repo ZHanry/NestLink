@@ -460,216 +460,210 @@
                         "artifact_name":  "original-offline-resident-ubuntu-24.04-91509d13f8aa52fff19f31e2fb77c5c702da0dc1-1",
                         "artifact_archive_bytes":  71222,
                         "artifact_digest_reported_by_github":  "sha256:ab283240cdae63b2f5b37b72dee42d35b1a6b120a1d6965c71d4e94653cdcea6",
-                        "downloaded_files":  {
-                                                 "value":  [
-                                                               {
-                                                                   "name":  "nestlink-codecs/x86_64-unknown-linux-gnu/nestlink-codecs.json",
-                                                                   "bytes":  20593,
-                                                                   "sha256":  "0978e48f7344135369ac3198081aa5b955cdadcec449482d0f8990f4e33fe297"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-native-offline-https-license.txt",
-                                                                   "bytes":  11357,
-                                                                   "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-native-offline-https-tool.json",
-                                                                   "bytes":  871,
-                                                                   "sha256":  "e0bff840901e9863f13af3e1be9a8948f82980fce72a3f1c66527533c62a35f6"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/app-core.log",
-                                                                   "bytes":  44820,
-                                                                   "sha256":  "5c1c5914a39ff61c5b2adb4e8249040be121a04131bbbef9647eaa50574fa8ff"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/app-core-capture-terminal-unit.log",
-                                                                   "bytes":  14307,
-                                                                   "sha256":  "ea7d4389e2dd8991f143309b5f3ef8154266b3bd863117bba8fe05260ca26b8f"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/app-core-clippy.log",
-                                                                   "bytes":  27573,
-                                                                   "sha256":  "506587c5f215a67bf44d430ef03f6ec810cc1c4cc0da59b99869010093db5fbe"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/cargo-version.log",
-                                                                   "bytes":  36,
-                                                                   "sha256":  "b6ef6807dd96d18b833474ad68e7a23a29e562a29c67afa71a59fb9a73df0068"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/daemon-clippy.log",
-                                                                   "bytes":  17722,
-                                                                   "sha256":  "23af9bf26d95595f962a061414c7d2ee994795bb9cc441248995c138200e3b87"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/daemon-download-consent-unit.log",
-                                                                   "bytes":  14157,
-                                                                   "sha256":  "5f101f7b63a533a8f8366cc5818c7b155663e5efc2b61e5e21ec1b512c0fe45b"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/daemon-entry-unit.log",
-                                                                   "bytes":  14228,
-                                                                   "sha256":  "22ddcc7eb4ff27005a8d350412f01d7e8045f342c87ac0f98bb42619909f7879"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/daemon-private-unit.log",
-                                                                   "bytes":  15786,
-                                                                   "sha256":  "36358ae2d31021500346642133bdef86f407dba591a8fa77c91c4305b1709d24"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/daemon-remote-unit.log",
-                                                                   "bytes":  18556,
-                                                                   "sha256":  "e63625e12818d47cf770e77523108df562540255d2143328f87519cc1649692c"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/desktop-layout.log",
-                                                                   "bytes":  28085,
-                                                                   "sha256":  "2756376e6b643510a700a8aa899f1836833d78ffb22b17cbb67c956edac9772c"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/nestlink-codecs.json",
-                                                                   "bytes":  20593,
-                                                                   "sha256":  "0978e48f7344135369ac3198081aa5b955cdadcec449482d0f8990f4e33fe297"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
-                                                                   "bytes":  11357,
-                                                                   "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
-                                                                   "bytes":  871,
-                                                                   "sha256":  "e0bff840901e9863f13af3e1be9a8948f82980fce72a3f1c66527533c62a35f6"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/receipt.json",
-                                                                   "bytes":  14047,
-                                                                   "sha256":  "38fbe077eb4021c5f3d95decff40dc3cb965ffc877a16cdf9a6fa09e90e6e995"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/resident.log",
-                                                                   "bytes":  40270,
-                                                                   "sha256":  "d512b9a83f0e500abd6a3597a1875631498ff638aed6ebee78ca29f9bc92fbba"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/resident-clippy.log",
-                                                                   "bytes":  17605,
-                                                                   "sha256":  "6959d70b15ba39e8ff308cfffc3c8f6928f5cfcb00dcf9d5c838438f365a3674"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/rustc-version.log",
-                                                                   "bytes":  633,
-                                                                   "sha256":  "c21d4eda194b86fd08d5f56a5a74a7753ac880789ca7703e9e18d8e899e8a408"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/source-after.json",
-                                                                   "bytes":  222,
-                                                                   "sha256":  "4eee09e6a2c60cbf57fabe6f4b1c1f580637ac995d326330d055844f48e0f13f"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/source-before.json",
-                                                                   "bytes":  222,
-                                                                   "sha256":  "4eee09e6a2c60cbf57fabe6f4b1c1f580637ac995d326330d055844f48e0f13f"
-                                                               }
-                                                           ],
-                                                 "Count":  22
-                                             },
-                        "producer_inventory_comparison":  {
-                                                              "value":  [
-                                                                            {
-                                                                                "name":  "app-core-capture-terminal-unit.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "app-core-clippy.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "app-core.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "cargo-version.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "daemon-clippy.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "daemon-download-consent-unit.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "daemon-entry-unit.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "daemon-private-unit.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "daemon-remote-unit.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "desktop-layout.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "nestlink-codecs.json",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "nestlink-native-offline-https-license.txt",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "nestlink-native-offline-https-tool.json",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "resident-clippy.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "resident.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "rustc-version.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "source-after.json",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "source-before.json",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            }
-                                                                        ],
-                                                              "Count":  18
-                                                          },
+                        "downloaded_files":  [
+                                                 {
+                                                     "name":  "nestlink-codecs/x86_64-unknown-linux-gnu/nestlink-codecs.json",
+                                                     "bytes":  20593,
+                                                     "sha256":  "0978e48f7344135369ac3198081aa5b955cdadcec449482d0f8990f4e33fe297"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-native-offline-https-license.txt",
+                                                     "bytes":  11357,
+                                                     "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-native-offline-https-tool.json",
+                                                     "bytes":  871,
+                                                     "sha256":  "e0bff840901e9863f13af3e1be9a8948f82980fce72a3f1c66527533c62a35f6"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core.log",
+                                                     "bytes":  44820,
+                                                     "sha256":  "5c1c5914a39ff61c5b2adb4e8249040be121a04131bbbef9647eaa50574fa8ff"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core-capture-terminal-unit.log",
+                                                     "bytes":  14307,
+                                                     "sha256":  "ea7d4389e2dd8991f143309b5f3ef8154266b3bd863117bba8fe05260ca26b8f"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core-clippy.log",
+                                                     "bytes":  27573,
+                                                     "sha256":  "506587c5f215a67bf44d430ef03f6ec810cc1c4cc0da59b99869010093db5fbe"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/cargo-version.log",
+                                                     "bytes":  36,
+                                                     "sha256":  "b6ef6807dd96d18b833474ad68e7a23a29e562a29c67afa71a59fb9a73df0068"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-clippy.log",
+                                                     "bytes":  17722,
+                                                     "sha256":  "23af9bf26d95595f962a061414c7d2ee994795bb9cc441248995c138200e3b87"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-download-consent-unit.log",
+                                                     "bytes":  14157,
+                                                     "sha256":  "5f101f7b63a533a8f8366cc5818c7b155663e5efc2b61e5e21ec1b512c0fe45b"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-entry-unit.log",
+                                                     "bytes":  14228,
+                                                     "sha256":  "22ddcc7eb4ff27005a8d350412f01d7e8045f342c87ac0f98bb42619909f7879"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-private-unit.log",
+                                                     "bytes":  15786,
+                                                     "sha256":  "36358ae2d31021500346642133bdef86f407dba591a8fa77c91c4305b1709d24"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-remote-unit.log",
+                                                     "bytes":  18556,
+                                                     "sha256":  "e63625e12818d47cf770e77523108df562540255d2143328f87519cc1649692c"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/desktop-layout.log",
+                                                     "bytes":  28085,
+                                                     "sha256":  "2756376e6b643510a700a8aa899f1836833d78ffb22b17cbb67c956edac9772c"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-codecs.json",
+                                                     "bytes":  20593,
+                                                     "sha256":  "0978e48f7344135369ac3198081aa5b955cdadcec449482d0f8990f4e33fe297"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
+                                                     "bytes":  11357,
+                                                     "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
+                                                     "bytes":  871,
+                                                     "sha256":  "e0bff840901e9863f13af3e1be9a8948f82980fce72a3f1c66527533c62a35f6"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/receipt.json",
+                                                     "bytes":  14047,
+                                                     "sha256":  "38fbe077eb4021c5f3d95decff40dc3cb965ffc877a16cdf9a6fa09e90e6e995"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/resident.log",
+                                                     "bytes":  40270,
+                                                     "sha256":  "d512b9a83f0e500abd6a3597a1875631498ff638aed6ebee78ca29f9bc92fbba"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/resident-clippy.log",
+                                                     "bytes":  17605,
+                                                     "sha256":  "6959d70b15ba39e8ff308cfffc3c8f6928f5cfcb00dcf9d5c838438f365a3674"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/rustc-version.log",
+                                                     "bytes":  633,
+                                                     "sha256":  "c21d4eda194b86fd08d5f56a5a74a7753ac880789ca7703e9e18d8e899e8a408"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/source-after.json",
+                                                     "bytes":  222,
+                                                     "sha256":  "4eee09e6a2c60cbf57fabe6f4b1c1f580637ac995d326330d055844f48e0f13f"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/source-before.json",
+                                                     "bytes":  222,
+                                                     "sha256":  "4eee09e6a2c60cbf57fabe6f4b1c1f580637ac995d326330d055844f48e0f13f"
+                                                 }
+                                             ],
+                        "producer_inventory_comparison":  [
+                                                              {
+                                                                  "name":  "app-core-capture-terminal-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "app-core-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "app-core.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "cargo-version.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-download-consent-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-entry-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-private-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-remote-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "desktop-layout.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-codecs.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-native-offline-https-license.txt",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-native-offline-https-tool.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "resident-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "resident.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "rustc-version.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "source-after.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "source-before.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              }
+                                                          ],
                         "independently_hashed_file_count":  22,
                         "producer_inventory_matched_files":  18
                     },
@@ -1151,216 +1145,210 @@
                         "artifact_name":  "original-offline-resident-windows-2022-91509d13f8aa52fff19f31e2fb77c5c702da0dc1-1",
                         "artifact_archive_bytes":  74508,
                         "artifact_digest_reported_by_github":  "sha256:c03c97dda0f07621ed60af37420a858894c4147b1b828fd785700cec0fb4c256",
-                        "downloaded_files":  {
-                                                 "value":  [
-                                                               {
-                                                                   "name":  "nestlink-codecs/x86_64-pc-windows-msvc/nestlink-codecs.json",
-                                                                   "bytes":  23792,
-                                                                   "sha256":  "7d394202da29d9a5eaddba9af86ae1ddd2816c8019bb46340938a9fb312321d7"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-native-offline-https-license.txt",
-                                                                   "bytes":  11357,
-                                                                   "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-native-offline-https-tool.json",
-                                                                   "bytes":  895,
-                                                                   "sha256":  "b9ba53cd98eed274affcf0b0454e717040ee750ed7cf3a98ab8e33c7a2492a5b"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/app-core.log",
-                                                                   "bytes":  44004,
-                                                                   "sha256":  "a014759c0be1754cba718df3fcd43763ca2de953525c1992dc3a62bf3bb1f6db"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/app-core-capture-terminal-unit.log",
-                                                                   "bytes":  14153,
-                                                                   "sha256":  "072ba2371b5d6bce1a2ac52fd83440bd2cd6be3537e74c8f7ce95fda529f31f1"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/app-core-clippy.log",
-                                                                   "bytes":  26978,
-                                                                   "sha256":  "4e9bb8d3853708dd48bb5c836aa6f3bfe5644d138ed8f26822b20b1acc7de80f"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/cargo-version.log",
-                                                                   "bytes":  123,
-                                                                   "sha256":  "d23c4c65b8674a054de5e636a3a8a764f439ce1ebffd9dc967c550b1298f9ed1"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/daemon-clippy.log",
-                                                                   "bytes":  18620,
-                                                                   "sha256":  "1828fb420115e293b158d8147957c9a3792a334f1cd0be52ff664bf158f63a7e"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/daemon-download-consent-unit.log",
-                                                                   "bytes":  14015,
-                                                                   "sha256":  "ad75d451133bb8e7c525f2ab0e1303d313ac533da15e94dc7853cd498cbb341a"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/daemon-entry-unit.log",
-                                                                   "bytes":  14087,
-                                                                   "sha256":  "b0ee270f9796111fcf27e776350f340ea80c201e01b0691d00f3486955b0960a"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/daemon-private-unit.log",
-                                                                   "bytes":  15644,
-                                                                   "sha256":  "b78dab4e1e2404354d1e3ca56dd06c24b2b7f5184d0326dd947233d5c72f55eb"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/daemon-remote-unit.log",
-                                                                   "bytes":  19813,
-                                                                   "sha256":  "ff0cab9c77adab81194353e554ac777d411bf7351ebbc96633d0e6591289b200"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/desktop-layout.log",
-                                                                   "bytes":  23398,
-                                                                   "sha256":  "bec62b607ea4374d7d0ee0bc278b56265d2edd9c14f9a292c40c91134815fcef"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/nestlink-codecs.json",
-                                                                   "bytes":  23792,
-                                                                   "sha256":  "7d394202da29d9a5eaddba9af86ae1ddd2816c8019bb46340938a9fb312321d7"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
-                                                                   "bytes":  11357,
-                                                                   "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
-                                                                   "bytes":  895,
-                                                                   "sha256":  "b9ba53cd98eed274affcf0b0454e717040ee750ed7cf3a98ab8e33c7a2492a5b"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/receipt.json",
-                                                                   "bytes":  16585,
-                                                                   "sha256":  "a32881e2468a66f122466300cd7f548a2ff9150e7cad3ce7c2d676c06223043d"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/resident.log",
-                                                                   "bytes":  37373,
-                                                                   "sha256":  "faeae1e182f2864840340426ff62986af8b42f8d9f7829bcbef20a828882330e"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/resident-clippy.log",
-                                                                   "bytes":  17316,
-                                                                   "sha256":  "395122280bd972019ebaab75112769ce3423d911dfdba0a42cb1558a4442ada3"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/rustc-version.log",
-                                                                   "bytes":  714,
-                                                                   "sha256":  "28a4631a2b64df26ae9a4c2b585ab6d75e8c29ce917e588c8fdec54fc8f16c15"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/source-after.json",
-                                                                   "bytes":  228,
-                                                                   "sha256":  "3b1f30fef81cb707a35bed3bc737818804f5a5e5cf55c4385bb0e6afce99ea4c"
-                                                               },
-                                                               {
-                                                                   "name":  "nestlink-offline-resident-focused/source-before.json",
-                                                                   "bytes":  228,
-                                                                   "sha256":  "3b1f30fef81cb707a35bed3bc737818804f5a5e5cf55c4385bb0e6afce99ea4c"
-                                                               }
-                                                           ],
-                                                 "Count":  22
-                                             },
-                        "producer_inventory_comparison":  {
-                                                              "value":  [
-                                                                            {
-                                                                                "name":  "app-core-capture-terminal-unit.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "app-core-clippy.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "app-core.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "cargo-version.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "daemon-clippy.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "daemon-download-consent-unit.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "daemon-entry-unit.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "daemon-private-unit.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "daemon-remote-unit.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "desktop-layout.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "nestlink-codecs.json",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "nestlink-native-offline-https-license.txt",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "nestlink-native-offline-https-tool.json",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "resident-clippy.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "resident.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "rustc-version.log",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "source-after.json",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            },
-                                                                            {
-                                                                                "name":  "source-before.json",
-                                                                                "bytes_match":  true,
-                                                                                "sha256_match":  true
-                                                                            }
-                                                                        ],
-                                                              "Count":  18
-                                                          },
+                        "downloaded_files":  [
+                                                 {
+                                                     "name":  "nestlink-codecs/x86_64-pc-windows-msvc/nestlink-codecs.json",
+                                                     "bytes":  23792,
+                                                     "sha256":  "7d394202da29d9a5eaddba9af86ae1ddd2816c8019bb46340938a9fb312321d7"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-native-offline-https-license.txt",
+                                                     "bytes":  11357,
+                                                     "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-native-offline-https-tool.json",
+                                                     "bytes":  895,
+                                                     "sha256":  "b9ba53cd98eed274affcf0b0454e717040ee750ed7cf3a98ab8e33c7a2492a5b"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core.log",
+                                                     "bytes":  44004,
+                                                     "sha256":  "a014759c0be1754cba718df3fcd43763ca2de953525c1992dc3a62bf3bb1f6db"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core-capture-terminal-unit.log",
+                                                     "bytes":  14153,
+                                                     "sha256":  "072ba2371b5d6bce1a2ac52fd83440bd2cd6be3537e74c8f7ce95fda529f31f1"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core-clippy.log",
+                                                     "bytes":  26978,
+                                                     "sha256":  "4e9bb8d3853708dd48bb5c836aa6f3bfe5644d138ed8f26822b20b1acc7de80f"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/cargo-version.log",
+                                                     "bytes":  123,
+                                                     "sha256":  "d23c4c65b8674a054de5e636a3a8a764f439ce1ebffd9dc967c550b1298f9ed1"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-clippy.log",
+                                                     "bytes":  18620,
+                                                     "sha256":  "1828fb420115e293b158d8147957c9a3792a334f1cd0be52ff664bf158f63a7e"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-download-consent-unit.log",
+                                                     "bytes":  14015,
+                                                     "sha256":  "ad75d451133bb8e7c525f2ab0e1303d313ac533da15e94dc7853cd498cbb341a"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-entry-unit.log",
+                                                     "bytes":  14087,
+                                                     "sha256":  "b0ee270f9796111fcf27e776350f340ea80c201e01b0691d00f3486955b0960a"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-private-unit.log",
+                                                     "bytes":  15644,
+                                                     "sha256":  "b78dab4e1e2404354d1e3ca56dd06c24b2b7f5184d0326dd947233d5c72f55eb"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-remote-unit.log",
+                                                     "bytes":  19813,
+                                                     "sha256":  "ff0cab9c77adab81194353e554ac777d411bf7351ebbc96633d0e6591289b200"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/desktop-layout.log",
+                                                     "bytes":  23398,
+                                                     "sha256":  "bec62b607ea4374d7d0ee0bc278b56265d2edd9c14f9a292c40c91134815fcef"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-codecs.json",
+                                                     "bytes":  23792,
+                                                     "sha256":  "7d394202da29d9a5eaddba9af86ae1ddd2816c8019bb46340938a9fb312321d7"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
+                                                     "bytes":  11357,
+                                                     "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
+                                                     "bytes":  895,
+                                                     "sha256":  "b9ba53cd98eed274affcf0b0454e717040ee750ed7cf3a98ab8e33c7a2492a5b"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/receipt.json",
+                                                     "bytes":  16585,
+                                                     "sha256":  "a32881e2468a66f122466300cd7f548a2ff9150e7cad3ce7c2d676c06223043d"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/resident.log",
+                                                     "bytes":  37373,
+                                                     "sha256":  "faeae1e182f2864840340426ff62986af8b42f8d9f7829bcbef20a828882330e"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/resident-clippy.log",
+                                                     "bytes":  17316,
+                                                     "sha256":  "395122280bd972019ebaab75112769ce3423d911dfdba0a42cb1558a4442ada3"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/rustc-version.log",
+                                                     "bytes":  714,
+                                                     "sha256":  "28a4631a2b64df26ae9a4c2b585ab6d75e8c29ce917e588c8fdec54fc8f16c15"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/source-after.json",
+                                                     "bytes":  228,
+                                                     "sha256":  "3b1f30fef81cb707a35bed3bc737818804f5a5e5cf55c4385bb0e6afce99ea4c"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/source-before.json",
+                                                     "bytes":  228,
+                                                     "sha256":  "3b1f30fef81cb707a35bed3bc737818804f5a5e5cf55c4385bb0e6afce99ea4c"
+                                                 }
+                                             ],
+                        "producer_inventory_comparison":  [
+                                                              {
+                                                                  "name":  "app-core-capture-terminal-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "app-core-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "app-core.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "cargo-version.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-download-consent-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-entry-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-private-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-remote-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "desktop-layout.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-codecs.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-native-offline-https-license.txt",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-native-offline-https-tool.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "resident-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "resident.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "rustc-version.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "source-after.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "source-before.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              }
+                                                          ],
                         "independently_hashed_file_count":  22,
                         "producer_inventory_matched_files":  18
                     }
