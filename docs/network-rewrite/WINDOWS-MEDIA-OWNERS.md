@@ -29,6 +29,17 @@ The exact-source `windows-media-owner.yml` workflow runs ordinary-token receiver
 diagnostic/presenter regressions, negative analyzer cases and strict desktop
 Clippy. It records source, workflow, dependency lock and tool hashes independently
 of its runtime logs. Hardware absence cannot be turned into a physical GPU pass.
+Its `owner-boundaries` job runs the same steps on both `windows-2022` and
+`windows-2025` with matrix fail-fast disabled. The original `native_compressed`
+integration command runs immediately after verifying the pinned native codecs,
+before the desktop checks, so each Windows image retains an independent result
+for actual two-TLS delivery, decoded credit reuse and joined cleanup. Original
+assertions and deadlines remain unchanged; a pass on one image does not replace
+a failure on the other. Source receipts include the runner label and OS.
+Download each new artifact by its exact
+`windows-media-owner-<windows-2022|windows-2025>-<source_revision>-<attempt>` name.
+Repository scripts do not consume the old fixed artifact name; historical
+evidence keeps the original artifact identities and results.
 
 The HEVC addition reuses the existing bounded Annex-B/SPS parser and original MF
 transform, timestamp ledger, bounded tracked textures and checked teardown. An

@@ -75,7 +75,11 @@ jobs:
           if-no-files-found: error
           retention-days: 30
   owner-boundaries:
-    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2025]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     env:
       CARGO_INCREMENTAL: "0"
@@ -93,6 +97,7 @@ jobs:
         shell: python
         env:
           EXPECTED_SOURCE: ${{ inputs.source_revision }}
+          EXPECTED_RUNNER: ${{ matrix.os }}
         run: |
           import hashlib, json, os, pathlib, re, subprocess
           expected = os.environ['EXPECTED_SOURCE']
@@ -106,6 +111,7 @@ jobs:
           receipt = {'source_revision': expected, 'workflow_revision': os.environ['GITHUB_WORKFLOW_SHA'],
               'run_id': os.environ['GITHUB_RUN_ID'], 'attempt': os.environ['GITHUB_RUN_ATTEMPT'],
               'runner_environment': os.environ['RUNNER_ENVIRONMENT'],
+              'runner_os': os.environ['RUNNER_OS'], 'runner_label': os.environ['EXPECTED_RUNNER'],
               'dependency_lock_sha256': hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
               'hardware_or_target_acceptance_claimed': False,
               'tool_sources': {p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in scripts}}
@@ -132,6 +138,12 @@ jobs:
         run: python scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe"
       - name: Verify native codec provenance
         run: python scripts/refactor-native-codecs.py verify --target x86_64-pc-windows-msvc --prefix "$env:NESTLINK_CODEC_PREFIX"
+      - name: Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --test native_compressed -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/compressed-native-tests.log"
+          exit $LASTEXITCODE
       - name: Verify actual receiver diagnostics, cleanup and cadence under the ordinary token
         shell: pwsh
         run: |
@@ -185,12 +197,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --lib video::tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/readback-ipc-tests.log"
           exit $LASTEXITCODE
-      - name: Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup
-        if: ${{ !cancelled() }}
-        shell: pwsh
-        run: |
-          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --test native_compressed -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/compressed-native-tests.log"
-          exit $LASTEXITCODE
       - name: Verify explicit GPU intent and exact local approval refusal boundaries
         if: ${{ !cancelled() }}
         shell: pwsh
@@ -215,7 +221,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: windows-media-owner-${{ inputs.source_revision }}-${{ github.run_attempt }}
+          name: windows-media-owner-${{ matrix.os }}-${{ inputs.source_revision }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/media-owner-evidence/
           if-no-files-found: error
           retention-days: 30
