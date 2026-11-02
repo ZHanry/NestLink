@@ -1,4 +1,4 @@
-//! Original monitor/session and same-device NV12 capture for the HEVC worker.
+//! Original monitor/session and same-device NV12/P010 capture for the HEVC worker.
 //! Opening a source does not read desktop pixels. Capture begins only on an
 //! explicit command of the caller's already-authorized live execution.
 use super::*;
@@ -15,7 +15,7 @@ struct HevcMonitorSource {
     _dpi: DpiScope,
 }
 // SAFETY: only the execution worker constructs/uses/drops this !Send source.
-// GpuCapture owns the original device and exact NV12 surface. The original
+// GpuCapture owns the original device and exact NV12/P010 surface. The original
 // monitor/session/DPI snapshot and sticky OS observer are checked around reads.
 unsafe impl HevcTextureSource for HevcMonitorSource {
     fn device(&self) -> io::Result<*mut c_void> {
@@ -47,6 +47,10 @@ unsafe impl HevcTextureSource for HevcMonitorSource {
         {
             return Err(denied("HEVC original desktop/session/monitor/DPI changed"));
         }
+        self.capture
+            .as_ref()
+            .ok_or_else(|| denied("HEVC capture already closed"))?
+            .check_current()?;
         Ok(())
     }
     fn close(mut self: Box<Self>) -> io::Result<()> {

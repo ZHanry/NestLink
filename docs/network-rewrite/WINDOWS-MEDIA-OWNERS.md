@@ -142,8 +142,8 @@ wire/IPC markers. Its exact SPS parser, original MF/P010 input/output, capture
 video-processor P010 surface, finite depth-bound shared ring and actual P010
 import/presentation are connected. Its real direction probe requires hardware
 encode/decode and an independent software decoder before publication. The
-desktop capture source remains BGRA8 SDR, so P010 conversion is not HDR or native
-ten-bit capture qualification. These changes still need exact-source hosted
+initial desktop capture source used BGRA8 SDR, so its P010 conversion was not HDR
+or native ten-bit capture qualification. These changes still need exact-source hosted
 validation and physical hardware execution; see the detailed owner record.
 
 The actual 1920x1080/60/8000 GPU controller direction attempt built by hosted run
@@ -279,3 +279,52 @@ These metadata tests open no device or encoder. Their exact-source hosted result
 and the original default physical commands still need a new build/rerun. No
 adapter-selection CLI, AU/SPS rewriting, relaxed colour/geometry assertion or
 GPU/performance/physical scanout qualification follows from this binding fix.
+
+The existing v4 Main10 SDR source now selects WGC with a
+`R16G16B16A16_FLOAT` frame pool and same-device retained RGB texture, followed by
+the original P010 encoder surface. Its original monitor approval, worker,
+session/DPI observer, deferred first-live-command `StartCapture`, format ACK and
+actual SPS/PTS/colour/geometry gates remain in force. H.264/Main8 retain their
+original BGRA8 duplication/WGC route. The Main10 route does not fall back through
+BGRA8 or the GDI cursor compositor; WGC retains its system cursor composition.
+
+This follows the official
+[WGC high-colour capture guidance](https://learn.microsoft.com/en-us/windows/uwp/audio-video-camera/screen-capture)
+and the separately selected Float16 WGC acquisition in
+[Sunshine at c101250](https://github.com/LizardByte/Sunshine/blob/c10125088da1f61e72fe1c65faa996a297490d36/src/platform/windows/display_wgc.cpp).
+The thin adapter first checks the exact Float16/scRGB interpretation to
+P010/limited-range BT.709 combination with
+[`CheckVideoProcessorFormatConversion`](https://learn.microsoft.com/en-us/windows/win32/api/d3d11_1/nf-d3d11_1-id3d11videoprocessorenumerator1-checkvideoprocessorformatconversion).
+It requires `S_OK` and an affirmative support result, sets the explicit
+`ID3D11VideoContext1` input/output colour spaces and requires exact readback.
+Unknown interfaces, query failures, unsupported combinations and conflicting
+readback fail source creation. No generic shader or tone-mapping fallback is
+introduced.
+
+The owner-local metadata receipt separates configured capture format, actual
+first-frame texture format, configured input/output colour interpretation,
+observed display colour space, display `BitsPerColor` and successful exact
+conversion checking. The WGC Float16 interpretation is linear scRGB; the
+receipt does not pretend that WGC supplies independent per-frame colour metadata.
+Display precision and captured content precision are different observations.
+An eight-bit SDR display is not promoted to a native ten-bit source by a
+Float16 container, and every receipt explicitly leaves content precision and
+HDR qualification false. Actual sample fidelity still requires physical
+capture/conversion validation; the existing eight-bit decoded colour checks
+cannot establish low-bit preservation.
+
+The Main10 owner retains its original DXGI factory and colour-output snapshot.
+Device borrowing, each live/repeated capture and the original HEVC source checks
+require the factory to remain current and the display colour/precision,
+primaries, white point, luminance, geometry, monitor and rotation facts to match.
+Failure retires the source permanently and clears retained content; subsequent
+matching facts cannot revive it. Actual foreign/changed Float16 surfaces also
+retire the source. This follows the dynamic-output guidance in
+[`GetDesc1`](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_6/nf-dxgi1_6-idxgioutput6-getdesc1).
+The hosted metadata regression uses the same production native decisions with
+DXGI/D3D structures, including unavailable conversion support, wrong formats,
+foreign devices, HDR/precision changes and irreversible retirement. It creates
+no device or capture session. These additions still require their exact-source
+hosted results and authorized physical capture evidence. The original HDR
+rejection and v4 SDR contract remain unchanged; the shared presenter still uses
+its original eight-bit SDR output, so this increment does not complete W33.

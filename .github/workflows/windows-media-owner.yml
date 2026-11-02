@@ -167,6 +167,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_mf::adapter_binding_tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/mf-adapter-binding-tests.log"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-platform-capture --lib windows::host::precision_source_tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/wgc-float16-source-tests.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-platform-capture --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/capture-precision-clippy.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib hevc_probe:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/hevc-contract-tests.log"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib hevc_execution:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/hevc-execution-tests.log"

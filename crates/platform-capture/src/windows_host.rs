@@ -31,6 +31,10 @@ unsafe extern "C" {
     ) -> i32;
     fn nl_capture_gpu_device(state: *mut c_void, device: *mut *mut c_void, luid: *mut u64) -> i32;
     fn nl_capture_gpu_observation(state: *mut c_void, backend: *mut u32, luid: *mut u64) -> i32;
+    fn nl_capture_gpu_source_state(
+        state: *mut c_void,
+        observation: *mut CaptureSourceObservation,
+    ) -> i32;
     fn nl_capture_gpu_frame(state: *mut c_void, repeated: u32, texture: *mut *mut c_void) -> i32;
     fn nl_capture_gpu_probe(
         state: *mut c_void,
@@ -72,8 +76,23 @@ struct HostFinalizer {
     observation: Arc<Mutex<HostObservation>>,
     sink: HostObservationSink,
 }
+#[derive(Default)]
+#[repr(C)]
+struct CaptureSourceObservation {
+    configured_format: u32,
+    observed_format: u32,
+    input_color_space: u32,
+    output_color_space: u32,
+    display_color_space: u32,
+    display_bits_per_color: u32,
+    flags: u32,
+    reserved: u32,
+}
+const _: () = assert!(std::mem::size_of::<CaptureSourceObservation>() == 32);
 struct GpuCapture {
     handle: NonNull<c_void>,
+    high_precision_sdr: bool,
+    precision_observed: bool,
     _owner: PhantomData<Rc<()>>,
 }
 impl Drop for GpuCapture {
@@ -114,10 +133,16 @@ impl GpuCapture {
         if hr < 0 {
             return Err(bridge("open", hr));
         }
-        Ok(Self {
+        let capture = Self {
             handle: NonNull::new(handle).ok_or_else(|| bridge("null capture", hr))?,
+            high_precision_sdr: bit_depth == 10,
+            precision_observed: false,
             _owner: PhantomData,
-        })
+        };
+        if capture.high_precision_sdr {
+            Self::log_source_state("configured", &capture.source_state()?);
+        }
+        Ok(capture)
     }
     fn synthetic(config: VideoConfig) -> io::Result<Self> {
         let mut handle = null_mut();
@@ -130,8 +155,46 @@ impl GpuCapture {
         }
         Ok(Self {
             handle: NonNull::new(handle).ok_or_else(|| bridge("null synthetic device", hr))?,
+            high_precision_sdr: false,
+            precision_observed: false,
             _owner: PhantomData,
         })
+    }
+    fn source_state(&self) -> io::Result<CaptureSourceObservation> {
+        let mut observation = CaptureSourceObservation::default();
+        // SAFETY: exact owner-local handle and initialized fixed-layout output.
+        // This queries metadata/current state only; it starts no capture.
+        let hr = unsafe { nl_capture_gpu_source_state(self.handle.as_ptr(), &mut observation) };
+        if hr != 0 {
+            return Err(bridge("source state", hr));
+        }
+        if observation.reserved != 0
+            || observation.flags & !15 != 0
+            || self.high_precision_sdr && observation.flags & 13 != 13
+        {
+            return Err(io::Error::other("invalid capture source metadata"));
+        }
+        Ok(observation)
+    }
+    fn log_source_state(phase: &str, observation: &CaptureSourceObservation) {
+        eprintln!(
+            "hevc_sdr_capture_source phase={phase} configured_dxgi_format={} observed_dxgi_format={} actual_frame_observed={} input_color_space_interpretation={} input_semantics=wgc_fp16_scrgb_contract output_color_space={} display_color_space={} display_bits_per_color={} display_color_known={} exact_conversion_checked={} native_content_precision_qualified=false hdr_qualified=false",
+            observation.configured_format,
+            observation.observed_format,
+            observation.flags & 2 != 0,
+            observation.input_color_space,
+            observation.output_color_space,
+            observation.display_color_space,
+            observation.display_bits_per_color,
+            observation.flags & 1 != 0,
+            observation.flags & 8 != 0,
+        );
+    }
+    fn check_current(&self) -> io::Result<()> {
+        if self.high_precision_sdr {
+            self.source_state()?;
+        }
+        Ok(())
     }
     fn device(&self) -> io::Result<*mut c_void> {
         let mut device = null_mut();
@@ -141,9 +204,12 @@ impl GpuCapture {
         if hr < 0 || device.is_null() {
             return Err(bridge("device", hr));
         }
-        eprintln!(
-            "host_gpu_adapter_luid={luid:016x} same_device=true cursor=gdi_surface driver_internal_readback=unknown"
-        );
+        let cursor = if self.high_precision_sdr {
+            "system_wgc"
+        } else {
+            "gdi_surface_or_system_wgc"
+        };
+        eprintln!("host_gpu_adapter_luid={luid:016x} same_device=true cursor={cursor} driver_internal_readback=unknown");
         Ok(device)
     }
     fn frame(&mut self, repeated: bool) -> io::Result<Option<NonNull<c_void>>> {
@@ -157,6 +223,16 @@ impl GpuCapture {
         if hr == 1 {
             return Ok(None);
         }
+        if self.high_precision_sdr && !self.precision_observed {
+            let observation = self.source_state()?;
+            if observation.flags & 2 == 0
+                || observation.observed_format != observation.configured_format
+            {
+                return Err(io::Error::other("actual Float16 capture format is absent"));
+            }
+            Self::log_source_state("actual_frame", &observation);
+            self.precision_observed = true;
+        }
         Ok(Some(
             NonNull::new(texture).ok_or_else(|| bridge("null texture", hr))?,
         ))
@@ -164,6 +240,24 @@ impl GpuCapture {
     fn discard(&mut self) {
         // SAFETY: merely invalidates retained recovery content on this owner.
         unsafe { nl_capture_gpu_discard(self.handle.as_ptr()) };
+    }
+}
+
+#[cfg(test)]
+mod precision_source_tests {
+    use super::CaptureSourceObservation;
+
+    unsafe extern "C" {
+        fn nl_capture_gpu_precision_contract() -> u32;
+    }
+
+    #[test]
+    fn exact_float16_conversion_and_sticky_source_metadata_boundaries() {
+        assert_eq!(std::mem::size_of::<CaptureSourceObservation>(), 32);
+        // SAFETY: the routine exercises production decisions with native
+        // metadata structures; it opens no device, window or capture source.
+        let passed = unsafe { nl_capture_gpu_precision_contract() };
+        assert_eq!(passed, 255, "Float16 source boundary bitmask: {passed:#x}");
     }
 }
 
