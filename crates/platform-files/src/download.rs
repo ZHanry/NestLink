@@ -24,6 +24,21 @@ use std::{
 fn invalid(reason: &'static str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, reason)
 }
+fn storage_error(stage: &'static str, error: &io::Error) {
+    // The worker retains the original io::Error for authorization and pause
+    // decisions. Emit only bounded OS diagnostics, never paths or file bytes.
+    let detail: String = error
+        .to_string()
+        .chars()
+        .filter(|character| !character.is_control())
+        .take(512)
+        .collect();
+    eprintln!(
+        "native download storage {stage}: kind={:?}, os={:?}, detail={detail}",
+        error.kind(),
+        error.raw_os_error()
+    );
+}
 fn check(consent: &AtomicBool, authorized: &mut dyn FnMut() -> io::Result<()>) -> io::Result<()> {
     authorized()?;
     if !consent.load(Ordering::Acquire) {
@@ -137,18 +152,19 @@ impl LocalDownload {
         }
         // Fresh 0700 / protected Windows owner+SYSTEM DACL. Its parent is an
         // explicitly trusted local application area, not an ambient peer path.
-        nestlink_platform_security::new_private_directory(&self.local_fresh_area)?;
+        nestlink_platform_security::new_private_directory(&self.local_fresh_area)
+            .inspect_err(|error| storage_error("prepare.private_directory", error))?;
         check(&self.consent, authorized)?;
         self.directory = Some(Dir::open_ambient_dir(
             &self.local_fresh_area,
             cap_std::ambient_authority(),
-        )?);
+        ).inspect_err(|error| storage_error("prepare.open_directory", error))?);
         check(&self.consent, authorized)?;
         let directory = self
             .directory
             .as_ref()
             .ok_or_else(|| invalid("download area closed"))?;
-        self.device = directory.dir_metadata()?.dev();
+        self.device = directory.dir_metadata().inspect_err(|error| storage_error("prepare.directory_metadata", error))?.dev();
         check(&self.consent, authorized)?;
         let mut options = OpenOptions::new();
         options
@@ -168,7 +184,7 @@ impl LocalDownload {
             // its original read/write handle is retained.
             options.share_mode(1);
         }
-        self.file = Some(directory.open_with(&self.temporary, &options)?);
+        self.file = Some(directory.open_with(&self.temporary, &options).inspect_err(|error| storage_error("prepare.create_temporary", error))?);
         self.temporary_created = true;
         self.status.file_closed = false;
         check(&self.consent, authorized)?;
@@ -176,7 +192,7 @@ impl LocalDownload {
             .file
             .as_ref()
             .ok_or_else(|| invalid("download file closed"))?
-            .metadata()?;
+            .metadata().inspect_err(|error| storage_error("prepare.temporary_metadata", error))?;
         check(&self.consent, authorized)?;
         if !metadata.is_file() || metadata.dev() != self.device || metadata.nlink() != 1 {
             return Err(invalid(
@@ -387,7 +403,7 @@ impl LocalDownload {
         self.file
             .as_ref()
             .ok_or_else(|| invalid("download file closed"))?
-            .sync_all()?;
+            .sync_all().inspect_err(|error| storage_error("finish.sync_file", error))?;
         check(&self.consent, authorized)?;
         self.object(authorized)?;
         check(&self.consent, authorized)?;
@@ -395,14 +411,16 @@ impl LocalDownload {
             .directory
             .as_ref()
             .ok_or_else(|| invalid("download area closed"))?;
-        directory.hard_link(&self.temporary, directory, &self.name)?;
+        directory.hard_link(&self.temporary, directory, &self.name)
+            .inspect_err(|error| storage_error("finish.publish_hard_link", error))?;
         self.status.published = true;
         // It is a verified local object once the OS call succeeds. Revocation
         // cannot erase already-published bytes; do not misreport that fact.
         check(&self.consent, authorized)?;
         self.file.take();
         self.status.file_closed = true;
-        directory.remove_file(&self.temporary)?;
+        directory.remove_file(&self.temporary)
+            .inspect_err(|error| storage_error("finish.remove_temporary", error))?;
         self.status.temporary_removed = true;
         #[cfg(unix)]
         {

@@ -629,8 +629,25 @@ pub struct Resident {
     input: Option<ChildStdin>,
     events: mpsc::UnboundedReceiver<Value>,
     stderr: Arc<Mutex<Vec<u8>>>,
+    last_event: Arc<Mutex<Value>>,
+    role: &'static str,
+    transport: String,
+    directory: PathBuf,
     unit: Option<String>,
 }
+
+fn observed_event(event: &Value) -> Value {
+    // Never retain an enrollment response, process nonce or signed bundle in
+    // failure diagnostics. These are original lifecycle facts only.
+    let mut data = serde_json::Map::new();
+    for name in ["status", "reason", "cleanup", "failure"] {
+        if let Some(value) = event["data"].get(name) {
+            data.insert(name.to_owned(), value.clone());
+        }
+    }
+    json!({"event":event["event"],"data":data})
+}
+
 impl Resident {
     pub async fn spawn(
         platform: &Platform,
@@ -663,11 +680,16 @@ impl Resident {
         let input = child.stdin.take();
         let output = child.stdout.take().ok_or("resident stdout")?;
         let (send, events) = mpsc::unbounded_channel();
+        let last_event = Arc::new(Mutex::new(Value::Null));
+        let observed = last_event.clone();
         tokio::spawn(async move {
             let mut lines = BufReader::new(output).lines();
             while let Ok(Some(line)) = lines.next_line().await {
-                match serde_json::from_str(&line) {
+                match serde_json::from_str::<Value>(&line) {
                     Ok(event) => {
+                        if let Ok(mut last) = observed.lock() {
+                            *last = observed_event(&event);
+                        }
                         if send.send(event).is_err() {
                             break;
                         }
@@ -676,14 +698,19 @@ impl Resident {
                 }
             }
         });
-        let error_output = child.stderr.take().ok_or("resident stderr")?;
+        let mut error_output = child.stderr.take().ok_or("resident stderr")?;
         let stderr = Arc::new(Mutex::new(Vec::new()));
         let collected = stderr.clone();
         tokio::spawn(async move {
-            let mut bytes = Vec::new();
-            let _ = error_output.take(65536).read_to_end(&mut bytes).await;
-            if let Ok(mut output) = collected.lock() {
-                *output = bytes;
+            let mut bytes = [0; 4096];
+            while let Ok(count) = error_output.read(&mut bytes).await {
+                if count == 0 {
+                    break;
+                }
+                if let Ok(mut output) = collected.lock() {
+                    let retained = count.min(65536_usize.saturating_sub(output.len()));
+                    output.extend_from_slice(&bytes[..retained]);
+                }
             }
         });
         let mut resident = Self {
@@ -691,6 +718,10 @@ impl Resident {
             input,
             events,
             stderr,
+            last_event,
+            role: if host { "host" } else { "controller" },
+            transport: transport.to_owned(),
+            directory: if host { &fixture.host } else { &fixture.source }.clone(),
             unit,
         };
         resident.event("ready").await?;
@@ -705,10 +736,8 @@ impl Resident {
         Ok(())
     }
     pub async fn event(&mut self, expected: &str) -> Result<Value> {
-        let mut last_event = None;
         let result = tokio::time::timeout(Duration::from_secs(15), async {
             while let Some(event) = self.events.recv().await {
-                last_event = Some(event.clone());
                 if event["event"] == expected {
                     return Ok(event["data"].clone());
                 }
@@ -724,17 +753,31 @@ impl Resident {
         match result {
             Ok(Ok(data)) => Ok(data),
             error => {
-                let diagnostic = self
-                    .stderr
-                    .lock()
-                    .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
-                    .unwrap_or_default();
+                let diagnostic = self.diagnostic().await;
                 Err(io::Error::other(format!(
-                    "resident event {expected}: {error:?}; last_event={last_event:?}; stderr={diagnostic}"
+                    "resident event {expected}: {error:?}; endpoint={diagnostic}"
                 ))
                 .into())
             }
         }
+    }
+    fn process_diagnostic(&mut self) -> Value {
+        let stderr = self.stderr.lock().map(|bytes| String::from_utf8_lossy(&bytes).into_owned()).unwrap_or_default();
+        let last_event = self.last_event.lock().map(|event| event.clone()).unwrap_or(Value::Null);
+        json!({"role":self.role,"transport":self.transport,"process":format!("{:?}",self.child.try_wait()),"last_event":last_event,"stderr":stderr})
+    }
+    pub async fn diagnostic(&mut self) -> Value {
+        let mut value = self.process_diagnostic();
+        let observation = tokio::time::timeout(Duration::from_secs(2), async {
+            let mut client = nestlink_app_ipc::Client::connect(&self.directory).await?;
+            client.request(0, nestlink_app_ipc::wire::Command::Snapshot).await
+        }).await;
+        value["ipc"] = match observation {
+            Ok(Ok(reply)) => json!({"generation":reply.snapshot.generation,"lifecycle":reply.snapshot.lifecycle,"native_session":reply.snapshot.native_session,"native_offline":reply.snapshot.native_offline}),
+            Ok(Err(error)) => json!({"unavailable":error.to_string()}),
+            Err(error) => json!({"unavailable":error.to_string()}),
+        };
+        value
     }
     pub async fn request(&mut self, command: Value, event: &str) -> Result<Value> {
         self.send(command).await?;
@@ -759,6 +802,7 @@ impl Resident {
 }
 impl Drop for Resident {
     fn drop(&mut self) {
+        eprintln!("resident endpoint at teardown: {}", self.process_diagnostic());
         if let Some(unit) = self.unit.take() {
             // Error/panic cleanup retains the exact service identity. Killing
             // only systemd-run would leave its original service and stdin open.
@@ -835,8 +879,12 @@ pub async fn start(source: &mut Resident, host: &mut Resident) -> Result {
     host.request(json!({"command":"start"}), "listening")
         .await?;
     source.send(json!({"command":"start"})).await?;
-    source.event("connected").await?;
-    host.event("connected").await?;
+    let (source_result, host_result) = tokio::join!(source.event("connected"), host.event("connected"));
+    if source_result.is_err() || host_result.is_err() {
+        let source_diagnostic = source.diagnostic().await;
+        let host_diagnostic = host.diagnostic().await;
+        return Err(io::Error::other(format!("original resident establishment: controller={source_result:?}; host={host_result:?}; controller_endpoint={source_diagnostic}; host_endpoint={host_diagnostic}")).into());
+    }
     let view = source
         .request(json!({"command":"status"}), "status")
         .await?;

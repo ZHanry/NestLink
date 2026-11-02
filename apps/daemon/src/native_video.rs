@@ -342,7 +342,8 @@ async fn prepare_until_session_changes(
                         PrepareOutcome::CoreStopped
                     }
                     Err(PrepareError::Capture(error)) if is_current_session(core, identity) => {
-                        eprintln!("native screen source unavailable: {:?}", error.kind());
+                        let detail: String = error.to_string().chars().filter(|character| !character.is_control()).take(512).collect();
+                        eprintln!("native screen source unavailable: kind={:?}, os={:?}, detail={detail}", error.kind(), error.raw_os_error());
                         PrepareOutcome::Failed
                     },
                     Err(PrepareError::Capture(_)) => PrepareOutcome::SessionChanged,

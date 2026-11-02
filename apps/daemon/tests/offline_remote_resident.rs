@@ -290,6 +290,7 @@ async fn actual_file(
             .await?
             {
                 if task.finished {
+                    eprintln!("original download terminal: phase={}, confirmed_bytes={}, error={:?}", task.phase, task.confirmed_bytes, task.error);
                     assert_eq!(task.phase, "completed", "download error {:?}", task.error);
                     assert_eq!(task.confirmed_bytes, 262144);
                     assert!(task.error.is_none());
@@ -340,6 +341,21 @@ async fn data_and_rebuild(transport: &str) -> Result {
     let peer = peer()?;
     let mut source = Resident::spawn(&platform, &fixture, false, transport, peer).await?;
     let mut host = Resident::spawn(&platform, &fixture, true, transport, peer).await?;
+    macro_rules! phase {
+        ($stage:literal, $operation:expr) => {
+            match $operation.await {
+                Ok(value) => value,
+                Err(error) => {
+                    let controller = source.diagnostic().await;
+                    let target = host.diagnostic().await;
+                    return Err(io::Error::other(format!(
+                        "resident {transport} {}: {error}; controller={controller}; host={target}",
+                        $stage
+                    )).into());
+                }
+            }
+        };
+    }
     let bundle = activate(&mut source, &mut host, &fixture).await?;
     fixture.offline().await?;
     tokio::time::sleep(Duration::from_millis(
@@ -347,9 +363,9 @@ async fn data_and_rebuild(transport: &str) -> Result {
     ))
     .await;
     assert!(wall()? >= fixture.online_expiry);
-    start(&mut source, &mut host).await?;
-    let mut source_ipc = connected(&fixture.source).await?;
-    let mut host_ipc = connected(&fixture.host).await?;
+    phase!("initial direct establishment", start(&mut source, &mut host));
+    let mut source_ipc = phase!("initial controller IPC", connected(&fixture.source));
+    let mut host_ipc = phase!("initial host IPC", connected(&fixture.host));
     let old = snapshot(&mut source_ipc).await?;
     let runtime = source_ipc.runtime_id().to_owned();
     let root = temporary.path().join("explicit-host-root");
@@ -358,16 +374,15 @@ async fn data_and_rebuild(transport: &str) -> Result {
     std::fs::create_dir(&destination)?;
     let bytes: Vec<u8> = (0..262144).map(|value| (value % 251) as u8).collect();
     std::fs::write(root.join("source.bin"), bytes)?;
-    let mut video = approve_capture(&mut host_ipc, &mut source_ipc, &fixture.source).await?;
-    frame(&mut video).await?;
-    actual_file(
+    let mut video = phase!("initial display approval", approve_capture(&mut host_ipc, &mut source_ipc, &fixture.source));
+    phase!("initial original pixels", frame(&mut video));
+    phase!("initial actual file", actual_file(
         &mut host_ipc,
         &mut source_ipc,
         &root,
         &destination,
         "first.bin",
-    )
-    .await?;
+    ));
     let spent = snapshot(&mut source_ipc)
         .await?
         .native_offline
@@ -408,9 +423,9 @@ async fn data_and_rebuild(transport: &str) -> Result {
     } else {
         drop(tokio::net::TcpListener::bind(peer).await?);
     }
-    start(&mut source, &mut host).await?;
-    let mut source_ipc = connected(&fixture.source).await?;
-    let mut host_ipc = connected(&fixture.host).await?;
+    phase!("rebuilt direct establishment", start(&mut source, &mut host));
+    let mut source_ipc = phase!("rebuilt controller IPC", connected(&fixture.source));
+    let mut host_ipc = phase!("rebuilt host IPC", connected(&fixture.host));
     assert_eq!(source_ipc.runtime_id(), runtime);
     let fresh = snapshot(&mut source_ipc).await?;
     assert!(fresh.generation > old.generation);
@@ -435,16 +450,15 @@ async fn data_and_rebuild(transport: &str) -> Result {
             reason: Rejection::StaleGeneration
         }
     ));
-    let mut video = approve_capture(&mut host_ipc, &mut source_ipc, &fixture.source).await?;
-    frame(&mut video).await?;
-    actual_file(
+    let mut video = phase!("rebuilt display approval", approve_capture(&mut host_ipc, &mut source_ipc, &fixture.source));
+    phase!("rebuilt original pixels", frame(&mut video));
+    phase!("rebuilt actual file", actual_file(
         &mut host_ipc,
         &mut source_ipc,
         &root,
         &destination,
         "second.bin",
-    )
-    .await?;
+    ));
     assert!(
         snapshot(&mut source_ipc)
             .await?

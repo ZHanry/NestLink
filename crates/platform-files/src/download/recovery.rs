@@ -514,14 +514,20 @@ impl DownloadRecoveryStore {
         let bytes = encode(ledger)?;
         let mut create = options(true);
         create.create_new(true);
-        let mut file = self.directory.open_with(PENDING, &create)?;
-        file.write_all(&bytes)?;
-        file.sync_all()?;
+        let mut file = self.directory.open_with(PENDING, &create)
+            .inspect_err(|error| storage_error("journal.create_pending", error))?;
+        file.write_all(&bytes)
+            .inspect_err(|error| storage_error("journal.write_pending", error))?;
+        file.sync_all()
+            .inspect_err(|error| storage_error("journal.sync_pending", error))?;
         drop(file);
-        self.directory.rename(PENDING, &self.directory, LEDGER)?;
+        self.directory.rename(PENDING, &self.directory, LEDGER)
+            .inspect_err(|error| storage_error("journal.rename_pending", error))?;
         self.directory
-            .open_with(LEDGER, &options(true))?
-            .sync_all()?;
+            .open_with(LEDGER, &options(true))
+            .inspect_err(|error| storage_error("journal.open_committed", error))?
+            .sync_all()
+            .inspect_err(|error| storage_error("journal.sync_committed", error))?;
         sync_directory(&self.directory)?;
         Ok(())
     }
@@ -1208,7 +1214,10 @@ impl PersistentDestination {
             .as_mut()
             .ok_or_else(|| invalid("persistent destination was not opened"))
     }
-    fn record_error(&self, result: &io::Result<()>) {
+    fn record_error(&self, stage: &'static str, result: &io::Result<()>) {
+        if let Err(error) = result {
+            storage_error(stage, error);
+        }
         if self.registered
             && let Err(error) = result
         {
@@ -1317,7 +1326,7 @@ impl FileDestination for PersistentDestination {
                 open_directory(
                     area.parent()
                         .ok_or_else(|| invalid("missing local area parent"))?,
-                )?;
+                ).inspect_err(|error| storage_error("prepare.open_parent", error))?;
                 self.disk = Some(disk);
                 self.disk()?.prepare(authorized)?;
                 let disk = self.disk()?;
@@ -1335,7 +1344,8 @@ impl FileDestination for PersistentDestination {
                         .ok_or_else(|| invalid("missing prepared file"))?
                         .metadata()?,
                 );
-                let area_actual = open_directory(&area)?;
+                let area_actual = open_directory(&area)
+                    .inspect_err(|error| storage_error("prepare.reopen_area", error))?;
                 if !directory_id.matches(&area_actual.dir_metadata()?) {
                     return Err(invalid("prepared directory pathname changed"));
                 }
@@ -1403,7 +1413,7 @@ impl FileDestination for PersistentDestination {
                 check(&self.selection.consent, authorized)
             }
         })();
-        self.record_error(&result);
+        self.record_error("prepare", &result);
         result
     }
     fn write(
@@ -1416,7 +1426,7 @@ impl FileDestination for PersistentDestination {
             self.disk()?.write_chunk(source, chunk, authorized)?;
             self.checkpoint(Stage::Staged, authorized)
         })();
-        self.record_error(&result);
+        self.record_error("write", &result);
         result
     }
     fn resume(
@@ -1431,7 +1441,7 @@ impl FileDestination for PersistentDestination {
             self.disk()?.resume(source, authorized)?;
             self.checkpoint(Stage::Staged, authorized)
         })();
-        self.record_error(&result);
+        self.record_error("resume", &result);
         result
     }
     fn finish(
@@ -1450,10 +1460,15 @@ impl FileDestination for PersistentDestination {
                     .cloned()
                     .ok_or_else(|| invalid("publication record disappeared"))?
             };
-            let directory = open_area(&record)?;
-            verify_temporary(&directory, &record, false)?;
+            let directory = open_area(&record)
+                .inspect_err(|error| storage_error("finish.reopen_area", error))?;
+            verify_temporary(&directory, &record, false)
+                .inspect_err(|error| storage_error("finish.verify_temporary", error))?;
             self.disk()?.finish(source, authorized).map(|_| ())
         })();
+        if let Err(error) = &result {
+            storage_error("finish", error);
+        }
         let status = self.status();
         // Record actual publication even if authorization changed after the OS
         // link call. Never falsely erase the completed local object.
