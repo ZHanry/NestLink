@@ -47,9 +47,10 @@ impl VideoPresentation {
             || state.execution.as_ref().map(|value| value.identity()).transpose()? != Some(crate::LiveExecutionIdentity::Hevc(identity))
         { return Err(io::Error::other("original shared consumer context differs")); }
         let hardware = self.decoder_hardware_target()?;
-        self.output.shared_claimed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-            .map_err(|_| io::Error::other("original shared output already claimed"))?;
+        let mut claim=self.output.shared_claim.lock().map_err(|_| io::Error::other("shared consumer poisoned"))?;
+        if claim.as_ref().is_some_and(|previous| !previous.retired_joined()) {return Err(io::Error::other("previous original shared consumer has not retired and joined"));}
         self.output.advance_consumer()?;
+        *claim=Some(execution.clone());
         state.scheduled.clear(); state.videos.clear(); state.ready.clear();
         let revision = self.output.consumer_revision.load(Ordering::Acquire);
         let context = crate::external::VideoSinkContext {
@@ -64,7 +65,7 @@ impl VideoPresentation {
             layout_epoch: selection.display.layout_epoch,
             decode_epoch: identity.generation(), configuration_id: selection.format_epoch,
         };
-        drop(state); drop(external);
+        drop(claim); drop(state); drop(external);
         Ok(SharedVideoConsumer {presentation:self.clone(), execution, context, selection, revision, ring:None})
     }
 }

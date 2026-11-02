@@ -119,7 +119,7 @@ pub struct SharedVideoClient {
     ring:nestlink_app_core::TransferredSurfaceRing,
 }
 impl SharedVideoClient {
-    pub async fn open(directory:&Path,binding:NativeVideoBinding) -> Result<Self,Error> {
+    pub async fn open(directory:&Path,binding:NativeVideoBinding) -> Result<Option<Self>,Error> {
         let mut connection = LocalStream::connect(directory).await?;
         let peer = connection.verified_peer_process()?;
         if peer.runtime_id() != binding.runtime_id || connection.runtime_id() != binding.runtime_id {return Err(Error::Protocol);}
@@ -129,12 +129,16 @@ impl SharedVideoClient {
         if response.version != nestlink_local_ipc::VERSION || response.runtime_id != binding.runtime_id || response.sequence != 1 || response.snapshot.generation != binding.ui_generation
             || response.snapshot.native_session.data.as_ref().is_none_or(|session| session.status != nestlink_app_core::NativeSessionStatus::Connected || session.request_id != binding.request_id || session.connection_generation != binding.connection_generation)
         {return Err(Error::Protocol);}
-        let Reply::SharedVideoOpened {context} = response.result else {return Err(Error::Protocol);};
+        let context=match response.result {
+            Reply::SharedVideoPreparing=>return Ok(None),
+            Reply::SharedVideoOpened {context}=>context,
+            _=>return Err(Error::Protocol),
+        };
         context.validate()?;
         if context.binding() != binding || context.qpc_frequency != qpc()?.1 {return Err(Error::Protocol);}
         peer.check_current()?;
         let ring = nestlink_app_core::TransferredSurfaceRing::from_authenticated_peer(context.native_ring()?,peer.export_target()?).map_err(|_| Error::Protocol)?;
-        Ok(Self {connection,context,peer,active:Arc::new(AtomicBool::new(true)),last_sequence:0,last_pts:0,last_token:0,last_keys:[0;3],authority_sequence:0,ring})
+        Ok(Some(Self {connection,context,peer,active:Arc::new(AtomicBool::new(true)),last_sequence:0,last_pts:0,last_token:0,last_keys:[0;3],authority_sequence:0,ring}))
     }
     pub fn ring(&self) -> nestlink_app_core::TransferredSurfaceRing {self.ring.clone()}
     pub async fn receive(&mut self) -> Result<SharedVideoMessage,Error> {

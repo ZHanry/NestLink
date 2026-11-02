@@ -3,7 +3,7 @@
 #![allow(unsafe_code)]
 use crate::{VideoConfig, windows_mf::Transform};
 use nestlink_platform_security::local_stream::VerifiedProcessExportTarget;
-use std::{ffi::c_void, io, os::windows::io::{AsRawHandle,FromRawHandle,OwnedHandle}, sync::{Arc, atomic::{AtomicBool, AtomicU8, Ordering}}};
+use std::{collections::BTreeMap,ffi::c_void, io, os::windows::io::{AsRawHandle,FromRawHandle,OwnedHandle}, sync::{Arc,Mutex,OnceLock,Weak, atomic::{AtomicBool, AtomicU8, Ordering}}};
 use sha2::{Digest, Sha256};
 
 #[repr(C)]
@@ -152,6 +152,27 @@ struct TransferredRingOwner {
     _handles:[OwnedHandle;3],
     peer:VerifiedProcessExportTarget,
 }
+// Tombstones remain for this desktop process lifetime. An old ring identifier
+// can never cause a closed numeric handle to be adopted again after ABA reuse.
+struct TransferClaims<T> {entries:BTreeMap<[u8;16],Weak<T>>}
+impl<T> TransferClaims<T> {
+    fn new()->Self {Self {entries:BTreeMap::new()}}
+    fn find(&self,id:[u8;16])->io::Result<Option<Arc<T>>> {
+        match self.entries.get(&id) {
+            None=>Ok(None),
+            Some(owner)=>owner.upgrade().map(Some).ok_or_else(|| io::Error::other("destination ring already retired; numeric handles cannot be readopted")),
+        }
+    }
+    fn insert(&mut self,id:[u8;16],owner:&Arc<T>)->io::Result<()> {
+        if self.entries.contains_key(&id) || self.entries.len()>=4096 {return Err(io::Error::other("destination ring identity already claimed or process ledger exhausted"));}
+        self.entries.insert(id,Arc::downgrade(owner));
+        Ok(())
+    }
+}
+fn transfer_claims()->&'static Mutex<TransferClaims<TransferredRingOwner>> {
+    static CLAIMS:OnceLock<Mutex<TransferClaims<TransferredRingOwner>>>=OnceLock::new();
+    CLAIMS.get_or_init(|| Mutex::new(TransferClaims::new()))
+}
 /// Destination-owned NT handles received once over the authenticated native
 /// connection. Clones retain the same handles; no serialized execution proof.
 #[derive(Clone)]
@@ -162,14 +183,47 @@ impl TransferredSurfaceRing {
     pub fn from_authenticated_peer(descriptor:SharedRingDescriptor,peer:VerifiedProcessExportTarget)->io::Result<Self> {
         peer.check_current()?;
         descriptor.validate(VideoConfig {width:descriptor.width,height:descriptor.height,fps:1,bitrate_kbps:64})?;
+        let mut claims=transfer_claims().lock().map_err(|_| io::Error::other("destination ring ownership poisoned"))?;
+        if let Some(existing)=claims.find(descriptor.ring_id)? {
+            if existing.descriptor!=descriptor {return Err(io::Error::other("destination ring identity changed native handles"));}
+            existing.peer.check_current()?;
+            return Ok(Self(existing));
+        }
+        if claims.entries.values().filter_map(Weak::upgrade).any(|owner| owner.descriptor.handles.iter().any(|handle| descriptor.handles.contains(handle))) {
+            return Err(io::Error::other("destination numeric handle already belongs to another live ring"));
+        }
+        if claims.entries.len()>=4096 {return Err(io::Error::other("destination ring process ledger exhausted"));}
         // SAFETY: the native TLS producer duplicated these distinct NT handles
         // into this process. The authenticated consumer calls this once; Arc
         // clones, never a second numeric adoption, retain their ownership.
         let handles=descriptor.handles.map(|handle| unsafe {OwnedHandle::from_raw_handle(handle as usize as *mut c_void)});
         let owner=Self(Arc::new(TransferredRingOwner {descriptor,_handles:handles,peer}));
+        claims.insert(descriptor.ring_id,&owner.0)?;
+        drop(claims);
         owner.check_current()?;
         Ok(owner)
     }
     pub fn descriptor(&self)->SharedRingDescriptor {self.0.descriptor}
     pub fn check_current(&self)->io::Result<()> {self.0.peer.check_current()}
+}
+
+#[cfg(test)]
+mod transfer_claim_tests {
+    use super::*;
+    #[test]
+    fn destination_claim_retains_one_owner_and_tombstones_closed_numeric_handles()->io::Result<()> {
+        // Ownership-ledger test only. No GPU handle, surface or native decoder
+        // receipt is constructed by this non-hardware lifecycle fixture.
+        let mut claims=TransferClaims::new();
+        let original=Arc::new(1u8);
+        claims.insert([1;16],&original)?;
+        let same=claims.find([1;16])?.ok_or_else(|| io::Error::other("missing live claim"))?;
+        assert!(Arc::ptr_eq(&original,&same));
+        assert!(claims.insert([1;16],&Arc::new(2)).is_err());
+        drop(same);drop(original);
+        assert!(claims.find([1;16]).is_err());
+        assert!(claims.insert([1;16],&Arc::new(3)).is_err());
+        assert!(claims.find([2;16])?.is_none());
+        Ok(())
+    }
 }

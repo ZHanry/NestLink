@@ -228,6 +228,7 @@ pub enum Reply {
     SharedVideoOpened {
         context: crate::shared_video::SharedVideoContext,
     },
+    SharedVideoPreparing,
     CompressedVideoOpened {
         context: crate::compressed_video::CompressedContext,
         ticket: [u8; 32],

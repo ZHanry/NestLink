@@ -279,7 +279,7 @@ impl DesktopApp {
                         }
                     }
                     Event::Failed(error) => {
-                        eprintln!("NestLink GPU presenter fallback: {error}");
+                        eprintln!("NestLink GPU presentation failed: {error}");
                         failed = true;
                     }
                     Event::Exited => {

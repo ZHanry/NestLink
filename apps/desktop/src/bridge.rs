@@ -1233,7 +1233,15 @@ async fn run_shared_session(
 )->bool {
     use nestlink_app_ipc::shared_video::{SharedVideoClient,SharedVideoMessage};
     let binding=NativeVideoBinding {runtime_id:target.runtime_id.clone(),ui_generation:target.ui_generation,request_id:target.request_id.clone(),connection_generation:target.connection_generation,source:target.source};
-    let Ok(mut client)=SharedVideoClient::open(directory,binding).await else {return false;};
+    let prepare_deadline=tokio::time::Instant::now()+Duration::from_secs(2);
+    let mut client=loop {
+        if *stopped.borrow() || !*shared.enabled.borrow() || video_target(snapshot,runtime_id,*interested.borrow(),displays).as_ref()!=Some(target) {return true;}
+        match SharedVideoClient::open(directory,binding.clone()).await {
+            Ok(Some(client))=>break client,
+            Ok(None) if tokio::time::Instant::now()<prepare_deadline=>tokio::time::sleep(Duration::from_millis(25)).await,
+            _=>return false,
+        }
+    };
     let original=client.context.clone();
     let ring=client.ring();
     let mut prepared=false;

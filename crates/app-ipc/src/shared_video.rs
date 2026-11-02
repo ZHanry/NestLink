@@ -158,4 +158,27 @@ mod tests {
         assert!(serde_json::from_value::<SharedFrameDescriptor>(unknown).is_err());
         Ok(())
     }
+    #[tokio::test]
+    async fn native_tls_shared_open_requires_live_view_and_exact_ui_before_any_handle_export()->TestResult {
+        use crate::wire::{Command,Reply,Rejection};
+        use nestlink_app_core::{AppCore,Limits,ShutdownState};
+        use std::{sync::Arc,time::Duration};
+        let temporary=tempfile::tempdir()?;
+        let directory=temporary.path().join("shared-owner");
+        let daemon=Arc::new(nestlink_local_ipc::LocalServer::bind(&directory).await?);
+        let mut core=AppCore::start(Limits::default())?;
+        let handle=core.handle();let generation=handle.snapshot().generation;
+        let (client,accepted)=tokio::join!(crate::Client::connect(&directory),async {daemon.accept().await?.authenticate().await});
+        let mut client=client?;let accepted=accepted?;
+        let (exit,_requests)=tokio::sync::mpsc::channel(1);
+        let task=tokio::spawn(crate::serve(accepted,handle,exit));
+        let open=|| Command::OpenNativeSharedVideo {request_id:"00000000-0000-4000-8000-000000000002".into(),connection_generation:1,source:0};
+        assert!(matches!(client.request(generation+1,open()).await?.result,Reply::Rejected {reason:Rejection::StaleGeneration}));
+        assert!(matches!(client.request(generation,open()).await?.result,Reply::Rejected {reason:Rejection::Invalid}));
+        assert!(matches!(client.request(generation,Command::Snapshot).await?.result,Reply::Snapshot));
+        drop(client);daemon.stop();
+        let _=tokio::time::timeout(Duration::from_secs(2),task).await??;
+        assert_eq!(core.shutdown(Duration::from_secs(2)).await,ShutdownState::Complete);
+        Ok(())
+    }
 }

@@ -303,7 +303,7 @@ enum DecoderReadiness {
 }
 struct Output {
     #[cfg(windows)]
-    shared_claimed: std::sync::atomic::AtomicBool,
+    shared_claim: Mutex<Option<nestlink_media_codec::HevcExecutionReceipt>>,
     consumer_revision: std::sync::atomic::AtomicU64,
     external: Mutex<Option<crate::external::ExternalSink>>,
     playout: Option<crate::SessionPlayoutClock>,
@@ -345,7 +345,7 @@ impl Output {
         let (prepared, _) = watch::channel(DecoderReadiness::Unprepared);
         Arc::new(Self {
             #[cfg(windows)]
-            shared_claimed: std::sync::atomic::AtomicBool::new(false),
+            shared_claim: Mutex::new(None),
             consumer_revision: std::sync::atomic::AtomicU64::new(1),
             external: Mutex::new(None),
             playout,
@@ -1130,8 +1130,12 @@ impl VideoPresentation {
             .lock()
             .map_err(|_| io::Error::other("media output poisoned"))?;
         #[cfg(windows)]
-        if self.output.shared_claimed.load(std::sync::atomic::Ordering::Acquire) != shared_consumer {
-            return Err(io::Error::other("original shared surface consumer exclusively owns this output"));
+        {
+            let claim=self.output.shared_claim.lock().map_err(|_| io::Error::other("shared consumer poisoned"))?;
+            let reserved=claim.as_ref().is_some_and(|execution| !execution.retired_joined());
+            if reserved != shared_consumer {
+                return Err(io::Error::other("original shared surface consumer exclusively owns this output"));
+            }
         }
         if state.closed {
             return Err(io::Error::new(

@@ -465,13 +465,17 @@ async fn serve_requests(
                     #[cfg(windows)]
                     {
                         let binding = NativeVideoBinding {runtime_id:connection.runtime_id().to_owned(), ui_generation:request.expected_generation, request_id, connection_generation, source};
-                        match shared_video::open(&connection, &core, binding).await {
+                        let session=nestlink_app_core::NativeSessionBinding {request_id:binding.request_id.clone(),connection_generation:binding.connection_generation};
+                        let preparing=video::video_binding_is_live(&core,&binding)
+                            && core.native_video_formats(&session).ok().flatten().is_some_and(|formats| formats.formats().iter().any(|format| format.codec==nestlink_protocol::media_format::Codec::Hevc))
+                            && core.native_confirmed_video_format(&session).ok().flatten().is_none();
+                        if preparing {Reply::SharedVideoPreparing} else {match shared_video::open(&connection, &core, binding).await {
                             Ok((context, consumer)) => {
                                 shared_video_stream = Some((context.clone(), consumer));
                                 Reply::SharedVideoOpened {context}
                             }
                             Err(_) => Reply::Rejected {reason:Rejection::Invalid},
-                        }
+                        }}
                     }
                     #[cfg(not(windows))]
                     { let _ = (request_id, connection_generation, source); Reply::Rejected {reason:Rejection::Invalid} }

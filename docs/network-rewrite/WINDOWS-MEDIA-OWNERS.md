@@ -105,14 +105,20 @@ presentation and target-conversion additions after that source require their own
 new exact-source results. None of these hosted boundary tests constitutes actual
 physical GPU or independent target acceptance.
 
-W33 production integration remains incomplete. The daemon native producer and
-wire codec selection, app-core live format/generation registry, media receiver
-and desktop compressed consumer still route executable product media through
-their existing H264/VP8 paths. The current H264 IPC context explicitly rejects
-an HEVC descriptor even though its canonical byte container can preserve v3.
-The new HEVC owners are not permission to bypass that failure. Product routing
-must connect original live owners, signed exact format ACKs, epochs and renewal
-fences before HEVC is enabled. `PRODUCTION_ISSUANCE_ENABLED` remains false. Main10,
-4:4:4/HDR, physical GPU/driver fallback, sustained 1080p60, scanout and independent
-target evidence are still required. No closed probe, wrapper rename or codec
-enum switch closes those implementation or acceptance requirements.
+Subsequent source now connects the explicit Main8 provider, real daemon capture
+and encode owner, exact v3 media authority/ACK/NLMF registry, original hardware
+receive owner, native-TLS destination process export and desktop shared NV12
+import/presentation. The desktop shared route opens no independent HEVC decoder;
+its GPU consumption/submission receipt stays separate from the original daemon
+decode receipt. See [the exact ownership and remaining-work record](gpu-shared-surface-owner.md).
+The earlier hosted result above predates this route and does not validate it.
+
+W33 remains incomplete in source: Main10/P010, real 4:4:4 resources, HDR capture/
+transfer/output metadata, the 4K/144Hz/fractional target matrix and executable
+per-combination fallback are not implemented by the Main8/420/eight-bit SDR
+entry. That entry is capped at 1080p and 1–120 integer FPS by the product provider.
+W32 also retains decoder BGRA readback alongside the new GPU copy, so removing
+that readback is further performance work. Actual cadence, device loss,
+multi-adapter/display/DPI switching, input and concurrent workloads still need
+same-source physical execution. `PRODUCTION_ISSUANCE_ENABLED` remains false.
+These implementation gaps and acceptance gaps must remain distinct.

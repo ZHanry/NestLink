@@ -2,6 +2,7 @@
 // slot: only the actual DXGI keyed mutex returning its consumption key does.
 #pragma once
 #include "shared_surface_abi.h"
+#include "shared_ring_retirement.h"
 class SharedDecodeRing {
     struct Slot {
         ComPtr<ID3D11Texture2D> texture;
@@ -20,6 +21,7 @@ class SharedDecodeRing {
     uint64_t issued=0;
     bool failed=false;
     bool descriptor_committed=false;
+    size_t cleanup_index=8;
     NlSharedRingDescriptor descriptor{};
     HRESULT refresh(Slot& slot) {
         if(!slot.pending)return S_OK;
@@ -42,6 +44,13 @@ public:
             if(DuplicateHandle(peer,reinterpret_cast<HANDLE>(static_cast<uintptr_t>(value)),GetCurrentProcess(),
                 &reclaimed,0,FALSE,DUPLICATE_CLOSE_SOURCE|DUPLICATE_SAME_ACCESS))CloseHandle(reclaimed);
         }
+        if(cleanup_index<8) {
+            if(descriptor_committed) {
+                std::array<HANDLE,3> retained{};std::array<uint64_t,3> remote{};
+                for(size_t index=0;index<slots.size();++index){retained[index]=slots[index].source;slots[index].source=nullptr;remote[index]=descriptor.handles[index];}
+                SharedRingRetirementLedger::instance().retire(cleanup_index,retained,remote);
+            } else SharedRingRetirementLedger::instance().abandon(cleanup_index);
+        }
         if(peer)CloseHandle(peer);
     }
     HRESULT current() {
@@ -58,6 +67,7 @@ public:
             return E_INVALIDARG;
         if(!DuplicateHandle(GetCurrentProcess(),destination,GetCurrentProcess(),&peer,0,FALSE,DUPLICATE_SAME_ACCESS))
             return HRESULT_FROM_WIN32(GetLastError());
+        HRESULT reserved=SharedRingRetirementLedger::instance().reserve(peer,&cleanup_index);if(FAILED(reserved))return reserved;
         device=original;context=original_context;
         HRESULT hr=current();if(FAILED(hr))return hr;
         GUID ring{};hr=CoCreateGuid(&ring);if(FAILED(hr))return hr;
