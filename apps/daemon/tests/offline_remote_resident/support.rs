@@ -558,6 +558,14 @@ impl Fixture {
         self.server = Some(Server::start(listener, router));
         Ok(self.requests.load(Ordering::Acquire))
     }
+    pub async fn finish(mut self) -> Result {
+        self.offline().await?;
+        if self._tunnel.try_wait()?.is_none() {
+            self._tunnel.kill().await?;
+        }
+        let _ = self._tunnel.wait().await?;
+        Ok(())
+    }
 }
 pub struct Resident {
     child: Child,

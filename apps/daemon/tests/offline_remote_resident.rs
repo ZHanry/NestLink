@@ -477,6 +477,7 @@ async fn data_and_rebuild(transport: &str) -> Result {
     } else {
         drop(tokio::net::TcpListener::bind(peer).await?);
     }
+    fixture.finish().await?;
     platform.shutdown().await;
     Ok(())
 }
@@ -567,6 +568,7 @@ async fn management_commands_fence_delivery_before_success_or_failed_http_and_ne
             .await?;
         source.finish(false).await?;
         host.finish(false).await?;
+        fixture.finish().await?;
     }
     platform.shutdown().await;
     Ok(())
@@ -628,6 +630,7 @@ async fn pending_original_listener_eof_stop_logout_and_identity_change_join_actu
         } else {
             drop(tokio::net::TcpListener::bind(peer).await?);
         }
+        fixture.finish().await?;
     }
     platform.shutdown().await;
     Ok(())
