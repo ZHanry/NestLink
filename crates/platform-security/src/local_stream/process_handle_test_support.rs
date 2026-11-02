@@ -24,10 +24,16 @@ pub fn duplicate_file(file: &File, target: &VerifiedProcessExportTarget) -> io::
         // for this synchronous operation. The child receives the new handle.
         if unsafe {
             DuplicateHandle(
-                GetCurrentProcess(), file.as_raw_handle(), process.as_raw_handle(),
-                &mut duplicate, 0, 0, DUPLICATE_SAME_ACCESS,
+                GetCurrentProcess(),
+                file.as_raw_handle(),
+                process.as_raw_handle(),
+                &mut duplicate,
+                0,
+                0,
+                DUPLICATE_SAME_ACCESS,
             )
-        } == 0 {
+        } == 0
+        {
             return Err(io::Error::last_os_error());
         }
         Ok(duplicate as usize as u64)
@@ -50,8 +56,10 @@ pub fn read_file_once(handle: u64) -> io::Result<String> {
         return Err(io::Error::other("fixture export is not a disk file"));
     }
     {
-        let mut consumed = CONSUMED.get_or_init(|| Mutex::new(HashSet::new()))
-            .lock().map_err(|_| io::Error::other("fixture ownership poisoned"))?;
+        let mut consumed = CONSUMED
+            .get_or_init(|| Mutex::new(HashSet::new()))
+            .lock()
+            .map_err(|_| io::Error::other("fixture ownership poisoned"))?;
         if consumed.len() >= 16 || !consumed.insert(handle) {
             return Err(io::Error::other("fixture handle already consumed or full"));
         }
@@ -60,7 +68,9 @@ pub fn read_file_once(handle: u64) -> io::Result<String> {
     impl Drop for Original {
         fn drop(&mut self) {
             // SAFETY: this once-claimed original export belongs to this child.
-            unsafe { CloseHandle(self.0); }
+            unsafe {
+                CloseHandle(self.0);
+            }
         }
     }
     let original = Original(raw);
@@ -76,8 +86,16 @@ pub fn read_file_once(handle: u64) -> io::Result<String> {
     let mut read = 0;
     // SAFETY: bytes is a live initialized allocation of the exact bounded
     // requested size. Synchronous ReadFile receives no OVERLAPPED pointer.
-    if unsafe { ReadFile(original.0, bytes.as_mut_ptr(), bytes.len() as u32,
-        &mut read, std::ptr::null_mut()) } == 0 {
+    if unsafe {
+        ReadFile(
+            original.0,
+            bytes.as_mut_ptr(),
+            bytes.len() as u32,
+            &mut read,
+            std::ptr::null_mut(),
+        )
+    } == 0
+    {
         return Err(io::Error::last_os_error());
     }
     if read as usize != bytes.len() {

@@ -7,7 +7,7 @@ use std::{
 };
 type TestResult<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 const CHILD_DIRECTORY: &str = "NESTLINK_NATIVE_TLS_CHILD_DIRECTORY";
-const EXPORTED_CONTENT:&str = "original retained native TLS process export";
+const EXPORTED_CONTENT: &str = "original retained native TLS process export";
 
 use nestlink_platform_security::local_stream::process_handle_test_support as native_handle_fixture;
 struct ChildOwner(Child);
@@ -26,8 +26,8 @@ async fn child_native_tls_process() -> TestResult {
     let mut client = LocalStream::connect(Path::new(&directory)).await?;
     client.verified_peer_process()?.check_current()?;
     client.send(&"native-child-ready").await?;
-    let content=native_handle_fixture::read_file_once(client.receive::<u64>().await?)?;
-    assert_eq!(content,EXPORTED_CONTENT);
+    let content = native_handle_fixture::read_file_once(client.receive::<u64>().await?)?;
+    assert_eq!(content, EXPORTED_CONTENT);
     client.send(&content).await?;
     assert_eq!(client.receive::<String>().await?, "exit-original-child");
     Ok(())
@@ -62,14 +62,14 @@ async fn original_native_tls_peer_is_the_actual_child_and_exit_retires_its_handl
     assert_eq!(original.runtime_id(), daemon.runtime_id());
     assert_eq!(accepted.receive::<String>().await?, "native-child-ready");
     original.check_current()?;
-    let target=original.export_target()?;
-    let mut source=tempfile::NamedTempFile::new()?;
-    std::io::Write::write_all(&mut source,EXPORTED_CONTENT.as_bytes())?;
-    let source=std::fs::File::open(source.path())?;
-    let remote=native_handle_fixture::duplicate_file(&source,&target)?;
+    let target = original.export_target()?;
+    let mut source = tempfile::NamedTempFile::new()?;
+    std::io::Write::write_all(&mut source, EXPORTED_CONTENT.as_bytes())?;
+    let source = std::fs::File::open(source.path())?;
+    let remote = native_handle_fixture::duplicate_file(&source, &target)?;
     drop(source);
     accepted.send(&remote).await?;
-    assert_eq!(accepted.receive::<String>().await?,EXPORTED_CONTENT);
+    assert_eq!(accepted.receive::<String>().await?, EXPORTED_CONTENT);
     accepted.send(&"exit-original-child").await?;
     let status = tokio::time::timeout(Duration::from_secs(5), async {
         loop {
@@ -83,8 +83,15 @@ async fn original_native_tls_peer_is_the_actual_child_and_exit_retires_its_handl
     assert!(status.success());
     assert!(original.check_current().is_err());
     assert!(target.check_current().is_err());
-    let invoked=std::sync::atomic::AtomicBool::new(false);
-    assert!(target.with_process_handle(|_| {invoked.store(true,std::sync::atomic::Ordering::Release);Ok(())}).is_err());
+    let invoked = std::sync::atomic::AtomicBool::new(false);
+    assert!(
+        target
+            .with_process_handle(|_| {
+                invoked.store(true, std::sync::atomic::Ordering::Release);
+                Ok(())
+            })
+            .is_err()
+    );
     assert!(!invoked.load(std::sync::atomic::Ordering::Acquire));
     Ok(())
 }

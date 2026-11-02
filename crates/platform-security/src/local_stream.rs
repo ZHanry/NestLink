@@ -35,11 +35,19 @@ pub struct LocalStream {
 impl LocalStream {
     #[cfg(unix)]
     fn new(stream: impl AsyncRead + AsyncWrite + Unpin + Send + 'static) -> Self {
-        Self { stream: Box::new(stream) }
+        Self {
+            stream: Box::new(stream),
+        }
     }
     #[cfg(windows)]
-    fn with_peer(stream: impl AsyncRead + AsyncWrite + Unpin + Send + 'static, peer: VerifiedPeerProcess) -> Self {
-        Self { stream: Box::new(stream), peer: Some(peer) }
+    fn with_peer(
+        stream: impl AsyncRead + AsyncWrite + Unpin + Send + 'static,
+        peer: VerifiedPeerProcess,
+    ) -> Self {
+        Self {
+            stream: Box::new(stream),
+            peer: Some(peer),
+        }
     }
     /// This proof came from the connected native pipe and shares its lifetime.
     /// It is not available on a TCP transport or constructible from a PID.
@@ -51,7 +59,9 @@ impl LocalStream {
 #[cfg(windows)]
 impl Drop for LocalStream {
     fn drop(&mut self) {
-        if let Some(peer) = &self.peer { peer.fence(); }
+        if let Some(peer) = &self.peer {
+            peer.fence();
+        }
     }
 }
 impl AsyncRead for LocalStream {

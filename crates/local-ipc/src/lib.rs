@@ -14,12 +14,12 @@ pub mod instance;
 pub mod maintenance;
 mod state;
 mod transport;
-use transport::LocalTransport;
 pub use duplex::{LocalDuplexOwner, LocalRead, LocalWrite};
-#[cfg(test)]
-mod tests;
+use transport::LocalTransport;
 #[cfg(all(test, windows))]
 mod process_tests;
+#[cfg(test)]
+mod tests;
 pub use state::initialize_directory;
 
 pub const VERSION: u16 = 1;
@@ -101,7 +101,8 @@ impl LocalServer {
         tls.alpn_protocols = vec![ALPN.to_vec()];
         let listener = TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).await?;
         #[cfg(windows)]
-        let native = nestlink_platform_security::local_stream::Listener::bind(directory, &runtime_id)?;
+        let native =
+            nestlink_platform_security::local_stream::Listener::bind(directory, &runtime_id)?;
         state.publish(listener.local_addr()?)?;
         let (stopped, _) = watch::channel(false);
         Ok(Self {
@@ -213,17 +214,31 @@ pub struct VerifiedLocalPeer {
 }
 #[cfg(windows)]
 impl VerifiedLocalPeer {
-    pub fn process_id(&self) -> u32 { self.process.process_id() }
-    pub fn runtime_id(&self) -> &str { &self.runtime_id }
-    pub fn export_target(&self) -> Result<nestlink_platform_security::local_stream::VerifiedProcessExportTarget> {
+    pub fn process_id(&self) -> u32 {
+        self.process.process_id()
+    }
+    pub fn runtime_id(&self) -> &str {
+        &self.runtime_id
+    }
+    pub fn export_target(
+        &self,
+    ) -> Result<nestlink_platform_security::local_stream::VerifiedProcessExportTarget> {
         self.check_current()?;
-        self.process.export_target().map_err(|_| Error::Authentication)
+        self.process
+            .export_target()
+            .map_err(|_| Error::Authentication)
     }
     pub fn check_current(&self) -> Result<()> {
-        if self.stopped.as_ref().is_some_and(|stopped| *stopped.borrow() || stopped.has_changed().is_err()) {
+        if self
+            .stopped
+            .as_ref()
+            .is_some_and(|stopped| *stopped.borrow() || stopped.has_changed().is_err())
+        {
             return Err(Error::Stopped);
         }
-        self.process.check_current().map_err(|_| Error::Authentication)
+        self.process
+            .check_current()
+            .map_err(|_| Error::Authentication)
     }
 }
 impl LocalStream {
@@ -274,10 +289,21 @@ impl LocalStream {
     /// native pipe. TCP compatibility connections cannot mint process proof.
     #[cfg(windows)]
     pub fn verified_peer_process(&self) -> Result<VerifiedLocalPeer> {
-        if self.failed { return Err(Error::Stopped); }
-        let proof = self.stream.get_ref().0.verified_peer_process().ok_or(Error::Authentication)?;
+        if self.failed {
+            return Err(Error::Stopped);
+        }
+        let proof = self
+            .stream
+            .get_ref()
+            .0
+            .verified_peer_process()
+            .ok_or(Error::Authentication)?;
         proof.check_current().map_err(|_| Error::Authentication)?;
-        Ok(VerifiedLocalPeer { process: proof, runtime_id: self.runtime_id.clone(), stopped: self.stopped.clone() })
+        Ok(VerifiedLocalPeer {
+            process: proof,
+            runtime_id: self.runtime_id.clone(),
+            stopped: self.stopped.clone(),
+        })
     }
     pub async fn send<T: Serialize>(&mut self, value: &T) -> Result<()> {
         if self.failed || self.binary_mode {

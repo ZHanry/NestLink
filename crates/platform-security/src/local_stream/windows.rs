@@ -2,24 +2,36 @@
 //! OS-reported peer token policy. No broker input capability or elevation.
 #![allow(unsafe_code)]
 use super::*;
-use std::{ffi::c_void, mem::size_of, os::windows::io::{AsHandle, AsRawHandle, BorrowedHandle, FromRawHandle, OwnedHandle}, ptr::null_mut, sync::{Arc, atomic::{AtomicBool, Ordering}}, time::Duration};
+use std::{
+    ffi::c_void,
+    mem::size_of,
+    os::windows::io::{AsHandle, AsRawHandle, BorrowedHandle, FromRawHandle, OwnedHandle},
+    ptr::null_mut,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::Duration,
+};
 use tokio::net::windows::named_pipe::{ClientOptions, NamedPipeServer, ServerOptions};
 use windows_sys::Win32::{
     Foundation::{
-        CloseHandle, ERROR_INSUFFICIENT_BUFFER, ERROR_PIPE_BUSY, GetLastError, HANDLE, LocalFree, WAIT_TIMEOUT,
+        CloseHandle, ERROR_INSUFFICIENT_BUFFER, ERROR_PIPE_BUSY, GetLastError, HANDLE, LocalFree,
+        WAIT_TIMEOUT,
     },
     Security::{
         Authorization::{
             ConvertSidToStringSidW, ConvertStringSecurityDescriptorToSecurityDescriptorW,
             SDDL_REVISION_1,
         },
-        GetTokenInformation, IsValidSid, SECURITY_ATTRIBUTES, TOKEN_QUERY, TOKEN_USER, TOKEN_STATISTICS,
-        TokenSessionId, TokenUser, TokenStatistics,
+        GetTokenInformation, IsValidSid, SECURITY_ATTRIBUTES, TOKEN_QUERY, TOKEN_STATISTICS,
+        TOKEN_USER, TokenSessionId, TokenStatistics, TokenUser,
     },
     System::{
         Pipes::{GetNamedPipeClientProcessId, GetNamedPipeServerProcessId},
         Threading::{
-            GetCurrentProcess, GetProcessId, OpenProcess, OpenProcessToken, WaitForSingleObject, PROCESS_DUP_HANDLE, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SYNCHRONIZE,
+            GetCurrentProcess, GetProcessId, OpenProcess, OpenProcessToken, PROCESS_DUP_HANDLE,
+            PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SYNCHRONIZE, WaitForSingleObject,
         },
     },
 };
@@ -65,8 +77,13 @@ pub struct VerifiedPeerProcess(Arc<PeerState>);
 #[derive(Clone)]
 pub struct VerifiedProcessExportTarget(VerifiedPeerProcess);
 impl VerifiedProcessExportTarget {
-    pub fn check_current(&self) -> io::Result<()> { self.0.check_current() }
-    pub fn with_process_handle<T>(&self, operation: impl FnOnce(BorrowedHandle<'_>) -> io::Result<T>) -> io::Result<T> {
+    pub fn check_current(&self) -> io::Result<()> {
+        self.0.check_current()
+    }
+    pub fn with_process_handle<T>(
+        &self,
+        operation: impl FnOnce(BorrowedHandle<'_>) -> io::Result<T>,
+    ) -> io::Result<T> {
         self.check_current()?;
         let result = operation(self.0.0.process.as_handle())?;
         self.check_current()?;
@@ -74,21 +91,28 @@ impl VerifiedProcessExportTarget {
     }
 }
 impl VerifiedPeerProcess {
-    pub fn process_id(&self) -> u32 { self.0.pid }
+    pub fn process_id(&self) -> u32 {
+        self.0.pid
+    }
     pub fn export_target(&self) -> io::Result<VerifiedProcessExportTarget> {
         self.check_current()?;
         Ok(VerifiedProcessExportTarget(self.clone()))
     }
     pub fn check_current(&self) -> io::Result<()> {
         if !self.0.active.load(Ordering::Acquire)
-            || unsafe { WaitForSingleObject(self.0.process.as_raw_handle().cast(), 0) } != WAIT_TIMEOUT
+            || unsafe { WaitForSingleObject(self.0.process.as_raw_handle().cast(), 0) }
+                != WAIT_TIMEOUT
             || process_owner(self.0.process.as_raw_handle().cast())? != self.0.owner
-        { return Err(denied()); }
+        {
+            return Err(denied());
+        }
         Ok(())
     }
     /// Retire this original pipe proof and every clone. This cannot create or
     /// extend process authority; TLS framing owners use it on cancellation.
-    pub fn fence(&self) { self.0.active.store(false, Ordering::Release); }
+    pub fn fence(&self) {
+        self.0.active.store(false, Ordering::Release);
+    }
 }
 fn current_owner() -> io::Result<Owner> {
     // SAFETY: GetCurrentProcess is a borrowed pseudo-handle; only the token
@@ -172,10 +196,27 @@ fn process_owner(process: HANDLE) -> io::Result<Owner> {
     let mut length = 0;
     // The authentication LUID distinguishes another logon by the same SID in
     // the same desktop session. It is read from the original process token.
-    if unsafe { GetTokenInformation(token.0, TokenStatistics, (&mut statistics as *mut TOKEN_STATISTICS).cast(), size_of::<TOKEN_STATISTICS>() as u32, &mut length) } == 0
+    if unsafe {
+        GetTokenInformation(
+            token.0,
+            TokenStatistics,
+            (&mut statistics as *mut TOKEN_STATISTICS).cast(),
+            size_of::<TOKEN_STATISTICS>() as u32,
+            &mut length,
+        )
+    } == 0
         || length as usize != size_of::<TOKEN_STATISTICS>()
-    { return Err(denied()); }
-    Ok(Owner { sid, session, authentication_id: (statistics.AuthenticationId.LowPart, statistics.AuthenticationId.HighPart) })
+    {
+        return Err(denied());
+    }
+    Ok(Owner {
+        sid,
+        session,
+        authentication_id: (
+            statistics.AuthenticationId.LowPart,
+            statistics.AuthenticationId.HighPart,
+        ),
+    })
 }
 fn peer_pid(pipe: HANDLE, server: bool) -> io::Result<u32> {
     let mut pid = 0;
@@ -193,17 +234,31 @@ fn peer_pid(pipe: HANDLE, server: bool) -> io::Result<u32> {
 }
 fn peer_process(pipe: HANDLE, server: bool, expected: &Owner) -> io::Result<VerifiedPeerProcess> {
     let pid = peer_pid(pipe, server)?;
-    let process = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_SYNCHRONIZE | PROCESS_DUP_HANDLE, 0, pid) };
+    let process = unsafe {
+        OpenProcess(
+            PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_SYNCHRONIZE | PROCESS_DUP_HANDLE,
+            0,
+            pid,
+        )
+    };
     if process.is_null() {
         return Err(io::Error::last_os_error());
     }
     // SAFETY: OpenProcess succeeded, and this is the sole owned handle.
     let process = unsafe { OwnedHandle::from_raw_handle(process.cast()) };
     let owner = process_owner(process.as_raw_handle().cast())?;
-    if owner != *expected || peer_pid(pipe, server)? != pid || unsafe { GetProcessId(process.as_raw_handle().cast()) } != pid {
+    if owner != *expected
+        || peer_pid(pipe, server)? != pid
+        || unsafe { GetProcessId(process.as_raw_handle().cast()) } != pid
+    {
         return Err(denied());
     }
-    let proof = VerifiedPeerProcess(Arc::new(PeerState { process, pid, owner, active: AtomicBool::new(true) }));
+    let proof = VerifiedPeerProcess(Arc::new(PeerState {
+        process,
+        pid,
+        owner,
+        active: AtomicBool::new(true),
+    }));
     proof.check_current()?;
     Ok(proof)
 }
@@ -266,7 +321,9 @@ pub struct Listener {
 }
 /// Derive the existing protected-pipe namespace without accepting arbitrary paths.
 pub fn endpoint_for(owner_id: &str) -> io::Result<PathBuf> {
-    if !valid_owner_id(owner_id) { return Err(denied()); }
+    if !valid_owner_id(owner_id) {
+        return Err(denied());
+    }
     Ok(PathBuf::from(format!("{PREFIX}{owner_id}")))
 }
 impl Listener {
@@ -292,7 +349,10 @@ impl Listener {
         pending.connect().await?;
         let peer = match peer_process(pending.as_raw_handle().cast(), true, &self.owner) {
             Ok(peer) => peer,
-            Err(error) => { pending.disconnect()?; return Err(error); }
+            Err(error) => {
+                pending.disconnect()?;
+                return Err(error);
+            }
         };
         // Keep one server instance alive across accepts: another process cannot
         // insert a replacement pipe server between two authenticated clients.
