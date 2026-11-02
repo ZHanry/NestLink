@@ -351,7 +351,11 @@ impl Inner {
         .with_transport_owner(socket);
         Ok(self.runtime(channels, local_address))
     }
-    fn runtime(self: &Arc<Self>, channels: ChannelRuntime, local_address: SocketAddr) -> OfflineRemoteRuntime {
+    fn runtime(
+        self: &Arc<Self>,
+        channels: ChannelRuntime,
+        local_address: SocketAddr,
+    ) -> OfflineRemoteRuntime {
         let owner = self.clone();
         let lease = channels.lease_control();
         let recovery = tokio::spawn(async move {

@@ -1,0 +1,223 @@
+{
+    "schema_version":  1,
+    "repository":  "ZHanry/NestLink",
+    "source_revision":  "55de3cd8debadb3750168144d6aa53ffff27513b",
+    "task_ids":  [
+                     "W27"
+                 ],
+    "whole_task_passed":  false,
+    "release_qualification_claimed":  false,
+    "build_provenance":  {
+                             "job_ids":  [
+                                             124638595887,
+                                             124638596022,
+                                             124638596070
+                                         ],
+                             "cargo_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                             "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41235596155",
+                             "kind":  "github_hosted_actions",
+                             "conclusion":  "success",
+                             "workflow":  ".github/workflows/offline-authority.yml",
+                             "digest_source":  "GitHub Actions API digest; downloaded extracted receipt and every referenced file SHA256 checked independently",
+                             "artifacts":  [
+                                               {
+                                                   "id":  13056096150,
+                                                   "github_artifact_digest":  "sha256:6e03b225fd27d9a31451bc12f776a4bd38af61f869a71160a7051848e1445270"
+                                               },
+                                               {
+                                                   "id":  13055511836,
+                                                   "github_artifact_digest":  "sha256:8fd1653c9e24e0634096b4f97aad769ed9080410595642906f3e73b17636dea6"
+                                               },
+                                               {
+                                                   "id":  13055169427,
+                                                   "github_artifact_digest":  "sha256:4004206bb6ffc5f51b2a8e2c7d9041e3af11aaadffc7e4e1f85dc085ef40ad6a"
+                                               }
+                                           ],
+                             "run_id":  41235596155,
+                             "run_attempt":  1
+                         },
+    "execution_provenance":  {
+                                 "scope":  "Actual two-account HTTP SDK independent offline draft/approval/one-use activation; physical management stop and original online expiry followed by concurrent direct QUIC and explicitly approved mutual TLS1.3 remote View business on original Session queues; Input refusal, both transports permanently charge the same attempts/bytes; memory process stop closes both, rejects fresh connection and releases original UDP endpoints and single-use TCP listener. Existing identity/session, durable SQLite authority and storage, actual private-service QUIC, resident guard, strict SDK/server/daemon checks also passed.",
+                                 "runner":  "ubuntu-24.04",
+                                 "qualified_receipts":  [
+                                                            {
+                                                                "relative_path":  "offline-authority-55de3cd8debadb3750168144d6aa53ffff27513b-1/receipt.json",
+                                                                "sha256":  "285e75a8c1e1718f0e52ec3a034eabad4a43d6f78275c0d425ce748ecc02db8e",
+                                                                "suite":  null,
+                                                                "passed":  true,
+                                                                "tests":  [
+                                                                              "offline::tests::both_endpoint_approvals_bind_the_complete_budget_process_and_authority",
+                                                                              "offline::tests::complete_chain_is_independent_and_unknown_or_missing_sections_fail",
+                                                                              "offline::tests::independent_offline_deadline_and_explicit_operations_cannot_expand",
+                                                                              "offline::tests::original_process_activation_and_cumulative_budget_survive_reconnect_only",
+                                                                              "offline::tests::private_service_pins_original_target_and_has_no_remote_rights",
+                                                                              "offline::tests::recovery_synchronizes_highest_revocation_and_cannot_revive_old_authority",
+                                                                              "offline::tests::rollback_deadline_and_local_exit_are_terminal_for_existing_owners"
+                                                                          ],
+                                                                "executable_sha256":  "14ed21d1a87fa9059477068cb135b235583a8c2d4d7e404e1d1bde4b2cfc9250",
+                                                                "files":  {
+                                                                              "build.jsonl":  "072ca506b48406cefde11ce7efac22e1da2c0e1cd202999e02e94e380035206a",
+                                                                              "build.log":  "a23700dd14a75750854dfc77db274fb827560bd398a9008a999098e95d8be12e",
+                                                                              "inventory.log":  "36ed361317920dcfe1525f4430240250e282b94bddb58c91051c7b710de0741d",
+                                                                              "tests.log":  "384b307c10b167177c33e555f34fbb526888b2f7cca4877deba4074aba10fd4f"
+                                                                          }
+                                                            },
+                                                            {
+                                                                "relative_path":  "offline-authority-55de3cd8debadb3750168144d6aa53ffff27513b-1/remote-identity/receipt.json",
+                                                                "sha256":  "320aaed21b3bb9f13f5a87e1ba7f078135e5cdac9859564ddc24bb1161ec897f",
+                                                                "suite":  "remote-identity",
+                                                                "passed":  true,
+                                                                "tests":  [
+                                                                              "remote_budget::tests::remote_budget_failed_connections_are_permanent_and_file_write_is_separate",
+                                                                              "remote_budget::tests::remote_budget_reverification_clones_and_owner_drop_cannot_reset_spent_bytes",
+                                                                              "remote_budget::tests::remote_budget_wrong_scope_signature_or_same_id_expansion_is_rejected"
+                                                                          ],
+                                                                "executable_sha256":  "14ed21d1a87fa9059477068cb135b235583a8c2d4d7e404e1d1bde4b2cfc9250",
+                                                                "files":  {
+                                                                              "build.jsonl":  "331d76938d8893916ad2b6c727d4b940ee254b892d5fe1a3eadbcffda0f392ef",
+                                                                              "build.log":  "bf26e0222461329e5ae4c0d72c1f2aa08bc0f08500279483deaa583da891f8fe",
+                                                                              "inventory.log":  "638c77199dce75e19fc3ecf2d04f6cffc588d176291a17e29ec9a737fc73f435",
+                                                                              "tests.log":  "255b3f1471622b9063ec86d36d3969d9fbcdd3de5c04ae4e9f9a5fe8b1560280"
+                                                                          }
+                                                            },
+                                                            {
+                                                                "relative_path":  "offline-authority-55de3cd8debadb3750168144d6aa53ffff27513b-1/remote-session/receipt.json",
+                                                                "sha256":  "39c4d7fa3226a81c92923b17c7936624b182ec55476ef8711f9d93eaa938ac4b",
+                                                                "suite":  "remote-session",
+                                                                "passed":  true,
+                                                                "tests":  [
+                                                                              "remote_budget_offline_original_session_uses_independent_deadline_and_never_exports_or_renews_online_authority",
+                                                                              "remote_budget_original_session_requires_verified_budget_and_retains_meter_during_renewal"
+                                                                          ],
+                                                                "executable_sha256":  "0dd8d41af1651928f8ba7308671ed5fb05197241b2701b3efecc21ed90707f70",
+                                                                "files":  {
+                                                                              "build.jsonl":  "925c646b78b58c3e7e624de91d51909ba363b05ed616f75cc35ee94f323f130a",
+                                                                              "build.log":  "435c478f1b661acc9b6a9f93f99c000f2c61e50bb2e0abfe1fc2314d232554d5",
+                                                                              "inventory.log":  "3578b1411988743acd5d76ae949047a5b2508cb9ceb7e9fcca3558e478f473a4",
+                                                                              "tests.log":  "db5e019d31e4f5714aa5f83fb2e88588ce43ecce0a5423d160d0d94aff6a4694"
+                                                                          }
+                                                            },
+                                                            {
+                                                                "relative_path":  "offline-management-sdk-55de3cd8debadb3750168144d6aa53ffff27513b-1/receipt.json",
+                                                                "sha256":  "c26e4df04c698e32661f4e630504211bdbc89b2be39e7ca656f1545a1ff6e24e",
+                                                                "suite":  "sdk",
+                                                                "passed":  true,
+                                                                "tests":  [
+                                                                              "offline::carrier::original_installation_certificate_without_memory_process_proof_cannot_reach_target",
+                                                                              "offline::carrier::original_offline_deadline_closes_idle_real_stream_and_native_listener",
+                                                                              "offline::carrier::original_offline_process_exit_and_authenticated_recovery_close_actual_channels",
+                                                                              "offline::carrier::original_offline_shared_byte_budget_stops_actual_reconnect_traffic",
+                                                                              "offline::carrier::original_quic_real_center_disconnect_reconnect_half_close_and_socket_release",
+                                                                              "offline::offline_http_sdk_administrator_enable_and_direct_policy_boundaries",
+                                                                              "offline::offline_http_sdk_approval_exact_process_consume_budget_and_recovery"
+                                                                          ],
+                                                                "executable_sha256":  "2d7ef57ad94174052edbc26ab226d4c862f43ba6e66c3cd34f03478584ee97b1",
+                                                                "files":  {
+                                                                              "build.jsonl":  "bbbe43bc2f0439337feb8e41f5f0e425bf5ebb894621cf04dff52d81fc1dee24",
+                                                                              "build.log":  "0c1d497a02ccd230ae93385b8880dc8d48f1899ec3de3be19f486fe40c237483",
+                                                                              "inventory.log":  "fe78647a0666eb74bfbf453fb2a091b8d1647d3b8bb51a8ba7396a0af7b3f960",
+                                                                              "tests.log":  "486df84b52e87d8db560952fd8ff3dff25f3c627b27e48487281e22c96911e20"
+                                                                          }
+                                                            },
+                                                            {
+                                                                "relative_path":  "offline-management-sdk-55de3cd8debadb3750168144d6aa53ffff27513b-1/remote-budget/receipt.json",
+                                                                "sha256":  "161e033c5a756c63745f25f1f96aa5c9fd298bd52c049cc13d1d836b1d86c08d",
+                                                                "suite":  "remote-sdk",
+                                                                "passed":  true,
+                                                                "tests":  [
+                                                                              "remote_budget_real_http_signed_reservation_renewal_original_quic_bytes_and_revoke"
+                                                                          ],
+                                                                "executable_sha256":  "a83572f3ef424ad691e2c71ff2c907a4de56d48ff00d4123f2d33f1a1a3d141e",
+                                                                "files":  {
+                                                                              "build.jsonl":  "ccf358d8a389e1cfed5fdeecf6c62d596634051f90c11dc21c0c2e964300fdba",
+                                                                              "build.log":  "ae8d820c47e723af251f6c28ae9337db694f25b2d33ba10d4103d439ddf35594",
+                                                                              "inventory.log":  "c11e1eee30e042a40329eb672f12fd84776b3bf510e7ae2883f666f74b230e1e",
+                                                                              "tests.log":  "b14c7e63665f603a3983379fe5f48065a3c1e1a1d259f701e34e2d874093defa"
+                                                                          }
+                                                            },
+                                                            {
+                                                                "relative_path":  "offline-management-sdk-55de3cd8debadb3750168144d6aa53ffff27513b-1/remote-offline/receipt.json",
+                                                                "sha256":  "fd0bafcf8ee81adee0a733eae3183d46309d5963ba9e9d10cae868c7a2c31b4f",
+                                                                "suite":  "remote-offline",
+                                                                "passed":  true,
+                                                                "tests":  [
+                                                                              "offline_remote_actual_http_then_expired_original_quic_view_budget_and_process_stop"
+                                                                          ],
+                                                                "executable_sha256":  "d4dbde9e2b861d05e0afc6cada89f2d62b11d0171a9b8e6b159e109701e4b3d8",
+                                                                "files":  {
+                                                                              "build.jsonl":  "6c610ab3b899f47c58e8eb1139e35f2ad1492d05ec3b6f063454557862738025",
+                                                                              "build.log":  "4d06c3f266d3013c4bf0e24b9566d3ea2dfe46656770efdafee7cfdd6f1c94e4",
+                                                                              "inventory.log":  "53892c54417ad20d3e9429dbe1ac414905f5d8c185c77bd842c89339acb5fb64",
+                                                                              "tests.log":  "c4779500e097b488f59c242169c96eb305b38e072b62206596e15938559e565f"
+                                                                          }
+                                                            },
+                                                            {
+                                                                "relative_path":  "offline-management-sdk-55de3cd8debadb3750168144d6aa53ffff27513b-1/resident-guard/receipt.json",
+                                                                "sha256":  "62421f36e11c5ac593bbac6f432fc605b13ac77a7bb580b3b453e7d30f56d8bf",
+                                                                "suite":  "daemon",
+                                                                "passed":  true,
+                                                                "tests":  [
+                                                                              "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance"
+                                                                          ],
+                                                                "executable_sha256":  "2a6e47cecfdfbf215317b4e7adb5d658475e0068bdc8a498cc2bdad40e1c4f50",
+                                                                "files":  {
+                                                                              "build.jsonl":  "ad0a3014d176653097d325ec8388116d9653dfbade510137366ed357e63d85da",
+                                                                              "build.log":  "68803b9572e66575ac29957bbcec740ec3490fc03580fbbfab14fd68695fd1a2",
+                                                                              "inventory.log":  "1d16956fbc1afd7b7047741678b0cc3b2df4c8490a07a109756400fcf84d3724",
+                                                                              "tests.log":  "653bab69074e42b4aa12a71135b09f79dec66aa5d71957b2caf9d545f815a6ad"
+                                                                          }
+                                                            },
+                                                            {
+                                                                "relative_path":  "offline-management-storage-55de3cd8debadb3750168144d6aa53ffff27513b-1/receipt.json",
+                                                                "sha256":  "dda65479424f5f655e9969998d12129481e91c6b8ff0360d92f0d88341ac8dc8",
+                                                                "suite":  "storage",
+                                                                "passed":  true,
+                                                                "tests":  [
+                                                                              "services::publication::tests::private_policy::offline::offline_consume_binds_exact_process_digest_and_device_then_burns_durably",
+                                                                              "services::publication::tests::private_policy::offline::offline_distinct_accounts_cannot_approve_or_consume_the_other_endpoint",
+                                                                              "services::publication::tests::private_policy::offline::offline_exact_both_approvals_charge_original_online_ledgers_without_refund",
+                                                                              "services::publication::tests::private_policy::offline::offline_failed_audit_rolls_back_both_approval_and_all_original_budget_debits",
+                                                                              "services::publication::tests::private_policy::offline::offline_outstanding_online_promise_blocks_second_approval_without_partial_spend",
+                                                                              "services::publication::tests::private_policy::offline::offline_recovery_applies_acl_revocation_and_cannot_revive_after_regrant",
+                                                                              "services::publication::tests::private_policy::offline::offline_restore_fence_and_administrator_disable_fail_closed_without_refund",
+                                                                              "services::publication::tests::private_policy::offline::offline_sqlite_two_connections_can_consume_original_endpoint_only_once"
+                                                                          ],
+                                                                "executable_sha256":  "b4168b40d49a5abcc8531edcb144b72f4ca4259c356fe4b9987bc6786c9b9b4c",
+                                                                "files":  {
+                                                                              "build.jsonl":  "96910f98916d1246c48433f250091fbbab649f8cbc653b978d94242827dba739",
+                                                                              "build.log":  "bc47f66d1b9e1c86781fef1c6fe965191025ee12cd83f7dcb499f404f4f222d2",
+                                                                              "inventory.log":  "45dac611cf4499bd666a9c7da96db0dce90c9544360f24b5325456f756aa4f87",
+                                                                              "tests.log":  "9fd72f7da506f4643e14aedc4aafbe63d291c3fafa2397de0da505b3d4a6ff13"
+                                                                          }
+                                                            },
+                                                            {
+                                                                "relative_path":  "offline-management-storage-55de3cd8debadb3750168144d6aa53ffff27513b-1/remote-budget/receipt.json",
+                                                                "sha256":  "99ef07048d6079025b8be3d86ec272a6a846e90e08d03b04bb1ab518d10934d2",
+                                                                "suite":  "remote-storage",
+                                                                "passed":  true,
+                                                                "tests":  [
+                                                                              "remote_budget::remote_budget_account_exhaustion_and_failed_issuance_are_atomic_and_restore_fenced",
+                                                                              "remote_budget::remote_budget_offline_failed_second_approval_rolls_back_and_original_online_expiry_does_not_extend",
+                                                                              "remote_budget::remote_budget_offline_second_approval_uses_online_total_once_and_revoke_never_refunds",
+                                                                              "remote_budget::remote_budget_online_reservation_is_permanent_same_owner_across_reads_and_renewal",
+                                                                              "remote_budget::remote_budget_requires_both_declared_native_endpoints"
+                                                                          ],
+                                                                "executable_sha256":  "a528fe85507387c10cc29ad2abb7e275ef6d81293a68463e7d0c14f3e7859fae",
+                                                                "files":  {
+                                                                              "build.jsonl":  "91140c8936dfc1d5752810df74cf8e93d76ab3b7262f90bc01c9aaa904fb9716",
+                                                                              "build.log":  "078f036892b7732a2659d81d384e513dc5ade8672400d01c107929275a30e760",
+                                                                              "inventory.log":  "63dd8ba525b8ec2db5482212ecad20e4a4b4a427db60d83cd20a7ed84732f905",
+                                                                              "tests.log":  "0ed864ba9a07d00e2ebd8ba4ce0606e323f20537b4b6ffa799bbe75496e1d5ca"
+                                                                          }
+                                                            }
+                                                        ],
+                                 "all_receipt_file_hashes_verified":  true,
+                                 "kind":  "github_hosted_lab"
+                             },
+    "limits":  [
+                   "No complete native capture/input/file OS adapter or product UI/offline resident multiplicity acceptance",
+                   "TLS is an explicitly approved direct transport, not automatic fallback",
+                   "Private-service TLS fallback is not covered by this remote-control test",
+                   "No physical target or complete W27/AC group qualification"
+               ]
+}

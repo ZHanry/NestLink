@@ -1,6 +1,6 @@
 # 离线远控使用显式批准的直连 TLS
 
-状态：源码实现，待 GitHub 托管 Actions 验证。
+状态：源码55de3cd，GitHub 托管 Actions 41235596155 全部通过；仅结项本 ADR 的承载范围，不代表完整 W27。
 
 完整离线授权格式已支持 QUIC 和 TLS，但原远控 SDK 只有 QUIC 承载。
 复用 rustls/Tokio-rustls 的原安装密钥 pin、TLS1.3 与远控 ALPN，以及
@@ -23,3 +23,6 @@ ChannelRuntime，沿用其终态任务 join 和关闭时限。两种承载共用
 同时建立 QUIC 与 TLS，验证两边原业务队列、Input 拒绝、同 meter、
 原 process.stop 后两种承载关闭，及 UDP/TCP 监听资源释放。完整原生
 采集、输入、文件和产品 UI 接线仍需独立完成，字节测试不代表其验收。
+
+运行收据及全部引用文件摘要已逐项核对，记录于
+`docs/network-rewrite/evidence/offline-remote-tls-55de3cd.json`。
