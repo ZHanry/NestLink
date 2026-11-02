@@ -337,6 +337,42 @@ async fn neighbors(
     Ok((accepted, connected, addresses))
 }
 
+async fn complete_host_capabilities(
+    fixture: &Fixture,
+    peer: &routed::RoutedTransport,
+    deadline: Instant,
+) -> Result {
+    use nestlink_protocol::network::{
+        CORE_CAPABILITY, CapabilityOffer, NegotiatedProtocol, REMOTE_CAPABILITY_ALPN,
+        SCHEMA_VERSION,
+    };
+    use nestlink_transport_quic::capability::{CapabilityBinding, exchange};
+    let selected = exchange(
+        peer.connection()?,
+        false,
+        REMOTE_CAPABILITY_ALPN,
+        &CapabilityBinding {
+            expected_peer: PeerId(fixture.controller.identity.fingerprint()),
+            business_digest: fixture.permit.digest(),
+            transport_group: fixture.path.transport_group_id(),
+        },
+        &CapabilityOffer {
+            schema_version: SCHEMA_VERSION,
+            supported: vec![CORE_CAPABILITY.into()],
+            required: vec![CORE_CAPABILITY.into()],
+        },
+        deadline,
+    )
+    .await?;
+    assert_eq!(
+        selected,
+        NegotiatedProtocol::NetworkV1 {
+            path_migration: false,
+        }
+    );
+    Ok(())
+}
+
 struct Abort<T>(tokio::task::JoinHandle<T>);
 impl<T> Drop for Abort<T> {
     fn drop(&mut self) {
@@ -813,8 +849,8 @@ async fn sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_esta
     let setup = f.setup(&f.permit, EndpointRole::Controller, stop)?;
     let peer_key = f.host.identity.public_key();
     let deadline = Instant::now() + Duration::from_millis(1200);
-    // The real peer completes inner TLS and deliberately withholds business
-    // proof. The remote proof implementation's own budget is three seconds.
+    // The real peer completes inner TLS and authenticated capabilities, then
+    // withholds business proof. Its own proof budget is three seconds.
     let (rejected, peer) = tokio::time::timeout_at(deadline + Duration::from_millis(500), async {
         tokio::join!(
             authorize_remote(
@@ -825,7 +861,12 @@ async fn sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_esta
                 &peer_key,
                 deadline
             ),
-            routed::establish(host_authority, host, &f.host.identity, deadline),
+            async {
+                let peer =
+                    routed::establish(host_authority, host, &f.host.identity, deadline).await?;
+                complete_host_capabilities(&f, &peer, deadline).await?;
+                Ok::<_, Box<dyn std::error::Error + Send + Sync>>(peer)
+            },
         )
     })
     .await?;
@@ -839,6 +880,85 @@ async fn sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_esta
     peer.close_and_wait(cleanup).await?;
     finish_mesh_after_incomplete_controller_cleanup(relay_stop, forwarding, addresses, cleanup)
         .await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn required_peer_capability_rejection_never_opens_business_and_releases_original_route()
+-> Result {
+    use nestlink_protocol::network::{
+        CORE_CAPABILITY, CapabilityOffer, MIGRATION_CAPABILITY, REMOTE_CAPABILITY_ALPN,
+        SCHEMA_VERSION,
+    };
+    use nestlink_transport_quic::capability::{CapabilityBinding, exchange};
+    let f = Fixture::new(true)?;
+    let context = f.context();
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let Mesh {
+        controller,
+        host,
+        relay_stop,
+        forwarding,
+        addresses,
+    } = mesh(&f, deadline).await?;
+    let (host_authority, host_stop) =
+        RouteAuthorization::remote(&context, &f.path, &f.connectivity, &f.transit, &f.permit)?;
+    let mut pending = routed::RoutedEstablishment::new(host_authority, host);
+    let (_keep, stop) = watch::channel(None);
+    let setup = f.setup(&f.permit, EndpointRole::Controller, stop)?;
+    let peer_key = f.host.identity.public_key();
+    let (result, malicious) = tokio::time::timeout_at(deadline, async {
+        tokio::join!(
+            authorize_remote(
+                f.authority(&context),
+                controller,
+                setup,
+                &f.controller,
+                &peer_key,
+                deadline,
+            ),
+            async {
+                pending.establish(&f.host.identity, deadline).await?;
+                let peer = pending.take_transport()?;
+                let offered = exchange(
+                    peer.connection()?,
+                    false,
+                    REMOTE_CAPABILITY_ALPN,
+                    &CapabilityBinding {
+                        expected_peer: PeerId(f.controller.identity.fingerprint()),
+                        business_digest: f.permit.digest(),
+                        transport_group: f.path.transport_group_id(),
+                    },
+                    &CapabilityOffer {
+                        schema_version: SCHEMA_VERSION,
+                        supported: vec![CORE_CAPABILITY.into(), MIGRATION_CAPABILITY.into()],
+                        required: vec![MIGRATION_CAPABILITY.into()],
+                    },
+                    deadline,
+                )
+                .await;
+                // The SDK supports core only. A still-valid signed path and
+                // SessionPermit cannot turn required migration into a retry
+                // using the old business proof or an accessible stream.
+                tokio::time::timeout_at(deadline, peer.connection()?.closed()).await?;
+                let business_blocked = peer.connection()?.open_bi().await.is_err();
+                Ok::<_, Box<dyn std::error::Error + Send + Sync>>((
+                    peer,
+                    offered.is_err(),
+                    business_blocked,
+                ))
+            },
+        )
+    })
+    .await?;
+    let (mut peer, capability_rejected, business_blocked) = malicious?;
+    host_stop.revoke();
+    let cleanup = Instant::now() + Duration::from_secs(5);
+    peer.close_and_wait(cleanup).await?;
+    let forwarded = finish_mesh(relay_stop, forwarding, addresses, cleanup).await?;
+    assert!(result.is_err(), "required capability must not yield a ChannelRuntime");
+    assert!(capability_rejected && business_blocked);
+    assert!(forwarded > 0, "the original real routed carrier must be exercised");
     Ok(())
 }
 
@@ -943,6 +1063,7 @@ async fn sdk_waiting_business_proof_ignores_none_updates_and_stops_on_revocation
                 async {
                     let peer =
                         routed::establish(host_authority, host, &f.host.identity, deadline).await?;
+                    complete_host_capabilities(&f, &peer, deadline).await?;
                     ready
                         .send(())
                         .map_err(|_| io::Error::other("proof wait was not observed"))?;
@@ -1542,9 +1663,11 @@ async fn external_cancel_and_source_drop_interrupt_business_proof_with_physical_
                     Ok::<_, Box<dyn std::error::Error + Send + Sync>>((signalled, keep))
                 },
                 async {
-                    // Complete actual inner QUIC and withhold business proof.
+                    // Complete actual inner QUIC and capabilities, then
+                    // withhold the independently required business proof.
                     let peer =
                         routed::establish(host_authority, host, &f.host.identity, deadline).await?;
+                    complete_host_capabilities(&f, &peer, deadline).await?;
                     ready
                         .send(())
                         .map_err(|_| io::Error::other("proof wait was not observed"))?;
