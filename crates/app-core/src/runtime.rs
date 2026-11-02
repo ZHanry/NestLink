@@ -1490,7 +1490,13 @@ impl CoreHandle {
                 .as_ref()
                 .is_some_and(|v| v.format.codec == nestlink_protocol::media_format::Codec::Hevc)
             {
-                nestlink_media_session::hevc_wire_codec(confirmed.as_ref().ok_or(NativeVideoError::Unauthorized)?.format).map_err(|_|NativeVideoError::Unauthorized)? as i32
+                nestlink_media_session::hevc_wire_codec(
+                    confirmed
+                        .as_ref()
+                        .ok_or(NativeVideoError::Unauthorized)?
+                        .format,
+                )
+                .map_err(|_| NativeVideoError::Unauthorized)? as i32
             } else if route
                 .lease
                 .media_capability(nestlink_protocol::media::H264_CAPABILITY)

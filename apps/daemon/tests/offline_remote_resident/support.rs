@@ -381,10 +381,14 @@ impl Fixture {
         let source = area.join("source");
         let host = area.join("host");
         let source_identity = installation(&source).map_err(|error| {
-            io::Error::other(format!("resident fixture protected source installation: {error}"))
+            io::Error::other(format!(
+                "resident fixture protected source installation: {error}"
+            ))
         })?;
         let host_identity = installation(&host).map_err(|error| {
-            io::Error::other(format!("resident fixture protected host installation: {error}"))
+            io::Error::other(format!(
+                "resident fixture protected host installation: {error}"
+            ))
         })?;
         let pinned_space = Arc::new(OnceLock::new());
         let sessions = [random_id(), random_id()];
@@ -397,7 +401,9 @@ impl Fixture {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
         let address = listener.local_addr()?;
         let (tunnel, origin) = https::start(address, area).await.map_err(|error| {
-            io::Error::other(format!("resident fixture public-PKI HTTPS startup: {error}"))
+            io::Error::other(format!(
+                "resident fixture public-PKI HTTPS startup: {error}"
+            ))
         })?;
         let app = nestlink_server::router(nestlink_server::AppState::new(
             store,

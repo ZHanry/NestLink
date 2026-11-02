@@ -14,10 +14,10 @@ fn v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_
     hevc_signed_lifecycle(3)
 }
 #[test]
-fn v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain()->TestResult {
+fn v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain() -> TestResult {
     hevc_signed_lifecycle(4)
 }
-fn hevc_signed_lifecycle(version:u32)->TestResult {
+fn hevc_signed_lifecycle(version: u32) -> TestResult {
     let mut store = Store::in_memory(&random_id())?;
     let vault = VaultKey::from_bytes([9; 32]);
     let password = "integration-only-password";
@@ -31,9 +31,13 @@ fn hevc_signed_lifecycle(version:u32)->TestResult {
     let cid = enroll(&mut store, &principal, &controller)?;
     let hid = enroll(&mut store, &principal, &host)?;
     let mut ptl = [0; 12];
-    ptl[0] = if version==4 {2} else {1};
+    ptl[0] = if version == 4 { 2 } else { 1 };
     ptl[11] = 120;
-    let constructor=if version==4 {VideoFormat::hevc_main10_observed} else {VideoFormat::hevc_main8_observed};
+    let constructor = if version == 4 {
+        VideoFormat::hevc_main10_observed
+    } else {
+        VideoFormat::hevc_main8_observed
+    };
     let format = constructor(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
     for (key, id, direction, backend) in [
         (
@@ -112,7 +116,11 @@ fn hevc_signed_lifecycle(version:u32)->TestResult {
     let proof = store.media_approval_transcript(&principal, &view.id, &choice, 1000)?;
     let mut legacy_proof = proof.clone();
     legacy_proof.payload_sha256 = nestlink_identity::digest(&serde_json::to_vec(&(
-        if version==4 {"nestlink/media-approval/v3"} else {"nestlink/media-approval/v2"},
+        if version == 4 {
+            "nestlink/media-approval/v3"
+        } else {
+            "nestlink/media-approval/v2"
+        },
         &choice,
         &scope,
     ))?)

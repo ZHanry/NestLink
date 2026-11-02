@@ -272,7 +272,7 @@ mod tests {
         hevc.codec = nestlink_protocol::NativeVideoCodec::HevcMain8 as u8;
         hevc.hardware_decode = true;
         assert!(ledger.begin(&hevc).is_err());
-        hevc.codec=nestlink_protocol::NativeVideoCodec::HevcMain10 as u8;
+        hevc.codec = nestlink_protocol::NativeVideoCodec::HevcMain10 as u8;
         assert!(ledger.begin(&hevc).is_err());
         assert!(!ledger.pending);
     }

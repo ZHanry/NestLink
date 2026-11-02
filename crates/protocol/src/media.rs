@@ -9,18 +9,26 @@ use prost::Message;
 
 pub const H264_CAPABILITY: &str = "h264-baseline-v1";
 pub fn negotiated_video_codec(claims: &crate::PermitClaims) -> crate::NativeVideoCodec {
-    if matches!(claims.media_format_version,crate::media_authority::HEVC_FORMAT_VERSION|crate::media_authority::HEVC_MAIN10_FORMAT_VERSION)
-        && crate::media_authority::permit_formats(claims)
-            .ok()
-            .flatten()
-            .is_some_and(|formats| {
-                formats
-                    .formats()
-                    .iter()
-                    .all(|f| f.codec == crate::media_format::Codec::Hevc)
-            })
+    if matches!(
+        claims.media_format_version,
+        crate::media_authority::HEVC_FORMAT_VERSION
+            | crate::media_authority::HEVC_MAIN10_FORMAT_VERSION
+    ) && crate::media_authority::permit_formats(claims)
+        .ok()
+        .flatten()
+        .is_some_and(|formats| {
+            formats
+                .formats()
+                .iter()
+                .all(|f| f.codec == crate::media_format::Codec::Hevc)
+        })
     {
-        return if claims.media_format_version==crate::media_authority::HEVC_MAIN10_FORMAT_VERSION {crate::NativeVideoCodec::HevcMain10} else {crate::NativeVideoCodec::HevcMain8};
+        return if claims.media_format_version == crate::media_authority::HEVC_MAIN10_FORMAT_VERSION
+        {
+            crate::NativeVideoCodec::HevcMain10
+        } else {
+            crate::NativeVideoCodec::HevcMain8
+        };
     }
     if claims
         .required_capabilities

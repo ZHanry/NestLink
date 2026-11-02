@@ -146,8 +146,9 @@ impl CompressedContext {
                 let format = wire.decode()?;
                 let allowed = match (self.ipc_version, format.codec, self.decoder_hardware) {
                     (2, nestlink_protocol::media_format::Codec::H264, None) => true,
-                    (3|4, nestlink_protocol::media_format::Codec::Hevc, Some(_)) => {
-                        format.canonical_version()==self.ipc_version && nestlink_app_core::hevc_contract(format).is_ok()
+                    (3 | 4, nestlink_protocol::media_format::Codec::Hevc, Some(_)) => {
+                        format.canonical_version() == self.ipc_version
+                            && nestlink_app_core::hevc_contract(format).is_ok()
                     }
                     _ => false,
                 };

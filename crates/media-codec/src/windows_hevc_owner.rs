@@ -60,7 +60,9 @@ impl MfHevcHardwareDecoder {
             ));
         }
         // SAFETY: explicit original worker-thread device, hardware-only transform.
-        let mut inner = unsafe { Transform::new_hevc_depth(target.config(), device, false, true,target.bit_depth()) }?;
+        let mut inner = unsafe {
+            Transform::new_hevc_depth(target.config(), device, false, true, target.bit_depth())
+        }?;
         let identity = match observation(&inner) {
             Ok(identity)
                 if identity.adapter_luid.is_some() && identity.driver_version.is_some() =>
@@ -282,7 +284,9 @@ impl MfHevcTextureEncoder {
             ));
         }
         // SAFETY: caller supplies the original owner-thread device; MF retains COM refs.
-        let mut inner = unsafe { Transform::new_hevc_depth(target.config(), device, true, true,target.bit_depth()) }?;
+        let mut inner = unsafe {
+            Transform::new_hevc_depth(target.config(), device, true, true, target.bit_depth())
+        }?;
         let identity = match observation(&inner) {
             Ok(identity)
                 if identity.adapter_luid.is_some() && identity.driver_version.is_some() =>

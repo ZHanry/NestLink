@@ -18,19 +18,24 @@ async fn explicit_gpu_request_rejects_trusted_access_and_missing_view_before_pub
     gpu_request_boundaries(false).await
 }
 #[tokio::test]
-async fn explicit_main10_request_rejects_trusted_access_and_missing_view_before_publication()->Result {
+async fn explicit_main10_request_rejects_trusted_access_and_missing_view_before_publication()
+-> Result {
     gpu_request_boundaries(true).await
 }
-async fn gpu_request_boundaries(main10:bool)->Result {
+async fn gpu_request_boundaries(main10: bool) -> Result {
     let server = Server::start(None).await?;
     let config = NativeSessionConfig::new(Arc::new(NetworkMonitor::start()?));
-    let target=VideoConfig {
-            width: 640,
-            height: 480,
-            fps: 30,
-            bitrate_kbps: 4000,
-        };
-    let config=if main10 {config.with_gpu_hevc_main10_target(target)?} else {config.with_gpu_hevc_main8_target(target)?};
+    let target = VideoConfig {
+        width: 640,
+        height: 480,
+        fps: 30,
+        bitrate_kbps: 4000,
+    };
+    let config = if main10 {
+        config.with_gpu_hevc_main10_target(target)?
+    } else {
+        config.with_gpu_hevc_main8_target(target)?
+    };
     let mut core = AppCore::with_identity_and_native_session(
         Limits::default(),
         DeviceIdentity::generate(),
@@ -76,21 +81,25 @@ async fn legacy_pending_request_cannot_be_reinterpreted_as_reviewed_gpu_media() 
     legacy_pending_boundary(false).await
 }
 #[tokio::test]
-async fn legacy_pending_request_cannot_be_reinterpreted_as_reviewed_main10_media()->Result {
+async fn legacy_pending_request_cannot_be_reinterpreted_as_reviewed_main10_media() -> Result {
     legacy_pending_boundary(true).await
 }
-async fn legacy_pending_boundary(main10:bool)->Result {
+async fn legacy_pending_boundary(main10: bool) -> Result {
     let server = Server::start(None).await?;
     let host_identity = DeviceIdentity::generate();
     let host_id = host_identity.device_id.clone();
     let config = NativeSessionConfig::new(Arc::new(NetworkMonitor::start()?));
-    let target=VideoConfig {
-            width: 640,
-            height: 480,
-            fps: 30,
-            bitrate_kbps: 4000,
-        };
-    let config=if main10 {config.with_gpu_hevc_main10_target(target)?} else {config.with_gpu_hevc_main8_target(target)?};
+    let target = VideoConfig {
+        width: 640,
+        height: 480,
+        fps: 30,
+        bitrate_kbps: 4000,
+    };
+    let config = if main10 {
+        config.with_gpu_hevc_main10_target(target)?
+    } else {
+        config.with_gpu_hevc_main8_target(target)?
+    };
     let mut host_core =
         AppCore::with_identity_and_native_session(Limits::default(), host_identity, config)?;
     let mut controller_core =
@@ -120,10 +129,14 @@ async fn legacy_pending_boundary(main10:bool)->Result {
         .clone()
         .ok_or("request absent")?;
     let mut ptl = [0; 12];
-    ptl[0] = if main10 {2} else {1};
+    ptl[0] = if main10 { 2 } else { 1 };
     ptl[11] = 120;
     // Only a syntax fixture for a rejection. No GPU announcement or receipt is fabricated.
-    let constructor=if main10 {VideoFormat::hevc_main10_observed} else {VideoFormat::hevc_main8_observed};
+    let constructor = if main10 {
+        VideoFormat::hevc_main10_observed
+    } else {
+        VideoFormat::hevc_main8_observed
+    };
     let format = constructor(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
     let set = FormatSet::new(vec![format])?;
     let rejected = done(host.submit(Action::ApproveMediaRemote {
@@ -136,7 +149,7 @@ async fn legacy_pending_boundary(main10:bool)->Result {
             paths: request.paths.clone(),
         },
         reviewed_scope: FrozenMediaScope {
-            version: if main10 {4} else {3},
+            version: if main10 { 4 } else { 3 },
             controller_revision: 1,
             host_revision: 1,
             formats: vec![format.encode()?],

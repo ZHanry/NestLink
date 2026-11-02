@@ -223,11 +223,9 @@ pub(super) async fn start(
             )
             .into());
         }
-        let resolved = tokio::time::timeout_at(
-            deadline.into(),
-            tokio::net::lookup_host((hostname, 443)),
-        )
-        .await;
+        let resolved =
+            tokio::time::timeout_at(deadline.into(), tokio::net::lookup_host((hostname, 443)))
+                .await;
         let diagnostic = match resolved {
             Ok(Ok(mut addresses)) => {
                 if addresses.next().is_some() {

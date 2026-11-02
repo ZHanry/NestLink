@@ -40,7 +40,11 @@ pub(super) fn gpu_config(
     }
     let (fps, bitrate_kbps) =
         if let Some(format) = context.video_format().map_err(io::Error::other)? {
-            let max_fps = if format.codec == nestlink_protocol::media_format::Codec::Hevc {144} else {120};
+            let max_fps = if format.codec == nestlink_protocol::media_format::Codec::Hevc {
+                144
+            } else {
+                120
+            };
             if format.width != width
                 || format.height != height
                 || format.frame_rate.denominator != 1

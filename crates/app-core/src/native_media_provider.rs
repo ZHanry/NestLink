@@ -222,13 +222,26 @@ impl NativeMediaProvider {
             state: Arc::new(Mutex::new(ProviderState::default())),
         })
     }
-    pub fn gpu_hevc_main10(target:VideoConfig)->io::Result<Self> {
+    pub fn gpu_hevc_main10(target: VideoConfig) -> io::Result<Self> {
         nestlink_media_codec::HevcMain8Contract::validate_main10_config(target)?;
-        let mut provider=Self::gpu_hevc_main8(target)?;provider.backend=ProviderBackend::GpuHevcMain10;Ok(provider)
+        let mut provider = Self::gpu_hevc_main8(target)?;
+        provider.backend = ProviderBackend::GpuHevcMain10;
+        Ok(provider)
     }
-    pub(crate) fn matches_gpu_hevc_target(&self,target:VideoConfig,version:u32)->bool {
-        let expected=match version {3=>ProviderBackend::GpuHevcMain8,4=>ProviderBackend::GpuHevcMain10,_=>return false};
-        self.backend==expected && self.targets.len()==1 && (self.target.width,self.target.height,self.target.fps,self.target.bitrate_kbps)==(target.width,target.height,target.fps,target.bitrate_kbps)
+    pub(crate) fn matches_gpu_hevc_target(&self, target: VideoConfig, version: u32) -> bool {
+        let expected = match version {
+            3 => ProviderBackend::GpuHevcMain8,
+            4 => ProviderBackend::GpuHevcMain10,
+            _ => return false,
+        };
+        self.backend == expected
+            && self.targets.len() == 1
+            && (
+                self.target.width,
+                self.target.height,
+                self.target.fps,
+                self.target.bitrate_kbps,
+            ) == (target.width, target.height, target.fps, target.bitrate_kbps)
     }
     /// Each of at most three budgets runs the original full direction probe.
     /// No lower geometry, rate or bitrate is inferred from the maximum receipt.
@@ -606,8 +619,8 @@ fn run_probes(
         // next exact target starts on this same original bounded worker.
         receipts.push(match backend {
             ProviderBackend::CpuH264 => run_probe(*target, direction, cancel)?,
-            ProviderBackend::GpuHevcMain8 => run_hevc_probe(*target, direction, cancel,8)?,
-            ProviderBackend::GpuHevcMain10 => run_hevc_probe(*target,direction,cancel,10)?,
+            ProviderBackend::GpuHevcMain8 => run_hevc_probe(*target, direction, cancel, 8)?,
+            ProviderBackend::GpuHevcMain10 => run_hevc_probe(*target, direction, cancel, 10)?,
         });
     }
     let mut receipts = receipts.into_iter();
@@ -685,13 +698,18 @@ fn run_hevc_probe(
     target: VideoConfig,
     direction: MediaDirection,
     cancel: &AtomicBool,
-    bit_depth:u8,
+    bit_depth: u8,
 ) -> io::Result<ProbeResult> {
     let actual_direction = match direction {
         MediaDirection::Encode => nestlink_media_codec::ExecutionDirection::Encode,
         MediaDirection::Decode => nestlink_media_codec::ExecutionDirection::Decode,
     };
-    let receipt = nestlink_media_codec::probe_hevc_direction_depth(target, actual_direction, cancel,bit_depth)?;
+    let receipt = nestlink_media_codec::probe_hevc_direction_depth(
+        target,
+        actual_direction,
+        cancel,
+        bit_depth,
+    )?;
     let contract = receipt.contract();
     let config = contract.config();
     let owner = receipt.owner();
@@ -707,8 +725,16 @@ fn run_hevc_probe(
             "HEVC direction receipt differs from exact product target/backend",
         ));
     }
-    let format_constructor=if bit_depth==10 {VideoFormat::hevc_main10_observed} else {VideoFormat::hevc_main8_observed};
-    if contract.bit_depth()!=bit_depth {return Err(io::Error::other("HEVC observed depth differs from exact requested workload"));}
+    let format_constructor = if bit_depth == 10 {
+        VideoFormat::hevc_main10_observed
+    } else {
+        VideoFormat::hevc_main8_observed
+    };
+    if contract.bit_depth() != bit_depth {
+        return Err(io::Error::other(
+            "HEVC observed depth differs from exact requested workload",
+        ));
+    }
     let format = format_constructor(
         contract.general_profile_tier_level(),
         config.width,
@@ -734,7 +760,7 @@ fn run_hevc_probe(
     _target: VideoConfig,
     _direction: MediaDirection,
     _cancel: &AtomicBool,
-    _bit_depth:u8,
+    _bit_depth: u8,
 ) -> io::Result<ProbeResult> {
     Err(io::Error::new(
         io::ErrorKind::Unsupported,
@@ -758,13 +784,24 @@ mod tests {
     use super::*;
     #[test]
     fn main10_allocation_is_rejected_before_probing_and_keeps_main8_budget() -> io::Result<()> {
-        let target = VideoConfig {width:3840,height:2160,fps:144,bitrate_kbps:40000};
+        let target = VideoConfig {
+            width: 3840,
+            height: 2160,
+            fps: 144,
+            bitrate_kbps: 40000,
+        };
         let provider = NativeMediaProvider::gpu_hevc_main10(target)?;
-        assert!(provider.matches_gpu_hevc_target(target,4));
-        assert!(!provider.matches_gpu_hevc_target(target,3));
-        let state = provider.state.lock().map_err(|_| io::Error::other("provider state poisoned"))?;
+        assert!(provider.matches_gpu_hevc_target(target, 4));
+        assert!(!provider.matches_gpu_hevc_target(target, 3));
+        let state = provider
+            .state
+            .lock()
+            .map_err(|_| io::Error::other("provider state poisoned"))?;
         assert!(state.encode.is_none() && state.decode.is_none());
-        let oversized = VideoConfig {width:4096,..target};
+        let oversized = VideoConfig {
+            width: 4096,
+            ..target
+        };
         assert!(NativeMediaProvider::gpu_hevc_main8(oversized).is_ok());
         assert!(NativeMediaProvider::gpu_hevc_main10(oversized).is_err());
         Ok(())
@@ -816,11 +853,20 @@ mod tests {
         Ok(())
     }
     #[test]
-    fn gpu_high_frame_and_4k_targets_are_configurations_until_each_direction_actually_probes() -> io::Result<()> {
-        for (width,height,fps) in [(1920,1080,144),(3840,2160,60),(3840,2160,144)] {
-            let provider = NativeMediaProvider::gpu_hevc_main8(VideoConfig {width,height,fps,bitrate_kbps:40000})?;
-            assert_eq!(provider.targets.len(),1);
-            let state = provider.state.lock().map_err(|_| io::Error::other("provider state poisoned"))?;
+    fn gpu_high_frame_and_4k_targets_are_configurations_until_each_direction_actually_probes()
+    -> io::Result<()> {
+        for (width, height, fps) in [(1920, 1080, 144), (3840, 2160, 60), (3840, 2160, 144)] {
+            let provider = NativeMediaProvider::gpu_hevc_main8(VideoConfig {
+                width,
+                height,
+                fps,
+                bitrate_kbps: 40000,
+            })?;
+            assert_eq!(provider.targets.len(), 1);
+            let state = provider
+                .state
+                .lock()
+                .map_err(|_| io::Error::other("provider state poisoned"))?;
             assert!(state.encode.is_none() && state.decode.is_none());
         }
         Ok(())

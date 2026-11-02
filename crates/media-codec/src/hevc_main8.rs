@@ -18,11 +18,11 @@ pub struct HevcContract {
     display: [u32; 2],
     fps: u32,
     kbps: u32,
-    bit_depth:u8,
+    bit_depth: u8,
 }
 /// Compatibility type name; the original observe/from_exact_target methods
 /// remain strictly Main8. Main10 always needs its explicit constructor.
-pub type HevcMain8Contract=HevcContract;
+pub type HevcMain8Contract = HevcContract;
 impl HevcContract {
     /// Bounded exact workload, not a claim that an adapter supports this target.
     /// The same allocation ceiling applies to probes and original live owners.
@@ -35,7 +35,9 @@ impl HevcContract {
             || !(64..=100_000).contains(&config.bitrate_kbps)
             || u64::from(config.width) * u64::from(config.height) * 4 > 64 * 1024 * 1024
         {
-            return Err(io::Error::other("unsupported exact HEVC allocation/rate budget"));
+            return Err(io::Error::other(
+                "unsupported exact HEVC allocation/rate budget",
+            ));
         }
         Ok(())
     }
@@ -44,29 +46,36 @@ impl HevcContract {
     pub fn validate_main10_config(config: VideoConfig) -> io::Result<()> {
         Self::validate_config(config)?;
         if u64::from(config.width) * u64::from(config.height) * 8 > 64 * 1024 * 1024 {
-            return Err(io::Error::other("unsupported exact Main10 allocation budget"));
+            return Err(io::Error::other(
+                "unsupported exact Main10 allocation budget",
+            ));
         }
         Ok(())
     }
     /// Freeze an independently validated signed target. Every actual encoded or
     /// decoded AU still has to match it; this does not attest that a probe ran.
     pub fn from_exact_target(ptl: [u8; 12], config: VideoConfig) -> io::Result<Self> {
-        Self::from_profile_target(ptl,config,8)
+        Self::from_profile_target(ptl, config, 8)
     }
-    pub fn from_main10_target(ptl:[u8;12],config:VideoConfig)->io::Result<Self> {
-        Self::from_profile_target(ptl,config,10)
+    pub fn from_main10_target(ptl: [u8; 12], config: VideoConfig) -> io::Result<Self> {
+        Self::from_profile_target(ptl, config, 10)
     }
-    fn from_profile_target(ptl:[u8;12],config:VideoConfig,bit_depth:u8)->io::Result<Self> {
+    fn from_profile_target(ptl: [u8; 12], config: VideoConfig, bit_depth: u8) -> io::Result<Self> {
         if bit_depth == 10 {
             Self::validate_main10_config(config)?;
         } else {
             Self::validate_config(config)?;
         }
-        let profile=if bit_depth==10 {2} else {1};
+        let profile = if bit_depth == 10 { 2 } else { 1 };
         if ptl[0] != profile
-            || !matches!(ptl[11], 30 | 60 | 63 | 90 | 93 | 120 | 123 | 150 | 153 | 156 | 180 | 183 | 186)
+            || !matches!(
+                ptl[11],
+                30 | 60 | 63 | 90 | 93 | 120 | 123 | 150 | 153 | 156 | 180 | 183 | 186
+            )
         {
-            return Err(io::Error::other("invalid exact expected HEVC profile/depth target"));
+            return Err(io::Error::other(
+                "invalid exact expected HEVC profile/depth target",
+            ));
         }
         Ok(Self {
             ptl,
@@ -79,7 +88,7 @@ impl HevcContract {
         })
     }
     fn from_sps(info: Sps, config: VideoConfig) -> io::Result<Self> {
-        let profile=if info.bit_depth==10 {2} else {1};
+        let profile = if info.bit_depth == 10 { 2 } else { 1 };
         if !info.explicit_bt709_limited
             || info.high_tier
             || info.profile != profile
@@ -106,16 +115,20 @@ impl HevcContract {
         ptl[1..5].copy_from_slice(&info.compatibility.to_be_bytes());
         ptl[5..11].copy_from_slice(&info.constraints.to_be_bytes()[2..]);
         ptl[11] = info.level as u8;
-        Self::from_profile_target(ptl, config,info.bit_depth)
+        Self::from_profile_target(ptl, config, info.bit_depth)
     }
     pub fn observe(access_unit: &[u8], config: VideoConfig) -> io::Result<Self> {
-        Self::observe_depth(access_unit,config,8)
+        Self::observe_depth(access_unit, config, 8)
     }
-    pub fn observe_main10(access_unit:&[u8],config:VideoConfig)->io::Result<Self> {
-        Self::observe_depth(access_unit,config,10)
+    pub fn observe_main10(access_unit: &[u8], config: VideoConfig) -> io::Result<Self> {
+        Self::observe_depth(access_unit, config, 10)
     }
-    fn observe_depth(access_unit:&[u8],config:VideoConfig,bit_depth:u8)->io::Result<Self> {
-        let mut validator = if bit_depth==10 {Validator::exact_main10()} else {Validator::exact_main8()};
+    fn observe_depth(access_unit: &[u8], config: VideoConfig, bit_depth: u8) -> io::Result<Self> {
+        let mut validator = if bit_depth == 10 {
+            Validator::exact_main10()
+        } else {
+            Validator::exact_main8()
+        };
         validator.validate(access_unit, config.width, config.height)?;
         Self::from_sps(
             validator
@@ -135,10 +148,16 @@ impl HevcContract {
     pub fn general_profile_tier_level(self) -> [u8; 12] {
         self.ptl
     }
-    pub fn bit_depth(self)->u8 {self.bit_depth}
+    pub fn bit_depth(self) -> u8 {
+        self.bit_depth
+    }
     pub fn digest(self) -> [u8; 32] {
         let mut hash = Sha256::new();
-        hash.update(if self.bit_depth==10 {b"nestlink/local-hevc-main10-output/v1\0".as_slice()} else {b"nestlink/local-hevc-main8-output/v1\0".as_slice()});
+        hash.update(if self.bit_depth == 10 {
+            b"nestlink/local-hevc-main10-output/v1\0".as_slice()
+        } else {
+            b"nestlink/local-hevc-main8-output/v1\0".as_slice()
+        });
         hash.update(self.ptl);
         for value in self
             .coded
@@ -165,7 +184,11 @@ impl HevcMain8Admission {
     pub fn new(expected: HevcMain8Contract) -> Self {
         Self {
             expected,
-            validator: if expected.bit_depth()==10 {Validator::exact_main10()} else {Validator::exact_main8()},
+            validator: if expected.bit_depth() == 10 {
+                Validator::exact_main10()
+            } else {
+                Validator::exact_main8()
+            },
         }
     }
     pub fn validate(&mut self, bytes: &[u8]) -> io::Result<()> {

@@ -14,7 +14,7 @@ use zeroize::Zeroizing;
 
 const VIDEO_MAGIC: &[u8; 8] = b"NLVID001";
 const VIDEO_HEVC_MAGIC: &[u8; 8] = b"NLVID002";
-const VIDEO_MAIN10_MAGIC: &[u8;8]=b"NLVID003";
+const VIDEO_MAIN10_MAGIC: &[u8; 8] = b"NLVID003";
 const KIND_LAYOUT: u8 = 1;
 const KIND_FRAME: u8 = 2;
 const KIND_CLOSED: u8 = 3;
@@ -624,7 +624,9 @@ fn encode_header(
         return Err(crate::Error::Protocol);
     }
     let mut bytes = [0_u8; VIDEO_HEADER_BYTES];
-    bytes[0..8].copy_from_slice(if fields.codec==3 {VIDEO_MAIN10_MAGIC} else if fields.codec == 2 {
+    bytes[0..8].copy_from_slice(if fields.codec == 3 {
+        VIDEO_MAIN10_MAGIC
+    } else if fields.codec == 2 {
         VIDEO_HEVC_MAGIC
     } else {
         VIDEO_MAGIC
@@ -648,7 +650,9 @@ fn encode_header(
 }
 
 fn decode_header(bytes: &[u8; VIDEO_HEADER_BYTES]) -> Result<Header, crate::Error> {
-    let valid_codec = if &bytes[0..8] == VIDEO_MAIN10_MAGIC {bytes[8]==KIND_FRAME && bytes[10]==3 && bytes[11]==1} else if &bytes[0..8] == VIDEO_HEVC_MAGIC {
+    let valid_codec = if &bytes[0..8] == VIDEO_MAIN10_MAGIC {
+        bytes[8] == KIND_FRAME && bytes[10] == 3 && bytes[11] == 1
+    } else if &bytes[0..8] == VIDEO_HEVC_MAGIC {
         bytes[8] == KIND_FRAME && bytes[10] == 2 && bytes[11] == 1
     } else {
         &bytes[0..8] == VIDEO_MAGIC && bytes[10] <= 1
@@ -775,11 +779,13 @@ mod tests {
         encoded[10] = 2;
         encoded[8] = KIND_LAYOUT;
         assert!(decode_header(&encoded).is_err());
-        encoded[8]=KIND_FRAME;encoded[10]=3;
+        encoded[8] = KIND_FRAME;
+        encoded[10] = 3;
         assert!(decode_header(&encoded).is_err());
         encoded[..8].copy_from_slice(VIDEO_MAIN10_MAGIC);
-        assert_eq!(decode_header(&encoded)?.codec,3);
-        encoded[10]=2;assert!(decode_header(&encoded).is_err());
+        assert_eq!(decode_header(&encoded)?.codec, 3);
+        encoded[10] = 2;
+        assert!(decode_header(&encoded).is_err());
         Ok(())
     }
 

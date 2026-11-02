@@ -3,17 +3,24 @@
 #[cfg(windows)]
 use nestlink_media_codec::HevcExecutionTarget;
 use nestlink_media_codec::{HevcMain8Contract, VideoConfig};
-use nestlink_protocol::media_format::{Codec, Geometry, HEVC_FORMAT_VERSION,HEVC_MAIN10_FORMAT_VERSION, VideoFormat};
+use nestlink_protocol::media_format::{
+    Codec, Geometry, HEVC_FORMAT_VERSION, HEVC_MAIN10_FORMAT_VERSION, VideoFormat,
+};
 use std::io;
 
 pub fn hevc_main8_contract(format: VideoFormat) -> io::Result<HevcMain8Contract> {
-    if format.canonical_version()!=HEVC_FORMAT_VERSION {return Err(io::Error::other("not an exact v3 Main8 target"));}
+    if format.canonical_version() != HEVC_FORMAT_VERSION {
+        return Err(io::Error::other("not an exact v3 Main8 target"));
+    }
     hevc_contract(format)
 }
-pub fn hevc_contract(format:VideoFormat)->io::Result<HevcMain8Contract> {
+pub fn hevc_contract(format: VideoFormat) -> io::Result<HevcMain8Contract> {
     format.validate().map_err(io::Error::other)?;
     if format.codec != Codec::Hevc
-        || !matches!(format.canonical_version(),HEVC_FORMAT_VERSION|HEVC_MAIN10_FORMAT_VERSION)
+        || !matches!(
+            format.canonical_version(),
+            HEVC_FORMAT_VERSION | HEVC_MAIN10_FORMAT_VERSION
+        )
         || format.geometry != Geometry::uncropped(format.width, format.height)
         || format.frame_rate.denominator != 1
     {
@@ -30,10 +37,18 @@ pub fn hevc_contract(format:VideoFormat)->io::Result<HevcMain8Contract> {
         fps: format.frame_rate.numerator,
         bitrate_kbps: format.max_kbps,
     };
-    if format.canonical_version()==HEVC_MAIN10_FORMAT_VERSION {HevcMain8Contract::from_main10_target(ptl.general_bytes(),config)} else {HevcMain8Contract::from_exact_target(ptl.general_bytes(), config)}
+    if format.canonical_version() == HEVC_MAIN10_FORMAT_VERSION {
+        HevcMain8Contract::from_main10_target(ptl.general_bytes(), config)
+    } else {
+        HevcMain8Contract::from_exact_target(ptl.general_bytes(), config)
+    }
 }
-pub fn hevc_wire_codec(format:VideoFormat)->io::Result<nestlink_protocol::NativeVideoCodec> {
-    Ok(if hevc_contract(format)?.bit_depth()==10 {nestlink_protocol::NativeVideoCodec::HevcMain10} else {nestlink_protocol::NativeVideoCodec::HevcMain8})
+pub fn hevc_wire_codec(format: VideoFormat) -> io::Result<nestlink_protocol::NativeVideoCodec> {
+    Ok(if hevc_contract(format)?.bit_depth() == 10 {
+        nestlink_protocol::NativeVideoCodec::HevcMain10
+    } else {
+        nestlink_protocol::NativeVideoCodec::HevcMain8
+    })
 }
 #[cfg(windows)]
 pub fn hevc_execution_target(
@@ -91,25 +106,69 @@ mod tests {
     use super::*;
     use nestlink_protocol::media_format::{FrameRate, HevcPtl};
     #[test]
-    fn main10_execution_requires_v4_and_keeps_exact_depth_digest_and_hardware()->io::Result<()> {
-        let mut ptl=[0;12];ptl[0]=2;ptl[11]=153;
-        let format=VideoFormat::hevc_main10_observed(ptl,3840,2160,FrameRate::new(60,1).map_err(io::Error::other)?,40000).map_err(io::Error::other)?;
+    fn main10_execution_requires_v4_and_keeps_exact_depth_digest_and_hardware() -> io::Result<()> {
+        let mut ptl = [0; 12];
+        ptl[0] = 2;
+        ptl[11] = 153;
+        let format = VideoFormat::hevc_main10_observed(
+            ptl,
+            3840,
+            2160,
+            FrameRate::new(60, 1).map_err(io::Error::other)?,
+            40000,
+        )
+        .map_err(io::Error::other)?;
         assert!(hevc_main8_contract(format).is_err());
-        let target=hevc_execution_target(format,7,9)?;assert_eq!(target.contract().bit_depth(),10);
-        assert_eq!(target.format_digest(),format.digest().map_err(io::Error::other)?);
-        assert_eq!(hevc_wire_codec(format)?,nestlink_protocol::NativeVideoCodec::HevcMain10);
-        assert_ne!(target,hevc_execution_target(format,7,10)?);
+        let target = hevc_execution_target(format, 7, 9)?;
+        assert_eq!(target.contract().bit_depth(), 10);
+        assert_eq!(
+            target.format_digest(),
+            format.digest().map_err(io::Error::other)?
+        );
+        assert_eq!(
+            hevc_wire_codec(format)?,
+            nestlink_protocol::NativeVideoCodec::HevcMain10
+        );
+        assert_ne!(target, hevc_execution_target(format, 7, 10)?);
         Ok(())
     }
     #[test]
     fn exact_4k_144_target_preserves_hardware_format_and_level_rate_limits() -> io::Result<()> {
-        let mut ptl=[0;12];ptl[0]=1;ptl[11]=183;
-        let format=VideoFormat::hevc_main8_observed(ptl,3840,2160,FrameRate::new(144,1).map_err(io::Error::other)?,40000).map_err(io::Error::other)?;
-        let target=hevc_execution_target(format,7,8)?;
-        assert_eq!((target.config().width,target.config().height,target.config().fps),(3840,2160,144));
-        assert_eq!(target.format_digest(),format.digest().map_err(io::Error::other)?);
-        ptl[11]=180;
-        assert!(VideoFormat::hevc_main8_observed(ptl,3840,2160,FrameRate::new(144,1).map_err(io::Error::other)?,40000).is_err());
+        let mut ptl = [0; 12];
+        ptl[0] = 1;
+        ptl[11] = 183;
+        let format = VideoFormat::hevc_main8_observed(
+            ptl,
+            3840,
+            2160,
+            FrameRate::new(144, 1).map_err(io::Error::other)?,
+            40000,
+        )
+        .map_err(io::Error::other)?;
+        let target = hevc_execution_target(format, 7, 8)?;
+        assert_eq!(
+            (
+                target.config().width,
+                target.config().height,
+                target.config().fps
+            ),
+            (3840, 2160, 144)
+        );
+        assert_eq!(
+            target.format_digest(),
+            format.digest().map_err(io::Error::other)?
+        );
+        ptl[11] = 180;
+        assert!(
+            VideoFormat::hevc_main8_observed(
+                ptl,
+                3840,
+                2160,
+                FrameRate::new(144, 1).map_err(io::Error::other)?,
+                40000
+            )
+            .is_err()
+        );
         Ok(())
     }
     #[test]

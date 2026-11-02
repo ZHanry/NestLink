@@ -241,7 +241,11 @@ impl VideoFormat {
                 || self.tier != Tier::Main
                 || self.chroma != Chroma::Yuv420
                 || self.color != Color::SDR_BT709_LIMITED
-                || !matches!((self.profile,self.bit_depth,ptl.0[0]),(Profile::HevcMain,BitDepth::Eight,1)|(Profile::HevcMain10,BitDepth::Ten,2))
+                || !matches!(
+                    (self.profile, self.bit_depth, ptl.0[0]),
+                    (Profile::HevcMain, BitDepth::Eight, 1)
+                        | (Profile::HevcMain10, BitDepth::Ten, 2)
+                )
                 || ptl.0[11] != self.level)
         {
             return Err(invalid(
@@ -427,11 +431,31 @@ impl VideoFormat {
     }
     /// Independent v4 Main10 SDR target. An observed SPS and actual resource
     /// owner are required by the provider before this can be announced.
-    pub fn hevc_main10_observed(ptl:[u8;12],width:u32,height:u32,frame_rate:FrameRate,max_kbps:u32) -> Result<Self> {
-        let format=Self {codec:Codec::Hevc,profile:Profile::HevcMain10,level:ptl[11],h264_constraints:0,
-            geometry:Geometry::uncropped(width,height),tier:Tier::Main,chroma:Chroma::Yuv420,bit_depth:BitDepth::Ten,
-            color:Color::SDR_BT709_LIMITED,width,height,frame_rate,max_kbps,hevc_ptl:Some(HevcPtl::main10(ptl)?)};
-        format.validate()?;Ok(format)
+    pub fn hevc_main10_observed(
+        ptl: [u8; 12],
+        width: u32,
+        height: u32,
+        frame_rate: FrameRate,
+        max_kbps: u32,
+    ) -> Result<Self> {
+        let format = Self {
+            codec: Codec::Hevc,
+            profile: Profile::HevcMain10,
+            level: ptl[11],
+            h264_constraints: 0,
+            geometry: Geometry::uncropped(width, height),
+            tier: Tier::Main,
+            chroma: Chroma::Yuv420,
+            bit_depth: BitDepth::Ten,
+            color: Color::SDR_BT709_LIMITED,
+            width,
+            height,
+            frame_rate,
+            max_kbps,
+            hevc_ptl: Some(HevcPtl::main10(ptl)?),
+        };
+        format.validate()?;
+        Ok(format)
     }
     fn legacy(
         codec: Codec,
@@ -491,7 +515,8 @@ impl VideoFormat {
     }
     pub fn decode(bytes: &[u8]) -> Result<Self> {
         let main10 = bytes.len() == 69 && bytes[..2] == HEVC_MAIN10_FORMAT_VERSION.to_be_bytes();
-        let exact_hevc = bytes.len() == 69 && (bytes[..2] == HEVC_FORMAT_VERSION.to_be_bytes() || main10);
+        let exact_hevc =
+            bytes.len() == 69 && (bytes[..2] == HEVC_FORMAT_VERSION.to_be_bytes() || main10);
         if !exact_hevc && (bytes.len() != 57 || bytes[..2] != VERSION.to_be_bytes()) {
             return Err(invalid("invalid canonical video format envelope"));
         }
@@ -530,8 +555,14 @@ impl VideoFormat {
             },
             max_kbps: u32_at(53),
             hevc_ptl: if exact_hevc {
-                let ptl=bytes[57..69].try_into().map_err(|_| invalid("invalid HEVC PTL length"))?;
-                Some(if main10 {HevcPtl::main10(ptl)?} else {HevcPtl::main8(ptl)?})
+                let ptl = bytes[57..69]
+                    .try_into()
+                    .map_err(|_| invalid("invalid HEVC PTL length"))?;
+                Some(if main10 {
+                    HevcPtl::main10(ptl)?
+                } else {
+                    HevcPtl::main8(ptl)?
+                })
             } else {
                 None
             },
@@ -581,7 +612,9 @@ impl VideoFormat {
     pub fn digest(self) -> Result<[u8; 32]> {
         self.validate()?;
         let mut hash = Sha256::new();
-        hash.update(if self.canonical_version()==HEVC_MAIN10_FORMAT_VERSION {MAIN10_FORMAT_DOMAIN} else if self.hevc_ptl.is_some() {
+        hash.update(if self.canonical_version() == HEVC_MAIN10_FORMAT_VERSION {
+            MAIN10_FORMAT_DOMAIN
+        } else if self.hevc_ptl.is_some() {
             HEVC_FORMAT_DOMAIN
         } else {
             FORMAT_DOMAIN
@@ -590,7 +623,9 @@ impl VideoFormat {
         Ok(hash.finalize().into())
     }
     pub fn canonical_version(self) -> u16 {
-        if self.hevc_ptl.is_some() && self.profile==Profile::HevcMain10 {HEVC_MAIN10_FORMAT_VERSION} else if self.hevc_ptl.is_some() {
+        if self.hevc_ptl.is_some() && self.profile == Profile::HevcMain10 {
+            HEVC_MAIN10_FORMAT_VERSION
+        } else if self.hevc_ptl.is_some() {
             HEVC_FORMAT_VERSION
         } else {
             VERSION
@@ -604,7 +639,10 @@ impl VideoFormat {
 pub struct FormatSet(Vec<VideoFormat>);
 impl FormatSet {
     pub fn from_versioned(version: u16, formats: Vec<VideoFormat>) -> Result<Self> {
-        if version != VERSION && version != HEVC_FORMAT_VERSION && version != HEVC_MAIN10_FORMAT_VERSION {
+        if version != VERSION
+            && version != HEVC_FORMAT_VERSION
+            && version != HEVC_MAIN10_FORMAT_VERSION
+        {
             return Err(invalid("unsupported media format version"));
         }
         let result = Self::new(formats)?;
@@ -656,7 +694,9 @@ impl FormatSet {
     pub fn digest(&self) -> [u8; 32] {
         let mut hash = Sha256::new();
         let version = self.canonical_version();
-        hash.update(if version == HEVC_MAIN10_FORMAT_VERSION {MAIN10_SET_DOMAIN} else if version == HEVC_FORMAT_VERSION {
+        hash.update(if version == HEVC_MAIN10_FORMAT_VERSION {
+            MAIN10_SET_DOMAIN
+        } else if version == HEVC_FORMAT_VERSION {
             HEVC_SET_DOMAIN
         } else {
             SET_DOMAIN
