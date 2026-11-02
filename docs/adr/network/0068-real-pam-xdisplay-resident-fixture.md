@@ -87,3 +87,19 @@ opening. It changes no production Xauthority lookup, socket, peer-credential,
 logind, display, capture, authorization or pixel check. The xauth package is an
 explicit hosted fixture input; no local package installation or execution was
 performed. This authority repair requires a newer exact-source hosted run.
+
+Additional source review confirms the boundary rather than inferring success
+from the new fixture. The lock selects x11rb-protocol 0.13.2. Its upstream
+`file::XAuthorityEntries::new` opens the XAUTHORITY/HOME file and explicitly
+returns an open error if it is missing; `get_auth` propagates it. The original
+NestLink transport maps that error with `io::Error::other`, matching the actual
+source78 error shape. Xserver's `LoadAuthorization` reads each authority
+record's protocol name and cookie data for the server; the client separately
+matches family/address/display. This explains seeding the cookie before
+`-displayfd` picks the display and then keeping the exact client record.
+No upstream code is copied by this adapter. Reviewed source snapshots:
+
+- x11rb v0.13.2 commit `1b73245acc5dce4c4987c80dd7589e7b60af3532`,
+  <https://github.com/psychon/x11rb/blob/1b73245acc5dce4c4987c80dd7589e7b60af3532/x11rb-protocol/src/xauth.rs>.
+- Xserver auth implementation commit `a026972776b303fa640f54e5e8f0fc1abf879071`,
+  <https://github.com/mirror/xserver/blob/a026972776b303fa640f54e5e8f0fc1abf879071/os/auth.c>.
