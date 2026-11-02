@@ -192,12 +192,23 @@ fn combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_a
     corrupt_path.path.signature = URL_SAFE_NO_PAD.encode(signature);
     let mut foreign_reservation = path.clone();
     foreign_reservation.grant_id = random_id();
+    // The original database constraint rejects malformed JSON before it can
+    // become a stored candidate. Keep that boundary active in this regression.
+    assert!(
+        f.store
+            .connection
+            .execute(
+                "UPDATE private_service_leases SET network_json=?1 WHERE grant_id=?2",
+                params!["{", usage.grant_id],
+            )
+            .is_err()
+    );
     // Every invocation must read its current stored path, even after a previous
-    // successful lookup. Missing, malformed, tampered and mismatched paths do
-    // not become authority merely because the business lease is still valid.
+    // successful lookup. Missing, schema-incomplete, tampered and mismatched
+    // paths do not become authority because the business lease is still valid.
     for stored in [
         None,
-        Some("{".to_owned()),
+        Some("{}".to_owned()),
         Some(serde_json::to_string(&corrupt_path)?),
         Some(serde_json::to_string(&foreign_reservation)?),
     ] {

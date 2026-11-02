@@ -39,8 +39,9 @@ helper retains its existing independent snapshot read. No cross-request cache,
 new lease, retry, deadline or resource allowance is introduced. SDK canonical
 decoding and usage-claim parsing are unchanged.
 
-The existing combined-currentness regression additionally replaces the stored
-path between requests with NULL, malformed JSON, a corrupted path signature and
+The existing combined-currentness regression first confirms the original
+database CHECK rejects malformed JSON. It then replaces the stored path between
+requests with NULL, schema-incomplete valid JSON, a corrupted path signature and
 a different reservation ID. Each complete currentness read must reject it;
 the standalone business-lease NULL-path behavior and restored exact lease/path
 bytes must remain unchanged. Original business-signature tamper, expiry, ACL
@@ -48,3 +49,8 @@ revocation and outstanding cumulative reservation assertions are retained.
 Existing HTTP/Quinn, multiplex, live snapshot and two-hop topology regressions
 remain required on GitHub-hosted Actions before the unchanged capacity workload.
 Source simplification alone establishes no latency or capacity qualification.
+
+Runs 41459674511 at ddadc32 and 41460136078 at a233500 stopped in regression
+fixture setup because the attempted malformed JSON write hit that original
+CHECK. The original capacity workload did not start in either run; these are
+fixture setup failures and do not provide capacity performance observations.
