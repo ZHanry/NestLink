@@ -678,6 +678,9 @@ mod geometry_tests {
         // SAFETY: no arguments or caller resources; native code owns and closes
         // its thread-local COM/MF objects before returning the scenario bitmask.
         let passed = unsafe { nl_gpu_output_geometry_contract() };
-        assert_eq!(passed, 255, "native MF geometry scenario bitmask: {passed:#x}");
+        assert_eq!(
+            passed, 255,
+            "native MF geometry scenario bitmask: {passed:#x}"
+        );
     }
 }

@@ -1,0 +1,159 @@
+{
+  "source_revision": "0f8d9a3cf31be19d3615b4a5b115276a9c4592c4",
+  "run_id": 41455441207,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41455441207",
+  "workflow_status": "success",
+  "artifact": {
+    "id": 13146934108,
+    "node_id": "MDg6QXJ0aWZhY3QxMzE0NjkzNDEwOA==",
+    "name": "windows-media-owner-0f8d9a3cf31be19d3615b4a5b115276a9c4592c4-1",
+    "size_in_bytes": 58074,
+    "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13146934108",
+    "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13146934108/zip",
+    "expired": false,
+    "digest": "sha256:7c8d7f196f1e478489e87c907a781e25687cd5521e2ab362b3dc2705d6934b09",
+    "created_at": "2026-11-02T13:56:47Z",
+    "updated_at": "2026-11-02T13:56:47Z",
+    "expires_at": "2026-12-02T13:56:46Z",
+    "workflow_run": {
+      "id": 41455441207,
+      "repository_id": 1423035582,
+      "head_repository_id": 1423035582,
+      "head_branch": "main",
+      "head_sha": "0f8d9a3cf31be19d3615b4a5b115276a9c4592c4"
+    }
+  },
+  "payload_inventory": [
+    {
+      "path": "compressed-context-tests.log",
+      "bytes": 18838,
+      "sha256": "b5bf58e6e929961e58dcd7dacc1f0e2035f74bb37ca1ff7463045a1d4e1e2b0b"
+    },
+    {
+      "path": "compressed-native-tests.log",
+      "bytes": 18308,
+      "sha256": "9d7a1b5e6b00537954519f1b84a44c1f9913a2309f10859a2dd0601ed6dd9144"
+    },
+    {
+      "path": "daemon-hevc-selection-tests.log",
+      "bytes": 14603,
+      "sha256": "229881db75e26c873f25b397fb78737d155cd55241de4c259ae5b4abef62c43a"
+    },
+    {
+      "path": "daemon-media-clippy.log",
+      "bytes": 19982,
+      "sha256": "fb2c4035a7cf84f81cb3fc98b77a822ceb1a024a22eab33abcede4048900fef3"
+    },
+    {
+      "path": "decoded-export-owner-tests.log",
+      "bytes": 965,
+      "sha256": "1093747744097a8c573d555330018c144b879b3dac3a4d5f93716462ea571439"
+    },
+    {
+      "path": "desktop-clippy.log",
+      "bytes": 29132,
+      "sha256": "b7c130915eecf93bb3505c909c3574a4fa71104671ab29071d7d27069eade715"
+    },
+    {
+      "path": "hevc-clippy.log",
+      "bytes": 1069,
+      "sha256": "95e394f51ddfd7b5266ff2d278838bb477ab9901208742d18d6fb3f61a320ab0"
+    },
+    {
+      "path": "hevc-contract-tests.log",
+      "bytes": 2476,
+      "sha256": "091473ef920c33797167a8cac0dc7feddb7eba4afcb88afbd0b742708e73e83d"
+    },
+    {
+      "path": "hevc-execution-tests.log",
+      "bytes": 1121,
+      "sha256": "d59b0a9b4dda9f0caf5f7ae6c300ae68cfc558cbf1101c12ed0e3ae7fb30b254"
+    },
+    {
+      "path": "hevc-target-tests.log",
+      "bytes": 3812,
+      "sha256": "0f3f36e00206864a7058bcf6323cc193717afc506b7434dd6427397c85755382"
+    },
+    {
+      "path": "media-opt-in-approval-tests.log",
+      "bytes": 14586,
+      "sha256": "7a40eb3d7bd8dfb37f3e75f3a50adfd47df8ee91d85e2d90d94f79db228b59d4"
+    },
+    {
+      "path": "media-opt-in-cli-tests.log",
+      "bytes": 20373,
+      "sha256": "03103d79a20c72e09e26e69d75463695e7014c78e946dc02c7d8fb5e5926f717"
+    },
+    {
+      "path": "media-opt-in-config-tests.log",
+      "bytes": 15354,
+      "sha256": "33cb928b575681d7439679c0efc1321231238a9a451453ccf2e716b259990289"
+    },
+    {
+      "path": "media-opt-in-http-tests.log",
+      "bytes": 14897,
+      "sha256": "168fd486f92d643903a12878e70646e6b5bac4f4983a592c636ea3c4635b3fb4"
+    },
+    {
+      "path": "media-provider-tests.log",
+      "bytes": 22113,
+      "sha256": "3f2bbfa6b187b97d8e110a68b0cd81286874a5136f03cdcce72e645abcaf3ad9"
+    },
+    {
+      "path": "native-media-wire-tests.log",
+      "bytes": 1593,
+      "sha256": "c24057957dae736f2b01ea644ac81f76e5ca599360af1e4e246070693aac11be"
+    },
+    {
+      "path": "presenter-tests.log",
+      "bytes": 15055,
+      "sha256": "cbac632564abe5dc3044d2d696ad9211aa931af3784aa705e89a19c65bc3f843"
+    },
+    {
+      "path": "readback-ipc-tests.log",
+      "bytes": 17314,
+      "sha256": "6476e5f15d5c2a096c809c47d08da32ba4e8fd4fda83e00d269a2f39bc63111a"
+    },
+    {
+      "path": "receiver-tests.log",
+      "bytes": 44531,
+      "sha256": "7e626b81ed99a06f012ec57bd30230f0e95ceffa959ae894b68a948f7262b3a7"
+    },
+    {
+      "path": "shared-surface-descriptor-tests.log",
+      "bytes": 14955,
+      "sha256": "a214b7db61f688b9f31480b12d7e770bfc6bc33e99ca84aaec07b1725bc23496"
+    },
+    {
+      "path": "shared-surface-transfer-claim-tests.log",
+      "bytes": 648,
+      "sha256": "039c457ad98bacd5cfc8b1df14be0075990b2715cc5dd6b11fb51065c46db524"
+    },
+    {
+      "path": "signed-store-media-tests.log",
+      "bytes": 4043,
+      "sha256": "a541effe7c6d9b0ddb8e8265f4d2a23d612cbcf0a77935c065102bbe7eaa94d6"
+    },
+    {
+      "path": "source-receipt.json",
+      "bytes": 627,
+      "sha256": "44f4baffc9255b6ae53030c936d0c845fa11abb4cd78f67920e0bc8fe992dc60"
+    }
+  ],
+  "execution": {
+    "environment": "GitHub-hosted windows-2025 ordinary token",
+    "case": "two_tls_connections_reuse_decoded_credit_and_release_only_after_owner_join",
+    "passed": true,
+    "actual_frames_decoded": 12,
+    "actual_tls_connections": 2,
+    "decode_credit_reused": true,
+    "owner_join_before_receipt": true,
+    "execution_seconds": 2.34,
+    "stage_log": "running 1 test\r\ntest two_tls_connections_reuse_decoded_credit_and_release_only_after_owner_join ... ok\r\n\r\nsuccesses:\r\n\r\n---- two_tls_connections_reuse_decoded_credit_and_release_only_after_owner_join stdout ----\r\ncompressed IPC stage started: software encoder creation and actual output\r\ncompressed IPC stage finished: software encoder creation and actual output; elapsed_ms=137; error=None\r\ncompressed IPC stage started: real management service\r\ncompressed IPC stage finished: real management service; elapsed_ms=523; error=None\r\ncompressed IPC stage started: proved H264 native pair\r\ncompressed IPC stage finished: proved H264 native pair; elapsed_ms=578; error=None\r\ncompressed IPC stage started: synthetic display SelectionAck\r\ncompressed IPC stage finished: synthetic display SelectionAck; elapsed_ms=21; error=None\r\ncompressed IPC stage started: local TLS listener\r\ncompressed IPC stage finished: local TLS listener; elapsed_ms=15; error=None\r\ncompressed IPC stage started: control and data TLS open\r\ncompressed IPC stage finished: control and data TLS open; elapsed_ms=21; error=None\r\ncompressed IPC stage started: Prepare and Activate\r\ncompressed IPC stage finished: Prepare and Activate; elapsed_ms=0; error=None\r\ncompressed IPC frame started: 1\r\ncompressed IPC stage started: real AU delivery and decoded credit\r\ncompressed IPC stage finished: real AU delivery and decoded credit; elapsed_ms=45; error=None\r\ncompressed IPC frame started: 2\r\ncompressed IPC stage started: real AU delivery and decoded credit\r\ncompressed IPC stage finished: real AU delivery and decoded credit; elapsed_ms=62; error=None\r\ncompressed IPC frame started: 3\r\ncompressed IPC stage started: real AU delivery and decoded credit\r\ncompressed IPC stage finished: real AU delivery and decoded credit; elapsed_ms=61; error=None\r\ncompressed IPC frame started: 4\r\ncompressed IPC stage started: real AU delivery and decoded credit\r\ncompressed IPC stage finished: real AU delivery and decoded credit; elapsed_ms=62; error=None\r\ncompressed IPC frame started: 5\r\ncompressed IPC stage started: real AU delivery and decoded credit\r\ncompressed IPC stage finished: real AU delivery and decoded credit; elapsed_ms=61; error=None\r\ncompressed IPC frame started: 6\r\ncompressed IPC stage started: real AU delivery and decoded credit\r\ncompressed IPC stage finished: real AU delivery and decoded credit; elapsed_ms=63; error=None\r\ncompressed IPC frame started: 7\r\ncompressed IPC stage started: real AU delivery and decoded credit\r\ncompressed IPC stage finished: real AU delivery and decoded credit; elapsed_ms=62; error=None\r\ncompressed IPC frame started: 8\r\ncompressed IPC stage started: real AU delivery and decoded credit\r\ncompressed IPC stage finished: real AU delivery and decoded credit; elapsed_ms=62; error=None\r\ncompressed IPC frame started: 9\r\ncompressed IPC stage started: real AU delivery and decoded credit\r\ncompressed IPC stage finished: real AU delivery and decoded credit; elapsed_ms=63; error=None\r\ncompressed IPC frame started: 10\r\ncompressed IPC stage started: real AU delivery and decoded credit\r\ncompressed IPC stage finished: real AU delivery and decoded credit; elapsed_ms=53; error=None\r\ncompressed IPC frame started: 11\r\ncompressed IPC stage started: real AU delivery and decoded credit\r\ncompressed IPC stage finished: real AU delivery and decoded credit; elapsed_ms=56; error=None\r\ncompressed IPC frame started: 12\r\ncompressed IPC stage started: real AU delivery and decoded credit\r\ncompressed IPC stage finished: real AU delivery and decoded credit; elapsed_ms=62; error=None\r\ncompressed IPC stage started: Fence, actual decoder join, and cleanup receipt\r\ncompressed IPC stage finished: Fence, actual decoder join, and cleanup receipt; elapsed_ms=30; error=None\r\ncompressed IPC stage started: normal native stop after external cleanup\r\ncompressed IPC stage finished: normal native stop after external cleanup; elapsed_ms=0; error=None\r\ncompressed_ipc actual_two_tls=true software_decoded=12 credit_reused=true owner_joined_before_receipt=true\r\n\r\n\r\nsuccesses:\r\n    two_tls_connections_reuse_decoded_credit_and_release_only_after_owner_join\r\n\r\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.34s\r\n\r\n"
+  },
+  "limitations": [
+    "No changed production recovery deadline or assertion. This source adds diagnostics and repeats the original test.",
+    "Original Windows 2022 source 85c8 run 41443857256 recovery-timeout failure remains retained; this Windows 2025 pass does not qualify that environment.",
+    "Physical GPU / desktop performance and whole W32 / W33 remain unqualified."
+  ]
+}
