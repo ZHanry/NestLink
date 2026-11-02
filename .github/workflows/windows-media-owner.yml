@@ -113,6 +113,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --lib video::tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/readback-ipc-tests.log"
           exit $LASTEXITCODE
+      - name: Verify production HEVC selection and strict original daemon cleanup boundaries
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-daemon -p nestlink-app-core -p nestlink-media-session --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/daemon-media-clippy.log"
+          exit $LASTEXITCODE
       - name: Retain exact-source evidence including failures
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
