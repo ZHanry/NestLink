@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "source_revision": "c0fc249fc24c4bab389fe10690a2becb1b71257e",
+  "repository": "ZHanry/NestLink",
+  "rust_run": {
+    "id": 41236630433,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41236630433",
+    "conclusion": "failure",
+    "only_failed_step": "first-party-format in both native core jobs",
+    "successful_core_steps": ["strict workspace clippy", "full Linux tests", "full ordinary-user Windows tests", "production SDK integration", "schema and encryption regressions"],
+    "other_successful_jobs": ["linux-network-events", "wasm-contract", "linux-x11-input", "openapi-generation", "linux-system-audio", "dependencies", "linux-portal-capture"],
+    "windows_core_job": 124641681162,
+    "linux_core_job": 124641681199,
+    "old_windows_offline_remote_addr_in_use_failure": "Absent at this source; full Windows test step succeeded. Old source3f1eb6b had failed that target."
+  },
+  "network_run": {
+    "id": 41236630464,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41236630464",
+    "conclusion": "failure",
+    "successful_jobs": ["quinn-carrier-replacement-feasibility", "production-socket-slice", "routed-kernel-nat-slice", "topology-carrier", "topology-journal", "independent-vectors", "native-ice-kernel-nat-slice"],
+    "contract_jobs": [
+      {"runner": "github-hosted ubuntu-24.04", "job": 124641698066, "artifact_id": 13055678340, "artifact_digest": "sha256:9404b468c306d1d210bba32f31b4afa77b7d14dc89d792befaa4a8e9a6fb3173", "receipt_sha256": "b891b1f19743ef986be20b367f114e4f25ce22528b4bbe08125e9526007aa065", "verified_inventory_files": 12, "format_check": 1, "contract_clippy": 0, "contract_tests": 0, "ci_evidence_tests": 0},
+      {"runner": "github-hosted windows-2022 ordinary process token", "job": 124641698097, "artifact_id": 13056212336, "artifact_digest": "sha256:1f6f598ecbd7ca8d638be36ab74aa9fc5ece3176e138017fe65df78d8e0440dd", "receipt_sha256": "7b1f34d32cb32777b1060d55e251791ba9f6ec0f06af074722d6cd4a56a0625d", "verified_inventory_files": 13, "ordinary_windows_token": 0, "format_check": 1, "contract_clippy": 0, "contract_tests": 0, "ci_evidence_tests": 0}
+    ],
+    "native_ice": {
+      "job": 124641698274,
+      "artifact_id": 13056745496,
+      "artifact_digest": "sha256:af6f49e8306ec2061360944ed77e11612d0ea2bcf2604c981d1bf16e2a4d6b28",
+      "receipt_sha256": "8f03e3ec31e2b7cb87ab56670b8f02d3cf544e9758b559a0f6800c8ec373c7c0",
+      "verified_inventory_files": 642,
+      "passed": true,
+      "cases": ["success", "blackhole", "cancel", "port_change"],
+      "actual_successful_scope": "Signed SDK remote SessionPermit, original signaling and bilateral ICE followed by pinned Quinn across two real Linux 1:1 UDP NAT gateways; complete random256KiB FileRead payload verified in each direction and Input rejected without permission.",
+      "cleanup": "All four cases remove owned namespaces and explicitly close original owners. Both original legacy and ICE sockets are rebound; the successful path cannot fall back to legacy.",
+      "forced_destination_dependent_port_change": "Refusal proven, not successful traversal or general symmetric NAT qualification.",
+      "ac04_passed": false,
+      "ac05_passed": false,
+      "ac07_passed": false
+    }
+  },
+  "verification": "Downloaded both contract artifacts and the native ICE artifact and SHA256-verified all667 retained inventory files; inspected complete Linux and Windows core logs and every failed step. No local compiler, formatter, lint or project test ran.",
+  "limitations": [
+    "Both full workflows remain failed due exact-source formatting. Later formatting cannot retroactively change their conclusions; final release requires successful same-source workflows.",
+    "Kernel NAT fixtures do not qualify external routers, general symmetric NAT, CGNAT, IPv6 NAT, installed Windows, phones, GPU, HA or cross-day target acceptance.",
+    "The FileRead fixture verifies payload frames, not a file browser or filesystem grant, download/resume or file worker.",
+    "New packet capability and subsequent native integration commits are outside this source and need their own hosted verification."
+  ]
+}
