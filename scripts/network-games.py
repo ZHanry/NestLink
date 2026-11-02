@@ -187,7 +187,10 @@ def teeworlds():
         xvfb = actors.start("teeworlds-xvfb", ["Xvfb", display, "-screen", "0", "1024x768x24", "-nolisten", "tcp"], env=env)
         wait_for(lambda: pathlib.Path("/tmp/.X11-unix/X97").exists(), 5, "Xvfb did not become ready")
         server_config = output / "teeworlds-server.cfg"
-        server_config.write_text('sv_name "NestLink W28 real room"\nsv_port 8304\nbindaddr 192.168.212.3\nsv_map dm1\nsv_register 0\nsv_gametype dm\nsv_max_clients 4\ndebug 1\nconsole_output_level 2\n')
+        # A unicast-only UDP bind cannot receive the upstream LAN broadcast.
+        # The namespace has only this one isolated LAN; the bridge still pins
+        # every response to the original exact 192.168.212.3:8304 server.
+        server_config.write_text('sv_name "NestLink W28 real room"\nsv_port 8304\nbindaddr 0.0.0.0\nsv_map dm1\nsv_register 0\nsv_gametype dm\nsv_max_clients 4\ndebug 1\nconsole_output_level 2\n')
         # The official storage API deliberately refuses absolute config paths.
         # Keep a public receipt copy, then use its unchanged bytes relative to
         # the original archive's current storage root.
@@ -196,6 +199,8 @@ def teeworlds():
             [root / "teeworlds_srv", "-f", "nestlink-hosted-server.cfg"]), cwd=root)
         capture = actors.start("teeworlds-packet-capture", ["sudo", "-n", "ip", "netns", "exec", left,
             "tcpdump", "-i", "nlp0", "-U", "-n", "-w", str(output / "teeworlds-client.pcap"), "udp"])
+        actors.start("teeworlds-server-packet-capture", ["sudo", "-n", "ip", "netns", "exec", right,
+            "tcpdump", "-i", "nlp1", "-U", "-n", "-w", str(output / "teeworlds-server.pcap"), "udp"])
         client_config = output / "teeworlds-client.cfg"
         client_config.write_text('player_name "NestLinkHosted"\ncl_show_welcome 0\ncl_skip_start_menu 1\nui_browser_page 6\ngfx_fullscreen 0\ngfx_screen_width 1024\ngfx_screen_height 768\ngfx_limitfps 1\ngfx_maxfps 30\nsnd_enable 0\ndebug 1\nconsole_output_level 2\ncl_auto_demo_record 1\n')
         shutil.copyfile(client_config, root / "nestlink-hosted-client.cfg")
