@@ -1068,21 +1068,44 @@ mod tests {
     #[test]
     fn exact_hevc_canonical_container_does_not_enable_the_old_h264_ipc_context() -> TestResult {
         use nestlink_protocol::media_format::{FrameRate, VideoFormat};
-        let mut ptl = [0; 12]; ptl[0] = 1; ptl[11] = 120;
+        let mut ptl = [0; 12];
+        ptl[0] = 1;
+        ptl[11] = 120;
         let format = VideoFormat::hevc_main8_observed(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
         let wire = WireVideoFormat::new(format)?;
         assert_eq!(wire.0.len(), 69);
-        assert_eq!(serde_json::from_value::<WireVideoFormat>(serde_json::to_value(&wire)?)?.decode()?, format);
-        let mut wrong = wire.0.clone(); wrong[1] = 2;
+        assert_eq!(
+            serde_json::from_value::<WireVideoFormat>(serde_json::to_value(&wire)?)?.decode()?,
+            format
+        );
+        let mut wrong = wire.0.clone();
+        wrong[1] = 2;
         assert!(serde_json::from_value::<WireVideoFormat>(serde_json::json!(wrong)).is_err());
-        let context = CompressedContext { ipc_version: 2, catalog_sha256: [1; 32], format_epoch: 1,
-            format_sha256: format.digest()?, format: Some(wire), binding: NativeCompressedBinding {
-                runtime_id: "runtime".into(), ui_generation: 1, request_id: "request".into(),
-                connection_generation: 1, source: 1, stream_id: [1; 16], stream_epoch: 1,
-            }, catalog_revision: 1, selection_sequence: 1, layout_epoch: 1, decode_epoch: 1,
-            configuration_id: 1 };
+        let context = CompressedContext {
+            ipc_version: 2,
+            catalog_sha256: [1; 32],
+            format_epoch: 1,
+            format_sha256: format.digest()?,
+            format: Some(wire),
+            binding: NativeCompressedBinding {
+                runtime_id: "runtime".into(),
+                ui_generation: 1,
+                request_id: "request".into(),
+                connection_generation: 1,
+                source: 1,
+                stream_id: [1; 16],
+                stream_epoch: 1,
+            },
+            catalog_revision: 1,
+            selection_sequence: 1,
+            layout_epoch: 1,
+            decode_epoch: 1,
+            configuration_id: 1,
+        };
         assert!(context.validate().is_err());
-        assert!(serde_json::from_value::<CompressedContext>(serde_json::to_value(&context)?).is_err());
+        assert!(
+            serde_json::from_value::<CompressedContext>(serde_json::to_value(&context)?).is_err()
+        );
         Ok(())
     }
 }

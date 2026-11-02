@@ -10,14 +10,15 @@ pub use timing::{
     SessionMediaTiming, SessionPlayoutClock,
 };
 pub mod external;
+#[cfg(windows)]
+mod hevc_negotiated_format;
 mod legacy_format;
 mod negotiated_budget;
 mod negotiated_format;
 #[cfg(windows)]
-mod hevc_negotiated_format;
-#[cfg(windows)]
-pub use hevc_negotiated_format::{hevc_execution_target, hevc_execution_receipt_matches,
-    hevc_submission_receipt_matches};
+pub use hevc_negotiated_format::{
+    hevc_execution_receipt_matches, hevc_execution_target, hevc_submission_receipt_matches,
+};
 pub use negotiated_budget::{select_h264_budget, select_h264_display_budget};
 pub use negotiated_format::{
     execution_receipt_matches, h264_display_config, h264_execution_target,

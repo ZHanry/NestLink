@@ -23,15 +23,28 @@ impl HevcMain8Contract {
     /// Freeze an independently validated signed target. Every actual encoded or
     /// decoded AU still has to match it; this does not attest that a probe ran.
     pub fn from_exact_target(ptl: [u8; 12], config: VideoConfig) -> io::Result<Self> {
-        if ptl[0] != 1 || !matches!(ptl[11], 30 | 60 | 63 | 90 | 93 | 120 | 123 | 150 | 153)
-            || config.width == 0 || config.height == 0 || config.width > 8192 || config.height > 8192
-            || !config.width.is_multiple_of(8) || !config.height.is_multiple_of(8)
-            || !(1..=120).contains(&config.fps) || !(64..=100_000).contains(&config.bitrate_kbps)
-            || u64::from(config.width) * u64::from(config.height) * 4 > 64 * 1024 * 1024 {
+        if ptl[0] != 1
+            || !matches!(ptl[11], 30 | 60 | 63 | 90 | 93 | 120 | 123 | 150 | 153)
+            || config.width == 0
+            || config.height == 0
+            || config.width > 8192
+            || config.height > 8192
+            || !config.width.is_multiple_of(8)
+            || !config.height.is_multiple_of(8)
+            || !(1..=120).contains(&config.fps)
+            || !(64..=100_000).contains(&config.bitrate_kbps)
+            || u64::from(config.width) * u64::from(config.height) * 4 > 64 * 1024 * 1024
+        {
             return Err(io::Error::other("invalid exact expected HEVC Main8 target"));
         }
-        Ok(Self { ptl, coded: [config.width, config.height], crop: [0; 4],
-            display: [config.width, config.height], fps: config.fps, kbps: config.bitrate_kbps })
+        Ok(Self {
+            ptl,
+            coded: [config.width, config.height],
+            crop: [0; 4],
+            display: [config.width, config.height],
+            fps: config.fps,
+            kbps: config.bitrate_kbps,
+        })
     }
     fn from_sps(info: Sps, config: VideoConfig) -> io::Result<Self> {
         if !info.explicit_bt709_limited

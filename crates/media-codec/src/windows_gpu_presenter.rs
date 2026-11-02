@@ -29,8 +29,14 @@ unsafe extern "C" {
         kbps: u32,
         result: *mut *mut c_void,
     ) -> i32;
-    fn nl_gpu_open_hevc(surface: *mut c_void, width: u32, height: u32, fps: u32,
-        kbps: u32, result: *mut *mut c_void) -> i32;
+    fn nl_gpu_open_hevc(
+        surface: *mut c_void,
+        width: u32,
+        height: u32,
+        fps: u32,
+        kbps: u32,
+        result: *mut *mut c_void,
+    ) -> i32;
     fn nl_gpu_step(
         handle: *mut c_void,
         input: *const u8,
@@ -179,12 +185,17 @@ pub struct GpuH264Presenter {
     _thread: PhantomData<Rc<()>>,
 }
 #[derive(Clone)]
-enum Admission { H264(H264Validator), Hevc(HevcMain8Admission) }
+enum Admission {
+    H264(H264Validator),
+    Hevc(HevcMain8Admission),
+}
 impl Admission {
-    fn validate(&mut self, bytes: &[u8]) -> io::Result<()> { match self {
-        Self::H264(value) => value.validate(bytes).map(|_| ()),
-        Self::Hevc(value) => value.validate(bytes),
-    }}
+    fn validate(&mut self, bytes: &[u8]) -> io::Result<()> {
+        match self {
+            Self::H264(value) => value.validate(bytes).map(|_| ()),
+            Self::Hevc(value) => value.validate(bytes),
+        }
+    }
 }
 impl GpuH264Presenter {
     /// Legacy caller default bitrate is not a probe announcement.
@@ -301,7 +312,9 @@ impl GpuH264Presenter {
         let mut next = self.validator.clone();
         next.validate(bytes)?;
         let step = self.exchange(sequence, pts_90khz, bytes, due_qpc, not_after_qpc)?;
-        if step.accepted { self.validator = next; }
+        if step.accepted {
+            self.validator = next;
+        }
         Ok(step)
     }
     pub fn poll(&mut self) -> io::Result<GpuDecodeStep> {
@@ -417,11 +430,21 @@ impl HevcGpuSubmissionReceipt {
         }
         Ok(())
     }
-    pub fn target(&self) -> crate::HevcExecutionTarget { self.target }
-    pub fn owner(&self) -> crate::OwnerObservation { self.owner }
-    pub fn sequence(&self) -> u64 { self.sequence }
-    pub fn pts_90khz(&self) -> u64 { self.pts_90khz }
-    pub fn submitted_qpc(&self) -> u64 { self.submitted_qpc }
+    pub fn target(&self) -> crate::HevcExecutionTarget {
+        self.target
+    }
+    pub fn owner(&self) -> crate::OwnerObservation {
+        self.owner
+    }
+    pub fn sequence(&self) -> u64 {
+        self.sequence
+    }
+    pub fn pts_90khz(&self) -> u64 {
+        self.pts_90khz
+    }
+    pub fn submitted_qpc(&self) -> u64 {
+        self.submitted_qpc
+    }
 }
 pub struct HevcGpuDecodeStep {
     pub step: GpuDecodeStep,
@@ -439,37 +462,80 @@ pub struct GpuHevcPresenter {
     live: Arc<std::sync::atomic::AtomicBool>,
 }
 impl GpuHevcPresenter {
-    pub fn with_target(surface: &GpuVideoSurface, target: crate::HevcExecutionTarget,
-        authority: Arc<std::sync::atomic::AtomicBool>) -> io::Result<Self> {
+    pub fn with_target(
+        surface: &GpuVideoSurface,
+        target: crate::HevcExecutionTarget,
+        authority: Arc<std::sync::atomic::AtomicBool>,
+    ) -> io::Result<Self> {
         use std::sync::atomic::{AtomicBool, Ordering};
-        if !authority.load(Ordering::Acquire) { return Err(io::Error::new(io::ErrorKind::PermissionDenied,
-            "HEVC presenter authority is revoked")); }
+        if !authority.load(Ordering::Acquire) {
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "HEVC presenter authority is revoked",
+            ));
+        }
         let config = target.contract().config();
         let mut handle = std::ptr::null_mut();
         // SAFETY: bridge retains this live surface; all D3D/MF resources stay
         // confined to this creating worker and only the HEVC subtype is chosen.
-        checked(unsafe { nl_gpu_open_hevc(surface.0.0.as_ptr(), config.width, config.height,
-            config.fps, config.bitrate_kbps, &mut handle) })?;
-        let mut inner = GpuH264Presenter { handle: NonNull::new(handle)
-            .ok_or_else(|| io::Error::other("null HEVC GPU presenter"))?,
+        checked(unsafe {
+            nl_gpu_open_hevc(
+                surface.0.0.as_ptr(),
+                config.width,
+                config.height,
+                config.fps,
+                config.bitrate_kbps,
+                &mut handle,
+            )
+        })?;
+        let mut inner = GpuH264Presenter {
+            handle: NonNull::new(handle)
+                .ok_or_else(|| io::Error::other("null HEVC GPU presenter"))?,
             validator: Admission::Hevc(HevcMain8Admission::new(target.contract())),
-            pending: VecDeque::new(), ready_identity: VecDeque::new(), last_input: None,
-            last_sequence: None, failed: false, closed: false, _thread: PhantomData };
-        let identity = match inner.owner_observation().and_then(|owner| { target.check_owner(owner)?; Ok(owner) }) {
-            Ok(owner) => owner,
-            Err(error) => { inner.close_owner()?; return Err(error); }
+            pending: VecDeque::new(),
+            ready_identity: VecDeque::new(),
+            last_input: None,
+            last_sequence: None,
+            failed: false,
+            closed: false,
+            _thread: PhantomData,
         };
-        let owner = Self { inner, surface: surface.clone(), target, identity, authority,
-            live: Arc::new(AtomicBool::new(true)) };
+        let identity = match inner.owner_observation().and_then(|owner| {
+            target.check_owner(owner)?;
+            Ok(owner)
+        }) {
+            Ok(owner) => owner,
+            Err(error) => {
+                inner.close_owner()?;
+                return Err(error);
+            }
+        };
+        let owner = Self {
+            inner,
+            surface: surface.clone(),
+            target,
+            identity,
+            authority,
+            live: Arc::new(AtomicBool::new(true)),
+        };
         owner.check()?;
         Ok(owner)
     }
     fn check(&self) -> io::Result<()> {
         use std::sync::atomic::Ordering;
-        if !self.authority.load(Ordering::Acquire) || !self.live.load(Ordering::Acquire)
-            || self.inner.owner_observation().ok().is_none_or(|owner| !self.identity.same_identity(owner)) {
+        if !self.authority.load(Ordering::Acquire)
+            || !self.live.load(Ordering::Acquire)
+            || self
+                .inner
+                .owner_observation()
+                .ok()
+                .is_none_or(|owner| !self.identity.same_identity(owner))
+        {
             self.retire();
-            return Err(io::Error::new(io::ErrorKind::PermissionDenied, "HEVC original presenter identity/authority retired"));
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "HEVC original presenter identity/authority retired",
+            ));
         }
         Ok(())
     }
@@ -480,27 +546,54 @@ impl GpuHevcPresenter {
     fn finish(&self, step: GpuDecodeStep) -> io::Result<HevcGpuDecodeStep> {
         self.check()?;
         let owner = self.inner.owner_observation()?;
-        if step.decoded.is_some() || step.picture.is_some() { owner.require_hardware_identity()?; }
+        if step.decoded.is_some() || step.picture.is_some() {
+            owner.require_hardware_identity()?;
+        }
         let submitted = if let Some(picture) = step.picture {
-            if !picture.gpu_converted { return Err(io::Error::other("HEVC presenter output did not use GPU conversion")); }
-            picture.submitted_qpc.map(|submitted_qpc| HevcGpuSubmissionReceipt {
-                authority: self.authority.clone(), live: self.live.clone(), target: self.target,
-                owner, sequence: picture.sequence, pts_90khz: picture.pts_90khz, submitted_qpc })
-        } else { None };
+            if !picture.gpu_converted {
+                return Err(io::Error::other(
+                    "HEVC presenter output did not use GPU conversion",
+                ));
+            }
+            picture
+                .submitted_qpc
+                .map(|submitted_qpc| HevcGpuSubmissionReceipt {
+                    authority: self.authority.clone(),
+                    live: self.live.clone(),
+                    target: self.target,
+                    owner,
+                    sequence: picture.sequence,
+                    pts_90khz: picture.pts_90khz,
+                    submitted_qpc,
+                })
+        } else {
+            None
+        };
         self.check()?;
         Ok(HevcGpuDecodeStep { step, submitted })
     }
     pub fn owner_observation(&self) -> io::Result<crate::OwnerObservation> {
-        self.check()?; self.inner.owner_observation()
+        self.check()?;
+        self.inner.owner_observation()
     }
-    pub fn submit_scheduled(&mut self, sequence: u64, pts_90khz: u64, bytes: &[u8],
-        due_qpc: u64, not_after_qpc: u64) -> io::Result<HevcGpuDecodeStep> {
+    pub fn submit_scheduled(
+        &mut self,
+        sequence: u64,
+        pts_90khz: u64,
+        bytes: &[u8],
+        due_qpc: u64,
+        not_after_qpc: u64,
+    ) -> io::Result<HevcGpuDecodeStep> {
         let result = (|| {
             self.check()?;
-            let step = self.inner.submit_scheduled(sequence, pts_90khz, bytes, due_qpc, not_after_qpc)?;
+            let step =
+                self.inner
+                    .submit_scheduled(sequence, pts_90khz, bytes, due_qpc, not_after_qpc)?;
             self.finish(step)
         })();
-        if result.is_err() { self.retire(); }
+        if result.is_err() {
+            self.retire();
+        }
         result
     }
     pub fn poll(&mut self) -> io::Result<HevcGpuDecodeStep> {
@@ -509,7 +602,9 @@ impl GpuHevcPresenter {
             let step = self.inner.poll()?;
             self.finish(step)
         })();
-        if result.is_err() { self.retire(); }
+        if result.is_err() {
+            self.retire();
+        }
         result
     }
     pub fn close(mut self) -> io::Result<()> {
@@ -520,6 +615,8 @@ impl GpuHevcPresenter {
 impl Drop for GpuHevcPresenter {
     fn drop(&mut self) {
         self.live.store(false, std::sync::atomic::Ordering::Release);
-        if let Err(error) = self.inner.close_owner() { eprintln!("HEVC original GPU presenter cleanup failed: {error}"); }
+        if let Err(error) = self.inner.close_owner() {
+            eprintln!("HEVC original GPU presenter cleanup failed: {error}");
+        }
     }
 }
