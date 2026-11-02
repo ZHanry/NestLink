@@ -617,7 +617,7 @@ fn decode_header(bytes: &[u8; VIDEO_HEADER_BYTES]) -> Result<Header, crate::Erro
         || bytes[9] != PIXEL_BGRA8
         || bytes[11] > 1
         || (bytes[10] == 0 && bytes[11] != 0)
-        || (bytes[8] != KIND_FRAME && (bytes[10] != 0 || bytes[11] != 0))
+        || (bytes[10] != 0 && bytes[8] != KIND_FRAME)
     {
         return Err(crate::Error::Protocol);
     }
