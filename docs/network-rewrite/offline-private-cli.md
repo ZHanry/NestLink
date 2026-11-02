@@ -42,7 +42,7 @@ nestlink-daemon private-service-proxy --state-dir <另一台设备的私有状�
 
    HTTP/HTTPS 服务发送 HTTP 应用字节；HTTPS 后端由宿主用本机信任材料单独校验证书。Windows 字节管道没有独立的写半关闭 EOF，应用必须自带帧边界。
 9. `{"command":"status"}` 显示 **离线仅直连**、固定失效时刻、剩余毫秒、累计剩余额度、累计连接、当前连接、恢复同步和清理状态。重连沿用同一累计 owner。每次 I/O 受同一锁及额度门禁控制，空闲时每 250ms 检查原定期限及本机进程终态。
-10. 原运行时每两秒尝试受认证的中心探测；收到有效响应后先暂停所有业务 I/O，再从中心同步原授权、ACL、策略及最高撤销 epoch。同步失败永久停止。`{"command":"recover"}` 可主动执行同样的暂停和同步。中心失联期间无法立即获知中心撤销；界面始终显示最迟影响时刻为原定 expiry，且不会自动延长。
+10. 原运行时每两秒尝试受认证的中心探测；收到有效响应后先暂停所有业务 I/O，再从中心同步原授权、ACL、策略及最高撤销 epoch。同步失败永久停止。驻留入口的显式 `policy`、`enable`、`service`、`recover` 和 `revoke` 管理操作均在发起 HTTP 前永久停止原离线 owner；响应失败或撤销其他包也不重新开启数据。`{"command":"recover"}` 读取并展示受认证的原包最新状态，继续在线使用须走普通入口的新授权。中心失联期间无法立即获知中心撤销；界面始终显示最迟影响时刻为原定 expiry，且不会自动延长。
 11. `{"command":"revoke","bundle_id":"<原授权 UUID>"}` 使用原有在线撤销 API；`{"command":"stop"}` 结束驻留。`cleanup_pending` 保留原来的 join 和 owner；只有实际 QUIC socket 释放回执及原私有端点移除完成才输出 `stopped`。`cleanup_failed` 必须处理，不能当作已完成清理。
 
 所有编译、lint、格式化和业务验收由 `offline-authority.yml` 在 GitHub 托管 runner 上执行。本机不运行源码构建或测试。已验证范围以对应源码 SHA 的 Actions receipt 为准；命令行编译通过不等于目标机器全量验收。

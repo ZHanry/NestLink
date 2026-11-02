@@ -365,11 +365,19 @@ impl Resident {
             }
             Command::Status => self.status()?,
             Command::Recover => {
-                let owner = self
+                let bundle_id = self
                     .owner
                     .as_ref()
-                    .ok_or_else(|| invalid("activate the original owner first"))?;
-                owner.synchronize_online(&self.sdk).await?;
+                    .ok_or_else(|| invalid("activate the original owner first"))?
+                    .status()?
+                    .bundle_id;
+                // This explicit management entry has already terminal-stopped
+                // its original authority. The SDK's pause/resume synchronization
+                // requires a live authority, so read the same authenticated
+                // bundle directly and never attempt to resume this owner.
+                let view = self.sdk.offline_bundle(&self.args.space, &bundle_id).await?;
+                self.check_review(&view)?;
+                emit("online_state", view)?;
                 self.status()?;
             }
             Command::Revoke { bundle_id } => {
