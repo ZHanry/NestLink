@@ -88,3 +88,16 @@ are read or verified again. The next exact-source original pair-window run is
 41449447897 at d7e735d. It also executes the existing external-change, persisted
 revocation/restart and clock-rollback/restore storage regressions. All prior
 failures and every original deadline, bound and load assertion remain in force.
+
+The optional flat perf diagnostic at e226eec, run 41470546001, retained the
+original release pair-window load and failed at wave zero, pair zero, flow 39
+with HTTP 403 PermissionRequired after 800 readiness records (40 per pair).
+There is no completed thousand-live hold or successful wave. All six sampler
+lifecycle tests and the preceding original regressions passed. Perf recorded
+1474 samples with zero lost samples; its flat report spans the entire target
+lifetime, including 244.900 seconds of wall-clock setup. It has no call graph
+or per-phase attribution, so its crypto, JSON and SQLite symbols cannot identify
+the cost of currentness or opening alone. The official ZIP digest and all 50
+receipt payload hashes were verified; `evidence/perf-e226eec.json` preserves the
+original receipt, failure, exact counts, limitations and mature perf references.
+This diagnostic does not qualify AC68 or replace any previous failed attempt.

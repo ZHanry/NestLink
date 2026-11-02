@@ -1,0 +1,1007 @@
+{
+    "schema_version":  1,
+    "source_revision":  "e226eec96c1baa567db2b382b1bf22a63249518d",
+    "work_packages":  [
+                          "W39"
+                      ],
+    "acceptance":  [
+                       "AC68"
+                   ],
+    "status":  "diagnostic_recorded_original_capacity_failed",
+    "reviewed_mature_tool_references": [
+      {
+        "repository": "torvalds/linux",
+        "ref": "v6.8",
+        "path": "tools/perf/Documentation/perf-record.txt",
+        "git_blob_sha": "6015fdd08fb63b679b56195b7734e7449a318851",
+        "url": "https://github.com/torvalds/linux/blob/v6.8/tools/perf/Documentation/perf-record.txt",
+        "reviewed_scope": "--timestamp, --clockid supported clocks and event restrictions, frame-pointer prerequisites for fp call graphs; reference review for a later optional diagnostic, not evidence this run recorded phase clocks or call graphs."
+      },
+      {
+        "repository": "torvalds/linux",
+        "ref": "v6.8",
+        "path": "tools/perf/Documentation/perf-report.txt",
+        "git_blob_sha": "38f59ac064f7d4615daf5e1bba57a7045ba4c597",
+        "url": "https://github.com/torvalds/linux/blob/v6.8/tools/perf/Documentation/perf-report.txt",
+        "reviewed_scope": "--time seconds.nanoseconds ranges and --header; reference review only, this run retained one full-lifetime flat report."
+      }
+    ],
+    "build_provenance":  {
+                             "workflow":  ".github/workflows/network-capacity.yml",
+                             "workflow_revision":  "e226eec96c1baa567db2b382b1bf22a63249518d",
+                             "run_id":  41470546001,
+                             "attempt":  1,
+                             "job_id":  125362673875,
+                             "runner":  "ubuntu-24.04",
+                             "runner_environment":  "github-hosted",
+                             "runner_image_version":  "20261026.354.1",
+                             "dependency_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+                             "conclusion":  "failure",
+                             "url":  "https://github.com/ZHanry/NestLink/actions/runs/41470546001",
+                             "original_release_settings_preserved":  true,
+                             "diagnostic_build_overrides":  {
+                                                                "CARGO_PROFILE_RELEASE_DEBUG":  "1",
+                                                                "CARGO_PROFILE_RELEASE_STRIP":  "none"
+                                                            }
+                         },
+    "artifact_verification":  {
+                                  "artifact_id":  13155808167,
+                                  "artifact_name":  "network-capacity-multiplexed-release-pair-windows-e226eec96c1baa567db2b382b1bf22a63249518d-1",
+                                  "archive_bytes":  88925,
+                                  "official_artifact_digest":  "sha256:85fa3260ac63d14aebdfe64e62e635128e02efe761a7eeae7237bfda9985eca0",
+                                  "downloaded_archive_sha256":  "85fa3260ac63d14aebdfe64e62e635128e02efe761a7eeae7237bfda9985eca0",
+                                  "archive_digest_matches":  true,
+                                  "receipt_sha256":  "4447aefbdc0258a7363b6e66facbc1cdb7e3d0f25f633fdb3ec47a76d2212c9c",
+                                  "verified_payload_files":  50,
+                                  "all_payload_sizes_and_sha256_verified":  true,
+                                  "all_manifest_paths_contained_and_unique":  true,
+                                  "unlisted_payloads":  [
+
+                                                        ],
+                                  "manifest_itself_is_only_unlisted_file":  true,
+                                  "independent_perf_metadata_matches_receipt_sampling":  true,
+                                  "exact_source_workflow_run_attempt_and_hosted_provenance_verified":  true,
+                                  "verification_scope":  "Downloaded official archive, receipt provenance and payload integrity only; no local project build, formatter, lint, syntax check or test."
+                              },
+    "execution_provenance":  {
+                                 "environment":  "github-hosted",
+                                 "original_target_runs_as_runner_uid":  1001,
+                                 "original_target_executable_sha256":  "56768a23ebe4a530dcf07a854ec24f10c90d9f44f320d353b773b13a5bf28232",
+                                 "original_target_timeout_seconds":  660,
+                                 "original_target_return_code":  101,
+                                 "original_target_timed_out":  false,
+                                 "original_target_seconds":  254.65069894499993,
+                                 "original_assertions_and_deadlines_preserved":  true,
+                                 "original_failure":  "wave 0 pair 0 flow 39 open_stream: management operation rejected (403 Forbidden): PermissionRequired",
+                                 "passed":  false,
+                                 "ac68_passed":  false,
+                                 "original_workload_passed":  false,
+                                 "diagnostic_passed":  false,
+                                 "sampler_status":  "passed",
+                                 "wave0_unique_ready_flows":  800,
+                                 "ready_flows_per_pair":  40,
+                                 "ready_pairs":  20,
+                                 "issued_leases":  20,
+                                 "ready_multiplex_control_owners":  20,
+                                 "thousand_live_sample_count":  0,
+                                 "wave_live_sample_count":  0,
+                                 "complete_sample_count":  0,
+                                 "setup_wall_seconds_before_setup_to_all_hosts_ready":  244.9,
+                                 "observed_ready_flow_open_microseconds":  {
+                                                                               "minimum":  1071736,
+                                                                               "maximum":  7619077,
+                                                                               "mean":  4299197.9175
+                                                                           }
+                             },
+    "hosted_regressions":  {
+                               "lifecycle_return_code":  0,
+                               "lifecycle_test_count":  6,
+                               "lifecycle_log_summary":  "Ran 6 tests in 0.015s; OK",
+                               "lifecycle_tests":  [
+                                                       "test_install_failure_still_executes_original_and_retains_real_return_code",
+                                                       "test_natural_target_exit_race_does_not_mark_recorder_premature",
+                                                       "test_nonzero_report_can_pass_only_diagnostic_without_exporting_raw_data",
+                                                       "test_perf_failure_cannot_replace_workload_error_or_output",
+                                                       "test_timeout_kills_waits_only_original_target_and_stops_its_own_recorder",
+                                                       "test_zero_samples_cannot_pass_diagnostic"
+                                                   ],
+                               "all_preceding_original_builds_regressions_and_strict_currentness_return_codes":  0,
+                               "currentness_authority_tests":  1,
+                               "delegation_verified_lease_tests":  1,
+                               "sealed_usage_claims_tests":  1,
+                               "canonical_view_claims_tests":  1,
+                               "snapshot_live_rows_tests":  1,
+                               "snapshot_restart_revocation_tests":  1,
+                               "snapshot_clock_and_restore_tests":  1,
+                               "native_http_backpressure_tests":  7,
+                               "explicit_negotiation_tests":  1,
+                               "multiplex_original_owner_tests":  6,
+                               "strict_capacity_after_failed_original_workload_executed":  false
+                           },
+    "flat_profile":  {
+                         "sampler_script_sha256":  "8b9492a1889945013390eedf0bd1b2ee80ea5d529969cf960e00f97735de97b2",
+                         "perf_binary":  "/usr/lib/linux-tools-6.8.0-147/perf",
+                         "perf_package":  "linux-tools-6.8.0-147 6.8.0-147.147",
+                         "perf_version":  "6.8.12",
+                         "perf_binary_sha256":  "2927eb0973fd937bdd417622531c95f1e6e19307a29c3e05a2c6198e12af6e56",
+                         "package_sources":  "Hosted Ubuntu noble-updates/main and noble-security/main apt repositories; package policy and ownership logs retained.",
+                         "record_return_code":  0,
+                         "report_return_code":  0,
+                         "event":  "cpu-clock:u",
+                         "frequency_hz":  99,
+                         "call_graph":  false,
+                         "raw_user_stack":  false,
+                         "user_registers":  false,
+                         "memory_sampling":  false,
+                         "raw_data_exported":  false,
+                         "private_raw_data_bytes":  97521,
+                         "private_raw_data_sha256":  "a5c9fbfab56595fc03e2e51ae3ab56d578b7f7859c320cd20669f5235ce23a61",
+                         "report_sha256":  "2d139ec2c859fb11022e30d31cf7fb6086ba180f99537c90cfe7e272dd13582e",
+                         "report_rows":  407,
+                         "exact_samples_from_record_and_sum_of_report_rows":  1474,
+                         "lost_samples":  0,
+                         "top_symbols":  [
+                                             {
+                                                 "overhead_percent":  8.89,
+                                                 "samples":  131,
+                                                 "dso":  "capacity-d71216f584dd5f47",
+                                                 "symbol":  "\u003c\u0026curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as \u003c\u0026curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as core::ops::arith::Mul\u003e::mul::__Impl_mul__\u003e::_impl_mul"
+                                             },
+                                             {
+                                                 "overhead_percent":  7.06,
+                                                 "samples":  104,
+                                                 "dso":  "capacity-d71216f584dd5f47",
+                                                 "symbol":  "curve25519_dalek::backend::serial::u64::field::FieldElement51::pow2k"
+                                             },
+                                             {
+                                                 "overhead_percent":  2.99,
+                                                 "samples":  44,
+                                                 "dso":  "capacity-d71216f584dd5f47",
+                                                 "symbol":  "\u003ccurve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4::square_and_negate_D::__Impl_square_and_negate_D__\u003e::_impl_square_and_negate_D"
+                                             },
+                                             {
+                                                 "overhead_percent":  2.71,
+                                                 "samples":  40,
+                                                 "dso":  "capacity-d71216f584dd5f47",
+                                                 "symbol":  "curve25519_dalek::backend::vector::scalar_mul::vartime_double_base::spec_avx2::mul::_impl_mul"
+                                             },
+                                             {
+                                                 "overhead_percent":  2.31,
+                                                 "samples":  34,
+                                                 "dso":  "capacity-d71216f584dd5f47",
+                                                 "symbol":  "sqlite3VdbeExec"
+                                             },
+                                             {
+                                                 "overhead_percent":  2.1,
+                                                 "samples":  31,
+                                                 "dso":  "capacity-d71216f584dd5f47",
+                                                 "symbol":  "sqlite3RunParser"
+                                             },
+                                             {
+                                                 "overhead_percent":  1.76,
+                                                 "samples":  26,
+                                                 "dso":  "capacity-d71216f584dd5f47",
+                                                 "symbol":  "sha2::sha512::x86::sha512_compress_x86_64_avx2"
+                                             },
+                                             {
+                                                 "overhead_percent":  1.56,
+                                                 "samples":  23,
+                                                 "dso":  "capacity-d71216f584dd5f47",
+                                                 "symbol":  "resolveExprStep"
+                                             },
+                                             {
+                                                 "overhead_percent":  1.49,
+                                                 "samples":  22,
+                                                 "dso":  "capacity-d71216f584dd5f47",
+                                                 "symbol":  "argon2::Argon2::compress::compress_avx2"
+                                             },
+                                             {
+                                                 "overhead_percent":  1.42,
+                                                 "samples":  21,
+                                                 "dso":  "capacity-d71216f584dd5f47",
+                                                 "symbol":  "\u003c\u0026curve25519_dalek::backend::serial::u64::field::FieldElement51 as core::ops::arith::Mul\u003e::mul"
+                                             },
+                                             {
+                                                 "overhead_percent":  1.42,
+                                                 "samples":  21,
+                                                 "dso":  "capacity-d71216f584dd5f47",
+                                                 "symbol":  "serde_json::de::Deserializer\u003cR\u003e::parse_integer"
+                                             },
+                                             {
+                                                 "overhead_percent":  1.36,
+                                                 "samples":  20,
+                                                 "dso":  "capacity-d71216f584dd5f47",
+                                                 "symbol":  "yy_reduce.isra.0"
+                                             }
+                                         ],
+                         "explicit_symbol_name_groups":  [
+                                                             {
+                                                                 "pattern":  "curve25519_dalek",
+                                                                 "samples":  351,
+                                                                 "percent":  23.812754409769337
+                                                             },
+                                                             {
+                                                                 "pattern":  "sha2::",
+                                                                 "samples":  41,
+                                                                 "percent":  2.7815468113975577
+                                                             },
+                                                             {
+                                                                 "pattern":  "argon2::",
+                                                                 "samples":  23,
+                                                                 "percent":  1.5603799185888738
+                                                             },
+                                                             {
+                                                                 "pattern":  "serde_json::|serde_core::|serde::",
+                                                                 "samples":  231,
+                                                                 "percent":  15.671641791044776
+                                                             },
+                                                             {
+                                                                 "pattern":  "sqlite3",
+                                                                 "samples":  260,
+                                                                 "percent":  17.639077340569877,
+                                                                 "scope":  "Lower bound for directly named sqlite3 symbols; internal parser and optimizer aliases are not all included."
+                                                             },
+                                                             {
+                                                                 "pattern":  "pthread_mutex",
+                                                                 "samples":  18,
+                                                                 "percent":  1.2211668928086838
+                                                             }
+                                                         ],
+                         "unresolved_address_samples":  {
+                                                            "samples":  141,
+                                                            "percent":  9.5658073270013571,
+                                                            "libc":  136,
+                                                            "vdso":  4,
+                                                            "libm":  1,
+                                                            "target_binary":  0
+                                                        }
+                     },
+    "limitations":  [
+                        "Flat on-CPU user-space samples cover the complete original target lifetime, including fixture setup, management enrollment and logins, control negotiation, application flow opening and failure teardown. No call graph or per-phase sample report was recorded.",
+                        "The 244.9-second wall-clock fixture setup is not a CPU attribution. Flat crypto, JSON and SQLite samples cannot be assigned to setup, opening, currentness, signing versus verification or any particular SQL operation.",
+                        "Sample percentages are sampled on-CPU overhead, not wall-clock waiting, database admission queue time, Store mutex wait duration, SQL timing or elapsed open_stream duration.",
+                        "Explicit symbol groups are descriptive matches, not an exhaustive disjoint cost model; some groups overlap other subsystem names. An absence of a high-level NestLink symbol is not absence of inlined work.",
+                        "800 readiness records do not establish all 1000 targets alive together, survival through the original two-second hold, completed accounting or three successful waves.",
+                        "This diagnostic uses the unchanged original offered load and deadlines but additional release debug symbols. It qualifies neither AC68 nor an unsampled capacity pass and does not replace any earlier failure.",
+                        "One hosted process does not qualify 100 independently deployed physical nodes, external relay capacity, all queue bounds or cross-day soak.",
+                        "No production permission, SQL, signature or currentness behavior was changed for this diagnostic. Existing bounded prepared statement reuse is already present in the tested source."
+                    ],
+    "receipt":  {
+                    "source_revision":  "e226eec96c1baa567db2b382b1bf22a63249518d",
+                    "workflow":  "ZHanry/NestLink/.github/workflows/network-capacity.yml@refs/heads/main",
+                    "workflow_revision":  "e226eec96c1baa567db2b382b1bf22a63249518d",
+                    "run_id":  "41470546001",
+                    "run_attempt":  "1",
+                    "runner_environment":  "github-hosted",
+                    "runner_os":  "Linux",
+                    "kernel":  [
+                                   "Linux",
+                                   "runnervm48cm3",
+                                   "7.0.0-1017-azure",
+                                   "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+                                   "x86_64"
+                               ],
+                    "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+                    "offered_load":  {
+                                         "registered_installations_in_one_space":  100,
+                                         "active_pairs":  20,
+                                         "simultaneous_flows":  1000,
+                                         "reconnect_waves":  3,
+                                         "management_logins_per_active_consumer":  1,
+                                         "streams_per_pair":  50,
+                                         "same_lease_control_owners_per_wave":  20
+                                     },
+                    "scope":  "Original HTTP management and signed grants, actual kernel QUIC/TCP targets, original limits and four-scope durable accounting. One independent management login per active consumer, unchanged original rate limits.",
+                    "limitations":  [
+                                        "one hosted process; not physical nodes or independently deployed relay runtimes",
+                                        "short-run samples cannot qualify cross-day soak, complete E2E or all bounded queues"
+                                    ],
+                    "passed":  false,
+                    "commands":  [
+                                     {
+                                         "name":  "perf-orchestration-tests",
+                                         "argv":  [
+                                                      "python3",
+                                                      "-B",
+                                                      "-m",
+                                                      "unittest",
+                                                      "discover",
+                                                      "-s",
+                                                      "scripts",
+                                                      "-p",
+                                                      "test_capacity_perf.py",
+                                                      "-v"
+                                                  ],
+                                         "timeout_seconds":  60,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  0.21432277600000305
+                                     },
+                                     {
+                                         "name":  "build-currentness",
+                                         "argv":  [
+                                                      "cargo",
+                                                      "test",
+                                                      "--release",
+                                                      "--locked",
+                                                      "-p",
+                                                      "nestlink-storage",
+                                                      "-p",
+                                                      "nestlink-identity",
+                                                      "--lib",
+                                                      "--test",
+                                                      "network_policy",
+                                                      "--no-run",
+                                                      "--message-format=json-render-diagnostics"
+                                                  ],
+                                         "timeout_seconds":  1200,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  130.19073090999998
+                                     },
+                                     {
+                                         "name":  "strict-currentness",
+                                         "argv":  [
+                                                      "cargo",
+                                                      "clippy",
+                                                      "--release",
+                                                      "--locked",
+                                                      "-p",
+                                                      "nestlink-storage",
+                                                      "-p",
+                                                      "nestlink-identity",
+                                                      "--lib",
+                                                      "--tests",
+                                                      "--",
+                                                      "-D",
+                                                      "warnings"
+                                                  ],
+                                         "timeout_seconds":  300,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  24.29332743500001
+                                     },
+                                     {
+                                         "name":  "currentness-authority",
+                                         "argv":  [
+                                                      "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_storage-c287ebbbbe9b6e19",
+                                                      "combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_and_revoke",
+                                                      "--show-output"
+                                                  ],
+                                         "timeout_seconds":  60,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  0.11416520599999558
+                                     },
+                                     {
+                                         "name":  "delegation-verified-lease",
+                                         "argv":  [
+                                                      "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_identity-4a4d0fc6f0850271",
+                                                      "delegation_verified_lease_reuse_keeps_exact_issuer_scope_and_original_deadlines",
+                                                      "--show-output"
+                                                  ],
+                                         "timeout_seconds":  60,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  0.0036551799999813284
+                                     },
+                                     {
+                                         "name":  "sealed-usage-claims",
+                                         "argv":  [
+                                                      "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_identity-4a4d0fc6f0850271",
+                                                      "sealed_usage_retains_exact_verified_claims_and_rejects_nested_substitution",
+                                                      "--show-output"
+                                                  ],
+                                         "timeout_seconds":  60,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  0.003428388000003224
+                                     },
+                                     {
+                                         "name":  "canonical-view-claims",
+                                         "argv":  [
+                                                      "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_identity-4a4d0fc6f0850271",
+                                                      "private_network_view_reuse_preserves_original_canonical_and_live_checks",
+                                                      "--show-output"
+                                                  ],
+                                         "timeout_seconds":  60,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  0.0034091199999863875
+                                     },
+                                     {
+                                         "name":  "snapshot-live-rows",
+                                         "argv":  [
+                                                      "/home/runner/work/NestLink/NestLink/target/release/deps/network_policy-5b97c18b5df97d1b",
+                                                      "--exact",
+                                                      "external_device_revocation_expiry_and_key_corruption_enter_the_live_snapshot",
+                                                      "--show-output"
+                                                  ],
+                                         "timeout_seconds":  60,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  0.6152848199999994
+                                     },
+                                     {
+                                         "name":  "snapshot-restart-revocation",
+                                         "argv":  [
+                                                      "/home/runner/work/NestLink/NestLink/target/release/deps/network_policy-5b97c18b5df97d1b",
+                                                      "--exact",
+                                                      "signed_membership_and_revocation_survive_restart_without_reissuing_the_id",
+                                                      "--show-output"
+                                                  ],
+                                         "timeout_seconds":  60,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  0.21429838299999915
+                                     },
+                                     {
+                                         "name":  "snapshot-clock-and-restore",
+                                         "argv":  [
+                                                      "/home/runner/work/NestLink/NestLink/target/release/deps/network_policy-5b97c18b5df97d1b",
+                                                      "--exact",
+                                                      "restart_cannot_roll_the_authorization_clock_back_and_restore_fences_old_spaces",
+                                                      "--show-output"
+                                                  ],
+                                         "timeout_seconds":  60,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  0.21431466900000373
+                                     },
+                                     {
+                                         "name":  "build",
+                                         "argv":  [
+                                                      "cargo",
+                                                      "test",
+                                                      "--release",
+                                                      "--locked",
+                                                      "-p",
+                                                      "nestlink-sdk",
+                                                      "--lib",
+                                                      "--test",
+                                                      "capacity",
+                                                      "--test",
+                                                      "private_services",
+                                                      "--no-run",
+                                                      "--message-format=json-render-diagnostics"
+                                                  ],
+                                         "timeout_seconds":  1200,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  514.009454877
+                                     },
+                                     {
+                                         "name":  "native-http-backpressure",
+                                         "argv":  [
+                                                      "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_sdk-f5764923b349523b",
+                                                      "http_admission::tests::",
+                                                      "--show-output",
+                                                      "--test-threads=1"
+                                                  ],
+                                         "timeout_seconds":  180,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  15.905621049000047
+                                     },
+                                     {
+                                         "name":  "explicit-negotiation",
+                                         "argv":  [
+                                                      "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_sdk-f5764923b349523b",
+                                                      "explicit_negotiation_preserves_legacy_wire_and_old_host_refusal",
+                                                      "--show-output"
+                                                  ],
+                                         "timeout_seconds":  300,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  0.0035475169999017453
+                                     },
+                                     {
+                                         "name":  "multiplex-original-owners",
+                                         "argv":  [
+                                                      "/home/runner/work/NestLink/NestLink/target/release/deps/private_services-ca199234124a907b",
+                                                      "multiplex::",
+                                                      "--show-output",
+                                                      "--test-threads=1"
+                                                  ],
+                                         "timeout_seconds":  300,
+                                         "return_code":  0,
+                                         "timed_out":  false,
+                                         "seconds":  12.28950420000001
+                                     },
+                                     {
+                                         "name":  "execution",
+                                         "argv":  [
+                                                      "/home/runner/work/NestLink/NestLink/target/release/deps/capacity-d71216f584dd5f47",
+                                                      "--exact",
+                                                      "hundred_enrolled_nodes_twenty_pairs_thousand_multiplexed_authorized_streams",
+                                                      "--ignored",
+                                                      "--nocapture",
+                                                      "--test-threads=1"
+                                                  ],
+                                         "timeout_seconds":  660,
+                                         "return_code":  101,
+                                         "timed_out":  false,
+                                         "seconds":  254.65069894499993,
+                                         "diagnostic_total_seconds":  254.87938876399994
+                                     }
+                                 ],
+                    "build_profile":  "release",
+                    "opening_schedule":  "pair-windows",
+                    "original_assertions_and_deadlines_preserved":  true,
+                    "load_mode":  "multiplexed",
+                    "diagnostic_only":  true,
+                    "ac68_passed":  false,
+                    "diagnostic_passed":  false,
+                    "original_workload_passed":  false,
+                    "sampling":  {
+                                     "diagnostic_only":  true,
+                                     "acceptance_qualified":  false,
+                                     "source_revision":  "e226eec96c1baa567db2b382b1bf22a63249518d",
+                                     "script_sha256":  "8b9492a1889945013390eedf0bd1b2ee80ea5d529969cf960e00f97735de97b2",
+                                     "status":  "passed",
+                                     "event":  "cpu-clock:u",
+                                     "frequency_hz":  99,
+                                     "call_graph":  false,
+                                     "raw_user_stack":  false,
+                                     "user_registers":  false,
+                                     "memory_sampling":  false,
+                                     "raw_data_exported":  false,
+                                     "target_runs_as_original_runner_user":  true,
+                                     "tool_source":  "Ubuntu linux-tools packages from the hosted runner apt repositories",
+                                     "runner_image_os":  "ubuntu24",
+                                     "runner_image_version":  "20261026.354.1",
+                                     "build_overrides":  {
+                                                             "CARGO_PROFILE_RELEASE_DEBUG":  "1",
+                                                             "CARGO_PROFILE_RELEASE_STRIP":  "none"
+                                                         },
+                                     "commands":  [
+                                                      {
+                                                          "name":  "perf-install",
+                                                          "argv":  [
+                                                                       "sudo",
+                                                                       "-n",
+                                                                       "apt-get",
+                                                                       "install",
+                                                                       "-y",
+                                                                       "linux-tools-common",
+                                                                       "linux-tools-generic"
+                                                                   ],
+                                                          "timeout_seconds":  300,
+                                                          "return_code":  0,
+                                                          "timed_out":  false,
+                                                          "seconds":  3.3713713530000007
+                                                      },
+                                                      {
+                                                          "name":  "perf-packages",
+                                                          "argv":  [
+                                                                       "dpkg-query",
+                                                                       "-W",
+                                                                       "-f=${binary:Package} ${Version}\n",
+                                                                       "linux-tools*"
+                                                                   ],
+                                                          "timeout_seconds":  30,
+                                                          "return_code":  0,
+                                                          "timed_out":  false,
+                                                          "seconds":  0.016079779000008898
+                                                      },
+                                                      {
+                                                          "name":  "perf-package-sources",
+                                                          "argv":  [
+                                                                       "apt-cache",
+                                                                       "policy",
+                                                                       "linux-tools-common",
+                                                                       "linux-tools-generic"
+                                                                   ],
+                                                          "timeout_seconds":  30,
+                                                          "return_code":  0,
+                                                          "timed_out":  false,
+                                                          "seconds":  0.03590033100000767
+                                                      },
+                                                      {
+                                                          "name":  "perf-package-owner",
+                                                          "argv":  [
+                                                                       "dpkg-query",
+                                                                       "-S",
+                                                                       "/usr/lib/linux-tools-6.8.0-147/perf"
+                                                                   ],
+                                                          "timeout_seconds":  30,
+                                                          "return_code":  0,
+                                                          "timed_out":  false,
+                                                          "seconds":  0.11415820599999904
+                                                      },
+                                                      {
+                                                          "name":  "perf-version",
+                                                          "argv":  [
+                                                                       "/usr/lib/linux-tools-6.8.0-147/perf",
+                                                                       "version",
+                                                                       "--build-options"
+                                                                   ],
+                                                          "timeout_seconds":  30,
+                                                          "return_code":  0,
+                                                          "timed_out":  false,
+                                                          "seconds":  0.031938541000002374
+                                                      },
+                                                      {
+                                                          "name":  "perf-record",
+                                                          "argv":  [
+                                                                       "sudo",
+                                                                       "-n",
+                                                                       "env",
+                                                                       "PERF_CONFIG=/dev/null",
+                                                                       "LC_ALL=C",
+                                                                       "/usr/lib/linux-tools-6.8.0-147/perf",
+                                                                       "record",
+                                                                       "-e",
+                                                                       "cpu-clock:u",
+                                                                       "-F",
+                                                                       "99",
+                                                                       "--no-buildid-cache",
+                                                                       "-o",
+                                                                       "/home/runner/work/_temp/network-capacity-perf-private-g7plw6ge/perf.data",
+                                                                       "--pid",
+                                                                       "16838"
+                                                                   ],
+                                                          "return_code":  0,
+                                                          "timed_out":  false,
+                                                          "target_threads_inherited":  true
+                                                      },
+                                                      {
+                                                          "name":  "perf-data-size",
+                                                          "argv":  [
+                                                                       "sudo",
+                                                                       "-n",
+                                                                       "stat",
+                                                                       "--printf=%s",
+                                                                       "/home/runner/work/_temp/network-capacity-perf-private-g7plw6ge/perf.data"
+                                                                   ],
+                                                          "timeout_seconds":  30,
+                                                          "return_code":  0,
+                                                          "timed_out":  false,
+                                                          "seconds":  0.007786762000023373
+                                                      },
+                                                      {
+                                                          "name":  "perf-data-sha256",
+                                                          "argv":  [
+                                                                       "sudo",
+                                                                       "-n",
+                                                                       "sha256sum",
+                                                                       "--",
+                                                                       "/home/runner/work/_temp/network-capacity-perf-private-g7plw6ge/perf.data"
+                                                                   ],
+                                                          "timeout_seconds":  30,
+                                                          "return_code":  0,
+                                                          "timed_out":  false,
+                                                          "seconds":  0.007540873000152715
+                                                      },
+                                                      {
+                                                          "name":  "perf-report",
+                                                          "argv":  [
+                                                                       "sudo",
+                                                                       "-n",
+                                                                       "env",
+                                                                       "PERF_CONFIG=/dev/null",
+                                                                       "LC_ALL=C",
+                                                                       "/usr/lib/linux-tools-6.8.0-147/perf",
+                                                                       "report",
+                                                                       "--stdio",
+                                                                       "--stdio-color",
+                                                                       "never",
+                                                                       "--no-children",
+                                                                       "--show-nr-samples",
+                                                                       "--sort",
+                                                                       "dso,symbol",
+                                                                       "--percent-limit",
+                                                                       "0",
+                                                                       "-i",
+                                                                       "/home/runner/work/_temp/network-capacity-perf-private-g7plw6ge/perf.data"
+                                                                   ],
+                                                          "timeout_seconds":  60,
+                                                          "return_code":  0,
+                                                          "timed_out":  false,
+                                                          "seconds":  0.06375559000002795
+                                                      }
+                                                  ],
+                                     "failures":  [
+
+                                                  ],
+                                     "tool_candidates":  [
+                                                             "/usr/lib/linux-azure-7.0-tools-7.0.0-1017/perf",
+                                                             "/usr/lib/linux-tools-6.8.0-147/perf"
+                                                         ],
+                                     "tool_path":  "/usr/lib/linux-tools-6.8.0-147/perf",
+                                     "tool_sha256":  "2927eb0973fd937bdd417622531c95f1e6e19307a29c3e05a2c6198e12af6e56",
+                                     "tool_version":  "perf version 6.8.12\n                 dwarf: [ on  ]  # HAVE_DWARF_SUPPORT\n    dwarf_getlocations: [ on  ]  # HAVE_DWARF_GETLOCATIONS_SUPPORT\n         syscall_table: [ on  ]  # HAVE_SYSCALL_TABLE_SUPPORT\n                libbfd: [ OFF ]  # HAVE_LIBBFD_SUPPORT\n            debuginfod: [ OFF ]  # HAVE_DEBUGINFOD_SUPPORT\n                libelf: [ on  ]  # HAVE_LIBELF_SUPPORT\n               libnuma: [ on  ]  # HAVE_LIBNUMA_SUPPORT\nnuma_num_possible_cpus: [ on  ]  # HAVE_LIBNUMA_SUPPORT\n               libperl: [ OFF ]  # HAVE_LIBPERL_SUPPORT\n             libpython: [ on  ]  # HAVE_LIBPYTHON_SUPPORT\n              libslang: [ on  ]  # HAVE_SLANG_SUPPORT\n             libcrypto: [ on  ]  # HAVE_LIBCRYPTO_SUPPORT\n             libunwind: [ on  ]  # HAVE_LIBUNWIND_SUPPORT\n    libdw-dwarf-unwind: [ on  ]  # HAVE_DWARF_SUPPORT\n                  zlib: [ on  ]  # HAVE_ZLIB_SUPPORT\n                  lzma: [ on  ]  # HAVE_LZMA_SUPPORT\n             get_cpuid: [ on  ]  # HAVE_AUXTRACE_SUPPORT\n                   bpf: [ on  ]  # HAVE_LIBBPF_SUPPORT\n                   aio: [ on  ]  # HAVE_AIO_SUPPORT\n                  zstd: [ on  ]  # HAVE_ZSTD_SUPPORT\n               libpfm4: [ OFF ]  # HAVE_LIBPFM\n         libtraceevent: [ on  ]  # HAVE_LIBTRACEEVENT\n         bpf_skeletons: [ OFF ]  # HAVE_BPF_SKEL\n",
+                                     "perf_event_paranoid":  "4",
+                                     "private_raw_directory":  "/home/runner/work/_temp/network-capacity-perf-private-g7plw6ge",
+                                     "target_argv":  [
+                                                         "/home/runner/work/NestLink/NestLink/target/release/deps/capacity-d71216f584dd5f47",
+                                                         "--exact",
+                                                         "hundred_enrolled_nodes_twenty_pairs_thousand_multiplexed_authorized_streams",
+                                                         "--ignored",
+                                                         "--nocapture",
+                                                         "--test-threads=1"
+                                                     ],
+                                     "target_timeout_seconds":  660,
+                                     "target_uid":  1001,
+                                     "target_executable_sha256":  "56768a23ebe4a530dcf07a854ec24f10c90d9f44f320d353b773b13a5bf28232",
+                                     "target_pid":  16838,
+                                     "target_return_code":  101,
+                                     "target_seconds":  254.65069894499993,
+                                     "raw_data_bytes":  97521,
+                                     "raw_data_sha256":  "a5c9fbfab56595fc03e2e51ae3ab56d578b7f7859c320cd20669f5235ce23a61",
+                                     "samples_display":  "1K",
+                                     "report_sha256":  "2d139ec2c859fb11022e30d31cf7fb6086ba180f99537c90cfe7e272dd13582e"
+                                 },
+                    "currentness_executable_sha256":  "ce6e227dcdebf08cef3a72872542ac3fe4e5e08efe5175ab7a0ab4d1be159c2f",
+                    "identity_executable_sha256":  "e54d17220de8862d095c71c49a76d40bc43ca895a40fbeed7987a66a348daf68",
+                    "snapshot_executable_sha256":  "38a7bd28dbb11c94fba5f6e438b0bf1ffd7f70ef8e8f60318002d97c5d1d8525",
+                    "test_executables":  {
+                                             "nestlink_sdk":  {
+                                                                  "path":  "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_sdk-f5764923b349523b",
+                                                                  "sha256":  "199729a476aab5a0e96b9e806e3d0508738b9aeff7dbacfc503afc1c83c7ae56"
+                                                              },
+                                             "capacity":  {
+                                                              "path":  "/home/runner/work/NestLink/NestLink/target/release/deps/capacity-d71216f584dd5f47",
+                                                              "sha256":  "56768a23ebe4a530dcf07a854ec24f10c90d9f44f320d353b773b13a5bf28232"
+                                                          },
+                                             "private_services":  {
+                                                                      "path":  "/home/runner/work/NestLink/NestLink/target/release/deps/private_services-ca199234124a907b",
+                                                                      "sha256":  "7c202f2eb8d594bba18b511850a900dd60bc06509c31e968311aa7b9909a7d26"
+                                                                  }
+                                         },
+                    "executable_sha256":  "56768a23ebe4a530dcf07a854ec24f10c90d9f44f320d353b773b13a5bf28232",
+                    "failure":  "AssertionError(\u0027execution failed; original failure retained\u0027)",
+                    "files":  [
+                                  {
+                                      "path":  "build-currentness.log",
+                                      "bytes":  159922,
+                                      "sha256":  "72acccbe605a0dbfd8ffa1ce248b46ac353829280357f2c6e213448f5b370915"
+                                  },
+                                  {
+                                      "path":  "build-currentness.stderr.log",
+                                      "bytes":  13787,
+                                      "sha256":  "d6818ae741c5bfd5630430d544cbc700b59004630f18c8a0148e56a0dab1126b"
+                                  },
+                                  {
+                                      "path":  "build.log",
+                                      "bytes":  460083,
+                                      "sha256":  "d29655305577378b76b1c22a1e904178352bc25b3410e50178e2b8314f61229f"
+                                  },
+                                  {
+                                      "path":  "build.stderr.log",
+                                      "bytes":  51269,
+                                      "sha256":  "b68257d2a2ddc5e12b0a06a7e9ec0c8490fae86c9635ec8eb3533b3133878264"
+                                  },
+                                  {
+                                      "path":  "canonical-view-claims.log",
+                                      "bytes":  359,
+                                      "sha256":  "477f216466b63ec50fc66744c2f24b154afc2c1c70d941adcec9cc44adeb4850"
+                                  },
+                                  {
+                                      "path":  "canonical-view-claims.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "currentness-authority.log",
+                                      "bytes":  419,
+                                      "sha256":  "5c2129993dc62de50a033a6c3e9273fa03409a6588d8b6d0f6b057d9a6b3dcd6"
+                                  },
+                                  {
+                                      "path":  "currentness-authority.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "delegation-verified-lease.log",
+                                      "bytes":  357,
+                                      "sha256":  "503ce19220e1755cb8a3f4fe5245beae11bdb979707632e1ca58609371b92ae2"
+                                  },
+                                  {
+                                      "path":  "delegation-verified-lease.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "execution.log",
+                                      "bytes":  312,
+                                      "sha256":  "f80c1475060f451811ecf0488e606c38cee3da3ab817fb6233a539c970656607"
+                                  },
+                                  {
+                                      "path":  "execution.stderr.log",
+                                      "bytes":  141,
+                                      "sha256":  "974188a7b6f44a8fa4103916df56e674fe49f7b25124c1acebc5ead465e7f6da"
+                                  },
+                                  {
+                                      "path":  "explicit-negotiation.log",
+                                      "bytes":  374,
+                                      "sha256":  "d70a340704109595a9e8ed79f0488ae9061a901ffd7107d3622bd40b220d93c1"
+                                  },
+                                  {
+                                      "path":  "explicit-negotiation.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "multiplex-original-owners.log",
+                                      "bytes":  1201,
+                                      "sha256":  "61487fee34cac1439088c3e1392bfd8dfaeb31985c18f5847fbfcb2ba4f64383"
+                                  },
+                                  {
+                                      "path":  "multiplex-original-owners.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "native-http-backpressure.log",
+                                      "bytes":  1570,
+                                      "sha256":  "33290b6790de76e362b544be7597a8c81ebe1fae84bd4442b69e854ef7f9e55b"
+                                  },
+                                  {
+                                      "path":  "native-http-backpressure.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "perf-data-sha256.log",
+                                      "bytes":  139,
+                                      "sha256":  "eefac1fb3618c3dc655f9352995aeb388bc4ac74c326217ebae80d83678ea0f1"
+                                  },
+                                  {
+                                      "path":  "perf-data-sha256.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "perf-data-size.log",
+                                      "bytes":  5,
+                                      "sha256":  "555fdc58c8643c4acc3212887078cfa948e069f678fc2245c2bc00256900affc"
+                                  },
+                                  {
+                                      "path":  "perf-data-size.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "perf-install.log",
+                                      "bytes":  2425,
+                                      "sha256":  "97b1ea80e88f0a2510ca3c1d48357ab22f48f9a4699b97db5a91439205199be7"
+                                  },
+                                  {
+                                      "path":  "perf-install.stderr.log",
+                                      "bytes":  237,
+                                      "sha256":  "3b419c69ff321ee6851fa5489a2bb0c9a2ef093815a709dbd05391f89767267f"
+                                  },
+                                  {
+                                      "path":  "perf-metadata.json",
+                                      "bytes":  6567,
+                                      "sha256":  "1ad9417947439340dc36ad0ad3cbd16daff858b45dbf12cd1900b64f5788a61d"
+                                  },
+                                  {
+                                      "path":  "perf-orchestration-tests.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "perf-orchestration-tests.stderr.log",
+                                      "bytes":  1142,
+                                      "sha256":  "34a8a3fa2a22dbe5511ea79b4eaa8e82775aaf6dbb128105180a607dd45b88e3"
+                                  },
+                                  {
+                                      "path":  "perf-package-owner.log",
+                                      "bytes":  59,
+                                      "sha256":  "ffaadb4530d85e6131ad5e0b99f320a62f250bcb1ffc4f78a0ccc266c40989a2"
+                                  },
+                                  {
+                                      "path":  "perf-package-owner.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "perf-package-sources.log",
+                                      "bytes":  4151,
+                                      "sha256":  "f94d70996029977be41a0a0eeb7ebccac8494a552b3726af9b08ea6a8efc4a07"
+                                  },
+                                  {
+                                      "path":  "perf-package-sources.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "perf-packages.log",
+                                      "bytes":  251,
+                                      "sha256":  "83bbdf9a156c0df6de1063f572bb689ff9cee158d8c592484972c71340e1b8d4"
+                                  },
+                                  {
+                                      "path":  "perf-packages.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "perf-record.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "perf-record.stderr.log",
+                                      "bytes":  184,
+                                      "sha256":  "3cb4f05d02ce94d93245f5bb2ca6dbbe4cdb49084fd821ac56a2a68c334125d2"
+                                  },
+                                  {
+                                      "path":  "perf-report.log",
+                                      "bytes":  184299,
+                                      "sha256":  "2d139ec2c859fb11022e30d31cf7fb6086ba180f99537c90cfe7e272dd13582e"
+                                  },
+                                  {
+                                      "path":  "perf-report.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "perf-version.log",
+                                      "bytes":  1295,
+                                      "sha256":  "eb06dca892ecf70fe2e86e80e1dc2acb8103249c671a21299261e9b705f73236"
+                                  },
+                                  {
+                                      "path":  "perf-version.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "samples.jsonl",
+                                      "bytes":  67939,
+                                      "sha256":  "8821c43dae2887a652321dee2a799c7eb7b4de1303cb71569c45666498ff0d43"
+                                  },
+                                  {
+                                      "path":  "sealed-usage-claims.log",
+                                      "bytes":  347,
+                                      "sha256":  "8a628246cff27d877f00ff8855623910b14f69626e5f19a6b10491859414442f"
+                                  },
+                                  {
+                                      "path":  "sealed-usage-claims.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "snapshot-clock-and-restore.log",
+                                      "bytes":  311,
+                                      "sha256":  "6c3b7084ce27b65baea3a1dc07dfa1be99cefaaab5c6f8bcd710c1bab37ac9f1"
+                                  },
+                                  {
+                                      "path":  "snapshot-clock-and-restore.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "snapshot-live-rows.log",
+                                      "bytes":  307,
+                                      "sha256":  "7a82e783ba8181865966e7ef225689d7fd41e4d8cb6914da83319625d65126e3"
+                                  },
+                                  {
+                                      "path":  "snapshot-live-rows.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "snapshot-restart-revocation.log",
+                                      "bytes":  301,
+                                      "sha256":  "c29642083519110518f62a36300049d421596c2a2341b6b59192f5d5be19933c"
+                                  },
+                                  {
+                                      "path":  "snapshot-restart-revocation.stderr.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "strict-currentness.log",
+                                      "bytes":  0,
+                                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                  },
+                                  {
+                                      "path":  "strict-currentness.stderr.log",
+                                      "bytes":  4455,
+                                      "sha256":  "277fe7bdae4eb27225caca70e7d12fdbae7bbd8a85730b96073d98ed71c3b01c"
+                                  }
+                              ]
+                }
+}
