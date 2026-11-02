@@ -105,6 +105,13 @@ pub(crate) struct Sps {
     pub height: u32,
     pub vps: u32,
     pub id: u32,
+    pub high_tier: bool,
+    pub compatibility: u32,
+    pub constraints: u64,
+    pub coded_width: u32,
+    pub coded_height: u32,
+    pub crop: [u32; 4],
+    pub explicit_bt709_limited: bool,
 }
 fn sps(nal: &[u8], width: u32, height: u32) -> io::Result<Sps> {
     let mut b = Bits::new(nal)?;
@@ -129,15 +136,15 @@ fn sps(nal: &[u8], width: u32, height: u32) -> io::Result<Sps> {
         ));
     }
     b.field = "ptl.tier_flag";
-    b.read(1)?;
+    let high_tier = b.read(1)? != 0;
     b.field = "ptl.profile_idc";
     let profile = b.read(5)?;
     b.field = "ptl.compatibility";
-    b.read(32)?;
+    let compatibility = b.read(32)?;
     b.field = "ptl.constraints_hi";
-    b.read(32)?;
+    let constraints_hi = b.read(32)?;
     b.field = "ptl.constraints_lo";
-    b.read(16)?;
+    let constraints_lo = b.read(16)?;
     b.field = "ptl.level_idc";
     let level = b.read(8)?;
     if profile != 1 || !matches!(level, 30 | 60 | 63 | 90 | 93 | 120 | 123 | 150 | 153) {
@@ -314,6 +321,7 @@ fn sps(nal: &[u8], width: u32, height: u32) -> io::Result<Sps> {
     b.field = "sps.strong_intra_smoothing_enabled_flag";
     b.read(1)?;
     b.field = "sps.vui_parameters_present_flag";
+    let mut explicit_bt709_limited = false;
     if b.read(1)? != 0 {
         b.field = "vui.aspect_ratio_info_present_flag";
         if b.read(1)? != 0 {
@@ -360,6 +368,7 @@ fn sps(nal: &[u8], width: u32, height: u32) -> io::Result<Sps> {
                         ));
                     }
                 }
+                explicit_bt709_limited = true;
             }
         }
     }
@@ -370,6 +379,13 @@ fn sps(nal: &[u8], width: u32, height: u32) -> io::Result<Sps> {
         height: visible_height,
         vps,
         id,
+        high_tier,
+        compatibility,
+        constraints: (u64::from(constraints_hi) << 16) | u64::from(constraints_lo),
+        coded_width,
+        coded_height,
+        crop: [left * 2, right * 2, top * 2, bottom * 2],
+        explicit_bt709_limited,
     })
 }
 #[derive(Clone, Default)]
@@ -492,6 +508,44 @@ impl Validator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{HevcMain8Admission, HevcMain8Contract, VideoConfig};
+
+    fn replace_ptl(mut rbsp: Vec<u8>, byte: usize, mask: u8) -> Vec<u8> {
+        rbsp[byte] ^= mask;
+        let mut nal = vec![0x42, 1];
+        let mut zeros = 0;
+        for value in rbsp {
+            if zeros >= 2 && value <= 3 { nal.push(3); zeros = 0; }
+            nal.push(value);
+            zeros = if value == 0 { zeros + 1 } else { 0 };
+        }
+        nal
+    }
+    #[test]
+    fn actual_main8_contract_keeps_exact_ptl_and_rejected_change_cannot_poison_history() -> io::Result<()> {
+        let config = VideoConfig { width: 640, height: 480, fps: 30, bitrate_kbps: 4000 };
+        let sps = fixture(false, 0, 1);
+        let valid = access_unit(sps.clone(), &[0x28, 1, 0xb0]);
+        let original = HevcMain8Contract::observe(&valid, config)?;
+        let mut admission = HevcMain8Admission::new(original);
+        admission.validate(&valid)?;
+        // Whole general compatibility and constraint bits are independently
+        // frozen, not inferred merely from profile_idc or a vendor codec name.
+        let rbsp = Bits::new(&sps)?.bytes;
+        for (byte, mask) in [(2, 0x40), (6, 0x80), (11, 1), (12, 1)] {
+            let changed = access_unit(replace_ptl(rbsp.clone(), byte, mask), &[0x28, 1, 0xb0]);
+            if let Ok(next) = HevcMain8Contract::observe(&changed, config) {
+                assert_ne!(next.digest(), original.digest());
+            }
+            assert!(admission.validate(&changed).is_err());
+            admission.validate(&valid)?;
+        }
+        let high_tier = access_unit(replace_ptl(rbsp, 1, 0x20), &[0x28, 1, 0xb0]);
+        assert!(HevcMain8Contract::observe(&high_tier, config).is_err());
+        assert!(HevcMain8Contract::observe(&valid, VideoConfig { fps: 0, ..config }).is_err());
+        assert!(HevcMain8Contract::observe(&valid, VideoConfig { bitrate_kbps: 1, ..config }).is_err());
+        Ok(())
+    }
     fn fixture(full_range: bool, depth: u32, matrix: u32) -> Vec<u8> {
         fixture_ptl(full_range, depth, matrix, 1, 120, 0)
     }

@@ -40,8 +40,13 @@ pub use windows_hevc::{
     HevcBackendObservation, HevcProbeDecodeStep, HevcProbeDecoder, HevcProbeEncoder,
     HevcProbePacket, HevcProbePicture, HevcSyntheticSource,
 };
-#[cfg(windows)]
 mod hevc_probe;
+mod hevc_main8;
+pub use hevc_main8::{HevcMain8Admission, HevcMain8Contract};
+#[cfg(windows)]
+mod windows_hevc_owner;
+#[cfg(windows)]
+pub use windows_hevc_owner::{HevcOwnerOutput, MfHevcTextureEncoder};
 
 #[cfg(windows)]
 mod owner_observation;
