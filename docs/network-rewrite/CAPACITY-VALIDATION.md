@@ -149,3 +149,28 @@ The diagnostic receipt retains original_workload_passed=true and
 diagnostic_passed=true, but passed=false and ac68_passed=false. An exact-source
 sampling=none qualification remains separate. Every historical failure remains
 recorded, and this short hosted process does not qualify AC68 or cross-day soak.
+
+The separate ordinary qualification, run 41486568717, checked out the identical
+4ec2c3c source and workflow with sampling=none, confirmed by the official job
+log. The original multiplexed release pair-window scenario passed in 275.131
+seconds under the original 660-second budget, with receipt.passed=true. All
+fifteen original commands returned zero, all 22 executed Rust tests passed and
+both strict Clippy checks passed. The official 95025-byte ZIP digest matches
+the independently downloaded archive; all 31 payloads, the exact producer/test
+inventory and the separate official job log were verified.
+
+Its event inventory again contains exactly 3000 wave/pair/flow tuples, sixty
+original leases and controls, three thousand-live samples, three original
+two-second full-load holds and three drains. The same-source exact-byte, EOF,
+per-pair resource accounting and physical UDP/TCP listener-rebinding assertions
+all completed. Wave open_seconds values are 8.4763, 8.6141 and 8.4610, including
+each hold. Setup retains the original 244 seconds of rate-limit waits. Final
+process FD26 and RSS252228 kB are recorded without a zero-resource claim.
+`evidence/capacity-none-4ec2c3c.json` retains the full evidence inventory.
+
+This qualifies the original single-process release pair-window scenario at
+that exact source. It does not qualify earlier debug failures, independent
+grants, other schedules, 100 physical nodes, loaded external management/relay
+machines, all queue bounds, cross-day soak or the complete AC68 group. The
+ordinary receipt has no ac68_passed field. The diagnostic receipt remains
+diagnostic-only, and every historical failure remains recorded separately.
