@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "47a0cec5ee98b4aa7171f6bdf4204c257735dfea",
+  "workflow": ".github/workflows/network-rewrite.yml",
+  "run_id": 41370072610,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41370072610",
+  "qualified_job": {
+    "id": 125038551505,
+    "name": "topology-carrier",
+    "runner": "github-hosted ubuntu-24.04",
+    "conclusion": "success",
+    "artifact_id": 13108879239,
+    "artifact_digest": "sha256:55e8a061aded95a3a4d760b91270eeb41a5f73d3ce9e6a9edd48da922f52f079"
+  },
+  "actual_tls_capability_suite": {
+    "command": "cargo test --locked -p nestlink-transport-quic --lib capability:: -- --show-output --color never",
+    "passed": 6,
+    "failed": 0,
+    "ignored": 0,
+    "log": "network-capability-tests.log",
+    "downloaded_log_sha256": "5072498934aa5dcede2db842c57ebbef134ef5d96ee3a818ab6322ee75dd4067",
+    "scope": ["Pinned actual Quinn peer and selected ALPN", "Original business and transport-group binding", "Common optional capabilities", "Required missing/future capability and unknown schema refusal", "Oversized, malformed and additional-field refusal", "Cancellation and absolute deadline including ready-expired handoff", "Original physical socket and writable-poller receipts before rebind"]
+  },
+  "production_packet_suite": {
+    "command": "cargo test --locked -p nestlink-transport-quic --lib packet_codec:: -- --show-output --color never",
+    "passed": 8,
+    "failed": 0,
+    "ignored": 0,
+    "log": "network-packet-capability-tests.log",
+    "downloaded_log_sha256": "08abf1dbc8d9438c84cebbcca0a970eb5fdfccf3792151b8e0a9200352ece119",
+    "scope": ["Actual DirectPacketEndpoint default network-packet/2 negotiates core before exposing datagrams", "Explicit frozen network-packet/1 preserves original proof and offers no new capabilities", "New/old ALPN mismatch rejects without fallback or single-use retry", "Mismatched business proof, incomplete proof and delayed establishment", "Original socket release and existing minimum IPv6 MTU bounded fragment/replay logic"]
+  },
+  "verification": "Downloaded the successful hosted job artifact, read each complete command log and retained its SHA256. Source is the run's exact checkout and artifact identity. No local project compilation, formatter, lint or tests ran.",
+  "related_failed_jobs": {
+    "quinn_carrier_replacement": 125038551164,
+    "routed_kernel_nat": 125038551339,
+    "production_socket": 125038551417,
+    "reason": "All three stop before scenarios because exact-source strict lint rejects the new nested HEVC PTL if at crates/protocol/src/media_format.rs:228 (collapsible_if). This is independent of the successful capability/packet commands; a corrected source must rerun these jobs."
+  },
+  "limitations": [
+    "This is a successful job and scoped test suites, not a successful complete workflow or release qualification.",
+    "The SDK routed remote production integration and its malicious required-offer/timeout/cancel fixtures require their own later hosted results.",
+    "No migration capability is advertised by production packet or routed remote admission; common-feature tests do not qualify path migration.",
+    "No physical target, retained published client, signed installation or full mixed Windows/Web/node matrix acceptance is claimed."
+  ]
+}
