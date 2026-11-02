@@ -1,0 +1,91 @@
+name: Windows actual media owner diagnostics and strict boundaries
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Exact main source revision to build and verify
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  owner-boundaries:
+    runs-on: windows-2025
+    timeout-minutes: 60
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      RUST_BACKTRACE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact hosted source and preserve input provenance
+        shell: python
+        env:
+          EXPECTED_SOURCE: ${{ inputs.source_revision }}
+        run: |
+          import hashlib, json, os, pathlib, re, subprocess
+          expected = os.environ['EXPECTED_SOURCE']
+          assert re.fullmatch('[0-9a-f]{40}', expected)
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == expected
+          subprocess.run(['git', 'merge-base', '--is-ancestor', expected, 'origin/main'], check=True)
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'media-owner-evidence'
+          output.mkdir()
+          scripts = ['scripts/network-rewrite-gpu-cadence.py', 'tests/network/test_gpu_cadence.py']
+          receipt = {'source_revision': expected, 'workflow_revision': os.environ['GITHUB_WORKFLOW_SHA'],
+              'run_id': os.environ['GITHUB_RUN_ID'], 'attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'runner_environment': os.environ['RUNNER_ENVIRONMENT'],
+              'dependency_lock_sha256': hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
+              'hardware_or_target_acceptance_claimed': False,
+              'tool_sources': {p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in scripts}}
+          (output / 'source-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+      - name: Verify diagnostic analyzer negatives on Actions
+        run: python -B -m unittest discover -s tests/network -p test_gpu_cadence.py -v
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - id: msys
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
+        with:
+          msystem: MSYS
+          install: make perl diffutils gawk sed grep coreutils nasm
+          cache: false
+      - name: Select native codec prefix
+        shell: pwsh
+        run: |
+          $codecRoot = Join-Path $env:RUNNER_TEMP 'nestlink-codecs/x86_64-pc-windows-msvc'
+          "NESTLINK_CODEC_PREFIX=$codecRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Build the original pinned native codecs on Actions
+        run: python scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe"
+      - name: Verify native codec provenance
+        run: python scripts/refactor-native-codecs.py verify --target x86_64-pc-windows-msvc --prefix "$env:NESTLINK_CODEC_PREFIX"
+      - name: Verify actual receiver diagnostics, cleanup and cadence under the ordinary token
+        shell: pwsh
+        run: |
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-desktop --lib gpu_diagnostics:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/receiver-tests.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-desktop --lib gpu_presenter:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/presenter-tests.log"
+          exit $LASTEXITCODE
+      - name: Check the complete desktop owner code strictly
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log"
+          exit $LASTEXITCODE
+      - name: Retain exact-source evidence including failures
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: windows-media-owner-${{ inputs.source_revision }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/media-owner-evidence/
+          if-no-files-found: error
+          retention-days: 30

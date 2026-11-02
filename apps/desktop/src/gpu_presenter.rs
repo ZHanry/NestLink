@@ -555,6 +555,7 @@ fn run(
             }
             if let Some(qpc) = picture.submitted_qpc {
                 observed.submitted = observed.submitted.saturating_add(1);
+                observed.submission_cadence.record(qpc);
                 observed.last_submitted_qpc = Some(qpc);
                 observed.last_submitted_pts = Some(picture.pts_90khz);
             }

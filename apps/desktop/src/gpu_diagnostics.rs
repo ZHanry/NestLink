@@ -1,4 +1,6 @@
 //! Scalar observations from the real receiver worker, never synthetic probes.
+mod cadence;
+pub(super) use cadence::SubmissionCadence;
 use crate::bridge::CompressedContext;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -155,6 +157,9 @@ pub(super) struct ReceiverObservation {
     pub last_submitted_pts: Option<u64>,
     pub last_submitted_qpc: Option<u64>,
     pub qpc_frequency: Option<u64>,
+    /// Actual submissions only; a bounded recent window plus the full lifetime.
+    #[serde(default)]
+    pub submission_cadence: SubmissionCadence,
     pub failed: bool,
     pub revoked: bool,
     pub worker_joined: bool,
@@ -368,6 +373,8 @@ impl Recorder {
             "counts_cover_successfully_returned_steps_only": true,
             "decoder_open_success_is_not_a_decoded_picture": true,
             "scanout_verified": false,
+            "cadence_clock": "same-host-query-performance-counter",
+            "cadence_boundary": "successfully returned DXGI submissions; not physical scanout",
             "performance_qualified": false,
             "host_capture_backend": null,
             "host_encoder_hardware": null,
