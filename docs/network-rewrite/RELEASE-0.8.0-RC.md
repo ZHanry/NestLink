@@ -23,7 +23,9 @@ config/product-scope.json 和 docs/refactor/ 中的旧结论保留其原适用�
 
 初次检出的 main 是 `82f1c8dfb31bdf0872ea7430b5608e205c1cbb08`，与研究基线一致。
 GitHub 登录账号 ZHanry 的仓库 push 和 workflow 权限已验证，Actions 已启用。
-当前产品公开版本仍为 `0.7.0-rc.1`，在新实现与验收完成前不把改版本号当成功能交付。
+已发布的公开版本仍为 `0.7.0-rc.1`。开发源码开始准备 `0.8.0-rc.1`，
+第一方依赖和候选安装器版本随之统一；三份 Cargo 锁文件由托管 Actions 派生，
+逐个核对原外部依赖身份、校验和与边。该准备不代表功能、候选或发布已验收。
 W00 的源码、旧制品、实际发布和历史文档差异由 BASELINE.md 记录。
 
 完整进度见 progress.json 与 NESTLINK-TASKS.json；二者不是验收证明。

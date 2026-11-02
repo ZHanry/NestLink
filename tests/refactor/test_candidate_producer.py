@@ -176,7 +176,7 @@ class CandidateTests(unittest.TestCase):
     def test_new_rc_source_version_is_unified_and_protocol_namespace_is_independent(self):
         source = self.root / "source-fixture"
         source.mkdir()
-        (source / "Cargo.toml").write_text('[workspace.package]\nversion="0.7.0-rc.1"\n[workspace.dependencies]\nnestlink-fixture={path="crates/fixture",version="=0.7.0-rc.1"}\n', encoding="utf-8")
+        (source / "Cargo.toml").write_text('[workspace.package]\nversion="0.8.0-rc.1"\n[workspace.dependencies]\nnestlink-fixture={path="crates/fixture",version="=0.8.0-rc.1"}\n', encoding="utf-8")
         self.write(source / "compatibility.json", {"version": P.VERSION, "namespace": "v15"})
         self.write(source / "protocol-spec/contract.json", {"product_version": P.VERSION, "namespace": "v15"})
         metadata = source / "protocol-spec/openapi.json"
@@ -357,7 +357,7 @@ class CandidateTests(unittest.TestCase):
             self.assertEqual(artifact["source_revision"], SOURCE)
             P.verify_record(output, artifact, SOURCE)
         self.assertEqual(manifest["repository_node_id"], "R_kgDOVNHMvg")
-        self.assertEqual(manifest["version"], "0.7.0-rc.1")
+        self.assertEqual(manifest["version"], "0.8.0-rc.1")
         self.assertEqual(manifest["product"], "NestLink")
         self.assertEqual({path.name for path in output.iterdir()}, {"files", "candidate-build-manifest.json"})
         self.assertEqual(len(manifest["acceptance_cases"]), 21)

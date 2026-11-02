@@ -1,0 +1,39 @@
+name: Prepare reviewed 0.8 product version locks
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Exact main source with the requested product version committed
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  version-lock:
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: [product, browser-native-fixture, security-fuzz]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - name: Derive local package versions while preserving every reviewed external identity and edge
+        env:
+          EXPECTED_SOURCE: ${{ inputs.source_revision }}
+          VERSION_SCOPE: ${{ matrix.scope }}
+        run: python3 -B scripts/network-rewrite-version-lock.py --scope "$VERSION_SCOPE" --source "$EXPECTED_SOURCE" --output "$RUNNER_TEMP/version-lock-$VERSION_SCOPE"
+      - name: Retain exact version locks and resolver failures for review
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: product-version-lock-${{ matrix.scope }}-${{ inputs.source_revision }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/version-lock-${{ matrix.scope }}/
+          if-no-files-found: error
+          retention-days: 30

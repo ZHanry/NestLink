@@ -27,7 +27,7 @@ import zipfile
 
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
-VERSION = "0.7.0-rc.1"
+VERSION = "0.8.0-rc.1"
 TAG = "v" + VERSION
 MAX_ASSET_BYTES = 2 * 1024**3
 MANIFEST_NAME = "candidate-build-manifest.json"

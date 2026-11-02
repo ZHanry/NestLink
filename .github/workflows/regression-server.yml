@@ -34,7 +34,7 @@ jobs:
           python3 -m unittest discover -s tests/refactor -p 'test_regression_image.py'
           cargo build --release --locked -p nestlink-server
           cargo test --locked -p nestlink-server --lib --tests
-          test "$(target/release/nestlink-server --version)" = 'nestlink-server 0.7.0-rc.1'
+          test "$(target/release/nestlink-server --version)" = 'nestlink-server 0.8.0-rc.1'
       - name: Stage the exact server and locked dependency notices
         shell: python
         run: |
@@ -65,7 +65,7 @@ jobs:
           docker build --pull --platform linux/arm64 --file packaging/regression/Dockerfile \
             --build-arg "NESTLINK_BASE=$NESTLINK_BASE" --build-arg "NESTLINK_SOURCE=$GITHUB_SHA" \
             --tag "$image" "$RUNNER_TEMP/regression-context"
-          test "$(docker run --rm --network none "$image" --version)" = 'nestlink-server 0.7.0-rc.1'
+          test "$(docker run --rm --network none "$image" --version)" = 'nestlink-server 0.8.0-rc.1'
           docker image inspect "$image" > "$RUNNER_TEMP/regression-image.json"
           mkdir "$RUNNER_TEMP/regression-artifact"
           docker save "$image" | gzip -1 > "$RUNNER_TEMP/regression-artifact/server-arm64.docker.tar.gz"
@@ -88,7 +88,7 @@ jobs:
           output = scratch / 'regression-artifact'
           archive = output / 'server-arm64.docker.tar.gz'
           value = {'schema_version': 1, 'purpose': 'regression-only', 'source_revision': source,
-                   'version': '0.7.0-rc.1', 'target': 'aarch64-unknown-linux-gnu',
+                   'version': '0.8.0-rc.1', 'target': 'aarch64-unknown-linux-gnu',
                    'image_id': image['Id'], 'base': os.environ['NESTLINK_BASE'],
                    'binary_sha256': sha(scratch / 'regression-context/nestlink-server'),
                    'archive_sha256': sha(archive), 'archive_bytes': archive.stat().st_size,

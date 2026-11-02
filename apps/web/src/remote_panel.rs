@@ -81,7 +81,7 @@ fn export_media_diagnostic(snapshot: Option<RemoteDiagnosticSnapshot>) -> Result
             .dyn_into::<web_sys::HtmlAnchorElement>()
             .map_err(|_| ())?;
         anchor.set_href(&url);
-        anchor.set_download("NestLink-0.7.0-RC-diagnostics.json");
+        anchor.set_download(&format!("NestLink-{}-diagnostics.json", env!("CARGO_PKG_VERSION")));
         anchor.click();
         Ok(())
     })();
