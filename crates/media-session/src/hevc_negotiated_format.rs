@@ -148,9 +148,9 @@ mod tests {
         let target = hevc_execution_target(format, 7, 8)?;
         assert_eq!(
             (
-                target.config().width,
-                target.config().height,
-                target.config().fps
+                target.contract().config().width,
+                target.contract().config().height,
+                target.contract().config().fps
             ),
             (3840, 2160, 144)
         );

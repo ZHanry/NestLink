@@ -160,6 +160,9 @@ fn sps_inner(
     let level = b.read(8)?;
     let expected_profile = if bit_depth == 10 { 2 } else { 1 };
     if profile != expected_profile
+        // Keep the original incomplete diagnostic parser's level boundary.
+        // Advanced targets require the explicit complete SPS validation path.
+        || (!complete && level >= 156)
         || !matches!(
             level,
             30 | 60 | 63 | 90 | 93 | 120 | 123 | 150 | 153 | 156 | 180 | 183 | 186
