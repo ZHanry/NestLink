@@ -78,7 +78,9 @@ pub(super) fn verify(
         snapshot.verify_decoded_member(candidate, &lease.lease().claims().definition.host_device_id)
     })?;
     let context = snapshot.verification();
-    let connection = with_decoded(&view.connectivity, |candidate| Ok(candidate.verify(&context)?))?;
+    let connection = with_decoded(&view.connectivity, |candidate| {
+        Ok(candidate.verify(&context)?)
+    })?;
     let path = VerifiedNetworkPath::from_grants(
         &context,
         [consumer, host],

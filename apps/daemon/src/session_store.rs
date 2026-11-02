@@ -71,10 +71,7 @@ impl SessionStore {
         let key = zeroize::Zeroizing::new(nestlink_auth::random_bytes::<32>());
         let text = zeroize::Zeroizing::new(URL_SAFE_NO_PAD.encode(*key));
         secret_service(
-            &secret_tool::store(
-                "--label=NestLink management login",
-                &binding,
-            ),
+            &secret_tool::store("--label=NestLink management login", &binding),
             Some(text.as_bytes()),
         )?;
         Ok(*key)

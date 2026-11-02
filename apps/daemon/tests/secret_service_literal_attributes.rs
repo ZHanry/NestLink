@@ -23,7 +23,14 @@ async fn original_secret_service_stores_and_reads_a_leading_hyphen_attribute() -
     // The retired argv is rejected by the actual GLib option parser before
     // any Secret Service operation. This distinguishes usage(2) from store(1).
     for arguments in [
-        vec!["store", label, "application", "NestLink", "instance", &binding],
+        vec![
+            "store",
+            label,
+            "application",
+            "NestLink",
+            "instance",
+            &binding,
+        ],
         vec!["lookup", "application", "NestLink", "instance", &binding],
     ] {
         let status = tokio::time::timeout(
