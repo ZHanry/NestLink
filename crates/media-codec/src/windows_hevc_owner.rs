@@ -39,6 +39,10 @@ pub struct MfHevcHardwareDecoder {
     draining: bool,
 }
 impl MfHevcHardwareDecoder {
+    pub fn owner_observation(&self) -> io::Result<OwnerObservation> {
+        self.check()?;
+        observation(&self.inner)
+    }
     /// # Safety
     /// `device` is a live original ID3D11Device on the current decode worker.
     /// It stays retained until open completes; this owner retains native refs.
@@ -211,6 +215,10 @@ fn observation(inner: &Transform) -> io::Result<OwnerObservation> {
     raw.try_into()
 }
 impl MfHevcTextureEncoder {
+    pub fn owner_observation(&self) -> io::Result<OwnerObservation> {
+        self.check()?;
+        observation(&self.inner)
+    }
     /// # Safety
     /// `device` is a live ID3D11Device on this thread, retained throughout open.
     /// Every input texture must belong to that original device and worker.

@@ -86,14 +86,17 @@ fn bridge(stage: &str, code: i32) -> io::Error {
 }
 impl GpuCapture {
     fn open(monitor: &Monitor, config: HostVideoConfig) -> io::Result<Self> {
+        Self::open_target(monitor, config.width, config.height, config.fps)
+    }
+    fn open_target(monitor: &Monitor, width: u32, height: u32, fps: u32) -> io::Result<Self> {
         let mut handle = null_mut();
         // SAFETY: exact enumerated approved HMONITOR, bounded config, out pointer.
         let hr = unsafe {
             nl_capture_gpu_open(
                 monitor.handle,
-                config.width,
-                config.height,
-                config.fps,
+                width,
+                height,
+                fps,
                 &mut handle,
             )
         };
@@ -152,6 +155,9 @@ impl GpuCapture {
         unsafe { nl_capture_gpu_discard(self.handle.as_ptr()) };
     }
 }
+
+#[path = "windows_host_hevc.rs"]
+mod hevc;
 struct GpuPipeline {
     encoder: MfH264Encoder,
     probed_sps: H264SpsInfo,
