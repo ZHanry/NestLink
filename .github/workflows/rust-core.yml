@@ -255,19 +255,33 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
           if ($IsWindows) {
-            python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --test offline_remote_resident -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog -Append
-          } else {
-            cargo test --locked -p nestlink-daemon --test offline_remote_resident -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog -Append
-          }
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo clippy --locked -p nestlink-daemon --test offline_remote_resident -- -D warnings 2>&1 | Tee-Object -FilePath $offlineLog -Append
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          if ($IsWindows) {
             python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-desktop --lib layout_tests::independent_offline_ -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog -Append
           } else {
             cargo test --locked -p nestlink-desktop --lib layout_tests::independent_offline_ -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog -Append
           }
           exit $LASTEXITCODE
+      - name: Check original offline resident HTTP CLI IPC platform data and terminal fences
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          $residentLog = Join-Path $env:RUNNER_TEMP 'nestlink-native-offline-resident-tests.log'
+          if ($IsWindows) {
+            python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --test offline_remote_resident -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $residentLog
+          } else {
+            cargo test --locked -p nestlink-daemon --test offline_remote_resident -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $residentLog
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo clippy --locked -p nestlink-daemon --test offline_remote_resident -- -D warnings 2>&1 | Tee-Object -FilePath $residentLog -Append
+          exit $LASTEXITCODE
+      - name: Preserve early original offline lifecycle output
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: early-native-offline-${{ matrix.os }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/nestlink-native-offline-tests.log
+            ${{ runner.temp }}/nestlink-native-offline-resident-tests.log
+          if-no-files-found: warn
       - name: Check original-session quality projection and old IPC compatibility
         if: ${{ !cancelled() }}
         shell: pwsh
@@ -469,6 +483,7 @@ jobs:
           path: |
             ${{ runner.temp }}/nestlink-sdk-routed-tests.log
             ${{ runner.temp }}/nestlink-native-offline-tests.log
+            ${{ runner.temp }}/nestlink-native-offline-resident-tests.log
             ${{ runner.temp }}/nestlink-sdk-routed-tests.json
             ${{ runner.temp }}/nestlink-sdk-network-relay-tests.log
             ${{ runner.temp }}/nestlink-node-relay-metadata-tests.log
