@@ -65,3 +65,25 @@ the existing OS library; it does not copy a login manager or PAM implementation.
 The runner's distribution supplies the exact library build. Keep the failed
 source85 receipt, and require a new same-source original capture/pixel/file/
 rebuild execution before claiming that the new fixture passes.
+
+Run 41451102046, source `78a7cb4f79f00e930a3fbb56409f17517129a171`,
+actually executed this adapter and registered real sessions for UID1001 with
+the fixture's `:0` PAM_XDISPLAY. The former empty Display parse error was gone.
+The next original capture operation failed with `Other`, no raw OS number,
+and `No such file or directory (os error 2)`. Reading the original X11 transport
+locates its mapped I/O error at `xauth::get_auth`; the fixture had no
+XAUTHORITY file. This run still failed all four Linux resident tests and does
+not establish resident capture or data completion.
+
+The next fixture repair reuses the existing repository's authenticated Xvfb
+boundary and the distribution's mature `xauth` CLI. It creates a private file,
+seeds one random 128-bit MIT-MAGIC-COOKIE-1 authorization for the server, starts
+that original Xvfb with `-auth`, then ensures the client record names the
+actual display selected by `-displayfd`. A seed record is removed if the real
+display differs. The same XAUTHORITY goes to the original ordinary daemon and
+its real X11 clients. `-noreset`, also used by the existing input fixture,
+preserves the actual green root between the setup client exiting and capture
+opening. It changes no production Xauthority lookup, socket, peer-credential,
+logind, display, capture, authorization or pixel check. The xauth package is an
+explicit hosted fixture input; no local package installation or execution was
+performed. This authority repair requires a newer exact-source hosted run.

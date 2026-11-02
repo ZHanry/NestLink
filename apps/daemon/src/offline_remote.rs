@@ -2,8 +2,8 @@
 //! Authority stays in this process; the desktop uses the existing local IPC.
 use crate::offline_resident::{LocalGuard, Result, emit, input};
 use nestlink_app_core::{
-    Limits, NativeOfflineRemote, NativeOfflineSession, NativeOfflineTransport, NativeSessionStatus,
-    ShutdownState,
+    Limits, NativeOfflineRemote, NativeOfflineSession, NativeOfflineTransport, NativeSessionCleanup,
+    NativeSessionStatus, NativeSessionStopReason, ShutdownState,
 };
 use nestlink_identity::{VerifiedPermit, offline::OfflineProcess};
 use nestlink_protocol::{
@@ -683,9 +683,28 @@ impl LocalProducts {
                 result = capture.wait() => result,
                 result = audio.wait() => result,
             };
+            // The offline Core keeps its final Running-lifecycle snapshot when
+            // its original carrier worker closes the observation channel. A
+            // normal capture/audio return can therefore precede the resident's
+            // explicit product join. Only the original successful transport
+            // cleanup receipt distinguishes that return from an actor failure.
+            let snapshot = core.snapshot();
+            let completed_carrier = snapshot.native_offline.as_ref().is_some_and(|view| {
+                view.status == NativeSessionStatus::Stopped
+                    && view.cleanup == Some(NativeSessionCleanup::Succeeded)
+                    && view.failure.is_none()
+                    && matches!(
+                        view.stop_reason,
+                        Some(
+                            NativeSessionStopReason::NetworkChanged
+                                | NativeSessionStopReason::TransportLost
+                        )
+                    )
+            });
             if first.is_err()
                 || (!*stopping.borrow()
-                    && core.snapshot().lifecycle == nestlink_app_core::Lifecycle::Running)
+                    && snapshot.lifecycle == nestlink_app_core::Lifecycle::Running
+                    && !completed_carrier)
             {
                 owner.stop();
             }

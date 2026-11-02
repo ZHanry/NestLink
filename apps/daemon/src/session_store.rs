@@ -85,16 +85,45 @@ impl SessionStore {
     }
     pub(crate) async fn restore(&self) -> Option<nestlink_sdk::Sdk> {
         if !self.enabled() {
+            eprintln!("protected_login_restore stage=local_consent unavailable=true");
             return None;
         }
-        let cipher = read_private(&self.directory.join("management-login.enc"), 16424).ok()?;
+        let cipher = read_private(&self.directory.join("management-login.enc"), 16424)
+            .inspect_err(|error| {
+                eprintln!(
+                    "protected_login_restore stage=read_cipher kind={:?} os={:?}",
+                    error.kind(), error.raw_os_error()
+                );
+            })
+            .ok()?;
         let plain = self
             .with_key(|key| {
                 key.decrypt_management(&self.binding(), &cipher)
+                    .inspect_err(|_| {
+                        eprintln!("protected_login_restore stage=decrypt unavailable=true");
+                    })
                     .map_err(|_| io::Error::other("login recovery could not be decrypted"))
             })
+            .inspect_err(|error| {
+                eprintln!(
+                    "protected_login_restore stage=key_or_decrypt kind={:?} os={:?}",
+                    error.kind(), error.raw_os_error()
+                );
+            })
             .ok()?;
-        match nestlink_sdk::Sdk::resume_login(&plain).await {
+        let restored = nestlink_sdk::Sdk::resume_login(&plain).await.inspect_err(|error| {
+            let status = match error {
+                nestlink_sdk::SdkError::Api(status, _) => Some(status.as_u16()),
+                _ => None,
+            };
+            // Use the SDK's fixed diagnostic categories. Raw errors can carry
+            // a URL or login material and must never enter recovery logs.
+            eprintln!(
+                "protected_login_restore stage=resume category={:?} http_status={status:?}",
+                error.diagnostic_failure()
+            );
+        });
+        match restored {
             Ok(sdk) => {
                 if let Ok(Some(next)) = sdk.export_login() {
                     let _ = self.save(&next);

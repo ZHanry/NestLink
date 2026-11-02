@@ -78,6 +78,29 @@ impl Platform {
                 .env
                 .push(("DBUS_SESSION_BUS_ADDRESS", address.trim().into()));
             value.children.push(dbus);
+            // Reuse the installed Xauthority tool for this independently owned
+            // Xvfb. The production transport deliberately requires an actual
+            // authority file; an unauthenticated test server cannot supply it.
+            let authority = area.join("Xauthority");
+            nestlink_platform_security::create_private(&authority, b"")?;
+            let cookie = nestlink_auth::random_bytes::<16>()
+                .into_iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>();
+            let seed_display = ":0";
+            let status = value
+                .command("xauth")
+                .arg("-f")
+                .arg(&authority)
+                .args(["add", seed_display, "MIT-MAGIC-COOKIE-1", &cookie])
+                .status()
+                .await?;
+            if !status.success() {
+                return Err(io::Error::other("original Xvfb authority setup failed").into());
+            }
+            value
+                .env
+                .push(("XAUTHORITY", authority.to_string_lossy().into_owned()));
             let mut x = Command::new("Xvfb")
                 .args([
                     "-displayfd",
@@ -87,7 +110,10 @@ impl Platform {
                     "640x480x24",
                     "-nolisten",
                     "tcp",
+                    "-noreset",
+                    "-auth",
                 ])
+                .arg(&authority)
                 .stdout(Stdio::piped())
                 .stderr(Stdio::null())
                 .kill_on_drop(true)
@@ -99,8 +125,33 @@ impl Platform {
             )
             .await??;
             let _: u16 = display.trim().parse()?;
-            value.env.push(("DISPLAY", format!(":{}", display.trim())));
             value.children.push(x);
+            let display = format!(":{}", display.trim());
+            if display != seed_display {
+                // Xvfb loads the seeded cookie before choosing its display.
+                // The client record must then identify that actual display.
+                let status = value
+                    .command("xauth")
+                    .arg("-f")
+                    .arg(&authority)
+                    .args(["add", &display, "MIT-MAGIC-COOKIE-1", &cookie])
+                    .status()
+                    .await?;
+                if !status.success() {
+                    return Err(io::Error::other("original Xvfb display authority failed").into());
+                }
+                let status = value
+                    .command("xauth")
+                    .arg("-f")
+                    .arg(&authority)
+                    .args(["remove", seed_display])
+                    .status()
+                    .await?;
+                if !status.success() {
+                    return Err(io::Error::other("original Xvfb seed authority cleanup failed").into());
+                }
+            }
+            value.env.push(("DISPLAY", display));
             let mut keyring = value.command("gnome-keyring-daemon");
             let mut keyring = keyring
                 .args(["--foreground", "--unlock", "--components=secrets"])
