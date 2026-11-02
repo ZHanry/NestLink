@@ -7,14 +7,22 @@ struct Shared {
     poisoned: AtomicBool,
     cancel: watch::Sender<bool>,
     _slot: Option<OwnedSemaphorePermit>,
+    #[cfg(windows)]
+    peer: Option<nestlink_platform_security::local_stream::VerifiedPeerProcess>,
+}
+impl Shared {
+    fn fence_peer(&self) {
+        #[cfg(windows)]
+        if let Some(peer) = &self.peer { peer.fence(); }
+    }
 }
 pub struct LocalRead {
-    read: tokio::io::ReadHalf<tokio_rustls::TlsStream<TcpStream>>,
+    read: tokio::io::ReadHalf<tokio_rustls::TlsStream<LocalTransport>>,
     shared: Arc<Shared>,
     stopped: Option<watch::Receiver<bool>>,
 }
 pub struct LocalWrite {
-    write: tokio::io::WriteHalf<tokio_rustls::TlsStream<TcpStream>>,
+    write: tokio::io::WriteHalf<tokio_rustls::TlsStream<LocalTransport>>,
     shared: Arc<Shared>,
     stopped: Option<watch::Receiver<bool>>,
 }
@@ -24,6 +32,7 @@ pub struct LocalDuplexOwner {
 impl Drop for LocalDuplexOwner {
     fn drop(&mut self) {
         self.shared.poisoned.store(true, Ordering::Release);
+        self.shared.fence_peer();
         self.shared.cancel.send_replace(true);
     }
 }
@@ -32,6 +41,7 @@ impl Drop for Operation {
     fn drop(&mut self) {
         if !self.1 {
             self.0.poisoned.store(true, Ordering::Release);
+            self.0.fence_peer();
             self.0.cancel.send_replace(true);
         }
     }
@@ -49,6 +59,8 @@ impl LocalStream {
             poisoned: AtomicBool::new(false),
             cancel: watch::channel(false).0,
             _slot: self._slot,
+            #[cfg(windows)]
+            peer: self.stream.get_ref().0.verified_peer_process(),
         });
         let (read, write) = tokio::io::split(self.stream);
         Ok((
@@ -70,6 +82,7 @@ impl LocalRead {
     /// One-way media peers send no bytes. Observe EOF without an idle timeout;
     /// daemon stop and the retained owner still cancel this wait immediately.
     pub async fn wait_closed(&mut self) -> Result<()> {
+        let _guard = Operation(self.shared.clone(), false);
         let mut cancel = self.shared.cancel.subscribe();
         let stopped = self.stopped.as_mut();
         tokio::select! {biased;

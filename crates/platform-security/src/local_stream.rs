@@ -19,13 +19,36 @@ pub use unix::{Listener, connect};
 mod windows;
 #[cfg(windows)]
 pub use windows::{Listener, connect};
+#[cfg(windows)]
+pub use windows::{VerifiedPeerProcess, endpoint_for};
 
 trait StreamIo: AsyncRead + AsyncWrite + Unpin + Send {}
 impl<T: AsyncRead + AsyncWrite + Unpin + Send> StreamIo for T {}
-pub struct LocalStream(Box<dyn StreamIo>);
+pub struct LocalStream {
+    stream: Box<dyn StreamIo>,
+    #[cfg(windows)]
+    peer: Option<VerifiedPeerProcess>,
+}
 impl LocalStream {
+    #[cfg(unix)]
     fn new(stream: impl AsyncRead + AsyncWrite + Unpin + Send + 'static) -> Self {
-        Self(Box::new(stream))
+        Self { stream: Box::new(stream) }
+    }
+    #[cfg(windows)]
+    fn with_peer(stream: impl AsyncRead + AsyncWrite + Unpin + Send + 'static, peer: VerifiedPeerProcess) -> Self {
+        Self { stream: Box::new(stream), peer: Some(peer) }
+    }
+    /// This proof came from the connected native pipe and shares its lifetime.
+    /// It is not available on a TCP transport or constructible from a PID.
+    #[cfg(windows)]
+    pub fn verified_peer_process(&self) -> Option<VerifiedPeerProcess> {
+        self.peer.clone()
+    }
+}
+#[cfg(windows)]
+impl Drop for LocalStream {
+    fn drop(&mut self) {
+        if let Some(peer) = &self.peer { peer.fence(); }
     }
 }
 impl AsyncRead for LocalStream {
@@ -34,7 +57,7 @@ impl AsyncRead for LocalStream {
         context: &mut Context<'_>,
         buffer: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
-        Pin::new(&mut *self.0).poll_read(context, buffer)
+        Pin::new(&mut *self.stream).poll_read(context, buffer)
     }
 }
 impl AsyncWrite for LocalStream {
@@ -43,13 +66,13 @@ impl AsyncWrite for LocalStream {
         context: &mut Context<'_>,
         buffer: &[u8],
     ) -> Poll<io::Result<usize>> {
-        Pin::new(&mut *self.0).poll_write(context, buffer)
+        Pin::new(&mut *self.stream).poll_write(context, buffer)
     }
     fn poll_flush(mut self: Pin<&mut Self>, context: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut *self.0).poll_flush(context)
+        Pin::new(&mut *self.stream).poll_flush(context)
     }
     fn poll_shutdown(mut self: Pin<&mut Self>, context: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut *self.0).poll_shutdown(context)
+        Pin::new(&mut *self.stream).poll_shutdown(context)
     }
 }
 fn valid_owner_id(id: &str) -> bool {

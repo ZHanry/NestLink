@@ -13,9 +13,13 @@ mod duplex;
 pub mod instance;
 pub mod maintenance;
 mod state;
+mod transport;
+use transport::LocalTransport;
 pub use duplex::{LocalDuplexOwner, LocalRead, LocalWrite};
 #[cfg(test)]
 mod tests;
+#[cfg(all(test, windows))]
+mod process_tests;
 pub use state::initialize_directory;
 
 pub const VERSION: u16 = 1;
@@ -78,6 +82,8 @@ impl HeadlessRuntimeLease {
 
 pub struct LocalServer {
     listener: TcpListener,
+    #[cfg(windows)]
+    native: tokio::sync::Mutex<nestlink_platform_security::local_stream::Listener>,
     acceptor: tokio_rustls::TlsAcceptor,
     runtime_id: String,
     slots: Arc<Semaphore>,
@@ -94,10 +100,14 @@ impl LocalServer {
                 .map_err(|_| Error::Authentication)?;
         tls.alpn_protocols = vec![ALPN.to_vec()];
         let listener = TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).await?;
+        #[cfg(windows)]
+        let native = nestlink_platform_security::local_stream::Listener::bind(directory, &runtime_id)?;
         state.publish(listener.local_addr()?)?;
         let (stopped, _) = watch::channel(false);
         Ok(Self {
             listener,
+            #[cfg(windows)]
+            native: tokio::sync::Mutex::new(native),
             acceptor: Arc::new(tls).into(),
             runtime_id,
             slots: Arc::new(Semaphore::new(CLIENTS)),
@@ -111,16 +121,21 @@ impl LocalServer {
     /// Accept a socket without letting its TLS handshake hold up subsequent
     /// clients. Admission is fixed before creating any handshake task.
     pub async fn accept(&self) -> Result<PendingConnection> {
-        let (socket, address) = self.listener.accept().await?;
-        if !address.ip().is_loopback() {
-            return Err(Error::Authentication);
-        }
+        #[cfg(windows)]
+        let socket = tokio::select! {
+            native = async {
+                let mut listener = self.native.lock().await;
+                listener.accept().await.map(LocalTransport::Native).map_err(Error::Io)
+            } => native?,
+            tcp = LocalTransport::tcp(&self.listener) => tcp?,
+        };
+        #[cfg(not(windows))]
+        let socket = LocalTransport::tcp(&self.listener).await?;
         let slot = self
             .slots
             .clone()
             .try_acquire_owned()
             .map_err(|_| Error::Protocol)?;
-        socket.set_nodelay(true)?;
         Ok(PendingConnection {
             socket,
             acceptor: self.acceptor.clone(),
@@ -140,7 +155,7 @@ impl Drop for LocalServer {
 }
 
 pub struct PendingConnection {
-    socket: TcpStream,
+    socket: LocalTransport,
     acceptor: tokio_rustls::TlsAcceptor,
     runtime_id: String,
     stopped: watch::Receiver<bool>,
@@ -178,7 +193,7 @@ impl PendingConnection {
 }
 
 pub struct LocalStream {
-    stream: tokio_rustls::TlsStream<TcpStream>,
+    stream: tokio_rustls::TlsStream<LocalTransport>,
     runtime_id: String,
     failed: bool,
     binary_mode: bool,
@@ -186,6 +201,26 @@ pub struct LocalStream {
     video_read_remaining: Option<usize>,
     stopped: Option<watch::Receiver<bool>>,
     _slot: Option<OwnedSemaphorePermit>,
+}
+/// The peer of one successfully authenticated native TLS IPC session. This
+/// cannot be reconstructed from a runtime UUID, PID or serialized message.
+#[cfg(windows)]
+#[derive(Clone)]
+pub struct VerifiedLocalPeer {
+    process: nestlink_platform_security::local_stream::VerifiedPeerProcess,
+    runtime_id: String,
+    stopped: Option<watch::Receiver<bool>>,
+}
+#[cfg(windows)]
+impl VerifiedLocalPeer {
+    pub fn process_id(&self) -> u32 { self.process.process_id() }
+    pub fn runtime_id(&self) -> &str { &self.runtime_id }
+    pub fn check_current(&self) -> Result<()> {
+        if self.stopped.as_ref().is_some_and(|stopped| *stopped.borrow() || stopped.has_changed().is_err()) {
+            return Err(Error::Stopped);
+        }
+        self.process.check_current().map_err(|_| Error::Authentication)
+    }
 }
 impl LocalStream {
     pub async fn connect(directory: &Path) -> Result<Self> {
@@ -199,10 +234,7 @@ impl LocalStream {
             // Keep endpoint/socket readiness errors distinct from TLS failures:
             // callers may retry a refused or missing local daemon endpoint, but
             // must not retry an authentication mismatch as if it were startup.
-            let socket = TcpStream::connect(endpoint.address)
-                .await
-                .map_err(Error::Io)?;
-            socket.set_nodelay(true).map_err(Error::Io)?;
+            let socket = LocalTransport::connect(&endpoint).await?;
             let name = rustls::pki_types::ServerName::try_from("peer.nestlink.invalid")
                 .map_err(|_| Error::Authentication)?;
             tokio_rustls::TlsConnector::from(Arc::new(tls))
@@ -234,6 +266,15 @@ impl LocalStream {
     pub fn runtime_id(&self) -> &str {
         &self.runtime_id
     }
+    /// Present only when this exact TLS stream runs over an OS-authenticated
+    /// native pipe. TCP compatibility connections cannot mint process proof.
+    #[cfg(windows)]
+    pub fn verified_peer_process(&self) -> Result<VerifiedLocalPeer> {
+        if self.failed { return Err(Error::Stopped); }
+        let proof = self.stream.get_ref().0.verified_peer_process().ok_or(Error::Authentication)?;
+        proof.check_current().map_err(|_| Error::Authentication)?;
+        Ok(VerifiedLocalPeer { process: proof, runtime_id: self.runtime_id.clone(), stopped: self.stopped.clone() })
+    }
     pub async fn send<T: Serialize>(&mut self, value: &T) -> Result<()> {
         if self.failed || self.binary_mode {
             return Err(Error::Stopped);
@@ -246,6 +287,7 @@ impl LocalStream {
         // Mark terminal before the first await. Dropping this future mid-frame
         // cannot leave a reusable stream with an ambiguous partial write.
         self.failed = true;
+        let mut proof = transport::PeerOperation::new(self.stream.get_ref().0);
         let operation = async {
             self.stream.write_u32(bytes.len() as u32).await?;
             self.stream.write_all(&bytes).await?;
@@ -253,6 +295,7 @@ impl LocalStream {
         };
         let result = checked_io(operation, self.stopped.as_mut()).await;
         self.failed = result.is_err();
+        proof.complete(result.is_ok());
         result
     }
     pub async fn receive<T: DeserializeOwned>(&mut self) -> Result<T> {
@@ -262,6 +305,7 @@ impl LocalStream {
         // Cancellation after any prefix/body byte is terminal, including when
         // the caller stops polling before the transport budget itself expires.
         self.failed = true;
+        let mut proof = transport::PeerOperation::new(self.stream.get_ref().0);
         let operation = async {
             let size = self.stream.read_u32().await? as usize;
             if size == 0 || size > FRAME_BYTES {
@@ -277,6 +321,7 @@ impl LocalStream {
         };
         let result = checked_io(operation, self.stopped.as_mut()).await;
         self.failed = result.is_err();
+        proof.complete(result.is_ok());
         result
     }
 
@@ -297,6 +342,7 @@ impl LocalStream {
             .ok_or(Error::Protocol)?;
         self.binary_mode = true;
         self.failed = true;
+        let mut proof = transport::PeerOperation::new(self.stream.get_ref().0);
         let operation = async {
             self.stream.write_u32(body_bytes as u32).await?;
             self.stream.write_all(header).await?;
@@ -305,6 +351,7 @@ impl LocalStream {
         let result =
             checked_io_with_budget(operation, self.stopped.as_mut(), VIDEO_CHUNK_BUDGET).await;
         self.failed = result.is_err();
+        proof.complete(result.is_ok());
         if result.is_ok() && payload_bytes > 0 {
             self.video_write_remaining = Some(payload_bytes);
         }
@@ -325,6 +372,7 @@ impl LocalStream {
             return Err(Error::Protocol);
         }
         self.failed = true;
+        let mut proof = transport::PeerOperation::new(self.stream.get_ref().0);
         let final_chunk = bytes.len() == remaining;
         let operation = async {
             self.stream.write_all(bytes).await?;
@@ -336,6 +384,7 @@ impl LocalStream {
         let result =
             checked_io_with_budget(operation, self.stopped.as_mut(), VIDEO_CHUNK_BUDGET).await;
         self.failed = result.is_err();
+        proof.complete(result.is_ok());
         if result.is_ok() {
             self.video_write_remaining =
                 (bytes.len() < remaining).then_some(remaining - bytes.len());
@@ -351,6 +400,7 @@ impl LocalStream {
         }
         self.binary_mode = true;
         self.failed = true;
+        let mut proof = transport::PeerOperation::new(self.stream.get_ref().0);
         let operation = async {
             let body_bytes = self.stream.read_u32().await? as usize;
             if !(VIDEO_HEADER_BYTES..=VIDEO_FRAME_BYTES).contains(&body_bytes) {
@@ -366,6 +416,7 @@ impl LocalStream {
         let result =
             checked_io_with_budget(operation, self.stopped.as_mut(), VIDEO_CHUNK_BUDGET).await;
         self.failed = result.is_err();
+        proof.complete(result.is_ok());
         if let Ok((_, payload_bytes)) = &result
             && *payload_bytes > 0
         {
@@ -384,6 +435,7 @@ impl LocalStream {
             return Err(Error::Protocol);
         }
         self.failed = true;
+        let mut proof = transport::PeerOperation::new(self.stream.get_ref().0);
         let operation = async {
             let mut payload = Zeroizing::new(vec![0_u8; payload_bytes]);
             self.stream.read_exact(&mut payload).await?;
@@ -392,6 +444,7 @@ impl LocalStream {
         let result =
             checked_io_with_budget(operation, self.stopped.as_mut(), VIDEO_FRAME_BUDGET).await;
         self.failed = result.is_err();
+        proof.complete(result.is_ok());
         if result.is_ok() {
             self.video_read_remaining = None;
         }
