@@ -111,7 +111,10 @@ enum Command {
 }
 impl Command {
     fn synchronizes_management(&self) -> bool {
-        matches!(self, Self::Policy | Self::Enable { .. } | Self::Recover | Self::Revoke { .. })
+        matches!(
+            self,
+            Self::Policy | Self::Enable { .. } | Self::Recover | Self::Revoke { .. }
+        )
     }
 }
 fn invalid(message: &str) -> io::Error {
@@ -232,7 +235,9 @@ impl Resident {
     }
     async fn command(&mut self, command: Command) -> Result<bool> {
         self.guard.check()?;
-        if command.synchronizes_management() && let Some(owner) = &self.owner {
+        if command.synchronizes_management()
+            && let Some(owner) = &self.owner
+        {
             // Fence the original authority before even starting the HTTP
             // request. Failed or unrelated management reads never rearm it.
             owner.stop();

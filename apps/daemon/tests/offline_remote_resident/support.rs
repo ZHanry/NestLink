@@ -1,17 +1,38 @@
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_auth::{Secret, VaultKey, random_id};
 use nestlink_identity::{InstallationIdentity, PermitSigner};
-use nestlink_protocol::{Path as NetworkPath, Permission, api::*, network::SpaceRole, offline::management::*};
+use nestlink_protocol::{
+    Path as NetworkPath, Permission, api::*, network::SpaceRole, offline::management::*,
+};
 use nestlink_sdk::{DeploymentTrust, DeviceIdentity, Sdk};
 use serde_json::{Value, json};
-use std::{io, path::{Path, PathBuf}, process::Stdio, sync::{Arc, Mutex, atomic::{AtomicUsize, Ordering}}, time::{Duration, SystemTime, UNIX_EPOCH}};
-use tokio::{io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader}, process::{Child, ChildStdin, Command}, sync::{mpsc, watch}, task::JoinHandle};
+use std::{
+    io,
+    path::{Path, PathBuf},
+    process::Stdio,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicUsize, Ordering},
+    },
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
+use tokio::{
+    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
+    process::{Child, ChildStdin, Command},
+    sync::{mpsc, watch},
+    task::JoinHandle,
+};
 
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 pub fn wall() -> Result<u64> {
-    Ok(SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis().try_into()?)
+    Ok(SystemTime::now()
+        .duration_since(UNIX_EPOCH)?
+        .as_millis()
+        .try_into()?)
 }
-fn password() -> Secret { Secret::from_text("resident-original-test-password".into()) }
+fn password() -> Secret {
+    Secret::from_text("resident-original-test-password".into())
+}
 
 /// Actual OS services are owned by this test, without changing process-global
 /// environment or installing a replacement platform/keyring implementation.
@@ -21,36 +42,81 @@ pub struct Platform {
 }
 impl Platform {
     pub async fn new(area: &Path) -> Result<Self> {
-        let value = Self { env: Vec::new(), children: Vec::new() };
+        let value = Self {
+            env: Vec::new(),
+            children: Vec::new(),
+        };
         #[cfg(target_os = "linux")]
         let mut value = value;
         #[cfg(target_os = "linux")]
         {
-            let mut dbus = Command::new("dbus-daemon").args(["--session", "--nofork", "--print-address=1"])
-                .stdout(Stdio::piped()).stderr(Stdio::null()).kill_on_drop(true).spawn()?;
+            let mut dbus = Command::new("dbus-daemon")
+                .args(["--session", "--nofork", "--print-address=1"])
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null())
+                .kill_on_drop(true)
+                .spawn()?;
             let mut address = String::new();
-            tokio::time::timeout(Duration::from_secs(5), BufReader::new(dbus.stdout.take().ok_or("dbus stdout")?).read_line(&mut address)).await??;
+            tokio::time::timeout(
+                Duration::from_secs(5),
+                BufReader::new(dbus.stdout.take().ok_or("dbus stdout")?).read_line(&mut address),
+            )
+            .await??;
             assert!(address.starts_with("unix:"));
-            value.env.push(("DBUS_SESSION_BUS_ADDRESS", address.trim().into()));
+            value
+                .env
+                .push(("DBUS_SESSION_BUS_ADDRESS", address.trim().into()));
             value.children.push(dbus);
-            let mut x = Command::new("Xvfb").args(["-displayfd", "1", "-screen", "0", "640x480x24", "-nolisten", "tcp"])
-                .stdout(Stdio::piped()).stderr(Stdio::null()).kill_on_drop(true).spawn()?;
+            let mut x = Command::new("Xvfb")
+                .args([
+                    "-displayfd",
+                    "1",
+                    "-screen",
+                    "0",
+                    "640x480x24",
+                    "-nolisten",
+                    "tcp",
+                ])
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null())
+                .kill_on_drop(true)
+                .spawn()?;
             let mut display = String::new();
-            tokio::time::timeout(Duration::from_secs(5), BufReader::new(x.stdout.take().ok_or("Xvfb stdout")?).read_line(&mut display)).await??;
+            tokio::time::timeout(
+                Duration::from_secs(5),
+                BufReader::new(x.stdout.take().ok_or("Xvfb stdout")?).read_line(&mut display),
+            )
+            .await??;
             let _: u16 = display.trim().parse()?;
             value.env.push(("DISPLAY", format!(":{}", display.trim())));
             value.children.push(x);
-            for (name, directory) in [("XDG_DATA_HOME", "keyring-data"), ("XDG_RUNTIME_DIR", "runtime")] {
+            for (name, directory) in [
+                ("XDG_DATA_HOME", "keyring-data"),
+                ("XDG_RUNTIME_DIR", "runtime"),
+            ] {
                 let path = area.join(directory);
                 nestlink_platform_security::new_private_directory(&path)?;
                 value.env.push((name, path.to_string_lossy().into_owned()));
             }
             let mut keyring = value.command("gnome-keyring-daemon");
-            let mut keyring = keyring.args(["--foreground", "--unlock", "--components=secrets"])
-                .stdin(Stdio::piped()).stdout(Stdio::null()).stderr(Stdio::null()).spawn()?;
-            keyring.stdin.take().ok_or("keyring input")?.write_all(b"resident-keyring-test-password\n").await?;
+            let mut keyring = keyring
+                .args(["--foreground", "--unlock", "--components=secrets"])
+                .stdin(Stdio::piped())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()?;
+            keyring
+                .stdin
+                .take()
+                .ok_or("keyring input")?
+                .write_all(b"resident-keyring-test-password\n")
+                .await?;
             value.children.push(keyring);
-            let status = value.command("xsetroot").args(["-solid", "#00ff00"]).status().await?;
+            let status = value
+                .command("xsetroot")
+                .args(["-solid", "#00ff00"])
+                .status()
+                .await?;
             assert!(status.success());
         }
         #[cfg(windows)]
@@ -60,30 +126,54 @@ impl Platform {
     pub fn command(&self, program: impl AsRef<std::ffi::OsStr>) -> Command {
         let mut command = Command::new(program);
         command.kill_on_drop(true).env_remove("WAYLAND_DISPLAY");
-        for (name, value) in &self.env { command.env(name, value); }
+        for (name, value) in &self.env {
+            command.env(name, value);
+        }
         command
     }
-    fn resident(&self) -> (Command,Option<String>) {
+    fn resident(&self) -> (Command, Option<String>) {
         #[cfg(target_os = "linux")]
         {
             // The production capture source requires a genuine logind desktop
             // session for this PID. PAM registers that original session; the
             // test never substitutes a bus, login service or accepted facts.
-            let unit = format!("nestlink-offline-test-{}",random_id());
+            let unit = format!("nestlink-offline-test-{}", random_id());
             let mut command = self.command("sudo");
-            command.args(["-n","systemd-run","--quiet","--wait","--pipe","--collect","--service-type=exec"])
+            command
+                .args([
+                    "-n",
+                    "systemd-run",
+                    "--quiet",
+                    "--wait",
+                    "--pipe",
+                    "--collect",
+                    "--service-type=exec",
+                ])
                 .arg(format!("--unit={unit}"))
-                .arg(format!("--uid={}",rustix::process::geteuid().as_raw()))
-                .args(["--property=PAMName=login","--property=TimeoutStopSec=5s","--property=RuntimeMaxSec=180s","--setenv=XDG_SESSION_TYPE=x11","--setenv=XDG_SESSION_CLASS=user"]);
-            for (name,value) in &self.env { command.arg(format!("--setenv={name}={value}")); }
+                .arg(format!("--uid={}", rustix::process::geteuid().as_raw()))
+                .args([
+                    "--property=PAMName=login",
+                    "--property=TimeoutStopSec=5s",
+                    "--property=RuntimeMaxSec=180s",
+                    "--setenv=XDG_SESSION_TYPE=x11",
+                    "--setenv=XDG_SESSION_CLASS=user",
+                ]);
+            for (name, value) in &self.env {
+                command.arg(format!("--setenv={name}={value}"));
+            }
             command.arg("--").arg(env!("CARGO_BIN_EXE_nestlink-daemon"));
-            (command,Some(unit))
+            (command, Some(unit))
         }
         #[cfg(windows)]
-        { (self.command(env!("CARGO_BIN_EXE_nestlink-daemon")),None) }
+        {
+            (self.command(env!("CARGO_BIN_EXE_nestlink-daemon")), None)
+        }
     }
     async fn protect_login(&self, directory: &Path, sdk: &Sdk) -> Result {
-        let binding = URL_SAFE_NO_PAD.encode(nestlink_auth::token_hash("management-store", &directory.to_string_lossy()));
+        let binding = URL_SAFE_NO_PAD.encode(nestlink_auth::token_hash(
+            "management-store",
+            &directory.to_string_lossy(),
+        ));
         let key = zeroize::Zeroizing::new(nestlink_auth::random_bytes::<32>());
         #[cfg(windows)]
         nestlink_platform_security::create_key(&directory.join("management-login.key"), &key)?;
@@ -94,22 +184,52 @@ impl Platform {
             // No plaintext fallback or test-only authentication path exists.
             tokio::time::timeout(Duration::from_secs(10), async {
                 loop {
-                    let mut child = self.command("secret-tool").args(["store", "--label=NestLink resident Actions test", "application", "NestLink", "instance", &binding])
-                        .stdin(Stdio::piped()).stdout(Stdio::null()).stderr(Stdio::null()).spawn()?;
-                    child.stdin.take().ok_or_else(|| io::Error::other("secret input"))?.write_all(secret.as_bytes()).await?;
-                    if child.wait().await?.success() { return Ok::<_, io::Error>(()); }
+                    let mut child = self
+                        .command("secret-tool")
+                        .args([
+                            "store",
+                            "--label=NestLink resident Actions test",
+                            "application",
+                            "NestLink",
+                            "instance",
+                            &binding,
+                        ])
+                        .stdin(Stdio::piped())
+                        .stdout(Stdio::null())
+                        .stderr(Stdio::null())
+                        .spawn()?;
+                    child
+                        .stdin
+                        .take()
+                        .ok_or_else(|| io::Error::other("secret input"))?
+                        .write_all(secret.as_bytes())
+                        .await?;
+                    if child.wait().await?.success() {
+                        return Ok::<_, io::Error>(());
+                    }
                     tokio::time::sleep(Duration::from_millis(50)).await;
                 }
-            }).await??;
+            })
+            .await??;
         }
-        let login = sdk.export_login()?.ok_or("actual protected login unavailable")?;
+        let login = sdk
+            .export_login()?
+            .ok_or("actual protected login unavailable")?;
         let cipher = VaultKey::from_bytes(*key).encrypt_management(&binding, &login)?;
-        nestlink_platform_security::create_private(&directory.join("remember-login.json"), b"true")?;
-        nestlink_platform_security::create_private(&directory.join("management-login.enc"), &cipher)?;
+        nestlink_platform_security::create_private(
+            &directory.join("remember-login.json"),
+            b"true",
+        )?;
+        nestlink_platform_security::create_private(
+            &directory.join("management-login.enc"),
+            &cipher,
+        )?;
         Ok(())
     }
     pub async fn shutdown(mut self) {
-        for child in self.children.iter_mut().rev() { let _ = child.kill().await; }
+        for child in self.children.iter_mut().rev() {
+            let _ = child.kill().await;
+        }
     }
 }
 
@@ -117,10 +237,16 @@ fn installation(directory: &Path) -> Result<DeviceIdentity> {
     nestlink_platform_security::new_private_directory(directory)?;
     let mut seed = zeroize::Zeroizing::new(nestlink_auth::random_bytes::<32>());
     nestlink_platform_security::create_key(&directory.join("installation-device.key"), &seed)?;
-    let identity = DeviceIdentity { device_id: random_id(), identity: InstallationIdentity::from_seed_zeroizing(&mut seed) };
-    nestlink_platform_security::create_private(&directory.join("installation-device.json"), &serde_json::to_vec(&json!({
-        "schema_version":1,"device_id":identity.device_id,"public_key_sha256":identity.identity.fingerprint()
-    }))?)?;
+    let identity = DeviceIdentity {
+        device_id: random_id(),
+        identity: InstallationIdentity::from_seed_zeroizing(&mut seed),
+    };
+    nestlink_platform_security::create_private(
+        &directory.join("installation-device.json"),
+        &serde_json::to_vec(&json!({
+            "schema_version":1,"device_id":identity.device_id,"public_key_sha256":identity.identity.fingerprint()
+        }))?,
+    )?;
     Ok(identity)
 }
 
@@ -151,52 +277,163 @@ impl Fixture {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
         let address = listener.local_addr()?;
         let origin = format!("http://{address}");
-        let app = nestlink_server::router(nestlink_server::AppState::new(store, VaultKey::from_bytes([53;32]), signer, origin.clone(), false)?);
+        let app = nestlink_server::router(nestlink_server::AppState::new(
+            store,
+            VaultKey::from_bytes([53; 32]),
+            signer,
+            origin.clone(),
+            false,
+        )?);
         let (gate, _) = watch::channel(false);
         let requests = Arc::new(AtomicUsize::new(0));
         let (held, observed) = (gate.clone(), requests.clone());
-        let router = app.layer(axum::middleware::from_fn(move |request: axum::extract::Request, next: axum::middleware::Next| {
-            let mut held = held.subscribe(); let observed = observed.clone();
-            async move {
-                observed.fetch_add(1, Ordering::AcqRel);
-                loop {
-                    let waiting = *held.borrow_and_update();
-                    if !waiting || held.changed().await.is_err() { break; }
+        let router = app.layer(axum::middleware::from_fn(
+            move |request: axum::extract::Request, next: axum::middleware::Next| {
+                let mut held = held.subscribe();
+                let observed = observed.clone();
+                async move {
+                    observed.fetch_add(1, Ordering::AcqRel);
+                    loop {
+                        let waiting = *held.borrow_and_update();
+                        if !waiting || held.changed().await.is_err() {
+                            break;
+                        }
+                    }
+                    next.run(request).await
                 }
-                next.run(request).await
-            }
-        }));
+            },
+        ));
         let server_router = router.clone();
         let server = tokio::spawn(async move { axum::serve(listener, server_router).await });
-        let mut source_sdk = Sdk::connect(&origin, DeploymentTrust { deployment_id: deployment.clone(), permit_issuer: issuer }, true).await?;
+        let mut source_sdk = Sdk::connect(
+            &origin,
+            DeploymentTrust {
+                deployment_id: deployment.clone(),
+                permit_issuer: issuer,
+            },
+            true,
+        )
+        .await?;
         source_sdk.login("admin".into(), password(), None).await?;
-        source_sdk.create_account("host-owner".into(), password()).await?;
-        let mut host_sdk = Sdk::connect(&origin, DeploymentTrust { deployment_id: deployment, permit_issuer: issuer }, true).await?;
-        host_sdk.login("host-owner".into(), password(), None).await?;
-        let source = area.join("source"); let host = area.join("host");
-        let source_identity = installation(&source)?; let host_identity = installation(&host)?;
-        for (sdk, identity, role) in [(&source_sdk, &source_identity, "controller"), (&host_sdk, &host_identity, "host")] {
-            sdk.enroll(identity, role.into(), if cfg!(windows) { "windows" } else { "linux-x11" }.into(), vec![role.into(), "vp8".into(), nestlink_protocol::remote_budget::CAPABILITY.into()], "direct_only".into()).await?;
+        source_sdk
+            .create_account("host-owner".into(), password())
+            .await?;
+        let mut host_sdk = Sdk::connect(
+            &origin,
+            DeploymentTrust {
+                deployment_id: deployment,
+                permit_issuer: issuer,
+            },
+            true,
+        )
+        .await?;
+        host_sdk
+            .login("host-owner".into(), password(), None)
+            .await?;
+        let source = area.join("source");
+        let host = area.join("host");
+        let source_identity = installation(&source)?;
+        let host_identity = installation(&host)?;
+        for (sdk, identity, role) in [
+            (&source_sdk, &source_identity, "controller"),
+            (&host_sdk, &host_identity, "host"),
+        ] {
+            sdk.enroll(
+                identity,
+                role.into(),
+                if cfg!(windows) {
+                    "windows"
+                } else {
+                    "linux-x11"
+                }
+                .into(),
+                vec![
+                    role.into(),
+                    "vp8".into(),
+                    nestlink_protocol::remote_budget::CAPABILITY.into(),
+                ],
+                "direct_only".into(),
+            )
+            .await?;
         }
-        let request = || RemoteRequest { id:random_id(),controller_device_id:source_identity.device_id.clone(),host_device_id:host_identity.device_id.clone(),permissions:vec![Permission::View as i32, Permission::FileRead as i32],path_mode:"direct_only".into() };
+        let request = || RemoteRequest {
+            id: random_id(),
+            controller_device_id: source_identity.device_id.clone(),
+            host_device_id: host_identity.device_id.clone(),
+            permissions: vec![Permission::View as i32, Permission::FileRead as i32],
+            path_mode: "direct_only".into(),
+        };
         let pending = source_sdk.create_remote(request()).await?;
-        host_sdk.approve(&host_identity, &pending, ApprovalChoice { approved:true, permissions:vec![Permission::View as i32, Permission::FileRead as i32], paths:vec![NetworkPath::Direct as i32] }).await?;
+        host_sdk
+            .approve(
+                &host_identity,
+                &pending,
+                ApprovalChoice {
+                    approved: true,
+                    permissions: vec![Permission::View as i32, Permission::FileRead as i32],
+                    paths: vec![NetworkPath::Direct as i32],
+                },
+            )
+            .await?;
         let original = source_sdk.permit(&pending.id).await?;
-        host_sdk.trust_remote(&host_identity, &original, TrustChoice { expected_revision:0, expires_at_unix_ms:wall()?+120_000 }).await?;
+        host_sdk
+            .trust_remote(
+                &host_identity,
+                &original,
+                TrustChoice {
+                    expected_revision: 0,
+                    expires_at_unix_ms: wall()? + 120_000,
+                },
+            )
+            .await?;
         let trusted = source_sdk.create_trusted_remote(request()).await?;
         let original = source_sdk.permit(&trusted.id).await?;
         let space = random_id();
-        source_sdk.configure_network_authority(&space,0).await?;
-        for (revision, identity) in [(1,&source_identity),(2,&host_identity)] {
-            source_sdk.set_network_member(&space,&identity.device_id,NetworkMemberRequest { expected_policy_revision:revision,expected_membership_epoch:0,role:SpaceRole::Member }).await?;
+        source_sdk.configure_network_authority(&space, 0).await?;
+        for (revision, identity) in [(1, &source_identity), (2, &host_identity)] {
+            source_sdk
+                .set_network_member(
+                    &space,
+                    &identity.device_id,
+                    NetworkMemberRequest {
+                        expected_policy_revision: revision,
+                        expected_membership_epoch: 0,
+                        role: SpaceRole::Member,
+                    },
+                )
+                .await?;
         }
-        source_sdk.set_offline_enabled(&space,&OfflineEnableUpdate { expected_revision:0,enabled:true }).await?;
-        platform.protect_login(&source,&source_sdk).await?;
-        platform.protect_login(&host,&host_sdk).await?;
-        Ok(Self { source,host,space,session:trusted.id,online_expiry:original.claims().expires_at_unix_ms,connection_generation:original.claims().connection_generation,lease_sequence:original.claims().lease_sequence,router,address,server:Some(server),gate,requests })
+        source_sdk
+            .set_offline_enabled(
+                &space,
+                &OfflineEnableUpdate {
+                    expected_revision: 0,
+                    enabled: true,
+                },
+            )
+            .await?;
+        platform.protect_login(&source, &source_sdk).await?;
+        platform.protect_login(&host, &host_sdk).await?;
+        Ok(Self {
+            source,
+            host,
+            space,
+            session: trusted.id,
+            online_expiry: original.claims().expires_at_unix_ms,
+            connection_generation: original.claims().connection_generation,
+            lease_sequence: original.claims().lease_sequence,
+            router,
+            address,
+            server: Some(server),
+            gate,
+            requests,
+        })
     }
     pub async fn offline(&mut self) -> Result {
-        if let Some(server) = self.server.take() { server.abort(); let _ = server.await; }
+        if let Some(server) = self.server.take() {
+            server.abort();
+            let _ = server.await;
+        }
         drop(tokio::net::TcpListener::bind(self.address).await?);
         Ok(())
     }
@@ -204,11 +441,19 @@ impl Fixture {
         self.gate.send_replace(true);
         let listener = tokio::net::TcpListener::bind(self.address).await?;
         let router = self.router.clone();
-        self.server = Some(tokio::spawn(async move { axum::serve(listener,router).await }));
+        self.server = Some(tokio::spawn(
+            async move { axum::serve(listener, router).await },
+        ));
         Ok(self.requests.load(Ordering::Acquire))
     }
 }
-impl Drop for Fixture { fn drop(&mut self) { if let Some(server) = &self.server { server.abort(); } } }
+impl Drop for Fixture {
+    fn drop(&mut self) {
+        if let Some(server) = &self.server {
+            server.abort();
+        }
+    }
+}
 
 pub struct Resident {
     child: Child,
@@ -218,66 +463,127 @@ pub struct Resident {
     unit: Option<String>,
 }
 impl Resident {
-    pub async fn spawn(platform: &Platform, fixture: &Fixture, host: bool, transport: &str, peer: std::net::SocketAddr) -> Result<Self> {
-        let (mut command,unit) = platform.resident();
-        command.arg("offline-remote").arg("--state-dir").arg(if host { &fixture.host } else { &fixture.source })
-            .args(["--space",&fixture.space,"--session",&fixture.session,"--role",if host {"host"} else {"controller"},"--transport",transport,if host {"--listen"} else {"--peer"},&peer.to_string()])
-            .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
+    pub async fn spawn(
+        platform: &Platform,
+        fixture: &Fixture,
+        host: bool,
+        transport: &str,
+        peer: std::net::SocketAddr,
+    ) -> Result<Self> {
+        let (mut command, unit) = platform.resident();
+        command
+            .arg("offline-remote")
+            .arg("--state-dir")
+            .arg(if host { &fixture.host } else { &fixture.source })
+            .args([
+                "--space",
+                &fixture.space,
+                "--session",
+                &fixture.session,
+                "--role",
+                if host { "host" } else { "controller" },
+                "--transport",
+                transport,
+                if host { "--listen" } else { "--peer" },
+                &peer.to_string(),
+            ])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
         let mut child = command.spawn()?;
         let input = child.stdin.take();
         let output = child.stdout.take().ok_or("resident stdout")?;
-        let (send,events) = mpsc::unbounded_channel();
+        let (send, events) = mpsc::unbounded_channel();
         tokio::spawn(async move {
             let mut lines = BufReader::new(output).lines();
             while let Ok(Some(line)) = lines.next_line().await {
-                match serde_json::from_str(&line) { Ok(event) => { if send.send(event).is_err() { break; } }, Err(_) => break }
+                match serde_json::from_str(&line) {
+                    Ok(event) => {
+                        if send.send(event).is_err() {
+                            break;
+                        }
+                    }
+                    Err(_) => break,
+                }
             }
         });
         let error_output = child.stderr.take().ok_or("resident stderr")?;
-        let stderr = Arc::new(Mutex::new(Vec::new())); let collected = stderr.clone();
+        let stderr = Arc::new(Mutex::new(Vec::new()));
+        let collected = stderr.clone();
         tokio::spawn(async move {
-            let mut bytes = Vec::new(); let _ = error_output.take(65536).read_to_end(&mut bytes).await;
-            if let Ok(mut output) = collected.lock() { *output = bytes; }
+            let mut bytes = Vec::new();
+            let _ = error_output.take(65536).read_to_end(&mut bytes).await;
+            if let Ok(mut output) = collected.lock() {
+                *output = bytes;
+            }
         });
-        let mut resident = Self { child,input,events,stderr,unit };
+        let mut resident = Self {
+            child,
+            input,
+            events,
+            stderr,
+            unit,
+        };
         resident.event("ready").await?;
         Ok(resident)
     }
     pub async fn send(&mut self, command: Value) -> Result {
-        let mut bytes = serde_json::to_vec(&command)?; bytes.push(b'\n');
+        let mut bytes = serde_json::to_vec(&command)?;
+        bytes.push(b'\n');
         let input = self.input.as_mut().ok_or("resident stdin closed")?;
-        input.write_all(&bytes).await?; input.flush().await?; Ok(())
+        input.write_all(&bytes).await?;
+        input.flush().await?;
+        Ok(())
     }
     pub async fn event(&mut self, expected: &str) -> Result<Value> {
         let result = tokio::time::timeout(Duration::from_secs(15), async {
             while let Some(event) = self.events.recv().await {
-                if event["event"] == expected { return Ok(event["data"].clone()); }
+                if event["event"] == expected {
+                    return Ok(event["data"].clone());
+                }
                 if event["event"] == "command_failed" || event["event"] == "connection_failed" {
                     return Err(io::Error::other(format!("waiting {expected}: {event}")));
                 }
             }
-            Err(io::Error::other(format!("resident ended before {expected}")))
-        }).await;
+            Err(io::Error::other(format!(
+                "resident ended before {expected}"
+            )))
+        })
+        .await;
         match result {
             Ok(Ok(data)) => Ok(data),
             error => {
-                let diagnostic = self.stderr.lock().map(|bytes| String::from_utf8_lossy(&bytes).into_owned()).unwrap_or_default();
-                Err(io::Error::other(format!("resident event {expected}: {error:?}; stderr={diagnostic}")).into())
+                let diagnostic = self
+                    .stderr
+                    .lock()
+                    .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
+                    .unwrap_or_default();
+                Err(io::Error::other(format!(
+                    "resident event {expected}: {error:?}; stderr={diagnostic}"
+                ))
+                .into())
             }
         }
     }
-    pub async fn request(&mut self, command: Value, event: &str) -> Result<Value> { self.send(command).await?; self.event(event).await }
+    pub async fn request(&mut self, command: Value, event: &str) -> Result<Value> {
+        self.send(command).await?;
+        self.event(event).await
+    }
     pub async fn finish(&mut self, eof: bool) -> Result {
-        if !eof { self.send(json!({"command":"stop"})).await?; }
+        if !eof {
+            self.send(json!({"command":"stop"})).await?;
+        }
         self.input.take();
-        let status = tokio::time::timeout(Duration::from_secs(15),self.child.wait()).await??;
+        let status = tokio::time::timeout(Duration::from_secs(15), self.child.wait()).await??;
         self.unit.take();
-        assert!(status.success(),"resident exited with {status}"); Ok(())
+        assert!(status.success(), "resident exited with {status}");
+        Ok(())
     }
     pub async fn exited(&mut self, success: bool) -> Result {
-        let status = tokio::time::timeout(Duration::from_secs(15),self.child.wait()).await??;
+        let status = tokio::time::timeout(Duration::from_secs(15), self.child.wait()).await??;
         self.unit.take();
-        assert_eq!(status.success(),success,"resident exit {status}"); Ok(())
+        assert_eq!(status.success(), success, "resident exit {status}");
+        Ok(())
     }
 }
 impl Drop for Resident {
@@ -285,44 +591,85 @@ impl Drop for Resident {
         if let Some(unit) = self.unit.take() {
             // Error/panic cleanup retains the exact service identity. Killing
             // only systemd-run would leave its original service and stdin open.
-            let _ = std::process::Command::new("sudo").args(["-n","systemctl","stop",&unit])
-                .stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null()).status();
+            let _ = std::process::Command::new("sudo")
+                .args(["-n", "systemctl", "stop", &unit])
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status();
         }
         let _ = self.child.start_kill();
     }
 }
 
-pub async fn activate(source: &mut Resident, host: &mut Resident, fixture: &Fixture) -> Result<String> {
-    source.request(json!({"command":"help"}),"help").await?;
-    source.request(json!({"command":"policy"}),"policy").await?;
-    let source_nonce = source.request(json!({"command":"begin"}),"process").await?["process_nonce"].clone();
-    let host_nonce = host.request(json!({"command":"begin"}),"process").await?["process_nonce"].clone();
+pub async fn activate(
+    source: &mut Resident,
+    host: &mut Resident,
+    fixture: &Fixture,
+) -> Result<String> {
+    source.request(json!({"command":"help"}), "help").await?;
+    source
+        .request(json!({"command":"policy"}), "policy")
+        .await?;
+    let source_nonce = source
+        .request(json!({"command":"begin"}), "process")
+        .await?["process_nonce"]
+        .clone();
+    let host_nonce =
+        host.request(json!({"command":"begin"}), "process").await?["process_nonce"].clone();
     let draft = source.request(json!({"command":"draft","request":{
         "session_id":fixture.session,"expected_policy_revision":3,"expected_connection_generation":fixture.connection_generation,"expected_lease_sequence":fixture.lease_sequence,
         "process_nonces":[source_nonce,host_nonce],"operations":["view","file_read"],"direct_transports":["quic","tls"],
         "maximum_bytes":16_777_216,"maximum_file_write_bytes":0,"maximum_connections":6,"expires_at_ms":wall()?+90_000
     }}),"draft").await?;
-    let bundle = draft["claims"]["bundle_id"].as_str().ok_or("bundle ID")?.to_owned();
+    let bundle = draft["claims"]["bundle_id"]
+        .as_str()
+        .ok_or("bundle ID")?
+        .to_owned();
     let digest = draft["draft_digest"].clone();
-    for resident in [&mut *source,&mut *host] {
-        let review = resident.request(json!({"command":"review","bundle_id":bundle}),"complete_bundle_review").await?;
-        assert_eq!(review["bundle"]["draft_digest"],digest);
-        resident.request(json!({"command":"approve","draft_digest":digest}),"approval").await?;
+    for resident in [&mut *source, &mut *host] {
+        let review = resident
+            .request(
+                json!({"command":"review","bundle_id":bundle}),
+                "complete_bundle_review",
+            )
+            .await?;
+        assert_eq!(review["bundle"]["draft_digest"], digest);
+        resident
+            .request(
+                json!({"command":"approve","draft_digest":digest}),
+                "approval",
+            )
+            .await?;
     }
-    for resident in [&mut *source,&mut *host] {
-        let status = resident.request(json!({"command":"activate","draft_digest":digest}),"status").await?;
-        assert_eq!(status["budget"]["stopped"],false);
-        resident.request(json!({"command":"activate","draft_digest":digest}),"command_failed").await?;
+    for resident in [&mut *source, &mut *host] {
+        let status = resident
+            .request(
+                json!({"command":"activate","draft_digest":digest}),
+                "status",
+            )
+            .await?;
+        assert_eq!(status["budget"]["stopped"], false);
+        resident
+            .request(
+                json!({"command":"activate","draft_digest":digest}),
+                "command_failed",
+            )
+            .await?;
     }
     Ok(bundle)
 }
 
 pub async fn start(source: &mut Resident, host: &mut Resident) -> Result {
-    host.request(json!({"command":"start"}),"listening").await?;
+    host.request(json!({"command":"start"}), "listening")
+        .await?;
     source.send(json!({"command":"start"})).await?;
-    source.event("connected").await?; host.event("connected").await?;
-    let view = source.request(json!({"command":"status"}),"status").await?;
-    assert_eq!(view["status"],"connected");
-    assert_eq!(view["budget"]["stopped"],false);
+    source.event("connected").await?;
+    host.event("connected").await?;
+    let view = source
+        .request(json!({"command":"status"}), "status")
+        .await?;
+    assert_eq!(view["status"], "connected");
+    assert_eq!(view["budget"]["stopped"], false);
     Ok(())
 }

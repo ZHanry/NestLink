@@ -160,8 +160,14 @@ impl Resident {
     }
     async fn command(&mut self, command: Command) -> Result<bool> {
         self.guard.check()?;
-        if matches!(&command, Command::Policy | Command::Enable { .. } | Command::Service { .. } | Command::Recover | Command::Revoke { .. })
-            && let Some(owner) = &self.owner
+        if matches!(
+            &command,
+            Command::Policy
+                | Command::Enable { .. }
+                | Command::Service { .. }
+                | Command::Recover
+                | Command::Revoke { .. }
+        ) && let Some(owner) = &self.owner
         {
             // An explicit management operation ends offline delivery before
             // HTTP, including failed requests and revocation of other bundles.

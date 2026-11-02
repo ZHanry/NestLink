@@ -646,7 +646,10 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
         let downloaded =
             tokio::time::timeout(Duration::from_secs(5), new_task.wait_finished()).await?;
         assert_eq!(downloaded.phase, NativeFileTaskPhase::Completed);
-        assert_eq!(std::fs::read(second_output.join("received-again.bin"))?, bytes);
+        assert_eq!(
+            std::fs::read(second_output.join("received-again.bin"))?,
+            bytes
+        );
         assert!(
             source.budget()?.remaining_bytes
                 < spent_before_rebuild.saturating_sub(bytes.len() as u64)
