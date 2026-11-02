@@ -72,7 +72,7 @@
     "only_failed_step": "NAT driver strict lint before any NAT scenario; protocol/media_format.rs:228 collapsible_if",
     "artifact_id": 13110185164,
     "artifact_digest": "sha256:bff52cc34448c9d6ef8ba6c1a9ed9f7bad3a0decdc3cf4b8ccd5bf323c61d877",
-    "all_13_remaining_sdk_and_product_steps": "success",
+    "all_13_remaining_sdk_and_product_commands": "success",
     "total_passed_tests": 72,
     "total_failed_tests": 0,
     "ignored_dedicated_fixture_roles": 5,
