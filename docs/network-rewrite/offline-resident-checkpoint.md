@@ -105,6 +105,19 @@ Locked metadata. It never reads a secret or prints raw command output. The
 cancelled original secret-tool is now killed through its existing Child owner;
 the gate remains10 seconds, and metadata cannot convert failure to success.
 
+The original f570 Linux job log reports gnome-keyring46.1-2ubuntu0.2 and
+libsecret0.21.4-1build3. Additional mature-component source reading pinned GNOME
+46.1 tag to commit `4e173494bf15795a1ebab6e2bbd9377fac456240`:
+`pam/gkr-pam-module.c::pam_sm_close_session` is explicitly a no-op, so repeated
+PAM close cannot be asserted as the direct keyring-kill cause.
+`daemon/gkd-main.c` can exit after its configured XDG_SESSION_ID enters closing,
+but this has not been observed for the failing fixture. The read establishes
+neither a root cause nor an adopted implementation; no upstream code is copied.
+Source links:
+<https://github.com/GNOME/gnome-keyring/blob/4e173494bf15795a1ebab6e2bbd9377fac456240/pam/gkr-pam-module.c>
+and
+<https://github.com/GNOME/gnome-keyring/blob/4e173494bf15795a1ebab6e2bbd9377fac456240/daemon/gkd-main.c>.
+
 ## Next exact-source hosted work
 
 The f570 focused matrix completed with the original failures above. The next
