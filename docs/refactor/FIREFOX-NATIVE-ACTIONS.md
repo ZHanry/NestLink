@@ -3,7 +3,9 @@
 The production Web/native job now includes Chrome, Edge and official stable
 Firefox as three independent jobs with fail-fast disabled. Each uses the same
 release site and builds the same original optimized native fixture. The Firefox
-adapter has been implemented; its exact-source hosted execution is pending.
+adapter passed exact-source hosted run 41439452056 on source
+`0e323b5da5999f809b6f50e2decb7df963d8d9fc`; its Firefox artifact and actual
+runner, browser, native media/input/file and cleanup receipts were verified.
 Neither the historical stock Firefox 158.0 Windows view result nor the earlier
 Playwright patched Firefox result establishes this new Linux integration pass.
 
@@ -101,3 +103,26 @@ target qualification retain their independent acceptance requirements.
 All download/extraction, dependency preparation, syntax checks, contract tests,
 builds and browser execution run on GitHub-hosted Actions. Local work for this
 change was source review/editing, upstream source/metadata reads and Git only.
+
+The first official Firefox attempt, run 41436192329/source 4c93f64, failed during
+initial HTTPS navigation with `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`. It reached
+no permit, media or business operation. Its original failure, exact navigation
+error, verified archive digest and physical cleanup remain recorded in
+`docs/network-rewrite/evidence/firefox-original-tls-failure-4c93f64.json`.
+The subsequent constrained CA chain and actual Blob download UUID fixes passed
+the real Firefox job in run 41439452056. That full five-job workflow succeeded,
+including Chrome and Edge. The independently downloaded Firefox archive's
+official SHA256 and 261479-byte length match; all 15 files have recorded hashes in
+`docs/network-rewrite/evidence/firefox-production-0e323b5.json`.
+
+The Firefox receipt records 36.005 seconds of actual decoded VP8, three intervals
+at 9.9958/10/10 fps and actual Opus at about 48000 samples/second and 50 packets/second.
+It observes one initial permit and eight signed renewals, seven during steady
+decoding, with all nine original response bodies completed and their BiDi owner
+drained and closed. All nine common UI groups pass. The actual Blob save carries
+a real download UUID and null navigation; 192239 download bytes and 130799 upload
+bytes match their native digests. The saved file remains exact after browser
+exit and is physically removed, while input release, file workers, response and
+download listeners, storage locks, processes and the temporary database all
+complete cleanup. This qualifies the stated hosted loopback scope and retains
+the separate target-device and Firefox impairment requirements above.

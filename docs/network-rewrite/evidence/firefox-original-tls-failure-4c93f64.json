@@ -122,6 +122,13 @@
     "pending_source_revision": "0e323b5da5999f809b6f50e2decb7df963d8d9fc",
     "status_at_review": "contracts_succeeded_release_site_build_in_progress",
     "new_firefox_execution_verified": false,
-    "failure_preserved": true
+    "failure_preserved": true,
+    "subsequent_verified_result": {
+      "run_id": 41439452056,
+      "source_revision": "0e323b5da5999f809b6f50e2decb7df963d8d9fc",
+      "firefox_hosted_scope_passed": true,
+      "evidence": "docs/network-rewrite/evidence/firefox-production-0e323b5.json",
+      "original_failure_unchanged": true
+    }
   }
 }
