@@ -1,6 +1,7 @@
 //! Controller-only compressed sink routing. IPC identity remains outside core.
 use super::*;
 pub use nestlink_media_session::ExternalVideoCleanup;
+pub use nestlink_media_session::hevc_main8_contract;
 pub use nestlink_media_session::external::{
     ExternalAccessUnit, VideoSinkContext, VideoSinkFeedback,
 };
@@ -62,6 +63,10 @@ impl CoreHandle {
             format_epoch: confirmed.as_ref().map_or(0, |v| v.format_epoch),
             format_sha256: confirmed.as_ref().map_or([0; 32], |v| v.format_sha256),
             format: confirmed.as_ref().map(|v| v.format),
+            decoder_hardware: if confirmed.as_ref().is_some_and(|v| v.format.codec == nestlink_protocol::media_format::Codec::Hevc) {
+                Some(route.presentation.decoder_hardware_target()
+                    .map_err(|_| NativeVideoError::Unauthorized)?)
+            } else { None },
             selection_sequence: selected.sequence,
             layout_epoch: selected.layout_epoch,
             decode_epoch: 1,

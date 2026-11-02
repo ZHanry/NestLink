@@ -547,6 +547,7 @@ async fn two_tls_connections_reuse_decoded_credit_and_release_only_after_owner_j
             format_epoch: context.format_epoch,
             format_sha256: context.format_sha256,
             format: context.video_format()?,
+            decoder_hardware: context.decoder_hardware,
             connection_generation: context.binding.connection_generation,
             source: context.binding.source,
             stream_id: context.binding.stream_id,

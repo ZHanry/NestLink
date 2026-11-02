@@ -1,14 +1,12 @@
 //! Exact independently-versioned HEVC target conversion. No legacy codec mapping,
 //! probe substitution, software fallback or implicit authority is introduced.
-use nestlink_media_codec::{HevcExecutionTarget, HevcMain8Contract, VideoConfig};
+use nestlink_media_codec::{HevcMain8Contract, VideoConfig};
+#[cfg(windows)]
+use nestlink_media_codec::HevcExecutionTarget;
 use nestlink_protocol::media_format::{Codec, Geometry, HEVC_FORMAT_VERSION, VideoFormat};
 use std::io;
 
-pub fn hevc_execution_target(
-    format: VideoFormat,
-    adapter_luid: u64,
-    driver_version: u64,
-) -> io::Result<HevcExecutionTarget> {
+pub fn hevc_main8_contract(format: VideoFormat) -> io::Result<HevcMain8Contract> {
     format.validate().map_err(io::Error::other)?;
     if format.codec != Codec::Hevc
         || format.canonical_version() != HEVC_FORMAT_VERSION
@@ -28,13 +26,19 @@ pub fn hevc_execution_target(
         fps: format.frame_rate.numerator,
         bitrate_kbps: format.max_kbps,
     };
+    HevcMain8Contract::from_exact_target(ptl.general_bytes(), config)
+}
+#[cfg(windows)]
+pub fn hevc_execution_target(format: VideoFormat, adapter_luid: u64,
+    driver_version: u64) -> io::Result<HevcExecutionTarget> {
     HevcExecutionTarget::new(
-        HevcMain8Contract::from_exact_target(ptl.general_bytes(), config)?,
+        hevc_main8_contract(format)?,
         format.digest().map_err(io::Error::other)?,
         adapter_luid,
         driver_version,
     )
 }
+#[cfg(windows)]
 pub fn hevc_execution_receipt_matches(
     receipt: &nestlink_media_codec::HevcExecutionReceipt,
     format: VideoFormat,
@@ -50,6 +54,7 @@ pub fn hevc_execution_receipt_matches(
     }
     Ok(())
 }
+#[cfg(windows)]
 pub fn hevc_submission_receipt_matches(
     receipt: &nestlink_media_codec::HevcGpuSubmissionReceipt,
     format: VideoFormat,
@@ -71,7 +76,7 @@ pub fn hevc_submission_receipt_matches(
     Ok(())
 }
 
-#[cfg(test)]
+#[cfg(all(test, windows))]
 mod tests {
     use super::*;
     use nestlink_protocol::media_format::{FrameRate, HevcPtl};

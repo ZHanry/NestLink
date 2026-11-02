@@ -2,7 +2,7 @@
 use crate::bridge::CompressedContext;
 use crate::gpu_diagnostics::{ReceiverObservation, TerminalSink};
 use eframe::egui;
-use nestlink_media_codec::{GpuH264Presenter, GpuVideoSurface, VideoConfig};
+use nestlink_media_codec::{GpuDecodeStep, GpuH264Presenter, GpuHevcPresenter, GpuVideoSurface, VideoConfig};
 use std::{
     collections::VecDeque,
     io,
@@ -94,6 +94,7 @@ struct PaintState {
 pub struct Presenter {
     paint: Arc<Mutex<PaintState>>,
     cancel: Arc<AtomicBool>,
+    decode_authority: Arc<AtomicBool>,
     queued_bytes: Arc<AtomicU64>,
     queued_units: Arc<AtomicU64>,
     worker: Option<thread::JoinHandle<ReceiverObservation>>,
@@ -136,6 +137,7 @@ impl Presenter {
                 authority_deadline: 0,
             })),
             cancel: Arc::new(AtomicBool::new(false)),
+            decode_authority: Arc::new(AtomicBool::new(true)),
             queued_bytes: Arc::new(AtomicU64::new(0)),
             queued_units: Arc::new(AtomicU64::new(0)),
             worker: None,
@@ -264,6 +266,7 @@ impl Presenter {
                 let (tx, rx) = mpsc::sync_channel(8);
                 let (event_tx, event_rx) = mpsc::sync_channel(32);
                 let cancel = self.cancel.clone();
+                let decode_authority = self.decode_authority.clone();
                 let bytes = self.queued_bytes.clone();
                 let units = self.queued_units.clone();
                 let config = self.config;
@@ -280,7 +283,7 @@ impl Presenter {
                         observed.worker_started = true;
                         let outcome = run(
                             surface,
-                            (config, owner_context),
+                            (config, owner_context, decode_authority),
                             rx,
                             &event_tx,
                             &cancel,
@@ -370,6 +373,7 @@ impl Presenter {
     pub fn stop(&mut self) {
         self.visible.store(false, Ordering::Release);
         self.cancel.store(true, Ordering::Release);
+        self.decode_authority.store(false, Ordering::Release);
         self.input = None;
         if let Ok(mut state) = self.paint.lock() {
             state.active = false;
@@ -400,7 +404,8 @@ impl Presenter {
         {
             surface.detach();
         }
-        self.worker.is_none()
+        self.worker.is_none() && self.observation.lock().is_ok_and(|value|
+            !value.decoder_opened || value.native_cleanup_completed)
     }
 }
 impl Drop for Presenter {
@@ -464,9 +469,60 @@ fn record_join(
         sink.enqueue(final_value, shared.clone());
     }
 }
+enum PresenterDecoder {
+    H264(Box<GpuH264Presenter>),
+    Hevc { decoder: Box<GpuHevcPresenter>, target: nestlink_media_codec::HevcExecutionTarget },
+}
+impl PresenterDecoder {
+    fn open(surface: &GpuVideoSurface, config: VideoConfig, context: &CompressedContext,
+        authority: Arc<AtomicBool>) -> io::Result<Self> {
+        match context.video_format().map_err(io::Error::other)? {
+            Some(format) if format.codec == nestlink_protocol::media_format::Codec::Hevc => {
+                let hardware = context.decoder_hardware
+                    .ok_or_else(|| io::Error::other("HEVC presenter platform absent from exact IPC"))?;
+                let target = nestlink_media_codec::HevcExecutionTarget::new(
+                    nestlink_app_core::hevc_main8_contract(format)?, format.digest().map_err(io::Error::other)?,
+                    hardware.adapter_luid, hardware.driver_version)?;
+                Ok(Self::Hevc { decoder: Box::new(GpuHevcPresenter::with_target(surface, target, authority)?), target })
+            }
+            _ => Ok(Self::H264(Box::new(GpuH264Presenter::with_config(surface, config)?))),
+        }
+    }
+    fn checked_hevc_step(value: nestlink_media_codec::HevcGpuDecodeStep,
+        target: nestlink_media_codec::HevcExecutionTarget) -> io::Result<GpuDecodeStep> {
+        let actual = value.step.picture.and_then(|p| p.submitted_qpc.map(|qpc| (p.sequence, p.pts_90khz, qpc)));
+        match (actual, value.submitted) {
+            (Some((sequence, pts, qpc)), Some(receipt)) => {
+                receipt.check_current()?;
+                if receipt.target() != target || receipt.sequence() != sequence
+                    || receipt.pts_90khz() != pts || receipt.submitted_qpc() != qpc {
+                    return Err(io::Error::other("HEVC DXGI receipt differs from its exact submitted output"));
+                }
+            }
+            (None, None) => {}
+            _ => return Err(io::Error::other("HEVC DXGI submission lacks its original receipt")),
+        }
+        Ok(value.step)
+    }
+    fn submit_scheduled(&mut self, unit: &AccessUnit) -> io::Result<GpuDecodeStep> {
+        match self {
+            Self::H264(decoder) => decoder.submit_scheduled(unit.native_sequence, unit.pts_90khz,
+                &unit.payload, unit.due_qpc, unit.not_after_qpc),
+            Self::Hevc { decoder, target } => Self::checked_hevc_step(decoder.submit_scheduled(
+                unit.native_sequence, unit.pts_90khz, &unit.payload, unit.due_qpc, unit.not_after_qpc)?, *target),
+        }
+    }
+    fn poll(&mut self) -> io::Result<GpuDecodeStep> { match self {
+        Self::H264(decoder) => decoder.poll(),
+        Self::Hevc { decoder, target } => Self::checked_hevc_step(decoder.poll()?, *target),
+    }}
+    fn close(self) -> io::Result<()> { match self {
+        Self::H264(decoder) => decoder.close(), Self::Hevc { decoder, .. } => decoder.close(),
+    }}
+}
 fn run(
     surface: GpuVideoSurface,
-    target: (VideoConfig, Arc<CompressedContext>),
+    target: (VideoConfig, Arc<CompressedContext>, Arc<AtomicBool>),
     input: mpsc::Receiver<AccessUnit>,
     events: &mpsc::SyncSender<Event>,
     cancel: &AtomicBool,
@@ -475,18 +531,19 @@ fn run(
 ) -> io::Result<()> {
     let (bytes, units) = queued;
     let (observed, observation) = telemetry;
-    let (config, owner_context) = target;
+    let (config, owner_context, decode_authority) = target;
     let expected = gpu_config(&owner_context, config.width, config.height)?;
     if config.fps != expected.fps || config.bitrate_kbps != expected.bitrate_kbps {
         return Err(io::Error::other(
             "GPU worker target differs from confirmed format",
         ));
     }
-    let mut decoder = GpuH264Presenter::with_config(&surface, config)?;
+    let mut decoder = PresenterDecoder::open(&surface, config, &owner_context, decode_authority)?;
     observed.decoder_opened = true;
     observed.qpc_frequency = nestlink_media_codec::gpu_qpc()
         .ok()
         .map(|(_, frequency)| frequency);
+    let outcome = (|| {
     events
         .try_send(Event::Prepared)
         .map_err(|_| io::Error::other("GPU event owner unavailable"))?;
@@ -503,13 +560,7 @@ fn run(
                     "GPU input belongs to another format owner",
                 ));
             }
-            decoder.submit_scheduled(
-                unit.native_sequence,
-                unit.pts_90khz,
-                &unit.payload,
-                unit.due_qpc,
-                unit.not_after_qpc,
-            )?
+            decoder.submit_scheduled(unit)?
         } else {
             decoder.poll()?
         };
@@ -578,8 +629,16 @@ fn run(
         }
         thread::sleep(Duration::from_millis(1));
     }
-    surface.revoke();
     Ok(())
+    })();
+    surface.revoke();
+    let cleanup = decoder.close();
+    observed.native_cleanup_completed = cleanup.is_ok();
+    match (outcome, cleanup) {
+        (Err(error), Ok(())) | (Ok(()), Err(error)) => Err(error),
+        (Err(error), Err(cleanup)) => Err(io::Error::other(format!("{error}; GPU checked cleanup failed: {cleanup}"))),
+        (Ok(()), Ok(())) => Ok(()),
+    }
 }
 
 #[cfg(test)]
@@ -590,6 +649,7 @@ pub(super) fn test_context() -> CompressedContext {
         format_epoch: 0,
         format_sha256: [0; 32],
         format: None,
+        decoder_hardware: None,
         binding: nestlink_app_ipc::compressed_video::NativeCompressedBinding {
             runtime_id: "runtime".into(),
             ui_generation: 1,
@@ -610,6 +670,27 @@ pub(super) fn test_context() -> CompressedContext {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn explicit_hevc_gpu_configuration_requires_exact_v3_and_frozen_platform()
+        -> Result<(), Box<dyn std::error::Error>> {
+        use nestlink_app_ipc::compressed_video::WireVideoFormat;
+        use nestlink_protocol::media_format::{FrameRate, VideoFormat};
+        let mut ptl = [0; 12]; ptl[0] = 1; ptl[11] = 120;
+        let format = VideoFormat::hevc_main8_observed(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
+        let mut context = test_context();
+        context.ipc_version = 3; context.format_epoch = 1;
+        context.format_sha256 = format.digest()?; context.format = Some(WireVideoFormat::new(format)?);
+        assert!(gpu_config(&context, 640, 480).is_err());
+        context.decoder_hardware = Some(nestlink_protocol::media_authority::HardwareMediaTarget {
+            adapter_luid: 7, driver_version: 9,
+        });
+        let config = gpu_config(&context, 640, 480)?;
+        assert_eq!((config.width, config.height, config.fps, config.bitrate_kbps), (640, 480, 30, 4000));
+        assert!(gpu_config(&context, 648, 480).is_err());
+        context.ipc_version = 2;
+        assert!(gpu_config(&context, 640, 480).is_err());
+        Ok(())
+    }
     fn unit(sequence: u64, bytes: usize) -> AccessUnit {
         AccessUnit {
             context: Arc::new(test_context()),
@@ -699,6 +780,7 @@ mod tests {
                 generation: 1,
                 worker_started: true,
                 decoder_opened: true,
+                native_cleanup_completed: true,
                 accepted: 1,
                 decoded: 1,
                 last_accepted_pts: Some(0),
@@ -728,6 +810,24 @@ mod tests {
         assert_eq!(final_value.accepted, 1);
         assert_eq!(final_value.decoded, 1);
         assert_eq!(final_value.submitted, 0);
+        Ok(())
+    }
+    #[test]
+    fn joined_rust_worker_cannot_release_a_failed_native_owner() -> io::Result<()> {
+        let mut presenter = Presenter::new(gpu_config(&test_context(), 640, 480)?, 1, test_context());
+        presenter.worker = Some(thread::spawn(|| ReceiverObservation {
+            worker_started: true, decoder_opened: true, failed: true,
+            native_cleanup_completed: false, ..ReceiverObservation::default()
+        }));
+        presenter.stop();
+        let deadline = Instant::now() + Duration::from_secs(1);
+        while presenter.worker.as_ref().is_some_and(|worker| !worker.is_finished())
+            && Instant::now() < deadline { thread::sleep(Duration::from_millis(1)); }
+        assert!(!presenter.join_if_finished());
+        let final_value = presenter.observation().ok_or_else(|| io::Error::other("cleanup observation unavailable"))?;
+        assert!(final_value.worker_joined && final_value.failed);
+        assert!(!final_value.native_cleanup_completed);
+        assert!(!presenter.join_if_finished());
         Ok(())
     }
 }

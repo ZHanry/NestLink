@@ -146,6 +146,9 @@ pub(super) struct ReceiverObservation {
     pub height: u32,
     pub worker_started: bool,
     pub decoder_opened: bool,
+    /// Checked native resource destruction, independent of the Rust thread join.
+    #[serde(default)]
+    pub native_cleanup_completed: bool,
     pub accepted: u64,
     pub decoded: u64,
     pub retired: u64,
@@ -805,6 +808,7 @@ mod tests {
             format_epoch: 0,
             format_sha256: [0; 32],
             format: None,
+            decoder_hardware: None,
             binding: NativeCompressedBinding {
                 runtime_id: "private-runtime-marker".into(),
                 request_id: "private-request-marker".into(),
@@ -974,6 +978,7 @@ mod tests {
             format_epoch: 0,
             format_sha256: [0; 32],
             format: None,
+            decoder_hardware: None,
             binding: NativeCompressedBinding {
                 runtime_id: "private-runtime-marker".into(),
                 request_id: "private-request-marker".into(),

@@ -760,6 +760,30 @@ impl LeaseControl {
             None => Ok(None),
         }
     }
+    /// Frozen hardware platform only after the current View authorization and
+    /// endpoint direction checks. It does not attest a new/live owner UUID.
+    pub fn local_media_hardware_target(
+        &self,
+        direction: nestlink_protocol::media_authority::MediaDirection,
+    ) -> Result<Option<nestlink_protocol::media_authority::HardwareMediaTarget>, RemoteError> {
+        let mut managed = self.inner.lock()?;
+        self.inner.check(&mut managed)?;
+        managed.session.authorize(Permission::View, self.inner.path,
+            self.inner.clock.monotonic_ms())?;
+        match managed.session.local_media_binding() {
+            Some(binding) if binding.local_direction() == direction => {
+                match (binding.adapter_luid(), binding.driver_version()) {
+                    (Some(adapter_luid), Some(driver_version)) => Ok(Some(
+                        nestlink_protocol::media_authority::HardwareMediaTarget { adapter_luid, driver_version })),
+                    (None, None) => Ok(None),
+                    _ => Err(io::Error::other("incomplete local hardware media target").into()),
+                }
+            }
+            Some(_) => Err(io::Error::new(io::ErrorKind::PermissionDenied,
+                "local hardware media direction differs").into()),
+            None => Ok(None),
+        }
+    }
     /// Recheck a delivered business frame against its original session. Control
     /// is reserved for the connection handshake and cannot be delivered here.
     pub fn check_channel_binding(

@@ -27,7 +27,7 @@ def inspect(report: dict) -> dict:
         raise ValueError("requires original live product receiver terminal, not a probe or disk history")
     terminal = report["latest_terminal"]
     receiver = terminal["receiver"]
-    for field in ("worker_started", "decoder_opened", "worker_joined", "revoked"):
+    for field in ("worker_started", "decoder_opened", "native_cleanup_completed", "worker_joined", "revoked"):
         if receiver.get(field) is not True:
             raise ValueError(f"original receiver has not completed {field}")
     for field in ("failed", "worker_panicked", "terminal_write_failed", "terminal_write_pending"):

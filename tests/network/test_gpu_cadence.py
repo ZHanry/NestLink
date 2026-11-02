@@ -16,6 +16,7 @@ def fixture():
         "latest_terminal": {"receiver": {
             "generation": 1, "width": 1920, "height": 1080,
             "worker_started": True, "decoder_opened": True, "worker_joined": True,
+            "native_cleanup_completed": True,
             "revoked": True, "failed": False, "worker_panicked": False,
             "terminal_write_failed": False, "terminal_write_pending": False,
             "accepted": 3601, "decoded": 3601, "converted": 3601, "submitted": 3601,
@@ -48,7 +49,7 @@ class CadenceTests(unittest.TestCase):
             report["latest_terminal"]["receiver"]["submission_cadence"][field] = value
             with self.subTest(field=field), self.assertRaises(ValueError):
                 MODULE.inspect(report)
-        for field, value in [("worker_joined", False), ("revoked", False),
+        for field, value in [("worker_joined", False), ("native_cleanup_completed", False), ("revoked", False),
                              ("failed", True), ("terminal_write_pending", True),
                              ("qpc_frequency", 0), ("submitted", True)]:
             report = fixture()

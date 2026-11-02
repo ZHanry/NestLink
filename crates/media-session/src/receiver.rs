@@ -425,6 +425,17 @@ impl ExternalVideoCleanup {
     }
 }
 impl VideoPresentation {
+    pub fn decoder_hardware_target(&self) -> io::Result<nestlink_protocol::media_authority::HardwareMediaTarget> {
+        use nestlink_protocol::media_authority::MediaDirection;
+        self.lease.check_media_binding(Channel::Video, self.connection_generation)
+            .map_err(io::Error::other)?;
+        if self.lease.local_media_backend(MediaDirection::Decode).map_err(io::Error::other)?
+            .as_deref() != Some("gpu-hevc-decoder") {
+            return Err(io::Error::other("no local exact HEVC hardware decoder evidence"));
+        }
+        self.lease.local_media_hardware_target(MediaDirection::Decode).map_err(io::Error::other)?
+            .ok_or_else(|| io::Error::other("local HEVC decoder platform absent"))
+    }
     pub fn current_execution(&self) -> io::Result<Option<nestlink_media_codec::ExecutionReceipt>> {
         self.lease
             .check_media_binding(Channel::Video, self.connection_generation)
@@ -571,13 +582,16 @@ impl VideoPresentation {
         self.lease
             .check_media_binding(Channel::Video, self.connection_generation)
             .map_err(io::Error::other)?;
+        let hevc = context.format.is_some_and(|f| f.codec == nestlink_protocol::media_format::Codec::Hevc);
+        let capability = if hevc { nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY }
+            else { nestlink_protocol::media::H264_CAPABILITY };
         if !self
             .lease
-            .media_capability(nestlink_protocol::media::H264_CAPABILITY)
+            .media_capability(capability)
             .map_err(io::Error::other)?
         {
             return Err(io::Error::other(
-                "external decoding requires negotiated H264",
+                "external decoding requires its explicit negotiated codec capability",
             ));
         }
         let mut external = self
@@ -608,11 +622,14 @@ impl VideoPresentation {
                 .local_media_backend(nestlink_protocol::media_authority::MediaDirection::Decode)
                 .map_err(io::Error::other)?
                 .as_deref()
-                != Some("gpu-presenter")
+                != Some(if hevc { "gpu-hevc-decoder" } else { "gpu-presenter" })
             {
                 return Err(io::Error::other(
                     "external GPU backend absent from local executable evidence",
                 ));
+            }
+            if hevc && context.decoder_hardware != Some(self.decoder_hardware_target()?) {
+                return Err(io::Error::other("HEVC external decoder platform differs from local frozen evidence"));
             }
             let confirmed = state
                 .format

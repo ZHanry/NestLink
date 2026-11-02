@@ -7,6 +7,14 @@ pub const FORMAT_CAPABILITY: &str = "native-media-format-v2";
 pub const FORMAT_VERSION: u32 = 2;
 pub const HEVC_FORMAT_CAPABILITY: &str = "native-media-format-v3";
 pub const HEVC_FORMAT_VERSION: u32 = 3;
+/// Expected original hardware platform from local generation-bound evidence.
+/// These scalars are configuration, never a live decoder/output receipt.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct HardwareMediaTarget {
+    pub adapter_luid: u64,
+    pub driver_version: u64,
+}
 pub fn capability_for_version(version: u32) -> Result<&'static str> {
     match version {
         FORMAT_VERSION => Ok(FORMAT_CAPABILITY),

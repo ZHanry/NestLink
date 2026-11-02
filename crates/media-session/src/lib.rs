@@ -10,8 +10,8 @@ pub use timing::{
     SessionMediaTiming, SessionPlayoutClock,
 };
 pub mod external;
-#[cfg(windows)]
 mod hevc_negotiated_format;
+pub use hevc_negotiated_format::hevc_main8_contract;
 mod legacy_format;
 mod negotiated_budget;
 mod negotiated_format;
