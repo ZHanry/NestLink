@@ -42,7 +42,7 @@ jobs:
           $codecRoot = Join-Path $env:RUNNER_TEMP "nestlink-codecs/$env:NESTLINK_TARGET"
           "NESTLINK_CODEC_PREFIX=$codecRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin xvfb x11-xserver-utils gnome-keyring libsecret-tools libpam-systemd
       - if: runner.os == 'Windows'
         id: msys
         uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
@@ -254,6 +254,14 @@ jobs:
             }
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
+          if ($IsWindows) {
+            python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --test offline_remote_resident -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog -Append
+          } else {
+            cargo test --locked -p nestlink-daemon --test offline_remote_resident -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog -Append
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo clippy --locked -p nestlink-daemon --test offline_remote_resident -- -D warnings 2>&1 | Tee-Object -FilePath $offlineLog -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ($IsWindows) {
             python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-desktop --lib layout_tests::independent_offline_ -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog -Append
           } else {

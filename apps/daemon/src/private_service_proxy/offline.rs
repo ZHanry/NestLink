@@ -160,6 +160,13 @@ impl Resident {
     }
     async fn command(&mut self, command: Command) -> Result<bool> {
         self.guard.check()?;
+        if matches!(&command, Command::Policy | Command::Enable { .. } | Command::Service { .. } | Command::Recover | Command::Revoke { .. })
+            && let Some(owner) = &self.owner
+        {
+            // An explicit management operation ends offline delivery before
+            // HTTP, including failed requests and revocation of other bundles.
+            owner.stop();
+        }
         match command {
             Command::Help => emit(
                 "help",
@@ -372,13 +379,6 @@ impl Resident {
                         .revoke_offline_bundle(&self.args.space, &bundle_id)
                         .await?,
                 )?;
-                if let Some(owner) = &self.owner
-                    && owner
-                        .status()
-                        .is_ok_and(|status| status.bundle_id == bundle_id)
-                {
-                    owner.stop();
-                }
             }
             Command::Stop => return Ok(true),
         }

@@ -109,6 +109,11 @@ enum Command {
     },
     Stop,
 }
+impl Command {
+    fn synchronizes_management(&self) -> bool {
+        matches!(self, Self::Policy | Self::Enable { .. } | Self::Recover | Self::Revoke { .. })
+    }
+}
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
 }
@@ -227,6 +232,11 @@ impl Resident {
     }
     async fn command(&mut self, command: Command) -> Result<bool> {
         self.guard.check()?;
+        if command.synchronizes_management() && let Some(owner) = &self.owner {
+            // Fence the original authority before even starting the HTTP
+            // request. Failed or unrelated management reads never rearm it.
+            owner.stop();
+        }
         match command {
             Command::Help => emit(
                 "help",
@@ -414,11 +424,6 @@ impl Resident {
                         .revoke_offline_bundle(&self.args.space, &bundle_id)
                         .await?,
                 )?;
-                if let Some(owner) = &self.owner
-                    && owner.binding()?.bundle_id == bundle_id
-                {
-                    owner.stop();
-                }
             }
             Command::Stop => return Ok(true),
         }
