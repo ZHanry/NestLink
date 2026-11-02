@@ -415,7 +415,14 @@ impl Platform {
                 } else {
                     None
                 };
-                (if output.status.success() { "ok" } else { "rejected" }, locked)
+                (
+                    if output.status.success() {
+                        "ok"
+                    } else {
+                        "rejected"
+                    },
+                    locked,
+                )
             }
             Ok(Err(_)) => ("io", None),
             Err(_) => ("timeout", None),

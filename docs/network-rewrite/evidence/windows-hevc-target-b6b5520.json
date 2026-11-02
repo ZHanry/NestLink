@@ -1,0 +1,926 @@
+{
+  "schema_version": 1,
+  "task_ids": [
+    "W33"
+  ],
+  "case_ids": [
+    "AC56",
+    "AC57"
+  ],
+  "status": "failed_original_sps_color_assertion",
+  "build_provenance": {
+    "run_id": 41460661662,
+    "source_revision": "b6b5520418756712c6c833c86e0a153dff394d1a",
+    "artifact_id": 13149411140,
+    "official_artifact_digest": "sha256:053ffa7691a7e775f0077472f129a720db0e048bdb49591e3155f198409370be",
+    "all_160_payloads_verified": true,
+    "receipt": {
+      "source_revision": "b6b5520418756712c6c833c86e0a153dff394d1a",
+      "workflow_revision": "b6b5520418756712c6c833c86e0a153dff394d1a",
+      "workflow": "ZHanry/NestLink/.github/workflows/windows-media-target-tools.yml@refs/heads/main",
+      "run_id": "41460661662",
+      "run_attempt": "1",
+      "runner_environment": "github-hosted",
+      "runner_os": "Windows",
+      "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+      "scope": "Finite original native direction workloads with synthetic input. No desktop capture, transport, scanout, sustained performance, HDR or native ten-bit capture qualification.",
+      "target_execution_performed": false,
+      "commands": [
+        {
+          "name": "build",
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked",
+            "-p",
+            "nestlink-media-codec",
+            "--examples"
+          ],
+          "return_code": 0
+        },
+        {
+          "name": "strict",
+          "argv": [
+            "cargo",
+            "clippy",
+            "--release",
+            "--locked",
+            "-p",
+            "nestlink-media-codec",
+            "--examples",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "return_code": 0
+        }
+      ],
+      "passed": true,
+      "files": [
+        {
+          "path": "build.log",
+          "bytes": 5181,
+          "sha256": "13c321078445dd86ecda34b9ae722109403989228214f70f6da1faa36d3ddf34"
+        },
+        {
+          "path": "Cargo.lock",
+          "bytes": 209772,
+          "sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 11354,
+          "sha256": "06a4d0421042d3d1e428040475b124cde7f4f25c39a68a1898fa66a9c1fbf7cc"
+        },
+        {
+          "path": "native-codecs.lock.json",
+          "bytes": 2649,
+          "sha256": "36ac70209ee6c5e5e387602a22a098f340b9e6d61cf95dff4c53a17f34a10c4f"
+        },
+        {
+          "path": "native-licenses/libvpx/LICENSE",
+          "bytes": 1537,
+          "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615"
+        },
+        {
+          "path": "native-licenses/libvpx/PATENTS",
+          "bytes": 1436,
+          "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+        },
+        {
+          "path": "native-licenses/libvpx/third_party/x86inc/LICENSE",
+          "bytes": 936,
+          "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8"
+        },
+        {
+          "path": "native-licenses/opus/COPYING",
+          "bytes": 1945,
+          "sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551"
+        },
+        {
+          "path": "native-licenses/opus/LICENSE_PLEASE_READ.txt",
+          "bytes": 703,
+          "sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d"
+        },
+        {
+          "path": "nestlink-codecs.json",
+          "bytes": 23854,
+          "sha256": "15a9d167ea70d68b01e8e137b844eca6ca52fae9d3dc240f3b4a251d8717ef25"
+        },
+        {
+          "path": "notices/async-broadcast-0.7.2-MIT.txt",
+          "bytes": 1079,
+          "sha256": "24e5860bf589d8501643e6ea51ffb3df66db2867492b09033d486183efbfa970"
+        },
+        {
+          "path": "notices/async-recursion-1.2.0-MIT.txt",
+          "bytes": 1022,
+          "sha256": "30fefc3a7d6a0041541858293bcbea2dde4caa4c0a5802f996a7f7e8c0085652"
+        },
+        {
+          "path": "notices/async-trait-0.1.92-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/base16-0.2.1-LICENSE-CC0.txt",
+          "bytes": 7048,
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+          "bytes": 1559,
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-APACHE",
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-MIT",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE.chromium",
+          "bytes": 1559,
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-APACHE",
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-MIT",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE.chromium",
+          "bytes": 1559,
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-APACHE",
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-MIT",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE.chromium",
+          "bytes": 1559,
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+        },
+        {
+          "path": "notices/cargo-upstream/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-APACHE",
+          "bytes": 10818,
+          "sha256": "10d30a673cd5e9349bdc02aeb48f14b3386d27d0da32df8f0a555d4aa16aa551"
+        },
+        {
+          "path": "notices/cargo-upstream/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-MIT",
+          "bytes": 1093,
+          "sha256": "c8167fdeeed46d3f244d3f85c5bf998ce889343691c32be2c61a8bc4b5c08333"
+        },
+        {
+          "path": "notices/cargo-upstream/brendanzab/gl-rs/ea503e8d5fb6d73c6030e6191ce738cd3bf3433e/LICENSE",
+          "bytes": 11358,
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "notices/cargo-upstream/brendanzab/gl-rs/f150967b1c44ae888e6676f93f639ebc82771bdc/LICENSE",
+          "bytes": 11358,
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "notices/cargo-upstream/DoumanAsh/clipboard-win/3b27cf2bfd1adcfa6e0264eb51c1025ddaf0f342/LICENSE",
+          "bytes": 1338,
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "path": "notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "bytes": 10850,
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "bytes": 1092,
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        },
+        {
+          "path": "notices/cargo-upstream/jni-rs/jni-rs/33045a124105c939d1e2cbdcb5a39e5d868ffa03/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/jni-rs/jni-rs/33045a124105c939d1e2cbdcb5a39e5d868ffa03/LICENSE-MIT",
+          "bytes": 1104,
+          "sha256": "fea1d5bf3dd71605ce5d7d2ff695c1837e914c77195e523a86b5391716477960"
+        },
+        {
+          "path": "notices/cargo-upstream/jni-rs/jni-rs/5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/jni-rs/jni-rs/5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7/LICENSE-MIT",
+          "bytes": 1104,
+          "sha256": "fea1d5bf3dd71605ce5d7d2ff695c1837e914c77195e523a86b5391716477960"
+        },
+        {
+          "path": "notices/cargo-upstream/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-APACHE",
+          "bytes": 11358,
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "notices/cargo-upstream/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-MIT",
+          "bytes": 1071,
+          "sha256": "1d85bd754b04ceec93e98e890edd1fa3c6a22e81bcb32135806beeccefa51cd1"
+        },
+        {
+          "path": "notices/cargo-upstream/JulianSchmid/etherparse/70f72bee542ae49efebb8d2106bde64f84f02a43/LICENSE-APACHE",
+          "bytes": 11342,
+          "sha256": "affcd3a3acd2a70d6405c6a5088413da8f97b91f5074ae313fbaa2ec4b45b19f"
+        },
+        {
+          "path": "notices/cargo-upstream/JulianSchmid/etherparse/70f72bee542ae49efebb8d2106bde64f84f02a43/LICENSE-MIT",
+          "bytes": 1069,
+          "sha256": "4be7e6a9b3e7293807bbebfd081941c2d87fa445733e1ad0a9fc6efbc4f3029a"
+        },
+        {
+          "path": "notices/cargo-upstream/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-APACHE",
+          "bytes": 10850,
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "notices/cargo-upstream/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-MIT",
+          "bytes": 1053,
+          "sha256": "2710a622a896bba67356913d4d0492cab5465f61b2ecce6d880aeb483834fb50"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/30fa4e039455bea69c9467e8ec45cad7fce0722f/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/43359694b6596f88d911b9c8d8d92a121c27d0ce/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/4e23d2b6f1cb74ef7eb08b40ef7f14baa85a7285/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/5f2d5115537d08043bba0293c406c4f9b97a4dae/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/6865c1f951bfa0bc5b107aa69286a110cd6f45ca/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/9b2e313d20c89603ddc0deb7b1133e60c877faed/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/d665dd4b89151e5d797df3db5cd2260cbe1e8fae/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/da62c0cb9a1d814cf480c2f1dae5f67f4ea4773f/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/4fc083f1c6d6784577e38b0ee8dbd344481e2fd2/LICENSE.txt",
+          "bytes": 1066,
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/5237cbf081d04ef75a1f6a207b4018e7c1ae7438/LICENSE.txt",
+          "bytes": 1066,
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "bytes": 1066,
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "bytes": 1339,
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/8852b424193ca41602281b3d7540d7c8ed51e49a/LICENSE.md",
+          "bytes": 1339,
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/8d214f5477365ffcbcbb7de058c86ed9a518efb7/LICENSE.md",
+          "bytes": 1339,
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/b4167b582b2f75f9a1be75495c41b765344fd03c/LICENSE.md",
+          "bytes": 1339,
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/d7d2fa23ceaa5e6096c923b081040e5d81b3b9df/LICENSE.md",
+          "bytes": 1339,
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "bytes": 1066,
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+        },
+        {
+          "path": "notices/cargo-upstream/protobuf-36.2-LICENSE-BSD-3-Clause.txt",
+          "bytes": 1732,
+          "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d"
+        },
+        {
+          "path": "notices/cargo-upstream/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-MIT",
+          "bytes": 1055,
+          "sha256": "2a7df90e60fd5512b8bca35d3ce90e068f21c52d962855053fd1d9e2e7ca0f16"
+        },
+        {
+          "path": "notices/cargo-upstream/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-APACHE",
+          "bytes": 11357,
+          "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+        },
+        {
+          "path": "notices/cargo-upstream/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-MIT",
+          "bytes": 1073,
+          "sha256": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b"
+        },
+        {
+          "path": "notices/cargo-upstream/rs-tml/rstml/9fe0f4616a8224d37d64a53fa91722a08d736952/LICENSE",
+          "bytes": 1097,
+          "sha256": "f99321bd5b3678fae12d43f1ae77064b2a0f6db3646c36d5171a38ecd01e744c"
+        },
+        {
+          "path": "notices/cargo-upstream/rust-lang/rust/a59de37e99060162a2674e3ff45409ac73595c0e/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-APACHE",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "notices/cargo-upstream/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-MIT",
+          "bytes": 1036,
+          "sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1"
+        },
+        {
+          "path": "notices/cargo-upstream/rust-windowing/android-ndk-rs/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-APACHE",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "notices/cargo-upstream/rust-windowing/android-ndk-rs/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-MIT",
+          "bytes": 1036,
+          "sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1"
+        },
+        {
+          "path": "notices/cargo-upstream/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-MIT",
+          "bytes": 1060,
+          "sha256": "a5c61b93b6ee1d104af9920cf020ff3c7efe818e31fe562c72261847a728f513"
+        },
+        {
+          "path": "notices/cargo-upstream/rustwasm/gloo/40c6daa612a90a138ba3e3d70804fcbc5ad4911e/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/rustwasm/gloo/40c6daa612a90a138ba3e3d70804fcbc5ad4911e/LICENSE-MIT",
+          "bytes": 1078,
+          "sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66"
+        },
+        {
+          "path": "notices/cargo-upstream/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-MIT",
+          "bytes": 1078,
+          "sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66"
+        },
+        {
+          "path": "notices/cargo-upstream/spdx/license-list-data/279b7e997a87c09be00dd6bdda189519ade502cf/text/MIT.txt",
+          "bytes": 1078,
+          "sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5"
+        },
+        {
+          "path": "notices/cargo-upstream/sqlite-3.50.2-PUBLIC-DOMAIN.txt",
+          "bytes": 271,
+          "sha256": "ad89cf5f9a0ca133418eae187ae954f2805fd3261aa00716642ed93fc7f3892d"
+        },
+        {
+          "path": "notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "bytes": 1057,
+          "sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a"
+        },
+        {
+          "path": "notices/cargo-upstream/tokio-rs/valuable/9efc29b6e58cef28f6566a47aa7e142a55fead77/LICENSE",
+          "bytes": 1065,
+          "sha256": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44"
+        },
+        {
+          "path": "notices/cargo-upstream/webrtc-rs/webrtc/a1f8f1919235d8452835852e018efd654f2f8366/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/webrtc-rs/webrtc/a1f8f1919235d8452835852e018efd654f2f8366/LICENSE-MIT",
+          "bytes": 1066,
+          "sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d"
+        },
+        {
+          "path": "notices/cargo-upstream/WorldSEnder/wasm-split-prototype/a3266fe9d998b3f8b0d2111500b7c4b8ec892506/LICENSE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/WorldSEnder/wasm-split-prototype/d8263b20578e8c49b02851009ae3bc7d43c567bd/LICENSE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/Apache-2.0.txt",
+          "bytes": 10280,
+          "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"
+        },
+        {
+          "path": "notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/CC0-1.0.txt",
+          "bytes": 7048,
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+        },
+        {
+          "path": "notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/MIT.txt",
+          "bytes": 1078,
+          "sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0"
+        },
+        {
+          "path": "notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/Apache-2.0.txt",
+          "bytes": 10280,
+          "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"
+        },
+        {
+          "path": "notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/CC0-1.0.txt",
+          "bytes": 7048,
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+        },
+        {
+          "path": "notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/MIT.txt",
+          "bytes": 1078,
+          "sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0"
+        },
+        {
+          "path": "notices/cargo-upstream/zrzka/anes-rs/378ac7461ecac29fde9e10df7b08359d1315a9ad/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/zrzka/anes-rs/378ac7461ecac29fde9e10df7b08359d1315a9ad/LICENSE-MIT",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/cc-1.8.0-MIT.txt",
+          "bytes": 1057,
+          "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+        },
+        {
+          "path": "notices/clipboard-win-5.4.1-BSL-1.0.txt",
+          "bytes": 1338,
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "path": "notices/crab_nat-0.8.1-NOTICE.txt",
+          "bytes": 2019,
+          "sha256": "948884d5dd459fee115c53513e9b57df5bd34f4a01df065cec3ff46fc3f4b48b"
+        },
+        {
+          "path": "notices/endi-1.1.1-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/enum-map-2.7.3-COPYRIGHT.txt",
+          "bytes": 2850,
+          "sha256": "3343c9876af0d8ec0b955bbf671ebb3691780b3ee510ff2e382846c6bfe037fa"
+        },
+        {
+          "path": "notices/enum-map-derive-0.17.0-COPYRIGHT.txt",
+          "bytes": 1268,
+          "sha256": "c4388e2a98c0ccc8ed866acb88789e9bc0e72e5f358e089126abde9faacf9d1b"
+        },
+        {
+          "path": "notices/enumflags2-0.7.12-MIT.txt",
+          "bytes": 1077,
+          "sha256": "2e3edd2716fb15616e867bd53f724f0906732242e9ae76bb1faad1d88f7eeebd"
+        },
+        {
+          "path": "notices/enumflags2_derive-0.7.12-MIT.txt",
+          "bytes": 1054,
+          "sha256": "d13669f0eaff9b7015bff0d8637297213b53d9f239826636c07a15633acf7052"
+        },
+        {
+          "path": "notices/error-code-3.4.0-BSL-1.0.txt",
+          "bytes": 1338,
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "path": "notices/event-listener-5.4.2-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/event-listener-strategy-0.5.4-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/font-types-0.11.3-LICENSE-APACHE.txt",
+          "bytes": 9695,
+          "sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0"
+        },
+        {
+          "path": "notices/font-types-0.11.3-LICENSE-MIT.txt",
+          "bytes": 1058,
+          "sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434"
+        },
+        {
+          "path": "notices/futures-lite-2.6.1-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/futures-lite-2.6.1-THIRD-PARTY.txt",
+          "bytes": 1849,
+          "sha256": "6226d0632e2e1a80c23597e964da9812ae193c535fe058154afb034e94167aa5"
+        },
+        {
+          "path": "notices/gethostname-1.1.0-Apache-2.0.txt",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/hex-0.4.3-MIT.txt",
+          "bytes": 1125,
+          "sha256": "f7bdb3426d045cd50efd4953026e3eb5a83d0199f458a075602611b9344da5b9"
+        },
+        {
+          "path": "notices/hkdf-MIT.txt",
+          "bytes": 1108,
+          "sha256": "d288f9c9b4590446ec18c22ead8f8b5a12a3d4025b68f62dc9015063eb9cca69"
+        },
+        {
+          "path": "notices/if-addrs-MIT.txt",
+          "bytes": 1085,
+          "sha256": "3990ddb78a5a2cfd64a5ffe5cebc3306f3298f6880c644afdf15043ef7d702d9"
+        },
+        {
+          "path": "notices/JSON-java-20250517-PUBLIC-DOMAIN.txt",
+          "bytes": 16,
+          "sha256": "86cc84f1773e3318ba26fd61b3ae508a167df38b361695e105f6e499e7a2736f"
+        },
+        {
+          "path": "notices/libc-MIT.txt",
+          "bytes": 1066,
+          "sha256": "123a331b5dbf04c30097fa43b8f858bc85df671fe776de498d01f3d6b7c1f69e"
+        },
+        {
+          "path": "notices/libvpx-1.16.0-LICENSE.txt",
+          "bytes": 1537,
+          "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615"
+        },
+        {
+          "path": "notices/libvpx-1.16.0-PATENTS.txt",
+          "bytes": 1436,
+          "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+        },
+        {
+          "path": "notices/libvpx-1.16.0-third_party-x86inc-LICENSE.txt",
+          "bytes": 936,
+          "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8"
+        },
+        {
+          "path": "notices/memoffset-0.9.1-MIT.txt",
+          "bytes": 1055,
+          "sha256": "3234ac55816264ee7b6c7ee27efd61cf0a1fe775806870e3d9b4c41ea73c5cb1"
+        },
+        {
+          "path": "notices/opus-1.6.1-COPYING.txt",
+          "bytes": 1945,
+          "sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551"
+        },
+        {
+          "path": "notices/opus-1.6.1-LICENSE_PLEASE_READ.txt",
+          "bytes": 703,
+          "sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d"
+        },
+        {
+          "path": "notices/opus-1.6.1-source-notices.txt",
+          "bytes": 145940,
+          "sha256": "e66bfc995afb6397369afc2002c1e0739db5fc72b6178f559d07b3303fab5c2c"
+        },
+        {
+          "path": "notices/ordered-stream-0.2.0-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/parking-2.2.1-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/parking-2.2.1-THIRD-PARTY.txt",
+          "bytes": 451,
+          "sha256": "9a6d7a3c1b8edcc706c4b6c37f8dae9a77f02c7f9051df603f975db136b55419"
+        },
+        {
+          "path": "notices/PipeWire-1.0.5-Debian-copyright.txt",
+          "bytes": 9011,
+          "sha256": "4a870a368fbb14aae8ff343f0e7cb6758f6a83c13a7bcab17b7509452ae6064a"
+        },
+        {
+          "path": "notices/pkg-config-0.3.34-MIT.txt",
+          "bytes": 1057,
+          "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+        },
+        {
+          "path": "notices/proc-macro-crate-3.5.0-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/read-fonts-0.37.0-LICENSE-APACHE.txt",
+          "bytes": 9695,
+          "sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0"
+        },
+        {
+          "path": "notices/read-fonts-0.37.0-LICENSE-MIT.txt",
+          "bytes": 1058,
+          "sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434"
+        },
+        {
+          "path": "notices/rustls-0.23.46-LICENSE-APACHE.txt",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/rustls-0.23.46-LICENSE-ISC.txt",
+          "bytes": 775,
+          "sha256": "7cfafc877eccc46c0e346ccbaa5c51bb6b894d2b818e617d970211e232785ad4"
+        },
+        {
+          "path": "notices/rustls-0.23.46-LICENSE-MIT.txt",
+          "bytes": 1082,
+          "sha256": "709e3175b4212f7b13aa93971c9f62ff8c69ec45ad8c6532a7e0c41d7a7d6f8c"
+        },
+        {
+          "path": "notices/serde_repr-0.1.21-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/skrifa-0.40.0-LICENSE-APACHE.txt",
+          "bytes": 9695,
+          "sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0"
+        },
+        {
+          "path": "notices/skrifa-0.40.0-LICENSE-MIT.txt",
+          "bytes": 1058,
+          "sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434"
+        },
+        {
+          "path": "notices/toml_datetime-1.1.2+spec-1.1.0-MIT.txt",
+          "bytes": 1062,
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        },
+        {
+          "path": "notices/toml_edit-0.25.17+spec-1.1.0-MIT.txt",
+          "bytes": 1062,
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        },
+        {
+          "path": "notices/tracing-attributes-0.1.31-MIT.txt",
+          "bytes": 1062,
+          "sha256": "898b1ae9821e98daf8964c8d6c7f61641f5f5aa78ad500020771c0939ee0dea1"
+        },
+        {
+          "path": "notices/uds_windows-1.2.1-MIT.txt",
+          "bytes": 1162,
+          "sha256": "27ebda9d51f0a56b7e281ccd8230a27236dcb51c05f64b07869ecf6e965d68b0"
+        },
+        {
+          "path": "notices/waitgroup-0.1.2-Apache-2.0.txt",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "notices/webpki-roots-CDLA-Permissive-2.0.txt",
+          "bytes": 2371,
+          "sha256": "e271993808fec50ab29350b39539cdec611a9103f827e0aa26d61da70e2d33f8"
+        },
+        {
+          "path": "notices/webrtc-rs-LICENSE-APACHE-2.0.txt",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/webrtc-rs-LICENSE-MIT.txt",
+          "bytes": 1066,
+          "sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d"
+        },
+        {
+          "path": "notices/x11rb-0.13.2-MIT.txt",
+          "bytes": 1058,
+          "sha256": "a72561f47c1f665535930f606739d9098a6186802d5e2e8ec491faf00f4add5b"
+        },
+        {
+          "path": "notices/x11rb-protocol-0.13.2-MIT.txt",
+          "bytes": 1058,
+          "sha256": "a72561f47c1f665535930f606739d9098a6186802d5e2e8ec491faf00f4add5b"
+        },
+        {
+          "path": "notices/xxhash-rust-0.8.19-BSL-1.0.txt",
+          "bytes": 1338,
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "path": "notices/zbus-5.19.0-MIT.txt",
+          "bytes": 1080,
+          "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+        },
+        {
+          "path": "notices/zbus_macros-5.19.0-MIT.txt",
+          "bytes": 1080,
+          "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+        },
+        {
+          "path": "notices/zbus_names-4.3.4-MIT.txt",
+          "bytes": 1080,
+          "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+        },
+        {
+          "path": "notices/zcheapstr-1.1.0-MIT.txt",
+          "bytes": 1085,
+          "sha256": "59871bb1612f8a0569655c10b995636827eceab42c6578cebdc45ad2922e0142"
+        },
+        {
+          "path": "notices/zvariant-5.15.0-MIT.txt",
+          "bytes": 1080,
+          "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+        },
+        {
+          "path": "notices/zvariant_derive-5.15.0-MIT.txt",
+          "bytes": 1080,
+          "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+        },
+        {
+          "path": "notices/zvariant_utils-4.2.0-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "README.md",
+          "bytes": 2239,
+          "sha256": "76c7d445dd80b46438edc79fd3c11ff83b2eb85f7031d5b7122d1ceaf230c8ff"
+        },
+        {
+          "path": "strict.log",
+          "bytes": 1838,
+          "sha256": "94f8adc6e89ab775c00d6b52c7cd2554afb02bd7384928a51f998829f6ec6b5b"
+        },
+        {
+          "path": "windows-controller-direction-probe.exe",
+          "bytes": 380928,
+          "sha256": "45e4dfa09919db3dbca88179b9215a108a602df480aee7d4bdf525fccc34682b"
+        },
+        {
+          "path": "windows-cpu-direction-probe.exe",
+          "bytes": 317952,
+          "sha256": "9a25f526d60fd1ace65db5c8dec157ad730b8299fc7b950f91b4225ab99b6260"
+        },
+        {
+          "path": "windows-hevc-direction-probe.exe",
+          "bytes": 314880,
+          "sha256": "5fe381d88ec7ca5443591c7b9eeb0eb286bcd8b23408f652a75e21ff1dfdd5a9"
+        }
+      ]
+    }
+  },
+  "execution_provenance": {
+    "kind": "user-target-windows",
+    "profile": "ordinary-interactive-medium-token",
+    "compilation_performed": false,
+    "desktop_capture": false,
+    "scope": "Original finite synthetic Main8 encode and decode commands with unchanged SPS, independent decoder, output and cleanup bounds",
+    "commands": [
+      {
+        "name": "windows-hevc-direction-probe",
+        "args": [
+          "encode",
+          "main8",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "started_at": "2026-11-02T14:28:13.660Z",
+        "elapsed_ms": 2360,
+        "executable_sha256": "5fe381d88ec7ca5443591c7b9eeb0eb286bcd8b23408f652a75e21ff1dfdd5a9",
+        "error": {
+          "code": 1,
+          "killed": false,
+          "signal": null
+        },
+        "stdout": "",
+        "stderr": "hevc_mf_configure encoder=1 stage=set_compressed_output hr=0x00000000\r\nhevc_mf_configure encoder=1 stage=set_raw_input hr=0x00000000\r\nhevc_mf_color_codecapi hr=0x00000000\r\nhevc_mf_color_property name=input.primaries expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.primaries expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=input.transfer expected=5 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.transfer expected=5 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=input.matrix expected=1 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.matrix expected=1 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=input.range expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.range expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_current_type encoder=1 output=0 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=1 output=0 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=1 output=0 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=1 output=0 attribute=range hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=1 output=1 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=1 output=1 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=1 output=1 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=1 output=1 attribute=range hr=0x00000000 value=2\r\nhevc_mf_configure encoder=1 stage=begin_streaming hr=0x00000000\r\nhevc_mf_configure encoder=1 stage=start_of_stream hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=set_compressed_input hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=set_raw_output hr=0x00000000\r\nhevc_mf_current_type encoder=0 output=0 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=0 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=0 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=0 attribute=range hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=1 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=1 attribute=range hr=0x00000000 value=2\r\nhevc_mf_configure encoder=0 stage=begin_streaming hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=start_of_stream hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=set_compressed_input hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=set_raw_output hr=0x00000000\r\nhevc_mf_current_type encoder=0 output=0 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=0 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=0 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=0 attribute=range hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=1 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=1 attribute=range hr=0x00000000 value=2\r\nhevc_mf_configure encoder=0 stage=begin_streaming hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=start_of_stream hr=0x00000000\r\nhevc_mf_rejected_parameter_set kind=32 bytes=23 recorded=23 hex=[40, 01, 0c, 01, ff, ff, 01, 60, 00, 00, 03, 00, b0, 00, 00, 03, 00, 00, 03, 00, 78, 2c, 09]\nhevc_mf_rejected_parameter_set kind=33 bytes=52 recorded=52 hex=[42, 01, 01, 01, 60, 00, 00, 03, 00, b0, 00, 00, 03, 00, 00, 03, 00, 78, a0, 03, c0, 80, 11, 07, cb, cb, 92, 42, 95, 92, e3, ff, 00, 01, 00, 01, 6a, 00, 02, 04, 08, 00, 00, 03, 00, 08, 00, 00, 03, 01, e6, 20]\nhevc_mf_rejected_parameter_set kind=34 bytes=7 recorded=7 hex=[44, 01, e0, f3, c0, 4c, 90]\nhost_gpu_mf_stage=close calls=1 accepted=1 pool_blocked=0 output_samples=1 output_need_input=0 copy_pending=0 busy_slots=0 asynchronous=1 input_credits=0 output_credits=0\r\nError: Custom { kind: InvalidData, error: \"hevc_probe_au_rejected target=1920x1080 au_bytes=754 nal_count=5 first16=[(Some(35), 3), (Some(32), 23), (Some(33), 52), (Some(34), 7), (Some(20), 649)] cause=(hevc_probe_rejection code=sps.color field=vui.colour_primaries actual=0 required=1 rbsp_bit=263)\" }\n"
+      },
+      {
+        "name": "windows-hevc-direction-probe",
+        "args": [
+          "decode",
+          "main8",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "started_at": "2026-11-02T14:28:16.021Z",
+        "elapsed_ms": 974,
+        "executable_sha256": "5fe381d88ec7ca5443591c7b9eeb0eb286bcd8b23408f652a75e21ff1dfdd5a9",
+        "error": {
+          "code": 1,
+          "killed": false,
+          "signal": null
+        },
+        "stdout": "",
+        "stderr": "hevc_mf_configure encoder=1 stage=set_compressed_output hr=0x00000000\r\nhevc_mf_configure encoder=1 stage=set_raw_input hr=0x00000000\r\nhevc_mf_color_codecapi hr=0x00000000\r\nhevc_mf_color_property name=input.primaries expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.primaries expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=input.transfer expected=5 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.transfer expected=5 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=input.matrix expected=1 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.matrix expected=1 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=input.range expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.range expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_current_type encoder=1 output=0 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=1 output=0 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=1 output=0 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=1 output=0 attribute=range hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=1 output=1 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=1 output=1 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=1 output=1 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=1 output=1 attribute=range hr=0x00000000 value=2\r\nhevc_mf_configure encoder=1 stage=begin_streaming hr=0x00000000\r\nhevc_mf_configure encoder=1 stage=start_of_stream hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=set_compressed_input hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=set_raw_output hr=0x00000000\r\nhevc_mf_current_type encoder=0 output=0 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=0 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=0 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=0 attribute=range hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=1 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=1 attribute=range hr=0x00000000 value=2\r\nhevc_mf_configure encoder=0 stage=begin_streaming hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=start_of_stream hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=set_compressed_input hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=set_raw_output hr=0x00000000\r\nhevc_mf_current_type encoder=0 output=0 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=0 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=0 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=0 attribute=range hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=1 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=1 attribute=range hr=0x00000000 value=2\r\nhevc_mf_configure encoder=0 stage=begin_streaming hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=start_of_stream hr=0x00000000\r\nhevc_mf_rejected_parameter_set kind=32 bytes=23 recorded=23 hex=[40, 01, 0c, 01, ff, ff, 01, 60, 00, 00, 03, 00, b0, 00, 00, 03, 00, 00, 03, 00, 78, 2c, 09]\nhevc_mf_rejected_parameter_set kind=33 bytes=52 recorded=52 hex=[42, 01, 01, 01, 60, 00, 00, 03, 00, b0, 00, 00, 03, 00, 00, 03, 00, 78, a0, 03, c0, 80, 11, 07, cb, cb, 92, 42, 95, 92, e3, ff, 00, 01, 00, 01, 6a, 00, 02, 04, 08, 00, 00, 03, 00, 08, 00, 00, 03, 01, e6, 20]\nhevc_mf_rejected_parameter_set kind=34 bytes=7 recorded=7 hex=[44, 01, e0, f3, c0, 4c, 90]\nhost_gpu_mf_stage=close calls=1 accepted=1 pool_blocked=0 output_samples=1 output_need_input=0 copy_pending=0 busy_slots=0 asynchronous=1 input_credits=0 output_credits=0\r\nError: Custom { kind: InvalidData, error: \"hevc_probe_au_rejected target=1920x1080 au_bytes=754 nal_count=5 first16=[(Some(35), 3), (Some(32), 23), (Some(33), 52), (Some(34), 7), (Some(20), 649)] cause=(hevc_probe_rejection code=sps.color field=vui.colour_primaries actual=0 required=1 rbsp_bit=263)\" }\n"
+      }
+    ]
+  },
+  "observation": [
+    "All eight standard ICodecAPI color properties returned E_NOTIMPL from IsSupported. Neither SetValue nor GetValue was called for unsupported properties.",
+    "Both raw and compressed current MF media types retained matrix 1 / primaries 2 / transfer 5 / nominal range 2, and streaming configuration succeeded.",
+    "Both original commands rejected the first encoder-generated fixture at SPS VUI colour_primaries=0, required=1, rbsp_bit=263. The bounded original VPS/SPS/PPS bytes are retained in stderr. Decode did not reach an accepted fixture or claim output."
+  ],
+  "next_diagnostic": "Use a mature independent HEVC parameter parser on GitHub-hosted Actions against the exact original synthetic parameter sets; do not change the parser assertion or rewrite AU metadata.",
+  "limitations": [
+    "No HEVC success or full W33 / AC56 / AC57 qualification.",
+    "No native ten-bit capture, HDR, 4:4:4, scanout, sustained performance or full product qualification.",
+    "Original 2ffc870 Main10 creation 0x8000ffff failure remains; not rerun by these Main8 commands."
+  ]
+}

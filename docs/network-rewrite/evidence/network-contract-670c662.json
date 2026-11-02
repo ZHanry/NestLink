@@ -1,0 +1,434 @@
+{
+  "schema_version": 1,
+  "source_revision": "670c662027f05e33ca87acf398f7c8b17fc6d0d6",
+  "run_id": 41457038066,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41457038066",
+  "workflow_status": "failure",
+  "artifact_id": 13148196289,
+  "official_artifact_digest": "sha256:28e37b16a142e11cfff5ec595bb1432da6c10bea572208ce2ca42d7374275a0a",
+  "all_12_payloads_verified": true,
+  "receipt": {
+    "schema_version": 1,
+    "kind": "nestlink-network-rewrite-contract-checks",
+    "recorded_at": "2026-11-02T14:02:57Z",
+    "timezone": "Asia/Shanghai",
+    "status": "failed",
+    "evidence_levels": [
+      "L0",
+      "L1"
+    ],
+    "acceptance_claims": [],
+    "failure": null,
+    "source_before": {
+      "expected_revision": "670c662027f05e33ca87acf398f7c8b17fc6d0d6",
+      "source_revision": "670c662027f05e33ca87acf398f7c8b17fc6d0d6",
+      "exact_source": true,
+      "clean": true,
+      "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status_raw_bytes": 0,
+      "status": [],
+      "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+    },
+    "source_after": {
+      "expected_revision": "670c662027f05e33ca87acf398f7c8b17fc6d0d6",
+      "source_revision": "670c662027f05e33ca87acf398f7c8b17fc6d0d6",
+      "exact_source": true,
+      "clean": true,
+      "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status_raw_bytes": 0,
+      "status": [],
+      "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+    },
+    "commands": [
+      {
+        "name": "rust-toolchain",
+        "argv": [
+          "rustc",
+          "--version",
+          "--verbose"
+        ],
+        "started_at": "2026-11-02T13:56:05Z",
+        "timeout_seconds": 60,
+        "log": "rust-toolchain.log",
+        "return_code": 0,
+        "timed_out": false,
+        "finished_at": "2026-11-02T13:56:05Z",
+        "elapsed_seconds": 0.032,
+        "log_bytes": 280,
+        "log_sha256": "1508d18ed6f74b3cebb0e28f9df883faf1d2fc8bf856d31c6c74c5022d56c911"
+      },
+      {
+        "name": "format-check",
+        "argv": [
+          "/usr/bin/python",
+          "-B",
+          "scripts/format-first-party.py",
+          "--check",
+          "--receipt",
+          "/home/runner/work/_temp/nestlink-network-rewrite-ubuntu-24.04/format-check-commands.json"
+        ],
+        "started_at": "2026-11-02T13:56:05Z",
+        "timeout_seconds": 300,
+        "log": "format-check.log",
+        "return_code": 1,
+        "timed_out": false,
+        "finished_at": "2026-11-02T13:56:08Z",
+        "elapsed_seconds": 3.369,
+        "log_bytes": 6466,
+        "log_sha256": "8a51995c992dacb26fc33555830e57c0ba855c0622a81a5f0a9f5cbe258dd74b"
+      },
+      {
+        "name": "format-worktree-create",
+        "argv": [
+          "git",
+          "worktree",
+          "add",
+          "--detach",
+          "/home/runner/work/_temp/nestlink-network-rewrite-ubuntu-24.04/format-source",
+          "HEAD"
+        ],
+        "started_at": "2026-11-02T13:56:08Z",
+        "timeout_seconds": 120,
+        "log": "format-worktree-create.log",
+        "return_code": 0,
+        "timed_out": false,
+        "finished_at": "2026-11-02T13:56:08Z",
+        "elapsed_seconds": 0.164,
+        "log_bytes": 304,
+        "log_sha256": "587cb7b1d5633083f8fee79c8d310e2ea2cb4716d0ebd74a52ac69a47c4c7560"
+      },
+      {
+        "name": "format-patch-generate",
+        "argv": [
+          "/usr/bin/python",
+          "-B",
+          "scripts/format-first-party.py",
+          "--receipt",
+          "/home/runner/work/_temp/nestlink-network-rewrite-ubuntu-24.04/format-patch-commands.json"
+        ],
+        "started_at": "2026-11-02T13:56:08Z",
+        "timeout_seconds": 300,
+        "log": "format-patch-generate.log",
+        "return_code": 0,
+        "timed_out": false,
+        "finished_at": "2026-11-02T13:56:12Z",
+        "elapsed_seconds": 3.319,
+        "log_bytes": 5870,
+        "log_sha256": "38784e54fc07a51ffde411bf6913335076bae627d54c2620ee0fc0d250507d73"
+      },
+      {
+        "name": "format-worktree-remove",
+        "argv": [
+          "git",
+          "worktree",
+          "remove",
+          "--force",
+          "/home/runner/work/_temp/nestlink-network-rewrite-ubuntu-24.04/format-source"
+        ],
+        "started_at": "2026-11-02T13:56:12Z",
+        "timeout_seconds": 120,
+        "log": "format-worktree-remove.log",
+        "return_code": 0,
+        "timed_out": false,
+        "finished_at": "2026-11-02T13:56:12Z",
+        "elapsed_seconds": 0.064,
+        "log_bytes": 168,
+        "log_sha256": "1599350a1869841e083535a272a3b2a10d8f2d1860aa0a21e03b584edf96f830"
+      },
+      {
+        "name": "contract-clippy",
+        "argv": [
+          "cargo",
+          "clippy",
+          "--all-targets",
+          "--locked",
+          "--keep-going",
+          "-p",
+          "nestlink-protocol",
+          "-p",
+          "nestlink-identity",
+          "-p",
+          "nestlink-policy",
+          "-p",
+          "nestlink-connectivity",
+          "-p",
+          "nestlink-storage",
+          "-p",
+          "nestlink-traversal",
+          "-p",
+          "nestlink-transport-stream",
+          "-p",
+          "nestlink-transport-quic",
+          "-p",
+          "nestlink-transport-wss",
+          "-p",
+          "nestlink-remote",
+          "-p",
+          "nestlink-server",
+          "--",
+          "-D",
+          "warnings"
+        ],
+        "started_at": "2026-11-02T13:56:12Z",
+        "timeout_seconds": 1200,
+        "log": "contract-clippy.log",
+        "return_code": 0,
+        "timed_out": false,
+        "finished_at": "2026-11-02T13:57:10Z",
+        "elapsed_seconds": 57.907,
+        "log_bytes": 29016,
+        "log_sha256": "615bde9c948e586dab02da997e4644d1afb35190cefc99850d20f3c2a8d31203"
+      },
+      {
+        "name": "contract-tests",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "--lib",
+          "--tests",
+          "--no-fail-fast",
+          "-p",
+          "nestlink-protocol",
+          "-p",
+          "nestlink-identity",
+          "-p",
+          "nestlink-policy",
+          "-p",
+          "nestlink-connectivity",
+          "-p",
+          "nestlink-storage",
+          "-p",
+          "nestlink-traversal",
+          "-p",
+          "nestlink-transport-stream",
+          "-p",
+          "nestlink-transport-quic",
+          "-p",
+          "nestlink-transport-wss",
+          "-p",
+          "nestlink-remote",
+          "-p",
+          "nestlink-server"
+        ],
+        "started_at": "2026-11-02T13:57:10Z",
+        "timeout_seconds": 1200,
+        "log": "contract-tests.log",
+        "return_code": 0,
+        "timed_out": false,
+        "finished_at": "2026-11-02T14:02:57Z",
+        "elapsed_seconds": 347.127,
+        "log_bytes": 98868,
+        "log_sha256": "06f5bcd843110a12f4bedd65fb7c75daeae00d5825cb39f61cef2d91eeb27163"
+      },
+      {
+        "name": "ci-evidence-tests",
+        "argv": [
+          "/usr/bin/python",
+          "-B",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests/network",
+          "-p",
+          "test_*.py",
+          "-v"
+        ],
+        "started_at": "2026-11-02T14:02:57Z",
+        "timeout_seconds": 1200,
+        "log": "ci-evidence-tests.log",
+        "return_code": 0,
+        "timed_out": false,
+        "finished_at": "2026-11-02T14:02:57Z",
+        "elapsed_seconds": 0.164,
+        "log_bytes": 4442,
+        "log_sha256": "d703019eccc87229367aa1c4b0aa4cb4443496e25ebbb3ca3a121e83407208b6"
+      }
+    ],
+    "build_provenance": {
+      "repository": "ZHanry/NestLink",
+      "source_revision": "670c662027f05e33ca87acf398f7c8b17fc6d0d6",
+      "workflow": "Network rewrite contract checks",
+      "workflow_path": ".github/workflows/network-rewrite.yml",
+      "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+      "workflow_sha": "670c662027f05e33ca87acf398f7c8b17fc6d0d6",
+      "job": "contract",
+      "run_id": "41457038066",
+      "run_attempt": "1",
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41457038066",
+      "runner": {
+        "environment": "github-hosted",
+        "name": "GitHub Actions 1000011795",
+        "os": "Linux",
+        "architecture": "X64"
+      },
+      "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+      "artifact_kind": "validation-logs-and-formatter-patch",
+      "artifact_files": [
+        {
+          "path": "ci-evidence-tests.log",
+          "bytes": 4442,
+          "sha256": "d703019eccc87229367aa1c4b0aa4cb4443496e25ebbb3ca3a121e83407208b6"
+        },
+        {
+          "path": "contract-clippy.log",
+          "bytes": 29016,
+          "sha256": "615bde9c948e586dab02da997e4644d1afb35190cefc99850d20f3c2a8d31203"
+        },
+        {
+          "path": "contract-tests.log",
+          "bytes": 98868,
+          "sha256": "06f5bcd843110a12f4bedd65fb7c75daeae00d5825cb39f61cef2d91eeb27163"
+        },
+        {
+          "path": "format-check-commands.json",
+          "bytes": 5797,
+          "sha256": "24c135880b6cb006244cd43a5518ea7fc19d9043aaea81b3de90f1e9ad314449"
+        },
+        {
+          "path": "format-check.log",
+          "bytes": 6466,
+          "sha256": "8a51995c992dacb26fc33555830e57c0ba855c0622a81a5f0a9f5cbe258dd74b"
+        },
+        {
+          "path": "format-patch-commands.json",
+          "bytes": 5764,
+          "sha256": "7e5380bdaba55b3263e59d5ca7ecd68200d41f0f842a4d59e6d251b39890d665"
+        },
+        {
+          "path": "format-patch-generate.log",
+          "bytes": 5870,
+          "sha256": "38784e54fc07a51ffde411bf6913335076bae627d54c2620ee0fc0d250507d73"
+        },
+        {
+          "path": "format-worktree-create.log",
+          "bytes": 304,
+          "sha256": "587cb7b1d5633083f8fee79c8d310e2ea2cb4716d0ebd74a52ac69a47c4c7560"
+        },
+        {
+          "path": "format-worktree-remove.log",
+          "bytes": 168,
+          "sha256": "1599350a1869841e083535a272a3b2a10d8f2d1860aa0a21e03b584edf96f830"
+        },
+        {
+          "path": "format-worktree-status.json",
+          "bytes": 79,
+          "sha256": "ad7b8c61027e2e33ef5bf1d10fd03e76009d26c44ee37013c8c5a4e0537a65e8"
+        },
+        {
+          "path": "rust-toolchain.log",
+          "bytes": 280,
+          "sha256": "1508d18ed6f74b3cebb0e28f9df883faf1d2fc8bf856d31c6c74c5022d56c911"
+        },
+        {
+          "path": "rustfmt.patch",
+          "bytes": 742,
+          "sha256": "82342cb613abf20aa16eec11bde5e1b60914f79ed9807edd76a012ee0eaa7f21"
+        }
+      ],
+      "receipt_digest_source": "GitHub Actions upload-artifact digest; self-hash excluded"
+    },
+    "execution_provenance": {
+      "kind": "github_actions",
+      "repository": "ZHanry/NestLink",
+      "source_revision": "670c662027f05e33ca87acf398f7c8b17fc6d0d6",
+      "workflow": "Network rewrite contract checks",
+      "workflow_path": ".github/workflows/network-rewrite.yml",
+      "workflow_ref": "ZHanry/NestLink/.github/workflows/network-rewrite.yml@refs/heads/main",
+      "workflow_sha": "670c662027f05e33ca87acf398f7c8b17fc6d0d6",
+      "job": "contract",
+      "run_id": "41457038066",
+      "run_attempt": "1",
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41457038066",
+      "runner": {
+        "environment": "github-hosted",
+        "name": "GitHub Actions 1000011795",
+        "os": "Linux",
+        "architecture": "X64"
+      },
+      "executed_commands": [
+        "rust-toolchain",
+        "format-check",
+        "format-worktree-create",
+        "format-patch-generate",
+        "format-worktree-remove",
+        "contract-clippy",
+        "contract-tests",
+        "ci-evidence-tests"
+      ],
+      "target_device_acceptance": false,
+      "l2_network_experiment": false
+    },
+    "limitations": [
+      "L0/L1 contract and CI receipt checks only; AC04 production-socket fault experiments have not run here.",
+      "No target GPU, phone, physical NAT, TUN, public HA, game or cross-day acceptance is claimed.",
+      "A formatting patch is review material; failing source is not replaced or counted as passing."
+    ]
+  },
+  "observation": {
+    "contract_strict_clippy_passed": true,
+    "contract_test_summaries": [
+      "test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.47s",
+      "test result: ok. 55 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+      "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 89 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+      "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.67s",
+      "test result: ok. 46 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.49s",
+      "test result: ok. 0 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.40s",
+      "test result: ok. 26 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 2.54s",
+      "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.81s",
+      "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.55s",
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.42s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.13s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.08s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.43s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.92s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.58s",
+      "test result: ok. 81 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 44.47s",
+      "test result: ok. 96 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 82.08s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s",
+      "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.17s",
+      "test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.89s",
+      "test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.81s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.39s",
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.13s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.88s",
+      "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.33s",
+      "test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.15s",
+      "test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.21s",
+      "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s",
+      "test result: ok. 54 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 6.40s",
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.05s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+      "test result: ok. 0 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s",
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.10s"
+    ],
+    "ci_evidence_tests_passed": 25,
+    "formatting_failed": true,
+    "formatting_patch_already_imported_in": "6f8ed357868643a3588210622385d7e2d29ad1b5"
+  },
+  "limitations": [
+    "Whole workflow remains failed due to the original formatting check. Later imported formatting requires verification on its own source.",
+    "Scoped contract tests do not qualify the complete product, target acceptance or release."
+  ]
+}

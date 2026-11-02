@@ -709,9 +709,19 @@ impl LocalProducts {
                 *stopping.borrow(),
                 snapshot.lifecycle,
                 snapshot.native_offline.as_ref().map(|view| view.status),
-                snapshot.native_offline.as_ref().and_then(|view| view.stop_reason),
-                snapshot.native_offline.as_ref().and_then(|view| view.cleanup),
-                snapshot.native_offline.as_ref().and_then(|view| view.failure.as_ref()).map(|failure| failure.kind)
+                snapshot
+                    .native_offline
+                    .as_ref()
+                    .and_then(|view| view.stop_reason),
+                snapshot
+                    .native_offline
+                    .as_ref()
+                    .and_then(|view| view.cleanup),
+                snapshot
+                    .native_offline
+                    .as_ref()
+                    .and_then(|view| view.failure.as_ref())
+                    .map(|failure| failure.kind)
             );
             if stop_owner {
                 owner.stop();

@@ -477,10 +477,7 @@ fn sealed_usage_retains_exact_verified_claims_and_rejects_nested_substitution()
     let f = Fixture::new()?;
     let signed = f.service.sign(&f.claims)?;
     let verified = verify_service_lease(&signed, &f.service.public_key())?;
-    let usage = verify_service_usage_budget_grant(
-        &f.claims.usage_grant,
-        &f.service.public_key(),
-    )?;
+    let usage = verify_service_usage_budget_grant(&f.claims.usage_grant, &f.service.public_key())?;
     assert_eq!(verified.usage(), &usage);
     assert_eq!(verified.signed().claims, signed.claims);
     assert_eq!(verified.signed().signature, signed.signature);
@@ -492,10 +489,7 @@ fn sealed_usage_retains_exact_verified_claims_and_rejects_nested_substitution()
     replacement.grant_id = id(97);
     let mut claims = f.claims.clone();
     claims.usage_grant = f.service.sign_usage_budget_grant(&replacement)?;
-    let changed = verify_service_lease(
-        &f.service.sign(&claims)?,
-        &f.service.public_key(),
-    )?;
+    let changed = verify_service_lease(&f.service.sign(&claims)?, &f.service.public_key())?;
     assert_eq!(changed.usage(), &replacement);
     assert_eq!(verified.usage(), &usage);
     assert_ne!(changed.digest(), verified.digest());
@@ -521,8 +515,12 @@ fn sealed_usage_retains_exact_verified_claims_and_rejects_nested_substitution()
         // original nested usage signature or its lease binding / lifetime.
         let bytes = encode(&claims, SERVICE_MESSAGE_BYTES)?;
         let signed = SignedServiceLease {
-            signature: f.service.key.sign(&domain_message(group::purpose(&claims), &bytes))
-                .to_bytes().to_vec(),
+            signature: f
+                .service
+                .key
+                .sign(&domain_message(group::purpose(&claims), &bytes))
+                .to_bytes()
+                .to_vec(),
             claims: bytes,
         };
         assert!(verify_service_lease(&signed, &f.service.public_key()).is_err());

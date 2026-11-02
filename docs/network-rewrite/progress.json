@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "e7c1be7d4df43f4ae8df23adb882ebb3e6e1a01b",
-  "checkpoint_kind": "original_target_direction_diagnostics_executed_with_two_cpu_passes_and_five_retained_gpu_hevc_failures_original_resident_repairs_under_hosted_validation",
+  "source_revision": "6c83bee349caf2b30b4f5159c6be6eca4d3dc116",
+  "checkpoint_kind": "actual_target_gpu_geometry_pass_original_capacity_798_failure_retained_request_local_path_and_usage_reuse_under_original_hosted_validation",
   "active_tasks": [
     "W00",
     "W02",
@@ -91,12 +91,12 @@
     }
   ],
   "next_steps": [
-    "Read original pair-windows release capacity run41454242981 at source9df4140; original100/20/1000/3waves and all signed deadlines unchanged. Retain all earlier failed observations.",
-    "Read sourcef570243 resident41455823431: actual private Xauthority and successful carrier retirement fix with original assertions. Protected-login fixed-stage diagnostics locate independent management failures.",
-    "Read source0f8d9a3 Windows owner41455441207 including newly explicit original native_compressed integration and stage diagnostics; no recovery deadline relaxation.",
-    "Rebuild GPU controller direction tools after exact verified SPS coded/display aperture repair; rerun finite target workload and retain initial0xc00d36b9 failure.",
-    "Continue mandatory same-source product/build/install/upgrade/signing/SBOM and full target qualification. Native10bit capture,444/HDR/fractional fallback, complete E2E/paired/24h remain open.",
-    "Keep user-required Luanti25second check failed. No0.8tag/release until original mandatory gates are satisfied; recheck local/remote main-only inventory."
+    "Read the unchanged release pair-window capacity run 41461482144 at 1dd4efd, after the new regression fixture stopped two earlier attempts before any load. Original database CHECK and all original workload assertions remain. ADR 0072 single-invocation canonical parse reuse is being implemented separately.",
+    "Review and import exact-source Actions formatting. Recheck strict storage/identity/SDK, original currentness and live snapshot counterexamples, HTTP / Quinn / multiplex and unchanged load.",
+    "Read 1dd4efd / 41461596961 original offline resident matrix: production snapshots now read the original cumulative meter directly instead of relying on the 250 ms notification cadence; original assertions and timeouts retained. Fixed category stop diagnostics locate QUIC early termination.",
+    "Main8 b6b5520 actual-target original commands still fail SPS VUI primaries 0 != 1; standard color properties are E_NOTIMPL while MF types retain correct attributes. Independently parse original parameter sets with a mature hosted tool before considering a parser repair; do not rewrite AUs or relax assertions.",
+    "Run the new Windows 2022 / 2025 owner matrix with original native_compressed test moved earlier. Source 670c662 original full Rust was cancelled before completion; its partial results are not qualification. Source 670c662 focused owner run 41457039142 succeeded all three original jobs.",
+    "Continue native ten-bit capture, 4:4:4 / HDR / fractional fallback, complete E2E / paired / 24-hour qualification, same-source candidate / install / upgrade / signing / SBOM. Keep Luanti 25-second failure by explicit user decision; no 0.8 tag or release until mandatory gates pass."
   ],
   "evidence_index": [
     "docs/network-rewrite/evidence/format-f570243.json",
@@ -240,7 +240,14 @@
     "docs/network-rewrite/evidence/linux-package-attempt-2f79d4b.json",
     "docs/network-rewrite/evidence/hevc-production-owner-2f79d4b.json",
     "docs/network-rewrite/evidence/native-offline-rebuild-2cb75d4-failure.json",
-    "docs/network-rewrite/evidence/sdk-routed-2cb75d4.json"
+    "docs/network-rewrite/evidence/sdk-routed-2cb75d4.json",
+    "docs/network-rewrite/evidence/windows-direction-target-670c662.json",
+    "docs/network-rewrite/evidence/compressed-native-0f8d9a3.json",
+    "docs/network-rewrite/evidence/format-670c662.json",
+    "docs/network-rewrite/evidence/network-contract-670c662.json",
+    "docs/network-rewrite/evidence/native-offline-resident-f570243.json",
+    "docs/network-rewrite/evidence/windows-hevc-target-b6b5520.json",
+    "docs/network-rewrite/evidence/format-1dd4efd.json"
   ],
   "observed_actions": [
     {
@@ -674,26 +681,32 @@
     }
   ],
   "current_hosted_runs": {
-    "rust_core": {
-      "run_id": 41372155731,
-      "source_revision": "c82bd8d9d47165d14acaf7f1c3ed26c942bee10a",
+    "capacity": {
+      "run_id": 41461482144,
+      "source_revision": "1dd4efd03b201d31744a716b4f99d73fd0d9c657",
       "state": "running",
-      "scope": "RootSDKroutedinventoryproofs passedbothOS; qualityprojectionoldIPCstepfailed; providerwidthfix14adlater; dependenciestransientcrates.ioHTTP2failure awaitsretry"
-    },
-    "media_impairment": {
-      "run_id": 41372948671,
-      "source_revision": "abf6499c545974f5f113ffe51e06cdf83dd8f365",
-      "state": "running"
-    },
-    "teeworlds": {
-      "run_id": 41372210583,
-      "source_revision": "c82bd8d9d47165d14acaf7f1c3ed26c942bee10a",
-      "state": "actualofficialexecutionpassed_workflowfailedprovidercompile",
       "whole_task_passed": false
+    },
+    "resident": {
+      "run_id": 41461596961,
+      "source_revision": "1dd4efd03b201d31744a716b4f99d73fd0d9c657",
+      "state": "running",
+      "whole_task_passed": false
+    },
+    "windows_owner": {
+      "run_id": 41460667796,
+      "source_revision": "b6b5520418756712c6c833c86e0a153dff394d1a",
+      "state": "running",
+      "whole_task_passed": false
+    },
+    "format": {
+      "run_id": 41461476335,
+      "source_revision": "1dd4efd03b201d31744a716b4f99d73fd0d9c657",
+      "state": "success_reviewed_imported_pending_commit"
     }
   },
   "branch_inventory": {
-    "verified_at": "2026-11-02T13:52:41.075Z",
+    "verified_at": "2026-11-02T14:16:39.545Z",
     "local": [
       "main"
     ],
@@ -702,52 +715,47 @@
     ]
   },
   "pending_runs": {
-    "capacity_original_release": {
-      "run_id": 41454242981,
-      "source_revision": "9df4140ebf99b755d4dd37a4dfa5ad51044c4532",
+    "capacity": {
+      "run_id": 41461482144,
+      "source_revision": "1dd4efd03b201d31744a716b4f99d73fd0d9c657",
       "state": "running",
       "whole_task_passed": false
     },
     "resident": {
-      "run_id": 41455823431,
-      "source_revision": "f570243c12e0390e963e373988fd76f5ec44b465",
+      "run_id": 41461596961,
+      "source_revision": "1dd4efd03b201d31744a716b4f99d73fd0d9c657",
       "state": "running",
       "whole_task_passed": false
     },
     "windows_owner": {
-      "run_id": 41455441207,
-      "source_revision": "0f8d9a3cf31be19d3615b4a5b115276a9c4592c4",
+      "run_id": 41460667796,
+      "source_revision": "b6b5520418756712c6c833c86e0a153dff394d1a",
       "state": "running",
       "whole_task_passed": false
     },
     "format": {
-      "run_id": 41455829187,
-      "source_revision": "f570243c12e0390e963e373988fd76f5ec44b465",
-      "state": "success_reviewed_imported"
-    },
-    "target_tools": {
-      "run_id": 41452426792,
-      "source_revision": "2ffc870909d50904379fdbd2b4dc5e060248a6d9",
-      "state": "build_and_strict_success_seven_target_commands_executed",
-      "whole_task_passed": false
+      "run_id": 41461476335,
+      "source_revision": "1dd4efd03b201d31744a716b4f99d73fd0d9c657",
+      "state": "success_reviewed_imported_pending_commit"
     }
   },
   "continuation_checkpoint": {
-    "at": "2026-11-02T13:51:59.959Z",
-    "source_revision": "e7c1be7d4df43f4ae8df23adb882ebb3e6e1a01b",
+    "at": "2026-11-02T14:30:26.065Z",
+    "source_revision": "6c83bee349caf2b30b4f5159c6be6eca4d3dc116",
     "verified_scopes": [
-      "Source2ffc870 run41452426792 originalWindows tools build+strict success; officialZIP818261bytes/e0534fc7 verified and all160payloadbytes/SHA verified.",
-      "Actual ordinary interactive Windows11 build26300 target: H264 CPU1920x1080/60/8000 encode16outputs and decode24outputs passed, checkedclose+flush. Finite synthetic output only.",
-      "Source78a7cb4 focused41451102046 WindowsTLS full originalpixels+two262144bytefiles+rebuild+IPCexit pass; Linux0/4 Windows2/4 overall failure remains. All42files/34producerpayloads verified."
+      "670c662 / 41457044725 original Windows tools build + strict clippy passed; official ZIP and all 160 receipt payloads verified. Original actual-target GPU command passed with accepted 24, decoded / color_verified / submitted 17, checked_flush + owner_closed; seven pending decodes discarded, eos_complete=false. No desktop, throughput or scanout qualification.",
+      "0f8d9a3 / 41455441207 Windows 2025 original native_compressed test passed 2 real TLS connections / 12 decoded frames / credit reuse / join before receipt; full three-job owner workflow succeeded. Earlier Windows 2022 failure retained.",
+      "670c662 / 41457038066 strict contract clippy, contract tests and 25 receipt tests passed; original workflow failed on formatting, whose reviewed patch was imported in 6f8ed35."
     ],
     "retained_failures": [
-      "Luanti25second deadline remains failed by explicit user decision.",
-      "Original target GPUcontroller failed at coded1920x1088/display1920x1080 geometry. Main8bothdirections failed exactVUI primaries0!=1; Main10bothdirections failedMFcreation0x8000ffff.",
-      "Source85c8 fullRust41443857256 native_compressed failed media keyframe recovery deadline. Offline QUIC owner-retirement, independent HTTPS/systemDNS and protected-login remain under original-case validation.",
-      "Capacity originalpair-window and alternateorigin-window previousattempts remainfailed; no complete1000livewave or24hqualification."
+      "User explicitly retains original Luanti 25-second disconnect check and its failed status.",
+      "9df4140 / 41454242981 original 100-installation / 20-pair / 1000-flow / 3-wave capacity failed at 798 flow_ready events with 403 PermissionRequired; no complete 1000-live-flow wave.",
+      "f570243 / 41455823431 resident whole-platform cases failed: Windows 3/4, Linux 0/4. Real TLS rebuild and both files completed before Linux immediate budget readback assertion; original QUIC early owner termination remains.",
+      "Original Main8 SPS primaries 0 != 1 and Main10 MF creation 0x8000ffff remain unresolved.",
+      "b6b5520 / 41460661662 verified tools executed both original Main8 target commands; still original SPS color rejection with all eight standard properties unsupported."
     ],
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
-    "branch_inventory": "Verified through local refs/heads and GitHub branches API: main only on both; latest release remains0.7.0RC1."
+    "branch_inventory": "Local refs/heads and GitHub branches API rechecked: main only."
   }
 }

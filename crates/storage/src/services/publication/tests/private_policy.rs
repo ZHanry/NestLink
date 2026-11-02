@@ -184,7 +184,10 @@ fn combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_a
         &f.service_signer,
         now()?,
     )?;
-    assert_eq!(serde_json::to_vec(&initial_lease)?, serde_json::to_vec(&lease)?);
+    assert_eq!(
+        serde_json::to_vec(&initial_lease)?,
+        serde_json::to_vec(&lease)?
+    );
     assert_eq!(serde_json::to_string(&initial_path)?, original_network);
     let mut corrupt_path = path.clone();
     let mut signature = URL_SAFE_NO_PAD.decode(&corrupt_path.path.signature)?;

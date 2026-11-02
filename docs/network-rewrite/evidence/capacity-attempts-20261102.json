@@ -2531,9 +2531,223 @@
         "flow_ready": 798
       },
       "failure_observation": "Original release pair-windows failed at wave 0 / pair 0 / flow 42 with 403 PermissionRequired near the original signed deadline after 798 flow_ready events. All currentness, sealed delegation, live external change, restart revocation, clock restore and original 7 HTTP / 1 negotiation / 6 multiplex regressions passed. No complete 1000-live-flow wave or capacity qualification; original bounds retained."
+    },
+    {
+      "source_revision": "ddadc328c1c6b12461289400cd4c6a90268ddbfe",
+      "run_id": 41459674511,
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41459674511",
+      "status": "failed_regression_fixture_setup",
+      "capacity_workload_started": false,
+      "artifact_id": 13147869186,
+      "official_artifact_digest": "sha256:70c8f69b7a9e1584cb9b46e0c189c9023a4120d5012074ad220039c923db1d24",
+      "all_payloads_verified": true,
+      "receipt": {
+        "source_revision": "ddadc328c1c6b12461289400cd4c6a90268ddbfe",
+        "workflow": "ZHanry/NestLink/.github/workflows/network-capacity.yml@refs/heads/main",
+        "workflow_revision": "ddadc328c1c6b12461289400cd4c6a90268ddbfe",
+        "run_id": "41459674511",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Linux",
+        "kernel": [
+          "Linux",
+          "runnervm48cm3",
+          "7.0.0-1017-azure",
+          "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+          "x86_64"
+        ],
+        "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+        "offered_load": {
+          "registered_installations_in_one_space": 100,
+          "active_pairs": 20,
+          "simultaneous_flows": 1000,
+          "reconnect_waves": 3,
+          "management_logins_per_active_consumer": 1,
+          "streams_per_pair": 50,
+          "same_lease_control_owners_per_wave": 20
+        },
+        "scope": "Original HTTP management and signed grants, actual kernel QUIC/TCP targets, original limits and four-scope durable accounting. One independent management login per active consumer, unchanged original rate limits.",
+        "limitations": [
+          "one hosted process; not physical nodes or independently deployed relay runtimes",
+          "short-run samples cannot qualify cross-day soak, complete E2E or all bounded queues"
+        ],
+        "passed": false,
+        "commands": [
+          {
+            "name": "build-currentness",
+            "argv": [
+              "cargo",
+              "test",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-storage",
+              "-p",
+              "nestlink-identity",
+              "--lib",
+              "--test",
+              "network_policy",
+              "--no-run",
+              "--message-format=json-render-diagnostics"
+            ],
+            "timeout_seconds": 1200,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 136.246987097
+          },
+          {
+            "name": "currentness-authority",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_storage-cc6cebbc49068ba8",
+              "combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_and_revoke",
+              "--show-output"
+            ],
+            "timeout_seconds": 60,
+            "return_code": 101,
+            "timed_out": false,
+            "seconds": 0.16430419600001755
+          }
+        ],
+        "build_profile": "release",
+        "opening_schedule": "pair-windows",
+        "original_assertions_and_deadlines_preserved": true,
+        "load_mode": "multiplexed",
+        "currentness_executable_sha256": "a62dc40ae9882e0907fdbd8ed49dcdb44afd7b1bf13152c578e717d7f6ded0e9",
+        "failure": "AssertionError('currentness-authority failed; original failure retained')",
+        "files": [
+          {
+            "path": "build-currentness.log",
+            "bytes": 159922,
+            "sha256": "c5d2e9cd5ca01ead3f7adef67ac7657fdb02866dc5a15c585dfc1885bb768dca"
+          },
+          {
+            "path": "build-currentness.stderr.log",
+            "bytes": 13775,
+            "sha256": "6398b3658b126403389956da2526350006c652850d6991d7ef469be6839213c0"
+          },
+          {
+            "path": "currentness-authority.log",
+            "bytes": 797,
+            "sha256": "57de81f7c37fb44d22797eff0757cd347fb0cacc244406cbdb9edf7efe168c29"
+          },
+          {
+            "path": "currentness-authority.stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      "failure_observation": "Currentness regression fixture attempted to store malformed JSON and hit the original SQLite CHECK. The CHECK correctly rejects it. Source 1dd4efd now separately asserts that rejection and uses valid but schema-incomplete JSON to test typed-path rejection. Original capacity did not start in either run."
+    },
+    {
+      "source_revision": "a23350062904e40908ea734344d3bd20897a5ae6",
+      "run_id": 41460136078,
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41460136078",
+      "status": "failed_regression_fixture_setup",
+      "capacity_workload_started": false,
+      "artifact_id": 13149160942,
+      "official_artifact_digest": "sha256:115e56bea3e5d469f461208d7e2a1af997b880e115236fea9af561e0540f9c7c",
+      "all_payloads_verified": true,
+      "receipt": {
+        "source_revision": "a23350062904e40908ea734344d3bd20897a5ae6",
+        "workflow": "ZHanry/NestLink/.github/workflows/network-capacity.yml@refs/heads/main",
+        "workflow_revision": "a23350062904e40908ea734344d3bd20897a5ae6",
+        "run_id": "41460136078",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Linux",
+        "kernel": [
+          "Linux",
+          "runnervm48cm3",
+          "7.0.0-1017-azure",
+          "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+          "x86_64"
+        ],
+        "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+        "offered_load": {
+          "registered_installations_in_one_space": 100,
+          "active_pairs": 20,
+          "simultaneous_flows": 1000,
+          "reconnect_waves": 3,
+          "management_logins_per_active_consumer": 1,
+          "streams_per_pair": 50,
+          "same_lease_control_owners_per_wave": 20
+        },
+        "scope": "Original HTTP management and signed grants, actual kernel QUIC/TCP targets, original limits and four-scope durable accounting. One independent management login per active consumer, unchanged original rate limits.",
+        "limitations": [
+          "one hosted process; not physical nodes or independently deployed relay runtimes",
+          "short-run samples cannot qualify cross-day soak, complete E2E or all bounded queues"
+        ],
+        "passed": false,
+        "commands": [
+          {
+            "name": "build-currentness",
+            "argv": [
+              "cargo",
+              "test",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-storage",
+              "-p",
+              "nestlink-identity",
+              "--lib",
+              "--test",
+              "network_policy",
+              "--no-run",
+              "--message-format=json-render-diagnostics"
+            ],
+            "timeout_seconds": 1200,
+            "return_code": 0,
+            "timed_out": false,
+            "seconds": 142.945690608
+          },
+          {
+            "name": "currentness-authority",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_storage-cc6cebbc49068ba8",
+              "combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_and_revoke",
+              "--show-output"
+            ],
+            "timeout_seconds": 60,
+            "return_code": 101,
+            "timed_out": false,
+            "seconds": 0.16420555900000977
+          }
+        ],
+        "build_profile": "release",
+        "opening_schedule": "pair-windows",
+        "original_assertions_and_deadlines_preserved": true,
+        "load_mode": "multiplexed",
+        "currentness_executable_sha256": "722535a254e95bc1106e2e6bf2359297f1b43f74fde4d4375b4b26ba7f2b5e73",
+        "failure": "AssertionError('currentness-authority failed; original failure retained')",
+        "files": [
+          {
+            "path": "build-currentness.log",
+            "bytes": 159922,
+            "sha256": "a28903591d57549087c42470dd5a92583ab0e4303b1dff6ab40d31afc99c6041"
+          },
+          {
+            "path": "build-currentness.stderr.log",
+            "bytes": 13775,
+            "sha256": "47e064032c0f74ac2c7ec3ac5aea4c709cdb1387a3da9118a5276658d8219e28"
+          },
+          {
+            "path": "currentness-authority.log",
+            "bytes": 797,
+            "sha256": "57de81f7c37fb44d22797eff0757cd347fb0cacc244406cbdb9edf7efe168c29"
+          },
+          {
+            "path": "currentness-authority.stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      "failure_observation": "Currentness regression fixture attempted to store malformed JSON and hit the original SQLite CHECK. The CHECK correctly rejects it. Source 1dd4efd now separately asserts that rejection and uses valid but schema-incomplete JSON to test typed-path rejection. Original capacity did not start in either run."
     }
   ],
-  "next_implementation": "Audit only provable repeated immutable work inside one current-authority invocation, after ADR 0066 / 0069. No cross-request authority cache, relaxed 3-second handshakes, increased lease, changed 1000-live assertion or quota changes. Latest 9df4140 original workload remains failed at 798 flow_ready events.",
+  "next_implementation": "Read original run 41461482144 at 1dd4efd, retaining all prior performance and fixture failures. ADR 0070 reuses only the exact path in one Immediate transaction; ADR 0071 reuses original verified usage typed claims. All original live checks, 100 / 20 / 1000 / 3-wave load, authority lifetimes, 3-second handshake bounds, quotas and assertions remain.",
   "limitations": [
     "One hosted process with enrolled installations; not 100 physical machines. No achieved 1000 simultaneous flow claim, no queue stability or 24h soak claim."
   ]
