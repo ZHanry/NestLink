@@ -918,6 +918,28 @@ impl CoreHandle {
         let route = self.display_route(binding)?;
         route_execution(&route, direction)
     }
+    /// Export the original decoder's actual NV12 ring to the native TLS peer.
+    /// It never opens an independent decoder or replaces the NLMF owner.
+    #[cfg(windows)]
+    pub async fn open_native_shared_video(
+        &self,
+        binding: &NativeSessionBinding,
+        source: u32,
+        peer: nestlink_platform_security::local_stream::VerifiedProcessExportTarget,
+    ) -> io::Result<nestlink_media_session::SharedVideoConsumer> {
+        let route = self.display_route(binding)?;
+        let _order = route.order.lock().await;
+        let confirmed = self.native_confirmed_video_format(binding)?
+            .filter(|format| format.display.source == source)
+            .ok_or_else(|| denied("shared output requires the exact confirmed format"))?;
+        let nestlink_media_session::LiveExecutionReceipt::Hevc(execution) = route_execution(
+            &route, nestlink_protocol::media_authority::MediaDirection::Decode,
+        )? else { return Err(denied("shared output requires original HEVC decode")); };
+        let consumer = route.presentation()?.presentation.open_shared_original(confirmed, execution, peer).await?;
+        route.check()?;
+        consumer.check_current()?;
+        Ok(consumer)
+    }
     pub fn native_media_execution_fence(
         &self,
         binding: &NativeSessionBinding,

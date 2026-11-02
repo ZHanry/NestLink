@@ -25,6 +25,12 @@ pub struct Request {
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Command {
+    /// Original HEVC NV12 resources duplicated into this native TLS peer only.
+    OpenNativeSharedVideo {
+        request_id: String,
+        connection_generation: u64,
+        source: u32,
+    },
     OpenNativeCompressedVideo {
         open: crate::compressed_video::NativeCompressedOpen,
     },
@@ -219,6 +225,9 @@ pub struct Response {
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "reply", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Reply {
+    SharedVideoOpened {
+        context: crate::shared_video::SharedVideoContext,
+    },
     CompressedVideoOpened {
         context: crate::compressed_video::CompressedContext,
         ticket: [u8; 32],

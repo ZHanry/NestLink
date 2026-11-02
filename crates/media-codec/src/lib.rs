@@ -51,6 +51,8 @@ mod windows_shared_output;
 #[cfg(windows)]
 pub use windows_shared_output::{SharedDecodedFrame, SharedFrameDescriptor, SharedRingDescriptor};
 #[cfg(windows)]
+pub use nestlink_platform_security::local_stream::VerifiedProcessExportTarget;
+#[cfg(windows)]
 pub use windows_hevc_owner::{
     HevcDecodedOutput, HevcOwnerOutput, MfHevcHardwareDecoder, MfHevcTextureEncoder,
 };

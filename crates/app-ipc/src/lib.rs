@@ -4,6 +4,7 @@ pub mod clipboard;
 pub mod compressed_video;
 pub mod files;
 pub mod privileged_input;
+pub mod shared_video;
 mod video;
 pub mod wire {
     include!(concat!(
@@ -452,12 +453,29 @@ async fn serve_requests(
         let mut video_stream = None;
         let mut compressed_control = None;
         let mut compressed_data = None;
+        #[cfg(windows)]
+        let mut shared_video_stream = None;
         let mut result = if request.command.mutates() && request.expected_generation != generation {
             Reply::Rejected {
                 reason: Rejection::StaleGeneration,
             }
         } else {
             match request.command {
+                Command::OpenNativeSharedVideo { request_id, connection_generation, source } => {
+                    #[cfg(windows)]
+                    {
+                        let binding = NativeVideoBinding {runtime_id:connection.runtime_id().to_owned(), ui_generation:request.expected_generation, request_id, connection_generation, source};
+                        match shared_video::open(&connection, &core, binding).await {
+                            Ok((context, consumer)) => {
+                                shared_video_stream = Some((context.clone(), consumer));
+                                Reply::SharedVideoOpened {context}
+                            }
+                            Err(_) => Reply::Rejected {reason:Rejection::Invalid},
+                        }
+                    }
+                    #[cfg(not(windows))]
+                    { let _ = (request_id, connection_generation, source); Reply::Rejected {reason:Rejection::Invalid} }
+                }
                 Command::OpenNativeCompressedVideo { open } => {
                     let binding = NativeVideoBinding {
                         runtime_id: connection.runtime_id().to_owned(),
@@ -941,6 +959,10 @@ async fn serve_requests(
             let _ = delivered.send(());
         }
         sent?;
+        #[cfg(windows)]
+        if let Some((context, consumer)) = shared_video_stream {
+            return shared_video::serve(connection, core, context, consumer).await;
+        }
         if let Some((context, ticket, active)) = compressed_control {
             return compressed_video::serve_control(connection, core, context, ticket, active)
                 .await;

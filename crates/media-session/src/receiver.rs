@@ -29,6 +29,11 @@ const EVENT_CAPACITY: usize = 4;
 #[cfg(windows)]
 #[path = "receiver_hevc.rs"]
 mod hevc;
+#[cfg(windows)]
+#[path = "receiver_shared.rs"]
+mod shared;
+#[cfg(windows)]
+pub use shared::SharedVideoConsumer;
 
 /// Packed BGRA for presentation. Every encoded reference is decoded before an
 /// older presentation image may be replaced in this per-source mailbox.
@@ -297,6 +302,8 @@ enum DecoderReadiness {
     Display(VideoLayout, u64),
 }
 struct Output {
+    #[cfg(windows)]
+    shared_claimed: std::sync::atomic::AtomicBool,
     consumer_revision: std::sync::atomic::AtomicU64,
     external: Mutex<Option<crate::external::ExternalSink>>,
     playout: Option<crate::SessionPlayoutClock>,
@@ -337,6 +344,8 @@ impl Output {
         let (recovery_deadline, _) = watch::channel(None);
         let (prepared, _) = watch::channel(DecoderReadiness::Unprepared);
         Arc::new(Self {
+            #[cfg(windows)]
+            shared_claimed: std::sync::atomic::AtomicBool::new(false),
             consumer_revision: std::sync::atomic::AtomicU64::new(1),
             external: Mutex::new(None),
             playout,
@@ -1103,6 +1112,11 @@ impl VideoPresentation {
         Ok(state.layouts.get(&source).copied())
     }
     pub fn poll_video(&self) -> io::Result<Option<DecodedVideo>> {
+        self.poll_video_inner(false)
+    }
+    fn poll_video_inner(&self, shared_consumer: bool) -> io::Result<Option<DecodedVideo>> {
+        #[cfg(not(windows))]
+        let _ = shared_consumer;
         if let Err(error) = self
             .lease
             .check_media_binding(Channel::Video, self.connection_generation)
@@ -1115,6 +1129,10 @@ impl VideoPresentation {
             .state
             .lock()
             .map_err(|_| io::Error::other("media output poisoned"))?;
+        #[cfg(windows)]
+        if self.output.shared_claimed.load(std::sync::atomic::Ordering::Acquire) != shared_consumer {
+            return Err(io::Error::other("original shared surface consumer exclusively owns this output"));
+        }
         if state.closed {
             return Err(io::Error::new(
                 io::ErrorKind::BrokenPipe,

@@ -39,6 +39,8 @@ pub use receiver::{
     DecodedVideo, ExternalVideoCleanup, VideoLayout, VideoPresentation, VideoReceiver,
     VideoReceiverStats,
 };
+#[cfg(windows)]
+pub use receiver::SharedVideoConsumer;
 pub use video::{ProducerBudgetObservation, VideoSender, VideoSenderStats, VideoStream};
 pub use worker::{ShutdownReport, WorkerMonitor, WorkerStatus};
 
