@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "case_ids": [
+    "AC68"
+  ],
+  "task_ids": [
+    "W39"
+  ],
+  "status": "failed",
+  "original_offered_load": {
+    "registered_installations": 100,
+    "active_pairs": 20,
+    "simultaneous_service_flows": 1000,
+    "reconnect_waves": 3
+  },
+  "original_assertions_preserved": true,
+  "rate_lease_quota_rules_unchanged": true,
+  "attempts": [
+    {
+      "run_id": 41412726329,
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41412726329",
+      "artifact_id": 13126362929,
+      "artifact_sha256": "93728770e81732e3719c3555c7d55991a9074f17e7785e17f323f0cf96971fb2",
+      "receipt": {
+        "source_revision": "2f79d4bfbad6c5588104fe9cae55294314b5b183",
+        "workflow": "ZHanry/NestLink/.github/workflows/network-capacity.yml@refs/heads/main",
+        "workflow_revision": "2f79d4bfbad6c5588104fe9cae55294314b5b183",
+        "run_id": "41412726329",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Linux",
+        "kernel": [
+          "Linux",
+          "runnervm48cm3",
+          "7.0.0-1017-azure",
+          "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+          "x86_64"
+        ],
+        "cargo_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+        "offered_load": {
+          "registered_installations_in_one_space": 100,
+          "active_pairs": 20,
+          "simultaneous_flows": 1000,
+          "reconnect_waves": 3
+        },
+        "scope": "Original HTTP management and signed grants, actual kernel QUIC/TCP targets, original limits and four-scope durable accounting. One independent management login per active consumer, unchanged original rate limits.",
+        "limitations": [
+          "one hosted process; not physical nodes or independently deployed relay runtimes",
+          "short-run samples cannot qualify cross-day soak, complete E2E or all bounded queues"
+        ],
+        "passed": false,
+        "commands": [
+          {
+            "name": "build",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-sdk",
+              "--test",
+              "capacity",
+              "--no-run",
+              "--message-format=json-render-diagnostics"
+            ],
+            "return_code": 0,
+            "seconds": 87.02617690400001
+          },
+          {
+            "name": "execution",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/debug/deps/capacity-8abe3ed8c40bf2db",
+              "--exact",
+              "hundred_enrolled_nodes_twenty_pairs_thousand_simultaneous_authorized_streams",
+              "--ignored",
+              "--nocapture",
+              "--test-threads=1"
+            ],
+            "return_code": 101,
+            "seconds": 245.556882082
+          }
+        ],
+        "executable_sha256": "a8470c8983a0d786c166bd9df1f63296f25d0f2ddd0c1c4d7eea756ec4f4bda9",
+        "failure": "AssertionError('execution failed; original failure retained')",
+        "files": [
+          {
+            "path": "build.log",
+            "bytes": 438729,
+            "sha256": "964e74744f53d9e66dad6ba7c81e0408c685f968a4353b7a7306393c15300a77"
+          },
+          {
+            "path": "build.stderr.log",
+            "bytes": 60126,
+            "sha256": "afd573837ce5760615da82a774dde8ffcbe9a14fd4235e6bc11f47a17ca582eb"
+          },
+          {
+            "path": "execution.log",
+            "bytes": 314,
+            "sha256": "e031c3f9c3901b97f9f7efeba89d9cb4774431cbaa043c54e1ac6b5627fcf865"
+          },
+          {
+            "path": "execution.stderr.log",
+            "bytes": 171,
+            "sha256": "0bff480c2d792244b4db01e0029b62d673bfc39848b3a8a157bf4032e26264c8"
+          },
+          {
+            "path": "samples.jsonl",
+            "bytes": 151,
+            "sha256": "2392fd326a591363a9df825096f3329c73e28944795dfc65a094d6d9be8f4239"
+          }
+        ]
+      },
+      "reason": "Fresh fixture parent permissions rejected by original private durable meter gate before load.",
+      "execution_stdout": "\nrunning 1 test\ntest hundred_enrolled_nodes_twenty_pairs_thousand_simultaneous_authorized_streams ... FAILED\n\nfailures:\n\nfailures:\n    hundred_enrolled_nodes_twenty_pairs_thousand_simultaneous_authorized_streams\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 245.55s\n\n",
+      "execution_stderr": "Error: ServiceIo(Custom { kind: Other, error: PrivatePath(Custom { kind: Other, error: \"private files must be owned by the service user and deny group/other access\" }) })\n",
+      "samples": [
+        {
+          "at_unix_ms": 1793608169787,
+          "open_descriptors": 10,
+          "process_status": [
+            "VmHWM:\t   13272 kB",
+            "VmRSS:\t   13272 kB",
+            "Threads:\t6"
+          ],
+          "stage": "before_setup"
+        }
+      ]
+    },
+    {
+      "run_id": 41414872211,
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41414872211",
+      "artifact_id": 13128015228,
+      "artifact_sha256": "86e0ccb52fee66f80736773ed67f16ddaac657a15b3ac5c96ccb482c5b29dec3",
+      "receipt": {
+        "source_revision": "648f811f72d0fa7562b9ef09ebaf4efe4e48f2f3",
+        "workflow": "ZHanry/NestLink/.github/workflows/network-capacity.yml@refs/heads/main",
+        "workflow_revision": "648f811f72d0fa7562b9ef09ebaf4efe4e48f2f3",
+        "run_id": "41414872211",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Linux",
+        "kernel": [
+          "Linux",
+          "runnervm48cm3",
+          "7.0.0-1017-azure",
+          "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+          "x86_64"
+        ],
+        "cargo_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+        "offered_load": {
+          "registered_installations_in_one_space": 100,
+          "active_pairs": 20,
+          "simultaneous_flows": 1000,
+          "reconnect_waves": 3
+        },
+        "scope": "Original HTTP management and signed grants, actual kernel QUIC/TCP targets, original limits and four-scope durable accounting. One independent management login per active consumer, unchanged original rate limits.",
+        "limitations": [
+          "one hosted process; not physical nodes or independently deployed relay runtimes",
+          "short-run samples cannot qualify cross-day soak, complete E2E or all bounded queues"
+        ],
+        "passed": false,
+        "commands": [
+          {
+            "name": "build",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-sdk",
+              "--test",
+              "capacity",
+              "--no-run",
+              "--message-format=json-render-diagnostics"
+            ],
+            "return_code": 0,
+            "seconds": 109.732685285
+          },
+          {
+            "name": "execution",
+            "argv": [
+              "/home/runner/work/NestLink/NestLink/target/debug/deps/capacity-8abe3ed8c40bf2db",
+              "--exact",
+              "hundred_enrolled_nodes_twenty_pairs_thousand_simultaneous_authorized_streams",
+              "--ignored",
+              "--nocapture",
+              "--test-threads=1"
+            ],
+            "return_code": 101,
+            "seconds": 254.26001285300003
+          }
+        ],
+        "executable_sha256": "8f4e2bac48ec4fb5bf166b94f65a17853faf1e1543026b0cb3f7db7c08ebb34c",
+        "failure": "AssertionError('execution failed; original failure retained')",
+        "files": [
+          {
+            "path": "build.log",
+            "bytes": 438729,
+            "sha256": "dc14d4a49b91eac6ba5afe84d5925d6138fe1eb819e980d0bb180bd9670f9e46"
+          },
+          {
+            "path": "build.stderr.log",
+            "bytes": 60126,
+            "sha256": "ea78f7f95bbf15d0d2cf7d4ffbbabf34e5a04b72b50ebda39cb63b9e4aed419b"
+          },
+          {
+            "path": "execution.log",
+            "bytes": 314,
+            "sha256": "d0c9d3d097717f6bbe32142c2ea095e3f97a6d87ac9bb5b1a19e4409fdff5e70"
+          },
+          {
+            "path": "execution.stderr.log",
+            "bytes": 34,
+            "sha256": "c6e75403f60c14c59deb974033fe58abfb3512616bebfc4aa6cec15b0012df6b"
+          },
+          {
+            "path": "samples.jsonl",
+            "bytes": 307,
+            "sha256": "30978afe174323e30c610d5fb5e5b9977a7c13c94df8abf3eb58e0b700c2a1b1"
+          }
+        ]
+      },
+      "reason": "HTTP 429 CapacityExceeded during independent access grant burst: unchanged 30 requests/minute per consumer login versus requested 50 simultaneous independent grants per pair.",
+      "execution_stdout": "\nrunning 1 test\ntest hundred_enrolled_nodes_twenty_pairs_thousand_simultaneous_authorized_streams ... FAILED\n\nfailures:\n\nfailures:\n    hundred_enrolled_nodes_twenty_pairs_thousand_simultaneous_authorized_streams\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 254.21s\n\n",
+      "execution_stderr": "Error: Api(429, CapacityExceeded)\n",
+      "samples": [
+        {
+          "at_unix_ms": 1793609037434,
+          "open_descriptors": 10,
+          "process_status": [
+            "VmHWM:\t   12920 kB",
+            "VmRSS:\t   12920 kB",
+            "Threads:\t6"
+          ],
+          "stage": "before_setup"
+        },
+        {
+          "at_unix_ms": 1793609291583,
+          "open_descriptors": 162,
+          "process_status": [
+            "VmHWM:\t  129764 kB",
+            "VmRSS:\t  129764 kB",
+            "Threads:\t10"
+          ],
+          "stage": "all_hosts_ready"
+        }
+      ]
+    }
+  ],
+  "next_implementation": "Use explicit negotiated bounded multiple streams inside one original authorized owner, preserving each nonce, signed proof, shared usage gate and original expiry. Do not add extra logins or enlarge original limits.",
+  "limitations": [
+    "One hosted process with enrolled installations; not 100 physical machines. No achieved 1000 simultaneous flow claim, no queue stability or 24h soak claim."
+  ]
+}

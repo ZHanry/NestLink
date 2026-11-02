@@ -2613,7 +2613,8 @@
         "docs/network-rewrite/evidence/offline-carrier-97541a2.json",
         "docs/network-rewrite/evidence/offline-resident-091686c.json",
         "docs/network-rewrite/evidence/offline-media-b166d8b.json",
-        "docs/network-rewrite/evidence/offline-remote-tls-55de3cd.json"
+        "docs/network-rewrite/evidence/offline-remote-tls-55de3cd.json",
+        "docs/network-rewrite/evidence/native-offline-rebuild-2cb75d4-failure.json"
       ],
       "blockers": [],
       "partial_verification": {
@@ -2625,7 +2626,7 @@
           "docs/network-rewrite/evidence/offline-resident-091686c.json"
         ]
       },
-      "implementation_notes": "Sourceb166d8b fully passed offline authority/storage/HTTP-SDK and physical socket/poller cleanup, including original independent remote QUIC after online expiry. Source55de3cd run41235596155 all jobs success adds explicitly approved mutual TLS1.3 remote business concurrently with QUIC, original shared attempts/bytes, Input refusal, process-stop and UDP/TCP listener release. Complete native AppCore capture/input/file OS adapters, finite offline UI and multiple-resident lifecycle remain implementation work; no wholeW27 claim."
+      "implementation_notes": "Native AppCore offline and actual resident CLI/IPC/capture/files/rebuild paths now implemented, including pre-HTTP terminal stop for every online management operation and destructor owner fix. Source68990e55 run41415857474 executing original assertions; later f8ea617 private Recover fence fix awaits next same-source run. Original two-OS source2cb75d4 failures preserved. Whole W27 remains open."
     },
     {
       "id": "W28",
@@ -2642,7 +2643,7 @@
       ],
       "status": "in_progress",
       "implementation_status": "in_progress",
-      "verification_status": "running",
+      "verification_status": "failed",
       "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
       "owned_paths_to_review": [
         "crates/network-overlay",
@@ -2681,10 +2682,11 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/adr/network/0054-controlled-lan-discovery-adapter.md"
+        "docs/adr/network/0054-controlled-lan-discovery-adapter.md",
+        "docs/network-rewrite/evidence/luanti-attempt-de61e76.json"
       ],
       "blockers": [],
-      "implementation_notes": "Original same-owner LAN UDP broadcast/unicast and DNS-SD binary TXT/virtual IP/socket cleanup fully passed exact4a2d7a0 run41235534909. Production optional TUN+LAN shares original authority, packet loop/root helper and cleanup; actual combined path still requires evidence. Pinned official Teeworlds0.7.5 and Luanti5.13+MinetestGame5.8 real client/server pipelines execute original carriers; initial official storage/window/limited-broadcast fixture failures retained. Current real-game reruns pending; no two-site or completeW28 acceptance."
+      "implementation_notes": "User explicitly requires preserving the original Luanti 25-second disconnect-display gate and its failed status. Official locked game uses30seconds; do not alter official client, clock or experiment deadline. Actual join/gameplay and original owner physical cleanup remain separate scoped evidence. No whole W28/AC47 pass."
     },
     {
       "id": "W29",
@@ -3093,10 +3095,11 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/network-rewrite/evidence/linux-package-upgrade-index.json"
+        "docs/network-rewrite/evidence/linux-package-upgrade-index.json",
+        "docs/network-rewrite/evidence/linux-package-attempt-2f79d4b.json"
       ],
       "blockers": [],
-      "implementation_notes": "Exactc0fc249 run41236630410 x64+ARM64 Linux headless network/gateway DEB matrix success, with actual daemon install/reinstall/uninstall/hash/sentinel checks,12CLI helps, missing-login/root-runtime refusal and candidate-integrity/Python checks; every retained receipt/hash checked. Candidate producer adds both Linux network roles,16 artifact roles and21 installation cases. Full same-source release candidate, Windows signing/production update and target matrix still required; Linux desktop remains retired."
+      "implementation_notes": "Exactsource2f79d4b run41412721054 Linux x64+ARM64 fully passed real dpkg SIGKILL interrupted-upgrade, pinned old-package recovery, originalpayload/modes/sentinel, current-candidate restore/uninstall and owned-port-conflict recovery. All4 ZIPs/86receiptfiles/74commandlog digests checked. Actual Windows Inno install/reinstall/payload/uninstall required path implemented, awaits new same-source candidate. Originalproductversion0.7.0-rc.1; no0.8/GPU/target/signing qualification."
     },
     {
       "id": "W35",
@@ -3222,10 +3225,11 @@
         "审阅、来源及例外证据可复核"
       ],
       "evidence_refs": [
-        "docs/adr/network/0063-coverage-guided-network-parsers.md"
+        "docs/adr/network/0063-coverage-guided-network-parsers.md",
+        "docs/network-rewrite/evidence/security-parser-fuzz-648f811.json"
       ],
       "blockers": [],
-      "implementation_notes": "Added actual-production parser coverage-guided libFuzzer+ASan harness, exact-source hosted lock derivation and bounded execution workflow, componentC27/ADR0063. No local compilation or fuzzing; hosted dependency lock and execution pending. Full independent lifecycle/authorization review remains open; no wholeW36/AC62 claim."
+      "implementation_notes": "Exactsource648f811 run41414876864 passed locked nightly coverage-guided production parser ASan fuzz,7023970 executions/121s, peakRSS583MiB. All2738retained files verified; priorstable-compiler failure retained. Full independent authorization/lifecycle review remains open."
     },
     {
       "id": "W37",
@@ -3372,9 +3376,9 @@
         "F22",
         "F25"
       ],
-      "status": "not_started",
-      "implementation_status": "not_started",
-      "verification_status": "not_run",
+      "status": "in_progress",
+      "implementation_status": "in_progress",
+      "verification_status": "failed",
       "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
       "owned_paths_to_review": [
         "scripts/acceptance",
@@ -3405,8 +3409,11 @@
         "证据绑定对应源码/制品/环境并保留失败",
         "结果满足原有及适用新增门槛；未执行不记通过"
       ],
-      "evidence_refs": [],
-      "blockers": []
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/capacity-attempts-20261102.json"
+      ],
+      "blockers": [],
+      "implementation_notes": "Original100enrolled-installation/20pair/1000realTCPflow/3wave capacity experiment implemented and attempted on GitHub. Source2f79 private-parent refusal and648f811 HTTP429 original30requests/minute consumer rate refusal retained; no1000flow pass. Explicit bounded same-owner multi-stream implementation now underway; originalrates/leases/quotas/assertions retained. Cross-day real-device24hsoak not run."
     },
     {
       "id": "W40",
@@ -4785,12 +4792,16 @@
         "L4"
       ],
       "expected_result": "两款真实LAN游戏覆盖广播发现/直接IP，完成跨网开房、加入、持续联机、退出/撤销；另测真实mDNS服务发现。",
-      "status": "not_run",
+      "status": "failed",
       "source_revision": null,
       "artifact_sha256": null,
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/luanti-attempt-de61e76.json"
+      ],
       "environment": {},
-      "limitations": [],
+      "limitations": [
+        "Original25second game display assertion retained as failed by explicit user instruction; hosted actual game evidence does not satisfy independent target topology."
+      ],
       "global_policy_ids": [
         "R01",
         "R02"
@@ -5353,12 +5364,16 @@
         "L2"
       ],
       "expected_result": "100注册节点、20活跃对、1000服务流无N²失控、无无界队列及持续资源增长。",
-      "status": "not_run",
+      "status": "failed",
       "source_revision": null,
       "artifact_sha256": null,
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/capacity-attempts-20261102.json"
+      ],
       "environment": {},
-      "limitations": [],
+      "limitations": [
+        "Original30requests/minute per consumer login prevented1000independent simultaneous flows; no capacity or24hsoak pass."
+      ],
       "global_policy_ids": [
         "R01",
         "R02"

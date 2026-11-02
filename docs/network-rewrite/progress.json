@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "0c04459031378ec58c353441e609779637a35fd1",
-  "checkpoint_kind": "real_kernel_impairment_passed_native_offline_hevc_and_actual_setup_ui_under_hosted_validation",
+  "source_revision": "2c44210ccea6b7b7a7a19844731e756e98132ba2",
+  "checkpoint_kind": "linux_interrupted_upgrade_passed_web_setup_passed_fuzz_passed_offline_resident_under_validation_capacity_rate_failure_preserved",
   "active_tasks": [
     "W00",
     "W02",
@@ -42,7 +42,9 @@
     "W32",
     "W33",
     "W34",
-    "W35"
+    "W35",
+    "W36",
+    "W39"
   ],
   "satisfied_interface_dependencies": [
     "W01 nine-topic source and mature-component research independently reviewed",
@@ -89,11 +91,11 @@
     }
   ],
   "next_steps": [
-    "Finish native offline resident CLI/desktop lifecycle and exact cleanup/reconnect tests; qualify independent owner after onlineexpiry without authority extension.",
-    "Finish HEVC actualreceiver-owner handoff, LiveExecutionReceipt/NLMF and originalproducer path; retain frozenformat/permission gates until actualqualification.",
-    "Review exactsource0c04459 hostedformatter; complete real websetup browser checks and fullRust41402345286/network41403709403.",
-    "Preserve successful officialTeeworlds and sameowner realdualstackTCP/HTTP/TUN/LAN receipts; keep mandatoryLuanti25s failed per userdecision.",
-    "Continue W31 exactWindowsCore/OSinput/file, remainingsecurity/E2E/capacity/install/upgrade and required target qualification before0.8.0RC release."
+    "Read exact68990e55 early native offline/resident original authority, realOS capture/files and process cleanup results; repair every actual failure without changing assertions.",
+    "Finish original private owner bounded Quinn multiple streams with per-flow fresh proof, currentauthority/sharedusage and original expiry; retain independent-access HTTP429 capacity failure, then repeat full100/20/1000offered load on explicit mode.",
+    "Complete Windows original named-pipe process identity retained through TLS IPC, then actual bounded shared DXGI surfaces and original decoder/presenter lifecycle qualification; noPID JSON proof.",
+    "Import new exact-source hosted formatting after integrated changes; run all required same-source Rust/Web/network/install/upgrade checks before candidate producer.",
+    "Keep Luanti original25second failure, requiredmobile/publictarget/GPU/signing/24hsoak and remainingfullE2E evidence open; release staysnot_ready."
   ],
   "evidence_index": [
     "docs/network-rewrite/evidence/sdk-routed-c82bd8d.json",
@@ -217,7 +219,13 @@
     "docs/network-rewrite/evidence/offline-resident-091686c.json",
     "docs/adr/network/0053-finite-probed-media-budget-switch.md",
     "docs/network-rewrite/evidence/media-receiver-actual-mtls-5cde425.json",
-    "docs/network-rewrite/evidence/media-and-native-files-2494ab3.json"
+    "docs/network-rewrite/evidence/media-and-native-files-2494ab3.json",
+    "docs/network-rewrite/evidence/security-parser-fuzz-648f811.json",
+    "docs/network-rewrite/evidence/capacity-attempts-20261102.json",
+    "docs/network-rewrite/evidence/linux-package-attempt-2f79d4b.json",
+    "docs/network-rewrite/evidence/hevc-production-owner-2f79d4b.json",
+    "docs/network-rewrite/evidence/native-offline-rebuild-2cb75d4-failure.json",
+    "docs/network-rewrite/evidence/sdk-routed-2cb75d4.json"
   ],
   "observed_actions": [
     {
@@ -670,7 +678,7 @@
     }
   },
   "branch_inventory": {
-    "verified_at": "2026-11-02T01:32:00Z",
+    "verified_at": "2026-11-02T09:03:00Z",
     "local": [
       "main"
     ],
@@ -680,16 +688,14 @@
   },
   "pending_runs": {
     "full_rust": {
-      "run_id": 41402345286,
-      "source_revision": "98e9f608a11f187d9616f49d2388ac6009d9dbcf"
+      "run_id": 41415857474,
+      "source_revision": "68990e55c04363edebc86d3ee7c7d0627be874e8",
+      "state": "running"
     },
-    "web_setup": {
-      "run_id": 41403705993,
-      "source_revision": "0c04459031378ec58c353441e609779637a35fd1"
-    },
-    "network": {
-      "run_id": 41403709403,
-      "source_revision": "0c04459031378ec58c353441e609779637a35fd1"
+    "regression_server": {
+      "run_id": 41415862488,
+      "source_revision": "68990e55c04363edebc86d3ee7c7d0627be874e8",
+      "state": "success"
     }
   }
 }

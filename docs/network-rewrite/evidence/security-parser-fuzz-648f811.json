@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "648f811f72d0fa7562b9ef09ebaf4efe4e48f2f3",
+  "workflow": ".github/workflows/network-security.yml",
+  "run_id": 41414876864,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41414876864",
+  "conclusion": "success",
+  "artifact_id": 13126828371,
+  "artifact_sha256": "5c0e5086b742274e9bf81667be0bce762fc5eeb8fff556c3dd616ea203a7e3f3",
+  "artifact_bytes": 1004100,
+  "complete_receipt_sha256": "e2375d4b8ee93d7bc3c717f693c0561dc6fab216a379792e33b273e9fba5b97b",
+  "all_receipt_files_verified": 2738,
+  "unlisted_files": [],
+  "build_provenance": {
+    "kind": "github-hosted",
+    "source_revision": "648f811f72d0fa7562b9ef09ebaf4efe4e48f2f3",
+    "product_cargo_lock_sha256": "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+    "fuzz_cargo_lock_sha256": "0ec4c791ef9d969a005838d6e35c9f810d4c497d9014e3b81335125da3d5410b",
+    "rustc_verbose": "rustc 1.101.0-nightly (12433c307 2026-10-24)\nbinary: rustc\ncommit-hash: 12433c307b5a497388ffe2f4e49dbf1ab8c71fa0\ncommit-date: 2026-10-24\nhost: x86_64-unknown-linux-gnu\nrelease: 1.101.0-nightly\nLLVM version: 23.1.4\n",
+    "commands": [
+      {
+        "name": "rust-version",
+        "argv": [
+          "rustc",
+          "-vV"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "check-fuzz-format",
+        "argv": [
+          "cargo",
+          "fmt",
+          "--manifest-path",
+          "tests/security/fuzz/Cargo.toml",
+          "--",
+          "--check"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "fetch-locked",
+        "argv": [
+          "cargo",
+          "fetch",
+          "--locked",
+          "--manifest-path",
+          "tests/security/fuzz/Cargo.toml"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "install-fuzzer",
+        "argv": [
+          "cargo",
+          "install",
+          "cargo-fuzz",
+          "--version",
+          "=0.13.2",
+          "--locked"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "seed-corpus",
+        "argv": [
+          "cargo",
+          "run",
+          "--locked",
+          "--manifest-path",
+          "tests/security/fuzz/Cargo.toml",
+          "--bin",
+          "seed_network",
+          "--",
+          "/home/runner/work/_temp/network-security/corpus"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "fuzz",
+        "argv": [
+          "cargo",
+          "fuzz",
+          "run",
+          "--fuzz-dir",
+          "tests/security/fuzz",
+          "network_wire",
+          "/home/runner/work/_temp/network-security/corpus",
+          "--",
+          "-max_total_time=120",
+          "-rss_limit_mb=2048",
+          "-timeout=5",
+          "-max_len=65537",
+          "-print_final_stats=1",
+          "-artifact_prefix=/home/runner/work/_temp/network-security/crash-"
+        ],
+        "return_code": 0
+      }
+    ]
+  },
+  "execution_provenance": {
+    "kind": "github-hosted",
+    "run_id": 41414876864,
+    "statistics": {
+      "number_of_executed_units": 7023970,
+      "average_exec_per_sec": 58049,
+      "new_units_added": 14685,
+      "slowest_unit_time_sec": 0,
+      "peak_rss_mb": 583
+    },
+    "fuzz_log_sha256": "8b077ffa2930063fd41442eae9a0b66fa97efee047cb7a8666aabfeb46af8007",
+    "sanitizer": "address",
+    "configured_seconds": 120,
+    "actual_seconds": 121
+  },
+  "scope": "Coverage-guided original production parser/canonicalization properties under ASan with retained corpus.",
+  "whole_W36_passed": false,
+  "limitations": [
+    "Does not qualify live authorization, full lifecycle review, target devices, or all security cases."
+  ],
+  "historical_failure": {
+    "run_id": 41412716556,
+    "source_revision": "2f79d4bfbad6c5588104fe9cae55294314b5b183",
+    "artifact_id": 13126221862,
+    "artifact_sha256": "b50d223b347b6af0869c6308f6ed965d2ed668d28806cad7282c205ac95d8faa",
+    "reason": "cargo-fuzz subprocess selected repository stable 1.96.0 and refused -Zsanitizer. No fuzz execution qualified."
+  }
+}
