@@ -32,6 +32,25 @@
     "downloaded_log_sha256": "08abf1dbc8d9438c84cebbcca0a970eb5fdfccf3792151b8e0a9200352ece119",
     "scope": ["Actual DirectPacketEndpoint default network-packet/2 negotiates core before exposing datagrams", "Explicit frozen network-packet/1 preserves original proof and offers no new capabilities", "New/old ALPN mismatch rejects without fallback or single-use retry", "Mismatched business proof, incomplete proof and delayed establishment", "Original socket release and existing minimum IPv6 MTU bounded fragment/replay logic"]
   },
+  "windows_contract_commands": {
+    "job_id": 125038551498,
+    "runner": "github-hosted windows-2022 ordinary process token",
+    "job_conclusion": "failure",
+    "artifact_id": 13108589121,
+    "artifact_digest": "sha256:1706a81cc6557cc5e29fc24b9173da1a3ebd94aa44271262d22d8e3b886cb27e",
+    "verified_inventory_files": 13,
+    "ordinary_windows_token_return_code": 0,
+    "ordinary_windows_token_log_sha256": "c43085cb7af77230c355f88323c7340cc8c78247cd1ee5d5688d06312119dc7b",
+    "all_contract_tests_return_code": 0,
+    "all_contract_tests_log_sha256": "1edbd528fb7da1b3644850ca6433e6a5442bd9ac3be2eb65423bbff2a6a2938c",
+    "capability_cases_passed": 6,
+    "packet_cases_passed": 8,
+    "ci_evidence_tests_return_code": 0,
+    "strict_clippy_return_code": 101,
+    "strict_clippy_log_sha256": "cc116ed49117be44bf0aca3f7a61c09cc84f19c1b200d0b400e9d86afa083bce",
+    "strict_clippy_failures": ["protocol/media_format.rs:228 collapsible_if", "protocol/media_authority.rs:227 assertion on constant value"],
+    "format_check_return_code": 1
+  },
   "verification": "Downloaded the successful hosted job artifact, read each complete command log and retained its SHA256. Source is the run's exact checkout and artifact identity. No local project compilation, formatter, lint or tests ran.",
   "related_failed_jobs": {
     "quinn_carrier_replacement": 125038551164,
