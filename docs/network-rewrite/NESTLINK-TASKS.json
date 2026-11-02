@@ -3413,7 +3413,7 @@
         "docs/network-rewrite/evidence/capacity-attempts-20261102.json"
       ],
       "blockers": [],
-      "implementation_notes": "Original100enrolled-installation/20pair/1000realTCPflow/3wave capacity experiment implemented and attempted on GitHub. Source2f79 private-parent refusal and648f811 HTTP429 original30requests/minute consumer rate refusal retained; no1000flow pass. Explicit bounded same-owner multi-stream implementation now underway; originalrates/leases/quotas/assertions retained. Cross-day real-device24hsoak not run."
+      "implementation_notes": "Original100enrolled-installation/20pair/1000realTCPflow/3wave capacity experiment implemented and attempted on GitHub. Source2f79 private-parent refusal and648f811 HTTP429 original30requests/minute consumer rate refusal retained. Sourcea3d5eab explicit multiplexing passed six original owner regressions but failed original database admission before any lease/control/flow; no1000flow pass. Source26098f3 implements bounded native HTTP admission shared per origin and the original15s total budget without POST replay or changes to server7+1 workers/8waiters/200ms, originalrates/leases/quotas/assertions. Source8c6ecfd run41431119457 repeats original100/20/1000/3wave load and seven realHTTP admission regressions; pending actual results. Cross-day real-device24hsoak not run."
     },
     {
       "id": "W40",
@@ -5372,7 +5372,7 @@
       ],
       "environment": {},
       "limitations": [
-        "Original30requests/minute per consumer login prevented1000independent simultaneous flows; no capacity or24hsoak pass."
+          "Original30requests/minute per consumer login prevented1000independent simultaneous flows. Explicit multiplexed sourcea3d5eab then failed original bounded database admission at wave0pair17 before any lease/control/flow. Bounded native per-origin HTTP admission now implemented and under hosted validation; all original limits and failed attempts preserved. No capacity or24hsoak pass."
       ],
       "global_policy_ids": [
         "R01",

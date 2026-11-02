@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "2c44210ccea6b7b7a7a19844731e756e98132ba2",
-  "checkpoint_kind": "linux_interrupted_upgrade_passed_web_setup_passed_fuzz_passed_offline_resident_under_validation_capacity_rate_failure_preserved",
+  "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
+  "checkpoint_kind": "native_http_bounded_backpressure_integrated_real_tls_process_passed_offline_member_authority_fixed_same_source_validation_running",
   "active_tasks": [
     "W00",
     "W02",
@@ -91,14 +91,16 @@
     }
   ],
   "next_steps": [
-    "Read exact68990e55 early native offline/resident original authority, realOS capture/files and process cleanup results; repair every actual failure without changing assertions.",
-    "Finish original private owner bounded Quinn multiple streams with per-flow fresh proof, currentauthority/sharedusage and original expiry; retain independent-access HTTP429 capacity failure, then repeat full100/20/1000offered load on explicit mode.",
-    "Complete Windows original named-pipe process identity retained through TLS IPC, then actual bounded shared DXGI surfaces and original decoder/presenter lifecycle qualification; noPID JSON proof.",
-    "Import new exact-source hosted formatting after integrated changes; run all required same-source Rust/Web/network/install/upgrade checks before candidate producer.",
+    "Read exact362f1b2 hosted native offline/resident results after realHTTPS restoration, original product-space ordinary-member authority discovery and exclusiveSend shared-video IPC fix. Retain e607 Linux403 and Windows compile failures separately.",
+    "Read original100registered/20pair/1000liveTCP/3wave capacity run41431119457 on8c6ecfd. Native SDK now shares bounded per-origin HTTP admission using existingTokio, including seven realHTTP negative/lifecycle checks; server7+1workers/8waiters/200ms and originalsigned/rate/usage deadlines remain unchanged. Preserve independent and multiplex database429 failures.",
+    "Qualify c83/a482 original shared decoder/presenter, realretired_joined replacement, explicitPreparing, once-onlydestinationadopt, boundedcleanup-onlyNTretirement and exclusiveIPCownership on actual Windows. Continue required144fps/Main10/P010/444/HDR production implementation; physicalGPU evidence remains separately required.",
+    "Exact8c6ecfd hosted Rust formatting imported in362f1b2. FullRust41431396538, Web41431401722, network41431407104 and Windowsowner41431391219 are running; no overall qualification claimed. Same-source installation/upgrade/signing/SBOM/candidate still required.",
     "Keep Luanti original25second failure, requiredmobile/publictarget/GPU/signing/24hsoak and remainingfullE2E evidence open; release staysnot_ready."
   ],
   "evidence_index": [
     "docs/network-rewrite/evidence/sdk-routed-c82bd8d.json",
+    "docs/network-rewrite/evidence/release-policy-a984fe2.json",
+    "docs/network-rewrite/evidence/native-offline-https-e607483.json",
     "docs/network-rewrite/evidence/media-real-impairment-09fee95.json",
     "docs/network-rewrite/evidence/production-carriers-e2e3657.json",
     "docs/adr/network/0062-separate-decoder-pressure-from-network.md",
@@ -678,7 +680,7 @@
     }
   },
   "branch_inventory": {
-    "verified_at": "2026-11-02T09:03:00Z",
+    "verified_at": "2026-11-02T10:48:47Z",
     "local": [
       "main"
     ],
@@ -688,14 +690,42 @@
   },
   "pending_runs": {
     "full_rust": {
-      "run_id": 41415857474,
-      "source_revision": "68990e55c04363edebc86d3ee7c7d0627be874e8",
+      "run_id": 41431396538,
+      "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
       "state": "running"
     },
-    "regression_server": {
-      "run_id": 41415862488,
-      "source_revision": "68990e55c04363edebc86d3ee7c7d0627be874e8",
-      "state": "success"
+    "web": {
+      "run_id": 41431401722,
+      "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
+      "state": "running"
+    },
+    "network": {
+      "run_id": 41431407104,
+      "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
+      "state": "running"
+    },
+    "windows_owner": {
+      "run_id": 41431391219,
+      "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
+      "state": "running"
+    },
+    "capacity": {
+      "run_id": 41431119457,
+      "source_revision": "8c6ecfdd043aee1a7343f2b6f5b697c5984cf961",
+      "state": "running"
     }
+  },
+  "continuation_checkpoint": {
+    "at": "2026-11-02T10:48:47Z",
+    "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
+    "verified_scopes": [
+      "Sourcea984 run41429487678 passed45syntheticpublication guards+21candidate/actualDEBmetadata cases for0.8.0-rc.1; downloaded2log hashes/sizes verified. This is policy/packaging-only, never product/target qualification.",
+      "Source046 run41429947343 nativepeer Windows27actualTLS/process/framing/cleanup tests and strictIPC/platformsecurity Clippy passed; Linux nativepeerjobalso success. NativeWin32 fixtureoperations are explicitlytestfeature-gated in originalplatformsecurity boundary; localIPC still forbidsunsafe. Mediaownerjobfailed older source compilation/lint, not qualified.",
+      "Sourcee607 AppCore actualpixels/files afteronlineexpiry2/2 passedbothOS. Linuxresident realHTTPSstartup4cases failedoriginal403; Windowsresident didnotexecute due originalsharedvideoSend compilefailure. Actualsource failuresretained;14878b3 fixesmemberauthorityanda4821ff fixesexclusiveborrow. Newsource results required."
+    ],
+    "user_decision": "Keep Luanti original25second disconnect-display check AND itsfailedstatus. No deadline relaxation, skippedfailure or releasequalification by versionmetadata.",
+    "release_state": "not_ready",
+    "new_tag_or_release_created": false,
+    "historical_entries": "Older run observations below prior checkpoints are retained history. Current pending_runs and exact-source receipts take precedence; no old product evidence is promoted to final same-source acceptance."
   }
 }
