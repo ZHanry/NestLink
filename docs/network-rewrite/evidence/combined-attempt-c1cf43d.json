@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "source_revision": "c1cf43db690f4742efa38779287030260372c232",
+  "workflow": ".github/workflows/network-lan.yml",
+  "workflow_conclusion": "success",
+  "run_id": 41402732147,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41402732147",
+  "run_attempt": 1,
+  "passed": true,
+  "artifact": {
+    "id": 13121594615,
+    "official_digest": "sha256:a8112b6738ea6d5acaba7b1960a36cb3e064425d75d9f9eabd447503477d388e",
+    "downloaded_zip_sha256": "a8112b6738ea6d5acaba7b1960a36cb3e064425d75d9f9eabd447503477d388e",
+    "outer_receipt_sha256": "7f37002e20bd7cd98c464e55387a9e6ed777adfcf720e31712089cfdcef652a6",
+    "execution_receipt_sha256": "810777b6dbd51f43b70b1aabfee65c9c77035311017a70375d7e0ce380af1a00",
+    "retained_file_digest_and_size_entries_verified": 34
+  },
+  "observed": {
+    "strict_passed": true,
+    "execution_passed": true,
+    "outer_cleanup_errors": [],
+    "execution": {
+      "actual_cross_tun_http": [
+        {
+          "body_bytes": 32768,
+          "body_sha256_base64url": "UG0Gm7_qapCa38lxrax3W2Sn40siXuZeqWKeh-O2uvc",
+          "family": "IPv4"
+        },
+        {
+          "body_bytes": 32768,
+          "body_sha256_base64url": "UG0Gm7_qapCa38lxrax3W2Sn40siXuZeqWKeh-O2uvc",
+          "family": "IPv6"
+        }
+      ],
+      "actual_kernel_ipv4_and_ipv6_udp_bytes": 5120,
+      "actual_lan_dns": [
+        {
+          "actual_protocol": "DNS over UDP to distribution dnsmasq",
+          "cases": [
+            {
+              "actual_dns_source": [
+                "192.168.211.2",
+                38303
+              ],
+              "actual_remote_a_answer": "10.222.0.2",
+              "elapsed_seconds": 0.011674377000019833,
+              "mode": "broadcast-discovery",
+              "requests": 1
+            },
+            {
+              "actual_dns_source": [
+                "192.168.211.2",
+                38303
+              ],
+              "actual_remote_a_answer": "10.222.0.2",
+              "elapsed_seconds": 0.004465829000025678,
+              "mode": "unicast-followup",
+              "requests": 1
+            }
+          ],
+          "game_evidence": false,
+          "passed": true
+        },
+        {
+          "actual_protocol": "DNS over UDP to distribution dnsmasq",
+          "cases": [
+            {
+              "actual_dns_source": [
+                "192.168.212.2",
+                38403
+              ],
+              "actual_remote_a_answer": "10.222.0.1",
+              "elapsed_seconds": 0.009474521000015557,
+              "mode": "broadcast-discovery",
+              "requests": 1
+            },
+            {
+              "actual_dns_source": [
+                "192.168.212.2",
+                38403
+              ],
+              "actual_remote_a_answer": "10.222.0.1",
+              "elapsed_seconds": 0.0047168300000066665,
+              "mode": "unicast-followup",
+              "requests": 1
+            }
+          ],
+          "game_evidence": false,
+          "passed": true
+        }
+      ],
+      "one_use_replay_denials": 2,
+      "original_source_spent_bytes": 80381,
+      "original_target_spent_bytes": 80381,
+      "remote_kernel": {
+        "fixture_boundary": "private local Unix datagrams carrying complete IP packets",
+        "http_implementation": "unmodified python3 -m http.server",
+        "ordinary_uid": 1001,
+        "tcp_implementation": "Linux kernel"
+      },
+      "revoked_all_physical_cleanup_ms": 1346,
+      "revoked_owner_stop_ms": 930
+    },
+    "cleanup": {
+      "lan_udp_and_physical_quic_ports_rebound": true,
+      "original_root_helpers_joined": true,
+      "original_source_and_remote_kernel_tun_and_routes_absent": true,
+      "remote_http_services_stopped": true
+    }
+  },
+  "scope": "hosted original production attached device and packet loops: actual source Linux TUN IPv4/IPv6 UDP and curl to unmodified remote Python HTTP over kernel TCP plus real dual-LAN DNS on one HTTP/SQLite one-use authority and QUIC; remote kernel TUN uses explicit private local IPC fixture, no production CLI, second physical device or target-site claim"
+}

@@ -128,6 +128,37 @@ does not qualify production login or durable online starts. Neither hosted
 fixture qualifies physical sites or human gameplay. A workflow declaration or
 queued run is not a pass; consume only a successful same-source receipt.
 
+The retained hosted result at source `c1cf43db690f4742efa38779287030260372c232`
+is Actions run `41402732147`: both actual Linux kernels exchanged IPv4/IPv6
+UDP and kernel TCP, `curl` received the exact 32 KiB body from the unchanged
+Python HTTP server in each family, and both real LANs completed broadcast DNS
+and unicast follow-up. The original source `attached::Device` and both original
+packet loops retain the same noncloneable online owners, QUIC connections and
+cumulative budget (80,381 bytes per endpoint). Two repeated starts were denied;
+management revocation stopped the owners in 930 ms and all original TUNs,
+routes, helpers, HTTP processes, LAN sockets and QUIC sockets were released in
+1,346 ms. The remote kernel is an explicit fixture boundary connected by
+owner-private local Unix datagrams carrying whole IP packets. This result
+qualifies that hosted combination; it does not qualify the complete production
+CLI, two physical machines or sites. Official ZIP and all 34 retained file
+digest/size entries were verified in
+[`evidence/combined-attempt-c1cf43d.json`](evidence/combined-attempt-c1cf43d.json).
+
+Games run `41401974736` at source
+`de61e767023eae9144bd4d54cc181e13873f7448` retains a fully passed Teeworlds
+job and a failed Luanti job. Luanti really joined, rendered, completed the full
+forward/back/jump/dig sequence and produced server-side dig records. The
+original carriers and root helpers stopped, but the unchanged 25-second
+client-disconnect observation failed. The pinned official engine hardcodes a
+30-second connection timeout in `src/constants.h:28`; that explains the
+observation conflict and does not turn the failed gate into a pass. The
+25-second gate and failure remain explicitly preserved. The driver now reads
+the actual upstream `--info` process log and checks native timeout deletion
+and the real timeout reason. Full W28, physical-site acceptance and this
+Luanti gate remain open. See
+[`evidence/teeworlds-attempt-de61e76.json`](evidence/teeworlds-attempt-de61e76.json)
+and [`evidence/luanti-attempt-de61e76.json`](evidence/luanti-attempt-de61e76.json).
+
 For separate real DNS-SD verification, run a permitted `_http._tcp.local.`
 service on each adapter host listening on the selected actual physical address
 and accessible approved virtual host address/port. A real independent browser

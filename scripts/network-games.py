@@ -317,6 +317,9 @@ def luanti():
     receipt = {"schema_version": 1, "source_revision": os.environ["GITHUB_SHA"],
                "game": manifest, "build": binaries, "commands": actors.commands,
                "ordinary_uid": os.getuid(), "passed": False,
+               "pinned_upstream_connection_timeout_seconds": 30,
+               "pinned_upstream_timeout_source": "https://github.com/luanti-org/luanti/blob/5ab66da6f72e89fe9c9b71b3e952da1676a8e172/src/constants.h#L28",
+               "client_disconnect_observation_bound_seconds": 25,
                "scope": "hosted real Luanti+Minetest Game through original kernel TUN/prefix NAT/QUIC with explicit signed mechanism credentials; production login/one-use and physical sites retain separate evidence"}
     failure = None
     env = None
@@ -371,8 +374,15 @@ def luanti():
         (output / "luanti-ready-for-stop").write_text("real player joined and completed original game input sequence")
         wait_for(lambda: (output / "luanti-owner-stopped").exists(), 6, "original packet owner did not stop and release")
         stopped_at = time.monotonic()
-        client_log = output / "luanti-client-debug.log"
-        wait_for(lambda: client_log.exists() and "Connection error" in client_log.read_text(errors="replace"),
+        # --info sends the actual upstream peer-deletion observation to the
+        # process log. A network timeout follows Client::deletingPeer(true)
+        # and Game::checkConnection(), not the PeerNotFound exception text.
+        client_log = output / "luanti-client.log"
+        def native_timeout_observed():
+            text = client_log.read_text(errors="replace") if client_log.exists() else ""
+            return ("Server Peer is getting deleted (timeout=1)" in text
+                    and "Connection timed out." in text)
+        wait_for(native_timeout_observed,
                  25, "official Luanti client did not observe stopped original data path")
         receipt["client_disconnect_after_original_stop_seconds"] = time.monotonic() - stopped_at
         actors.run(["import", "-window", "root", str(output / "luanti-stopped.png")], env=env)

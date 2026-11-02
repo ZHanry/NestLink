@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source_revision": "de61e767023eae9144bd4d54cc181e13873f7448",
+  "workflow": ".github/workflows/network-games.yml",
+  "run_id": 41401974736,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41401974736",
+  "run_attempt": 1,
+  "workflow_conclusion": "failure",
+  "job_conclusion": "failure",
+  "passed": false,
+  "artifact": {
+    "id": 13122236957,
+    "official_digest": "sha256:ef02fcc0396064690ad0848da8992735d0696db5f14c139ab39d14a6966cc76f",
+    "downloaded_zip_sha256": "ef02fcc0396064690ad0848da8992735d0696db5f14c139ab39d14a6966cc76f",
+    "outer_receipt_sha256": "305c9fb43166f81f8970887e38a29f502b87ac206d4d4c5f988ff5089263090e",
+    "execution_receipt_sha256": "76cbc56622f72a9426f35c45a22aaf1c51c74b829bc4e9cb3a115fcc800b370c",
+    "retained_file_digest_and_size_entries_verified": 187
+  },
+  "observed": {
+    "strict_passed": null,
+    "execution_passed": null,
+    "failure": "AssertionError: official Luanti client did not observe stopped original data path",
+    "outer_failure": "AssertionError: actual-game-original-subnet-owner",
+    "driver_cleanup_errors": [],
+    "outer_cleanup_errors": null,
+    "sustained_play_seconds": 12.908758499999976,
+    "original_gameplay_input_executed": true,
+    "server_observed_peer": "192.168.1.254",
+    "actual_server_join": "06:54:59",
+    "actual_server_digs": "06:55:08 through 06:55:10",
+    "client_disconnect_observation_seconds": 25,
+    "client_still_in_actual_game_at_failure": true,
+    "client_debug_log_bytes": 43,
+    "original_owner_stop_marker_retained": true
+  },
+  "scope": "Official Luanti+complete unchanged Minetest Game joined, rendered, received full forward/back/jump/dig input and server recorded actual digs. Original carriers/root helpers joined; the unchanged 25-second client-disconnect observation failed. No full execution or W28 qualification.",
+  "upstream_contract_conflict": {
+    "pinned_source": "5ab66da6f72e89fe9c9b71b3e952da1676a8e172",
+    "native_connection_timeout_seconds": 30,
+    "source_url": "https://github.com/luanti-org/luanti/blob/5ab66da6f72e89fe9c9b71b3e952da1676a8e172/src/constants.h#L28",
+    "original_experiment_25_second_gate_introduced_by": "c0fc249fc24c4bab389fe10690a2becb1b71257e",
+    "observation_correction": "Read actual --info process output and require native deletingPeer(timeout=1) plus Connection timed out. Keep original 25-second gate and its failure per the explicit user instruction; do not patch the official game, shift the clock or fabricate a disconnect."
+  }
+}

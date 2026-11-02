@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "source_revision": "de61e767023eae9144bd4d54cc181e13873f7448",
+  "workflow": ".github/workflows/network-lan.yml",
+  "workflow_conclusion": "success",
+  "run_id": 41401979455,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41401979455",
+  "run_attempt": 1,
+  "passed": true,
+  "artifact": {
+    "id": 13121329426,
+    "official_digest": "sha256:1cef3b4ce541a93f939cba5ef41cc4fa3db19e8681e9d042ef3cce6a28a155f1",
+    "downloaded_zip_sha256": "1cef3b4ce541a93f939cba5ef41cc4fa3db19e8681e9d042ef3cce6a28a155f1",
+    "outer_receipt_sha256": "019d9a3630f84ef186bd516a2eead218a82795e798f5f7e31d1569c99f833880",
+    "execution_receipt_sha256": "acdaca6a9128d64f04fd7be5c335cf1ef4ab972b420e887e4a9e31f83c164d59",
+    "retained_file_digest_and_size_entries_verified": 34
+  },
+  "observed": {
+    "strict_passed": true,
+    "execution_passed": true,
+    "outer_cleanup_errors": [],
+    "execution": {
+      "actual_kernel_ipv4_and_ipv6_udp_bytes": 5120,
+      "actual_lan_dns": [
+        {
+          "actual_protocol": "DNS over UDP to distribution dnsmasq",
+          "cases": [
+            {
+              "actual_dns_source": [
+                "192.168.211.2",
+                38303
+              ],
+              "actual_remote_a_answer": "10.222.0.2",
+              "elapsed_seconds": 0.006690975000026356,
+              "mode": "broadcast-discovery",
+              "requests": 1
+            },
+            {
+              "actual_dns_source": [
+                "192.168.211.2",
+                38303
+              ],
+              "actual_remote_a_answer": "10.222.0.2",
+              "elapsed_seconds": 0.007357445000025109,
+              "mode": "unicast-followup",
+              "requests": 1
+            }
+          ],
+          "game_evidence": false,
+          "passed": true
+        },
+        {
+          "actual_protocol": "DNS over UDP to distribution dnsmasq",
+          "cases": [
+            {
+              "actual_dns_source": [
+                "192.168.212.2",
+                38403
+              ],
+              "actual_remote_a_answer": "10.222.0.1",
+              "elapsed_seconds": 0.014592357000026368,
+              "mode": "broadcast-discovery",
+              "requests": 1
+            },
+            {
+              "actual_dns_source": [
+                "192.168.212.2",
+                38403
+              ],
+              "actual_remote_a_answer": "10.222.0.1",
+              "elapsed_seconds": 0.006560067999998864,
+              "mode": "unicast-followup",
+              "requests": 1
+            }
+          ],
+          "game_evidence": false,
+          "passed": true
+        }
+      ],
+      "one_use_replay_denials": 2,
+      "original_source_spent_bytes": 7040,
+      "original_target_spent_bytes": 7040,
+      "revoked_all_physical_cleanup_ms": 1147,
+      "revoked_owner_stop_ms": 942
+    },
+    "cleanup": {
+      "lan_udp_and_physical_quic_ports_rebound": true,
+      "original_kernel_tun_and_routes_absent": true,
+      "original_root_helper_joined": true
+    }
+  },
+  "scope": "hosted original production attached device and packet loop: actual single Linux TUN IPv4/IPv6 UDP plus real dual-LAN DNS on one HTTP/SQLite one-use authority and QUIC; remote host packet witness, no peer OS/TCP/virtual HTTP/CLI/target claim"
+}
