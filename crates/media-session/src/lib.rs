@@ -13,7 +13,7 @@ pub use timing::{
 };
 pub mod external;
 mod hevc_negotiated_format;
-pub use hevc_negotiated_format::hevc_main8_contract;
+pub use hevc_negotiated_format::{hevc_main8_contract,hevc_contract,hevc_wire_codec};
 mod legacy_format;
 mod live_execution;
 pub use live_execution::{LiveExecutionIdentity, LiveExecutionReceipt, LiveExecutionTarget};

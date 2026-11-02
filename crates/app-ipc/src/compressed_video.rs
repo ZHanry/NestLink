@@ -122,11 +122,12 @@ impl CompressedContext {
         match self.ipc_version {
             2 => Ok(*b"NLCMP002"),
             3 => Ok(*b"NLCMP003"),
+            4 => Ok(*b"NLCMP004"),
             _ => Err(Error::Protocol),
         }
     }
     pub fn validate(&self) -> Result<(), Error> {
-        if !matches!(self.ipc_version, 2 | 3) || self.format_epoch > i64::MAX as u64 {
+        if !matches!(self.ipc_version, 2 | 3 | 4) || self.format_epoch > i64::MAX as u64 {
             return Err(Error::Protocol);
         }
         match &self.format {
@@ -145,8 +146,8 @@ impl CompressedContext {
                 let format = wire.decode()?;
                 let allowed = match (self.ipc_version, format.codec, self.decoder_hardware) {
                     (2, nestlink_protocol::media_format::Codec::H264, None) => true,
-                    (3, nestlink_protocol::media_format::Codec::Hevc, Some(_)) => {
-                        nestlink_app_core::hevc_main8_contract(format).is_ok()
+                    (3|4, nestlink_protocol::media_format::Codec::Hevc, Some(_)) => {
+                        format.canonical_version()==self.ipc_version && nestlink_app_core::hevc_contract(format).is_ok()
                     }
                     _ => false,
                 };
@@ -201,7 +202,7 @@ impl CompressedContext {
                 .format
                 .is_some_and(|f| f.codec == nestlink_protocol::media_format::Codec::Hevc)
             {
-                3
+                c.format.ok_or(Error::Protocol)?.canonical_version()
             } else {
                 2
             },

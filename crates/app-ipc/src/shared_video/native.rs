@@ -54,6 +54,7 @@ pub(crate) async fn open(
         width: ring.width,
         height: ring.height,
         bytes: ring.bytes,
+        bit_depth:ring.bit_depth,
         qpc_frequency: qpc()?.1,
     };
     context.validate()?;
@@ -168,7 +169,7 @@ pub(crate) async fn serve(
 }
 
 pub struct ImportedSharedFrame {
-    descriptor: SharedFrameDescriptor,
+    descriptor: Box<SharedFrameDescriptor>,
     peer: VerifiedLocalPeer,
     active: Arc<AtomicBool>,
     ring: nestlink_app_core::TransferredSurfaceRing,
@@ -341,7 +342,7 @@ impl SharedVideoClient {
                 self.last_token = descriptor.token;
                 self.last_keys[descriptor.slot as usize] = descriptor.acquire_key;
                 Ok(SharedVideoMessage::Frame(Box::new(ImportedSharedFrame {
-                    descriptor,
+                        descriptor:Box::new(descriptor),
                     peer: self.peer.clone(),
                     active: self.active.clone(),
                     ring: self.ring.clone(),

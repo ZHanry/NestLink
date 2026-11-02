@@ -4,7 +4,7 @@ pub use nestlink_media_session::ExternalVideoCleanup;
 pub use nestlink_media_session::external::{
     ExternalAccessUnit, VideoSinkContext, VideoSinkFeedback,
 };
-pub use nestlink_media_session::hevc_main8_contract;
+pub use nestlink_media_session::{hevc_main8_contract,hevc_contract};
 
 impl CoreHandle {
     pub fn native_compressed_cleanup(

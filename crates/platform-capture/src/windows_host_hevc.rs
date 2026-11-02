@@ -91,7 +91,7 @@ impl WindowsCaptureSource {
                     .monitors
                     .get(selection.index)
                     .ok_or_else(|| denied("HEVC approved monitor absent"))?;
-                GpuCapture::open_target(monitor, config.width, config.height, config.fps)
+                GpuCapture::open_target_depth(monitor, config.width, config.height, config.fps,target.contract().bit_depth())
             })();
             let capture = match result {
                 Ok(capture) => capture,

@@ -12,6 +12,8 @@ struct SharedPresenter {
     bool failed=false;
     HRESULT initialize(Surface* surface,const NlSharedRingDescriptor& descriptor,UINT fps,uint64_t driver) {
         auto& p=output;p.surface=surface;++surface->references;
+        if((descriptor.bit_depth!=8 && descriptor.bit_depth!=10) || descriptor.reserved)return E_INVALIDARG;
+        p.input_format=descriptor.bit_depth==10?DXGI_FORMAT_P010:DXGI_FORMAT_NV12;
         p.width=descriptor.width;p.height=descriptor.height;ring=descriptor;
         HRESULT hr=CoInitializeEx(nullptr,COINIT_MULTITHREADED);if(FAILED(hr))return hr;p.com=true;
         ComPtr<IDXGIFactory1> factory;hr=CreateDXGIFactory1(IID_PPV_ARGS(&factory));if(FAILED(hr))return hr;
@@ -38,7 +40,7 @@ struct SharedPresenter {
             hr=importer->OpenSharedResource1(handle,IID_PPV_ARGS(&textures[index]));if(FAILED(hr))return hr;
             D3D11_TEXTURE2D_DESC desc{};textures[index]->GetDesc(&desc);
             const UINT shared=D3D11_RESOURCE_MISC_SHARED_NTHANDLE|D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
-            if(desc.Width!=p.width || desc.Height!=p.height || desc.Format!=DXGI_FORMAT_NV12 || desc.ArraySize!=1 || desc.MipLevels!=1 ||
+            if(desc.Width!=p.width || desc.Height!=p.height || desc.Format!=p.input_format || desc.ArraySize!=1 || desc.MipLevels!=1 ||
                 desc.SampleDesc.Count!=1 || desc.SampleDesc.Quality || desc.CPUAccessFlags || desc.Usage!=D3D11_USAGE_DEFAULT || (desc.MiscFlags&shared)!=shared)
                 return MF_E_INVALIDMEDIATYPE;
             hr=textures[index].As(&mutexes[index]);if(FAILED(hr))return hr;

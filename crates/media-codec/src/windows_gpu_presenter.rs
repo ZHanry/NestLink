@@ -477,6 +477,7 @@ impl GpuHevcPresenter {
                 "HEVC presenter authority is revoked",
             ));
         }
+        if target.contract().bit_depth()!=8 {return Err(io::Error::new(io::ErrorKind::Unsupported,"Main10 presentation requires its original P010 shared decoder owner"));}
         let config = target.contract().config();
         let mut handle = std::ptr::null_mut();
         // SAFETY: bridge retains this live surface; all D3D/MF resources stay

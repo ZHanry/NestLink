@@ -20,6 +20,7 @@ unsafe extern "C" {
         width: u32,
         height: u32,
         fps: u32,
+        bit_depth:u32,
         result: *mut *mut c_void,
     ) -> i32;
     fn nl_capture_gpu_synthetic_open(
@@ -89,9 +90,12 @@ impl GpuCapture {
         Self::open_target(monitor, config.width, config.height, config.fps)
     }
     fn open_target(monitor: &Monitor, width: u32, height: u32, fps: u32) -> io::Result<Self> {
+        Self::open_target_depth(monitor,width,height,fps,8)
+    }
+    fn open_target_depth(monitor:&Monitor,width:u32,height:u32,fps:u32,bit_depth:u8)->io::Result<Self> {
         let mut handle = null_mut();
         // SAFETY: exact enumerated approved HMONITOR, bounded config, out pointer.
-        let hr = unsafe { nl_capture_gpu_open(monitor.handle, width, height, fps, &mut handle) };
+        let hr = unsafe { nl_capture_gpu_open(monitor.handle, width, height, fps,u32::from(bit_depth), &mut handle) };
         if hr < 0 {
             return Err(bridge("open", hr));
         }

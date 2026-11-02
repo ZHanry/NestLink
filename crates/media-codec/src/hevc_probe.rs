@@ -113,11 +113,12 @@ pub(crate) struct Sps {
     pub crop: [u32; 4],
     pub explicit_bt709_limited: bool,
     pub stream_timing: Option<[u32; 2]>,
+    pub bit_depth: u8,
 }
 fn sps(nal: &[u8], width: u32, height: u32) -> io::Result<Sps> {
-    sps_inner(nal, width, height, false)
+    sps_inner(nal, width, height, false, 8)
 }
-fn sps_inner(nal: &[u8], width: u32, height: u32, complete: bool) -> io::Result<Sps> {
+fn sps_inner(nal: &[u8], width: u32, height: u32, complete: bool, bit_depth:u8) -> io::Result<Sps> {
     let mut b = Bits::new(nal)?;
     b.field = "sps.vps_id";
     let vps = b.read(4)?;
@@ -151,11 +152,12 @@ fn sps_inner(nal: &[u8], width: u32, height: u32, complete: bool) -> io::Result<
     let constraints_lo = b.read(16)?;
     b.field = "ptl.level_idc";
     let level = b.read(8)?;
-    if profile != 1 || !matches!(level, 30 | 60 | 63 | 90 | 93 | 120 | 123 | 150 | 153 | 156 | 180 | 183 | 186) {
+    let expected_profile=if bit_depth==10 {2} else {1};
+    if profile != expected_profile || !matches!(level, 30 | 60 | 63 | 90 | 93 | 120 | 123 | 150 | 153 | 156 | 180 | 183 | 186) {
         return Err(rejection(
             "sps.profile_level",
             format!(
-                "profile={profile} required_profile=1 level={level} accepted_levels=30,60,63,90,93,120,123,150,153,156,180,183,186 rbsp_bit={}",
+                "profile={profile} required_profile={expected_profile} level={level} accepted_levels=30,60,63,90,93,120,123,150,153,156,180,183,186 rbsp_bit={}",
                 b.pos
             ),
         ));
@@ -211,7 +213,7 @@ fn sps_inner(nal: &[u8], width: u32, height: u32, complete: bool) -> io::Result<
     }
     b.field = "sps.bit_depth_luma_minus8";
     let luma = b.ue(8)?;
-    if luma != 0 {
+    if luma != u32::from(bit_depth-8) {
         return Err(rejection(
             "sps.luma_depth",
             format!("minus8={luma} required=0 rbsp_bit={}", b.pos),
@@ -219,7 +221,7 @@ fn sps_inner(nal: &[u8], width: u32, height: u32, complete: bool) -> io::Result<
     }
     b.field = "sps.bit_depth_chroma_minus8";
     let chroma_depth = b.ue(8)?;
-    if chroma_depth != 0 {
+    if chroma_depth != u32::from(bit_depth-8) {
         return Err(rejection(
             "sps.chroma_depth",
             format!("minus8={chroma_depth} required=0 rbsp_bit={}", b.pos),
@@ -473,6 +475,7 @@ fn sps_inner(nal: &[u8], width: u32, height: u32, complete: bool) -> io::Result<
         crop: [left * 2, right * 2, top * 2, bottom * 2],
         explicit_bt709_limited,
         stream_timing,
+        bit_depth,
     })
 }
 #[derive(Clone, Default)]
@@ -481,13 +484,18 @@ pub(crate) struct Validator {
     sps: Option<Sps>,
     pps: Option<u32>,
     complete_sps: bool,
+    bit_depth:u8,
 }
 impl Validator {
     pub(crate) fn exact_main8() -> Self {
         Self {
             complete_sps: true,
+            bit_depth:8,
             ..Self::default()
         }
+    }
+    pub(crate) fn exact_main10() -> Self {
+        Self {complete_sps:true,bit_depth:10,..Self::default()}
     }
     pub fn info(&self) -> Option<Sps> {
         self.sps
@@ -528,7 +536,7 @@ impl Validator {
                 }
                 33 => {
                     let info = if next.complete_sps {
-                        sps_inner(nal, width, height, true)?
+                        sps_inner(nal, width, height, true,next.bit_depth)?
                     } else {
                         sps(nal, width, height)?
                     };
@@ -607,6 +615,20 @@ impl Validator {
 pub(crate) mod tests {
     use super::*;
     use crate::{HevcMain8Admission, HevcMain8Contract, VideoConfig};
+    #[test]
+    fn main10_exact_sps_requires_ten_bit_luma_chroma_main10_profile_and_sdr_color()->io::Result<()> {
+        let config=VideoConfig {width:640,height:480,fps:60,bitrate_kbps:4000};
+        let au=access_unit(fixture_ptl(false,2,1,2,123,0),&[0x28,1,0xb0]);
+        let contract=HevcMain8Contract::observe_main10(&au,config)?;
+        assert_eq!(contract.bit_depth(),10);assert_eq!(contract.general_profile_tier_level()[0],2);
+        assert!(HevcMain8Contract::observe(&au,config).is_err());
+        assert!(HevcMain8Contract::from_exact_target(contract.general_profile_tier_level(),config).is_err());
+        let mut admission=HevcMain8Admission::new(contract);admission.validate(&au)?;
+        for wrong in [fixture_ptl(false,0,1,2,123,0),fixture_ptl(false,2,1,1,123,0),fixture_ptl(true,2,1,2,123,0),fixture_ptl(false,2,9,2,123,0),fixture_ptl(false,0,1,1,123,0)] {
+            assert!(admission.validate(&access_unit(wrong,&[0x28,1,0xb0])).is_err());admission.validate(&au)?;
+        }
+        Ok(())
+    }
 
     #[test]
     fn exact_main8_high_frame_levels_keep_full_ptl_and_admission_history() -> io::Result<()> {

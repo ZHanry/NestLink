@@ -29,3 +29,15 @@ it cannot qualify debug performance or replace either prior failure. A failing
 optimized run requires further implementation and diagnosis. This single
 hosted-process experiment also cannot qualify 100 independent physical nodes,
 loaded external management/relay machines, all bounded queues or a 24-hour soak.
+
+The first explicit release-profile attempt, run 41434724934 at c010515,
+successfully compiled the capacity executable in 406.53 seconds. The following
+HTTP regression command spent its entire original 180-second execution budget
+compiling a second release test harness; no HTTP test or offered load executed.
+It remains a failed build/execution orchestration attempt, separate from the
+original failed debug load. The workflow now compiles all three original test
+harnesses together under its existing 1200-second build budget, records their
+individual hashes, then executes those binaries under the unchanged 180/300/660
+second execution budgets. It also verifies the exact executed test counts and
+records a command before starting it so a timeout cannot omit that command from
+the provenance. Application deadlines, gates and assertions are unchanged.

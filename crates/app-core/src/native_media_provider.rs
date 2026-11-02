@@ -29,6 +29,7 @@ pub struct NativeMediaProvider {
 enum ProviderBackend {
     CpuH264,
     GpuHevcMain8,
+    GpuHevcMain10,
 }
 #[derive(Default)]
 struct ProviderState {
@@ -221,6 +222,13 @@ impl NativeMediaProvider {
             state: Arc::new(Mutex::new(ProviderState::default())),
         })
     }
+    pub fn gpu_hevc_main10(target:VideoConfig)->io::Result<Self> {
+        let mut provider=Self::gpu_hevc_main8(target)?;provider.backend=ProviderBackend::GpuHevcMain10;Ok(provider)
+    }
+    pub(crate) fn matches_gpu_hevc_target(&self,target:VideoConfig,version:u32)->bool {
+        let expected=match version {3=>ProviderBackend::GpuHevcMain8,4=>ProviderBackend::GpuHevcMain10,_=>return false};
+        self.backend==expected && self.targets.len()==1 && (self.target.width,self.target.height,self.target.fps,self.target.bitrate_kbps)==(target.width,target.height,target.fps,target.bitrate_kbps)
+    }
     /// Each of at most three budgets runs the original full direction probe.
     /// No lower geometry, rate or bitrate is inferred from the maximum receipt.
     pub fn cpu_software_adaptive(target: VideoConfig) -> io::Result<Self> {
@@ -261,16 +269,6 @@ impl NativeMediaProvider {
     }
     pub fn target(&self) -> VideoConfig {
         self.target
-    }
-    pub(crate) fn matches_gpu_hevc_main8_target(&self, target: VideoConfig) -> bool {
-        self.backend == ProviderBackend::GpuHevcMain8
-            && self.targets.len() == 1
-            && (
-                self.target.width,
-                self.target.height,
-                self.target.fps,
-                self.target.bitrate_kbps,
-            ) == (target.width, target.height, target.fps, target.bitrate_kbps)
     }
     /// Explicit candidate policy replaces the convenience ladder with exactly
     /// its reviewed formats. Every target still needs its own actual probe.
@@ -607,7 +605,8 @@ fn run_probes(
         // next exact target starts on this same original bounded worker.
         receipts.push(match backend {
             ProviderBackend::CpuH264 => run_probe(*target, direction, cancel)?,
-            ProviderBackend::GpuHevcMain8 => run_hevc_probe(*target, direction, cancel)?,
+            ProviderBackend::GpuHevcMain8 => run_hevc_probe(*target, direction, cancel,8)?,
+            ProviderBackend::GpuHevcMain10 => run_hevc_probe(*target,direction,cancel,10)?,
         });
     }
     let mut receipts = receipts.into_iter();
@@ -685,12 +684,13 @@ fn run_hevc_probe(
     target: VideoConfig,
     direction: MediaDirection,
     cancel: &AtomicBool,
+    bit_depth:u8,
 ) -> io::Result<ProbeResult> {
     let actual_direction = match direction {
         MediaDirection::Encode => nestlink_media_codec::ExecutionDirection::Encode,
         MediaDirection::Decode => nestlink_media_codec::ExecutionDirection::Decode,
     };
-    let receipt = nestlink_media_codec::probe_hevc_direction(target, actual_direction, cancel)?;
+    let receipt = nestlink_media_codec::probe_hevc_direction_depth(target, actual_direction, cancel,bit_depth)?;
     let contract = receipt.contract();
     let config = contract.config();
     let owner = receipt.owner();
@@ -706,7 +706,9 @@ fn run_hevc_probe(
             "HEVC direction receipt differs from exact product target/backend",
         ));
     }
-    let format = VideoFormat::hevc_main8_observed(
+    let format_constructor=if bit_depth==10 {VideoFormat::hevc_main10_observed} else {VideoFormat::hevc_main8_observed};
+    if contract.bit_depth()!=bit_depth {return Err(io::Error::other("HEVC observed depth differs from exact requested workload"));}
+    let format = format_constructor(
         contract.general_profile_tier_level(),
         config.width,
         config.height,
@@ -731,6 +733,7 @@ fn run_hevc_probe(
     _target: VideoConfig,
     _direction: MediaDirection,
     _cancel: &AtomicBool,
+    _bit_depth:u8,
 ) -> io::Result<ProbeResult> {
     Err(io::Error::new(
         io::ErrorKind::Unsupported,

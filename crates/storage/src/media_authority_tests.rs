@@ -11,6 +11,13 @@ type TestResult<T = ()> = Result<T, Box<dyn std::error::Error>>;
 #[test]
 fn v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain()
 -> TestResult {
+    hevc_signed_lifecycle(3)
+}
+#[test]
+fn v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain()->TestResult {
+    hevc_signed_lifecycle(4)
+}
+fn hevc_signed_lifecycle(version:u32)->TestResult {
     let mut store = Store::in_memory(&random_id())?;
     let vault = VaultKey::from_bytes([9; 32]);
     let password = "integration-only-password";
@@ -24,9 +31,10 @@ fn v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_
     let cid = enroll(&mut store, &principal, &controller)?;
     let hid = enroll(&mut store, &principal, &host)?;
     let mut ptl = [0; 12];
-    ptl[0] = 1;
+    ptl[0] = if version==4 {2} else {1};
     ptl[11] = 120;
-    let format = VideoFormat::hevc_main8_observed(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
+    let constructor=if version==4 {VideoFormat::hevc_main10_observed} else {VideoFormat::hevc_main8_observed};
+    let format = constructor(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
     for (key, id, direction, backend) in [
         (
             &controller,
@@ -40,7 +48,7 @@ fn v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_
         let mut submission = MediaAnnouncementSubmission {
             challenge_id: challenge.id,
             announcement: MediaAnnouncement {
-                version: 3,
+                version,
                 device_id: id.clone(),
                 direction,
                 revision: 1,
@@ -81,7 +89,7 @@ fn v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_
                 &principal,
                 nestlink_protocol::api::MediaRemoteRequest {
                     request: request.clone(),
-                    media_format_version: 3
+                    media_format_version: version
                 },
                 1000
             )
@@ -91,7 +99,7 @@ fn v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_
     let scope = store
         .remote_media_scope(&principal, &view.id, 1000)?
         .ok_or("missing exact scope")?;
-    assert_eq!(scope.version, 3);
+    assert_eq!(scope.version, version);
     assert_eq!(scope.formats, vec![format.encode()?]);
     let choice = MediaApprovalChoice {
         choice: ApprovalChoice {
@@ -104,7 +112,7 @@ fn v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_
     let proof = store.media_approval_transcript(&principal, &view.id, &choice, 1000)?;
     let mut legacy_proof = proof.clone();
     legacy_proof.payload_sha256 = nestlink_identity::digest(&serde_json::to_vec(&(
-        "nestlink/media-approval/v2",
+        if version==4 {"nestlink/media-approval/v3"} else {"nestlink/media-approval/v2"},
         &choice,
         &scope,
     ))?)

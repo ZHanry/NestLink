@@ -216,6 +216,7 @@ enum NativeVideoCodec {
   VP8 = 0; // default keeps the v0.6 wire profile
   H264_BASELINE = 1; // negotiated h264-baseline-v1; bounded Annex B, 8-bit 4:2:0
   HEVC_MAIN8 = 2; // independent exact native-media-format-v3 scope; never legacy fallback
+  HEVC_MAIN10 = 3; // independent exact native-media-format-v4; P010 SDR, never inferred from Main8
 }
 message NativeVideo {
   uint32 schema_version = 1;

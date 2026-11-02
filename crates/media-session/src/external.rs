@@ -47,7 +47,7 @@ impl VideoSinkContext {
                     && format.digest().map_err(io::Error::other)? == self.format_sha256 =>
             {
                 if format.codec == Codec::Hevc {
-                    crate::hevc_main8_contract(format)?;
+                    crate::hevc_contract(format)?;
                 }
                 Ok(())
             }
@@ -101,7 +101,7 @@ impl ExternalPrepare {
     fn new(context: &VideoSinkContext, width: u32, height: u32) -> io::Result<Self> {
         if let Some(format) = context.format {
             if format.codec == Codec::Hevc {
-                let contract = crate::hevc_main8_contract(format)?;
+                let contract = crate::hevc_contract(format)?;
                 if format.width != width || format.height != height {
                     return Err(io::Error::other(
                         "HEVC external geometry differs from frozen format",

@@ -61,9 +61,9 @@ public:
         return hr;
     }
     HRESULT initialize(ID3D11Device* original,ID3D11DeviceContext* original_context,
-        HANDLE destination,uint32_t width,uint32_t height,NlSharedRingDescriptor* result) {
+        HANDLE destination,uint32_t width,uint32_t height,uint32_t bit_depth,NlSharedRingDescriptor* result) {
         if(!original || !original_context || !destination || !result || peer || !width || !height ||
-            ((width|height)&1) || static_cast<uint64_t>(width)*height*3/2*3>128*1024*1024)
+            ((width|height)&1) || (bit_depth!=8 && bit_depth!=10) || static_cast<uint64_t>(width)*height*3/2*3*(bit_depth==10?2u:1u)>128*1024*1024)
             return E_INVALIDARG;
         if(!DuplicateHandle(GetCurrentProcess(),destination,GetCurrentProcess(),&peer,0,FALSE,DUPLICATE_SAME_ACCESS))
             return HRESULT_FROM_WIN32(GetLastError());
@@ -78,9 +78,10 @@ public:
         descriptor.adapter_luid=static_cast<uint64_t>(static_cast<uint32_t>(adapter_desc.AdapterLuid.HighPart))<<32|
             adapter_desc.AdapterLuid.LowPart;
         descriptor.width=width;descriptor.height=height;
-        descriptor.bytes=static_cast<uint64_t>(width)*height*3/2*3;
+        descriptor.bit_depth=bit_depth;
+        descriptor.bytes=static_cast<uint64_t>(width)*height*3/2*3*(bit_depth==10?2u:1u);
         D3D11_TEXTURE2D_DESC desc{};desc.Width=width;desc.Height=height;desc.ArraySize=1;desc.MipLevels=1;
-        desc.Format=DXGI_FORMAT_NV12;desc.SampleDesc.Count=1;desc.Usage=D3D11_USAGE_DEFAULT;
+        desc.Format=bit_depth==10?DXGI_FORMAT_P010:DXGI_FORMAT_NV12;desc.SampleDesc.Count=1;desc.Usage=D3D11_USAGE_DEFAULT;
         desc.BindFlags=D3D11_BIND_SHADER_RESOURCE|D3D11_BIND_RENDER_TARGET;
         desc.MiscFlags=D3D11_RESOURCE_MISC_SHARED_NTHANDLE|D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
         for(size_t i=0;i<slots.size();++i) {

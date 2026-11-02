@@ -4,6 +4,24 @@ fn rate(fps: u32) -> FrameRate {
     FrameRate::new(fps, 1).unwrap_or_else(|error| panic!("valid fixture rejected: {error}"))
 }
 #[test]
+fn main10_v4_preserves_v3_bytes_and_requires_exact_profile_depth_and_version()->std::result::Result<(),ContractError> {
+    let mut ptl=[0;12];ptl[0]=1;ptl[11]=120;
+    let main8=VideoFormat::hevc_main8_observed(ptl,640,480,rate(30),4000)?;
+    let before=(main8.encode()?,main8.digest()?);
+    ptl[0]=2;
+    let main10=VideoFormat::hevc_main10_observed(ptl,640,480,rate(30),4000)?;
+    let wire=main10.encode()?;
+    assert_eq!(wire.len(),69);assert_eq!(&wire[..2],&4u16.to_be_bytes());
+    assert_eq!(VideoFormat::decode(&wire)?,main10);
+    assert_ne!(main8.digest()?,main10.digest()?);
+    assert!(FormatSet::new(vec![main8,main10]).is_err());
+    assert!(FormatSet::from_versioned(3,vec![main10]).is_err());
+    for version in [2u16,3] {let mut wrong=wire.clone();wrong[..2].copy_from_slice(&version.to_be_bytes());assert!(VideoFormat::decode(&wrong).is_err());}
+    for bad in [VideoFormat {bit_depth:BitDepth::Eight,..main10},VideoFormat {profile:Profile::HevcMain,..main10},VideoFormat {chroma:Chroma::Yuv444,..main10},VideoFormat {color:Color {transfer:Transfer::Pq,..main10.color},..main10}] {assert!(bad.validate().is_err());}
+    assert_eq!((main8.encode()?,main8.digest()?),before);
+    Ok(())
+}
+#[test]
 fn independently_versioned_hevc_ptl_is_exact_and_cannot_change_v2_h264_bytes()
 -> std::result::Result<(), ContractError> {
     let h264 = VideoFormat::legacy_h264(31, 640, 480, rate(30), 4000)?;

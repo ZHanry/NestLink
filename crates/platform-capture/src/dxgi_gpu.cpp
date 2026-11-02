@@ -51,7 +51,7 @@ struct GpuCapture {
     }
 };
 namespace {
-HRESULT create_surfaces(GpuCapture* s,uint32_t width,uint32_t height,uint32_t fps) {
+HRESULT create_surfaces(GpuCapture* s,uint32_t width,uint32_t height,uint32_t fps,uint32_t bit_depth=8) {
     HRESULT hr = S_OK;
     D3D11_TEXTURE2D_DESC texture{};
     texture.Width = width; texture.Height = height; texture.MipLevels = 1; texture.ArraySize = 1;
@@ -61,7 +61,7 @@ HRESULT create_surfaces(GpuCapture* s,uint32_t width,uint32_t height,uint32_t fp
     texture.MiscFlags = D3D11_RESOURCE_MISC_GDI_COMPATIBLE;
     hr = s->device->CreateTexture2D(&texture,nullptr,&s->bgra);
     if (FAILED(hr)) return hr;
-    texture.Format = DXGI_FORMAT_NV12; texture.MiscFlags = 0;
+    texture.Format = bit_depth==10?DXGI_FORMAT_P010:DXGI_FORMAT_NV12; texture.MiscFlags = 0;
     texture.BindFlags = D3D11_BIND_RENDER_TARGET;
     hr = s->device->CreateTexture2D(&texture,nullptr,&s->nv12);
     if (FAILED(hr)) return hr;
@@ -78,7 +78,7 @@ HRESULT create_surfaces(GpuCapture* s,uint32_t width,uint32_t height,uint32_t fp
     UINT support = 0;
     if (SUCCEEDED(hr)) hr = s->enumerator->CheckVideoProcessorFormat(DXGI_FORMAT_B8G8R8A8_UNORM,&support);
     if (SUCCEEDED(hr) && !(support & D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_INPUT)) hr = DXGI_ERROR_UNSUPPORTED;
-    if (SUCCEEDED(hr)) hr = s->enumerator->CheckVideoProcessorFormat(DXGI_FORMAT_NV12,&support);
+    if (SUCCEEDED(hr)) hr = s->enumerator->CheckVideoProcessorFormat(texture.Format,&support);
     if (SUCCEEDED(hr) && !(support & D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT)) hr = DXGI_ERROR_UNSUPPORTED;
     if (SUCCEEDED(hr)) hr = s->video->CreateVideoProcessor(s->enumerator.Get(),0,&s->processor);
     if (FAILED(hr)) return hr;
@@ -176,9 +176,10 @@ HRESULT cursor(GpuCapture& s) {
 }
 }
 extern "C" int32_t nl_capture_gpu_open(uintptr_t monitor, uint32_t width, uint32_t height,
-    uint32_t fps, void** result) noexcept {
+    uint32_t fps,uint32_t bit_depth, void** result) noexcept {
     if (!result) return E_POINTER;
     *result = nullptr;
+    if(bit_depth!=8 && bit_depth!=10)return E_INVALIDARG;
     // Odd/HDR/rotated outputs use the existing complete CPU path.
     if (!monitor || !width || !height || ((width|height)&1) || width > 8192 || height > 8192 ||
         static_cast<uint64_t>(width)*height*4 > 64*1024*1024 || !fps || fps > 144) return E_INVALIDARG;
@@ -231,7 +232,7 @@ extern "C" int32_t nl_capture_gpu_open(uintptr_t monitor, uint32_t width, uint32
                 hr = open_wgc(*s,reinterpret_cast<HMONITOR>(monitor),width,height);
                 if (FAILED(hr)) return hr;
             }
-            hr = create_surfaces(s.get(),width,height,fps);
+            hr = create_surfaces(s.get(),width,height,fps,bit_depth);
             if (FAILED(hr)) return hr;
             s->backend = s->duplication ? 1u : 2u;
             s->width = width; s->height = height; s->left = desc.DesktopCoordinates.left; s->top = desc.DesktopCoordinates.top;

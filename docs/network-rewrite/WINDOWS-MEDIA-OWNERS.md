@@ -113,7 +113,7 @@ its GPU consumption/submission receipt stays separate from the original daemon
 decode receipt. See [the exact ownership and remaining-work record](gpu-shared-surface-owner.md).
 The earlier hosted result above predates this route and does not validate it.
 
-W33 remains incomplete in source: Main10/P010, real 4:4:4 resources, HDR capture/
+W33 remains incomplete in source: real 4:4:4 resources, HDR capture/
 transfer/output metadata, the fractional target matrix and executable
 per-combination fallback are not implemented by the Main8/420/eight-bit SDR
 entry. Its original allocation/probe/capture/codec/import owners now admit
@@ -125,3 +125,12 @@ that readback is further performance work. Actual cadence, device loss,
 multi-adapter/display/DPI switching, input and concurrent workloads still need
 same-source physical execution. `PRODUCTION_ISSUANCE_ENABLED` remains false.
 These implementation gaps and acceptance gaps must remain distinct.
+
+The Main10 SDR entry now has a separately versioned v4 signed scope and native
+wire/IPC markers. Its exact SPS parser, original MF/P010 input/output, capture
+video-processor P010 surface, finite depth-bound shared ring and actual P010
+import/presentation are connected. Its real direction probe requires hardware
+encode/decode and an independent software decoder before publication. The
+desktop capture source remains BGRA8 SDR, so P010 conversion is not HDR or native
+ten-bit capture qualification. These changes still need exact-source hosted
+validation and physical hardware execution; see the detailed owner record.

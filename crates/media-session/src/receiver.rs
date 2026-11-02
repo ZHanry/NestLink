@@ -86,9 +86,9 @@ impl DecodedVideo {
                     && self.hardware_decode == execution.identity()?.adapter_luid().is_some()
             }
             #[cfg(windows)]
-            crate::LiveExecutionReceipt::Hevc(_) => {
-                self.codec == nestlink_protocol::NativeVideoCodec::HevcMain8 as u8
-                    && self.hardware_decode
+            crate::LiveExecutionReceipt::Hevc(receipt) => {
+                let codec=if receipt.target().contract().bit_depth()==10 {nestlink_protocol::NativeVideoCodec::HevcMain10} else {nestlink_protocol::NativeVideoCodec::HevcMain8};
+                self.codec == codec as u8 && self.hardware_decode
             }
         };
         if !codec_matches || (config.width, config.height) != (self.width, self.height) {
@@ -597,7 +597,7 @@ impl VideoPresentation {
         }
         let hevc = value.format.codec == nestlink_protocol::media_format::Codec::Hevc;
         if hevc {
-            let target = crate::hevc_main8_contract(value.format)?.config();
+            let target = crate::hevc_contract(value.format)?.config();
             if (target.width, target.height) != (layout.width, layout.height) {
                 return Err(io::Error::other(
                     "HEVC format differs from selected original display",
@@ -670,7 +670,7 @@ impl VideoPresentation {
             .format
             .is_some_and(|f| f.codec == nestlink_protocol::media_format::Codec::Hevc);
         let capability = if hevc {
-            nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY
+            nestlink_protocol::media_authority::capability_for_version(u32::from(context.format.ok_or_else(||io::Error::other("HEVC format absent"))?.canonical_version())).map_err(io::Error::other)?
         } else {
             nestlink_protocol::media::H264_CAPABILITY
         };
@@ -1733,7 +1733,7 @@ impl Decoder {
         if !self.accept_input(&packet, epoch, now)? {
             return Ok(None);
         }
-        if packet.codec == nestlink_protocol::NativeVideoCodec::HevcMain8 as i32 {
+        if matches!(nestlink_protocol::NativeVideoCodec::try_from(packet.codec),Ok(nestlink_protocol::NativeVideoCodec::HevcMain8|nestlink_protocol::NativeVideoCodec::HevcMain10)) {
             #[cfg(windows)]
             {
                 return self.decode_hevc(packet, payload, epoch, now);
@@ -1771,7 +1771,7 @@ impl Decoder {
             let kind = match nestlink_protocol::NativeVideoCodec::try_from(packet.codec) {
                 Ok(nestlink_protocol::NativeVideoCodec::Vp8) => VideoCodec::Vp8,
                 Ok(nestlink_protocol::NativeVideoCodec::H264Baseline) => VideoCodec::H264Baseline,
-                Ok(nestlink_protocol::NativeVideoCodec::HevcMain8) | Err(_) => {
+                Ok(nestlink_protocol::NativeVideoCodec::HevcMain8 | nestlink_protocol::NativeVideoCodec::HevcMain10) | Err(_) => {
                     return Err(io::Error::other("codec lacks a legacy decoder"));
                 }
             };
@@ -2156,10 +2156,8 @@ fn receive(
         .media_capability(nestlink_protocol::native_qos::CAPABILITY)
         .map_err(io::Error::other)?;
     let mut qos_window = crate::receiver_qos::ReportWindow::new(Instant::now());
-    let exact_hevc = lease
-        .media_formats()
-        .map_err(io::Error::other)?
-        .is_some_and(|formats| {
+    let formats=lease.media_formats().map_err(io::Error::other)?;
+    let exact_hevc = formats.as_ref().is_some_and(|formats| {
             formats
                 .formats()
                 .iter()
@@ -2167,14 +2165,14 @@ fn receive(
         });
     let codec_kind = if exact_hevc {
         if !lease
-            .media_capability(nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY)
+            .media_capability(nestlink_protocol::media_authority::capability_for_version(u32::from(formats.as_ref().ok_or_else(||io::Error::other("HEVC formats absent"))?.canonical_version())).map_err(io::Error::other)?)
             .map_err(io::Error::other)?
         {
             return Err(io::Error::other(
                 "HEVC wire codec lacks its independent exact capability",
             ));
         }
-        nestlink_protocol::NativeVideoCodec::HevcMain8 as i32
+        crate::hevc_wire_codec(*formats.as_ref().and_then(|formats|formats.formats().first()).ok_or_else(||io::Error::other("HEVC exact format absent"))?)? as i32
     } else if lease
         .media_capability(nestlink_protocol::media::H264_CAPABILITY)
         .map_err(io::Error::other)?
@@ -2346,7 +2344,7 @@ fn receive(
                     if !state.selected.is_some_and(|layout| {
                         match state.format.as_ref() {
                             Some(format) if format.format.codec == nestlink_protocol::media_format::Codec::Hevc =>
-                                crate::hevc_main8_contract(format.format).is_ok_and(|contract| {
+                                crate::hevc_contract(format.format).is_ok_and(|contract| {
                                     let config = contract.config(); (packet.width, packet.height) == (config.width, config.height)
                                         && (packet.width, packet.height) == (layout.width, layout.height)
                                 }),

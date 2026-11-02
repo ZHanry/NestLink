@@ -25,6 +25,8 @@ pub struct SharedRingDescriptor {
     pub width: u32,
     pub height: u32,
     pub bytes: u64,
+    pub bit_depth:u32,
+    pub reserved:u32,
 }
 impl SharedRingDescriptor {
     pub fn validate(&self, config: VideoConfig) -> io::Result<()> {
@@ -46,7 +48,8 @@ impl SharedRingDescriptor {
             || !self.height.is_multiple_of(2)
             || self.width > 8192
             || self.height > 8192
-            || self.bytes != u64::from(self.width) * u64::from(self.height) * 3 / 2 * 3
+            || !matches!(self.bit_depth,8|10) || self.reserved!=0
+            || self.bytes != u64::from(self.width) * u64::from(self.height) * 3 / 2 * 3 * if self.bit_depth==10 {2} else {1}
             || self.bytes > 128 * 1024 * 1024
         {
             return Err(io::Error::other("original shared ring descriptor invalid"));
@@ -119,6 +122,7 @@ impl SharedOutput {
         config: VideoConfig,
         peer: VerifiedProcessExportTarget,
         authority: Arc<AtomicBool>,
+        bit_depth:u8,
     ) -> io::Result<Self> {
         let mut descriptor = SharedRingDescriptor::default();
         peer.with_process_handle(|process| {
@@ -134,6 +138,7 @@ impl SharedOutput {
             .map(|_| ())
         })?;
         descriptor.validate(config)?;
+        if descriptor.bit_depth!=u32::from(bit_depth) {return Err(io::Error::other("original native ring depth differs from exact decoder target"));}
         Ok(Self {
             descriptor,
             peer,
@@ -255,6 +260,8 @@ impl SharedDecodedFrame {
         let mut hash = Sha256::new();
         hash.update(self.ring.ring_id);
         hash.update(self.ring.adapter_luid.to_be_bytes());
+        hash.update(self.ring.bit_depth.to_be_bytes());
+        hash.update(self.ring.width.to_be_bytes());hash.update(self.ring.height.to_be_bytes());hash.update(self.ring.bytes.to_be_bytes());
         hash.update(self.ring.resource_ids[self.frame.slot as usize]);
         hash.update(self.frame.token.to_be_bytes());
         hash.update(self.frame.pts_90khz.to_be_bytes());

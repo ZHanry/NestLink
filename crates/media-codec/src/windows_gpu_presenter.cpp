@@ -84,6 +84,7 @@ struct Presenter {
     ComPtr<ID3D11Device> device;
     ComPtr<ID3D11DeviceContext> context;
     ComPtr<IMFDXGIDeviceManager> manager;
+    DXGI_FORMAT input_format=DXGI_FORMAT_NV12;
     ComPtr<IMFTransform> decoder;
     ComPtr<IDXGISwapChain1> swap;
     ComPtr<ID3D11VideoDevice> video;
@@ -278,7 +279,7 @@ HRESULT configure_output(Presenter& p,UINT fps) {
     trace(p.surface,"video_processor_create_begin");
     hr=p.video->CreateVideoProcessorEnumerator(&content,&p.enumerator); if (FAILED(hr)) return hr;
     UINT flags=0;
-    hr=p.enumerator->CheckVideoProcessorFormat(DXGI_FORMAT_NV12,&flags);
+    hr=p.enumerator->CheckVideoProcessorFormat(p.input_format,&flags);
     if (FAILED(hr) || !(flags&D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_INPUT)) return E_NOTIMPL;
     hr=p.enumerator->CheckVideoProcessorFormat(desc.Format,&flags);
     if (FAILED(hr) || !(flags&D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT)) return E_NOTIMPL;

@@ -79,13 +79,16 @@ struct Args {
     #[arg(long)]
     disable_native_route_set: bool,
     /// CPU media ceiling, e.g. 1920x1080@30:4000; probes at most two lower budgets.
-    #[arg(long, value_parser=parse_native_media_target, conflicts_with = "native_gpu_hevc_target")]
+    #[arg(long, value_parser=parse_native_media_target, conflicts_with_all = ["native_gpu_hevc_target","native_gpu_hevc_main10_target"])]
     native_media_target: Option<nestlink_media_codec::VideoConfig>,
     /// Exact Windows GPU HEVC Main8 target, e.g. 1920x1080@60:8000.
     /// Requires actual independent probes and local request approval; rollout stays closed.
     #[arg(long, value_parser=parse_native_gpu_hevc_target,
-        conflicts_with_all = ["native_media_target", "internal_software_media_candidate"])]
+        conflicts_with_all = ["native_media_target", "internal_software_media_candidate","native_gpu_hevc_main10_target"])]
     native_gpu_hevc_target: Option<nestlink_media_codec::VideoConfig>,
+    /// Exact Main10/P010 SDR workload. BGRA desktop capture does not attest HDR.
+    #[arg(long,value_parser=parse_native_gpu_hevc_main10_target,conflicts_with_all=["native_media_target","native_gpu_hevc_target","internal_software_media_candidate"])]
+    native_gpu_hevc_main10_target:Option<nestlink_media_codec::VideoConfig>,
     /// Private JSON policy for one internal software candidate; absent keeps rollout closed.
     #[arg(long, requires = "native_media_target")]
     internal_software_media_candidate: Option<PathBuf>,
@@ -600,6 +603,9 @@ async fn serve(args: Args) -> Result<(), Box<dyn std::error::Error + Send + Sync
     if let Some(target) = args.native_gpu_hevc_target {
         native = native.with_gpu_hevc_main8_target(target)?;
     }
+    if let Some(target)=args.native_gpu_hevc_main10_target {
+        native=native.with_gpu_hevc_main10_target(target)?;
+    }
     if let Some(path) = args.internal_software_media_candidate {
         let bytes = nestlink_platform_security::read_private(&path, 16 * 1024)?;
         let policy = serde_json::from_slice(&bytes)?;
@@ -862,6 +868,10 @@ fn parse_native_gpu_hevc_target(value: &str) -> Result<nestlink_media_codec::Vid
     nestlink_app_core::NativeMediaProvider::gpu_hevc_main8(target).map_err(|e| e.to_string())?;
     Ok(target)
 }
+fn parse_native_gpu_hevc_main10_target(value:&str)->Result<nestlink_media_codec::VideoConfig,String> {
+    let target=parse_media_target_syntax(value)?;
+    nestlink_app_core::NativeMediaProvider::gpu_hevc_main10(target).map_err(|error|error.to_string())?;Ok(target)
+}
 
 #[cfg(test)]
 mod media_cli_tests {
@@ -923,6 +933,14 @@ mod media_cli_tests {
         let target = parse_native_gpu_hevc_target("3840x2160@144:40000").map_err(io::Error::other)?;
         assert_eq!((target.width, target.height, target.fps, target.bitrate_kbps), (3840,2160,144,40000));
         assert!(parse_native_media_target("3840x2160@144:40000").is_err());
+        Ok(())
+    }
+    #[test]
+    fn main10_cli_has_explicit_sdr_target_and_cannot_mix_with_main8_or_software()->io::Result<()> {
+        let args=Args::try_parse_from(["nestlink-daemon","--native-gpu-hevc-main10-target","3840x2160@144:40000"]).map_err(io::Error::other)?;
+        let target=args.native_gpu_hevc_main10_target.ok_or_else(||io::Error::other("Main10 target absent"))?;assert_eq!(target.fps,144);
+        assert!(Args::try_parse_from(["nestlink-daemon","--native-gpu-hevc-main10-target","640x480@30:4000","--native-gpu-hevc-target","640x480@30:4000"]).is_err());
+        assert!(Args::try_parse_from(["nestlink-daemon","--native-gpu-hevc-main10-target","640x480@30:4000","--native-media-target","640x480@30:4000"]).is_err());
         Ok(())
     }
 }

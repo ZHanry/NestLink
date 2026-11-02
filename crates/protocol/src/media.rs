@@ -9,7 +9,7 @@ use prost::Message;
 
 pub const H264_CAPABILITY: &str = "h264-baseline-v1";
 pub fn negotiated_video_codec(claims: &crate::PermitClaims) -> crate::NativeVideoCodec {
-    if claims.media_format_version == crate::media_authority::HEVC_FORMAT_VERSION
+    if matches!(claims.media_format_version,crate::media_authority::HEVC_FORMAT_VERSION|crate::media_authority::HEVC_MAIN10_FORMAT_VERSION)
         && crate::media_authority::permit_formats(claims)
             .ok()
             .flatten()
@@ -20,7 +20,7 @@ pub fn negotiated_video_codec(claims: &crate::PermitClaims) -> crate::NativeVide
                     .all(|f| f.codec == crate::media_format::Codec::Hevc)
             })
     {
-        return crate::NativeVideoCodec::HevcMain8;
+        return if claims.media_format_version==crate::media_authority::HEVC_MAIN10_FORMAT_VERSION {crate::NativeVideoCodec::HevcMain10} else {crate::NativeVideoCodec::HevcMain8};
     }
     if claims
         .required_capabilities
@@ -158,7 +158,7 @@ impl NativeVideo {
                 // slice dependencies and SPS geometry before invoking the OS.
                 return Ok(());
             }
-            Ok(crate::NativeVideoCodec::HevcMain8) => {
+            Ok(crate::NativeVideoCodec::HevcMain8 | crate::NativeVideoCodec::HevcMain10) => {
                 if self.format_epoch == 0
                     || self.format_sha256.len() != 32
                     || !self.width.is_multiple_of(8)

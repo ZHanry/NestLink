@@ -95,6 +95,7 @@ fn picture(
 }
 struct Workload {
     config: VideoConfig,
+    bit_depth:u8,
     contract: Option<HevcMain8Contract>,
     admission: Option<HevcMain8Admission>,
     expected: [VecDeque<u64>; 2],
@@ -110,7 +111,7 @@ impl Workload {
         deadline: Instant,
     ) -> io::Result<()> {
         if self.contract.is_none() {
-            let contract = HevcMain8Contract::observe(&packet.data, self.config)?;
+            let contract = if self.bit_depth==10 {HevcMain8Contract::observe_main10(&packet.data,self.config)} else {HevcMain8Contract::observe(&packet.data, self.config)}?;
             self.contract = Some(contract);
             self.admission = Some(HevcMain8Admission::new(contract));
         }
@@ -153,19 +154,24 @@ pub fn probe_hevc_direction(
     direction: ExecutionDirection,
     cancel: &AtomicBool,
 ) -> io::Result<HevcDirectionProbe> {
+    probe_hevc_direction_depth(config,direction,cancel,8)
+}
+pub fn probe_hevc_direction_depth(config:VideoConfig,direction:ExecutionDirection,cancel:&AtomicBool,bit_depth:u8)->io::Result<HevcDirectionProbe> {
+    if !matches!(bit_depth,8|10) {return Err(io::Error::other("unsupported HEVC probe depth"));}
     HevcMain8Contract::validate_config(config)?;
     let deadline = Instant::now() + Duration::from_secs(10);
     check(cancel, deadline)?;
     let authority = Arc::new(AtomicBool::new(true));
-    let source = HevcSyntheticSource::new(config.width, config.height)?;
+    let source = HevcSyntheticSource::with_depth(config.width, config.height,bit_depth)?;
     let mut encoder = HevcProbeEncoder::new(&source, config, authority.clone())?;
-    let mut gpu = HevcProbeDecoder::new(Some(&source), config, authority.clone())?;
-    let mut independent = HevcProbeDecoder::new(None, config, authority.clone())?;
+    let mut gpu = HevcProbeDecoder::with_depth(Some(&source), config, authority.clone(),bit_depth)?;
+    let mut independent = HevcProbeDecoder::with_depth(None, config, authority.clone(),bit_depth)?;
     let result = (|| {
         let original_encoder = encoder.owner_observation()?;
         let original_decoder = gpu.owner_observation()?;
         let mut workload = Workload {
             config,
+            bit_depth,
             contract: None,
             admission: None,
             expected: [VecDeque::new(), VecDeque::new()],

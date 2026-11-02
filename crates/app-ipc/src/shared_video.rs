@@ -14,8 +14,12 @@ pub struct SharedVideoContext {
     pub width: u32,
     pub height: u32,
     pub bytes: u64,
+    #[serde(default="main8_depth",skip_serializing_if="is_main8_depth")]
+    pub bit_depth:u32,
     pub qpc_frequency: u64,
 }
+fn main8_depth()->u32 {8}
+fn is_main8_depth(depth:&u32)->bool {*depth==8}
 impl SharedVideoContext {
     pub fn validate(&self) -> Result<(), Error> {
         self.media.validate()?;
@@ -24,7 +28,7 @@ impl SharedVideoContext {
             return Err(Error::Protocol);
         };
         let contract =
-            nestlink_app_core::hevc_main8_contract(format).map_err(|_| Error::Protocol)?;
+            nestlink_app_core::hevc_contract(format).map_err(|_| Error::Protocol)?;
         let counters = [
             b.ui_generation,
             b.connection_generation,
@@ -35,7 +39,8 @@ impl SharedVideoContext {
             self.media.decode_epoch,
             self.media.configuration_id,
         ];
-        if self.media.ipc_version != 3
+        if self.media.ipc_version != format.canonical_version()
+            || self.bit_depth!=u32::from(contract.bit_depth())
             || !nestlink_protocol::valid_id(&b.runtime_id)
             || !nestlink_protocol::valid_id(&b.request_id)
             || counters
@@ -60,7 +65,7 @@ impl SharedVideoContext {
             || self.resource_ids[0] == self.resource_ids[1]
             || self.resource_ids[0] == self.resource_ids[2]
             || self.resource_ids[1] == self.resource_ids[2]
-            || self.bytes != u64::from(self.width) * u64::from(self.height) * 3 / 2 * 3
+            || self.bytes != u64::from(self.width) * u64::from(self.height) * 3 / 2 * 3 * if self.bit_depth==10 {2} else {1}
             || self.bytes > 128 * 1024 * 1024
             || self.qpc_frequency == 0
             || self.qpc_frequency > i64::MAX as u64 / 5
@@ -80,6 +85,7 @@ impl SharedVideoContext {
             width: self.width,
             height: self.height,
             bytes: self.bytes,
+            bit_depth:self.bit_depth,reserved:0,
         })
     }
     #[cfg(windows)]
@@ -214,6 +220,7 @@ mod tests {
             width: 640,
             height: 480,
             bytes: 640 * 480 * 3 / 2 * 3,
+            bit_depth:8,
             qpc_frequency: 10_000_000,
         })
     }
@@ -240,6 +247,18 @@ mod tests {
             }
             assert!(wrong.validate().is_err(), "mutation {mutation}");
         }
+        Ok(())
+    }
+    #[test]
+    fn main10_shared_context_requires_v4_exact_depth_and_doubled_p010_ring_bytes()->TestResult {
+        use nestlink_protocol::media_format::{FrameRate,VideoFormat};
+        let mut context=syntax_context()?;
+        let mut ptl=[0;12];ptl[0]=2;ptl[11]=120;
+        let format=VideoFormat::hevc_main10_observed(ptl,640,480,FrameRate::new(30,1)?,4000)?;
+        context.media.ipc_version=4;context.media.format_sha256=format.digest()?;
+        context.media.format=Some(crate::compressed_video::WireVideoFormat::new(format)?);
+        context.bit_depth=10;context.bytes*=2;context.validate()?;
+        for mutation in 0..4 {let mut wrong=context.clone();match mutation {0=>wrong.media.ipc_version=3,1=>wrong.bit_depth=8,2=>wrong.bytes/=2,_=>wrong.bit_depth=12};assert!(wrong.validate().is_err());}
         Ok(())
     }
     #[test]

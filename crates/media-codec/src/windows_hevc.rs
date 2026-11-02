@@ -13,7 +13,7 @@ use std::{
     },
 };
 unsafe extern "C" {
-    fn nl_hevc_synthetic_open(width: u32, height: u32, result: *mut *mut c_void) -> i32;
+    fn nl_hevc_synthetic_open(width: u32, height: u32,bit_depth:u32, result: *mut *mut c_void) -> i32;
     fn nl_hevc_synthetic_borrow(
         source: *mut c_void,
         device: *mut *mut c_void,
@@ -44,16 +44,21 @@ fn authorized(authority: &AtomicBool) -> io::Result<()> {
 /// Only synthetic NV12 pixels. The source cannot enumerate or capture a desktop.
 pub struct HevcSyntheticSource {
     handle: NonNull<c_void>,
+    bit_depth:u8,
     _thread: PhantomData<Rc<()>>,
 }
 impl HevcSyntheticSource {
     pub fn new(width: u32, height: u32) -> io::Result<Self> {
+        Self::with_depth(width,height,8)
+    }
+    pub fn with_depth(width:u32,height:u32,bit_depth:u8)->io::Result<Self> {
         let mut handle = std::ptr::null_mut();
         // SAFETY: bounded constructor, initialized output; no borrowed pixels.
-        checked(unsafe { nl_hevc_synthetic_open(width, height, &mut handle) })?;
+        checked(unsafe { nl_hevc_synthetic_open(width, height,u32::from(bit_depth), &mut handle) })?;
         Ok(Self {
             handle: NonNull::new(handle)
                 .ok_or_else(|| io::Error::other("null synthetic source"))?,
+            bit_depth,
             _thread: PhantomData,
         })
     }
@@ -126,11 +131,11 @@ impl HevcProbeEncoder {
         authorized(&authority)?;
         let (device, _) = source.borrow()?;
         // SAFETY: same owner/device; native retains its device and four input textures.
-        let inner = unsafe { Transform::new_hevc(config, device, true, true) }?;
+        let inner = unsafe { if source.bit_depth==8 {Transform::new_hevc(config,device,true,true)} else {Transform::new_hevc_depth(config, device, true, true,source.bit_depth)} }?;
         Ok(Self {
             inner,
             config,
-            validator: Validator::default(),
+            validator: if source.bit_depth==10 {Validator::exact_main10()} else {Validator::default()},
             scratch: vec![0; 8 * 1024 * 1024],
             authority,
         })
@@ -229,18 +234,22 @@ impl HevcProbeDecoder {
         config: VideoConfig,
         authority: Arc<AtomicBool>,
     ) -> io::Result<Self> {
+        Self::with_depth(source,config,authority,8)
+    }
+    pub fn with_depth(source:Option<&HevcSyntheticSource>,config:VideoConfig,authority:Arc<AtomicBool>,bit_depth:u8)->io::Result<Self> {
         authorized(&authority)?;
+        if source.is_some_and(|source|source.bit_depth!=bit_depth) {return Err(io::Error::other("HEVC synthetic source depth differs"));}
         let device = source
             .map(HevcSyntheticSource::borrow)
             .transpose()?
             .map_or(std::ptr::null_mut(), |v| v.0);
         // SAFETY: owner-local device or null software decode; native retains COM references.
-        let inner = unsafe { Transform::new_hevc(config, device, false, source.is_some()) }?;
+        let inner = unsafe { Transform::new_hevc_depth(config, device, false, source.is_some(),bit_depth) }?;
         let size = inner.raw_bytes;
         Ok(Self {
             inner,
             config,
-            validator: Validator::default(),
+            validator: if bit_depth==10 {Validator::exact_main10()} else {Validator::default()},
             scratch: vec![0; size],
             authority,
         })

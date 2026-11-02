@@ -49,12 +49,12 @@ pub(super) fn prepare(
             .formats()
             .iter()
             .filter(|f| (f.width, f.height) == (layout.width, layout.height))
-            .filter(|f| crate::hevc_main8_contract(**f).is_ok())
+            .filter(|f| crate::hevc_contract(**f).is_ok())
             .max_by_key(|f| (f.frame_rate.numerator, f.max_kbps))
             .copied()
             .ok_or_else(|| io::Error::other("approved display lacks an exact signed HEVC target"))?
     };
-    let config = crate::hevc_main8_contract(format)?.config();
+    let config = crate::hevc_contract(format)?.config();
     if (config.width, config.height) != (layout.width, layout.height) {
         return Err(io::Error::other(
             "HEVC original display and execution geometry differ",
@@ -171,7 +171,7 @@ impl Decoder {
                     execution: Some(receipt.into()),
                     shared: picture.shared.take(),
                     source_color: format.color,
-                    codec: nestlink_protocol::NativeVideoCodec::HevcMain8 as u8,
+                    codec: crate::hevc_wire_codec(format)? as u8,
                     hardware_decode: true,
                     epoch,
                     source: packet.source,

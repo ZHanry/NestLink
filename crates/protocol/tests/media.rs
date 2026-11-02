@@ -66,6 +66,10 @@ fn hevc_wire_marker_requires_exact_identity_and_keeps_legacy_markers_strict() ->
     assert_eq!(NativeVideoCodec::Vp8 as i32, 0);
     assert_eq!(NativeVideoCodec::H264Baseline as i32, 1);
     assert_eq!(NativeVideoCodec::HevcMain8 as i32, 2);
+    assert_eq!(NativeVideoCodec::HevcMain10 as i32,3);
+    frame.codec=NativeVideoCodec::HevcMain10 as i32;
+    assert_eq!(NativeVideo::decode_validated(&frame.encode_validated()?)?,frame);
+    frame.format_epoch=0;frame.format_sha256.clear();assert!(frame.encode_validated().is_err());
     Ok(())
 }
 fn unhex(value: &str) -> Result<Vec<u8>> {

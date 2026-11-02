@@ -43,7 +43,7 @@ jobs:
       - name: Build and attempt original authorized service capacity with complete failure records
         shell: python
         run: |
-          import hashlib, json, os, pathlib, subprocess, time
+          import hashlib, json, os, pathlib, re, subprocess, time
           assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
           output = pathlib.Path(os.environ['RUNNER_TEMP'])/'network-capacity'
           output.mkdir()
@@ -73,24 +73,43 @@ jobs:
           receipt['offered_load']['same_lease_control_owners_per_wave'] = 20 if mode == 'multiplexed' else 1000
           def execute(name, command, timeout):
               started = time.monotonic()
-              with (output/(name+'.log')).open('wb') as stream, (output/(name+'.stderr.log')).open('wb') as errors:
-                  result = subprocess.run(command,stdout=stream,stderr=errors,timeout=timeout)
-              receipt['commands'].append({'name':name,'argv':command,'return_code':result.returncode,'seconds':time.monotonic()-started})
-              assert result.returncode == 0, name+' failed; original failure retained'
+              record = {'name':name,'argv':command,'timeout_seconds':timeout,'return_code':None,'timed_out':False}
+              receipt['commands'].append(record)
+              try:
+                  with (output/(name+'.log')).open('wb') as stream, (output/(name+'.stderr.log')).open('wb') as errors:
+                      result = subprocess.run(command,stdout=stream,stderr=errors,timeout=timeout)
+                  record['return_code'] = result.returncode
+                  assert result.returncode == 0, name+' failed; original failure retained'
+              except subprocess.TimeoutExpired:
+                  record['timed_out'] = True
+                  raise
+              finally:
+                  record['seconds'] = time.monotonic()-started
+          def execute_tests(name, command, timeout, expected):
+              execute(name, command, timeout)
+              summaries = re.findall(r'test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;', (output/(name+'.log')).read_text())
+              assert summaries == [(str(expected),'0','0')], name+' exact executed inventory differs'
           try:
               os.environ['NESTLINK_CAPACITY_SAMPLES'] = str(output/'samples.jsonl')
-              execute('build',['cargo','test',*cargo_profile,'--locked','-p','nestlink-sdk','--test','capacity','--no-run','--message-format=json-render-diagnostics'],1200)
-              artifacts = [item['executable'] for line in (output/'build.log').read_text().splitlines()
-                if (item:=json.loads(line)).get('reason')=='compiler-artifact' and item.get('target',{}).get('name')=='capacity' and item.get('executable')]
-              assert len(artifacts)==1, artifacts
-              executable = pathlib.Path(artifacts[0])
+              # Compile every harness under the original build budget. Test
+              # execution budgets must not accidentally include release LTO.
+              execute('build',['cargo','test',*cargo_profile,'--locked','-p','nestlink-sdk','--lib','--test','capacity','--test','private_services','--no-run','--message-format=json-render-diagnostics'],1200)
+              artifacts = [item for line in (output/'build.log').read_text().splitlines()
+                if (item:=json.loads(line)).get('reason')=='compiler-artifact' and item.get('executable')]
+              executables = {}
+              for name in ('nestlink_sdk','capacity','private_services'):
+                  matches = [item['executable'] for item in artifacts if item['target']['name']==name]
+                  assert len(matches)==1, (name,matches)
+                  executables[name] = pathlib.Path(matches[0])
+              receipt['test_executables'] = {name: {'path':str(path),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()} for name,path in executables.items()}
+              executable = executables['capacity']
               receipt['executable_sha256'] = hashlib.sha256(executable.read_bytes()).hexdigest()
-              execute('native-http-backpressure',['cargo','test',*cargo_profile,'--locked','-p','nestlink-sdk','--lib','http_admission::tests::','--','--show-output','--test-threads=1'],180)
+              execute_tests('native-http-backpressure',[str(executables['nestlink_sdk']),'http_admission::tests::','--show-output','--test-threads=1'],180,7)
               if mode == 'multiplexed':
-                  execute('explicit-negotiation',['cargo','test',*cargo_profile,'--locked','-p','nestlink-sdk','--lib','explicit_negotiation_preserves_legacy_wire_and_old_host_refusal','--','--show-output'],300)
-                  execute('multiplex-original-owners',['cargo','test',*cargo_profile,'--locked','-p','nestlink-sdk','--test','private_services','multiplex::','--','--show-output','--test-threads=1'],300)
+                  execute_tests('explicit-negotiation',[str(executables['nestlink_sdk']),'explicit_negotiation_preserves_legacy_wire_and_old_host_refusal','--show-output'],300,1)
+                  execute_tests('multiplex-original-owners',[str(executables['private_services']),'multiplex::','--show-output','--test-threads=1'],300,6)
               case = 'hundred_enrolled_nodes_twenty_pairs_thousand_'+('multiplexed' if mode == 'multiplexed' else 'simultaneous')+'_authorized_streams'
-              execute('execution',[str(executable),'--exact',case,'--ignored','--nocapture','--test-threads=1'],660)
+              execute_tests('execution',[str(executable),'--exact',case,'--ignored','--nocapture','--test-threads=1'],660,1)
               execute('strict-capacity',['cargo','clippy',*cargo_profile,'--locked','-p','nestlink-sdk','--test','capacity','--test','private_services','--','-D','warnings'],300)
               receipt['passed'] = True
           except BaseException as error:

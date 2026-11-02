@@ -409,6 +409,7 @@ impl Store {
             body.media_format_version,
             nestlink_protocol::media_authority::FORMAT_VERSION
                 | nestlink_protocol::media_authority::HEVC_FORMAT_VERSION
+                | nestlink_protocol::media_authority::HEVC_MAIN10_FORMAT_VERSION
         ) || (!self.media_issuance_enabled_for_request(&body.request.id) && candidate().is_err())
         {
             return Err(StorageError::Invalid(

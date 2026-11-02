@@ -167,6 +167,9 @@ impl Transform {
         encoder: bool,
         hardware: bool,
     ) -> io::Result<Self> {
+        unsafe {Self::new_hevc_depth(config,device,encoder,hardware,8)}
+    }
+    pub(super) unsafe fn new_hevc_depth(config:VideoConfig,device:*mut c_void,encoder:bool,hardware:bool,bit_depth:u8)->io::Result<Self> {
         unsafe extern "C" {
             fn nl_hevc_open(
                 device: *mut c_void,
@@ -176,6 +179,7 @@ impl Transform {
                 height: u32,
                 fps: u32,
                 kbps: u32,
+                bit_depth:u32,
                 result: *mut *mut c_void,
             ) -> i32;
         }
@@ -192,6 +196,7 @@ impl Transform {
                 config.height,
                 config.fps,
                 config.bitrate_kbps,
+                u32::from(bit_depth),
                 &mut handle,
             )
         };

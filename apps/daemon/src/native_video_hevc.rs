@@ -169,7 +169,7 @@ fn select_target(formats: &FormatSet, binding: NativeVideoBinding) -> io::Result
         .filter(|format| {
             format.codec == Codec::Hevc
                 && (format.width, format.height) == (binding.width, binding.height)
-                && nestlink_media_session::hevc_main8_contract(**format).is_ok()
+                && nestlink_media_session::hevc_contract(**format).is_ok()
         })
         .max_by_key(|format| (format.frame_rate.numerator, format.max_kbps))
         .copied()

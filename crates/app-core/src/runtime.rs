@@ -1432,7 +1432,7 @@ impl CoreHandle {
             let display_config = if value.format.codec
                 == nestlink_protocol::media_format::Codec::Hevc
             {
-                let config = nestlink_media_session::hevc_main8_contract(value.format)
+                let config = nestlink_media_session::hevc_contract(value.format)
                     .map_err(|_| NativeVideoError::Unauthorized)?
                     .config();
                 if (config.width, config.height) != (source_binding.width, source_binding.height) {
@@ -1490,7 +1490,7 @@ impl CoreHandle {
                 .as_ref()
                 .is_some_and(|v| v.format.codec == nestlink_protocol::media_format::Codec::Hevc)
             {
-                nestlink_protocol::NativeVideoCodec::HevcMain8 as i32
+                nestlink_media_session::hevc_wire_codec(confirmed.as_ref().ok_or(NativeVideoError::Unauthorized)?.format).map_err(|_|NativeVideoError::Unauthorized)? as i32
             } else if route
                 .lease
                 .media_capability(nestlink_protocol::media::H264_CAPABILITY)
