@@ -2885,10 +2885,12 @@
         "docs/network-rewrite/evidence/media-receiver-actual-mtls-5cde425.json",
         "docs/network-rewrite/evidence/media-and-native-files-2494ab3.json",
         "docs/network-rewrite/evidence/offline-media-b166d8b.json",
-        "docs/adr/network/0060-real-kernel-media-impairment.md"
+        "docs/adr/network/0060-real-kernel-media-impairment.md",
+        "docs/network-rewrite/evidence/media-real-impairment-failures.json",
+        "docs/adr/network/0062-separate-decoder-pressure-from-network.md"
       ],
       "blockers": [],
-      "implementation_notes": "Sourceb166d8b Linux41234566427 and ordinary Windows MF/Core41234569423 both fully passed strict original media/candidate HTTP approval+renewal/proposal+ACK/spatial-resolution owner replacement within their recorded scope. New actual kernel HTB/netem/fq_codel 1percent-loss20-to5Mbps experiment uses original QUIC/mTLS VP8, actual4MiB disk FileRead protocol and InputController observation. First69a failed original15s lease validation (strict compile passed); b376 run41368961040 reached real decode/file traffic and failed pre-step-budget>5Mbps, so2s downshift and p95+10ms are NOT qualified. efec diagnostic rerun41369633024 pending; no OS input/display, Windows H264 or fullAC53 claim.",
+      "implementation_notes": "Production receiver CPU classification separates DecoderLimited from real transport lag. source122a Actions41371534957 passed strict media lint and all40codec+64session original library regressions, but physical20to5Mbps failed original2s. source62bd Actions41372314200 preserved exactbudget timeline, realstep but no downshift5s; debugCPU limited actualcadence20to25 and selected8000kbps did not prove actual>5Mbps. sourceabf6499 now uses originalreleasebuild and stricter measuredpayload>5Mbps precondition;09fee95 fixes idleHealthy polls consuming the original500ms adjustment cooldown. All2s/10ms/100samples/frame/file assertions retained; optimizedphysical reruns pending. CompleteOSinput-display and WindowsCore concurrentfile acceptance remain unfinished.",
       "partial_verification": {
         "scoped_passed": true,
         "whole_task_passed": false,

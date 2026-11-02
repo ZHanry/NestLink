@@ -148,6 +148,36 @@
             "test result: ok. 64 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.26s"
           ]
         }
+      },
+      {
+        "source_revision": "62bdafad60dc128823bea1905e128a129a3f611f",
+        "run_id": 41372314200,
+        "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41372314200",
+        "job_id": 125045197025,
+        "artifact_id": 13109907113,
+        "github_artifact_digest": "sha256:e67c060761b563e5c657f1f8cb476ef1c785b51f836127b9b16292eeaed638ac",
+        "workflow_conclusion": "failure",
+        "strict_lint_conclusion": "success",
+        "receipt_sha256": "1a39822a2c902cf100fa6144b9b72813ee9cc3c9702fcd9c7256aa056e10662a",
+        "all_referenced_file_hashes_verified": true,
+        "files": {
+          "build.jsonl": "15a83f960065bd66bd833558c267e4554bce079f6636a16c78c8cf3b61aaab13",
+          "build.log": "7021e75ea7a109bb67f7414b03b713afb71dbe12e8d7a39acdee241a5973f5a9",
+          "configured": "084fe09c71b87a10131ae17355211acbbdbdbf7c229c499efdbe73171e8795a2",
+          "inventory.log": "ab16f75fc871931ced2593e87fce23e05a8c77e57d205a2d7d4583ddddb8753f",
+          "payload.bin": "1daa308fc5875f51fdaf44c00f1aa3263930913fae2c405ece0272dac3cf6b9a",
+          "post-step-stats.txt": "781ef965509c1c1aab42724d96a0de953995158ef24e75020130509c33219e59",
+          "pre-step-stats.txt": "2aa8e46e98298863bf2e33efd2dee7997f5fdfdaad9f87eb21db725d7c61707d",
+          "ready.json": "5b6e939bfd550fe6287fe7195b4179e75e12aec2e5d8806bf4c4da480ff2803c",
+          "step-budget-observations.txt": "1bdf3e6ffecb252ae8cb439d4a238b397608fcb3cc5ec6ef257ecdc18fe99333",
+          "step-request": "8f144a181947338e011551e3534b29f8ac104f7f838dca5d9281f6383e409b5a",
+          "stepped": "c3cdc98ef2c39a8a15718e4c678c876eee75f9d4a2e88cdadb4e73b6186f1709",
+          "tests.log": "06a07326cb1f04efdbba55db6d593849aa7e39517eef43fe5abcd388915d7b65"
+        },
+        "build_exit_code": 0,
+        "owned_qdisc_removed": true,
+        "scope_failure": "Debug codec/capture CPU limited actualcadence20to25fps; target8000kbps and Healthy pre-step, real step executed but no<=5000budget during5s. Original2s and p95 gates not qualified. Actual briefCongested between healthy polls was not acted on. Followup uses releasebuild and stricter actualpre-step>5Mbps payload gate; production cooldown now consumed only by actualbudget changes.",
+        "actual_pre_step_stats": "baseline=VideoSenderStats { receiver_reports: 7, feedback_requests: 0, duplicate_requests: 0, keyframes_encoded: 2, last_budget: Some(ProducerBudgetObservation { source: 42, cadence_fps: 22, bitrate_kbps: 8000, observed_at: Instant { tv_sec: 147, tv_nsec: 874362422 }, encoding_time: 28.279645ms, enqueue_time: 42.73µs, receiver_condition: Some(Healthy) }), enqueued_video_bytes: 2554126 }\nfile_loaded=VideoSenderStats { receiver_reports: 14, feedback_requests: 0, duplicate_requests: 0, keyframes_encoded: 3, last_budget: Some(ProducerBudgetObservation { source: 42, cadence_fps: 20, bitrate_kbps: 8000, observed_at: Instant { tv_sec: 151, tv_nsec: 921264986 }, encoding_time: 47.096641ms, enqueue_time: 39.133µs, receiver_condition: Some(Healthy) }), enqueued_video_bytes: 4491093 }\n"
       }
     ]
   },
@@ -162,9 +192,9 @@
     ]
   },
   "followup": {
-    "source_revision": "62bdafad60dc128823bea1905e128a129a3f611f",
-    "run_id": 41372314200,
+    "source_revision": "abf6499c545974f5f113ffe51e06cdf83dd8f365",
+    "run_id": 41372948671,
     "state": "running",
-    "change": "Preserve actual per-budget observations before the unchanged2s assertion, to distinguish measured receiver CPU cost, enqueue pressure and report lag. No gate changed."
+    "change": "Original Cargo release performance build, stricter actualpayload>5Mbps precondition, samegeometry/content/fps/fileandinputload and originalassertions. New09fee95productioncooldownfix awaits subsequent exactrun."
   }
 }

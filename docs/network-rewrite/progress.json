@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "efec94fe20273f27a32ff0a64856315776f8ef7f",
-  "checkpoint_kind": "qualified_offline_TLS_windows_product_CLI_and_linux_packages_actual_media_step_failure_under_repair",
+  "source_revision": "09fee9572e77d72a522a35dfcdc33a90327426a1",
+  "checkpoint_kind": "full_rust_root_sdk_passed_production_capability_qualified_offline_and_hevc_continuing_real_media_performance_failure_under_repair",
   "active_tasks": [
     "W00",
     "W02",
@@ -57,7 +57,7 @@
     "W22 Source1e7b236 run41236273780 fully passed hosted ordinary IPC, 1016-byte main future and original8 process cases, original9 native cases including non-test product HTTPS protected-login restore, actual CLI/Clap, one-use HTTP/SQLite QUIC IPv4/IPv6 traffic, authenticated DELETE/403 revoke and814ms physical TUN/UDP cleanup. Independent live Wintun snapshots preserved throughout; its separate owner cleanup1500ms. Strict Clippy passed. Independent target TCP/full third-party VPN and complete system acceptance remain open.",
     "W26 Source4fc9c30 hosted run41223203804 passed all five exact regressions and actual fixed IPVS HTTP/HTTPS/TCP/UDP across two edge processes, cooperative stop and independent SIGKILL, revoke, old-runtime revival isolation, four-domain accounting and physical cleanup. Both failure modes recovered new connections within original5s. Independent public target ingress/DNS and complete W26 acceptance remain open.",
     "W27 Sourceb166d8b fully passed offline authority/storage/HTTP-SDK and physical socket/poller cleanup, including original independent remote QUIC after online expiry. Source55de3cd run41235596155 all jobs success adds explicitly approved mutual TLS1.3 remote business concurrently with QUIC, original shared attempts/bytes, Input refusal, process-stop and UDP/TCP listener release. Complete native AppCore capture/input/file OS adapters, finite offline UI and multiple-resident lifecycle remain implementation work; no wholeW27 claim.",
-    "W31 Sourceb166d8b Linux41234566427 and ordinary Windows MF/Core41234569423 both fully passed strict original media/candidate HTTP approval+renewal/proposal+ACK/spatial-resolution owner replacement within their recorded scope. New actual kernel HTB/netem/fq_codel 1percent-loss20-to5Mbps experiment uses original QUIC/mTLS VP8, actual4MiB disk FileRead protocol and InputController observation. First69a failed original15s lease validation (strict compile passed); b376 run41368961040 reached real decode/file traffic and failed pre-step-budget>5Mbps, so2s downshift and p95+10ms are NOT qualified. efec diagnostic rerun41369633024 pending; no OS input/display, Windows H264 or fullAC53 claim."
+    "W31 source122a run41371534957 strict lint and all40codec+64media-session original tests passed; actual kernel20-to5Mbps failed original2s. source62bdafa run41372314200 preserved full budget observations, failed no downshift5s; debugcodec CPU limited actualcadence and traffic, selected8000kbps not proof of >5Mbps actual load. sourceabf6499run41372948671 uses original releaseperformance build and adds measuredactualpayload>5Mbps precondition. Production09fee95onlyactualbudgetchangesconsume500mscooldown; no original2s/p95+10ms/samplecount/frame/file gates weakened. No OSinput/display or fullAC53 claim."
   ],
   "external_prerequisites": [
     {
@@ -94,6 +94,9 @@
     "Complete security/E2E/capacity and required target qualification, produce same-source signed candidates and publish0.8.0RC only when mandatory gates satisfied."
   ],
   "evidence_index": [
+    "docs/adr/network/0062-separate-decoder-pressure-from-network.md",
+    "docs/network-rewrite/evidence/media-real-impairment-failures.json",
+    "docs/network-rewrite/evidence/production-capability-47a0cec.json",
     "docs/adr/network/0061-bound-production-capability-exchange.md",
     "docs/adr/network/0060-real-kernel-media-impairment.md",
     "docs/network-rewrite/evidence/core-and-network-c0fc249.json",
@@ -641,5 +644,33 @@
       "status": "in_progress",
       "scope": "Remote cumulative budget plus original finite offline authorization/carrier/resident regressions; no pass claimed"
     }
-  ]
+  ],
+  "current_hosted_runs": {
+    "rust_core": {
+      "run_id": 41372155731,
+      "source_revision": "c82bd8d9d47165d14acaf7f1c3ed26c942bee10a",
+      "state": "running",
+      "scope": "RootSDKroutedinventoryproofs passedbothOS; qualityprojectionoldIPCstepfailed; providerwidthfix14adlater; dependenciestransientcrates.ioHTTP2failure awaitsretry"
+    },
+    "media_impairment": {
+      "run_id": 41372948671,
+      "source_revision": "abf6499c545974f5f113ffe51e06cdf83dd8f365",
+      "state": "running"
+    },
+    "teeworlds": {
+      "run_id": 41372210583,
+      "source_revision": "c82bd8d9d47165d14acaf7f1c3ed26c942bee10a",
+      "state": "actualofficialexecutionpassed_workflowfailedprovidercompile",
+      "whole_task_passed": false
+    }
+  },
+  "branch_inventory": {
+    "verified_at": "2026-11-02T01:32:00Z",
+    "local": [
+      "main"
+    ],
+    "remote": [
+      "main"
+    ]
+  }
 }
