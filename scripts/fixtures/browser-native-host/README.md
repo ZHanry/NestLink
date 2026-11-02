@@ -39,9 +39,11 @@ its SHA512 in `docs/refactor/firefox-stable-linux.lock.json`; each run retains
 the actual executable version/SHA256 and source. It generates a one-day
 127.0.0.1 certificate and fresh browser profile. Chrome receives only the exact
 leaf SPKI for that process; broad certificate-error bypass is disabled and no
-installed profile or system trust store is changed. Firefox instead trusts only
-the exact CA:FALSE leaf as an SSL peer in its fresh owned NSS profile, with
-`acceptInsecureCerts=false`. Its BiDi response and download completion adapters
+installed profile or system trust store is changed. Firefox instead imports a
+fresh pathlen0 CA constrained to127.0.0.1 into its owned NSS profile and uses its
+CA:FALSE signed leaf, with `acceptInsecureCerts=false` and normal chain/name/time
+verification. The served leaf remains independently checked byte-for-byte.
+Its BiDi response and download completion adapters
 retain the same media, input, file and cleanup requirements; see
 `docs/refactor/FIREFOX-NATIVE-ACTIONS.md` from the repository root. The runner independently
 verifies the TLS certificate, IP SAN and same-run production index before browsing.

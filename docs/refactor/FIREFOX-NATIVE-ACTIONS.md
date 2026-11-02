@@ -21,15 +21,21 @@ their separate names. A newer stable release requires a reviewed lock change;
 the job does not silently download a moving version.
 
 The existing pinned puppeteer-core 25.14.0 launches Firefox with WebDriver BiDi,
-a fresh owned profile and `acceptInsecureCerts=false`. The generated certificate
-retains its 127.0.0.1 IP SAN, one-day validity and CA:FALSE constraint. NSS certutil
-imports only that exact certificate as an SSL trusted peer (`P,,`) into the
-new profile's cert9 database and reads it back to compare its complete DER
-bytes. Enterprise-root import is disabled for this owned Firefox profile. No
-normal browser profile or OS trust store changes. The runner's independent TLS
-connection still verifies the exact leaf and same-run production index before
-the browser starts. Firefox has no Chromium SPKI switch and receives no broad
-certificate-error bypass, custom clipboard grants or user-activation bypass.
+a fresh owned profile and `acceptInsecureCerts=false`. Firefox159's original
+`NSSCertDBTrustDomain::GetCertTrust` admits NSS CA anchors for trust, so this
+engine uses a standard fresh local CA and leaf chain. The one-day CA has
+critical pathlen0 and nameConstraints permitting only127.0.0.1, plus serverAuth
+usage. Its signed leaf retains the127.0.0.1 IP SAN, one-day validity and CA:FALSE
+constraint. NSS certutil imports only that exact constrained root (`C,,`) into
+the new profile's cert9 database and reads it back to compare complete DER
+bytes. Both private keys remain in the attempt's0700 directory with0600 modes.
+Enterprise-root import is disabled for this owned Firefox profile. No normal
+browser profile or OS trust store changes. Normal chain, hostname and validity
+checks remain enabled. The runner's independent TLS connection also verifies
+the exact served leaf and same-run production index before the browser starts.
+Firefox has no Chromium SPKI switch and receives no broad certificate-error
+bypass, custom clipboard grants or user-activation bypass. The fixed verifier
+source is `https://github.com/mozilla-firefox/firefox/blob/FIREFOX_159_0_RELEASE/security/certverifier/NSSCertDBTrustDomain.cpp`.
 
 The original trusted Puppeteer input, real SDK/server/SQLite controls, isolated
 recipient context, OPFS and Web Locks tests remain in the common probe. Six

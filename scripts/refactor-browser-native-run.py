@@ -428,6 +428,28 @@ def make_tls(private, origin, browser_product="chrome"):
              "-addext", "basicConstraints=critical,CA:FALSE", "-addext", "extendedKeyUsage=serverAuth",
              "-keyout", str(key), "-out", str(cert)])
     key.chmod(0o600)
+    ca = private / "firefox-ca.pem"
+    if browser_product == "firefox":
+        # Firefox159's verifier trusts NSS CA anchors, not the older trusted
+        # peer bit. Use an ordinary local chain, constrained to this IP, with
+        # no system trust modification or broad certificate-error override.
+        ca_key = private / "firefox-ca-key.pem"
+        command(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-sha256", "-nodes", "-days", "1",
+                 "-subj", "/CN=NestLink owned loopback validation CA",
+                 "-addext", "basicConstraints=critical,CA:TRUE,pathlen:0",
+                 "-addext", "keyUsage=critical,keyCertSign,cRLSign",
+                 "-addext", "extendedKeyUsage=serverAuth",
+                 "-addext", "nameConstraints=critical,permitted;IP:127.0.0.1/255.255.255.255",
+                 "-keyout", str(ca_key), "-out", str(ca)])
+        ca_key.chmod(0o600)
+        csr = private / "firefox-leaf.csr"
+        command(["openssl", "req", "-new", "-key", str(key), "-subj", "/CN=127.0.0.1", "-out", str(csr)])
+        extensions = private / "firefox-leaf.ext"
+        extensions.write_text("subjectAltName=IP:127.0.0.1\nbasicConstraints=critical,CA:FALSE\n"
+                              "keyUsage=critical,digitalSignature,keyEncipherment\n"
+                              "extendedKeyUsage=serverAuth\n", encoding="ascii")
+        command(["openssl", "x509", "-req", "-in", str(csr), "-CA", str(ca), "-CAkey", str(ca_key),
+                 "-set_serial", "1", "-days", "1", "-sha256", "-extfile", str(extensions), "-out", str(cert)])
     leaf = command(["openssl", "x509", "-in", str(cert), "-outform", "DER"])
     public = command(["openssl", "x509", "-in", str(cert), "-pubkey", "-noout"])
     spki = command(["openssl", "pkey", "-pubin", "-outform", "DER"], input_bytes=public)
@@ -435,20 +457,22 @@ def make_tls(private, origin, browser_product="chrome"):
            "leaf_spki_sha256_base64": base64.b64encode(hashlib.sha256(spki).digest()).decode("ascii"),
            "profile": str(private / "profile")}
     if browser_product == "firefox":
-        # NSS trusts only this exact CA:FALSE leaf as an SSL peer. Its fresh
-        # database belongs to the private attempt, never a system/user profile.
+        # Only this fresh loopback-constrained CA enters this private profile.
+        # The served leaf is still independently checked byte-for-byte below.
         profile = private / "profile"
         profile.mkdir(mode=0o700)
         database = "sql:" + str(profile)
         command(["certutil", "-N", "--empty-password", "-d", database])
-        command(["certutil", "-A", "-d", database, "-n", "nestlink-owned-loopback-leaf",
-                 "-t", "P,,", "-i", str(cert)])
+        command(["certutil", "-A", "-d", database, "-n", "nestlink-owned-loopback-ca",
+                 "-t", "C,,", "-i", str(ca)])
         imported = command(["certutil", "-L", "-d", database,
-                            "-n", "nestlink-owned-loopback-leaf", "-a"])
+                            "-n", "nestlink-owned-loopback-ca", "-a"])
         readback = command(["openssl", "x509", "-outform", "DER"], input_bytes=imported)
-        if readback != leaf:
-            raise ValueError("Firefox NSS imported certificate differs from the exact temporary leaf")
-        tls["firefox_profile_exact_leaf_trusted"] = True
+        ca_der = command(["openssl", "x509", "-in", str(ca), "-outform", "DER"])
+        if readback != ca_der:
+            raise ValueError("Firefox NSS imported CA differs from the exact constrained temporary root")
+        tls["firefox_profile_scoped_ca_trusted"] = True
+        tls["firefox_ca_sha256"] = sha256(ca_der)
     write_json(private / "tls.json", tls)
     return tls
 
@@ -492,7 +516,8 @@ def wait_ready(path, process):
 
 def verify_https(private, tls, site, process):
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    context.load_verify_locations(cafile=str(private / "leaf.pem"))
+    context.load_verify_locations(cafile=str(private / (
+        "firefox-ca.pem" if tls.get("firefox_profile_scoped_ca_trusted") is True else "leaf.pem")))
     deadline = time.monotonic() + 12
     while time.monotonic() < deadline:
         if process.poll() is not None:

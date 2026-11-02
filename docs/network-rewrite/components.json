@@ -43,7 +43,7 @@
       "selection_reason": "Reuse the mature browser and its original BiDi automation; no new driver, protocol client or fake engine.",
       "adapter_boundary": "Owned loopback fixture only. Thin bounded response/claims observer, actual request JSON and standard BiDi download completion events. Original production authorization, UI, media counters, thresholds and cleanup remain required.",
       "security_and_operations_cost": [
-        "Profile-local exact CA:FALSE leaf peer trust, acceptInsecureCerts=false and no system trust changes",
+        "Profile-local fresh pathlen0 CA constrained to127.0.0.1, CA:FALSE leaf independently pinned by runner, acceptInsecureCerts=false and no system trust changes",
         "Puppeteer BiDi body collector has its own20MB encoded buffer; adapter rejects projected response bodies above262144bytes and reads only completed original requests",
         "Pinned internal BiDi connection/frame context used only to observe standard download events; no new permission or interception commands",
         "Firefox has no equivalent of the separate CDP page WebRTC impairment mode; explicit refusal remains and that scenario stays pending",

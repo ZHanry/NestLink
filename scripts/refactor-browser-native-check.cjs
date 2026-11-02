@@ -38,7 +38,7 @@ const origin = new URL(ready.origin);
 if (origin.protocol !== 'https:' || origin.hostname !== '127.0.0.1' || !origin.port || !ready.scope.startsWith('Ephemeral local development fixture')) throw new Error('Only the owned HTTPS loopback fixture is allowed');
 const tls = JSON.parse(fs.readFileSync(args.tls, 'utf8'));
 if (tls.origin !== ready.origin || tls.global_trust_modified !== false || !/^[A-Za-z0-9+/]{43}=$/.test(tls.leaf_spki_sha256_base64)) throw new Error('An isolated temporary certificate trust setup is required');
-if (args.engine === 'firefox' && tls.firefox_profile_exact_leaf_trusted !== true) throw new Error('Firefox requires the exact temporary leaf in its fresh owned NSS profile');
+if (args.engine === 'firefox' && (tls.firefox_profile_scoped_ca_trusted !== true || !/^[a-f0-9]{64}$/.test(tls.firefox_ca_sha256))) throw new Error('Firefox requires the constrained temporary CA in its fresh owned NSS profile');
 if (fs.existsSync(args.report)) throw new Error('Preserve the previous browser report');
 const toolsPromise = import(require('node:url').pathToFileURL(path.join(path.resolve(args.tools), 'lib', 'puppeteer', 'puppeteer-core.js')).href);
 if (require(path.join(path.resolve(args.tools), 'package.json')).version !== '25.14.0') throw new Error('Use the reviewed pinned Puppeteer runtime');
@@ -70,7 +70,8 @@ const retainSample = value => {
   fs.fsyncSync(progress);
 };
 report.tls = { origin: tls.origin, leaf_sha256: tls.leaf_sha256, global_trust_modified: false,
-  browser_trust: args.engine === 'firefox' ? 'Exact temporary leaf SSL peer in this fresh NSS profile only' : 'Exact temporary leaf SPKI in this fresh process only' };
+  ...(args.engine === 'firefox' ? { ca_sha256: tls.firefox_ca_sha256 } : {}),
+  browser_trust: args.engine === 'firefox' ? 'Fresh owned profile CA constrained to 127.0.0.1, with independently verified exact leaf' : 'Exact temporary leaf SPKI in this fresh process only' };
 
 function check(value, message) { if (!value) throw new Error(message); }
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));

@@ -107,34 +107,47 @@ def completed_receipts():
 
 
 class NativeRunnerTests(unittest.TestCase):
-    def test_firefox_trusts_only_the_exact_generated_leaf_in_its_owned_profile(self):
+    def test_firefox_trusts_only_the_exact_loopback_constrained_ca_in_its_owned_profile(self):
         with tempfile.TemporaryDirectory() as directory:
             private = Path(directory)
             calls = []
 
             def command(arguments, *, input_bytes=None):
                 calls.append(arguments)
-                if arguments[:2] == ["openssl", "req"]:
-                    (private / "leaf-key.pem").write_bytes(b"owned-key")
-                    (private / "leaf.pem").write_bytes(b"owned-leaf-pem")
+                if arguments[:2] == ["openssl", "req"] and "-keyout" in arguments:
+                    Path(arguments[arguments.index("-keyout") + 1]).write_bytes(b"owned-key")
+                    Path(arguments[arguments.index("-out") + 1]).write_bytes(b"owned-cert-pem")
                 if arguments[:2] == ["openssl", "x509"]:
+                    if input_bytes == b"owned-ca-pem" or str(private / "firefox-ca.pem") in arguments:
+                        return b"owned-ca-der"
                     return b"owned-leaf-der" if "-outform" in arguments else b"owned-public-key"
                 if arguments[0] == "certutil" and "-L" in arguments:
-                    return b"owned-leaf-pem"
+                    return b"owned-ca-pem"
                 return b"owned-spki"
 
             with patch.object(RUNNER, "command", side_effect=command):
                 tls = RUNNER.make_tls(private, "https://127.0.0.1:45678", "firefox")
-            self.assertIs(tls["firefox_profile_exact_leaf_trusted"], True)
+            self.assertIs(tls["firefox_profile_scoped_ca_trusted"], True)
+            self.assertEqual(tls["firefox_ca_sha256"], RUNNER.sha256(b"owned-ca-der"))
+            self.assertEqual(tls["leaf_sha256"], RUNNER.sha256(b"owned-leaf-der"))
             self.assertIs(tls["global_trust_modified"], False)
             nss = [arguments for arguments in calls if arguments[0] == "certutil"]
             self.assertEqual(len(nss), 3)
             for arguments in nss:
                 self.assertEqual(arguments[arguments.index("-d") + 1], "sql:" + str(private / "profile"))
             imported = next(arguments for arguments in nss if "-A" in arguments)
-            self.assertEqual(imported[imported.index("-t") + 1], "P,,")
-            self.assertEqual(imported[imported.index("-i") + 1], str(private / "leaf.pem"))
+            self.assertEqual(imported[imported.index("-t") + 1], "C,,")
+            self.assertEqual(imported[imported.index("-i") + 1], str(private / "firefox-ca.pem"))
             self.assertIn("basicConstraints=critical,CA:FALSE", calls[0])
+            authority = next(arguments for arguments in calls if "basicConstraints=critical,CA:TRUE,pathlen:0" in arguments)
+            self.assertIn("nameConstraints=critical,permitted;IP:127.0.0.1/255.255.255.255", authority)
+            self.assertIn("keyUsage=critical,keyCertSign,cRLSign", authority)
+            self.assertIn("extendedKeyUsage=serverAuth", authority)
+            leaf_extensions = (private / "firefox-leaf.ext").read_text(encoding="ascii")
+            self.assertIn("basicConstraints=critical,CA:FALSE\n", leaf_extensions)
+            self.assertIn("subjectAltName=IP:127.0.0.1\n", leaf_extensions)
+            signing = next(arguments for arguments in calls if "-CAkey" in arguments)
+            self.assertEqual(signing[signing.index("-out") + 1], str(private / "leaf.pem"))
 
     def test_firefox_requires_its_real_runtime_bidi_owner_and_same_original_media_thresholds(self):
         receipts = completed_receipts()
