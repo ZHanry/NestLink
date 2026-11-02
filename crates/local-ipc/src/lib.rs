@@ -215,6 +215,10 @@ pub struct VerifiedLocalPeer {
 impl VerifiedLocalPeer {
     pub fn process_id(&self) -> u32 { self.process.process_id() }
     pub fn runtime_id(&self) -> &str { &self.runtime_id }
+    pub fn export_target(&self) -> Result<nestlink_platform_security::local_stream::VerifiedProcessExportTarget> {
+        self.check_current()?;
+        self.process.export_target().map_err(|_| Error::Authentication)
+    }
     pub fn check_current(&self) -> Result<()> {
         if self.stopped.as_ref().is_some_and(|stopped| *stopped.borrow() || stopped.has_changed().is_err()) {
             return Err(Error::Stopped);

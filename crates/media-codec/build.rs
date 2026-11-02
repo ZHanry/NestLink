@@ -4,6 +4,7 @@ use std::{env, fs, io, path::PathBuf};
 fn main() -> io::Result<()> {
     println!("cargo:rerun-if-env-changed=NESTLINK_CODEC_PREFIX");
     println!("cargo:rerun-if-changed=src/owner_observation.h");
+    println!("cargo:rerun-if-changed=src/shared_decode_surface.h");
     let prefix = PathBuf::from(env::var_os("NESTLINK_CODEC_PREFIX").ok_or_else(|| {
         io::Error::new(io::ErrorKind::NotFound, "run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation")
     })?);

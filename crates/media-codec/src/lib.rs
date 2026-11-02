@@ -47,6 +47,10 @@ pub use hevc_main8::{HevcMain8Admission, HevcMain8Contract};
 #[cfg(windows)]
 mod windows_hevc_owner;
 #[cfg(windows)]
+mod windows_shared_output;
+#[cfg(windows)]
+pub use windows_shared_output::{SharedDecodedFrame, SharedFrameDescriptor, SharedRingDescriptor};
+#[cfg(windows)]
 pub use windows_hevc_owner::{
     HevcDecodedOutput, HevcOwnerOutput, MfHevcHardwareDecoder, MfHevcTextureEncoder,
 };

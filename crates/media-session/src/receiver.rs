@@ -34,6 +34,8 @@ mod hevc;
 /// older presentation image may be replaced in this per-source mailbox.
 pub struct DecodedVideo {
     pub(crate) execution: Option<crate::LiveExecutionReceipt>,
+    #[cfg(windows)]
+    pub(crate) shared: Option<nestlink_media_codec::SharedDecodedFrame>,
     /// Encoded YUV source conversion; does not label the returned BGRA as
     /// limited-range RGB, establish capture transfer, or prove display HDR.
     pub source_color: nestlink_protocol::media_format::Color,
@@ -49,6 +51,15 @@ pub struct DecodedVideo {
     pub repeated_source: bool,
 }
 impl DecodedVideo {
+    #[cfg(windows)]
+    pub fn shared_surface(&self) -> io::Result<Option<&nestlink_media_codec::SharedDecodedFrame>> {
+        let Some(frame) = &self.shared else { return Ok(None); };
+        let Some(crate::LiveExecutionReceipt::Hevc(execution)) = &self.execution else {
+            return Err(io::Error::other("shared surface lacks original HEVC execution"));
+        };
+        execution.check_shared(frame)?;
+        Ok(Some(frame))
+    }
     pub(crate) fn export_execution(&self) -> io::Result<Option<crate::LiveExecutionReceipt>> {
         let Some(execution) = &self.execution else {
             if self.codec > nestlink_protocol::NativeVideoCodec::H264Baseline as u8 {
@@ -1810,6 +1821,8 @@ impl Decoder {
         Ok(Some((
             DecodedVideo {
                 execution,
+                #[cfg(windows)]
+                shared: None,
                 source_color: color,
                 codec: packet.codec as u8,
                 hardware_decode: self.codec.as_ref().is_some_and(VideoDecoder::hardware),
@@ -2837,6 +2850,8 @@ mod tests {
     fn image(sequence: u64, pts_90khz: u64) -> DecodedVideo {
         DecodedVideo {
             execution: None,
+            #[cfg(windows)]
+            shared: None,
             source_color: nestlink_protocol::media_format::Color::LEGACY_VP8_BT601,
             codec: 0,
             hardware_decode: false,

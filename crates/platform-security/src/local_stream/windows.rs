@@ -2,7 +2,7 @@
 //! OS-reported peer token policy. No broker input capability or elevation.
 #![allow(unsafe_code)]
 use super::*;
-use std::{ffi::c_void, mem::size_of, os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle}, ptr::null_mut, sync::{Arc, atomic::{AtomicBool, Ordering}}, time::Duration};
+use std::{ffi::c_void, mem::size_of, os::windows::io::{AsHandle, AsRawHandle, BorrowedHandle, FromRawHandle, OwnedHandle}, ptr::null_mut, sync::{Arc, atomic::{AtomicBool, Ordering}}, time::Duration};
 use tokio::net::windows::named_pipe::{ClientOptions, NamedPipeServer, ServerOptions};
 use windows_sys::Win32::{
     Foundation::{
@@ -19,7 +19,7 @@ use windows_sys::Win32::{
     System::{
         Pipes::{GetNamedPipeClientProcessId, GetNamedPipeServerProcessId},
         Threading::{
-            GetCurrentProcess, GetProcessId, OpenProcess, OpenProcessToken, WaitForSingleObject, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SYNCHRONIZE,
+            GetCurrentProcess, GetProcessId, OpenProcess, OpenProcessToken, WaitForSingleObject, PROCESS_DUP_HANDLE, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SYNCHRONIZE,
         },
     },
 };
@@ -60,8 +60,25 @@ struct PeerState {
 /// Clones share the original pipe's revocation; no PID or JSON constructor exists.
 #[derive(Clone)]
 pub struct VerifiedPeerProcess(Arc<PeerState>);
+/// Export destination for the original pipe peer, never a reopened PID. The
+/// handle stays private and every synchronous use checks its original fence.
+#[derive(Clone)]
+pub struct VerifiedProcessExportTarget(VerifiedPeerProcess);
+impl VerifiedProcessExportTarget {
+    pub fn check_current(&self) -> io::Result<()> { self.0.check_current() }
+    pub fn with_process_handle<T>(&self, operation: impl FnOnce(BorrowedHandle<'_>) -> io::Result<T>) -> io::Result<T> {
+        self.check_current()?;
+        let result = operation(self.0.0.process.as_handle())?;
+        self.check_current()?;
+        Ok(result)
+    }
+}
 impl VerifiedPeerProcess {
     pub fn process_id(&self) -> u32 { self.0.pid }
+    pub fn export_target(&self) -> io::Result<VerifiedProcessExportTarget> {
+        self.check_current()?;
+        Ok(VerifiedProcessExportTarget(self.clone()))
+    }
     pub fn check_current(&self) -> io::Result<()> {
         if !self.0.active.load(Ordering::Acquire)
             || unsafe { WaitForSingleObject(self.0.process.as_raw_handle().cast(), 0) } != WAIT_TIMEOUT
@@ -176,7 +193,7 @@ fn peer_pid(pipe: HANDLE, server: bool) -> io::Result<u32> {
 }
 fn peer_process(pipe: HANDLE, server: bool, expected: &Owner) -> io::Result<VerifiedPeerProcess> {
     let pid = peer_pid(pipe, server)?;
-    let process = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_SYNCHRONIZE, 0, pid) };
+    let process = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_SYNCHRONIZE | PROCESS_DUP_HANDLE, 0, pid) };
     if process.is_null() {
         return Err(io::Error::last_os_error());
     }

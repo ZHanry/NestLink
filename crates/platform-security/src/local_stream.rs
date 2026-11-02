@@ -20,7 +20,7 @@ mod windows;
 #[cfg(windows)]
 pub use windows::{Listener, connect};
 #[cfg(windows)]
-pub use windows::{VerifiedPeerProcess, endpoint_for};
+pub use windows::{VerifiedPeerProcess, VerifiedProcessExportTarget, endpoint_for};
 
 trait StreamIo: AsyncRead + AsyncWrite + Unpin + Send {}
 impl<T: AsyncRead + AsyncWrite + Unpin + Send> StreamIo for T {}

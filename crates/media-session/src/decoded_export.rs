@@ -194,6 +194,8 @@ mod tests {
     fn frame(sequence: u64, pts: u64) -> DecodedVideo {
         DecodedVideo {
             execution: None,
+            #[cfg(windows)]
+            shared: None,
             source_color: Color::LEGACY_VP8_BT601,
             codec: 0,
             hardware_decode: false,

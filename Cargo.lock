@@ -3871,6 +3871,7 @@ version = "0.7.0-rc.1"
 dependencies = [
  "cc",
  "fast_image_resize",
+ "nestlink-platform-security",
  "serde",
  "serde_json",
  "sha2 0.10.9",

@@ -1,6 +1,7 @@
 // First-party bounded Media Foundation bridge; HEVC diagnostic extension draft.
 // Worker-thread ownership,
-// no shared handles or pointers cross the application IPC boundary.
+// COM pointers stay on the original worker. Shared NT handles target only the
+// retained OS process capability supplied by the native pinned TLS owner.
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
@@ -26,6 +27,7 @@
 #include <dxgi1_2.h>
 #include "owner_observation.h"
 using Microsoft::WRL::ComPtr;
+#include "shared_decode_surface.h"
 namespace {
 constexpr size_t raw_limit = 64 * 1024 * 1024;
 constexpr size_t packet_limit = 8 * 1024 * 1024;
@@ -92,6 +94,7 @@ struct Codec {
     uint32_t gpu_calls=0, gpu_accepted=0, gpu_pool_blocked=0, gpu_outputs=0, gpu_need_input=0, gpu_copy_pending=0;
     std::array<ComPtr<ID3D11Texture2D>, 4> gpu_slots;
     std::shared_ptr<GpuRelease> gpu_release;
+    std::unique_ptr<SharedDecodeRing> shared_output;
 
     std::array<BufferedOutput, 2> ready;
     size_t ready_head = 0, ready_size = 0, ready_bytes = 0;
@@ -105,6 +108,7 @@ struct Codec {
             transform->ProcessMessage(MFT_MESSAGE_NOTIFY_END_STREAMING, 0);
         }
         for (auto& entry : ready) entry.reset();
+        shared_output.reset();
         events.Reset(); transform.Reset();
         for (auto& texture : gpu_slots) texture.Reset();
         gpu_release.reset(); manager.Reset(); context.Reset(); device.Reset();
@@ -315,6 +319,10 @@ HRESULT choose_decoder_output(Codec& state) {
 }
 HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* length, uint64_t* pts, DWORD wait_ms) {
     *length = 0;
+    if(state.shared_output) {
+        const HRESULT shared=state.shared_output->room();
+        if(shared!=S_OK)return shared;
+    }
     if (state.events) {
         HRESULT hr = poll_events(state);
         if (FAILED(hr)) return hr;
@@ -387,6 +395,10 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
                     static_cast<uint64_t>(desc.Width)*desc.Height*3/2 > raw_limit ||
                     ((desc.Width|desc.Height)&1) || desc.Format != DXGI_FORMAT_NV12)
                     return MF_E_INVALIDMEDIATYPE;
+                if(state.shared_output) {
+                    hr=state.shared_output->copy(texture.Get(),subresource,*pts);
+                    if(hr!=S_OK)return FAILED(hr)?hr:E_UNEXPECTED;
+                }
                 desc.Usage = D3D11_USAGE_STAGING; desc.BindFlags = 0;
                 desc.MiscFlags = 0; desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
                 desc.ArraySize = 1; desc.MipLevels = 1;
@@ -714,6 +726,32 @@ extern "C" int32_t nl_mf_bitrate(void* opaque, uint32_t kbps) noexcept {
     auto* state = static_cast<Codec*>(opaque);
     if (!state || !state->encoder || state->thread != GetCurrentThreadId() || kbps < 64 || kbps > 100000) return E_INVALIDARG;
     return set_codec_value(state->transform.Get(), CODECAPI_AVEncCommonMeanBitRate, kbps*1000);
+}
+extern "C" int32_t nl_mf_enable_shared_output(void* opaque,void* process,NlSharedRingDescriptor* result) noexcept {
+    auto* state=static_cast<Codec*>(opaque);
+    if(!state || state->thread!=GetCurrentThreadId() || state->encoder || !state->hevc || !state->hardware ||
+        !state->device || !state->context || state->shared_output || !result)return E_INVALIDARG;
+    std::unique_ptr<SharedDecodeRing> ring(new(std::nothrow)SharedDecodeRing());if(!ring)return E_OUTOFMEMORY;
+    const HRESULT hr=ring->initialize(state->device.Get(),state->context.Get(),static_cast<HANDLE>(process),
+        state->width,state->height,result);
+    if(FAILED(hr))return hr;
+    state->shared_output=std::move(ring);return S_OK;
+}
+extern "C" int32_t nl_mf_shared_frame(void* opaque,uint64_t pts,NlSharedFrame* result) noexcept {
+    auto* state=static_cast<Codec*>(opaque);
+    if(!state || state->thread!=GetCurrentThreadId() || !result)return E_INVALIDARG;
+    if(!state->shared_output)return S_FALSE;
+    return state->shared_output->frame(pts,result);
+}
+extern "C" int32_t nl_mf_discard_shared_frame(void* opaque,uint32_t slot,uint64_t token) noexcept {
+    auto* state=static_cast<Codec*>(opaque);
+    if(!state || state->thread!=GetCurrentThreadId() || !state->shared_output)return E_INVALIDARG;
+    return state->shared_output->discard(slot,token);
+}
+extern "C" int32_t nl_mf_shared_frame_status(void* opaque,uint32_t slot,uint64_t token) noexcept {
+    auto* state=static_cast<Codec*>(opaque);
+    if(!state || state->thread!=GetCurrentThreadId() || !state->shared_output)return E_INVALIDARG;
+    return state->shared_output->status(slot,token);
 }
 extern "C" int32_t nl_mf_flush_decoder(void* opaque) noexcept {
     auto* state = static_cast<Codec*>(opaque);

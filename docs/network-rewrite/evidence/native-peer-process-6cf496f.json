@@ -1,0 +1,150 @@
+{
+    "schema_version":  1,
+    "source_revision":  "6cf496fcfee0241673521b051e37019c2c9f86e3",
+    "status":  "verified_lab_native_tls_peer_process_and_portable_compatibility",
+    "build_provenance":  {
+                             "workflow":  ".github/workflows/windows-media-owner.yml",
+                             "workflow_revision":  "6cf496fcfee0241673521b051e37019c2c9f86e3",
+                             "checkout_input_revision":  "6cf496fcfee0241673521b051e37019c2c9f86e3",
+                             "run_id":  41418871935,
+                             "attempt":  1,
+                             "runner_environment":  "github-hosted",
+                             "dependency_lock_sha256":  "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+                             "url":  "https://github.com/ZHanry/NestLink/actions/runs/41418871935"
+                         },
+    "execution_provenance":  {
+                                 "windows_ordinary_user_token":  true,
+                                 "actual_child_native_pipe_and_pinned_tls":  true,
+                                 "physical_gpu_or_desktop_execution":  false,
+                                 "target_media_acceptance_claimed":  false,
+                                 "production_issuance_enabled":  false
+                             },
+    "jobs":  [
+                 {
+                     "job_id":  125189322156,
+                     "runner_os":  "Windows",
+                     "conclusion":  "success",
+                     "artifact_id":  13128719381,
+                     "archive_sha256":  "3d5faf7f0f223ca3c90098ac3c5d870833cd6801540e2837e371de1d5af37c08",
+                     "receipt_sha256":  "b78282c0aedee0860686b0652bd751306eef43fb35b84e33795a352222155819",
+                     "tests_passed":  27,
+                     "strict_all_targets_passed":  true,
+                     "commands":  [
+                                      {
+                                          "name":  "ipc-tests",
+                                          "argv":  [
+                                                       "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+                                                       "scripts/refactor-windows-normal-user.py",
+                                                       "cargo",
+                                                       "test",
+                                                       "--locked",
+                                                       "-p",
+                                                       "nestlink-local-ipc",
+                                                       "--lib",
+                                                       "--",
+                                                       "--show-output"
+                                                   ],
+                                          "return_code":  0
+                                      },
+                                      {
+                                          "name":  "strict-peer-owner",
+                                          "argv":  [
+                                                       "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+                                                       "scripts/refactor-windows-normal-user.py",
+                                                       "cargo",
+                                                       "clippy",
+                                                       "--locked",
+                                                       "-p",
+                                                       "nestlink-local-ipc",
+                                                       "-p",
+                                                       "nestlink-platform-security",
+                                                       "--all-targets",
+                                                       "--",
+                                                       "-D",
+                                                       "warnings"
+                                                   ],
+                                          "return_code":  0
+                                      }
+                                  ],
+                     "files":  [
+                                   {
+                                       "path":  "ipc-tests.log",
+                                       "bytes":  21570,
+                                       "sha256":  "0333267514704787d8fa53acd49d6f4b6cd9d334b41a2d97db8a94712e227b8a"
+                                   },
+                                   {
+                                       "path":  "strict-peer-owner.log",
+                                       "bytes":  5758,
+                                       "sha256":  "d72ec0c40436cf618530a3c3ae747626d38f467f71773982f917a09647a2589b"
+                                   }
+                               ]
+                 },
+                 {
+                     "job_id":  125189322184,
+                     "runner_os":  "Linux",
+                     "conclusion":  "success",
+                     "artifact_id":  13128138988,
+                     "archive_sha256":  "690e36d400b43cc200bc05c30d3cd15bb13355a134eb50f2c3d7e0cddc343e99",
+                     "receipt_sha256":  "dffd9cc3c1bb39f90c92d24961a6da5583219f38bd8ee73ba39e4cd97b02cfb3",
+                     "tests_passed":  24,
+                     "strict_all_targets_passed":  true,
+                     "commands":  [
+                                      {
+                                          "name":  "ipc-tests",
+                                          "argv":  [
+                                                       "cargo",
+                                                       "test",
+                                                       "--locked",
+                                                       "-p",
+                                                       "nestlink-local-ipc",
+                                                       "--lib",
+                                                       "--",
+                                                       "--show-output"
+                                                   ],
+                                          "return_code":  0
+                                      },
+                                      {
+                                          "name":  "strict-peer-owner",
+                                          "argv":  [
+                                                       "cargo",
+                                                       "clippy",
+                                                       "--locked",
+                                                       "-p",
+                                                       "nestlink-local-ipc",
+                                                       "-p",
+                                                       "nestlink-platform-security",
+                                                       "--all-targets",
+                                                       "--",
+                                                       "-D",
+                                                       "warnings"
+                                                   ],
+                                          "return_code":  0
+                                      }
+                                  ],
+                     "files":  [
+                                   {
+                                       "path":  "ipc-tests.log",
+                                       "bytes":  20853,
+                                       "sha256":  "d1bcb6116ccb32b7b9adcfef5e0f37a5081096db8cd81016f6bf6cfc4dafde41"
+                                   },
+                                   {
+                                       "path":  "strict-peer-owner.log",
+                                       "bytes":  5633,
+                                       "sha256":  "89b5cb04d30c6cca9a6e875e692b0738a54cb6df94cbce33d4216b2df73446c0"
+                                   }
+                               ]
+                 }
+             ],
+    "verified_behavior":  [
+                              "Windows TLS peer PID equals the original OS-created child process; the retained original process handle rejects after that child exits.",
+                              "Original pipe drop, cancellation of a partial TLS frame, original daemon stop and duplex owner drop revoke peer proof clones.",
+                              "Old TCP client to new daemon and new client to a daemon with no native pipe both retain the original pinned TLS/Hello behavior and have no OS peer process proof.",
+                              "The complete existing IPC framing, singleton, maintenance and cleanup tests and strict local-ipc/platform-security checks pass on Windows and Linux."
+                          ],
+    "limits":  [
+                   "Windows count 27 includes a child harness test which performs its workload only when launched by the parent cross-process test; Linux count 24 exercises the original portable IPC behavior.",
+                   "This exact source does not contain the later PROCESS_DUP_HANDLE export capability or native shared-texture ring implementation; these require their own same-source hosted checks.",
+                   "No GPU resource allocation, import, fence consumption, presentation, physical cadence or advanced-format acceptance is claimed.",
+                   "Production issuance remains disabled. The original Luanti 25-second failure and threshold remain preserved. This scoped result does not satisfy the complete release gate."
+               ]
+}

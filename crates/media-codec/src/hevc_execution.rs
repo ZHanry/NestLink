@@ -173,10 +173,13 @@ struct State {
     joined: AtomicBool,
     identity: OnceLock<HevcExecutionIdentity>,
     target: HevcExecutionTarget,
+    commands: OnceLock<mpsc::SyncSender<Command>>,
+    shared_peer: OnceLock<nestlink_platform_security::local_stream::VerifiedProcessExportTarget>,
 }
 impl State {
     fn is_active(&self) -> bool {
         self.active.load(Ordering::Acquire) && self.authority.load(Ordering::Acquire)
+            && self.shared_peer.get().is_none_or(|peer| peer.check_current().is_ok())
     }
     fn retire(&self) {
         let _guard = self
@@ -196,7 +199,7 @@ impl Drop for ExitFence {
 enum Kind {
     Registration,
     Encoded { pts: u64, digest: [u8; 32] },
-    Decoded { pts: u64, digest: [u8; 32] },
+    Decoded { pts: u64, digest: [u8; 32], surface: Option<[u8; 32]> },
 }
 /// Only this actual worker seals an output after hardware identity and complete
 /// AU admission. Copies share the original generation's revocation/join fence.
@@ -266,17 +269,40 @@ impl HevcExecutionReceipt {
     pub fn check_decoded(&self, pts: u64, pixels: &[u8]) -> io::Result<()> {
         self.check_current()?;
         if self.identity()?.direction != ExecutionDirection::Decode
-            || self.kind
-                != (Kind::Decoded {
-                    pts,
-                    digest: Sha256::digest(pixels).into(),
-                })
+            || !matches!(self.kind, Kind::Decoded {pts: original, digest, ..} if original == pts && digest == <[u8;32]>::from(Sha256::digest(pixels)))
         {
             return Err(io::Error::other(
                 "HEVC pixels differ from sealed live owner output",
             ));
         }
         Ok(())
+    }
+    pub fn check_shared(&self, frame: &crate::SharedDecodedFrame) -> io::Result<()> {
+        self.check_current()?;
+        frame.check_current()?;
+        let ring = frame.ring();
+        let config = self.target().contract().config();
+        if self.identity()?.direction != ExecutionDirection::Decode || ring.adapter_luid != self.target().adapter_luid()
+            || (ring.width, ring.height) != (config.width, config.height)
+            || !matches!(self.kind, Kind::Decoded {pts, surface: Some(expected), ..} if pts == frame.descriptor().pts_90khz && expected == frame.fingerprint())
+        { return Err(io::Error::other("shared surface differs from original sealed decoded output")); }
+        Ok(())
+    }
+    pub fn enable_shared_output(&self, peer: nestlink_platform_security::local_stream::VerifiedProcessExportTarget) -> io::Result<HevcExecutionTicket> {
+        self.check_current()?;
+        if self.identity()?.direction != ExecutionDirection::Decode { return Err(io::Error::other("shared output requires original decoder")); }
+        self.submit_operation(Operation::ShareOutput(peer))
+    }
+    fn submit_operation(&self, operation: Operation) -> io::Result<HevcExecutionTicket> {
+        self.check_current()?;
+        let (reply, receive) = mpsc::sync_channel(1);
+        let deadline = Instant::now() + COMMAND_BUDGET;
+        self.state.commands.get().ok_or_else(|| io::Error::other("HEVC original command owner absent"))?
+            .try_send(Command {deadline, operation, reply}).map_err(|error| match error {
+                mpsc::TrySendError::Full(_) => io::Error::new(io::ErrorKind::WouldBlock, "HEVC execution queue full"),
+                mpsc::TrySendError::Disconnected(_) => io::Error::other("HEVC execution worker disconnected"),
+            })?;
+        Ok(HevcExecutionTicket {reply: receive, deadline, state: self.state.clone(), completed: false})
     }
 }
 #[derive(Default)]
@@ -336,6 +362,7 @@ enum Operation {
     Decode(Zeroizing<Vec<u8>>, u64),
     Poll,
     BeginDrain,
+    ShareOutput(nestlink_platform_security::local_stream::VerifiedProcessExportTarget),
 }
 struct Command {
     deadline: Instant,
@@ -352,6 +379,7 @@ pub enum HevcExecutionOutput {
         output: Option<(HevcDecodedOutput, HevcExecutionReceipt)>,
     },
     Draining,
+    SharedOutput(crate::SharedRingDescriptor),
 }
 // Payload containers zeroize even when a timed-out worker fails to return them.
 pub struct HevcExecutionTicket {
@@ -441,8 +469,11 @@ impl HardwareHevcExecution {
             joined: AtomicBool::new(false),
             identity: OnceLock::new(),
             target,
+            commands: OnceLock::new(),
+            shared_peer: OnceLock::new(),
         });
         let (send, receive) = mpsc::sync_channel(COMMAND_CAPACITY);
+        let _ = state.commands.set(send.clone());
         let (ready, initial) = mpsc::sync_channel(1);
         let owner = state.clone();
         let spawned = thread::Builder::new()
@@ -487,31 +518,7 @@ impl HardwareHevcExecution {
         Ok(value)
     }
     fn submit(&self, operation: Operation) -> io::Result<HevcExecutionTicket> {
-        self.current()?;
-        let (reply, receive) = mpsc::sync_channel(1);
-        let deadline = Instant::now() + COMMAND_BUDGET;
-        self.commands
-            .as_ref()
-            .ok_or_else(|| io::Error::other("HEVC execution stopped"))?
-            .try_send(Command {
-                deadline,
-                operation,
-                reply,
-            })
-            .map_err(|error| match error {
-                mpsc::TrySendError::Full(_) => {
-                    io::Error::new(io::ErrorKind::WouldBlock, "HEVC execution queue full")
-                }
-                mpsc::TrySendError::Disconnected(_) => {
-                    io::Error::other("HEVC execution worker disconnected")
-                }
-            })?;
-        Ok(HevcExecutionTicket {
-            reply: receive,
-            deadline,
-            state: self.state.clone(),
-            completed: false,
-        })
+        self.current()?.submit_operation(operation)
     }
     pub fn submit_capture(&self, pts: u64, repeated: bool) -> io::Result<HevcExecutionTicket> {
         self.submit(Operation::Capture { pts, repeated })
@@ -655,6 +662,7 @@ fn decoded(
                 kind: Kind::Decoded {
                     pts: picture.pts_90khz,
                     digest: Sha256::digest(picture.bgra.as_slice()).into(),
+                    surface: picture.shared.as_ref().map(crate::SharedDecodedFrame::fingerprint),
                 },
             };
             Ok((picture, receipt))
@@ -781,6 +789,11 @@ where
                     owner.begin_drain()?;
                     HevcExecutionOutput::Draining
                 }
+                (Engine::Decode(owner), Operation::ShareOutput(peer)) => {
+                    let descriptor = owner.enable_shared_output(peer.clone())?;
+                    state.shared_peer.set(peer).map_err(|_| io::Error::other("original shared peer already registered"))?;
+                    HevcExecutionOutput::SharedOutput(descriptor)
+                }
                 _ => {
                     return Err(io::Error::other(
                         "HEVC execution operation has wrong direction",
@@ -838,6 +851,8 @@ mod tests {
             joined: AtomicBool::new(false),
             identity,
             target,
+            commands: OnceLock::new(),
+            shared_peer: OnceLock::new(),
         }))
     }
     #[test]

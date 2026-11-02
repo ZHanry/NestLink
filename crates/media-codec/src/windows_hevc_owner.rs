@@ -1,6 +1,6 @@
 //! Same-thread actual NV12 texture encoder, independent of synthetic factories.
 //! The caller owns approval, signed format negotiation, epoch and worker join.
-//! This primitive does not enable HEVC on the current H264-only product wire.
+//! Exact wire negotiation and local consumer process authority remain separate.
 #![allow(unsafe_code)]
 use crate::{HevcMain8Admission, HevcMain8Contract, OwnerObservation, windows_mf::Transform};
 use std::{
@@ -24,6 +24,7 @@ pub struct HevcDecodedOutput {
     pub bgra: Zeroizing<Vec<u8>>,
     pub owner: OwnerObservation,
     pub local_contract_sha256: [u8; 32],
+    pub shared: Option<crate::SharedDecodedFrame>,
 }
 
 /// An independent exact hardware decode owner. No software or guessed-device
@@ -37,6 +38,7 @@ pub struct MfHevcHardwareDecoder {
     scratch: Zeroizing<Vec<u8>>,
     failed: bool,
     draining: bool,
+    shared: Option<crate::windows_shared_output::SharedOutput>,
 }
 impl MfHevcHardwareDecoder {
     pub fn owner_observation(&self) -> io::Result<OwnerObservation> {
@@ -82,6 +84,7 @@ impl MfHevcHardwareDecoder {
             scratch: Zeroizing::new(vec![0; bytes]),
             failed: false,
             draining: false,
+            shared: None,
         };
         owner.check()?;
         Ok(owner)
@@ -98,6 +101,23 @@ impl MfHevcHardwareDecoder {
                 "HEVC original decode resource/adapter/driver identity changed",
             ));
         }
+        if let Some(shared) = &self.shared { shared.check()?; }
+        Ok(())
+    }
+    pub fn enable_shared_output(&mut self, peer: nestlink_platform_security::local_stream::VerifiedProcessExportTarget) -> io::Result<crate::SharedRingDescriptor> {
+        self.check()?;
+        if self.shared.is_some() { return Err(io::Error::other("original shared consumer already configured")); }
+        let shared = crate::windows_shared_output::SharedOutput::enable(&self.inner, self.target.config(), peer, self.authority.clone())?;
+        let descriptor = shared.descriptor();
+        if Some(descriptor.adapter_luid) != self.identity.adapter_luid {
+            self.failed = true;
+            return Err(io::Error::other("shared ring changed the original decoder adapter"));
+        }
+        self.shared = Some(shared);
+        Ok(descriptor)
+    }
+    fn reap_shared(&mut self) -> io::Result<()> {
+        if let Some(shared) = &mut self.shared { shared.reap(&self.inner)?; }
         Ok(())
     }
     fn finish(&mut self, output: Option<(usize, u64)>) -> io::Result<Option<HevcDecodedOutput>> {
@@ -114,11 +134,13 @@ impl MfHevcHardwareDecoder {
             let owner = observation(&self.inner)?;
             owner.require_hardware_identity()?;
             self.check()?;
+            let shared = self.shared.as_mut().map(|shared| shared.output(&self.inner, pts_90khz)).transpose()?.flatten();
             Ok(Some(HevcDecodedOutput {
                 pts_90khz,
                 bgra: Zeroizing::new(self.scratch[..size].to_vec()),
                 owner,
                 local_contract_sha256: self.target.digest(),
+                shared,
             }))
         })();
         if result.is_err() {
@@ -132,6 +154,7 @@ impl MfHevcHardwareDecoder {
         pts_90khz: u64,
     ) -> io::Result<(bool, Option<HevcDecodedOutput>)> {
         self.check()?;
+        self.reap_shared()?;
         if self.draining {
             return Err(io::Error::other(
                 "HEVC drained decoder cannot accept another AU",
@@ -158,6 +181,7 @@ impl MfHevcHardwareDecoder {
     }
     pub fn poll(&mut self) -> io::Result<Option<HevcDecodedOutput>> {
         self.check()?;
+        self.reap_shared()?;
         let output = match self.inner.receive(&mut self.scratch) {
             Ok(output) => output,
             Err(error) => {

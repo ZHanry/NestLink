@@ -169,6 +169,7 @@ impl Decoder {
                     })?;
                 self.hevc_ready.push_back(DecodedVideo {
                     execution: Some(receipt.into()),
+                    shared: picture.shared.take(),
                     source_color: format.color,
                     codec: nestlink_protocol::NativeVideoCodec::HevcMain8 as u8,
                     hardware_decode: true,
