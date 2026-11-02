@@ -234,3 +234,62 @@ repair only confirmed failures. Preserve every failed receipt,
 all original assertions and deadlines, independent HTTPS owners and strict
 clippy. The same-source full workflow and physical-target gates remain
 separate; this log does not change their status.
+
+## Source9f original follow-up and mature conversion implementation
+
+Run [41473579543](https://github.com/ZHanry/NestLink/actions/runs/41473579543),
+exact source `9f00b068a67e5db9d1ed5285e7bda90afe004600`, completed both
+original jobs with failure. The complete focused evidence is retained in
+[native-offline-resident-9f00b06.json](evidence/native-offline-resident-9f00b06.json).
+All44 downloaded files were independently byte-counted and SHA256-hashed;
+all36 producer inventory entries match. Downloaded source-before/after files
+are byte-identical, clean at the exact source/Cargo.lock. Both receipts retain
+matching original frozen HTTPS executable hashes. GitHub artifact digests are
+reported separately; no independently hashed ZIP is claimed.
+
+Both OS passed all original focused AppCore/daemon/desktop cases, including
+the actual signed/proved late-capture regression and download-consent case,
+plus all three strict clippy commands. Original Linux resident is3/4 in226.83s:
+management8 and the complete QUIC/TLS real-pixel/two262144-byte-files/rebuild/
+EOF or IPC Exit paths pass. The pending case0 EOF setup failed before SDK
+calls in its independent public-PKI HTTPS startup: temporary fixture DNS was
+not ready before the original deadline. That failure remains recorded.
+
+Original Windows resident is3/4 in314.01s: management8, all four pending
+EOF/Stop/logout/identity cases and complete QUIC real data/rebuild/EOF pass.
+TLS now failed at initial original pixels, before its first file or rebuild.
+The original host actually selected DXGI, both sessions remained Connected/
+Running, attempts remained1, and the original budget had roughly75 seconds
+left. Observed ingress-to-output was114072us first and83–85ms later. Queue
+admission dropped frames41–54ms late; another frame entered at38966us late
+and exceeded the same40ms threshold at presentation-poll43089us. These are
+whole-pipeline measurements; they do not isolate libvpx decode cost.
+
+The new fixed SDK operation-stage diagnostic emitted on neither platform:
+Linux failed before SDK setup, while Windows's pending setup cases passed.
+The earlier source915 management-response-invalid result remains unresolved
+historical evidence. This run does not identify its SDK operation or repair it.
+No original time bound, assertion or independent HTTPS owner was changed.
+
+Implementation commit `7de4463463d115643e75ce59a92c0382a58d137f` reuses the
+already pinned libvpx archive's mature bundled libyuv1711, with its explicit
+upstream commit, original BSD/README notices, fixed17-file static source
+closure, native compiler/Release/CRT checks, installed-file receipt and both
+SPDX metadata producers. The production bridge converts original libvpx
+planes directly into the original bounded wiping BGRA owner, removing the
+intermediate packed-I420 copy and scalar Rust decode conversion. The encoder
+is unchanged. The BT.601 limited semantics and opaque BGRA bytes remain,
+with the supplier's documented different integer approximation. All original
+color/PSNR and resident assertions remain; new actual converter/stride/guard
+vectors supplement them. First3 debug decode calls report only fixed Rust
+geometry/allocation/whole-FFI/total durations. See
+[ADR0073](../adr/network/0073-reuse-bundled-libyuv-vp8-conversion.md).
+
+Source9f predates that implementation and cannot qualify it. Require newer
+exact-source native builds, original VP8 quality cases, sanitizer, notice/
+receipt tests, strict lint and the complete original resident matrix. No
+local build/format/lint/test/Python execution or packaging was performed.
+Keep the60ms immutable validated-ingress anchor,40ms late threshold, original
+PTS/clocks/deadlines and cumulative authority meter unchanged. Resident
+completion still requires all four original cases to execute and pass on
+both OS; physical devices and public-NAT acceptance remain separate.
