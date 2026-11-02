@@ -1,3 +1,4 @@
+minVersion = "8.25.0"
 [extend]
 useDefault = true
 
@@ -17,3 +18,54 @@ condition = "AND"
 regexTarget = "secret"
 paths = ['''^scripts/refactor\-service\-caddy\-contract\.py$''']
 regexes = ['''^dGhlIHNhbXBsZSBub25jZQ==$''']
+
+# Six public provenance digests reviewed against exact historical scan locations.
+# Each exclusion binds one rule, one file and one complete public digest.
+# See docs/network-rewrite/SECRET-SCAN-REVIEW-2026-11-02.md.
+[[allowlists]]
+description = "Public ordinary-token Actions log SHA256"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^docs/network-rewrite/evidence/production-capability-47a0cec\.json$''']
+regexes = ['''^c43085cb7af77230c355f88323c7340cc8c78247cd1ee5d5688d06312119dc7b$''']
+
+[[allowlists]]
+description = "Public pinned cloudflared release binary SHA256"
+targetRules = ["cloudflare-api-key"]
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^scripts/network-rewrite-windows-tun\.py$''']
+regexes = ['''^2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343$''']
+
+[[allowlists]]
+description = "Public WireGuard Wintun source revision"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^docs/adr/network/0045-windows-managed-tun-boundary\.md$''']
+regexes = ['''^bfef136abfa1665c2592be09a7e383d646cdbe6e$''']
+
+[[allowlists]]
+description = "Public official-driver Authenticode report SHA256"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^docs/network-rewrite/evidence/wintun-authenticode-ipc-41194242039\.json$''']
+regexes = ['''^2f25c56ca773132fad4f9b0c8fb41476c06be95b9eed272c31fba9e477e2b060$''']
+
+[[allowlists]]
+description = "Public medium-token capability check log SHA256"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^docs/network-rewrite/evidence/wfp-kernel-79fb710\.json$''']
+regexes = ['''^9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212$''']
+
+[[allowlists]]
+description = "Public native ICE Actions artifact ZIP SHA256"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^docs/network-rewrite/evidence/development-run-8186f75\.json$''']
+regexes = ['''^71e518e86500ac62d59e98f7aaa50b1c25810b23861f2d9ebfb0d911312f15b1$''']
