@@ -83,6 +83,7 @@ impl VideoQuality {
             return None;
         }
         let before = self.kbps;
+        let before_fps = self.fps;
         if network_limited {
             let minimum_kbps = self.maximum_kbps.min(800);
             self.kbps = (self.kbps * 3 / 4).max(minimum_kbps);
@@ -96,7 +97,13 @@ impl VideoQuality {
             self.fps = (self.fps + 5).min(self.maximum_fps);
             self.healthy_since = now;
         }
-        self.next_adjustment = now + Duration::from_millis(500);
+        // Quiet observations must not spend the adjustment cooldown. A brief
+        // authenticated congestion report can otherwise fall between two
+        // healthy polls and never reach the producer. Actual budget changes
+        // retain the original minimum500ms interval.
+        if before != self.kbps || before_fps != self.fps {
+            self.next_adjustment = now + Duration::from_millis(500);
+        }
         (before != self.kbps).then_some(self.kbps)
     }
 }
@@ -104,6 +111,18 @@ impl VideoQuality {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn healthy_polls_do_not_hide_short_real_congestion_between_adjustments() {
+        let start = Instant::now();
+        let mut quality = VideoQuality::new(30, 8000, start);
+        assert_eq!(quality.observe(start, Duration::ZERO, Duration::ZERO), None);
+        assert_eq!(quality.observe_with_receiver(start + Duration::from_millis(100), Duration::ZERO, Duration::ZERO, ReceiverCondition::Congested), Some(6000));
+        assert_eq!(quality.observe_with_receiver(start + Duration::from_millis(200), Duration::ZERO, Duration::ZERO, ReceiverCondition::Congested), None);
+        assert_eq!(quality.bitrate_kbps(),6000);
+        assert_eq!(quality.observe(start + Duration::from_millis(600), Duration::ZERO, Duration::ZERO), None);
+        assert_eq!(quality.observe_with_receiver(start + Duration::from_millis(650), Duration::ZERO, Duration::ZERO, ReceiverCondition::Congested), Some(4500));
+        assert_eq!(quality.fps(),30);
+    }
     #[test]
     fn actual_decoder_pressure_reduces_cadence_without_inventing_network_congestion() {
         let start = Instant::now();
