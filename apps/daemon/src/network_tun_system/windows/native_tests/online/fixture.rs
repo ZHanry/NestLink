@@ -6,6 +6,8 @@ use nestlink_identity::{
     PermitSigner,
     network::{NetworkVerification, verify_network_grant},
 };
+#[cfg(windows)]
+use nestlink_protocol::network::{Direction, IpProtocol};
 use nestlink_protocol::{
     api::NetworkIssueRequest,
     network::{IpPrefix, NetworkRule},
@@ -18,8 +20,6 @@ use nestlink_protocol::{
 use nestlink_sdk::{DeploymentTrust, DeviceIdentity, network_management::decode_network_grant};
 use nestlink_server::{AppState, router};
 use nestlink_storage::Store;
-#[cfg(windows)]
-use nestlink_protocol::network::{Direction, IpProtocol};
 
 #[cfg(windows)]
 #[path = "fixture/https.rs"]
@@ -52,11 +52,15 @@ pub(super) struct Fixture {
 impl Fixture {
     #[cfg(windows)]
     pub async fn new(https_case: Option<&Path>) -> Result<Self> {
-        Self::with_rules(https_case, vec![NetworkRule {
-            protocol: IpProtocol::Udp,
-            direction: Direction::Inbound,
-            ports: Some([443, 443]),
-        }]).await
+        Self::with_rules(
+            https_case,
+            vec![NetworkRule {
+                protocol: IpProtocol::Udp,
+                direction: Direction::Inbound,
+                ports: Some([443, 443]),
+            }],
+        )
+        .await
     }
     pub async fn with_rules(https_case: Option<&Path>, rules: Vec<NetworkRule>) -> Result<Self> {
         // Secrets and the management database never enter the uploaded public
@@ -89,7 +93,10 @@ impl Fixture {
         };
         #[cfg(target_os = "linux")]
         let (tunnel, origin) = {
-            assert!(https_case.is_none(), "Linux combined mechanism fixture does not claim protected HTTPS CLI login");
+            assert!(
+                https_case.is_none(),
+                "Linux combined mechanism fixture does not claim protected HTTPS CLI login"
+            );
             (None, format!("http://{}", listener.local_addr()?))
         };
         let app = router(AppState::new(
