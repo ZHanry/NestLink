@@ -92,7 +92,8 @@ impl SessionStore {
             .inspect_err(|error| {
                 eprintln!(
                     "protected_login_restore stage=read_cipher kind={:?} os={:?}",
-                    error.kind(), error.raw_os_error()
+                    error.kind(),
+                    error.raw_os_error()
                 );
             })
             .ok()?;
@@ -107,22 +108,25 @@ impl SessionStore {
             .inspect_err(|error| {
                 eprintln!(
                     "protected_login_restore stage=key_or_decrypt kind={:?} os={:?}",
-                    error.kind(), error.raw_os_error()
+                    error.kind(),
+                    error.raw_os_error()
                 );
             })
             .ok()?;
-        let restored = nestlink_sdk::Sdk::resume_login(&plain).await.inspect_err(|error| {
-            let status = match error {
-                nestlink_sdk::SdkError::Api(status, _) => Some(status.as_u16()),
-                _ => None,
-            };
-            // Use the SDK's fixed diagnostic categories. Raw errors can carry
-            // a URL or login material and must never enter recovery logs.
-            eprintln!(
-                "protected_login_restore stage=resume category={:?} http_status={status:?}",
-                error.diagnostic_failure()
-            );
-        });
+        let restored = nestlink_sdk::Sdk::resume_login(&plain)
+            .await
+            .inspect_err(|error| {
+                let status = match error {
+                    nestlink_sdk::SdkError::Api(status, _) => Some(status.as_u16()),
+                    _ => None,
+                };
+                // Use the SDK's fixed diagnostic categories. Raw errors can carry
+                // a URL or login material and must never enter recovery logs.
+                eprintln!(
+                    "protected_login_restore stage=resume category={:?} http_status={status:?}",
+                    error.diagnostic_failure()
+                );
+            });
         match restored {
             Ok(sdk) => {
                 if let Ok(Some(next)) = sdk.export_login() {

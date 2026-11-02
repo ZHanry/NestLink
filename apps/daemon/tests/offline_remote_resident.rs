@@ -566,7 +566,9 @@ async fn management_commands_fence_delivery_before_success_or_failed_http_and_ne
         let area = temporary.path().join(format!("case-{index}"));
         std::fs::create_dir(&area)?;
         let mut fixture = Fixture::new(&area, &platform).await.map_err(|error| {
-            io::Error::other(format!("original management fence case={index} setup: {error}"))
+            io::Error::other(format!(
+                "original management fence case={index} setup: {error}"
+            ))
         })?;
         let peer = peer()?;
         let mut source = Resident::spawn(&platform, &fixture, false, "quic", peer).await?;
@@ -630,11 +632,15 @@ async fn pending_original_listener_eof_stop_logout_and_identity_change_join_actu
     .into_iter()
     .enumerate()
     {
-        eprintln!("original pending listener case={index} transport={transport} termination={termination}");
+        eprintln!(
+            "original pending listener case={index} transport={transport} termination={termination}"
+        );
         let area = temporary.path().join(format!("pending-{index}"));
         std::fs::create_dir(&area)?;
         let mut fixture = Fixture::new(&area, &platform).await.map_err(|error| {
-            io::Error::other(format!("original pending listener case={index} {termination} setup: {error}"))
+            io::Error::other(format!(
+                "original pending listener case={index} {termination} setup: {error}"
+            ))
         })?;
         let peer = peer()?;
         let mut source = Resident::spawn(&platform, &fixture, false, transport, peer).await?;
@@ -668,7 +674,9 @@ async fn pending_original_listener_eof_stop_logout_and_identity_change_join_actu
             _ => unreachable!(),
         }
         source.finish(false).await.map_err(|error| {
-            io::Error::other(format!("original pending listener case={index} {termination} controller cleanup: {error}"))
+            io::Error::other(format!(
+                "original pending listener case={index} {termination} controller cleanup: {error}"
+            ))
         })?;
         assert!(Client::connect(&fixture.host).await.is_err());
         assert!(!fixture.host.join("daemon-endpoint.json").exists());
@@ -678,7 +686,9 @@ async fn pending_original_listener_eof_stop_logout_and_identity_change_join_actu
             drop(tokio::net::TcpListener::bind(peer).await?);
         }
         fixture.finish().await.map_err(|error| {
-            io::Error::other(format!("original pending listener case={index} {termination} HTTPS cleanup: {error}"))
+            io::Error::other(format!(
+                "original pending listener case={index} {termination} HTTPS cleanup: {error}"
+            ))
         })?;
     }
     platform.shutdown().await;

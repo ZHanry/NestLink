@@ -2,8 +2,8 @@
 //! Authority stays in this process; the desktop uses the existing local IPC.
 use crate::offline_resident::{LocalGuard, Result, emit, input};
 use nestlink_app_core::{
-    Limits, NativeOfflineRemote, NativeOfflineSession, NativeOfflineTransport, NativeSessionCleanup,
-    NativeSessionStatus, NativeSessionStopReason, ShutdownState,
+    Limits, NativeOfflineRemote, NativeOfflineSession, NativeOfflineTransport,
+    NativeSessionCleanup, NativeSessionStatus, NativeSessionStopReason, ShutdownState,
 };
 use nestlink_identity::{VerifiedPermit, offline::OfflineProcess};
 use nestlink_protocol::{

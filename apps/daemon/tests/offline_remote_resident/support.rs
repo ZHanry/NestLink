@@ -148,7 +148,9 @@ impl Platform {
                     .status()
                     .await?;
                 if !status.success() {
-                    return Err(io::Error::other("original Xvfb seed authority cleanup failed").into());
+                    return Err(
+                        io::Error::other("original Xvfb seed authority cleanup failed").into(),
+                    );
                 }
             }
             value.env.push(("DISPLAY", display));
