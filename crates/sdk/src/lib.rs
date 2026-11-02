@@ -15,6 +15,12 @@ use reqwest::{Client, Method, StatusCode};
 use serde::{Serialize, de::DeserializeOwned};
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::Duration;
+#[cfg(not(target_arch = "wasm32"))]
+mod http_admission;
+#[cfg(not(target_arch = "wasm32"))]
+mod http_native;
+#[cfg(not(target_arch = "wasm32"))]
+use http_native::request;
 #[cfg(target_arch = "wasm32")]
 mod http_wasm;
 #[cfg(target_arch = "wasm32")]
@@ -1439,44 +1445,6 @@ fn parse_origin(input: &str, allow_loopback: bool) -> Result<Url, SdkError> {
         return Err(SdkError::Invalid);
     }
     Ok(origin)
-}
-#[cfg(not(target_arch = "wasm32"))]
-async fn request<R: DeserializeOwned>(
-    client: &Client,
-    origin: &Url,
-    method: Method,
-    path: &str,
-    body: Option<serde_json::Value>,
-    token: Option<&str>,
-) -> Result<Option<R>, SdkError> {
-    let url = origin
-        .join(&format!("{API_BASE}{path}"))
-        .map_err(|_| SdkError::Invalid)?;
-    let mut request = client
-        .request(method, url)
-        .header("Origin", origin.origin().ascii_serialization())
-        .timeout(Duration::from_secs(15));
-    if let Some(token) = token {
-        request = request.bearer_auth(token);
-    }
-    if let Some(body) = body {
-        request = request.json(&body);
-    }
-    let response = request.send().await?;
-    let status = response.status();
-    if response.content_length().is_some_and(|v| v > CONTROL_BYTES) {
-        return Err(SdkError::Invalid);
-    }
-    let mut stream = response.bytes_stream();
-    let mut bytes = Vec::new();
-    while let Some(chunk) = stream.next().await {
-        let chunk = chunk?;
-        if bytes.len().saturating_add(chunk.len()) > CONTROL_BYTES as usize {
-            return Err(SdkError::Invalid);
-        }
-        bytes.extend_from_slice(&chunk);
-    }
-    decode_response(status, &bytes)
 }
 fn attach_remote_budget(
     permit: VerifiedPermit,
