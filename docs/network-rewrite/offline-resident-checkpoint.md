@@ -402,3 +402,61 @@ offline budget, ordinary OS tokens and independent public-PKI owner remain
 unchanged. Require newer exact-source strict lint and all four original cases
 on both OS. No local build, formatter, lint, test, Python execution or
 packaging occurred; this evidence work did not dispatch another workflow.
+
+## Source4a complete original resident matrix and real CLI strict regression
+
+Run [41488486927](https://github.com/ZHanry/NestLink/actions/runs/41488486927),
+exact source `4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00`, completed with both
+original hosted jobs successful. Original resident is4/4 on Linux in245.79s
+and4/4 on Windows in289.20s. Each ran all management8 cases, all pending
+EOF/Stop/logout/identity cases, QUIC/TLS initial/rebuilt real pixels, both
+262144-byte completed files per carrier and original EOF/IPC Exit. All scoped
+AppCore/daemon/desktop tests, actual capture-terminal/download-consent
+regressions and the original three strict-clippy commands also passed on
+each OS. No case was filtered, ignored, renamed or replaced.
+
+The separate Linux real Secret Service leading-hyphen regression passed1/1
+in0.23s, including both retired actual parser exit2 assertions and repaired
+retained-data equality through the original private D-Bus/gnome-keyring.
+Its additional strict-clippy command passed, exercising the single-module
+reuse repair. The original10-second store gate, production3-second helper
+timeout, token hash/base64 binding, actual key/cipher/lookup and OS service
+remain. No attribute or secret value is retained in the evidence.
+
+Complete exact commands/results, both native supplier receipts, case-labelled
+fixed Rust timing observations and independently hashed downloads are in
+[native-offline-resident-4a4496b.json](evidence/native-offline-resident-4a4496b.json).
+All46 extracted artifact files and two independently downloaded complete
+GitHub job logs were byte-counted/SHA256-hashed; all38 producer inventory
+entries match. Both source-before/after facts are identical and clean.
+Native archive hashes remain explicitly producer inventory; GitHub ZIP
+digests remain GitHub-reported metadata. Both x64 suppliers built/verified
+the fixed17-file libyuv closure, including native Release/Windows dynamic CRT,
+and original Rust consumers linked and ran.
+
+Linux full QUIC first initial/rebuilt Rust decode totals were4942/5621us
+(allocation4125/4820us, whole FFI815/799us); TLS was4802/5196us
+(3900/4510us,900/684us). Later full-case FFI was463–723us. Windows QUIC was
+37048/44347us (9446/10123us,27596/34223us); TLS was38794/43055us
+(10886/15823us,27903/27230us). Later recorded FFI was1323/1352us. These are
+original debug-context observations including lazy native setup, not pure
+libvpx or throughput benchmarks. All fixed observations remain in evidence,
+including separate management-case records with their original case identity.
+
+No failure-only socket stage emitted on either OS. The source4ec Windows
+Os10013 bind stage and OS cause remain unproven, and no socket algorithm,
+retry or error was changed. Source comparison from4ec changes original
+resident paths only by fixed failure diagnostics and module visibility;
+the original independent HTTPS owner and all assertions/deadlines remain.
+Earlier DNS, SDK setup, protected-store and Windows socket failures stay
+preserved as historical results. This run does not reconstruct their random
+inputs or infer an unobserved cause.
+
+The60ms immutable validated-ingress anchor,40ms late threshold, PTS/capture
+clocks, frame/IPC deadlines, cumulative offline authority budget and ordinary
+OS identities remain unchanged. This completes the focused both-OS resident
+matrix and Linux real CLI regression on this exact source. Full Rust-core,
+VP8 quality/sanitizer/notice, ARM64, original25-second Luanti, actual AMF
+hardware, physical-target and public-NAT/advanced-media acceptance require
+their own evidence. No local build/formatter/lint/test/Python execution or
+packaging occurred, and this evidence work did not dispatch another workflow.

@@ -1,6 +1,7 @@
 # 0073 — Reuse the pinned bundled libyuv conversion for VP8 output
 
-Date: 2026-11-02. Status: implemented; exact-source hosted qualification pending.
+Date: 2026-11-02. Status: implemented; original both-OS focused resident matrix
+passed on exact source4a; broader qualification remains separate.
 Scope: the existing software VP8 decode output, on the three existing native
 codec supplier targets. This does not change the negotiated codec or color space.
 
@@ -79,10 +80,10 @@ explicit source subdirectory/commit/archive hash and no invented independent
 archive checksum or download. Both original notice files enter license bundles.
 
 No local build, formatting, lint, tests, Python execution or packaging was run.
-Hosted native builds, strict lint, unchanged original color/quality tests,
-boundary sanitizer and the full original resident matrix must qualify the
-implementation. This decision does not claim those checks have already passed,
-formal device acceptance, public-NAT coverage or release readiness.
+The qualification requires hosted native builds, strict lint, unchanged original
+color/quality tests, boundary sanitizer and the full original resident matrix.
+Follow-ups below record the completed focused scope. Broader checks, formal
+device acceptance, public-NAT coverage and release readiness remain separate.
 
 Reviewed original sources:
 
@@ -110,3 +111,24 @@ original failure are in
 Broader VP8 quality/sanitizer/notice and ARM64 checks remain separate evidence;
 both-OS original resident completion still requires the newer Linux setup repair
 and a complete exact-source run. No local project execution was performed.
+
+Follow-up source `4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00`, run41488486927,
+now passes all four original resident cases on each OS: Linux245.79s and
+Windows289.20s. Each ran management8, pending EOF/Stop/logout/identity,
+QUIC/TLS actual initial/rebuilt pixels, both262144-byte files per carrier
+and original EOF/IPC Exit. Both native suppliers built/verified the fixed17
+unmodified libyuv units and all original focused strict commands passed.
+The separate Linux real Secret Service regression and its added strict command
+also passed. Source4ec's unrelated DNS/socket failures remain preserved;
+no socket algorithm or original frame/authority/deadline assertion was changed.
+
+Linux full-case first decode totals were4.8–5.6ms with whole FFI0.68–0.90ms;
+Windows first totals were37–44ms with whole FFI27–34ms. Later observed full-case
+FFI was0.46–0.72ms on Linux and1.32–1.35ms on Windows. These original debug
+context observations include lazy native setup and do not isolate pure decode
+or establish throughput. The original60ms anchor and40ms threshold remain.
+All46 extracted artifact files and two complete job logs were independently
+hashed; all38 producer entries match, with clean identical source facts.
+See [source4a evidence](../../network-rewrite/evidence/native-offline-resident-4a4496b.json).
+Full Rust quality/sanitizer/notice, ARM64 and physical device results remain
+separate. This VP8 resident run does not establish actual AMF hardware acceptance.

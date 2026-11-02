@@ -1,7 +1,7 @@
 # 0074 — Preserve opaque login bindings as literal Secret Service attributes
 
-Date: 2026-11-03. Status: implemented; real hosted regression passed; additional
-strict-clippy repair and complete original resident matrix pending.
+Date: 2026-11-03. Status: implemented; real hosted regression, additional strict
+clippy and complete original both-OS focused resident matrix passed on source4a.
 Scope: the existing Linux Secret Service CLI adapter and original resident
 fixture. There is no new dependency, service replacement or stored binding format.
 
@@ -75,6 +75,25 @@ the failing bind stage or OS cause. Keep these failures and require newer
 exact-source strict lint and the original both-OS matrix. Full receipts and
 independent hashes of all46 downloaded files, with38 matching producer entries,
 are in [source4ec evidence](../../network-rewrite/evidence/native-offline-resident-4ec2c3c.json).
+
+Run [41488486927](https://github.com/ZHanry/NestLink/actions/runs/41488486927),
+exact source `4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00`, now passes the same
+real Linux leading-hyphen regression1/1 in0.23s and its added strict-clippy
+command. The single-module reuse repair is therefore exercised on the hosted
+runner, alongside original resident4/4 on both Linux and Windows. Every
+management/pending case and both real pixel/file/rebuild carrier cases passed;
+all other focused tests and original strict commands passed on both OS.
+The fixed socket diagnostics emitted no failure, so the older source4ec
+Os10013 cause remains unproven. No retry or socket selection change was made.
+
+The complete original deadlines,10-second store gate,3-second production
+helper timeout, token hash/base64 binding, key/cipher/lookup and independent
+HTTPS owner remain. The preserved historical failures are not reclassified.
+All46 artifact files and both complete job logs were independently hashed,
+with38 matching producer records and identical clean source facts. See
+[source4a evidence](../../network-rewrite/evidence/native-offline-resident-4a4496b.json).
+This focused completion does not establish full Rust-core, physical-device,
+public-NAT or advanced-media acceptance, and no local project checks ran.
 
 Reviewed mature interfaces and source:
 
