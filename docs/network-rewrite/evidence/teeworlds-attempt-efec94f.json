@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "source_revision": "efec94fe20273f27a32ff0a64856315776f8ef7f",
+  "workflow": ".github/workflows/network-games.yml",
+  "run_id": 41369712856,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41369712856",
+  "job_conclusion": "failure",
+  "passed": false,
+  "scope": "Actual official Teeworlds LAN browser follow-up. The limited IPv4 broadcast route and actual emitted client broadcast are now observed; discovery/play/revocation are still unqualified.",
+  "artifact": {
+    "id": 13108488079,
+    "name": "game-teeworlds-efec94fe20273f27a32ff0a64856315776f8ef7f-1",
+    "official_digest": "sha256:0f8e8de25c408a251473cc4d71422e0360bd9526000395ff1e1be376aae74cd4",
+    "downloaded_zip_sha256": "0f8e8de25c408a251473cc4d71422e0360bd9526000395ff1e1be376aae74cd4",
+    "outer_receipt_sha256": "9800df9acfc0272762d6dd5a471d4cbc144eba3c7b48e42c91800818af3433b3",
+    "execution_receipt_sha256": "b52dfb765986768f30aaa5cd541b387f7978044c7e142617b093d9d64a50cac3",
+    "client_pcap_sha256": "f2cc76ac72d6c7aa7692d8bef9121fb58dcde5d1024e0c720678852c4d04426d"
+  },
+  "observed": {
+    "strict_sdk_and_daemon_clippy_passed": true,
+    "broadcast_route_readback": "broadcast 255.255.255.255 dev nlp0 src 192.168.211.3; identical independently scoped route on nlp1",
+    "actual_client_ipv4_broadcast": "192.168.211.3:60842 -> 255.255.255.255:8303 through :8310",
+    "actual_browser_room_count": 0,
+    "failure": "AssertionError: real LAN room missing from official browser",
+    "driver_actor_cleanup_errors": [],
+    "outer_namespace_cleanup_errors": []
+  },
+  "candidate_correction": {
+    "source_commit": "63bc4a1",
+    "change": "The official server was bound to its unicast address, which excludes subnet-broadcast destination packets. Use its broadcast-capable wildcard bind inside the one-interface isolated namespace, preserving the bridge's exact permitted 192.168.212.3:8304 response identity. Add a separate real server-side capture.",
+    "verification_status": "pending_separate_same_source_actions_run"
+  }
+}
