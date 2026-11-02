@@ -85,11 +85,15 @@ class Actors:
         assert result.returncode == 0, self.commands[-1]
         return result.stdout.decode(errors="replace")
 
-    def window(self, title, env, seconds):
+    def window(self, title, env, seconds, class_name=None):
         # The upstream SDL window can be mapped before its caption is set.
         # Query the current X state repeatedly; a single --sync query can wait
         # on creation events after that already existing window changes title.
-        argv = ["xdotool", "search", "--onlyvisible", "--name", title]
+        # SDL's Luanti window exposes a stable WM_CLASS while its UTF-8
+        # caption need not be searchable through xdotool's legacy WM_NAME.
+        # Still require one actually visible window and read its real title.
+        selector = ["--class", "^" + class_name + "$"] if class_name else ["--name", title]
+        argv = ["xdotool", "search", "--onlyvisible", *selector]
         deadline = time.monotonic() + seconds
         attempts = 0
         blocked_queries = 0
@@ -327,7 +331,7 @@ def luanti():
              "--name", "NestLinkHosted", "--password", "", "--config", client_config,
              "--logfile", output / "luanti-client-debug.log"],
             {key: env[key] for key in ("DISPLAY", "LIBGL_ALWAYS_SOFTWARE", "SDL_AUDIODRIVER", "HOME")}), cwd=root)
-        window = actors.window("Luanti", env, 25)
+        window = actors.window("Luanti", env, 25, class_name="luanti")
         actors.run(["xdotool", "windowfocus", "--sync", window], env=env)
         def live():
             assert client.poll() is None and server.poll() is None and xvfb.poll() is None
