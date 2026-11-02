@@ -137,6 +137,8 @@ struct Resident {
     >,
     session: Option<NativeOfflineSession>,
     products: Option<LocalProducts>,
+    retired: bool,
+    file_stores: Option<Arc<LocalFileStores>>,
 }
 impl Resident {
     fn process(&self) -> Result<&OfflineProcess> {
@@ -370,6 +372,7 @@ impl Resident {
                     .ok_or_else(|| invalid("activate the original owner online first"))?
                     .clone();
                 let transport = self.args.transport.native();
+                self.retired = false;
                 self.establishing = Some(if self.args.role == Role::Host {
                     let listener = owner.listen(transport, self.args.listen).await?;
                     emit(
@@ -440,9 +443,10 @@ impl Resident {
             .ok_or_else(|| invalid("establishment missing"))?
             .await?;
         match result {
-            Ok(mut session) => {
+            Ok(session) => {
                 if let Err(error) = self.guard.check() {
-                    let _ = session.shutdown(Duration::from_secs(5)).await;
+                    session.request_stop();
+                    self.session = Some(session);
                     return Err(error);
                 }
                 let owner = self
@@ -450,8 +454,18 @@ impl Resident {
                     .as_ref()
                     .ok_or_else(|| invalid("original owner missing"))?
                     .clone();
-                let products =
-                    match LocalProducts::attach(session.handle(), &self.directory, owner).await {
+                let products = async {
+                    let stores = match &self.file_stores {
+                        Some(stores) => stores.clone(),
+                        None => {
+                            let stores = Arc::new(LocalFileStores::open(&self.directory).await?);
+                            self.file_stores = Some(stores.clone());
+                            stores
+                        }
+                    };
+                    LocalProducts::attach(session.handle(), stores, owner)
+                }.await;
+                let products = match products {
                         Ok(products) => products,
                         Err(error) => {
                             self.session = Some(session);
@@ -459,8 +473,9 @@ impl Resident {
                         }
                     };
                 self.products = Some(products);
-                emit("connected", session.view())?;
+                let view = session.view();
                 self.session = Some(session);
+                emit("connected", view)?;
             }
             Err(error) => emit("connection_failed", error.to_string())?,
         }
@@ -471,14 +486,14 @@ impl Resident {
             return Ok(());
         };
         let report = session.wait_stopped().await;
-        let products = if let Some(mut products) = self.products.take() {
+        let products = if let Some(products) = self.products.as_mut() {
             products.shutdown().await
         } else {
             Ok(())
         };
-        self.session.take();
         let report = report?;
         products?;
+        self.retired = true;
         emit("connection_stopped", &report)?;
         if report.cleanup != nestlink_app_core::NativeSessionCleanup::Succeeded
             || report.failure.is_some()
@@ -490,6 +505,11 @@ impl Resident {
                 invalid("offline lifecycle ended without successful product cleanup").into(),
             );
         }
+        if !self.owner.as_ref().is_some_and(|owner| owner.budget().map_or(true, |budget| budget.stopped)) {
+            self.session.take();
+            self.products.take();
+        }
+        // A terminal local stop keeps its completed IPC snapshot available.
         // Only the transport ended. The original process, absolute deadline,
         // cumulative byte reservations and attempt counter remain unchanged.
         self.status()
@@ -564,12 +584,13 @@ struct LocalProducts {
     stop: watch::Sender<bool>,
     task: Option<JoinHandle<Result<()>>>,
 }
-impl LocalProducts {
-    async fn attach(
-        core: nestlink_app_core::CoreHandle,
-        directory: &std::path::Path,
-        owner: NativeOfflineRemote,
-    ) -> Result<Self> {
+struct LocalFileStores {
+    roots: Arc<crate::native_files::RootBudget>,
+    quota: Arc<nestlink_platform_files::upload::WriteQuota>,
+    recovery: Arc<nestlink_platform_files::download::recovery::DownloadRecoveryStore>,
+}
+impl LocalFileStores {
+    async fn open(directory: &std::path::Path) -> Result<Self> {
         let area = directory.canonicalize()?;
         let quota = Arc::new(
             tokio::task::spawn_blocking(move || {
@@ -594,11 +615,16 @@ impl LocalProducts {
             nestlink_protocol::FILE_READ_ROOTS,
             nestlink_protocol::FILE_WRITE_ROOTS,
         ));
+        Ok(Self { roots, quota, recovery })
+    }
+}
+impl LocalProducts {
+    fn attach(core: nestlink_app_core::CoreHandle, stores: Arc<LocalFileStores>, owner: NativeOfflineRemote) -> Result<Self> {
         let files = Arc::new(crate::native_files::LocalFiles::new(
             core.clone(),
-            roots,
-            quota,
-            recovery,
+            stores.roots.clone(),
+            stores.quota.clone(),
+            stores.recovery.clone(),
         ));
         let clipboard = crate::native_clipboard::install(&core)?;
         let privileged = crate::privileged_input::PrivilegedInput::new();
@@ -715,6 +741,8 @@ pub(crate) async fn run(args: OfflineRemoteArgs) -> Result<()> {
         establishing: None,
         session: None,
         products: None,
+        retired: false,
+        file_stores: None,
     };
     emit(
         "ready",
@@ -740,9 +768,8 @@ pub(crate) async fn run(args: OfflineRemoteArgs) -> Result<()> {
             _ = tick.tick() => {
                 if let Err(error) = resident.guard.check() { operation = Err(error); break; }
                 if let Err(error) = resident.poll_establishment().await { operation = Err(error); break; }
-                if resident.session.as_ref().is_some_and(|session| matches!(session.view().status, NativeSessionStatus::Stopped | NativeSessionStatus::Failed)) {
+                if !resident.retired && resident.session.as_ref().is_some_and(|session| matches!(session.view().status, NativeSessionStatus::Stopped | NativeSessionStatus::Failed)) {
                     if let Err(error) = resident.retire_session().await { operation = Err(error); break; }
-                    if resident.owner.as_ref().is_some_and(|owner| owner.budget().map_or(true, |budget| budget.stopped)) { break; }
                 }
             },
             accepted = server.accept() => match accepted {

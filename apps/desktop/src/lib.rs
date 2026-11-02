@@ -24,6 +24,7 @@ mod native_input;
 mod native_network;
 mod navigation;
 mod network_diagnostics;
+mod offline_remote;
 pub mod picker;
 mod privileged_input;
 mod remote;
@@ -116,6 +117,7 @@ struct RemoteViewportTarget {
 
 struct RemoteWindowCleanup {
     target: RemoteViewportTarget,
+    offline: bool,
     stop_submission: Option<u64>,
     revoke_submission: Option<u64>,
     stop_operation: Option<OperationId>,
@@ -890,7 +892,8 @@ impl DesktopApp {
             && self.remote_viewport_open
             && self.remote_window_cleanup.is_none()
             && visible
-            && snapshot.authentication == Authentication::SignedIn
+            && (snapshot.authentication == Authentication::SignedIn
+                || self.remote_viewport_target.as_ref().is_some_and(|target| offline_remote::viewer_is_current(snapshot, target)))
             && runtime_id.is_some()
             && target_matches
             && session.is_some_and(|session| session.status == NativeSessionStatus::Connected);
@@ -1098,7 +1101,13 @@ impl DesktopApp {
         self.remote_window_cleanup = None;
         self.remote_viewport_open = true;
         self.clear_video();
-        self.refresh_remote_request(snapshot, &target.request_id);
+        if offline_remote::target(snapshot, &target).is_some() {
+            self.remote_inspection_submission = None;
+            self.remote_inspection_completed = false;
+            self.remote_inspection_succeeded = false;
+        } else {
+            self.refresh_remote_request(snapshot, &target.request_id);
+        }
     }
 
     fn refresh_remote_request(&mut self, snapshot: &Snapshot, request_id: &str) {
@@ -1270,7 +1279,7 @@ impl DesktopApp {
                                     .find(|device| device.device.id == request.host_device_id)
                             })
                             .map(|device| device.device.name.as_str())
-                            .unwrap_or(self.t("远程桌面", "Remote desktop"));
+                            .unwrap_or(if snapshot.native_offline.is_some() { self.t("离线仅直连", "Offline · direct only") } else { self.t("远程桌面", "Remote desktop") });
                         ui.add(
                             egui::Label::new(egui::RichText::new(name).size(18.).strong())
                                 .truncate(),
@@ -1301,10 +1310,11 @@ impl DesktopApp {
                         egui::vec2(message_width, 48.),
                         |ui| {
                             if let Some(cleanup) = &self.remote_window_cleanup {
-                                let message = cleanup.error.as_deref().unwrap_or(self.t(
-                                    "正在结束会话并撤销访问…",
-                                    "Ending the session and revoking access…",
-                                ));
+                                let message = cleanup.error.as_deref().unwrap_or(if cleanup.offline {
+                                    self.t("正在终止原离线授权并清理资源…", "Ending the original offline authority and cleaning up…")
+                                } else {
+                                    self.t("正在结束会话并撤销访问…", "Ending the session and revoking access…")
+                                });
                                 ui.add(egui::Label::new(message).truncate())
                                     .on_hover_text(message);
                                 ui.add(
@@ -1313,7 +1323,7 @@ impl DesktopApp {
                                             "{} {} / {} {}",
                                             self.t("本地清理", "Local cleanup"),
                                             cleanup_phase(cleanup.stop_status, self.english),
-                                            self.t("访问撤销", "Revocation"),
+                                            if cleanup.offline { self.t("本机授权终止", "Local authority stop") } else { self.t("访问撤销", "Revocation") },
                                             cleanup_phase(cleanup.revoke_status, self.english)
                                         ))
                                         .small(),
@@ -1408,7 +1418,7 @@ impl DesktopApp {
                             }
                             if let Some(observed) = &self.video_observation {
                                 ui.strong(self.t("连接与性能", "Connection and performance"));
-                                ui.label(format!("{}: {}", self.t("实际编码", "Actual codec"), if observed.codec == 1 { "H.264 Baseline" } else { "VP8" }));
+                                ui.label(format!("{}: {}", self.t("实际编码", "Actual codec"), match observed.codec { 1 => "H.264 Baseline", 2 => "HEVC Main8", _ => "VP8" }));
                                 ui.label(format!("{}: {}", self.t("实际解码", "Actual decoder"), if observed.hardware { self.t("硬件", "Hardware") } else { self.t("软件", "Software") }));
                                 let fps = observed.fps.filter(|_| observed.latest.elapsed() < Duration::from_secs(2))
                                     .map(|fps| format!("{fps:.1} fps")).unwrap_or_else(|| self.t("未观测", "Not observed").into());
@@ -1416,7 +1426,7 @@ impl DesktopApp {
                                 ui.label(format!("{} × {}", observed.layout.1, observed.layout.2));
                                 ui.small(self.t("解码后经 CPU 像素上传呈现；此帧率不代表端到端输入时延。", "Decoded CPU pixels are uploaded for display. This rate does not measure input-to-picture latency."));
                                 if ui.button(self.t("复制脱敏诊断", "Copy redacted diagnostics")).clicked() {
-                                    let report = serde_json::json!({"version": env!("CARGO_PKG_VERSION"), "codec": if observed.codec == 1 {"h264-baseline"} else {"vp8"}, "hardware_decode_observed": observed.hardware,
+                                    let report = serde_json::json!({"version": env!("CARGO_PKG_VERSION"), "codec": match observed.codec { 1 => "h264-baseline", 2 => "hevc-main8", _ => "vp8" }, "hardware_decode_observed": observed.hardware,
                                         "texture_upload_fps": observed.fps.filter(|_| observed.latest.elapsed() < Duration::from_secs(2)), "sample_age_ms": observed.latest.elapsed().as_millis(), "width": observed.layout.1, "height": observed.layout.2,
                                         "presentation": "cpu-bgra-texture-upload", "network_rtt_ms": null, "end_to_end_latency_ms": null});
                                     if let Ok(text) = serde_json::to_string_pretty(&report) { ui.ctx().copy_text(text); }
@@ -1476,8 +1486,10 @@ impl DesktopApp {
             self.bridge.set_input_interest(false);
             return;
         };
+        let offline = offline_remote::target(snapshot, &target).is_some();
         let mut cleanup = RemoteWindowCleanup {
             target,
+            offline,
             stop_submission: None,
             revoke_submission: None,
             stop_operation: None,
@@ -1493,7 +1505,7 @@ impl DesktopApp {
             ).into());
         } else {
             self.submit_close_stop(snapshot, &mut cleanup);
-            if self.remote_inspection_completed {
+            if !cleanup.offline && self.remote_inspection_completed {
                 if self.remote_inspection_succeeded {
                     self.submit_close_revoke(snapshot, &mut cleanup);
                 } else {
@@ -1558,6 +1570,7 @@ impl DesktopApp {
     }
 
     fn submit_close_revoke(&self, snapshot: &Snapshot, cleanup: &mut RemoteWindowCleanup) {
+        if cleanup.offline { return; }
         if remote_request_is_terminal(snapshot, &cleanup.target.request_id) {
             cleanup.revoke_status = Some(OperationStatus::Succeeded);
             return;
@@ -1601,9 +1614,11 @@ impl DesktopApp {
                 .into(),
             );
         } else {
-            let request_id = cleanup.target.request_id.clone();
-            self.refresh_remote_request(snapshot, &request_id);
-            if self.remote_inspection_completed && !self.remote_inspection_succeeded {
+            if !cleanup.offline {
+                let request_id = cleanup.target.request_id.clone();
+                self.refresh_remote_request(snapshot, &request_id);
+            }
+            if !cleanup.offline && self.remote_inspection_completed && !self.remote_inspection_succeeded {
                 cleanup.error = Some(
                     self.t(
                         "访问状态刷新未能排入守护进程队列。",
@@ -1637,7 +1652,11 @@ impl DesktopApp {
             let Some(cleanup) = self.remote_window_cleanup.as_mut() else {
                 return;
             };
-            if cleanup.revoke_submission.is_none() && cleanup.revoke_status.is_none() {
+            if cleanup.offline {
+                if offline_remote::authority_stopped(snapshot, &cleanup.target) {
+                    cleanup.revoke_status = Some(OperationStatus::Succeeded);
+                }
+            } else if cleanup.revoke_submission.is_none() && cleanup.revoke_status.is_none() {
                 if inspection_completed && inspection_succeeded {
                     if remote_request_is_terminal(snapshot, &cleanup.target.request_id) {
                         cleanup.revoke_status = Some(OperationStatus::Succeeded);
@@ -1730,8 +1749,11 @@ impl DesktopApp {
             }
             let session_confirmed =
                 session.is_some_and(|session| session_cleanup_succeeded(session));
-            let request_confirmed =
-                remote_request_is_terminal(snapshot, &cleanup.target.request_id);
+            let request_confirmed = if cleanup.offline {
+                offline_remote::authority_stopped(snapshot, &cleanup.target)
+            } else {
+                remote_request_is_terminal(snapshot, &cleanup.target.request_id)
+            };
             session_confirmed
                 && request_confirmed
                 && cleanup.stop_status == Some(OperationStatus::Succeeded)
@@ -2082,7 +2104,7 @@ impl DesktopApp {
         }
         if self.connected
             && !self.workspace_attached
-            && snapshot.authentication == Authentication::SignedIn
+            && (snapshot.authentication == Authentication::SignedIn || snapshot.native_offline.is_some())
         {
             self.workspace_attached = true;
             self.screen = Screen::Remote;
@@ -2325,6 +2347,10 @@ impl eframe::App for DesktopApp {
                     .inner_margin(self.tokens.layout.content_padding.round() as i8),
             )
             .show_inside(parent, |ui| {
+                if snapshot.native_offline.is_some() {
+                    ui.add_enabled_ui(self.connected && !self.exiting, |ui| self.offline_remote_page(ui, &snapshot));
+                    return;
+                }
                 // Remote desktop is a bounded workspace. Only the device
                 // directory, options and secondary sections scroll; polling
                 // cannot resize a page above its primary actions.

@@ -991,7 +991,7 @@ impl DesktopApp {
         }
     }
 
-    fn native_session_panel(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+    pub(super) fn native_session_panel(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         widgets::section(ui, &snapshot.native_session, self.english);
         let Some(session) = snapshot.native_session.data.as_ref() else {
             return;

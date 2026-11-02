@@ -254,6 +254,11 @@ jobs:
             }
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
+          if ($IsWindows) {
+            python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-desktop --lib layout_tests::independent_offline_ -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog -Append
+          } else {
+            cargo test --locked -p nestlink-desktop --lib layout_tests::independent_offline_ -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog -Append
+          }
           exit $LASTEXITCODE
       - name: Check original-session quality projection and old IPC compatibility
         if: ${{ !cancelled() }}

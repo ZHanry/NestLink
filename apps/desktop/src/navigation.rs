@@ -5,6 +5,10 @@ use nestlink_app_core::{Action, Page, Snapshot};
 impl DesktopApp {
     pub(crate) fn navigate(&mut self, screen: Screen, snapshot: &Snapshot) {
         self.message = None;
+        if snapshot.native_offline.is_some() {
+            self.screen = Screen::Remote;
+            return;
+        }
         self.screen = screen;
         match screen {
             Screen::Remote => {
@@ -227,6 +231,12 @@ impl DesktopApp {
                     },
                 );
                 let signed_in = snapshot.principal.is_some();
+                if snapshot.native_offline.is_some() {
+                    if widgets::nav_button(ui, widgets::NavIcon::Monitor, self.t("离线仅直连", "Offline direct"), true).clicked() {
+                        self.screen = Screen::Remote;
+                    }
+                    return;
+                }
                 ui.add_enabled_ui(signed_in && self.connected && !self.exiting, |ui| {
                     for (screen, icon, zh, en) in [
                         (
