@@ -15,6 +15,31 @@
   "research_runtime_exclusion": "EasyTier is idea_reference only; no executable, library, FFI, forked core or adapted code is selected.",
   "components": [
     {
+      "id": "C29",
+      "purpose": "Actual logind X11 login for the original hosted offline resident capture fixture",
+      "existing_implementation": ["Original runner libpam.so.0/login stack, systemd/logind, Xvfb, Secret Service and native capture validation"],
+      "candidates": [
+        "Original systemd PAMName adapter with DISPLAY environment (insufficient: no PAM_XDISPLAY item)",
+        "Original libpam/login stack with one explicit actual PAM_XDISPLAY and exact child lifetime (selected)",
+        "Complete display-manager desktop installation (mature but introduces another graphical owner for this bounded fixture)"
+      ],
+      "official_sources": [
+        "https://github.com/systemd/systemd/blob/db11bab38ccf1ed257f310d29070843d4c58ea01/src/login/pam_systemd.c",
+        "https://github.com/systemd/systemd/blob/db11bab38ccf1ed257f310d29070843d4c58ea01/src/core/exec-invoke.c",
+        "https://github.com/linux-pam/linux-pam/blob/v1.5.3/Copyright"
+      ],
+      "maintenance_status": {"reviewed_at": "2026-11-02", "evidence": "Real source85 hosted failure and original systemd v255 PAM adapters reviewed; library remains the hosted Ubuntu distribution dependency, not a vendored implementation."},
+      "platforms": ["GitHub-hosted ubuntu-24.04 laboratory only"],
+      "version": {"libpam": "Runner distribution libpam.so.0 ABI", "systemd_source_review": "v255 db11bab38ccf1ed257f310d29070843d4c58ea01"},
+      "license": "Runner-provided Linux-PAM library and its distribution notices; reviewed Linux-PAM v1.5.3 Copyright. No new library linkage or binary redistribution.",
+      "selection_reason": "Reuse mature OS session registration; only the missing standard PAM_XDISPLAY item and original child lifetime need fixture adaptation.",
+      "adapter_boundary": "Privileged hosted fixture opens original login PAM session, sets actual Xvfb display, drops child to original UID/GID, retains and closes the real session. Original product system-bus/PID/UID/active/display checks, protected login, permissions, assertions and deadlines remain in force.",
+      "security_and_operations_cost": ["Exact original service cleanup and bounds retained", "Child credential drop, signal forwarding and parent-death fence", "No fake logind service or accepted facts", "Host execution must establish actual capture; pending-listener success is insufficient"],
+      "work_packages": ["W27"],
+      "validation_status": "implemented_hosted_original_pam_execution_pending",
+      "decision_ref": "docs/adr/network/0068-real-pam-xdisplay-resident-fixture.md"
+    },
+    {
       "id": "C28",
       "purpose": "Actual stable Firefox as the third production Web/native integration engine",
       "existing_implementation": [

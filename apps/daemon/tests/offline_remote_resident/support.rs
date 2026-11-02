@@ -182,9 +182,8 @@ impl Platform {
                     "--service-type=exec",
                 ])
                 .arg(format!("--unit={unit}"))
-                .arg(format!("--uid={}", rustix::process::geteuid().as_raw()))
+                .arg("--uid=0")
                 .args([
-                    "--property=PAMName=login",
                     "--property=TimeoutStopSec=5s",
                     "--property=RuntimeMaxSec=180s",
                     "--setenv=XDG_SESSION_TYPE=x11",
@@ -193,14 +192,28 @@ impl Platform {
             for (name, value) in &self.env {
                 command.arg(format!("--setenv={name}={value}"));
             }
-            // pam_systemd can set the per-user bus/runtime environment. Restore
-            // this test's actual private Secret Service after PAM registers the
-            // real login session, without changing any original session facts.
+            for name in ["GITHUB_ACTIONS", "RUNNER_ENVIRONMENT"] {
+                if let Ok(value) = std::env::var(name) {
+                    command.arg(format!("--setenv={name}={value}"));
+                }
+            }
+            // The original systemd v255 PAMName adapter does not set
+            // PAM_XDISPLAY. The thin libpam adapter registers this actual Xvfb
+            // through the original login stack, then drops to the original UID.
+            // Product logind facts and the private Secret Service stay real.
             command.args(["--", "/usr/bin/env", "--unset=WAYLAND_DISPLAY"]);
             for (name, value) in &self.env {
                 command.arg(format!("{name}={value}"));
             }
-            command.arg(env!("CARGO_BIN_EXE_nestlink-daemon"));
+            command
+                .arg("/usr/bin/python3")
+                .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/../../scripts/refactor-offline-resident-pam.py"))
+                .arg("--uid")
+                .arg(rustix::process::geteuid().as_raw().to_string())
+                .arg("--display")
+                .arg(self.env.iter().find(|(name, _)| *name == "DISPLAY").map(|(_, value)| value.as_str()).unwrap_or_default())
+                .arg("--")
+                .arg(env!("CARGO_BIN_EXE_nestlink-daemon"));
             (command, Some(unit))
         }
         #[cfg(windows)]
