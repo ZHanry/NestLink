@@ -23,6 +23,42 @@ const COMMAND_CAPACITY: usize = 2;
 const COMMAND_BUDGET: Duration = Duration::from_millis(500);
 const START_BUDGET: Duration = Duration::from_secs(2);
 const JOIN_BUDGET: Duration = Duration::from_millis(250);
+unsafe extern "C" {
+    fn nl_hevc_decoder_device_open(adapter_luid: u64, result: *mut *mut c_void) -> i32;
+    fn nl_hevc_decoder_device_borrow(source: *mut c_void, device: *mut *mut c_void) -> i32;
+    fn nl_hevc_decoder_device_close(source: *mut c_void) -> i32;
+}
+fn device_checked(code: i32) -> io::Result<()> {
+    if code < 0 { Err(io::Error::other(format!("HEVC original decoder device failed ({code:#010x})"))) }
+    else { Ok(()) }
+}
+struct DecoderDeviceSource(NonNull<c_void>);
+impl DecoderDeviceSource {
+    fn open(adapter_luid: u64) -> io::Result<Self> {
+        let mut device = std::ptr::null_mut();
+        // SAFETY: initialized output, constructed on the actual decode worker.
+        device_checked(unsafe { nl_hevc_decoder_device_open(adapter_luid, &mut device) })?;
+        Ok(Self(NonNull::new(device).ok_or_else(|| io::Error::other("null HEVC decoder device"))?))
+    }
+}
+// SAFETY: this !Send source is constructed, checked, used and closed only by
+// the original codec worker. It never exposes a texture or capture operation.
+unsafe impl HevcTextureSource for DecoderDeviceSource {
+    fn device(&self) -> io::Result<*mut c_void> {
+        let mut device = std::ptr::null_mut();
+        // SAFETY: same-thread live native owner checks thread and device loss.
+        device_checked(unsafe { nl_hevc_decoder_device_borrow(self.0.as_ptr(), &mut device) })?;
+        Ok(device)
+    }
+    fn capture(&mut self, _: bool) -> io::Result<Option<NonNull<c_void>>> {
+        Err(io::Error::other("decode-only HEVC owner cannot capture"))
+    }
+    fn check_current(&self) -> io::Result<()> { self.device().map(|_| ()) }
+    fn close(self: Box<Self>) -> io::Result<()> {
+        // SAFETY: the MF transform completed checked close before this call.
+        device_checked(unsafe { nl_hevc_decoder_device_close(self.0.as_ptr()) })
+    }
+}
 
 /// The factory runs on the native worker. No COM object, device or texture may
 /// be moved from the calling thread into it.
@@ -200,6 +236,7 @@ impl HevcExecutionReceipt {
     pub fn retired_joined(&self) -> bool {
         self.state.joined.load(Ordering::Acquire) && !self.state.active.load(Ordering::Acquire)
     }
+    pub fn is_encoded_output(&self) -> bool { matches!(self.kind, Kind::Encoded { .. }) }
     pub fn check_encoded(&self, pts: u64, bytes: &[u8]) -> io::Result<()> {
         self.check_current()?;
         if self.identity()?.direction != ExecutionDirection::Encode
@@ -359,6 +396,10 @@ pub struct HardwareHevcExecution {
     worker: Option<JoinHandle<io::Result<()>>>,
 }
 impl HardwareHevcExecution {
+    pub fn start_decode(target: HevcExecutionTarget, authority: Arc<AtomicBool>) -> io::Result<Self> {
+        Self::start(ExecutionDirection::Decode, target, authority,
+            move || Ok(Box::new(DecoderDeviceSource::open(target.adapter_luid())?) as Box<dyn HevcTextureSource>))
+    }
     /// The source factory must enumerate and open the approved original device
     /// on this new worker. Passing an old closed probe is intentionally impossible.
     pub fn start<F>(

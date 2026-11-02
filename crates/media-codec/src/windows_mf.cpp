@@ -859,10 +859,45 @@ extern "C" int32_t nl_hevc_observation(void* opaque,uint64_t* luid,uint32_t* fla
     return S_OK;
 }
 namespace {
+struct HevcDecoderDevice {
+    ComPtr<ID3D11Device> device;ComPtr<ID3D11DeviceContext> context;
+    DWORD thread=GetCurrentThreadId();
+};
 struct HevcSyntheticSource {
     ComPtr<ID3D11Device> device;ComPtr<ID3D11DeviceContext> context;ComPtr<ID3D11Texture2D> texture;
     DWORD thread=GetCurrentThreadId();
 };
+}
+// Real decode-only D3D owner: no synthetic texture, desktop read or HWND.
+extern "C" int32_t nl_hevc_decoder_device_open(uint64_t adapter_luid,void** result) noexcept {
+    if(!result)return E_POINTER;*result=nullptr;
+    try {
+        std::unique_ptr<HevcDecoderDevice> s(new(std::nothrow) HevcDecoderDevice());if(!s)return E_OUTOFMEMORY;
+        ComPtr<IDXGIFactory1> factory;HRESULT hr=CreateDXGIFactory1(IID_PPV_ARGS(&factory));if(FAILED(hr))return hr;
+        ComPtr<IDXGIAdapter1> selected;
+        for(UINT index=0;;++index){
+            ComPtr<IDXGIAdapter1> candidate;hr=factory->EnumAdapters1(index,&candidate);
+            if(hr==DXGI_ERROR_NOT_FOUND)break;if(FAILED(hr))return hr;
+            DXGI_ADAPTER_DESC1 desc{};hr=candidate->GetDesc1(&desc);if(FAILED(hr))return hr;
+            const uint64_t luid=(uint64_t(uint32_t(desc.AdapterLuid.HighPart))<<32)|uint32_t(desc.AdapterLuid.LowPart);
+            if(luid==adapter_luid && !(desc.Flags&DXGI_ADAPTER_FLAG_SOFTWARE)){selected=candidate;break;}
+        }
+        if(!selected)return DXGI_ERROR_NOT_FOUND;
+        hr=D3D11CreateDevice(selected.Get(),D3D_DRIVER_TYPE_UNKNOWN,nullptr,D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
+            nullptr,0,D3D11_SDK_VERSION,&s->device,nullptr,&s->context);if(FAILED(hr))return hr;
+        *result=s.release();return S_OK;
+    }catch(...){return E_OUTOFMEMORY;}
+}
+extern "C" int32_t nl_hevc_decoder_device_borrow(void* opaque,void** device) noexcept {
+    auto* s=static_cast<HevcDecoderDevice*>(opaque);
+    if(!s||!device||s->thread!=GetCurrentThreadId())return E_INVALIDARG;
+    HRESULT hr=s->device->GetDeviceRemovedReason();if(FAILED(hr))return hr;
+    *device=s->device.Get();return S_OK;
+}
+extern "C" int32_t nl_hevc_decoder_device_close(void* opaque) noexcept {
+    auto* s=static_cast<HevcDecoderDevice*>(opaque);
+    if(!s||s->thread!=GetCurrentThreadId())return E_INVALIDARG;
+    delete s;return S_OK;
 }
 // Synthetic upload only: no monitor enumeration, capture API, HWND or desktop read.
 extern "C" int32_t nl_hevc_synthetic_open(uint32_t width,uint32_t height,void** result) noexcept {

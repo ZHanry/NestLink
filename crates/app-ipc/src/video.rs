@@ -11,6 +11,7 @@ use tokio::time::Instant;
 use zeroize::Zeroizing;
 
 const VIDEO_MAGIC: &[u8; 8] = b"NLVID001";
+const VIDEO_HEVC_MAGIC: &[u8; 8] = b"NLVID002";
 const KIND_LAYOUT: u8 = 1;
 const KIND_FRAME: u8 = 2;
 const KIND_CLOSED: u8 = 3;
@@ -583,7 +584,7 @@ fn encode_header(
         return Err(crate::Error::Protocol);
     }
     let mut bytes = [0_u8; VIDEO_HEADER_BYTES];
-    bytes[0..8].copy_from_slice(VIDEO_MAGIC);
+    bytes[0..8].copy_from_slice(if fields.codec == 2 { VIDEO_HEVC_MAGIC } else { VIDEO_MAGIC });
     bytes[8] = fields.kind;
     bytes[9] = PIXEL_BGRA8;
     bytes[10] = fields.codec;
@@ -603,9 +604,13 @@ fn encode_header(
 }
 
 fn decode_header(bytes: &[u8; VIDEO_HEADER_BYTES]) -> Result<Header, crate::Error> {
-    if &bytes[0..8] != VIDEO_MAGIC
+    let valid_codec = if &bytes[0..8] == VIDEO_HEVC_MAGIC {
+        bytes[8] == KIND_FRAME && bytes[10] == 2 && bytes[11] == 1
+    } else {
+        &bytes[0..8] == VIDEO_MAGIC && bytes[10] <= 1
+    };
+    if !valid_codec
         || bytes[9] != PIXEL_BGRA8
-        || bytes[10] > 1
         || bytes[11] > 1
         || (bytes[10] == 0 && bytes[11] != 0)
         || (bytes[8] != KIND_FRAME && (bytes[10] != 0 || bytes[11] != 0))
@@ -696,6 +701,28 @@ mod tests {
             connection_generation: 9,
             source: 0,
         }
+    }
+    #[test]
+    fn hevc_readback_pixels_have_an_independent_strict_magic() -> Result<(), crate::Error> {
+        let mut encoded = encode_header(&binding(), HeaderFields {
+            codec: 2, hardware_decode: true, kind: KIND_FRAME,
+            layout_epoch: 2, sequence: 3, pts_90khz: 90,
+            width: 640, height: 480, payload_bytes: 640 * 480 * 4,
+        })?;
+        assert_eq!(&encoded[..8], VIDEO_HEVC_MAGIC);
+        assert_eq!(decode_header(&encoded)?.codec, 2);
+        encoded[..8].copy_from_slice(VIDEO_MAGIC);
+        assert!(decode_header(&encoded).is_err());
+        encoded[..8].copy_from_slice(VIDEO_HEVC_MAGIC);
+        encoded[11] = 0;
+        assert!(decode_header(&encoded).is_err());
+        encoded[11] = 1;
+        encoded[10] = 1;
+        assert!(decode_header(&encoded).is_err());
+        encoded[10] = 2;
+        encoded[8] = KIND_LAYOUT;
+        assert!(decode_header(&encoded).is_err());
+        Ok(())
     }
 
     fn frame_header(binding: &NativeVideoBinding) -> Header {

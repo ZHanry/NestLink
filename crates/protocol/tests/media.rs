@@ -34,6 +34,37 @@ fn audio() -> NativeAudio {
         payload: vec![0xf8, 0xff, 0xfe],
     }
 }
+#[test]
+fn hevc_wire_marker_requires_exact_identity_and_keeps_legacy_markers_strict() -> Result {
+    use nestlink_protocol::NativeVideoCodec;
+    let mut frame = video();
+    frame.codec = NativeVideoCodec::HevcMain8 as i32;
+    frame.format_epoch = 1;
+    frame.format_sha256 = vec![3; 32];
+    // Structural envelope fixture only. The actual HEVC owner independently
+    // validates VPS/SPS/PPS, full PTL, geometry/color and all slice dependencies.
+    frame.payload = vec![0, 0, 0, 1, 38, 1, 0x80];
+    let bytes = frame.encode_validated()?;
+    assert_eq!(NativeVideo::decode_validated(&bytes)?, frame);
+    for case in 0..8 {
+        let mut invalid = frame.clone();
+        match case {
+            0 => { invalid.format_epoch = 0; invalid.format_sha256.clear(); }
+            1 => invalid.format_sha256 = vec![0; 32],
+            2 => invalid.keyframe = false,
+            3 => invalid.width = 30,
+            4 => invalid.payload[4] = 2,
+            5 => invalid.payload[5] = 2,
+            6 => invalid.codec = NativeVideoCodec::H264Baseline as i32,
+            _ => invalid.codec = NativeVideoCodec::Vp8 as i32,
+        }
+        assert!(invalid.encode_validated().is_err(), "case {case}");
+    }
+    assert_eq!(NativeVideoCodec::Vp8 as i32, 0);
+    assert_eq!(NativeVideoCodec::H264Baseline as i32, 1);
+    assert_eq!(NativeVideoCodec::HevcMain8 as i32, 2);
+    Ok(())
+}
 fn unhex(value: &str) -> Result<Vec<u8>> {
     (0..value.len())
         .step_by(2)

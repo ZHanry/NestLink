@@ -13,6 +13,8 @@ pub mod external;
 mod hevc_negotiated_format;
 pub use hevc_negotiated_format::hevc_main8_contract;
 mod legacy_format;
+mod live_execution;
+pub use live_execution::{LiveExecutionIdentity, LiveExecutionReceipt, LiveExecutionTarget};
 mod negotiated_budget;
 mod negotiated_format;
 #[cfg(windows)]

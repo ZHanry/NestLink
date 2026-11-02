@@ -596,7 +596,7 @@ impl DeliveryGuard for HostVideoDeliveryGuard {
 }
 struct NativeVideoRoute {
     receiver_qos: Mutex<nestlink_media_session::ReceiverReportTracker>,
-    execution: Mutex<Option<nestlink_media_codec::ExecutionReceipt>>,
+    execution: Mutex<Option<nestlink_media_session::LiveExecutionReceipt>>,
     request_id: String,
     connection_generation: u64,
     sender: ChannelSender,
@@ -625,7 +625,7 @@ impl NativeVideoRoute {
     }
 }
 struct NativeVideoDeliveryGuard {
-    execution: Option<nestlink_media_codec::ExecutionReceipt>,
+    execution: Option<nestlink_media_session::LiveExecutionReceipt>,
     display: HostVideoDeliveryGuard,
     format: HostVideoDeliveryGuard,
 }
@@ -1316,8 +1316,19 @@ impl CoreHandle {
             keyframe,
             repeated_source,
             Zeroizing::new(encoded_frame),
-            Some(execution),
+            Some(execution.into()),
         )
+    }
+    // Shared by the existing frame APIs and the sealed execution entry point.
+    #[cfg(windows)]
+    #[allow(clippy::too_many_arguments)]
+    pub fn send_native_hevc_execution_frame(
+        &self, session_binding: &NativeSessionBinding, source_binding: NativeVideoBinding,
+        pts_90khz: u64, repeated_source: bool, encoded_frame: Vec<u8>,
+        execution: nestlink_media_codec::HevcExecutionReceipt,
+    ) -> impl Future<Output = Result<(), NativeVideoError>> + '_ {
+        self.send_native_video_frame_inner(session_binding.clone(), source_binding,
+            pts_90khz, true, repeated_source, Zeroizing::new(encoded_frame), Some(execution.into()))
     }
     // Shared by the existing frame APIs and the sealed execution entry point.
     #[allow(clippy::too_many_arguments)]
@@ -1329,7 +1340,7 @@ impl CoreHandle {
         keyframe: bool,
         repeated_source: bool,
         mut encoded_frame: Zeroizing<Vec<u8>>,
-        execution: Option<nestlink_media_codec::ExecutionReceipt>,
+        execution: Option<nestlink_media_session::LiveExecutionReceipt>,
     ) -> Result<(), NativeVideoError> {
         // The public entry points create the guard synchronously, so dropping
         // an unpolled or cancelled producer future also clears the frame.
@@ -1375,14 +1386,21 @@ impl CoreHandle {
                         && formats.contains(&v.format)
                 })
                 .ok_or(NativeVideoError::Unauthorized)?;
-            nestlink_media_session::execution_receipt_matches(receipt, value.format)
+            receipt.matches_format(value.format)
                 .map_err(|_| NativeVideoError::Unauthorized)?;
-            let display_config = nestlink_media_session::h264_display_config(
+            let display_config = if value.format.codec == nestlink_protocol::media_format::Codec::Hevc {
+                let config = nestlink_media_session::hevc_main8_contract(value.format)
+                    .map_err(|_| NativeVideoError::Unauthorized)?.config();
+                if (config.width, config.height) != (source_binding.width, source_binding.height) {
+                    return Err(NativeVideoError::Unauthorized);
+                }
+                config
+            } else { nestlink_media_session::h264_display_config(
                 value.format,
                 source_binding.width,
                 source_binding.height,
             )
-            .map_err(|_| NativeVideoError::Unauthorized)?;
+            .map_err(|_| NativeVideoError::Unauthorized)? };
             let actual_config = receipt.target().config();
             if (actual_config.width, actual_config.height)
                 != (display_config.width, display_config.height)
@@ -1422,7 +1440,9 @@ impl CoreHandle {
             format_sha256: confirmed
                 .as_ref()
                 .map_or_else(Vec::new, |v| v.format_sha256.to_vec()),
-            codec: if route
+            codec: if confirmed.as_ref().is_some_and(|v| v.format.codec == nestlink_protocol::media_format::Codec::Hevc) {
+                nestlink_protocol::NativeVideoCodec::HevcMain8 as i32
+            } else if route
                 .lease
                 .media_capability(nestlink_protocol::media::H264_CAPABILITY)
                 .map_err(|_| NativeVideoError::Unauthorized)?
