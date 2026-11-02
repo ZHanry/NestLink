@@ -893,7 +893,10 @@ impl DesktopApp {
             && self.remote_window_cleanup.is_none()
             && visible
             && (snapshot.authentication == Authentication::SignedIn
-                || self.remote_viewport_target.as_ref().is_some_and(|target| offline_remote::viewer_is_current(snapshot, target)))
+                || self
+                    .remote_viewport_target
+                    .as_ref()
+                    .is_some_and(|target| offline_remote::viewer_is_current(snapshot, target)))
             && runtime_id.is_some()
             && target_matches
             && session.is_some_and(|session| session.status == NativeSessionStatus::Connected);
@@ -1279,7 +1282,11 @@ impl DesktopApp {
                                     .find(|device| device.device.id == request.host_device_id)
                             })
                             .map(|device| device.device.name.as_str())
-                            .unwrap_or(if snapshot.native_offline.is_some() { self.t("离线仅直连", "Offline · direct only") } else { self.t("远程桌面", "Remote desktop") });
+                            .unwrap_or(if snapshot.native_offline.is_some() {
+                                self.t("离线仅直连", "Offline · direct only")
+                            } else {
+                                self.t("远程桌面", "Remote desktop")
+                            });
                         ui.add(
                             egui::Label::new(egui::RichText::new(name).size(18.).strong())
                                 .truncate(),
@@ -1570,7 +1577,9 @@ impl DesktopApp {
     }
 
     fn submit_close_revoke(&self, snapshot: &Snapshot, cleanup: &mut RemoteWindowCleanup) {
-        if cleanup.offline { return; }
+        if cleanup.offline {
+            return;
+        }
         if remote_request_is_terminal(snapshot, &cleanup.target.request_id) {
             cleanup.revoke_status = Some(OperationStatus::Succeeded);
             return;
@@ -1618,7 +1627,10 @@ impl DesktopApp {
                 let request_id = cleanup.target.request_id.clone();
                 self.refresh_remote_request(snapshot, &request_id);
             }
-            if !cleanup.offline && self.remote_inspection_completed && !self.remote_inspection_succeeded {
+            if !cleanup.offline
+                && self.remote_inspection_completed
+                && !self.remote_inspection_succeeded
+            {
                 cleanup.error = Some(
                     self.t(
                         "访问状态刷新未能排入守护进程队列。",
@@ -2104,7 +2116,8 @@ impl DesktopApp {
         }
         if self.connected
             && !self.workspace_attached
-            && (snapshot.authentication == Authentication::SignedIn || snapshot.native_offline.is_some())
+            && (snapshot.authentication == Authentication::SignedIn
+                || snapshot.native_offline.is_some())
         {
             self.workspace_attached = true;
             self.screen = Screen::Remote;
@@ -2348,7 +2361,9 @@ impl eframe::App for DesktopApp {
             )
             .show_inside(parent, |ui| {
                 if snapshot.native_offline.is_some() {
-                    ui.add_enabled_ui(self.connected && !self.exiting, |ui| self.offline_remote_page(ui, &snapshot));
+                    ui.add_enabled_ui(self.connected && !self.exiting, |ui| {
+                        self.offline_remote_page(ui, &snapshot)
+                    });
                     return;
                 }
                 // Remote desktop is a bounded workspace. Only the device

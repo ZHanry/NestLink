@@ -232,7 +232,14 @@ impl DesktopApp {
                 );
                 let signed_in = snapshot.principal.is_some();
                 if snapshot.native_offline.is_some() {
-                    if widgets::nav_button(ui, widgets::NavIcon::Monitor, self.t("离线仅直连", "Offline direct"), true).clicked() {
+                    if widgets::nav_button(
+                        ui,
+                        widgets::NavIcon::Monitor,
+                        self.t("离线仅直连", "Offline direct"),
+                        true,
+                    )
+                    .clicked()
+                    {
                         self.screen = Screen::Remote;
                     }
                     return;

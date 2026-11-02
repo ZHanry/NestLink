@@ -4,7 +4,10 @@ use eframe::egui;
 use nestlink_app_core::{NativeOfflineView, NativeSessionCleanup, NativeSessionStatus, Snapshot};
 use nestlink_protocol::offline::OfflineRemoteOperation;
 
-pub(super) fn target<'a>(snapshot: &'a Snapshot, target: &RemoteViewportTarget) -> Option<&'a NativeOfflineView> {
+pub(super) fn target<'a>(
+    snapshot: &'a Snapshot,
+    target: &RemoteViewportTarget,
+) -> Option<&'a NativeOfflineView> {
     snapshot.native_offline.as_ref().filter(|offline| {
         offline.request_id == target.request_id
             && offline.connection_generation == target.connection_generation
@@ -23,7 +26,10 @@ pub(super) fn viewer_is_current(snapshot: &Snapshot, selected: &RemoteViewportTa
 pub(super) fn authority_stopped(snapshot: &Snapshot, selected: &RemoteViewportTarget) -> bool {
     target(snapshot, selected).is_some_and(|offline| {
         offline.budget.stopped
-            && matches!(offline.status, NativeSessionStatus::Stopped | NativeSessionStatus::Failed)
+            && matches!(
+                offline.status,
+                NativeSessionStatus::Stopped | NativeSessionStatus::Failed
+            )
             && offline.cleanup == Some(NativeSessionCleanup::Succeeded)
             && offline.failure.is_none()
     })
@@ -31,7 +37,9 @@ pub(super) fn authority_stopped(snapshot: &Snapshot, selected: &RemoteViewportTa
 
 impl DesktopApp {
     pub(super) fn offline_remote_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        let Some(offline) = snapshot.native_offline.as_ref() else { return; };
+        let Some(offline) = snapshot.native_offline.as_ref() else {
+            return;
+        };
         egui::ScrollArea::vertical().id_salt("independent-offline-remote").show(ui, |ui| {
             ui.heading(self.t("离线仅直连", "Offline · direct only"));
             ui.label(self.t(

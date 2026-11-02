@@ -16,23 +16,37 @@ fn independent_offline_snapshot() -> Snapshot {
     let mut snapshot = Snapshot::default();
     let request_id = "00000000-0000-4000-8000-000000000030".to_owned();
     snapshot.native_session.data = Some(Arc::new(nestlink_app_core::NativeSessionView {
-        request_id: request_id.clone(), connection_generation: 4, lease_sequence: 2,
-        status: NativeSessionStatus::Connected, host_view_authorized: false,
-        path: Some(1), quality: None, stop_reason: None, stop_effects: None,
-        cleanup: None, failure: None,
+        request_id: request_id.clone(),
+        connection_generation: 4,
+        lease_sequence: 2,
+        status: NativeSessionStatus::Connected,
+        host_view_authorized: false,
+        path: Some(1),
+        quality: None,
+        stop_reason: None,
+        stop_effects: None,
+        cleanup: None,
+        failure: None,
     }));
     snapshot.native_offline = Some(nestlink_app_core::NativeOfflineView {
         space_id: "00000000-0000-4000-8000-000000000031".into(),
         bundle_id: "00000000-0000-4000-8000-000000000032".into(),
-        request_id, connection_generation: 4, is_host: false,
+        request_id,
+        connection_generation: 4,
+        is_host: false,
         operations: vec![nestlink_protocol::offline::OfflineRemoteOperation::View],
         transport: nestlink_app_core::NativeOfflineTransport::Quic,
         status: NativeSessionStatus::Connected,
         budget: nestlink_app_core::NativeOfflineBudget {
-            remaining_bytes: 8192, remaining_file_write_bytes: 0,
-            connection_attempts: 2, remaining_lifetime_ms: 30000, stopped: false,
+            remaining_bytes: 8192,
+            remaining_file_write_bytes: 0,
+            connection_attempts: 2,
+            remaining_lifetime_ms: 30000,
+            stopped: false,
         },
-        stop_reason: None, cleanup: None, failure: None,
+        stop_reason: None,
+        cleanup: None,
+        failure: None,
     });
     snapshot
 }
@@ -41,47 +55,118 @@ fn independent_offline_snapshot() -> Snapshot {
 fn independent_offline_workspace_displays_finite_scope_without_management_login() {
     let snapshot = independent_offline_snapshot();
     let mut workspace = Workspace::new(snapshot.clone());
-    for _ in 0..3 { workspace.frame(egui::vec2(1280., 1000.), vec![]); }
+    for _ in 0..3 {
+        workspace.frame(egui::vec2(1280., 1000.), vec![]);
+    }
     assert!(!workspace.label_bounds("离线仅直连").is_empty());
     assert_eq!(workspace.bounds("打开独立远控窗口").len(), 1);
     assert_eq!(workspace.bounds("停止会话").len(), 1);
     assert!(workspace.bounds("登录").is_empty());
     assert_eq!(snapshot.authentication, Authentication::Disconnected);
     assert!(snapshot.server.is_none() && snapshot.principal.is_none());
-    let target = RemoteViewportTarget { request_id: snapshot.native_offline.as_ref().expect("scope").request_id.clone(), connection_generation: 4 };
+    let target = RemoteViewportTarget {
+        request_id: snapshot
+            .native_offline
+            .as_ref()
+            .expect("scope")
+            .request_id
+            .clone(),
+        connection_generation: 4,
+    };
     assert!(offline_remote::viewer_is_current(&snapshot, &target));
-    assert!(!offline_remote::viewer_is_current(&snapshot, &RemoteViewportTarget { connection_generation: 5, ..target.clone() }));
+    assert!(!offline_remote::viewer_is_current(
+        &snapshot,
+        &RemoteViewportTarget {
+            connection_generation: 5,
+            ..target.clone()
+        }
+    ));
     let mut exhausted = snapshot;
-    exhausted.native_offline.as_mut().expect("scope").budget.remaining_lifetime_ms = 0;
+    exhausted
+        .native_offline
+        .as_mut()
+        .expect("scope")
+        .budget
+        .remaining_lifetime_ms = 0;
     assert!(!offline_remote::viewer_is_current(&exhausted, &target));
 }
 
 #[test]
-fn independent_offline_viewport_close_requires_exact_local_receipts_without_online_inspect_or_revoke() {
+fn independent_offline_viewport_close_requires_exact_local_receipts_without_online_inspect_or_revoke()
+ {
     let mut snapshot = independent_offline_snapshot();
     let mut workspace = Workspace::new(snapshot.clone());
     workspace.app.bridge.layout_enable_commands();
     let selected = snapshot.native_offline.as_ref().expect("scope");
-    workspace.app.open_remote_viewport(&snapshot, RemoteViewportTarget { request_id: selected.request_id.clone(), connection_generation: selected.connection_generation });
-    assert!(workspace.app.bridge.layout_submission().is_none(), "opening offline must not inspect an online request");
+    workspace.app.open_remote_viewport(
+        &snapshot,
+        RemoteViewportTarget {
+            request_id: selected.request_id.clone(),
+            connection_generation: selected.connection_generation,
+        },
+    );
+    assert!(
+        workspace.app.bridge.layout_submission().is_none(),
+        "opening offline must not inspect an online request"
+    );
     workspace.app.begin_remote_viewport_close(&snapshot);
-    assert!(workspace.app.remote_window_cleanup.as_ref().expect("cleanup").offline);
-    assert!(matches!(workspace.app.bridge.layout_submission(), Some((_, Command::Submit { action: Action::StopNativeSession { connection_generation: 4, .. } }))));
-    assert!(workspace.app.bridge.layout_submission().is_none(), "closing offline must not submit online revocation");
-    let mut native = snapshot.native_session.data.as_ref().expect("session").as_ref().clone();
+    assert!(
+        workspace
+            .app
+            .remote_window_cleanup
+            .as_ref()
+            .expect("cleanup")
+            .offline
+    );
+    assert!(matches!(
+        workspace.app.bridge.layout_submission(),
+        Some((
+            _,
+            Command::Submit {
+                action: Action::StopNativeSession {
+                    connection_generation: 4,
+                    ..
+                }
+            }
+        ))
+    ));
+    assert!(
+        workspace.app.bridge.layout_submission().is_none(),
+        "closing offline must not submit online revocation"
+    );
+    let mut native = snapshot
+        .native_session
+        .data
+        .as_ref()
+        .expect("session")
+        .as_ref()
+        .clone();
     native.status = NativeSessionStatus::Stopped;
     native.cleanup = Some(NativeSessionCleanup::Succeeded);
-    native.stop_effects = Some(nestlink_app_core::NativeSessionEffects { cancel_channels: true, release_inputs: true, discard_queues: true, close_allocations: true });
+    native.stop_effects = Some(nestlink_app_core::NativeSessionEffects {
+        cancel_channels: true,
+        release_inputs: true,
+        discard_queues: true,
+        close_allocations: true,
+    });
     snapshot.native_session.data = Some(Arc::new(native));
     let offline = snapshot.native_offline.as_mut().expect("scope");
     offline.status = NativeSessionStatus::Stopped;
     offline.budget.stopped = true;
     workspace.app.retry_remote_viewport_close(&snapshot);
-    workspace.app.update_remote_viewport_cleanup(&snapshot, &workspace.context);
-    assert!(workspace.app.remote_viewport_open, "a local stop request alone is not the actual offline cleanup receipt");
+    workspace
+        .app
+        .update_remote_viewport_cleanup(&snapshot, &workspace.context);
+    assert!(
+        workspace.app.remote_viewport_open,
+        "a local stop request alone is not the actual offline cleanup receipt"
+    );
     assert!(workspace.app.bridge.layout_submission().is_none());
-    snapshot.native_offline.as_mut().expect("scope").cleanup = Some(NativeSessionCleanup::Succeeded);
-    workspace.app.update_remote_viewport_cleanup(&snapshot, &workspace.context);
+    snapshot.native_offline.as_mut().expect("scope").cleanup =
+        Some(NativeSessionCleanup::Succeeded);
+    workspace
+        .app
+        .update_remote_viewport_cleanup(&snapshot, &workspace.context);
     assert!(!workspace.app.remote_viewport_open);
     assert!(workspace.app.remote_window_cleanup.is_none());
     assert!(workspace.app.bridge.layout_submission().is_none());

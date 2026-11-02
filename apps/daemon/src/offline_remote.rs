@@ -464,14 +464,15 @@ impl Resident {
                         }
                     };
                     LocalProducts::attach(session.handle(), stores, owner)
-                }.await;
+                }
+                .await;
                 let products = match products {
-                        Ok(products) => products,
-                        Err(error) => {
-                            self.session = Some(session);
-                            return Err(error);
-                        }
-                    };
+                    Ok(products) => products,
+                    Err(error) => {
+                        self.session = Some(session);
+                        return Err(error);
+                    }
+                };
                 self.products = Some(products);
                 let view = session.view();
                 self.session = Some(session);
@@ -505,7 +506,11 @@ impl Resident {
                 invalid("offline lifecycle ended without successful product cleanup").into(),
             );
         }
-        if !self.owner.as_ref().is_some_and(|owner| owner.budget().map_or(true, |budget| budget.stopped)) {
+        if !self
+            .owner
+            .as_ref()
+            .is_some_and(|owner| owner.budget().map_or(true, |budget| budget.stopped))
+        {
             self.session.take();
             self.products.take();
         }
@@ -615,11 +620,19 @@ impl LocalFileStores {
             nestlink_protocol::FILE_READ_ROOTS,
             nestlink_protocol::FILE_WRITE_ROOTS,
         ));
-        Ok(Self { roots, quota, recovery })
+        Ok(Self {
+            roots,
+            quota,
+            recovery,
+        })
     }
 }
 impl LocalProducts {
-    fn attach(core: nestlink_app_core::CoreHandle, stores: Arc<LocalFileStores>, owner: NativeOfflineRemote) -> Result<Self> {
+    fn attach(
+        core: nestlink_app_core::CoreHandle,
+        stores: Arc<LocalFileStores>,
+        owner: NativeOfflineRemote,
+    ) -> Result<Self> {
         let files = Arc::new(crate::native_files::LocalFiles::new(
             core.clone(),
             stores.roots.clone(),
