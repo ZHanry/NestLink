@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "scope": "Exact-source complete SDK routed test inventory, including the strict four-node approved OS file paired-stop fixture",
+  "source_revision": "2cb75d4d7e2a55ba703480fe2933e8fd46c95c74",
+  "workflow": ".github/workflows/rust-core.yml",
+  "run_id": 41410122398,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41410122398",
+  "build_provenance": "The exact-source GitHub-hosted core jobs built the SDK routed library test filter.",
+  "execution_provenance": "The same jobs actually executed all 22 source-inventoried cases on both OS targets. Windows used the original ordinary-user wrapper. The test inventory has no missing or unexpected cases.",
+  "targets": [
+    {
+      "target": "x86_64-unknown-linux-gnu",
+      "runner": "ubuntu-24.04",
+      "job_id": 125161018627,
+      "tests_passed": 22,
+      "tests_failed": 0,
+      "tests_ignored": 0,
+      "test_elapsed_seconds": 5.01,
+      "missing_tests": [],
+      "unexpected_tests": [],
+      "artifact_id": 13126735984,
+      "artifact_digest_reported_by_github": "sha256:d175a9d9cbb3fcca3e39212e9e4a600a58f25cc006897faf4d8d9549d924be3b",
+      "downloaded_log_sha256": "c0edd991375316c3816599add8e77a17f144dd0f975133e10ed989daed24b7cf",
+      "downloaded_test_inventory_sha256": "bd543266b197ddfa4d448fd39ec5b52783b8009007ecef0a589759efed2f5b6e"
+    },
+    {
+      "target": "x86_64-pc-windows-msvc",
+      "runner": "windows-2022",
+      "job_id": 125161018740,
+      "tests_passed": 22,
+      "tests_failed": 0,
+      "tests_ignored": 0,
+      "test_elapsed_seconds": 5.32,
+      "missing_tests": [],
+      "unexpected_tests": [],
+      "artifact_id": 13127155444,
+      "artifact_digest_reported_by_github": "sha256:1a7dd8fd379597b8aa4cd1a7c4fa64795d70f5c33a268f891bd13de7925d569f",
+      "downloaded_log_sha256": "0fbb9eedb8702b5942dc70e88a64dde926bc3409990bd4fa2411f19e0435b64d",
+      "downloaded_test_inventory_sha256": "30273b43b5ca8a47ac7a3cd1f5ff696abea81324311d0aca387407d98c0ce389"
+    }
+  ],
+  "files": {
+    "downloaded_log": "nestlink-sdk-routed-tests.log",
+    "downloaded_test_inventory": "nestlink-sdk-routed-tests.json"
+  },
+  "verification": "The source-derived test inventory reports passed=true with exactly 22 expected/result cases for each OS. Downloaded SHA-256 hashes are fingerprints; no producer per-file hash inventory was supplied or claimed.",
+  "limitations": [
+    "Scoped routed evidence only. The same run fails the independent offline AppCore rebuild assertion, retained separately in native-offline-rebuild-2cb75d4-failure.json.",
+    "No latest-source full Rust success, real public NAT, physical dual-device platform or release acceptance is claimed."
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "scope": "Expanded same-authority offline AppCore carrier rebuild regression; failed evidence retained without weakening assertions",
+  "source_revision": "2cb75d4d7e2a55ba703480fe2933e8fd46c95c74",
+  "workflow": ".github/workflows/rust-core.yml",
+  "run_id": 41410122398,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41410122398",
+  "build_provenance": "Exact-source GitHub-hosted Linux and Windows core jobs compiled the expanded native_offline integration target. Windows execution used the original normal-user wrapper.",
+  "execution_provenance": "Both hosted targets actually executed both QUIC and TLS cases. Both cases reached the unchanged post-rebuild cleanup checks and then failed the retained-owner assertion at crates/app-core/tests/native_offline.rs:580.",
+  "tests": [
+    "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+    "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry"
+  ],
+  "targets": [
+    {
+      "target": "x86_64-unknown-linux-gnu",
+      "runner": "ubuntu-24.04",
+      "job_id": 125161018627,
+      "offline_step_conclusion": "failure",
+      "tests_passed": 0,
+      "tests_failed": 2,
+      "tests_ignored": 0,
+      "test_elapsed_seconds": 43.22,
+      "artifact_id": 13126735984,
+      "artifact_digest_reported_by_github": "sha256:d175a9d9cbb3fcca3e39212e9e4a600a58f25cc006897faf4d8d9549d924be3b",
+      "downloaded_log": "nestlink-native-offline-tests.log",
+      "downloaded_log_bytes": 20030,
+      "downloaded_log_sha256": "d4efc4d869a02117a654a2ec54ef9c35e16c091425dac8ea9f58cc7b4f6a98c8"
+    },
+    {
+      "target": "x86_64-pc-windows-msvc",
+      "runner": "windows-2022",
+      "job_id": 125161018740,
+      "offline_step_conclusion": "failure",
+      "tests_passed": 0,
+      "tests_failed": 2,
+      "tests_ignored": 0,
+      "test_elapsed_seconds": 42.74,
+      "artifact_id": 13127155444,
+      "artifact_digest_reported_by_github": "sha256:1a7dd8fd379597b8aa4cd1a7c4fa64795d70f5c33a268f891bd13de7925d569f",
+      "downloaded_log": "nestlink-native-offline-tests.log",
+      "downloaded_log_bytes": 19774,
+      "downloaded_log_sha256": "15f12690b27ca4f8e56cbe4ba9741a768bdb309a1ffee8afea6e811cc7b727ac"
+    }
+  ],
+  "failure": "assertion failed: !source.budget()?.stopped && !target.budget()?.stopped",
+  "source_audit": "ChannelRuntime and Inner destructors applied a second ExplicitExit stop after successful NetworkChanged cleanup. Session retained its first carrier reason but the redundant stop still terminal-stopped the independently retained finite authority.",
+  "follow_up_implementation": [
+    "38d72c1 reuses the original stop_if_running destructor fence for ChannelRuntime/ExternalChannelRuntime and preserves an already-stopped Inner session.",
+    "7b42c4b selects a new fresh private no-clobber download area for the second post-rebuild transfer.",
+    "2233cec adds pre-HTTP management terminal fences and original resident process integration; 2bc5c05 isolates execution and uploads early logs."
+  ],
+  "verification": "GitHub artifact digests and downloaded log fingerprints are distinct. No producer per-file hash inventory was supplied or claimed.",
+  "limitations": [
+    "Failure evidence only; newer repairs require exact-source hosted execution. No recovered-owner success is inferred from this failed run.",
+    "Earlier source98e9f60 positive AppCore evidence does not cover the expanded rebuild or resident process cases.",
+    "No physical dual-device platform, advanced media, public NAT or mobile target acceptance is claimed."
+  ]
+}
