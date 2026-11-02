@@ -46,7 +46,7 @@ jobs:
           printf 'CARGO_TARGET_DIR=%s/nestlink-games-target\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
           printf 'NESTLINK_GAME_PREPARED=%s/nestlink-pinned-games\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - name: Install mature game graphics, observation and original build tools
-        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev iproute2 dnsmasq-base xvfb xdotool imagemagick tesseract-ocr tcpdump libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0 libfreetype6 libogg0 libvorbis0a libvorbisfile3
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev iproute2 dnsmasq-base xvfb xdotool x11-utils imagemagick tesseract-ocr tcpdump libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0 libfreetype6 libogg0 libvorbis0a libvorbisfile3
       - name: Verify exact official client, server, map and retained upstream notices
         run: python3 -B scripts/network-games.py prepare --game teeworlds --output "$NESTLINK_GAME_PREPARED"
       - name: Build and verify original native SDK codec inputs on GitHub
@@ -95,7 +95,7 @@ jobs:
           printf 'CARGO_TARGET_DIR=%s/nestlink-luanti-target\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
           printf 'NESTLINK_GAME_PREPARED=%s/nestlink-pinned-luanti\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - name: Install mature original kernel, source build, rendering and capture tools
-        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev iproute2 nftables iputils-arping util-linux xvfb xdotool imagemagick tcpdump libpng-dev libjpeg-dev libgl1-mesa-dev libgl1-mesa-dri libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libfreetype6-dev zlib1g-dev libgmp-dev libjsoncpp-dev libzstd-dev libluajit-5.1-dev libsdl2-dev
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev iproute2 nftables iputils-arping util-linux xvfb xdotool x11-utils imagemagick tcpdump libpng-dev libjpeg-dev libgl1-mesa-dev libgl1-mesa-dri libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libfreetype6-dev zlib1g-dev libgmp-dev libjsoncpp-dev libzstd-dev libluajit-5.1-dev libsdl2-dev
       - name: Verify and build exact official Luanti and complete Minetest Game content
         run: python3 -B scripts/network-games.py prepare --game luanti --output "$NESTLINK_GAME_PREPARED"
       - name: Build and verify original native SDK codec inputs on GitHub

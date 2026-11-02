@@ -85,6 +85,43 @@ class Actors:
         assert result.returncode == 0, self.commands[-1]
         return result.stdout.decode(errors="replace")
 
+    def window(self, title, env, seconds):
+        # The upstream SDL window can be mapped before its caption is set.
+        # Query the current X state repeatedly; a single --sync query can wait
+        # on creation events after that already existing window changes title.
+        argv = ["xdotool", "search", "--onlyvisible", "--name", title]
+        deadline = time.monotonic() + seconds
+        attempts = 0
+        while time.monotonic() < deadline:
+            result = subprocess.run(argv, env=env, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT, timeout=2, check=False)
+            attempts += 1
+            assert result.returncode in (0, 1), result.stdout.decode(errors="replace")
+            if result.returncode == 0:
+                windows = result.stdout.decode().splitlines()
+                assert len(windows) == 1, "exact owned X server must expose one matching game window"
+                self.commands.append({"command": argv, "return_code": 0,
+                                      "attempts": attempts, "window_ids": windows})
+                actual = self.run(["xdotool", "getwindowname", windows[0]], env=env)
+                assert title in actual
+                return windows[0]
+            time.sleep(0.1)
+        self.commands.append({"command": argv, "attempts": attempts, "timed_out": True,
+                              "timeout_seconds": seconds})
+        raise AssertionError("actual visible " + title + " window did not appear within its startup bound")
+
+    def observe_failure(self, prefix, env):
+        errors = []
+        for argv in (["import", "-window", "root", str(self.output / (prefix + "-failure.png"))],
+                     ["xwininfo", "-root", "-tree"]):
+            try:
+                observed = self.run(argv, env=env, timeout=5)
+                if argv[0] == "xwininfo":
+                    (self.output / (prefix + "-failure-windows.txt")).write_text(observed)
+            except BaseException as error:
+                errors.append(type(error).__name__ + ": " + str(error))
+        return errors
+
     def close(self):
         failures = []
         for name, process, log in reversed(self.actors):
@@ -138,6 +175,7 @@ def teeworlds():
                "scope": "hosted isolated dual LAN real official Teeworlds; no physical site or human gameplay acceptance",
                "passed": False}
     failure = None
+    env = None
     try:
         left = os.environ["NESTLINK_LAN_0_NAMESPACE"]
         right = os.environ["NESTLINK_LAN_1_NAMESPACE"]
@@ -167,8 +205,7 @@ def teeworlds():
         def live():
             assert client.poll() is None and server.poll() is None and xvfb.poll() is None
             return True
-        window = actors.run(["xdotool", "search", "--sync", "--onlyvisible", "--name", "Teeworlds"],
-                            env=env, timeout=10).splitlines()[0]
+        window = actors.window("Teeworlds", env, 10)
         actors.run(["xdotool", "windowfocus", "--sync", window], env=env)
         time.sleep(3)
         actors.run(["import", "-window", "root", str(output / "teeworlds-lan-browser.png")], env=env)
@@ -214,6 +251,8 @@ def teeworlds():
                                     "bytes": path.stat().st_size} for path in demos])
     except BaseException as error:
         failure = type(error).__name__ + ": " + str(error)
+        if env is not None:
+            receipt["failure_observation_errors"] = actors.observe_failure("teeworlds", env)
     finally:
         cleanup = actors.close()
         receipt.update(failure=failure, cleanup_errors=cleanup, passed=failure is None and not cleanup)
@@ -240,6 +279,7 @@ def luanti():
                "ordinary_uid": os.getuid(), "passed": False,
                "scope": "hosted real Luanti+Minetest Game through original kernel TUN/prefix NAT/QUIC with explicit signed mechanism credentials; production login/one-use and physical sites retain separate evidence"}
     failure = None
+    env = None
     try:
         left = os.environ["NESTLINK_LUANTI_0_NAMESPACE"]
         right = os.environ["NESTLINK_LUANTI_1_NAMESPACE"]
@@ -262,11 +302,11 @@ def luanti():
         client_config = output / "luanti-client.conf"
         client_config.write_text("enable_sound = false\nfullscreen = false\nscreen_w = 1024\nscreen_h = 768\nvsync = false\nfps_max = 30\nviewing_range = 20\nclouds = false\nvideo_driver = opengl\n")
         client = actors.start("luanti-client", namespace(left,
-            [root / "bin" / "luanti", "--go", "--address", "10.211.2.42", "--port", "45123",
+            [root / "bin" / "luanti", "--info", "--go", "--address", "10.211.2.42", "--port", "45123",
              "--name", "NestLinkHosted", "--password", "", "--config", client_config,
              "--logfile", output / "luanti-client-debug.log"],
             {key: env[key] for key in ("DISPLAY", "LIBGL_ALWAYS_SOFTWARE", "SDL_AUDIODRIVER", "HOME")}), cwd=root)
-        window = actors.run(["xdotool", "search", "--sync", "--onlyvisible", "--name", "Luanti"], env=env, timeout=25).splitlines()[0]
+        window = actors.window("Luanti", env, 25)
         actors.run(["xdotool", "windowfocus", "--sync", window], env=env)
         def live():
             assert client.poll() is None and server.poll() is None and xvfb.poll() is None
@@ -308,6 +348,8 @@ def luanti():
                        original_packet_owner_stop=True, production_management_revocation_claimed=False)
     except BaseException as error:
         failure = type(error).__name__ + ": " + str(error)
+        if env is not None:
+            receipt["failure_observation_errors"] = actors.observe_failure("luanti", env)
     finally:
         cleanup = actors.close()
         receipt.update(failure=failure, cleanup_errors=cleanup, passed=failure is None and not cleanup)
