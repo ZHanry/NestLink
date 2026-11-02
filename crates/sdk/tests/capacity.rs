@@ -54,7 +54,9 @@ fn record(value: serde_json::Value) -> Result {
         .create(true)
         .append(true)
         .open(path)?;
-    writeln!(file, "{value}")?;
+    let mut line = serde_json::to_vec(&value)?;
+    line.push(b'\n');
+    file.write_all(&line)?;
     file.flush()?;
     Ok(())
 }
@@ -182,6 +184,12 @@ async fn run_capacity(multiplexed: bool) -> Result {
         std::env::var("RUNNER_ENVIRONMENT").as_deref(),
         Ok("github-hosted")
     );
+    tracing_subscriber::fmt()
+        .with_env_filter("nestlink_server=warn")
+        .with_writer(std::io::stderr)
+        .with_ansi(false)
+        .try_init()
+        .map_err(|error| std::io::Error::other(error.to_string()))?;
     tokio::time::timeout(Duration::from_secs(600), capacity(multiplexed)).await??;
     Ok(())
 }
@@ -402,10 +410,15 @@ async fn capacity(multiplexed: bool) -> Result {
                 let service = pair.view.id.clone();
                 let request = pair.request(&consumer);
                 connecting.spawn(async move {
-                    let lease = sdk.request_private_service(&service, request).await?;
+                    let lease = sdk.request_private_service(&service, request).await
+                        .map_err(|error| std::io::Error::other(format!("wave {wave} pair {index} request_private_service: {error}")))?;
+                    record(json!({"stage":"multiplex_lease_issued","wave":wave,"pair":index,
+                        "at_unix_ms":wall_ms()?,"expires_at_unix_ms":lease.lease().claims().expires_at_unix_ms}))?;
                     let owner = sdk
                         .connect_private_service_multiplexed(&consumer, lease)
-                        .await?;
+                        .await
+                        .map_err(|error| std::io::Error::other(format!("wave {wave} pair {index} connect_private_service_multiplexed: {error}")))?;
+                    record(json!({"stage":"multiplex_control_ready","wave":wave,"pair":index,"at_unix_ms":wall_ms()?}))?;
                     assert!(owner.is_multiplexed());
                     Ok::<_, Box<dyn std::error::Error + Send + Sync>>((index, Arc::new(owner)))
                 });
@@ -435,7 +448,8 @@ async fn capacity(multiplexed: bool) -> Result {
                         // Respect the original finite negotiation window. The
                         // full 1000 live TCP targets remain an exact assertion.
                         let _opening = opening_window.acquire_owned().await?;
-                        Flow::Multiplexed(owner.open_stream(&consumer).await?)
+                        Flow::Multiplexed(owner.open_stream(&consumer).await
+                            .map_err(|error| std::io::Error::other(format!("wave {wave} pair {index} flow {flow} open_stream: {error}")))?)
                     } else {
                         let lease = sdk.request_private_service(&service, request).await?;
                         Flow::Independent(Box::new(
