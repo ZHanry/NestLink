@@ -35,6 +35,13 @@ pub fn wall() -> Result<u64> {
         .as_millis()
         .try_into()?)
 }
+pub fn socket_diagnostic(stage: &'static str, error: &io::Error) {
+    eprintln!(
+        "original_resident_socket stage={stage} io_kind={:?} os_code={:?}",
+        error.kind(),
+        error.raw_os_error()
+    );
+}
 fn password() -> Secret {
     Secret::from_text(URL_SAFE_NO_PAD.encode(nestlink_auth::random_bytes::<32>()))
 }
@@ -798,12 +805,18 @@ impl Fixture {
         if let Some(server) = self.server.take() {
             server.stop().await?;
         }
-        drop(tokio::net::TcpListener::bind(self.address).await?);
+        drop(
+            tokio::net::TcpListener::bind(self.address)
+                .await
+                .inspect_err(|error| socket_diagnostic("management_offline_rebind", error))?,
+        );
         Ok(())
     }
     pub async fn hold_management(&mut self) -> Result<usize> {
         self.gate.send_replace(true);
-        let listener = tokio::net::TcpListener::bind(self.address).await?;
+        let listener = tokio::net::TcpListener::bind(self.address)
+            .await
+            .inspect_err(|error| socket_diagnostic("management_hold_bind", error))?;
         let router = self.router.clone();
         self.server = Some(Server::start(listener, router));
         Ok(self.requests.load(Ordering::Acquire))

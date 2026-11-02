@@ -21,12 +21,16 @@ use std::{
     sync::{Arc, atomic::Ordering},
     time::Duration,
 };
-use support::{Fixture, Platform, Resident, Result, activate, start, wall};
+use support::{Fixture, Platform, Resident, Result, activate, socket_diagnostic, start, wall};
 
 fn peer() -> Result<std::net::SocketAddr> {
-    let tcp = std::net::TcpListener::bind("127.0.0.1:0")?;
-    let address = tcp.local_addr()?;
-    let udp = std::net::UdpSocket::bind(address)?;
+    let tcp = std::net::TcpListener::bind("127.0.0.1:0")
+        .inspect_err(|error| socket_diagnostic("peer_tcp_bind", error))?;
+    let address = tcp
+        .local_addr()
+        .inspect_err(|error| socket_diagnostic("peer_tcp_local_addr", error))?;
+    let udp = std::net::UdpSocket::bind(address)
+        .inspect_err(|error| socket_diagnostic("peer_udp_bind", error))?;
     drop(udp);
     drop(tcp);
     Ok(address)
