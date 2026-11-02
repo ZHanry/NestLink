@@ -116,6 +116,9 @@ def qualify(args):
             if INSTALLED.exists() or sha(sentinel) != expected:
                 raise ValueError("uninstall left executable bytes or changed retained user data")
         receipt["status"] = "passed"
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        receipt["failure"] = type(error).__name__ + ": " + str(error)
+        raise
     finally:
         if installed:
             try:

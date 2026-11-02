@@ -86,6 +86,9 @@ def interrupted_replacement(args, producer, architecture, version, sentinel, rec
         fixture_version = version + "+hosted.interruption.1"
         producer.deb_candidate(payload, incoming, "network", architecture,
             {"source_revision": receipt["source_revision"], "version": fixture_version, "sequence": 1})
+        incoming_version = command("incoming-fixture-deb-version", ["dpkg-deb", "--field", incoming, "Version"]).decode().strip()
+        prior_version = command("retained-baseline-deb-version", ["dpkg-deb", "--field", package, "Version"]).decode().strip()
+        command("real-dpkg-upgrade-version-order", ["dpkg", "--compare-versions", incoming_version, "gt", prior_version])
         extracted = private / "retained-payload"
         command("extract-retained-rollback-payload", ["dpkg-deb", "--extract", package, extracted])
         roots = (Path("opt/nestlink-rc/network"), Path("usr/share/doc/nestlink-rc-network"))
@@ -154,10 +157,14 @@ signal.pause()
         status = command("restored-configured-status", ["dpkg-query", "--show", "--showformat=${Status}", "nestlink-rc-network"]).decode()
         if status != "install ok installed":
             raise ValueError("explicit rollback did not finish the original dpkg recovery")
+        restored_version = command("restored-dpkg-version", ["dpkg-query", "--show", "--showformat=${Version}", "nestlink-rc-network"]).decode().strip()
+        if restored_version != prior_version:
+            raise ValueError("rollback did not restore the original package version metadata")
         command("reinstall-current-after-rollback", ["sudo", "-n", "dpkg", "--install", args.output / receipt["package"]["path"]])
         if producer.digest(installed) != receipt["build_provenance"]["binary_sha256"]:
             raise ValueError("recovery did not restore the current exact-source candidate")
-        receipt["interrupted_upgrade"] = {"passed": True, "baseline": prior, "fixture_package_version": fixture_version,
+        receipt["interrupted_upgrade"] = {"passed": True, "baseline": prior, "fixture_package_version": incoming_version,
+            "restored_package_version": restored_version,
             "incoming_fixture_sha256": producer.digest(incoming), "actual_dpkg_sigkill": True,
             "interrupted_status": after, "restored_status": status, "original_payload_and_modes_restored": True,
             "retained_user_state_unchanged": True, "candidate_payload_residuals_absent": True,
