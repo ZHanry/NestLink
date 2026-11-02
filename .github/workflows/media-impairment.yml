@@ -45,6 +45,12 @@ jobs:
         run: |
           set -o pipefail
           cargo clippy --locked -p nestlink-media-session --all-targets --features network-impairment-lab -- -D warnings 2>&1 | tee "$RUNNER_TEMP/media-impairment/clippy.log"
+      - name: Preserve original codec and media regressions including decoder pressure
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-media-codec -p nestlink-media-session --lib -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/media-impairment/original-media-regressions.log"
       - name: Retain exact failed and successful scope with original samples
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
