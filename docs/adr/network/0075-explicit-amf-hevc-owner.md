@@ -33,7 +33,8 @@ not mean FFmpeg is imported. AMF appears separately as MIT in both SPDX lists.
 
 `SystemMf` remains the default. `AmdAmf` is an explicit local typed encoder
 choice, with a separate diagnostic executable using the same original workload.
-No production CLI or wire codec is added. The decoder remains the original
+The existing daemon HEVC opt-in has one explicit encoder selector; no wire codec
+is added. The decoder remains the original
 hardware MF decoder on the same supplied device plus the independent software
 decoder. A completed diagnostic owner grants no live execution authority.
 `NativeSessionConfig::with_gpu_hevc_main8_encoder` and the Main10 counterpart
@@ -48,9 +49,15 @@ the encoder rechecks it on every owner observation. Registration and subsequent
 route/frame access compare it against the current View-authorized local probe.
 The shared provider is retained from the validated original configuration.
 Replacing the public provider with one using another backend fails configuration
-validation. Decode remains MF and rejects an encoder runtime selection. No
-wire schema or production CLI is added, and no default is changed. This local
-programmatic opt-in does not claim a completed ordinary-user UI or acceptance.
+validation. Decode remains MF and rejects an encoder runtime selection. The
+daemon's optional `--native-gpu-hevc-encoder system-mf|amd-amf` selects the same
+builder and requires exactly one existing Main8/Main10 target. Unknown values,
+standalone/repeated selector use, CPU targets and software policies are rejected
+by the real Clap parser and repeated actual configuration checks before a
+native probe or policy read. Omitting the selector keeps MF. No wire schema
+or default is changed; local display approval, peer/request approval, signed
+scope, View lease and the closed production rollout gate remain. This operator
+entry does not claim a desktop settings UI or completed target acceptance.
 
 The native adapter loads only the absolute System32 `amfrt64.dll`, validates
 the actual loaded path and queries the installed version. It neither installs

@@ -288,7 +288,8 @@ impl NativeMediaProvider {
         provider.backend = ProviderBackend::GpuHevcMain10;
         Ok(provider)
     }
-    pub(crate) fn hevc_encoder_backend(&self) -> HevcEncoderBackend {
+    /// Configured local intent only; capability still requires the real probe.
+    pub fn hevc_encoder_backend(&self) -> HevcEncoderBackend {
         self.hevc_encoder
     }
     pub(crate) fn encoder_for_probe(

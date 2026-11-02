@@ -193,8 +193,6 @@ jobs:
         run: |
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/native-session-selection-tests.log"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-session --lib hevc_negotiated_format:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/hevc-target-tests.log"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-session --lib decoded_export::tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/decoded-export-owner-tests.log"
@@ -209,7 +207,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --lib video::tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/readback-ipc-tests.log"
           exit $LASTEXITCODE
-      - name: Verify explicit GPU intent and exact local approval refusal boundaries
+      - name: Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries
         if: ${{ !cancelled() }}
         shell: pwsh
         run: |

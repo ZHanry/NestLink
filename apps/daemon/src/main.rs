@@ -50,6 +50,8 @@ use tokio::{sync::mpsc, task::JoinSet};
 
 #[derive(Parser)]
 #[command(name = "nestlink-daemon", version, about = "NestLink user daemon")]
+#[command(group(clap::ArgGroup::new("native_gpu_hevc_targets")
+    .args(["native_gpu_hevc_target", "native_gpu_hevc_main10_target"])))]
 struct Args {
     #[command(subcommand)]
     command: Option<Command>,
@@ -79,7 +81,7 @@ struct Args {
     #[arg(long)]
     disable_native_route_set: bool,
     /// CPU media ceiling, e.g. 1920x1080@30:4000; probes at most two lower budgets.
-    #[arg(long, value_parser=parse_native_media_target, conflicts_with_all = ["native_gpu_hevc_target","native_gpu_hevc_main10_target"])]
+    #[arg(long, value_parser=parse_native_media_target, conflicts_with_all = ["native_gpu_hevc_target","native_gpu_hevc_main10_target", "native_gpu_hevc_encoder"])]
     native_media_target: Option<nestlink_media_codec::VideoConfig>,
     /// Exact Windows GPU HEVC Main8 target, e.g. 1920x1080@60:8000.
     /// Requires actual independent probes and local request approval; rollout stays closed.
@@ -89,9 +91,28 @@ struct Args {
     /// Exact Main10/P010 SDR workload. BGRA desktop capture does not attest HDR.
     #[arg(long,value_parser=parse_native_gpu_hevc_main10_target,conflicts_with_all=["native_media_target","native_gpu_hevc_target","internal_software_media_candidate"])]
     native_gpu_hevc_main10_target: Option<nestlink_media_codec::VideoConfig>,
+    /// Encoder for the explicit HEVC target: system-mf (default) or amd-amf.
+    /// This selects one backend; a probe failure never retries another encoder.
+    #[arg(long, value_enum, requires = "native_gpu_hevc_targets",
+        conflicts_with_all = ["native_media_target", "internal_software_media_candidate"])]
+    native_gpu_hevc_encoder: Option<NativeHevcEncoder>,
     /// Private JSON policy for one internal software candidate; absent keeps rollout closed.
     #[arg(long, requires = "native_media_target")]
     internal_software_media_candidate: Option<PathBuf>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, clap::ValueEnum)]
+enum NativeHevcEncoder {
+    SystemMf,
+    AmdAmf,
+}
+impl From<NativeHevcEncoder> for nestlink_media_codec::HevcEncoderBackend {
+    fn from(value: NativeHevcEncoder) -> Self {
+        match value {
+            NativeHevcEncoder::SystemMf => Self::SystemMf,
+            NativeHevcEncoder::AmdAmf => Self::AmdAmf,
+        }
+    }
 }
 
 #[derive(Subcommand)]
@@ -596,16 +617,14 @@ async fn serve(args: Args) -> Result<(), Box<dyn std::error::Error + Send + Sync
     ));
     let network = Arc::new(nestlink_sdk::NetworkMonitor::start()?);
     let browser_data_registry = Arc::new(browser_data::BrowserHostDataRegistry::default());
-    let mut native = nestlink_app_core::NativeSessionConfig::new(network);
-    if let Some(target) = args.native_media_target {
-        native = native.with_cpu_media_target(target)?;
-    }
-    if let Some(target) = args.native_gpu_hevc_target {
-        native = native.with_gpu_hevc_main8_target(target)?;
-    }
-    if let Some(target) = args.native_gpu_hevc_main10_target {
-        native = native.with_gpu_hevc_main10_target(target)?;
-    }
+    let mut native = configure_native_media(
+        nestlink_app_core::NativeSessionConfig::new(network),
+        args.native_media_target,
+        args.native_gpu_hevc_target,
+        args.native_gpu_hevc_main10_target,
+        args.native_gpu_hevc_encoder,
+        args.internal_software_media_candidate.is_some(),
+    )?;
     if let Some(path) = args.internal_software_media_candidate {
         let bytes = nestlink_platform_security::read_private(&path, 16 * 1024)?;
         let policy = serde_json::from_slice(&bytes)?;
@@ -838,6 +857,25 @@ async fn serve(args: Args) -> Result<(), Box<dyn std::error::Error + Send + Sync
     }
 }
 
+fn configure_native_media(
+    native: nestlink_app_core::NativeSessionConfig,
+    cpu: Option<nestlink_media_codec::VideoConfig>,
+    main8: Option<nestlink_media_codec::VideoConfig>,
+    main10: Option<nestlink_media_codec::VideoConfig>,
+    encoder: Option<NativeHevcEncoder>,
+    software_candidate: bool,
+) -> io::Result<nestlink_app_core::NativeSessionConfig> {
+    let selected = encoder.unwrap_or(NativeHevcEncoder::SystemMf).into();
+    match (cpu, main8, main10, encoder, software_candidate) {
+        (Some(target), None, None, None, _) => native.with_cpu_media_target(target),
+        (None, Some(target), None, _, false) => native.with_gpu_hevc_main8_encoder(target, selected),
+        (None, None, Some(target), _, false) => native.with_gpu_hevc_main10_encoder(target, selected),
+        (None, None, None, None, false) => Ok(native),
+        _ => Err(io::Error::new(io::ErrorKind::InvalidInput,
+            "HEVC encoder requires exactly one HEVC target and cannot combine with CPU media or software candidate policy")),
+    }
+}
+
 fn parse_media_target_syntax(value: &str) -> Result<nestlink_media_codec::VideoConfig, String> {
     let (size, rate) = value
         .split_once('@')
@@ -880,6 +918,77 @@ fn parse_native_gpu_hevc_main10_target(
 #[cfg(test)]
 mod media_cli_tests {
     use super::*;
+
+    #[tokio::test]
+    async fn explicit_encoder_cli_reaches_the_actual_configured_provider_and_keeps_mf_default() -> io::Result<()> {
+        let network = Arc::new(nestlink_sdk::NetworkMonitor::start()?);
+        for target_flag in ["--native-gpu-hevc-target", "--native-gpu-hevc-main10-target"] {
+            for (name, expected) in [
+                (None, nestlink_media_codec::HevcEncoderBackend::SystemMf),
+                (Some("system-mf"), nestlink_media_codec::HevcEncoderBackend::SystemMf),
+                (Some("amd-amf"), nestlink_media_codec::HevcEncoderBackend::AmdAmf),
+            ] {
+                let mut command = vec!["nestlink-daemon", target_flag, "640x480@30:4000"];
+                if let Some(name) = name { command.extend(["--native-gpu-hevc-encoder", name]); }
+                let args = Args::try_parse_from(command).map_err(io::Error::other)?;
+                assert!(args.native_media_target.is_none());
+                assert_eq!(args.native_gpu_hevc_encoder.map(nestlink_media_codec::HevcEncoderBackend::from).unwrap_or_default(), expected);
+                let native = configure_native_media(nestlink_app_core::NativeSessionConfig::new(network.clone()), args.native_media_target, args.native_gpu_hevc_target, args.native_gpu_hevc_main10_target, args.native_gpu_hevc_encoder, args.internal_software_media_candidate.is_some())?;
+                let provider = native.media_provider.ok_or_else(|| io::Error::other("explicit HEVC provider absent"))?;
+                assert_eq!(provider.hevc_encoder_backend(), expected);
+                let target = provider.target();
+                assert_eq!((target.width, target.height, target.fps, target.bitrate_kbps), (640, 480, 30, 4000));
+            }
+        }
+        let args = Args::try_parse_from(["nestlink-daemon"]).map_err(io::Error::other)?;
+        let native = configure_native_media(nestlink_app_core::NativeSessionConfig::new(network), args.native_media_target, args.native_gpu_hevc_target, args.native_gpu_hevc_main10_target, args.native_gpu_hevc_encoder, false)?;
+        assert!(native.media_provider.is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn encoder_cli_rejects_unknown_alone_duplicate_and_software_combinations() {
+        for value in ["auto", "mf", "amf", "AMD-AMF", "", "amd-amf,system-mf"] {
+            let result = Args::try_parse_from(["nestlink-daemon", "--native-gpu-hevc-target", "640x480@30:4000", "--native-gpu-hevc-encoder", value]);
+            assert!(result.is_err(), "unknown encoder {value:?}");
+        }
+        for value in ["system-mf", "amd-amf"] {
+            for command in [
+                vec!["nestlink-daemon", "--native-gpu-hevc-encoder", value],
+                vec!["nestlink-daemon", "--native-media-target", "640x480@30:4000", "--native-gpu-hevc-encoder", value],
+                vec!["nestlink-daemon", "--native-gpu-hevc-target", "640x480@30:4000", "--native-gpu-hevc-main10-target", "640x480@30:4000", "--native-gpu-hevc-encoder", value],
+                vec!["nestlink-daemon", "--native-gpu-hevc-target", "640x480@30:4000", "--internal-software-media-candidate", "policy.json", "--native-gpu-hevc-encoder", value],
+                vec!["nestlink-daemon", "--native-gpu-hevc-encoder", value, "--native-media-target", "640x480@30:4000", "--internal-software-media-candidate", "policy.json"],
+                vec!["nestlink-daemon", "--native-gpu-hevc-target", "640x480@30:4000", "--native-gpu-hevc-encoder", value, "--native-gpu-hevc-encoder", value],
+            ] {
+                assert!(Args::try_parse_from(command.clone()).is_err(), "{command:?}");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn actual_media_config_rejects_invalid_combinations_before_any_probe_or_policy_read() -> io::Result<()> {
+        let network = Arc::new(nestlink_sdk::NetworkMonitor::start()?);
+        let target = Some(parse_native_gpu_hevc_target("640x480@30:4000").map_err(io::Error::other)?);
+        for encoder in [NativeHevcEncoder::SystemMf, NativeHevcEncoder::AmdAmf] {
+            for (cpu, main8, main10, candidate) in [
+                (None, None, None, false),
+                (target, None, None, false),
+                (target, target, None, false),
+                (None, target, target, false),
+                (None, target, None, true),
+                (None, None, target, true),
+            ] {
+                assert!(configure_native_media(nestlink_app_core::NativeSessionConfig::new(network.clone()), cpu, main8, main10, Some(encoder), candidate).is_err());
+            }
+        }
+        assert!(configure_native_media(nestlink_app_core::NativeSessionConfig::new(network.clone()), None, None, None, None, true).is_err());
+        for candidate in [false, true] {
+            let native = configure_native_media(nestlink_app_core::NativeSessionConfig::new(network.clone()), target, None, None, None, candidate)?;
+            assert!(native.media_provider.is_some());
+        }
+        Ok(())
+    }
 
     #[test]
     fn explicit_gpu_target_cannot_mix_with_software_or_infer_other_formats() -> io::Result<()> {

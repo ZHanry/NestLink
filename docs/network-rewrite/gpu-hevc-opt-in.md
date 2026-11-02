@@ -10,6 +10,36 @@ This selects the existing Windows hardware HEVC Main8 provider. Width and height
 
 The separate `--native-gpu-hevc-main10-target` argument selects the explicit ten-bit 4:2:0 SDR/P010 implementation, for example `1920x1080@60:8000`. It retains the same geometry, rate and bitrate configuration bounds, with its own eight-byte-per-pixel 64 MiB admission before any probe or hardware resource is opened. Main8 and Main10 use separate constructors and independently versioned v3/v4 authority. Each target is exact. A different resolution, FPS, bitrate, profile, chroma or bit depth requires its own verified implementation and authority. These two arguments are mutually exclusive and conflict with `--native-media-target` and `--internal-software-media-candidate`. Non-Windows hardware publication returns an unsupported-platform error.
 
+The optional `--native-gpu-hevc-encoder` selector accepts exactly `system-mf`
+or `amd-amf`. Omitting it keeps the existing System MF encoder. It requires one
+of the two existing HEVC target arguments; standalone use, unknown values,
+repeated selectors, both targets, CPU media and a software-candidate policy are
+rejected. The actual daemon configuration repeats the combination checks before
+constructing its provider or reading a policy file.
+
+To explicitly select the installed AMD runtime on Windows, replace the quoted
+state placeholder with the existing approved private state directory and choose
+one of these commands:
+
+```text
+nestlink-daemon --state-dir "<existing-private-state-dir>" --native-gpu-hevc-target 1920x1080@60:8000 --native-gpu-hevc-encoder amd-amf
+nestlink-daemon --state-dir "<existing-private-state-dir>" --native-gpu-hevc-main10-target 1920x1080@60:8000 --native-gpu-hevc-encoder amd-amf
+```
+
+Use `system-mf`, or omit the selector, for the original backend. AMF uses the
+official pinned headers and only the existing driver's absolute System32
+runtime. It installs no SDK or driver and distributes no AMD runtime. The
+selected implementation applies to the encoder; hardware MF and independent
+software decode checks remain. The real direction probe must accept the exact
+original output contract before publication. Its complete authorized local
+probe identity binds the selected backend and queried AMF runtime through the
+live capture target, original worker, registration and subsequent frame checks.
+Probe failure or a changed implementation/runtime is an error; it never retries
+MF, another device, depth or source. The original MF diagnostic executable and
+all four original direction commands remain separate evidence, including their
+recorded failures. See [the source decision](../adr/network/0075-explicit-amf-hevc-owner.md)
+and [same-source diagnostic commands](WINDOWS-MEDIA-TARGET-TOOLS.md).
+
 Configuration supplies selection intent. It does not certify hardware, start capture, approve a peer, or enable production media issuance. `PRODUCTION_ISSUANCE_ENABLED` remains false. Current ordinary production servers reject v3/v4 media requests while that rollout gate is closed; the daemon returns the failure and does not create a legacy request as a fallback. This implementation is not an instruction to enable the gate.
 
 After a locally enrolled host signs in, the existing native inbox obtains its own actual Encode probe through the configured provider and publishes the signed, expiring result. The controller's ordinary local-approval request obtains and publishes its independent actual Decode probe before calling the versioned v3 request endpoint. Both probes retain the original bounded native worker, checked close/join, adapter LUID, driver version and full observed profile-tier-level behavior. Merely constructing a target does not add a probe result. Provider replacement, probe failure, expired announcements and an empty intersection stop this flow. GPU opt-in requires local approval and rejects the trusted-device request shortcut.
@@ -18,7 +48,7 @@ The server freezes the exact format intersection and both catalog revisions for 
 
 After an eventual qualified issuance, the existing native preparation and renewal paths bind the local direction announcement to the signed permit. Capture still requires the original local display approval and View lease. Live output still requires an actual sealed original execution, exact adapter/driver/format identity, format propose/ACK and current execution fence. Probe observations do not substitute for a live output receipt. This change does not transfer the daemon's sealed decoder owner to an independent desktop process; the unproven transfer remains rejected.
 
-Hosted regression tests cover configuration exclusivity, exact routing, changed or absent providers, wrong directions and target formats, stale reviews, permission expansion, and rejection before a hardware probe through the real AppCore/HTTP entry. Synthetic format and announcement objects in predicate tests exercise syntax and policy only. They do not claim physical GPU capture, decode, presentation or performance.
+Hosted regression tests cover the real Clap parser and actual daemon configuration with omitted/explicit MF and explicit AMF for both depths; unknown, standalone, duplicate and software combinations; configuration exclusivity, exact routing, changed or absent providers, wrong directions and target formats, stale reviews, permission expansion, and rejection before a hardware probe through the real AppCore/HTTP entry. The existing Windows owner workflow runs `cargo test --locked -p nestlink-daemon --bin nestlink-daemon media_cli_tests:: -- --show-output` under its ordinary-user wrapper. Synthetic format and announcement objects in predicate tests exercise syntax and policy only. They do not claim physical GPU capture, decode, presentation or performance.
 
 Main10 follows the corresponding independently versioned v4 scope, full PTL and original hardware-owner checks. The daemon exports the actual original decoder's depth-bound P010 shared surface for desktop import and presentation; the desktop does not open another decoder to replace it. The desktop capture source remains BGRA8 SDR, so conversion into P010 supplies neither native ten-bit capture nor HDR evidence. See [the exact owner record](gpu-shared-surface-owner.md).
 

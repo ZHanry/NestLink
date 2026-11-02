@@ -54,8 +54,10 @@ The existing production `NativeSessionConfig` also has explicit local
 `with_gpu_hevc_main8_encoder(target, HevcEncoderBackend::AmdAmf)` and Main10
 builders. They run the same original provider probe before publication, then
 bind the actual live target and owner to that probe's exact implementation and
-runtime. Existing target builders keep SystemMf. This programmatic opt-in adds
-no production command and does not establish an ordinary-user UI or target pass.
+runtime. Existing target builders keep SystemMf. The existing daemon HEVC
+target flags also accept an explicit `--native-gpu-hevc-encoder amd-amf` selector;
+see [operator configuration and restrictions](gpu-hevc-opt-in.md). Neither
+entry establishes a target pass or bypasses the original approval/rollout gates.
 
 Record the complete arguments, exit status, stdout/stderr, wall time, actual
 Windows build and GPU/driver inventory, tool receipt, exact source and all
