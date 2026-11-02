@@ -8,11 +8,14 @@ use nestlink_identity::PermitSigner;
 use nestlink_protocol::{api::*, service_plane::*, services::private::*, spaces::*};
 use nestlink_sdk::{
     DeploymentTrust, DeviceIdentity, Sdk,
-    services::{LocalServiceTargetConsent, PrivateServiceConnection, PrivateServiceHost, PrivateServiceHostConfig},
+    services::{
+        LocalServiceTargetConsent, PrivateServiceConnection, PrivateServiceHost,
+        PrivateServiceHostConfig,
+    },
 };
-use nestlink_transport_quic::service::BiStream;
 use nestlink_server::{AppState, router};
 use nestlink_storage::Store;
+use nestlink_transport_quic::service::BiStream;
 use serde_json::json;
 use std::{
     io::Write,
@@ -26,7 +29,7 @@ use std::{
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
-    sync::{mpsc, watch, Semaphore},
+    sync::{Semaphore, mpsc, watch},
     task::JoinSet,
 };
 
@@ -400,7 +403,9 @@ async fn capacity(multiplexed: bool) -> Result {
                 let request = pair.request(&consumer);
                 connecting.spawn(async move {
                     let lease = sdk.request_private_service(&service, request).await?;
-                    let owner = sdk.connect_private_service_multiplexed(&consumer, lease).await?;
+                    let owner = sdk
+                        .connect_private_service_multiplexed(&consumer, lease)
+                        .await?;
                     assert!(owner.is_multiplexed());
                     Ok::<_, Box<dyn std::error::Error + Send + Sync>>((index, Arc::new(owner)))
                 });
@@ -433,7 +438,9 @@ async fn capacity(multiplexed: bool) -> Result {
                         Flow::Multiplexed(owner.open_stream(&consumer).await?)
                     } else {
                         let lease = sdk.request_private_service(&service, request).await?;
-                        Flow::Independent(Box::new(sdk.connect_private_service(&consumer, lease).await?))
+                        Flow::Independent(Box::new(
+                            sdk.connect_private_service(&consumer, lease).await?,
+                        ))
                     };
                     let mut payload = [0; 16];
                     payload[..4].copy_from_slice(&(wave as u32).to_be_bytes());
