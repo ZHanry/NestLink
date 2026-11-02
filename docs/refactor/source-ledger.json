@@ -2,6 +2,16 @@
   "schema_version": 1,
   "license_route": "L-B",
   "first_party_license": "Apache-2.0",
+  "secret_service_literal_attribute_review_20261103": {
+    "source": "First-party fixed argv adapter using the existing distribution secret-tool and GLib option terminator; no upstream implementation copied",
+    "paths": ["apps/daemon/src/session_store.rs", "apps/daemon/src/session_store/secret_tool.rs", "apps/daemon/tests/offline_remote_resident/support.rs", "apps/daemon/tests/secret_service_literal_attributes.rs", "scripts/refactor-offline-resident-check.py"],
+    "supplier_review": "libsecret 0.21.4 tag resolves to commit 6b5a6c28afc6dd93c232a4907a87c881079ff91b; tool/secret-tool.c distinguishes parser/usage exit2 from actual store failure1 and uses GOptionContext for both store and lookup",
+    "supplier_license": "Existing distribution libsecret/secret-tool LGPL-2.1-or-later source notice; no new linkage, vendoring or redistribution",
+    "method": "Place standard -- after fixed CLI options and before opaque attributes in production and the original fixture. Preserve the original token hash/base64 binding, real Secret Service, exact key/lookup verification and original deadlines. Failure-only diagnostic is a boolean, never a binding or secret.",
+    "regression": "Separate Linux integration target calls the real retired argv with a leading-hyphen valid base64 attribute and requires exit2, then uses production argv to store/read the exact secret through the original owned private D-Bus/gnome-keyring. Original four resident assertions and expected tests are unchanged.",
+    "verification": "Implemented and manually reviewed; hosted actual regression and full original resident results pending. Sourcee202 Secret Service gate failure retained; its exact binding prefix was not logged and is not claimed reconstructed. No local execution.",
+    "decision": "docs/adr/network/0074-literal-secret-service-cli-attributes.md"
+  },
   "browser_probe_lifecycle_and_input_diagnosis_20261016": {
     "source": "Independent first-party local browser diagnostic and owned-data verification scripts",
     "license": "Apache-2.0; existing reviewed pinned browser/Puppeteer suppliers unchanged",

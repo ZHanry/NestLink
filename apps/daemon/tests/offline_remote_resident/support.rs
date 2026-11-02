@@ -24,6 +24,9 @@ use tokio::{
 };
 #[path = "https.rs"]
 mod https;
+#[cfg(target_os = "linux")]
+#[path = "../../src/session_store/secret_tool.rs"]
+mod secret_tool;
 
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 pub fn wall() -> Result<u64> {
@@ -303,14 +306,10 @@ impl Platform {
                     attempts += 1;
                     let mut child = self
                         .command("secret-tool")
-                        .args([
-                            "store",
+                        .args(secret_tool::store(
                             "--label=NestLink resident Actions test",
-                            "application",
-                            "NestLink",
-                            "instance",
                             &binding,
-                        ])
+                        ))
                         .stdin(Stdio::piped())
                         .stdout(Stdio::null())
                         .stderr(Stdio::null())
@@ -332,7 +331,8 @@ impl Platform {
             })
             .await;
             if stored.is_err() {
-                self.secret_service_diagnostics(attempts, last_status).await;
+                self.secret_service_diagnostics(attempts, last_status, binding.starts_with('-'))
+                    .await;
             }
             stored.map_err(|_| {
                 io::Error::new(
@@ -342,7 +342,7 @@ impl Platform {
             })??;
             let lookup = self
                 .command("secret-tool")
-                .args(["lookup", "application", "NestLink", "instance", &binding])
+                .args(secret_tool::lookup(&binding))
                 .output()
                 .await?;
             assert!(
@@ -373,10 +373,17 @@ impl Platform {
         Ok(())
     }
     #[cfg(target_os = "linux")]
-    async fn secret_service_diagnostics(&self, attempts: u32, last_status: Option<i32>) {
+    async fn secret_service_diagnostics(
+        &self,
+        attempts: u32,
+        last_status: Option<i32>,
+        binding_option_prefix: bool,
+    ) {
         // This runs only after the unchanged key-store gate has failed. Read
         // fixed service metadata, never a stored secret or raw helper output.
-        eprintln!("original_secret_service_store attempts={attempts} last_exit={last_status:?}");
+        eprintln!(
+            "original_secret_service_store attempts={attempts} last_exit={last_status:?} binding_option_prefix={binding_option_prefix}"
+        );
         for (index, child) in self.children.iter().enumerate() {
             let state = if let Some(pid) = child.id() {
                 tokio::fs::read_to_string(format!("/proc/{pid}/stat"))

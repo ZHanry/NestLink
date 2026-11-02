@@ -4,6 +4,9 @@ use nestlink_auth::VaultKey;
 use nestlink_platform_security::{read_private, replace_private_metadata};
 use std::{io, path::PathBuf, sync::Mutex};
 
+#[cfg(unix)]
+mod secret_tool;
+
 pub(crate) struct SessionStore {
     directory: PathBuf,
     key: Mutex<Option<VaultKey>>,
@@ -53,10 +56,7 @@ impl SessionStore {
     fn os_key(&self) -> io::Result<[u8; 32]> {
         use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
         let binding = self.binding();
-        let saved = secret_service(
-            &["lookup", "application", "NestLink", "instance", &binding],
-            None,
-        )?;
+        let saved = secret_service(&secret_tool::lookup(&binding), None)?;
         if !saved.is_empty() {
             let bytes = zeroize::Zeroizing::new(
                 URL_SAFE_NO_PAD
@@ -71,14 +71,10 @@ impl SessionStore {
         let key = zeroize::Zeroizing::new(nestlink_auth::random_bytes::<32>());
         let text = zeroize::Zeroizing::new(URL_SAFE_NO_PAD.encode(*key));
         secret_service(
-            &[
-                "store",
+            &secret_tool::store(
                 "--label=NestLink management login",
-                "application",
-                "NestLink",
-                "instance",
                 &binding,
-            ],
+            ),
             Some(text.as_bytes()),
         )?;
         Ok(*key)

@@ -138,6 +138,8 @@ def main():
             ("desktop-layout", ["-p", "nestlink-desktop", "--lib", "layout_tests::independent_offline_"], 2, None),
             ("resident", ["-p", "nestlink-daemon", "--test", "offline_remote_resident"], 4, RESIDENT_TESTS),
         ]
+        if os.name != "nt":
+            tests.append(("secret-service-literal-attributes", ["-p", "nestlink-daemon", "--test", "secret_service_literal_attributes"], 1, {"original_secret_service_stores_and_reads_a_leading_hyphen_attribute"}))
         for name, arguments, count, names in tests:
             execute(name, ["cargo", "test", "--locked", *arguments, "--", "--show-output", "--test-threads=1", "--color", "never"],
                     expected_count=count, expected_names=names)
@@ -147,6 +149,8 @@ def main():
             ("resident-clippy", ["-p", "nestlink-daemon", "--test", "offline_remote_resident"]),
         ]:
             execute(name, ["cargo", "clippy", "--locked", *arguments, "--", "-D", "warnings"])
+        if os.name != "nt":
+            execute("secret-service-literal-attributes-clippy", ["cargo", "clippy", "--locked", "-p", "nestlink-daemon", "--test", "secret_service_literal_attributes", "--", "-D", "warnings"])
         if "NESTLINK_OFFLINE_RESIDENT_CLOUDFLARED" in os.environ:
             receipt["https_tool_sha256_after"] = digest(pathlib.Path(os.environ["NESTLINK_OFFLINE_RESIDENT_CLOUDFLARED"]))
         receipt["passed"] = (all(entry["passed"] for entry in receipt["commands"])
