@@ -63,8 +63,12 @@ fn value(name: &str) -> Result<String> {
 }
 fn policy(space: &str, index: usize, game: bool) -> Result<LanPolicy> {
     let address: Ipv4Addr = value(&format!("NESTLINK_LAN_{index}_ADDRESS"))?.parse()?;
-    let port = match (game, index) { (true, 0) => 8303, (true, _) => 8304,
-        (false, 0) => 38303, (false, _) => 38403 };
+    let port = match (game, index) {
+        (true, 0) => 8303,
+        (true, _) => 8304,
+        (false, 0) => 38303,
+        (false, _) => 38403,
+    };
     Ok(LanPolicy {
         schema_version: 1,
         space_id: space.into(),
@@ -146,34 +150,52 @@ async fn game(f: &Fixture, grant: &str) -> TaskResult<serde_json::Value> {
     let output = std::path::PathBuf::from(std::env::var("NESTLINK_GAME_EVIDENCE")?);
     let process = tokio::process::Command::new("python3")
         .args(["-B", "scripts/network-games.py", "teeworlds"])
-        .kill_on_drop(true).output();
+        .kill_on_drop(true)
+        .output();
     let revoke = async {
         tokio::time::timeout(Duration::from_secs(35), async {
             while !output.join("teeworlds-ready-for-revoke").try_exists()? {
                 tokio::time::sleep(Duration::from_millis(50)).await;
             }
             let revision = f.target.space_details(&f.space).await?.space.revision;
-            f.target.revoke_network_access(&f.space, grant, revision).await?;
-            std::fs::write(output.join("teeworlds-revoked"), b"original management revocation committed")?;
+            f.target
+                .revoke_network_access(&f.space, grant, revision)
+                .await?;
+            std::fs::write(
+                output.join("teeworlds-revoked"),
+                b"original management revocation committed",
+            )?;
             Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
-        }).await??;
+        })
+        .await??;
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     };
-    tokio::try_join!(async {
-        let result = process.await?;
-        if !result.status.success() {
-            return Err(io::Error::other(format!("official Teeworlds failed: {} {}",
-                String::from_utf8_lossy(&result.stdout), String::from_utf8_lossy(&result.stderr))).into());
-        }
-        Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
-    }, revoke)?;
-    Ok(serde_json::from_slice(&std::fs::read(output.join("teeworlds-execution.json"))?)?)
+    tokio::try_join!(
+        async {
+            let result = process.await?;
+            if !result.status.success() {
+                return Err(io::Error::other(format!(
+                    "official Teeworlds failed: {} {}",
+                    String::from_utf8_lossy(&result.stdout),
+                    String::from_utf8_lossy(&result.stderr)
+                ))
+                .into());
+            }
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+        },
+        revoke
+    )?;
+    Ok(serde_json::from_slice(&std::fs::read(
+        output.join("teeworlds-execution.json"),
+    )?)?)
 }
 async fn exercise_lan(game_mode: bool) -> Result {
     assert_eq!(std::env::var("RUNNER_ENVIRONMENT")?, "github-hosted");
     let f = Fixture::new().await?;
     let mut request = f.fresh_request().await?;
-    if game_mode { request.byte_limit = 4 * 1024 * 1024; }
+    if game_mode {
+        request.byte_limit = 4 * 1024 * 1024;
+    }
     request.rules = vec![Direction::Inbound, Direction::Outbound]
         .into_iter()
         .map(|direction| NetworkRule {
@@ -206,7 +228,10 @@ async fn exercise_lan(game_mode: bool) -> Result {
         random_id(),
     )
     .await?;
-    let policies = [policy(&f.space, 0, game_mode)?, policy(&f.space, 1, game_mode)?];
+    let policies = [
+        policy(&f.space, 0, game_mode)?,
+        policy(&f.space, 1, game_mode)?,
+    ];
     let bridges = [
         LanBridge::bind(policies[0].clone(), &f.space, &source)?,
         LanBridge::bind(policies[1].clone(), &f.space, &target)?,
@@ -332,7 +357,10 @@ async fn exercise_lan(game_mode: bool) -> Result {
     let execution = if game_mode {
         let (owners, details) = tokio::join!(owner_pair, exercise);
         details.map(|details| {
-            assert!(owners.is_err(), "original online admission must stop on real management revocation");
+            assert!(
+                owners.is_err(),
+                "original online admission must stop on real management revocation"
+            );
             ((source.spent_bytes(), target.spent_bytes()), details)
         })
     } else {
