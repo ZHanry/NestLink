@@ -395,7 +395,7 @@ impl ExternalChannelRuntime {
 
 impl Drop for ExternalChannelRuntime {
     fn drop(&mut self) {
-        let _ = self.lease.stop(StopReason::ExplicitExit);
+        let _ = self.lease.stop_if_running(StopReason::ExplicitExit);
         self.incoming.close();
         self.outgoing.close();
         // Dropping JoinHandles detaches bounded bridge tasks which retain their

@@ -1179,7 +1179,7 @@ impl ChannelRuntime {
 }
 impl Drop for ChannelRuntime {
     fn drop(&mut self) {
-        let _ = self.lease.stop(StopReason::ExplicitExit);
+        let _ = self.lease.stop_if_running(StopReason::ExplicitExit);
         self.incoming.close();
         self.outgoing.close();
         if let Some(observation) = &self.path_observation {

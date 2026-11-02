@@ -347,7 +347,12 @@ impl Drop for Inner {
             .managed
             .get_mut()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
-        managed.session.stop(StopReason::ExplicitExit);
+        // The original carrier may already have completed a recoverable stop.
+        // Destruction only closes a still-running lease; it cannot revoke the
+        // separate finite owner retained for the next explicitly proved carrier.
+        if !matches!(managed.session.state(), SessionState::Stopped(_)) {
+            managed.session.stop(StopReason::ExplicitExit);
+        }
         self.input_permits.send_replace(None);
         if let Some(report) = managed.finish() {
             self.reports.send_replace(Some(report));
