@@ -49,7 +49,7 @@ def main():
         "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
         "runner_environment": os.environ["RUNNER_ENVIRONMENT"],
         "scope": ("isolated hosted official Teeworlds real play and revocation; no physical-site acceptance" if args.game
-                  else "isolated actual Linux TUN and dual-LAN DNS on the original production composite device/packet loop; remote host packet witness, no virtual HTTP/CLI/target claim" if args.combined_tun
+                  else "isolated original production composite device/packet loops combine actual Linux TUN dual-stack kernel UDP/TCP/HTTP and dual-LAN DNS; remote kernel uses explicit private local IPC fixture, no production CLI or physical-target claim" if args.combined_tun
                   else "isolated dual LAN UDP DNS and DNS-SD mechanism; no game or target-site acceptance"),
         "lock_sha256": sha256(pathlib.Path("Cargo.lock")),
         "commands": commands,
