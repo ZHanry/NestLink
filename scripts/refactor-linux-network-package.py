@@ -21,6 +21,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location("linux_network_candidate", ROOT / "scripts/refactor-candidate-producer.py")
 PRODUCER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PRODUCER)
+FAULT_SPEC = importlib.util.spec_from_file_location("linux_network_package_faults", ROOT / "scripts/refactor-linux-package-faults.py")
+FAULTS = importlib.util.module_from_spec(FAULT_SPEC)
+FAULT_SPEC.loader.exec_module(FAULTS)
 PACKAGE = "nestlink-rc-network"
 INSTALLED = Path("/opt/nestlink-rc/network/nestlink-daemon")
 COMMANDS = ("network-tun", "network-tun-system", "network-subnet", "network-subnet-system",
@@ -47,13 +50,14 @@ def qualify(args):
         "build_provenance": {"workflow": os.environ["GITHUB_WORKFLOW_REF"],
                              "run_id": os.environ["GITHUB_RUN_ID"], "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
                              "target": target, "cargo_lock_sha256": sha(ROOT / "Cargo.lock"),
-                             "binary_sha256": sha(args.binary)},
+                             "binary_sha256": sha(args.binary), "server_binary_sha256": sha(args.server)},
         "execution_provenance": {"runner_environment": os.environ["RUNNER_ENVIRONMENT"],
                                  "machine": platform.machine(), "ordinary_uid": os.geteuid(),
                                  "kernel": platform.release()},
         "status": "failed", "commands": [], "production_update_eligible": False,
         "limitations": ["Unsigned development package; no installed signed update or formal lifecycle claim",
-                        "CLI admission/refusal and actual DEB install/reinstall/uninstall only; physical TUN, subnet, DNS and WireGuard have separate experiments",
+                        "Actual unsigned DEB install/reinstall/uninstall, installed server TCP conflict and interrupted candidate package replacement; physical TUN, subnet, DNS and WireGuard have separate experiments",
+                        "The +hosted.interruption.1 DEB is a failure-injection package revision, never a release or production update",
                         "No graphical Linux desktop, phone or physical ARM64 target acceptance"],
     }
 
@@ -74,6 +78,7 @@ def qualify(args):
                                                stderr=subprocess.DEVNULL, check=False).returncode == 0:
             raise ValueError("runner already contains this isolated candidate package")
         PRODUCER.TOOLS.elf(args.binary, 183 if architecture == "arm64" else 62)
+        PRODUCER.TOOLS.elf(args.server, 183 if architecture == "arm64" else 62)
         with tempfile.TemporaryDirectory(prefix="nestlink-network-payload-") as temporary:
             directory = Path(temporary)
             PRODUCER.copy_fixed(args.binary, directory / "nestlink-daemon")
@@ -93,6 +98,7 @@ def qualify(args):
         command("version", [INSTALLED, "--version"])
         for name in COMMANDS:
             command("help-" + name, [INSTALLED, name, "--help"])
+        FAULTS.port_conflict(args, PRODUCER, architecture, version, receipt, command)
         with tempfile.TemporaryDirectory(prefix="nestlink-network-user-state-") as temporary:
             state = Path(temporary)
             sentinel = state / "retained-data"
@@ -104,6 +110,7 @@ def qualify(args):
             command("reinstall", ["sudo", "-n", "dpkg", "--install", package])
             if sha(INSTALLED) != receipt["build_provenance"]["binary_sha256"] or sha(sentinel) != expected:
                 raise ValueError("reinstall changed the accepted binary or user data")
+            FAULTS.interrupted_replacement(args, PRODUCER, architecture, version, sentinel, receipt, command)
             command("uninstall", ["sudo", "-n", "dpkg", "--remove", PACKAGE])
             installed = False
             if INSTALLED.exists() or sha(sentinel) != expected:
@@ -124,6 +131,7 @@ def qualify(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, required=True)
+    parser.add_argument("--server", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     qualify(parser.parse_args())
 
