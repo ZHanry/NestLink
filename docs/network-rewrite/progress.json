@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "cdd669b86738bed641b8ac2cb1a692c8d94b4ea5",
-  "checkpoint_kind": "real_firefox_and_windows_main10_boundary_workflows_passed_all_original_capacity_and_luanti_failures_retained_single_transaction_currentness_awaits_hosted_validation",
+  "source_revision": "e7c1be7d4df43f4ae8df23adb882ebb3e6e1a01b",
+  "checkpoint_kind": "original_target_direction_diagnostics_executed_with_two_cpu_passes_and_five_retained_gpu_hevc_failures_original_resident_repairs_under_hosted_validation",
   "active_tasks": [
     "W00",
     "W02",
@@ -91,13 +91,18 @@
     }
   ],
   "next_steps": [
-    "Validate ADR0066 single-transaction private currentness with exact-byte/tamper/expiry/revoke regression and original100/20/1000/3wave pair-window release workload. All prior61flow and598flow failures remain failed; no deadline/currentness/authority relaxation.",
-    "Read source85c8 focusedresident41443851500 and fullRust41443857256: Linux originalcapture detail Failed to parse value emptystring identifies actual logind Display metadata; preserve publicDNS60s failure. Windows original persistentdownload stage remains pending.",
-    "Read exactsource85c8 network41443863754; do not substitute earlier362 network success for current source.",
-    "Continue required same-source candidate/install/upgrade/signing/SBOM, product implementation and target qualification. W33 original444/HDR/fractional matrix and native10bit capture remain source gaps, target GPU/mobile/publicNAT/24h remain separate execution gaps.",
-    "Keep user-required Luanti25second check and its failure. Publication not_ready; no0.8tag/release created. Local/remote main only."
+    "Read original pair-windows release capacity run41454242981 at source9df4140; original100/20/1000/3waves and all signed deadlines unchanged. Retain all earlier failed observations.",
+    "Read sourcef570243 resident41455823431: actual private Xauthority and successful carrier retirement fix with original assertions. Protected-login fixed-stage diagnostics locate independent management failures.",
+    "Read source0f8d9a3 Windows owner41455441207 including newly explicit original native_compressed integration and stage diagnostics; no recovery deadline relaxation.",
+    "Rebuild GPU controller direction tools after exact verified SPS coded/display aperture repair; rerun finite target workload and retain initial0xc00d36b9 failure.",
+    "Continue mandatory same-source product/build/install/upgrade/signing/SBOM and full target qualification. Native10bit capture,444/HDR/fractional fallback, complete E2E/paired/24h remain open.",
+    "Keep user-required Luanti25second check failed. No0.8tag/release until original mandatory gates are satisfied; recheck local/remote main-only inventory."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/format-f570243.json",
+    "docs/network-rewrite/offline-resident-checkpoint.md",
+    "docs/network-rewrite/evidence/native-offline-resident-78a7cb4.json",
+    "docs/network-rewrite/evidence/windows-direction-target-2ffc870.json",
     "docs/adr/network/0066-single-transaction-private-currentness.md",
     "docs/network-rewrite/evidence/native-offline-resident-b97182d.json",
     "docs/network-rewrite/evidence/windows-media-owner-failure-0e323b5.json",
@@ -688,7 +693,7 @@
     }
   },
   "branch_inventory": {
-    "verified_at": "2026-11-02T10:48:47Z",
+    "verified_at": "2026-11-02T13:52:41.075Z",
     "local": [
       "main"
     ],
@@ -697,65 +702,52 @@
     ]
   },
   "pending_runs": {
-    "full_rust": {
-      "run_id": 41443857256,
-      "source_revision": "85c8da8d5ec1f7af4e393e31e299cc83bc36c53d",
-      "state": "running"
-    },
-    "resident": {
-      "run_id": 41443851500,
-      "source_revision": "85c8da8d5ec1f7af4e393e31e299cc83bc36c53d",
-      "state": "partial_failure_linux_original_capture_and_public_DNS_windows_pending"
-    },
-    "network": {
-      "run_id": 41443863754,
-      "source_revision": "85c8da8d5ec1f7af4e393e31e299cc83bc36c53d",
-      "state": "running"
-    },
-    "windows_owner": {
-      "run_id": 41442724948,
-      "source_revision": "6f46f3820c7cee61e01061c0ca80b45d298b8d28",
-      "state": "success",
+    "capacity_original_release": {
+      "run_id": 41454242981,
+      "source_revision": "9df4140ebf99b755d4dd37a4dfa5ad51044c4532",
+      "state": "running",
       "whole_task_passed": false
     },
-    "web": {
-      "run_id": 41439452056,
-      "source_revision": "0e323b5da5999f809b6f50e2decb7df963d8d9fc",
-      "state": "success",
-      "scope": "Entire hosted Chrome/Edge/Firefox release-site and browser-contract workflow; no physical target qualification"
+    "resident": {
+      "run_id": 41455823431,
+      "source_revision": "f570243c12e0390e963e373988fd76f5ec44b465",
+      "state": "running",
+      "whole_task_passed": false
     },
-    "capacity_original_release": {
-      "run_id": 41437445247,
-      "source_revision": "b97182d39a1512f57cea36b2a2a7e40c217363e1",
-      "state": "failure",
-      "ready_application_flows": 61
-    },
-    "capacity_origin_release": {
-      "run_id": 41441918578,
-      "source_revision": "8a35c4ec59faf604002cedf947563037d8bf7883",
-      "state": "failure",
-      "ready_application_flows": 598
+    "windows_owner": {
+      "run_id": 41455441207,
+      "source_revision": "0f8d9a3cf31be19d3615b4a5b115276a9c4592c4",
+      "state": "running",
+      "whole_task_passed": false
     },
     "format": {
-      "run_id": 41445591976,
-      "source_revision": "cdd669b86738bed641b8ac2cb1a692c8d94b4ea5",
+      "run_id": 41455829187,
+      "source_revision": "f570243c12e0390e963e373988fd76f5ec44b465",
       "state": "success_reviewed_imported"
+    },
+    "target_tools": {
+      "run_id": 41452426792,
+      "source_revision": "2ffc870909d50904379fdbd2b4dc5e060248a6d9",
+      "state": "build_and_strict_success_seven_target_commands_executed",
+      "whole_task_passed": false
     }
   },
   "continuation_checkpoint": {
-    "at": "2026-11-02T12:41:13.775Z",
-    "source_revision": "cdd669b86738bed641b8ac2cb1a692c8d94b4ea5",
+    "at": "2026-11-02T13:51:59.959Z",
+    "source_revision": "e7c1be7d4df43f4ae8df23adb882ebb3e6e1a01b",
     "verified_scopes": [
-      "Source0e323b5 full Web41439452056 success including actual Firefox159/BiDi,36s VP8/Opus,realinput/files9UIgroups and cleanup. OriginalFirefox self-signed navigationfailure4c retained.",
-      "Source6f46f38 Windowsowner41442724948 all3jobs success. ThreeofficialZIPdigests verified;106media-boundary and51nativeIPC tests pass, strictdesktop/daemon checks pass. No actualGPUtarget claim."
+      "Source2ffc870 run41452426792 originalWindows tools build+strict success; officialZIP818261bytes/e0534fc7 verified and all160payloadbytes/SHA verified.",
+      "Actual ordinary interactive Windows11 build26300 target: H264 CPU1920x1080/60/8000 encode16outputs and decode24outputs passed, checkedclose+flush. Finite synthetic output only.",
+      "Source78a7cb4 focused41451102046 WindowsTLS full originalpixels+two262144bytefiles+rebuild+IPCexit pass; Linux0/4 Windows2/4 overall failure remains. All42files/34producerpayloads verified."
     ],
     "retained_failures": [
-      "Luanti25s disconnect display deadline remains failed by explicit user decision.",
-      "Originalrelease pair-window61flow and separateorigin-window598flow observations failed before1000live; alloriginalchecks/deadlines/authority retained.",
-      "ResidentLinux actualcapture logindDisplayempty andHTTPS publicDNS60s failure; Windows persistentdownloadPermissionDenied underdiagnosis."
+      "Luanti25second deadline remains failed by explicit user decision.",
+      "Original target GPUcontroller failed at coded1920x1088/display1920x1080 geometry. Main8bothdirections failed exactVUI primaries0!=1; Main10bothdirections failedMFcreation0x8000ffff.",
+      "Source85c8 fullRust41443857256 native_compressed failed media keyframe recovery deadline. Offline QUIC owner-retirement, independent HTTPS/systemDNS and protected-login remain under original-case validation.",
+      "Capacity originalpair-window and alternateorigin-window previousattempts remainfailed; no complete1000livewave or24hqualification."
     ],
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
-    "branch_inventory": "Local main and remote main only; recheck before eventual delivery."
+    "branch_inventory": "Verified through local refs/heads and GitHub branches API: main only on both; latest release remains0.7.0RC1."
   }
 }

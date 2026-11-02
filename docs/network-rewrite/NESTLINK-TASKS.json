@@ -2614,7 +2614,9 @@
         "docs/network-rewrite/evidence/offline-resident-091686c.json",
         "docs/network-rewrite/evidence/offline-media-b166d8b.json",
         "docs/network-rewrite/evidence/offline-remote-tls-55de3cd.json",
-        "docs/network-rewrite/evidence/native-offline-rebuild-2cb75d4-failure.json"
+        "docs/network-rewrite/evidence/native-offline-rebuild-2cb75d4-failure.json",
+        "docs/network-rewrite/evidence/native-offline-resident-78a7cb4.json",
+        "docs/network-rewrite/offline-resident-checkpoint.md"
       ],
       "blockers": [],
       "partial_verification": {
@@ -2626,7 +2628,7 @@
           "docs/network-rewrite/evidence/offline-resident-091686c.json"
         ]
       },
-      "implementation_notes": "Native AppCore offline and actual resident CLI/IPC/capture/files/rebuild paths now implemented, including pre-HTTP terminal stop for every online management operation and destructor owner fix. Source68990e55 run41415857474 executing original assertions; later f8ea617 private Recover fence fix awaits next same-source run. Original two-OS source2cb75d4 failures preserved. Whole W27 remains open."
+      "implementation_notes": "有限离线 AppCore、实际守护进程 CLI/IPC、捕获、文件及重建路径已接线。78a7cb4/41451102046 的 Windows TLS 原始全数据、两次262144字节下载、重建和 IPC退出通过；该轮 Windows2/4、Linux0/4，仍保留整体失败。f570243 修复真实 Xauthority 与成功载体退役竞态，41455823431 按原断言验证中；保护登录固定阶段诊断继续定位独立失败，完整 W27 及目标验收未完成。"
     },
     {
       "id": "W28",
@@ -2973,10 +2975,11 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/network-rewrite/evidence/windows-media-owner-6f46f38.json"
+        "docs/network-rewrite/evidence/windows-media-owner-6f46f38.json",
+        "docs/network-rewrite/evidence/windows-direction-target-2ffc870.json"
       ],
       "blockers": [],
-      "implementation_notes": "Existing production Windows capture H264 and same-device GPU presenter are retained. Source50df7ec adds bounded actual DXGI-submit QPC cadence and exact original-owner target analyzer; hosted source50 workflow41369064258 and source1518218 workflow41369702948 running. Submit cadence is not scanout or complete GPU/58fps/p95 qualification; full target chain remains open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33."
+      "implementation_notes": "Existing production Windows capture H264 and same-device GPU presenter are retained. Source50df7ec adds bounded actual DXGI-submit QPC cadence and exact original-owner target analyzer; hosted source50 workflow41369064258 and source1518218 workflow41369702948 running. Submit cadence is not scanout or complete GPU/58fps/p95 qualification; full target chain remains open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33. 2ffc870/41452426792的工具已由Actions构建并严格检查，官方归档及160个文件全部核验后在真实Windows11普通交互令牌执行7个原始有限合成工作负载：H264 CPU编码/解码通过；GPU controller coded/display几何失败，HEVC Main8两个方向严格VUI色彩拒绝，Main10两个方向MF创建失败。原始失败保留；不能抵扣实际桌面58fps/HDR/444或整个W32/W33验收。"
     },
     {
       "id": "W33",
@@ -3032,10 +3035,11 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/network-rewrite/evidence/windows-media-owner-6f46f38.json"
+        "docs/network-rewrite/evidence/windows-media-owner-6f46f38.json",
+        "docs/network-rewrite/evidence/windows-direction-target-2ffc870.json"
       ],
       "blockers": [],
-      "implementation_notes": "Sourcebc52249/1518218 adds strict actual Main8 complete96bit PTL/geometry/VUI output validation and original-GPU-NV12 MF encoder owner boundary. Source7a53a28 adds independentv3 canonical69-byte format while preservingv2 H26457-byte contract; signed authority/NLMF/IPC/provider/capture/presenter production integration remains in progress. Synthetic HEVC probes do not complete this task; advanced444/10bit/HDR/high-frame fallback remains mandatory work. Source59882e4 additionally wires Main10/P010/v4 explicit SDR authority, compressed/readback/shared-surface ownership and separate8byte64MiB admission;4K144 is a target configuration rather than actual probe evidence. Originalhardware/HDR/444/target gaps remain open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33."
+      "implementation_notes": "Sourcebc52249/1518218 adds strict actual Main8 complete96bit PTL/geometry/VUI output validation and original-GPU-NV12 MF encoder owner boundary. Source7a53a28 adds independentv3 canonical69-byte format while preservingv2 H26457-byte contract; signed authority/NLMF/IPC/provider/capture/presenter production integration remains in progress. Synthetic HEVC probes do not complete this task; advanced444/10bit/HDR/high-frame fallback remains mandatory work. Source59882e4 additionally wires Main10/P010/v4 explicit SDR authority, compressed/readback/shared-surface ownership and separate8byte64MiB admission;4K144 is a target configuration rather than actual probe evidence. Originalhardware/HDR/444/target gaps remain open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33. 2ffc870/41452426792的工具已由Actions构建并严格检查，官方归档及160个文件全部核验后在真实Windows11普通交互令牌执行7个原始有限合成工作负载：H264 CPU编码/解码通过；GPU controller coded/display几何失败，HEVC Main8两个方向严格VUI色彩拒绝，Main10两个方向MF创建失败。原始失败保留；不能抵扣实际桌面58fps/HDR/444或整个W32/W33验收。"
     },
     {
       "id": "W34",
@@ -3417,7 +3421,7 @@
         "docs/network-rewrite/evidence/capacity-attempts-20261102.json"
       ],
       "blockers": [],
-      "implementation_notes": "Original100enrolled-installation/20pair/1000realTCPflow/3wave capacity implemented. All failed attempts retained, including private-parent, originalPOSTrate, originaldatabase429 and debug8c6 immutableleaseexpiry. Run41431119457 passed7nativeHTTP+6multiplex+negotiation, established20control owners, butzero flow_ready. Explicitproductionrelease-profile41434724934runs unchangedassertions/deadlines/rates/quotas/currentness checks; no success inferred. Real24hourtargetsoak remainsunrun. Sourceb971 run41437445247 now executed release load: original7HTTP/1negotiation/6multiplex pass,20controlready,61flowready, original3s management timeout before1000live. Failure and11receipt hashes plus officialZIP verified. Separate named eight-open shared-origin ramp observation added without altering original pair-window execution or full-load/lease/assertion requirements; neither passed nor fullW39 qualification claimed. Explicit8a35c4e origin-window release41441918578 reached598flowready thenoriginalauthorityexpiry; stillfailed before1000live. ADR0066 removesrepeatedsame-requestverificationwithoutcache,originaldeadlinesunchanged;newexact-sourcevalidationpending."
+      "implementation_notes": "Original100enrolled-installation/20pair/1000realTCPflow/3wave capacity implemented. All failed attempts retained, including private-parent, originalPOSTrate, originaldatabase429 and debug8c6 immutableleaseexpiry. Run41431119457 passed7nativeHTTP+6multiplex+negotiation, established20control owners, butzero flow_ready. Explicitproductionrelease-profile41434724934runs unchangedassertions/deadlines/rates/quotas/currentness checks; no success inferred. Real24hourtargetsoak remainsunrun. Sourceb971 run41437445247 now executed release load: original7HTTP/1negotiation/6multiplex pass,20controlready,61flowready, original3s management timeout before1000live. Failure and11receipt hashes plus officialZIP verified. Separate named eight-open shared-origin ramp observation added without altering original pair-window execution or full-load/lease/assertion requirements; neither passed nor fullW39 qualification claimed. Explicit8a35c4e origin-window release41441918578 reached598flowready thenoriginalauthorityexpiry; stillfailed before1000live. ADR0066 removesrepeatedsame-requestverificationwithoutcache,originaldeadlinesunchanged;newexact-sourcevalidationpending. d7e735d原release pair-window在751flow_ready后原权限期限拒绝；f3的1000readiness随后原2秒保持检查存活数为0，仍失败。ADR0069复用单次调用内同一sealed lease，9df4140/41454242981原100/20/1000/3wave pair-window在跑，所有原期限、实时管理校验、配额和断言保持。"
     },
     {
       "id": "W40",
@@ -4996,9 +5000,13 @@
       "status": "not_run",
       "source_revision": null,
       "artifact_sha256": null,
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/windows-direction-target-2ffc870.json"
+      ],
       "environment": {},
-      "limitations": [],
+      "limitations": [
+        "有限合成方向诊断仅作失败定位/对应功能观察；该完整验收组尚未实际执行，保持not_run。"
+      ],
       "global_policy_ids": [
         "R01",
         "R02"
@@ -5050,9 +5058,13 @@
       "status": "not_run",
       "source_revision": null,
       "artifact_sha256": null,
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/windows-direction-target-2ffc870.json"
+      ],
       "environment": {},
-      "limitations": [],
+      "limitations": [
+        "有限合成方向诊断仅作失败定位/对应功能观察；该完整验收组尚未实际执行，保持not_run。"
+      ],
       "global_policy_ids": [
         "R01",
         "R02"
