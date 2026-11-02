@@ -616,6 +616,22 @@ pub(crate) mod tests {
     use super::*;
     use crate::{HevcMain8Admission, HevcMain8Contract, VideoConfig};
     #[test]
+    fn main10_contract_matches_v4_surface_budget_without_widening_legacy() -> io::Result<()> {
+        let target = VideoConfig {width:3840,height:2160,fps:144,bitrate_kbps:40000};
+        let mut ptl = [0;12];
+        ptl[0] = 2;
+        ptl[11] = 183;
+        HevcMain8Contract::from_main10_target(ptl,target)?;
+        let oversized = VideoConfig {width:4096,..target};
+        assert!(HevcMain8Contract::validate_config(oversized).is_ok());
+        assert!(HevcMain8Contract::validate_main10_config(oversized).is_err());
+        assert!(HevcMain8Contract::from_main10_target(ptl,oversized).is_err());
+        assert!(HevcMain8Contract::validate_main10_config(VideoConfig {height:2048,..oversized}).is_ok());
+        ptl[0] = 1;
+        assert!(HevcMain8Contract::from_exact_target(ptl,oversized).is_ok());
+        Ok(())
+    }
+    #[test]
     fn main10_exact_sps_requires_ten_bit_luma_chroma_main10_profile_and_sdr_color()->io::Result<()> {
         let config=VideoConfig {width:640,height:480,fps:60,bitrate_kbps:4000};
         let au=access_unit(fixture_ptl(false,2,1,2,123,0),&[0x28,1,0xb0]);

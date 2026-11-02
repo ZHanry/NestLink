@@ -158,7 +158,11 @@ pub fn probe_hevc_direction(
 }
 pub fn probe_hevc_direction_depth(config:VideoConfig,direction:ExecutionDirection,cancel:&AtomicBool,bit_depth:u8)->io::Result<HevcDirectionProbe> {
     if !matches!(bit_depth,8|10) {return Err(io::Error::other("unsupported HEVC probe depth"));}
-    HevcMain8Contract::validate_config(config)?;
+    if bit_depth == 10 {
+        HevcMain8Contract::validate_main10_config(config)?;
+    } else {
+        HevcMain8Contract::validate_config(config)?;
+    }
     let deadline = Instant::now() + Duration::from_secs(10);
     check(cancel, deadline)?;
     let authority = Arc::new(AtomicBool::new(true));

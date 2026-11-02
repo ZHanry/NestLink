@@ -183,7 +183,11 @@ impl Transform {
                 result: *mut *mut c_void,
             ) -> i32;
         }
-        crate::HevcMain8Contract::validate_config(config)?;
+        match bit_depth {
+            8 => crate::HevcMain8Contract::validate_config(config)?,
+            10 => crate::HevcMain8Contract::validate_main10_config(config)?,
+            _ => return Err(io::Error::other("unsupported HEVC transform bit depth")),
+        }
         let raw_bytes = geometry_with_rate_limit(config, 144)?;
         let mut handle = std::ptr::null_mut();
         // SAFETY: caller retains an owner-thread D3D device, or null for software decode.

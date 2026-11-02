@@ -223,6 +223,7 @@ impl NativeMediaProvider {
         })
     }
     pub fn gpu_hevc_main10(target:VideoConfig)->io::Result<Self> {
+        nestlink_media_codec::HevcMain8Contract::validate_main10_config(target)?;
         let mut provider=Self::gpu_hevc_main8(target)?;provider.backend=ProviderBackend::GpuHevcMain10;Ok(provider)
     }
     pub(crate) fn matches_gpu_hevc_target(&self,target:VideoConfig,version:u32)->bool {
@@ -755,6 +756,19 @@ fn run_probe(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn main10_allocation_is_rejected_before_probing_and_keeps_main8_budget() -> io::Result<()> {
+        let target = VideoConfig {width:3840,height:2160,fps:144,bitrate_kbps:40000};
+        let provider = NativeMediaProvider::gpu_hevc_main10(target)?;
+        assert!(provider.matches_gpu_hevc_target(target,4));
+        assert!(!provider.matches_gpu_hevc_target(target,3));
+        let state = provider.state.lock().map_err(|_| io::Error::other("provider state poisoned"))?;
+        assert!(state.encode.is_none() && state.decode.is_none());
+        let oversized = VideoConfig {width:4096,..target};
+        assert!(NativeMediaProvider::gpu_hevc_main8(oversized).is_ok());
+        assert!(NativeMediaProvider::gpu_hevc_main10(oversized).is_err());
+        Ok(())
+    }
     #[test]
     fn explicit_hevc_target_is_single_exact_and_cannot_enter_the_cpu_candidate() -> io::Result<()> {
         let target = VideoConfig {

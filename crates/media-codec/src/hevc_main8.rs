@@ -39,6 +39,15 @@ impl HevcContract {
         }
         Ok(())
     }
+    /// Match the independent v4 format budget before opening any P010 owner.
+    /// Main8 retains its original four-byte surface allowance.
+    pub fn validate_main10_config(config: VideoConfig) -> io::Result<()> {
+        Self::validate_config(config)?;
+        if u64::from(config.width) * u64::from(config.height) * 8 > 64 * 1024 * 1024 {
+            return Err(io::Error::other("unsupported exact Main10 allocation budget"));
+        }
+        Ok(())
+    }
     /// Freeze an independently validated signed target. Every actual encoded or
     /// decoded AU still has to match it; this does not attest that a probe ran.
     pub fn from_exact_target(ptl: [u8; 12], config: VideoConfig) -> io::Result<Self> {
@@ -48,7 +57,11 @@ impl HevcContract {
         Self::from_profile_target(ptl,config,10)
     }
     fn from_profile_target(ptl:[u8;12],config:VideoConfig,bit_depth:u8)->io::Result<Self> {
-        Self::validate_config(config)?;
+        if bit_depth == 10 {
+            Self::validate_main10_config(config)?;
+        } else {
+            Self::validate_config(config)?;
+        }
         let profile=if bit_depth==10 {2} else {1};
         if ptl[0] != profile
             || !matches!(ptl[11], 30 | 60 | 63 | 90 | 93 | 120 | 123 | 150 | 153 | 156 | 180 | 183 | 186)
