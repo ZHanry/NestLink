@@ -227,20 +227,19 @@ pub struct VideoFormat {
 }
 impl VideoFormat {
     pub fn validate(self) -> Result<()> {
-        if let Some(ptl) = self.hevc_ptl {
-            if self.codec != Codec::Hevc
+        if let Some(ptl) = self.hevc_ptl
+            && (self.codec != Codec::Hevc
                 || self.profile != Profile::HevcMain
                 || self.tier != Tier::Main
                 || self.chroma != Chroma::Yuv420
                 || self.bit_depth != BitDepth::Eight
                 || self.color != Color::SDR_BT709_LIMITED
                 || ptl.0[0] != 1
-                || ptl.0[11] != self.level
-            {
-                return Err(invalid(
-                    "exact HEVC PTL differs from the discrete Main8 format",
-                ));
-            }
+                || ptl.0[11] != self.level)
+        {
+            return Err(invalid(
+                "exact HEVC PTL differs from the discrete Main8 format",
+            ));
         }
         self.geometry.validate(self)?;
         self.frame_rate.validate()?;
