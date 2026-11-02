@@ -391,9 +391,13 @@ impl NativeOfflineSession {
         let scope = remote.binding()?;
         let initial_budget = remote.budget()?;
         let key = key(&scope);
-        let generation = remote.0.next_generation.fetch_update(Ordering::AcqRel, Ordering::Acquire, |value| {
-            value.checked_add(1).filter(|next| *next <= i64::MAX as u64)
-        }).map_err(|_| NativeOfflineError::Limits)?;
+        let generation = remote
+            .0
+            .next_generation
+            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |value| {
+                value.checked_add(1).filter(|next| *next <= i64::MAX as u64)
+            })
+            .map_err(|_| NativeOfflineError::Limits)?;
         let shared = Shared::new(remote.0.limits);
         shared.generation.store(generation, Ordering::Release);
         let mut routes = Routes::default();
@@ -407,7 +411,10 @@ impl NativeOfflineSession {
             return Err(error.into());
         }
         let carrier = runtime.channels().lease_control();
-        let mut snapshot = Snapshot { generation, ..Snapshot::default() };
+        let mut snapshot = Snapshot {
+            generation,
+            ..Snapshot::default()
+        };
         snapshot.native_session.replace(NativeSessionView {
             request_id: key.request_id.clone(),
             connection_generation: key.connection_generation,
@@ -608,10 +615,16 @@ impl NativeOfflineSession {
     /// connect/listen spends another signed attempt after actual cleanup.
     pub fn request_carrier_rebuild(&self) -> Result<(), NativeOfflineError> {
         if self.view().status != NativeSessionStatus::Connected {
-            return Err(io::Error::new(io::ErrorKind::NotConnected, "offline carrier is not connected").into());
+            return Err(io::Error::new(
+                io::ErrorKind::NotConnected,
+                "offline carrier is not connected",
+            )
+            .into());
         }
         self.data.shared.closing.store(true, Ordering::Release);
-        self.carrier.stop(StopReason::NetworkChanged).map_err(io::Error::other)?;
+        self.carrier
+            .stop(StopReason::NetworkChanged)
+            .map_err(io::Error::other)?;
         Ok(())
     }
     pub async fn wait_stopped(&mut self) -> Result<NativeOfflineStop, NativeOfflineError> {

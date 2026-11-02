@@ -58,8 +58,18 @@ impl Check {
     }
 }
 
-async fn read_checks(sdk: &Sdk, purpose: Purpose, current: &impl Fn() -> bool) -> Result<Vec<Check>, SdkError> {
-    let check_current = || if current() { Ok(()) } else { Err(SdkError::Invalid) };
+async fn read_checks(
+    sdk: &Sdk,
+    purpose: Purpose,
+    current: &impl Fn() -> bool,
+) -> Result<Vec<Check>, SdkError> {
+    let check_current = || {
+        if current() {
+            Ok(())
+        } else {
+            Err(SdkError::Invalid)
+        }
+    };
     check_current()?;
     // Re-read the account before any optional administrator-only operation.
     // The cached principal alone cannot prove the role is still current.
@@ -152,9 +162,11 @@ pub(super) fn SetupPanel(
         let alive = alive.clone();
         spawn_local(async move {
             let client = sdk.lock().await;
-            let current = || alive.load(Ordering::Acquire)
-                && session_revision.try_get_untracked() == Some(session)
-                && revision.try_get_untracked() == Some(request);
+            let current = || {
+                alive.load(Ordering::Acquire)
+                    && session_revision.try_get_untracked() == Some(session)
+                    && revision.try_get_untracked() == Some(request)
+            };
             let result = read_checks(&client, mode, &current).await;
             drop(client);
             if !current() {

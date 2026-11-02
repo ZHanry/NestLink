@@ -32,11 +32,14 @@ fn verify_quic_peer(connection: &quinn::Connection, peer: &[u8; 32]) -> Result<(
     // Quinn's identity uses Box<dyn Any>. Finish this synchronous inspection
     // before constructing a Send setup future for a resident task.
     let actual = connection.peer_identity().ok_or(SdkError::Trust)?;
-    let protocol = connection.handshake_data()
+    let protocol = connection
+        .handshake_data()
         .and_then(|data| data.downcast::<quinn::crypto::rustls::HandshakeData>().ok())
         .and_then(|data| data.protocol);
     if protocol.as_deref() != Some(ALPN.as_bytes())
-        || nestlink_transport_stream::tls::peer_identity_fingerprint(actual.as_ref()).map_err(|_| SdkError::Trust)? != digest(peer)
+        || nestlink_transport_stream::tls::peer_identity_fingerprint(actual.as_ref())
+            .map_err(|_| SdkError::Trust)?
+            != digest(peer)
     {
         return Err(SdkError::Trust);
     }

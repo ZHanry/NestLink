@@ -594,7 +594,8 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
         let old_controller = controller_handle;
         let old_host = host_handle;
         let listener = target.listen(transport, peer).await?;
-        let (host_session, controller_session) = tokio::join!(listener.accept(), source.connect(transport, peer));
+        let (host_session, controller_session) =
+            tokio::join!(listener.accept(), source.connect(transport, peer));
         let mut host_session = host_session?;
         let mut controller_session = controller_session?;
         let controller_handle = controller_session.handle();
@@ -605,19 +606,50 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
         assert_eq!(source.budget()?.connection_attempts, 3);
         assert_eq!(target.budget()?.connection_attempts, 2);
         assert!(source.budget()?.remaining_bytes <= spent_before_rebuild);
-        assert!(controller_handle.poll_native_video()?.is_none(), "new proof must not replay old pixels");
+        assert!(
+            controller_handle.poll_native_video()?.is_none(),
+            "new proof must not replay old pixels"
+        );
         assert!(old_controller.poll_native_video().is_err());
         assert!(old_host.native_host_session_binding().is_none());
-        assert!(controller_handle.native_file_access(&session_binding, local_generation).is_err());
+        assert!(
+            controller_handle
+                .native_file_access(&session_binding, local_generation)
+                .is_err()
+        );
         let new_generation = controller_handle.snapshot().generation;
-        let (root, _new_consent) = nestlink_platform_files::ApprovedReadRoot::open(&root_id, &directory, bytes.len() as u64)?;
-        host_handle.native_host_start_file_read(&session_binding, host_handle.snapshot().generation, nestlink_platform_files::FileRoots::new(vec![root])?).await?;
-        let (destination, _new_destination_consent) = nestlink_platform_files::download::LocalDownloadSelection::new(&output, "received-again.bin", bytes.len() as u64)?;
-        let new_task = controller_handle.native_download(&session_binding, new_generation, nestlink_sdk::files::NativeDownloadRequest::new(&root_id, "source.bin")?, destination)?;
-        let downloaded = tokio::time::timeout(Duration::from_secs(5), new_task.wait_finished()).await?;
+        let (root, _new_consent) = nestlink_platform_files::ApprovedReadRoot::open(
+            &root_id,
+            &directory,
+            bytes.len() as u64,
+        )?;
+        host_handle
+            .native_host_start_file_read(
+                &session_binding,
+                host_handle.snapshot().generation,
+                nestlink_platform_files::FileRoots::new(vec![root])?,
+            )
+            .await?;
+        let (destination, _new_destination_consent) =
+            nestlink_platform_files::download::LocalDownloadSelection::new(
+                &output,
+                "received-again.bin",
+                bytes.len() as u64,
+            )?;
+        let new_task = controller_handle.native_download(
+            &session_binding,
+            new_generation,
+            nestlink_sdk::files::NativeDownloadRequest::new(&root_id, "source.bin")?,
+            destination,
+        )?;
+        let downloaded =
+            tokio::time::timeout(Duration::from_secs(5), new_task.wait_finished()).await?;
         assert_eq!(downloaded.phase, NativeFileTaskPhase::Completed);
         assert_eq!(std::fs::read(output.join("received-again.bin"))?, bytes);
-        assert!(source.budget()?.remaining_bytes < spent_before_rebuild.saturating_sub(bytes.len() as u64));
+        assert!(
+            source.budget()?.remaining_bytes
+                < spent_before_rebuild.saturating_sub(bytes.len() as u64)
+        );
         if transport == NativeOfflineTransport::Quic {
             let stop = controller_handle.submit(Action::StopNativeSession {
                 request_id: session_binding.request_id.clone(),

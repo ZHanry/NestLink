@@ -42,7 +42,9 @@ unsafe impl HevcTextureSource for HevcMonitorSource {
     fn check_current(&self) -> io::Result<()> {
         self.observer.pump();
         if self.cancelled.load(Ordering::Acquire)
-            || self.invalidated.load(Ordering::Acquire) || context()? != *self.original {
+            || self.invalidated.load(Ordering::Acquire)
+            || context()? != *self.original
+        {
             return Err(denied("HEVC original desktop/session/monitor/DPI changed"));
         }
         Ok(())
@@ -79,7 +81,9 @@ impl WindowsCaptureSource {
             let result = (|| {
                 observer.pump();
                 if cancelled.load(Ordering::Acquire)
-                    || invalidated.load(Ordering::Acquire) || context()? != *selection.original {
+                    || invalidated.load(Ordering::Acquire)
+                    || context()? != *selection.original
+                {
                     return Err(denied("HEVC approved capture selection is stale"));
                 }
                 let monitor = selection
