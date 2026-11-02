@@ -4,7 +4,10 @@ use leptos::{prelude::*, task::spawn_local};
 use nestlink_protocol::api::ServicePublicationStatus;
 use nestlink_sdk::{Sdk, SdkError};
 use nestlink_web::i18n::{sdk_error, text as t};
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Purpose {
@@ -35,10 +38,22 @@ struct Check {
 impl Check {
     fn result(title: UiCopy, result: Result<UiCopy, SdkError>) -> Result<Self, SdkError> {
         match result {
-            Err(error) if matches!(&error, SdkError::SignIn)
-                || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401) => Err(error),
-            Err(error) => Ok(Self { title, detail: sdk_error(&error).to_string().into(), failed: true }),
-            Ok(detail) => Ok(Self { title, detail, failed: false }),
+            Err(error)
+                if matches!(&error, SdkError::SignIn)
+                    || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401) =>
+            {
+                Err(error)
+            }
+            Err(error) => Ok(Self {
+                title,
+                detail: sdk_error(&error).to_string().into(),
+                failed: true,
+            }),
+            Ok(detail) => Ok(Self {
+                title,
+                detail,
+                failed: false,
+            }),
         }
     }
 }
@@ -47,12 +62,18 @@ async fn read_checks(sdk: &Sdk, purpose: Purpose) -> Result<Vec<Check>, SdkError
     // Re-read the account before any optional administrator-only operation.
     // The cached principal alone cannot prove the role is still current.
     let account = sdk.me().await?;
-    if sdk.principal().is_none_or(|p| p.account_id != account.principal.account_id) {
+    if sdk
+        .principal()
+        .is_none_or(|p| p.account_id != account.principal.account_id)
+    {
         return Err(SdkError::Trust);
     }
     let mut checks = vec![Check {
         title: UiCopy::new("管理连接与账号", "Management connection and account"),
-        detail: UiCopy::new("已通过核验的服务器读取当前账号。", "Current account read through the verified server."),
+        detail: UiCopy::new(
+            "已通过核验的服务器读取当前账号。",
+            "Current account read through the verified server.",
+        ),
         failed: false,
     }];
     checks.push(Check::result(UiCopy::new("设备登记", "Device enrollment"), sdk.devices().await.map(|devices| {
@@ -104,8 +125,12 @@ pub(super) fn SetupPanel(
         busy.set(false);
     });
     let read = Callback::new(move |()| {
-        if busy.get_untracked() { return; }
-        let Some(sdk) = api.get_value() else { return; };
+        if busy.get_untracked() {
+            return;
+        }
+        let Some(sdk) = api.get_value() else {
+            return;
+        };
         let request = revision.get_untracked().saturating_add(1);
         revision.set(request);
         let session = session_revision.get_untracked();
@@ -118,8 +143,12 @@ pub(super) fn SetupPanel(
             let client = sdk.lock().await;
             let result = read_checks(&client, mode).await;
             drop(client);
-            if !alive.load(Ordering::Acquire) || session_revision.try_get_untracked() != Some(session)
-                || revision.try_get_untracked() != Some(request) { return; }
+            if !alive.load(Ordering::Acquire)
+                || session_revision.try_get_untracked() != Some(session)
+                || revision.try_get_untracked() != Some(request)
+            {
+                return;
+            }
             busy.set(false);
             match result {
                 Ok(values) => reports.set(values),
