@@ -114,9 +114,12 @@ decode receipt. See [the exact ownership and remaining-work record](gpu-shared-s
 The earlier hosted result above predates this route and does not validate it.
 
 W33 remains incomplete in source: Main10/P010, real 4:4:4 resources, HDR capture/
-transfer/output metadata, the 4K/144Hz/fractional target matrix and executable
+transfer/output metadata, the fractional target matrix and executable
 per-combination fallback are not implemented by the Main8/420/eight-bit SDR
-entry. That entry is capped at 1080p and 1–120 integer FPS by the product provider.
+entry. Its original allocation/probe/capture/codec/import owners now admit
+bounded exact 4K and integer targets through 144 FPS, within the same byte limits.
+Each combination still requires an actual independently completed direction
+probe and signed level/rate checks; configuration adds no qualified format.
 W32 also retains decoder BGRA readback alongside the new GPU copy, so removing
 that readback is further performance work. Actual cadence, device loss,
 multi-adapter/display/DPI switching, input and concurrent workloads still need

@@ -58,6 +58,9 @@ unsafe extern "C" {
 }
 
 fn geometry(config: VideoConfig) -> io::Result<usize> {
+    geometry_with_rate_limit(config, 120)
+}
+fn geometry_with_rate_limit(config: VideoConfig, max_fps: u32) -> io::Result<usize> {
     let bytes = u64::from(config.width) * u64::from(config.height) * 4;
     if config.width == 0
         || config.height == 0
@@ -66,7 +69,7 @@ fn geometry(config: VideoConfig) -> io::Result<usize> {
         || config.width > 8192
         || config.height > 8192
         || bytes > 64 * 1024 * 1024
-        || !(1..=120).contains(&config.fps)
+        || !(1..=max_fps).contains(&config.fps)
         || !(64..=100_000).contains(&config.bitrate_kbps)
     {
         return Err(io::Error::new(
@@ -176,7 +179,8 @@ impl Transform {
                 result: *mut *mut c_void,
             ) -> i32;
         }
-        let raw_bytes = geometry(config)?;
+        crate::HevcMain8Contract::validate_config(config)?;
+        let raw_bytes = geometry_with_rate_limit(config, 144)?;
         let mut handle = std::ptr::null_mut();
         // SAFETY: caller retains an owner-thread D3D device, or null for software decode.
         let hr = unsafe {

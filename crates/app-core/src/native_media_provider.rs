@@ -213,18 +213,7 @@ impl NativeMediaProvider {
     /// encode/decode workloads. Configuration does not probe hardware or add a
     /// product capability; publication still needs completed native close/join.
     pub fn gpu_hevc_main8(target: VideoConfig) -> io::Result<Self> {
-        if !(16..=1920).contains(&target.width)
-            || !(16..=1080).contains(&target.height)
-            || !target.width.is_multiple_of(8)
-            || !target.height.is_multiple_of(8)
-            || !(1..=120).contains(&target.fps)
-            || !(64..=100_000).contains(&target.bitrate_kbps)
-        {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "unsupported exact GPU HEVC product target",
-            ));
-        }
+        nestlink_media_codec::HevcMain8Contract::validate_config(target)?;
         Ok(Self {
             backend: ProviderBackend::GpuHevcMain8,
             target,
@@ -796,7 +785,7 @@ mod tests {
                 ..target
             },
             VideoConfig {
-                height: 2160,
+                height: 8193,
                 ..target
             },
             VideoConfig { fps: 0, ..target },
@@ -806,6 +795,16 @@ mod tests {
             },
         ] {
             assert!(NativeMediaProvider::gpu_hevc_main8(bad).is_err());
+        }
+        Ok(())
+    }
+    #[test]
+    fn gpu_high_frame_and_4k_targets_are_configurations_until_each_direction_actually_probes() -> io::Result<()> {
+        for (width,height,fps) in [(1920,1080,144),(3840,2160,60),(3840,2160,144)] {
+            let provider = NativeMediaProvider::gpu_hevc_main8(VideoConfig {width,height,fps,bitrate_kbps:40000})?;
+            assert_eq!(provider.targets.len(),1);
+            let state = provider.state.lock().map_err(|_| io::Error::other("provider state poisoned"))?;
+            assert!(state.encode.is_none() && state.decode.is_none());
         }
         Ok(())
     }

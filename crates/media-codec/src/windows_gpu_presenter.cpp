@@ -523,7 +523,7 @@ static int32_t open_presenter(void* surface, uint32_t width, uint32_t height, ui
     if(kbps<64 || kbps>100000)return E_INVALIDARG;
     auto* s=static_cast<Surface*>(surface);
     if (!s || !s->live || !width || !height || ((width|height)&1) || width>8192 || height>8192 ||
-        static_cast<uint64_t>(width)*height*4>64*1024*1024 || !fps || fps>120) return E_INVALIDARG;
+        static_cast<uint64_t>(width)*height*4>64*1024*1024 || !fps || fps>(hevc?144u:120u)) return E_INVALIDARG;
     bool probe_reserved=false;
     if(s->probe_parent) {
         bool expected=false;
@@ -612,7 +612,7 @@ extern "C" int32_t nl_gpu_close_checked(void* handle) noexcept {
 extern "C" int32_t nl_gpu_shared_open(void* surface,const NlSharedRingDescriptor* ring,uint32_t fps,uint64_t driver,void** result) noexcept {
     auto* target=static_cast<Surface*>(surface);
     if(!target || !target->live || !ring || !result || !ring->width || !ring->height || ring->width>8192 || ring->height>8192 ||
-        ((ring->width|ring->height)&1) || !fps || fps>120 || !driver)return E_INVALIDARG;
+        ((ring->width|ring->height)&1) || !fps || fps>144 || !driver)return E_INVALIDARG;
     *result=nullptr;
     std::unique_ptr<SharedPresenter> owner(new(std::nothrow)SharedPresenter());if(!owner)return E_OUTOFMEMORY;
     const HRESULT hr=owner->initialize(target,*ring,fps,driver);if(FAILED(hr))return hr;

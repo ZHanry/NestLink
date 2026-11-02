@@ -451,7 +451,7 @@ static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint3
     *result = nullptr;
     if (supplied_device && gpu_teardown_failed) return MF_E_SHUTDOWN;
     if (!width || !height || (width|height)&1 || width > 8192 || height > 8192 ||
-        static_cast<uint64_t>(width)*height*4 > raw_limit || !fps || fps > 120 || kbps > 100000)
+        static_cast<uint64_t>(width)*height*4 > raw_limit || !fps || fps > (hevc ? 144u : 120u) || kbps > 100000)
         return E_INVALIDARG;
     std::unique_ptr<Codec> state(new (std::nothrow) Codec());
     if (!state) return E_OUTOFMEMORY;
@@ -940,7 +940,8 @@ extern "C" int32_t nl_hevc_decoder_device_close(void* opaque) noexcept {
 // Synthetic upload only: no monitor enumeration, capture API, HWND or desktop read.
 extern "C" int32_t nl_hevc_synthetic_open(uint32_t width,uint32_t height,void** result) noexcept {
     if(!result)return E_POINTER;*result=nullptr;
-    if(!width||!height||((width|height)&1)||width>1920||height>1080)return E_INVALIDARG;
+    if(!width||!height||((width|height)&1)||width>8192||height>8192 ||
+        static_cast<uint64_t>(width)*height*4>raw_limit)return E_INVALIDARG;
     try {
         std::unique_ptr<HevcSyntheticSource> s(new(std::nothrow) HevcSyntheticSource());if(!s)return E_OUTOFMEMORY;
         HRESULT hr=D3D11CreateDevice(nullptr,D3D_DRIVER_TYPE_HARDWARE,nullptr,D3D11_CREATE_DEVICE_VIDEO_SUPPORT,

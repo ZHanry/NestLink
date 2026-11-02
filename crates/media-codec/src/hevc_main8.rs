@@ -20,20 +20,27 @@ pub struct HevcMain8Contract {
     kbps: u32,
 }
 impl HevcMain8Contract {
+    /// Bounded exact workload, not a claim that an adapter supports this target.
+    /// The same allocation ceiling applies to probes and original live owners.
+    pub fn validate_config(config: VideoConfig) -> io::Result<()> {
+        if !(16..=8192).contains(&config.width)
+            || !(16..=8192).contains(&config.height)
+            || !config.width.is_multiple_of(8)
+            || !config.height.is_multiple_of(8)
+            || !(1..=144).contains(&config.fps)
+            || !(64..=100_000).contains(&config.bitrate_kbps)
+            || u64::from(config.width) * u64::from(config.height) * 4 > 64 * 1024 * 1024
+        {
+            return Err(io::Error::other("unsupported exact HEVC allocation/rate budget"));
+        }
+        Ok(())
+    }
     /// Freeze an independently validated signed target. Every actual encoded or
     /// decoded AU still has to match it; this does not attest that a probe ran.
     pub fn from_exact_target(ptl: [u8; 12], config: VideoConfig) -> io::Result<Self> {
+        Self::validate_config(config)?;
         if ptl[0] != 1
-            || !matches!(ptl[11], 30 | 60 | 63 | 90 | 93 | 120 | 123 | 150 | 153)
-            || config.width == 0
-            || config.height == 0
-            || config.width > 8192
-            || config.height > 8192
-            || !config.width.is_multiple_of(8)
-            || !config.height.is_multiple_of(8)
-            || !(1..=120).contains(&config.fps)
-            || !(64..=100_000).contains(&config.bitrate_kbps)
-            || u64::from(config.width) * u64::from(config.height) * 4 > 64 * 1024 * 1024
+            || !matches!(ptl[11], 30 | 60 | 63 | 90 | 93 | 120 | 123 | 150 | 153 | 156 | 180 | 183 | 186)
         {
             return Err(io::Error::other("invalid exact expected HEVC Main8 target"));
         }
@@ -57,7 +64,7 @@ impl HevcMain8Contract {
             || info.coded_width != info.width
             || info.coded_height != info.height
             || info.crop != [0; 4]
-            || !(1..=120).contains(&config.fps)
+            || !(1..=144).contains(&config.fps)
             || !(64..=100_000).contains(&config.bitrate_kbps)
             || u64::from(config.width) * u64::from(config.height) * 4 > 64 * 1024 * 1024
             || info.stream_timing.is_some_and(|[units, scale]| {

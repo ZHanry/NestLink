@@ -153,18 +153,7 @@ pub fn probe_hevc_direction(
     direction: ExecutionDirection,
     cancel: &AtomicBool,
 ) -> io::Result<HevcDirectionProbe> {
-    if !(16..=1920).contains(&config.width)
-        || !(16..=1080).contains(&config.height)
-        || !config.width.is_multiple_of(8)
-        || !config.height.is_multiple_of(8)
-        || !(1..=120).contains(&config.fps)
-        || !(64..=100_000).contains(&config.bitrate_kbps)
-    {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "unsupported exact Main8 probe target",
-        ));
-    }
+    HevcMain8Contract::validate_config(config)?;
     let deadline = Instant::now() + Duration::from_secs(10);
     check(cancel, deadline)?;
     let authority = Arc::new(AtomicBool::new(true));

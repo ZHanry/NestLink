@@ -181,7 +181,7 @@ extern "C" int32_t nl_capture_gpu_open(uintptr_t monitor, uint32_t width, uint32
     *result = nullptr;
     // Odd/HDR/rotated outputs use the existing complete CPU path.
     if (!monitor || !width || !height || ((width|height)&1) || width > 8192 || height > 8192 ||
-        static_cast<uint64_t>(width)*height*4 > 64*1024*1024 || !fps || fps > 120) return E_INVALIDARG;
+        static_cast<uint64_t>(width)*height*4 > 64*1024*1024 || !fps || fps > 144) return E_INVALIDARG;
     ComPtr<IDXGIFactory1> factory;
     HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory));
     if (FAILED(hr)) return hr;
@@ -338,7 +338,7 @@ extern "C" int32_t nl_capture_gpu_synthetic_open(uint32_t width,uint32_t height,
     if (!result) return E_POINTER;
     *result=nullptr;
     if (!width || !height || ((width|height)&1) || width>8192 || height>8192 ||
-        static_cast<uint64_t>(width)*height*4>64*1024*1024 || !fps || fps>120) return E_INVALIDARG;
+        static_cast<uint64_t>(width)*height*4>64*1024*1024 || !fps || fps>144) return E_INVALIDARG;
     std::unique_ptr<GpuCapture> s(new (std::nothrow) GpuCapture());
     if (!s) return E_OUTOFMEMORY;
     HRESULT hr=CoInitializeEx(nullptr,COINIT_MULTITHREADED);

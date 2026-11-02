@@ -832,7 +832,7 @@ async fn serve(args: Args) -> Result<(), Box<dyn std::error::Error + Send + Sync
     }
 }
 
-fn parse_native_media_target(value: &str) -> Result<nestlink_media_codec::VideoConfig, String> {
+fn parse_media_target_syntax(value: &str) -> Result<nestlink_media_codec::VideoConfig, String> {
     let (size, rate) = value
         .split_once('@')
         .ok_or("expected WIDTHxHEIGHT@FPS:KBPS")?;
@@ -848,12 +848,17 @@ fn parse_native_media_target(value: &str) -> Result<nestlink_media_codec::VideoC
         fps: parse(fps)?,
         bitrate_kbps: parse(kbps)?,
     };
+    Ok(target)
+}
+
+fn parse_native_media_target(value: &str) -> Result<nestlink_media_codec::VideoConfig, String> {
+    let target = parse_media_target_syntax(value)?;
     nestlink_app_core::NativeMediaProvider::cpu_software(target).map_err(|e| e.to_string())?;
     Ok(target)
 }
 
 fn parse_native_gpu_hevc_target(value: &str) -> Result<nestlink_media_codec::VideoConfig, String> {
-    let target = parse_native_media_target(value)?;
+    let target = parse_media_target_syntax(value)?;
     nestlink_app_core::NativeMediaProvider::gpu_hevc_main8(target).map_err(|e| e.to_string())?;
     Ok(target)
 }
@@ -901,7 +906,8 @@ mod media_cli_tests {
         );
         for invalid in [
             "1918x1080@60:8000",
-            "1920x2160@60:8000",
+            "8192x8192@60:8000",
+            "3840x2160@145:8000",
             "1920x1080@0:8000",
             "1920x1080@60:0",
             "1920x1080@60/1:8000",
@@ -909,6 +915,14 @@ mod media_cli_tests {
         ] {
             assert!(parse_native_gpu_hevc_target(invalid).is_err(), "{invalid}");
         }
+        Ok(())
+    }
+
+    #[test]
+    fn gpu_4k_144_target_keeps_exact_values_without_entering_cpu_rate_limits() -> io::Result<()> {
+        let target = parse_native_gpu_hevc_target("3840x2160@144:40000").map_err(io::Error::other)?;
+        assert_eq!((target.width, target.height, target.fps, target.bitrate_kbps), (3840,2160,144,40000));
+        assert!(parse_native_media_target("3840x2160@144:40000").is_err());
         Ok(())
     }
 }

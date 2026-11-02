@@ -84,6 +84,17 @@ mod tests {
     use super::*;
     use nestlink_protocol::media_format::{FrameRate, HevcPtl};
     #[test]
+    fn exact_4k_144_target_preserves_hardware_format_and_level_rate_limits() -> io::Result<()> {
+        let mut ptl=[0;12];ptl[0]=1;ptl[11]=183;
+        let format=VideoFormat::hevc_main8_observed(ptl,3840,2160,FrameRate::new(144,1).map_err(io::Error::other)?,40000).map_err(io::Error::other)?;
+        let target=hevc_execution_target(format,7,8)?;
+        assert_eq!((target.config().width,target.config().height,target.config().fps),(3840,2160,144));
+        assert_eq!(target.format_digest(),format.digest().map_err(io::Error::other)?);
+        ptl[11]=180;
+        assert!(VideoFormat::hevc_main8_observed(ptl,3840,2160,FrameRate::new(144,1).map_err(io::Error::other)?,40000).is_err());
+        Ok(())
+    }
+    #[test]
     fn exact_target_keeps_every_ptl_bit_and_independent_wire_digest() -> io::Result<()> {
         let mut ptl = [0; 12];
         ptl[0] = 1;

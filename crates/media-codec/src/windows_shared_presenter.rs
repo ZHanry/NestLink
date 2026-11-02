@@ -96,7 +96,7 @@ impl GpuSharedPresenter {
         ring.descriptor().validate(config)?;
         if !authority.load(Ordering::Acquire)
             || config.fps == 0
-            || config.fps > 120
+            || config.fps > 144
             || driver_version == 0
         {
             return Err(io::Error::other(
