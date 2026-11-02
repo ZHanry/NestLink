@@ -263,7 +263,10 @@ jobs:
             cargo test --locked -p nestlink-desktop --lib layout_tests::independent_offline_ -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath $offlineLog -Append
           }
           exit $LASTEXITCODE
-      - name: Check original offline resident HTTP CLI IPC platform data and terminal fences
+      - name: Freeze original offline resident public-PKI HTTPS fixture tool
+        if: ${{ !cancelled() }}
+        run: python scripts/refactor-offline-resident-https.py
+      - name: Check original offline resident HTTPS CLI IPC platform data and terminal fences
         if: ${{ !cancelled() }}
         shell: pwsh
         run: |
@@ -284,6 +287,8 @@ jobs:
           path: |
             ${{ runner.temp }}/nestlink-native-offline-tests.log
             ${{ runner.temp }}/nestlink-native-offline-resident-tests.log
+            ${{ runner.temp }}/nestlink-native-offline-https-tool.json
+            ${{ runner.temp }}/nestlink-native-offline-https-license.txt
           if-no-files-found: warn
       - name: Check original-session quality projection and old IPC compatibility
         if: ${{ !cancelled() }}

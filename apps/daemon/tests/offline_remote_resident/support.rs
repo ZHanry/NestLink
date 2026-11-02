@@ -4,7 +4,7 @@ use nestlink_identity::{InstallationIdentity, PermitSigner};
 use nestlink_protocol::{
     Path as NetworkPath, Permission, api::*, network::SpaceRole, offline::management::*,
 };
-use nestlink_sdk::{DeploymentTrust, DeviceIdentity, Sdk};
+use nestlink_sdk::{DeviceIdentity, Sdk};
 use serde_json::{Value, json};
 use std::{
     io,
@@ -12,16 +12,18 @@ use std::{
     process::Stdio,
     sync::{
         Arc, Mutex,
-        atomic::{AtomicUsize, Ordering},
+        atomic::{AtomicBool, AtomicUsize, Ordering},
     },
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
     process::{Child, ChildStdin, Command},
-    sync::{mpsc, watch},
+    sync::{mpsc, oneshot, watch},
     task::JoinHandle,
 };
+#[path = "https.rs"]
+mod https;
 
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 pub fn wall() -> Result<u64> {
@@ -31,7 +33,7 @@ pub fn wall() -> Result<u64> {
         .try_into()?)
 }
 fn password() -> Secret {
-    Secret::from_text("resident-original-test-password".into())
+    Secret::from_text(URL_SAFE_NO_PAD.encode(nestlink_auth::random_bytes::<32>()))
 }
 
 /// Actual OS services are owned by this test, without changing process-global
@@ -313,6 +315,32 @@ fn installation(directory: &Path) -> Result<DeviceIdentity> {
 /// The original HTTP application and database issue every permit, approval and
 /// one-use consumption. The gate only delays real HTTP responses for a fence
 /// assertion; it cannot construct or modify authority.
+struct Server {
+    task: JoinHandle<io::Result<()>>,
+    shutdown: Option<oneshot::Sender<()>>,
+}
+impl Server {
+    fn start(listener: tokio::net::TcpListener, router: axum::Router) -> Self {
+        let (shutdown, stopped) = oneshot::channel();
+        let task = tokio::spawn(async move {
+            axum::serve(listener, router.into_make_service_with_connect_info::<std::net::SocketAddr>())
+                .with_graceful_shutdown(async { let _ = stopped.await; })
+                .await
+        });
+        Self { task, shutdown: Some(shutdown) }
+    }
+    async fn stop(mut self) -> Result {
+        if let Some(shutdown) = self.shutdown.take() {
+            let _ = shutdown.send(());
+        }
+        tokio::time::timeout(Duration::from_secs(5), &mut self.task).await???;
+        Ok(())
+    }
+}
+impl Drop for Server {
+    fn drop(&mut self) { self.task.abort(); }
+}
+
 pub struct Fixture {
     pub source: PathBuf,
     pub host: PathBuf,
@@ -323,7 +351,8 @@ pub struct Fixture {
     pub lease_sequence: u64,
     router: axum::Router,
     address: std::net::SocketAddr,
-    server: Option<JoinHandle<io::Result<()>>>,
+    server: Option<Server>,
+    _tunnel: Child,
     pub gate: watch::Sender<bool>,
     pub requests: Arc<AtomicUsize>,
 }
@@ -333,16 +362,33 @@ impl Fixture {
         let signer = PermitSigner::generate();
         let issuer = signer.public_key();
         let mut store = nestlink_storage::Store::in_memory(&deployment)?;
-        store.bootstrap_admin("admin", password().expose())?;
+        let source_account = format!("lab-{}", random_id());
+        let host_account = format!("lab-{}", random_id());
+        let source_password = password();
+        let host_password = password();
+        store.bootstrap_admin(&source_account, source_password.expose())?;
+        let source = area.join("source");
+        let host = area.join("host");
+        let source_identity = installation(&source)?;
+        let host_identity = installation(&host)?;
+        let space = random_id();
+        let sessions = [random_id(), random_id()];
+        let setup = Arc::new(AtomicBool::new(true));
+        let scope = https::Scope {
+            space: space.clone(),
+            devices: [source_identity.device_id.clone(), host_identity.device_id.clone()],
+            sessions: sessions.clone(),
+            setup: setup.clone(),
+        };
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
         let address = listener.local_addr()?;
-        let origin = format!("http://{address}");
+        let (tunnel, origin) = https::start(address, area).await?;
         let app = nestlink_server::router(nestlink_server::AppState::new(
             store,
-            VaultKey::from_bytes([53; 32]),
+            VaultKey::from_bytes(nestlink_auth::random_bytes()),
             signer,
             origin.clone(),
-            false,
+            true,
         )?);
         let (gate, _) = watch::channel(false);
         let requests = Arc::new(AtomicUsize::new(0));
@@ -362,38 +408,14 @@ impl Fixture {
                     next.run(request).await
                 }
             },
-        ));
+        )).layer(axum::middleware::from_fn(move |request, next| scope.clone().serve(request, next)));
         let server_router = router.clone();
-        let server = tokio::spawn(async move { axum::serve(listener, server_router).await });
-        let mut source_sdk = Sdk::connect(
-            &origin,
-            DeploymentTrust {
-                deployment_id: deployment.clone(),
-                permit_issuer: issuer,
-            },
-            true,
-        )
-        .await?;
-        source_sdk.login("admin".into(), password(), None).await?;
+        let server = Server::start(listener, server_router);
+        let source_sdk = https::login(&origin, &deployment, issuer, &source_account, &source_password).await?;
         source_sdk
-            .create_account("host-owner".into(), password())
+            .create_account(host_account.clone(), Secret::from_text(host_password.expose().into()))
             .await?;
-        let mut host_sdk = Sdk::connect(
-            &origin,
-            DeploymentTrust {
-                deployment_id: deployment,
-                permit_issuer: issuer,
-            },
-            true,
-        )
-        .await?;
-        host_sdk
-            .login("host-owner".into(), password(), None)
-            .await?;
-        let source = area.join("source");
-        let host = area.join("host");
-        let source_identity = installation(&source)?;
-        let host_identity = installation(&host)?;
+        let host_sdk = https::login(&origin, &deployment, issuer, &host_account, &host_password).await?;
         for (sdk, identity, role) in [
             (&source_sdk, &source_identity, "controller"),
             (&host_sdk, &host_identity, "host"),
@@ -416,14 +438,14 @@ impl Fixture {
             )
             .await?;
         }
-        let request = || RemoteRequest {
-            id: random_id(),
+        let request = |id| RemoteRequest {
+            id,
             controller_device_id: source_identity.device_id.clone(),
             host_device_id: host_identity.device_id.clone(),
             permissions: vec![Permission::View as i32, Permission::FileRead as i32],
             path_mode: "direct_only".into(),
         };
-        let pending = source_sdk.create_remote(request()).await?;
+        let pending = source_sdk.create_remote(request(sessions[0].clone())).await?;
         host_sdk
             .approve(
                 &host_identity,
@@ -446,9 +468,8 @@ impl Fixture {
                 },
             )
             .await?;
-        let trusted = source_sdk.create_trusted_remote(request()).await?;
+        let trusted = source_sdk.create_trusted_remote(request(sessions[1].clone())).await?;
         let original = source_sdk.permit(&trusted.id).await?;
-        let space = random_id();
         source_sdk.configure_network_authority(&space, 0).await?;
         for (revision, identity) in [(1, &source_identity), (2, &host_identity)] {
             source_sdk
@@ -474,6 +495,7 @@ impl Fixture {
             .await?;
         platform.protect_login(&source, &source_sdk).await?;
         platform.protect_login(&host, &host_sdk).await?;
+        setup.store(false, Ordering::Release);
         Ok(Self {
             source,
             host,
@@ -485,14 +507,14 @@ impl Fixture {
             router,
             address,
             server: Some(server),
+            _tunnel: tunnel,
             gate,
             requests,
         })
     }
     pub async fn offline(&mut self) -> Result {
         if let Some(server) = self.server.take() {
-            server.abort();
-            let _ = server.await;
+            server.stop().await?;
         }
         drop(tokio::net::TcpListener::bind(self.address).await?);
         Ok(())
@@ -501,20 +523,10 @@ impl Fixture {
         self.gate.send_replace(true);
         let listener = tokio::net::TcpListener::bind(self.address).await?;
         let router = self.router.clone();
-        self.server = Some(tokio::spawn(
-            async move { axum::serve(listener, router).await },
-        ));
+        self.server = Some(Server::start(listener, router));
         Ok(self.requests.load(Ordering::Acquire))
     }
 }
-impl Drop for Fixture {
-    fn drop(&mut self) {
-        if let Some(server) = &self.server {
-            server.abort();
-        }
-    }
-}
-
 pub struct Resident {
     child: Child,
     input: Option<ChildStdin>,
