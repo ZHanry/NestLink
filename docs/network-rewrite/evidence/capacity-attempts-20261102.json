@@ -1090,9 +1090,94 @@
           "wave": 0
         }
       ]
+    },
+    {
+      "run_id": 41434724934,
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41434724934",
+      "artifact_id": 13135619396,
+      "artifact_sha256": "39bba139a9bfd231bb64f96687f5b285bf7863778c914f4bef635c888d4081a0",
+      "receipt": {
+        "source_revision": "c01051596ba667ea55e9d465226e67ca355d5a62",
+        "workflow": "ZHanry/NestLink/.github/workflows/network-capacity.yml@refs/heads/main",
+        "workflow_revision": "c01051596ba667ea55e9d465226e67ca355d5a62",
+        "run_id": "41434724934",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Linux",
+        "kernel": [
+          "Linux",
+          "runnervm48cm3",
+          "7.0.0-1017-azure",
+          "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+          "x86_64"
+        ],
+        "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+        "offered_load": {
+          "registered_installations_in_one_space": 100,
+          "active_pairs": 20,
+          "simultaneous_flows": 1000,
+          "reconnect_waves": 3,
+          "management_logins_per_active_consumer": 1,
+          "streams_per_pair": 50,
+          "same_lease_control_owners_per_wave": 20
+        },
+        "scope": "Original HTTP management and signed grants, actual kernel QUIC/TCP targets, original limits and four-scope durable accounting. One independent management login per active consumer, unchanged original rate limits.",
+        "limitations": [
+          "one hosted process; not physical nodes or independently deployed relay runtimes",
+          "short-run samples cannot qualify cross-day soak, complete E2E or all bounded queues"
+        ],
+        "passed": false,
+        "commands": [
+          {
+            "name": "build",
+            "argv": [
+              "cargo",
+              "test",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-sdk",
+              "--test",
+              "capacity",
+              "--no-run",
+              "--message-format=json-render-diagnostics"
+            ],
+            "return_code": 0,
+            "seconds": 406.53397612699996
+          }
+        ],
+        "build_profile": "release",
+        "original_assertions_and_deadlines_preserved": true,
+        "load_mode": "multiplexed",
+        "executable_sha256": "160fdb80b8ed8e7bef698c50aa56a363b2c20a2ebacef61a902179b6d4a6a313",
+        "failure": "TimeoutExpired(['cargo', 'test', '--release', '--locked', '-p', 'nestlink-sdk', '--lib', 'http_admission::tests::', '--', '--show-output', '--test-threads=1'], 179.99998103500002)",
+        "files": [
+          {
+            "path": "build.log",
+            "bytes": 458653,
+            "sha256": "385939af344a1c12f477f260f287375422136cadcfd8e8b5e0fa51622176b0f6"
+          },
+          {
+            "path": "build.stderr.log",
+            "bytes": 60127,
+            "sha256": "a32ed0abd530ea30617f43a66c1f6d823e6d5708752ffde535e00f343f13d9b3"
+          },
+          {
+            "path": "native-http-backpressure.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "native-http-backpressure.stderr.log",
+            "bytes": 19873,
+            "sha256": "1ec37ac08780b03e1d358b7174e88e8f6076488274ee02e8075154213a1767fa"
+          }
+        ]
+      },
+      "failure_observation": "Explicit release profile capacity executable compiled in 406.53s. The following native HTTP cargo test command then timed out during release harness compilation inside its original180s test budget; stdout contains no running tests or load sample. Four recorded files verified. Capacity did not execute, no successful load inferred; retained separately from the original failed debug lease expiry. Next workflow separates unchanged build and execution budgets and records timed-out command provenance."
     }
   ],
-  "next_implementation": "Keep failed debug attempts. Run an explicitly selected production release build with every original assertion, lease interval, currentness readback, handshake bound, server admission/rate/quota rule and full offered load unchanged. Record the build profile; any passing optimized result cannot replace the debug failure or establish physical-node/long-soak acceptance.",
+  "next_implementation": "Compile all original harnesses together under the existing1200s build budget; record exact hashes and execute unchanged7HTTP/1negotiation/6multiplex/1capacity inventories under their original180/300/660s budgets. Retain all prior failed attempts, unchanged original signed lease/rate/quota/currentness gates and full100/20/1000/three-wave assertions.",
   "limitations": [
     "One hosted process with enrolled installations; not 100 physical machines. No achieved 1000 simultaneous flow claim, no queue stability or 24h soak claim."
   ]
