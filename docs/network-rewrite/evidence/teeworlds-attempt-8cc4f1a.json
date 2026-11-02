@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source_revision": "8cc4f1a9b122c250746abaf4d9b91fb7f8d6f97e",
+  "workflow": ".github/workflows/network-games.yml",
+  "run_id": 41371139663,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41371139663",
+  "job_conclusion": "failure",
+  "passed": false,
+  "scope": "Actual official Teeworlds LAN browser, join, game input, snapshots and live management revocation reached. Whole case still failed the unchanged five-second ordinary client exit requirement; no complete W28 or physical-site qualification.",
+  "artifact": {
+    "id": 13109995003,
+    "name": "game-teeworlds-8cc4f1a9b122c250746abaf4d9b91fb7f8d6f97e-1",
+    "official_digest": "sha256:c6db9586b9b7bd55d6e97b8c9a30300706667b4b2b2bb48393eb025a931cff89",
+    "downloaded_zip_sha256": "c6db9586b9b7bd55d6e97b8c9a30300706667b4b2b2bb48393eb025a931cff89",
+    "outer_receipt_sha256": "81c9bf799cc76ece1d23cc8c539f4ef122eba444ab32bd585ae92a0a5b1b3a8e",
+    "execution_receipt_sha256": "1844147bc226ce1c176a73491f72a77ce15f9b6917f6eb89833975bfa350960f",
+    "client_pcap_sha256": "ef83044287bab96bccf0ff007f30df61ba83ab8714bcdeffd0edc6acf881c907f",
+    "server_pcap_sha256": "68c8cdbdfb897b481344b67a442f542ae766af106da48e4b6a366567a39d53de",
+    "playing_screenshot_sha256": "cc6e0e29d94b2169e924b75fc57b6622a44420dec134e986c662a39cd6447d26",
+    "revoked_screenshot_sha256": "211e6a4b654e645ff435e7793375654b0b072fd34dae13e6ef4d98db21ff4166"
+  },
+  "observed": {
+    "original_sdk_build_passed": true,
+    "official_lan_browser_ocr": "NestLink W28 real room DM dm1 0/4; one server",
+    "official_server_join": "player has entered the game. ClientID=0 addr=192.168.212.2:41742; team_join player='0:NestLinkHosted' team=0",
+    "sustained_play_seconds": 10.32997278800002,
+    "input_sequence": ["right 2.5s", "left 2.5s", "jump 2.5s", "right 2.5s"],
+    "client_offline_after_management_revocation_seconds": 10.295381094999982,
+    "official_client_disconnect": "offline error='Timeout'",
+    "official_demo_bytes": 9302,
+    "official_demo_sha256": "3809d212cff30cfd254bc9946f1d8869c31bb4073bd013d477d6f505b5e1964a",
+    "failure": "The ordinary quit command was appended to one pending gameplay character. The official console logged No such command: dquit.; client.wait(timeout=5) then failed.",
+    "driver_actor_cleanup_errors": [],
+    "outer_namespace_cleanup_errors": [],
+    "strict_clippy_after_game": "not reached because the exact game case failed"
+  },
+  "candidate_correction": {
+    "source_commit": "21c342d80db8f7bccc02c2ffde1ef3c80c30bf20",
+    "change": "After opening the ordinary upstream console, use its documented-in-source Down-key draft clear before typing each command. Exact upstream CGameConsole::CInstance::OnInput clears m_Input when Down is pressed without a selected history entry. Preserve the original gameplay, revocation and five-second zero-exit gates.",
+    "source_reference": "https://github.com/teeworlds/teeworlds/blob/4fc25a17fef3e6c2bf4d52b0421e0d69ecaa1e79/src/game/client/components/console.cpp",
+    "verification_status": "pending_separate_same_source_actions_run"
+  }
+}
