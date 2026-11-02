@@ -1118,7 +1118,8 @@ impl DesktopApp {
                     }
                 }
                 NativeSessionStatus::Connected => {
-                    if ui.button(self.t("停止会话", "Stop session")).clicked() {
+                    let stop_label = if snapshot.native_offline.is_some() { self.t("结束离线授权", "End offline authority") } else { self.t("停止会话", "Stop session") };
+                    if ui.button(stop_label).clicked() {
                         self.action(
                             snapshot,
                             Action::StopNativeSession {

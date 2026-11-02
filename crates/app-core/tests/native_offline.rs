@@ -566,6 +566,58 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
         assert_eq!(downloaded.confirmed_bytes, bytes.len() as u64);
         assert_eq!(std::fs::read(output.join("received.bin"))?, bytes);
         assert!(source.budget()?.remaining_bytes < 1048576 - 262144);
+        let spent_before_rebuild = source.budget()?.remaining_bytes;
+        let local_generation = controller_handle.snapshot().generation;
+        controller_session.request_carrier_rebuild()?;
+        host_session.request_carrier_rebuild()?;
+        let stopped = controller_session.wait_stopped().await?;
+        let host_stopped = host_session.wait_stopped().await?;
+        for receipt in [&stopped, &host_stopped] {
+            assert_eq!(receipt.reason, NativeSessionStopReason::NetworkChanged);
+            assert_eq!(receipt.cleanup, NativeSessionCleanup::Succeeded);
+            assert!(receipt.failure.is_none());
+        }
+        assert!(!source.budget()?.stopped && !target.budget()?.stopped);
+        assert!(controller_handle.poll_native_video().is_err());
+        assert!(controller_handle.native_file_session_binding().is_none());
+        assert!(host_handle.native_host_session_binding().is_none());
+        assert_eq!(resets.load(std::sync::atomic::Ordering::SeqCst), 1);
+        assert!(capture.poll().is_err());
+        // Rebind the actual old physical endpoint before spending another
+        // attempt. The original owner and signed scope are retained unchanged.
+        match transport {
+            NativeOfflineTransport::Quic => drop(std::net::UdpSocket::bind(peer)?),
+            NativeOfflineTransport::Tls => drop(tokio::net::TcpListener::bind(peer).await?),
+        }
+        drop(host_session);
+        drop(controller_session);
+        let old_controller = controller_handle;
+        let old_host = host_handle;
+        let listener = target.listen(transport, peer).await?;
+        let (host_session, controller_session) = tokio::join!(listener.accept(), source.connect(transport, peer));
+        let mut host_session = host_session?;
+        let mut controller_session = controller_session?;
+        let controller_handle = controller_session.handle();
+        let host_handle = host_session.handle();
+        assert!(controller_handle.snapshot().generation > local_generation);
+        assert!(host_handle.snapshot().generation > local_generation);
+        assert_eq!(source.binding()?.bundle_id, original_bundle);
+        assert_eq!(source.budget()?.connection_attempts, 3);
+        assert_eq!(target.budget()?.connection_attempts, 2);
+        assert!(source.budget()?.remaining_bytes <= spent_before_rebuild);
+        assert!(controller_handle.poll_native_video()?.is_none(), "new proof must not replay old pixels");
+        assert!(old_controller.poll_native_video().is_err());
+        assert!(old_host.native_host_session_binding().is_none());
+        assert!(controller_handle.native_file_access(&session_binding, local_generation).is_err());
+        let new_generation = controller_handle.snapshot().generation;
+        let (root, _new_consent) = nestlink_platform_files::ApprovedReadRoot::open(&root_id, &directory, bytes.len() as u64)?;
+        host_handle.native_host_start_file_read(&session_binding, host_handle.snapshot().generation, nestlink_platform_files::FileRoots::new(vec![root])?).await?;
+        let (destination, _new_destination_consent) = nestlink_platform_files::download::LocalDownloadSelection::new(&output, "received-again.bin", bytes.len() as u64)?;
+        let new_task = controller_handle.native_download(&session_binding, new_generation, nestlink_sdk::files::NativeDownloadRequest::new(&root_id, "source.bin")?, destination)?;
+        let downloaded = tokio::time::timeout(Duration::from_secs(5), new_task.wait_finished()).await?;
+        assert_eq!(downloaded.phase, NativeFileTaskPhase::Completed);
+        assert_eq!(std::fs::read(output.join("received-again.bin"))?, bytes);
+        assert!(source.budget()?.remaining_bytes < spent_before_rebuild.saturating_sub(bytes.len() as u64));
         if transport == NativeOfflineTransport::Quic {
             let stop = controller_handle.submit(Action::StopNativeSession {
                 request_id: session_binding.request_id.clone(),

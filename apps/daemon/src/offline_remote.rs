@@ -101,6 +101,7 @@ enum Command {
         draft_digest: [u8; 32],
     },
     Start,
+    Rebuild,
     Status,
     Recover,
     Revoke {
@@ -229,7 +230,7 @@ impl Resident {
         match command {
             Command::Help => emit(
                 "help",
-                serde_json::json!({"commands":["policy","enable","begin","draft","review","approve","activate","start","status","recover","revoke","stop"],"guide":"docs/network-rewrite/offline-remote-cli.md","label":"离线仅直连","maximum_command_bytes":65536}),
+                serde_json::json!({"commands":["policy","enable","begin","draft","review","approve","activate","start","rebuild","status","recover","revoke","stop"],"guide":"docs/network-rewrite/offline-remote-cli.md","label":"离线仅直连","maximum_command_bytes":65536}),
             )?,
             Command::Policy => emit("policy", self.sdk.offline_policy(&self.args.space).await?)?,
             Command::Enable {
@@ -387,6 +388,10 @@ impl Resident {
                         .ok_or_else(|| invalid("controller needs an explicit --peer endpoint"))?;
                     tokio::spawn(async move { owner.connect(transport, peer).await })
                 });
+            }
+            Command::Rebuild => {
+                self.session.as_ref().ok_or_else(|| invalid("no connected original offline carrier"))?.request_carrier_rebuild()?;
+                emit("carrier_retiring", serde_json::json!({"label":"离线仅直连","notice":"仅重建当前直连载体。等待connection_stopped后再次显式start；沿用原绝对期限和累计额度，不重新消费授权。"}))?;
             }
             Command::Status => self.status()?,
             Command::Recover => {

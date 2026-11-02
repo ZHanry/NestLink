@@ -60,7 +60,7 @@ fn independent_offline_workspace_displays_finite_scope_without_management_login(
     }
     assert!(!workspace.label_bounds("离线仅直连").is_empty());
     assert_eq!(workspace.bounds("打开独立远控窗口").len(), 1);
-    assert_eq!(workspace.bounds("停止会话").len(), 1);
+    assert_eq!(workspace.bounds("结束离线授权").len(), 1);
     assert!(workspace.bounds("登录").is_empty());
     assert_eq!(snapshot.authentication, Authentication::Disconnected);
     assert!(snapshot.server.is_none() && snapshot.principal.is_none());
