@@ -152,7 +152,8 @@ fn ledgers(f: &mut Fixture, spent: u64, outstanding: u64) -> Result {
 }
 
 #[test]
-fn combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_and_revoke() -> Result {
+fn combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_and_revoke() -> Result
+{
     let mut f = Fixture::new()?;
     let access = configure(&mut f)?;
     let lease = f.store.issue_private_service(
@@ -183,14 +184,21 @@ fn combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_a
         now()?,
     )?;
     assert_eq!(serde_json::to_vec(&observed)?, serde_json::to_vec(&lease)?);
-    assert_eq!(serde_json::to_vec(&observed_path)?, serde_json::to_vec(&path)?);
-    assert!(f.store.private_service_current_authority(
-        &f.creator,
-        &f.view.id,
-        &usage.grant_id,
-        &f.service_signer,
-        verified.lease().claims().expires_at_unix_ms,
-    ).is_err());
+    assert_eq!(
+        serde_json::to_vec(&observed_path)?,
+        serde_json::to_vec(&path)?
+    );
+    assert!(
+        f.store
+            .private_service_current_authority(
+                &f.creator,
+                &f.view.id,
+                &usage.grant_id,
+                &f.service_signer,
+                verified.lease().claims().expires_at_unix_ms,
+            )
+            .is_err()
+    );
 
     let original = serde_json::to_string(&lease)?;
     let mut corrupt = lease.clone();
@@ -199,15 +207,27 @@ fn combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_a
         "UPDATE private_service_leases SET lease_json=?1 WHERE grant_id=?2",
         params![serde_json::to_string(&corrupt)?, usage.grant_id],
     )?;
-    assert!(f.store.private_service_current_authority(
-        &f.creator, &f.view.id, &usage.grant_id, &f.service_signer, now()?,
-    ).is_err());
+    assert!(
+        f.store
+            .private_service_current_authority(
+                &f.creator,
+                &f.view.id,
+                &usage.grant_id,
+                &f.service_signer,
+                now()?,
+            )
+            .is_err()
+    );
     f.store.connection.execute(
         "UPDATE private_service_leases SET lease_json=?1 WHERE grant_id=?2",
         params![original, usage.grant_id],
     )?;
     f.store.private_service_current_authority(
-        &f.creator, &f.view.id, &usage.grant_id, &f.service_signer, now()?,
+        &f.creator,
+        &f.view.id,
+        &usage.grant_id,
+        &f.service_signer,
+        now()?,
     )?;
     f.store.revoke_private_service(
         &f.creator,
@@ -216,9 +236,17 @@ fn combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_a
         access.exposure.revision,
         now()?,
     )?;
-    assert!(f.store.private_service_current_authority(
-        &f.creator, &f.view.id, &usage.grant_id, &f.service_signer, now()?,
-    ).is_err());
+    assert!(
+        f.store
+            .private_service_current_authority(
+                &f.creator,
+                &f.view.id,
+                &usage.grant_id,
+                &f.service_signer,
+                now()?,
+            )
+            .is_err()
+    );
     ledgers(&mut f, 0, access.exposure.private_maximum_bytes)?;
     Ok(())
 }

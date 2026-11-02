@@ -143,8 +143,7 @@ async fn approve_capture(
                     .selected
                     .as_ref()
                     .is_some_and(|selection| selection.source == source_id)
-            })
-            {
+            }) {
                 return Ok::<_, Box<dyn std::error::Error + Send + Sync>>(());
             }
             tokio::time::sleep(Duration::from_millis(20)).await;

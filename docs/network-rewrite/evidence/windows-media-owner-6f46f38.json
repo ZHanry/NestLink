@@ -1,0 +1,523 @@
+{
+  "schema_version": 1,
+  "scope": "Hosted Windows Main8/Main10 exact-format, provider, original ownership and strict source boundaries plus Windows/Linux native TLS process regressions. No hardware probe success or target qualification inferred.",
+  "scoped_passed": true,
+  "whole_W32_W33_or_release_passed": false,
+  "source_revision": "6f46f3820c7cee61e01061c0ca80b45d298b8d28",
+  "run_id": 41442724948,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41442724948",
+  "workflow": ".github/workflows/windows-media-owner.yml",
+  "runner_environment": "github-hosted",
+  "jobs": [
+    {
+      "id": 125268297743,
+      "name": "native-peer-process (windows-2025)",
+      "conclusion": "success",
+      "steps": [
+        "Set up job",
+        "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+        "Exercise the actual local TLS process owner and portable compatibility",
+        "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+        "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "Complete job"
+      ]
+    },
+    {
+      "id": 125268298166,
+      "name": "native-peer-process (ubuntu-24.04)",
+      "conclusion": "success",
+      "steps": [
+        "Set up job",
+        "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+        "Exercise the actual local TLS process owner and portable compatibility",
+        "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+        "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "Complete job"
+      ]
+    },
+    {
+      "id": 125268298289,
+      "name": "owner-boundaries",
+      "conclusion": "success",
+      "steps": [
+        "Set up job",
+        "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "Verify exact hosted source and preserve input provenance",
+        "Verify diagnostic analyzer negatives on Actions",
+        "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+        "Verify independent exact format, signed scope and unchanged legacy contracts",
+        "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+        "Select native codec prefix",
+        "Build the original pinned native codecs on Actions",
+        "Verify native codec provenance",
+        "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+        "Check the complete desktop owner code strictly",
+        "Verify exact HEVC Main8 contract and original MF parser boundaries",
+        "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+        "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+        "Verify explicit GPU intent and exact local approval refusal boundaries",
+        "Verify production HEVC selection and strict original daemon cleanup boundaries",
+        "Retain exact-source evidence including failures",
+        "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "Complete job"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact": {
+        "id": 13141302690,
+        "name": "windows-media-owner-6f46f3820c7cee61e01061c0ca80b45d298b8d28-1",
+        "sha256": "493db8a5d617a891e02b7646713f95b189aa8525d317e751d7a1230bd77ded18",
+        "official_zip_digest_verified": true
+      },
+      "files": [
+        {
+          "path": "compressed-context-tests.log",
+          "bytes": 18838,
+          "sha256": "568e4402d739fbb5726cef2314de0a737b00dcd6376de8df485635fd079799ea"
+        },
+        {
+          "path": "daemon-hevc-selection-tests.log",
+          "bytes": 14603,
+          "sha256": "6d6ac94c07cbce638c5776661a41dba13ac65124e5fb5823f873005b82cd9d0f"
+        },
+        {
+          "path": "daemon-media-clippy.log",
+          "bytes": 19982,
+          "sha256": "713b72019336a09b5b8f5e66a155bc8e68b1665fe44a21f8b3f0e61a5dc4e79c"
+        },
+        {
+          "path": "decoded-export-owner-tests.log",
+          "bytes": 965,
+          "sha256": "ab47b2f5d9349b9260a66117ea52c9534e979038424f54344f813f59c7bc8b32"
+        },
+        {
+          "path": "desktop-clippy.log",
+          "bytes": 29132,
+          "sha256": "bf698d510d7a8b76cb1296fc4e9c01b76fcb8a94026d0d541963afedd5ff216f"
+        },
+        {
+          "path": "hevc-clippy.log",
+          "bytes": 1070,
+          "sha256": "5dadb4152deab5c95f298bf06322dba8cd4bb65186a133c9412d78df070aba3f"
+        },
+        {
+          "path": "hevc-contract-tests.log",
+          "bytes": 2476,
+          "sha256": "a92ef2edd979e4ec92f9bfc2d0ddfa21f0cdd2b652860a867ebd6a7419c9b8b3"
+        },
+        {
+          "path": "hevc-execution-tests.log",
+          "bytes": 1121,
+          "sha256": "300b731215561961c9da393f7d2fd4fbab6eca1278fde490dad1b402bb061ee5"
+        },
+        {
+          "path": "hevc-target-tests.log",
+          "bytes": 3812,
+          "sha256": "580ff85af2f49e34c3119138fbf3d8f546412a7e4d523c99254daf7a911da5b3"
+        },
+        {
+          "path": "media-opt-in-approval-tests.log",
+          "bytes": 14586,
+          "sha256": "11d34c029966b2c3945191cec5c601a991786b53c1edacb864c4b54df1db77d9"
+        },
+        {
+          "path": "media-opt-in-cli-tests.log",
+          "bytes": 20373,
+          "sha256": "9d77383aefa2f80ab5603effdd119ac2f4e17b5cd97677881b40101235098c16"
+        },
+        {
+          "path": "media-opt-in-config-tests.log",
+          "bytes": 15354,
+          "sha256": "429367890f32e6b10b326fb9664d75150d3411f506b33bc28af193572d470d03"
+        },
+        {
+          "path": "media-opt-in-http-tests.log",
+          "bytes": 14897,
+          "sha256": "42c42a8e55d6d5dd6e9ba12aebad565098395205cee76677de919629df490d40"
+        },
+        {
+          "path": "media-provider-tests.log",
+          "bytes": 22113,
+          "sha256": "3dedf383a2771c376f59eef6220cb044b6e3fb488302ff7b6b6a4cb791790312"
+        },
+        {
+          "path": "native-media-wire-tests.log",
+          "bytes": 1593,
+          "sha256": "f3b97e9ae3f59f663390e4718a0e082de1990cbab4daf6f20d4a732dd08e3174"
+        },
+        {
+          "path": "presenter-tests.log",
+          "bytes": 15055,
+          "sha256": "5763a3ec5dc2e1bb21d05e8f0c94b1494d687decc6cf86409daf5cbd6b4d1e69"
+        },
+        {
+          "path": "readback-ipc-tests.log",
+          "bytes": 17314,
+          "sha256": "c34b1252129b4078a8079538e56c565e0c7f94e9aa7fb68bc25ea2e1cf2b295e"
+        },
+        {
+          "path": "receiver-tests.log",
+          "bytes": 44531,
+          "sha256": "9c5bc4aa590246519df36434bda8e745967d5fbdd9435c1c09a7a11bb8b996e9"
+        },
+        {
+          "path": "shared-surface-descriptor-tests.log",
+          "bytes": 14955,
+          "sha256": "84832811641e5d5bc16ce2f6a8c9a085850adc96dc6db0579aa516f8a5cd16de"
+        },
+        {
+          "path": "shared-surface-transfer-claim-tests.log",
+          "bytes": 648,
+          "sha256": "a78a83376d5cf7e8489ca173b5170b30a05efd7af9bf5948522c1e0be0a90657"
+        },
+        {
+          "path": "signed-store-media-tests.log",
+          "bytes": 4043,
+          "sha256": "0cd09fa91c47fc44d2e65382474569dbc352900746e55f47454ddf17922f63cb"
+        },
+        {
+          "path": "source-receipt.json",
+          "bytes": 627,
+          "sha256": "1f9919723cc9523bd0ad17a14daf92b39761f0de3263352ee849594779a48ba1"
+        }
+      ],
+      "test_groups": [
+        {
+          "log": "compressed-context-tests.log",
+          "state": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "daemon-hevc-selection-tests.log",
+          "state": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "decoded-export-owner-tests.log",
+          "state": "ok",
+          "passed": 3,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "hevc-contract-tests.log",
+          "state": "ok",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "hevc-execution-tests.log",
+          "state": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "hevc-target-tests.log",
+          "state": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "media-opt-in-approval-tests.log",
+          "state": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "media-opt-in-cli-tests.log",
+          "state": "ok",
+          "passed": 3,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "media-opt-in-config-tests.log",
+          "state": "ok",
+          "passed": 6,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "media-opt-in-http-tests.log",
+          "state": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "media-provider-tests.log",
+          "state": "ok",
+          "passed": 12,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "native-media-wire-tests.log",
+          "state": "ok",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "presenter-tests.log",
+          "state": "ok",
+          "passed": 5,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "readback-ipc-tests.log",
+          "state": "ok",
+          "passed": 17,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "receiver-tests.log",
+          "state": "ok",
+          "passed": 9,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "shared-surface-descriptor-tests.log",
+          "state": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "shared-surface-transfer-claim-tests.log",
+          "state": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "log": "signed-store-media-tests.log",
+          "state": "ok",
+          "passed": 10,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "source_receipt": {
+        "source_revision": "6f46f3820c7cee61e01061c0ca80b45d298b8d28",
+        "workflow_revision": "6f46f3820c7cee61e01061c0ca80b45d298b8d28",
+        "run_id": "41442724948",
+        "attempt": "1",
+        "runner_environment": "github-hosted",
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+        "hardware_or_target_acceptance_claimed": false,
+        "tool_sources": {
+          "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+        }
+      }
+    },
+    {
+      "artifact": {
+        "id": 13141028517,
+        "name": "native-peer-process-windows-2025-6f46f3820c7cee61e01061c0ca80b45d298b8d28-1",
+        "sha256": "0cc6a9e8f4bc8d50a3a5a43cde814b7732bd43bb4a5e137f809bb2c9b36dece3",
+        "official_zip_digest_verified": true
+      },
+      "files": [
+        {
+          "path": "ipc-tests.log",
+          "bytes": 21570,
+          "sha256": "90dcef0d4d5ac1310d67da57bb9dae4e8f3f2095d8d23a9b0fcbd3cb216662af"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 1622,
+          "sha256": "b28da98a42d2fbc6d9b1be48e35fbc3c89edb5b2258f8a7285ea2e6e164d368e"
+        },
+        {
+          "path": "strict-peer-owner.log",
+          "bytes": 5758,
+          "sha256": "dd3e127fe82d816679b8b82f38367dedd29de7b82d0d7f7ce0f67ce37f00c2ca"
+        }
+      ],
+      "test_groups": [
+        {
+          "log": "ipc-tests.log",
+          "state": "ok",
+          "passed": 27,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "receipt": {
+        "source_revision": "6f46f3820c7cee61e01061c0ca80b45d298b8d28",
+        "run_id": "41442724948",
+        "attempt": "1",
+        "runner_os": "Windows",
+        "runner_environment": "github-hosted",
+        "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+        "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+        "passed": true,
+        "commands": [
+          {
+            "name": "ipc-tests",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+              "scripts/refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-local-ipc",
+              "--lib",
+              "--",
+              "--show-output"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "strict-peer-owner",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+              "scripts/refactor-windows-normal-user.py",
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-local-ipc",
+              "-p",
+              "nestlink-platform-security",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "return_code": 0
+          }
+        ],
+        "files": [
+          {
+            "path": "ipc-tests.log",
+            "bytes": 21570,
+            "sha256": "90dcef0d4d5ac1310d67da57bb9dae4e8f3f2095d8d23a9b0fcbd3cb216662af"
+          },
+          {
+            "path": "strict-peer-owner.log",
+            "bytes": 5758,
+            "sha256": "dd3e127fe82d816679b8b82f38367dedd29de7b82d0d7f7ce0f67ce37f00c2ca"
+          }
+        ]
+      },
+      "receipt_files_verified": 2
+    },
+    {
+      "artifact": {
+        "id": 13140083515,
+        "name": "native-peer-process-ubuntu-24.04-6f46f3820c7cee61e01061c0ca80b45d298b8d28-1",
+        "sha256": "00b8c282014b3ca5b966ea20d5faf2615a2b4c82c10bc1514c18d5e171e55c37",
+        "official_zip_digest_verified": true
+      },
+      "files": [
+        {
+          "path": "ipc-tests.log",
+          "bytes": 20853,
+          "sha256": "ca70221796e71302a6ef0d0373dd9f031085df9ba655edfa21f2b0048f3d298d"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 1311,
+          "sha256": "006314f068885faa31e89a10b46f645788a70d1bd0d45dcd8140cee467c214a5"
+        },
+        {
+          "path": "strict-peer-owner.log",
+          "bytes": 5633,
+          "sha256": "5539b94db934b7ab0319a15982581e92aebd285b923832c1b4708eb8b693a0d6"
+        }
+      ],
+      "test_groups": [
+        {
+          "log": "ipc-tests.log",
+          "state": "ok",
+          "passed": 24,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "receipt": {
+        "source_revision": "6f46f3820c7cee61e01061c0ca80b45d298b8d28",
+        "run_id": "41442724948",
+        "attempt": "1",
+        "runner_os": "Linux",
+        "runner_environment": "github-hosted",
+        "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+        "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+        "passed": true,
+        "commands": [
+          {
+            "name": "ipc-tests",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-local-ipc",
+              "--lib",
+              "--",
+              "--show-output"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "strict-peer-owner",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-local-ipc",
+              "-p",
+              "nestlink-platform-security",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "return_code": 0
+          }
+        ],
+        "files": [
+          {
+            "path": "ipc-tests.log",
+            "bytes": 20853,
+            "sha256": "ca70221796e71302a6ef0d0373dd9f031085df9ba655edfa21f2b0048f3d298d"
+          },
+          {
+            "path": "strict-peer-owner.log",
+            "bytes": 5633,
+            "sha256": "5539b94db934b7ab0319a15982581e92aebd285b923832c1b4708eb8b693a0d6"
+          }
+        ]
+      },
+      "receipt_files_verified": 2
+    }
+  ],
+  "retained_failures": [
+    "docs/network-rewrite/evidence/windows-media-owner-failure-0e323b5.json"
+  ],
+  "limitations": [
+    "Physical GPU capture, ten-bit source capture, HDR,4:4:4 and complete format/fallback matrix unverified or unimplemented.",
+    "Real Windows targets, original cadence/weak-network/concurrent-file and L3/L4 acceptance remain open.",
+    "PRODUCTION_ISSUANCE_ENABLED remains false."
+  ]
+}

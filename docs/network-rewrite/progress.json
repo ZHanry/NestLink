@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
-  "checkpoint_kind": "complete_hosted_network_and_chrome_edge_workflows_passed_original_capacity_debug_lease_expiry_retained_explicit_release_observation_running",
+  "source_revision": "cdd669b86738bed641b8ac2cb1a692c8d94b4ea5",
+  "checkpoint_kind": "real_firefox_and_windows_main10_boundary_workflows_passed_all_original_capacity_and_luanti_failures_retained_single_transaction_currentness_awaits_hosted_validation",
   "active_tasks": [
     "W00",
     "W02",
@@ -91,13 +91,19 @@
     }
   ],
   "next_steps": [
-    "Finish and validate the current original Windows media-owner Main10/P010 and high-frame work without changing target acceptance gates; source362 desktop strict failure is a large error payload and remains recorded.",
-    "Finish and validate explicit stable Firefox/BiDi integration; source362 Chrome/Edge Web workflow41431401722 succeeded, four retained evidence archives/37files checked. This does not qualify Firefox or target hardware.",
-    "Repair source362 Linux resident clipboard-owner premature stop and Windows resident original AccessDenied; retain HTTPS public DNS failure. Other offline AppCore scopes are separately passed; no whole resident acceptance.",
-    "Read explicit release-profile original100/20/1000/3wave capacity run41434724934. Original debug41431119457 passed7HTTP+6multiplex+negotiation and established20control owners but firstapplication stream failed at original lease expiry; no flow_ready and failed status retained.",
-    "Continue exact same-source all-platform candidate, upgrade, signing/SBOM and full product/target qualification. Keep user-required Luanti25second failure, all external GPU/mobile/publictarget/24hour requirements and every unfinished implementation open."
+    "Validate ADR0066 single-transaction private currentness with exact-byte/tamper/expiry/revoke regression and original100/20/1000/3wave pair-window release workload. All prior61flow and598flow failures remain failed; no deadline/currentness/authority relaxation.",
+    "Read source85c8 focusedresident41443851500 and fullRust41443857256: Linux originalcapture detail Failed to parse value emptystring identifies actual logind Display metadata; preserve publicDNS60s failure. Windows original persistentdownload stage remains pending.",
+    "Read exactsource85c8 network41443863754; do not substitute earlier362 network success for current source.",
+    "Continue required same-source candidate/install/upgrade/signing/SBOM, product implementation and target qualification. W33 original444/HDR/fractional matrix and native10bit capture remain source gaps, target GPU/mobile/publicNAT/24h remain separate execution gaps.",
+    "Keep user-required Luanti25second check and its failure. Publication not_ready; no0.8tag/release created. Local/remote main only."
   ],
   "evidence_index": [
+    "docs/adr/network/0066-single-transaction-private-currentness.md",
+    "docs/network-rewrite/evidence/native-offline-resident-b97182d.json",
+    "docs/network-rewrite/evidence/windows-media-owner-failure-0e323b5.json",
+    "docs/network-rewrite/evidence/windows-media-owner-6f46f38.json",
+    "docs/network-rewrite/evidence/firefox-production-0e323b5.json",
+    "docs/network-rewrite/evidence/firefox-original-tls-failure-4c93f64.json",
     "docs/network-rewrite/evidence/web-production-362f1b2.json",
     "docs/network-rewrite/evidence/production-carriers-362f1b2.json",
     "docs/network-rewrite/evidence/sdk-routed-c82bd8d.json",
@@ -692,49 +698,64 @@
   },
   "pending_runs": {
     "full_rust": {
-      "run_id": 41431396538,
-      "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
+      "run_id": 41443857256,
+      "source_revision": "85c8da8d5ec1f7af4e393e31e299cc83bc36c53d",
       "state": "running"
     },
-    "web": {
-      "run_id": 41431401722,
-      "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
-      "state": "success"
+    "resident": {
+      "run_id": 41443851500,
+      "source_revision": "85c8da8d5ec1f7af4e393e31e299cc83bc36c53d",
+      "state": "partial_failure_linux_original_capture_and_public_DNS_windows_pending"
     },
     "network": {
-      "run_id": 41431407104,
-      "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
-      "state": "success"
+      "run_id": 41443863754,
+      "source_revision": "85c8da8d5ec1f7af4e393e31e299cc83bc36c53d",
+      "state": "running"
     },
     "windows_owner": {
-      "run_id": 41431391219,
-      "source_revision": "362f1b2a8cce330c14e2e7be11b6b75b36e3c01d",
-      "state": "failure"
+      "run_id": 41442724948,
+      "source_revision": "6f46f3820c7cee61e01061c0ca80b45d298b8d28",
+      "state": "success",
+      "whole_task_passed": false
     },
-    "capacity": {
-      "run_id": 41431119457,
-      "source_revision": "8c6ecfdd043aee1a7343f2b6f5b697c5984cf961",
-      "state": "failure"
+    "web": {
+      "run_id": 41439452056,
+      "source_revision": "0e323b5da5999f809b6f50e2decb7df963d8d9fc",
+      "state": "success",
+      "scope": "Entire hosted Chrome/Edge/Firefox release-site and browser-contract workflow; no physical target qualification"
     },
-    "capacity_release": {
-      "run_id": 41434724934,
-      "source_revision": "c01051596ba667ea55e9d465226e67ca355d5a62",
-      "state": "running",
-      "build_profile": "release",
-      "original_assertions_and_deadlines_preserved": true
+    "capacity_original_release": {
+      "run_id": 41437445247,
+      "source_revision": "b97182d39a1512f57cea36b2a2a7e40c217363e1",
+      "state": "failure",
+      "ready_application_flows": 61
+    },
+    "capacity_origin_release": {
+      "run_id": 41441918578,
+      "source_revision": "8a35c4ec59faf604002cedf947563037d8bf7883",
+      "state": "failure",
+      "ready_application_flows": 598
+    },
+    "format": {
+      "run_id": 41445591976,
+      "source_revision": "cdd669b86738bed641b8ac2cb1a692c8d94b4ea5",
+      "state": "success_reviewed_imported"
     }
   },
   "continuation_checkpoint": {
-    "at": "2026-11-02T11:18:49.144Z",
-    "source_revision": "851a4bb",
+    "at": "2026-11-02T12:41:13.775Z",
+    "source_revision": "cdd669b86738bed641b8ac2cb1a692c8d94b4ea5",
     "verified_scopes": [
-      "Source362 full network41431407104 all9jobs success;11officialZIPs/1642files indexed;1597recorded command/file hashes verified. Strict bothOS and realproduction socket/NAT/ICE/topology/business scopes passed. Quinncarrier replacement remains its separate prototype.",
-      "Source362 Web41431401722 complete workflow success: realChrome/EdgeVP8/Opus/input/files/UI/cleanup. Fourretained officialevidenceZIPs and37files indexed; noFirefox/physicalGPU/externaltarget claim.",
-      "Originalcapacity debug8c6 run41431119457failed after20control owners andzeroapplicationflow;11receiptfile hashes verified. Releaseprofile observation runsseparately with originalassertions."
+      "Source0e323b5 full Web41439452056 success including actual Firefox159/BiDi,36s VP8/Opus,realinput/files9UIgroups and cleanup. OriginalFirefox self-signed navigationfailure4c retained.",
+      "Source6f46f38 Windowsowner41442724948 all3jobs success. ThreeofficialZIPdigests verified;106media-boundary and51nativeIPC tests pass, strictdesktop/daemon checks pass. No actualGPUtarget claim."
     ],
-    "user_decision": "Keep Luanti original25second disconnect-display check and failed status; never weaken or skip it.",
+    "retained_failures": [
+      "Luanti25s disconnect display deadline remains failed by explicit user decision.",
+      "Originalrelease pair-window61flow and separateorigin-window598flow observations failed before1000live; alloriginalchecks/deadlines/authority retained.",
+      "ResidentLinux actualcapture logindDisplayempty andHTTPS publicDNS60s failure; Windows persistentdownloadPermissionDenied underdiagnosis."
+    ],
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
-    "branch_inventory": "Local main and remote main only; verified GitHub branches API."
+    "branch_inventory": "Local main and remote main only; recheck before eventual delivery."
   }
 }
