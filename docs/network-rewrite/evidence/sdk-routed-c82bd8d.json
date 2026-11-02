@@ -1,0 +1,511 @@
+{
+    "schema_version":  1,
+    "scope":  "Exact original SDK routed contracts, including production capability exchange and business proof cancellation",
+    "source_revision":  "c82bd8d9d47165d14acaf7f1c3ed26c942bee10a",
+    "workflow":  ".github/workflows/rust-core.yml",
+    "run_id":  41372155731,
+    "run_attempt":  1,
+    "run_conclusion":  "failure",
+    "build_provenance":  "GitHub-hosted Actions builds at the exact source revision",
+    "execution_provenance":  "The same GitHub-hosted jobs actually ran the source inventory and routed tests; Windows business checks used the normal process token.",
+    "targets":  [
+                    {
+                        "target":  "x86_64-unknown-linux-gnu",
+                        "runner":  "ubuntu-24.04",
+                        "job_id":  125044720628,
+                        "job_conclusion":  "failure",
+                        "scoped_routed_step":  "success",
+                        "source_inventory_step":  "success",
+                        "artifact_id":  13110620601,
+                        "artifact_name":  "nestlink-sdk-routed-tests-x86_64-unknown-linux-gnu",
+                        "artifact_digest_reported_by_github":  "sha256:cfdc1e0f949c83b768913abd1fc7d97638ea4fce21fc1f8692acd812e474512f",
+                        "downloaded_file_inventory":  [
+                                                          {
+                                                              "name":  "first-party-format.json",
+                                                              "bytes":  5797,
+                                                              "sha256":  "24c135880b6cb006244cd43a5518ea7fc19d9043aaea81b3de90f1e9ad314449"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-ice-quic-tests.log",
+                                                              "bytes":  15184,
+                                                              "sha256":  "a997cde86973029eaaa6be4ea0d071c0ebad9a63fb541f3d219f7672afb95b60"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-native-inbox-tests.log",
+                                                              "bytes":  14125,
+                                                              "sha256":  "aa19b1939864d01e26967c90c10a8d37cecc27e1b23b77af3d816b53f50310eb"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-native-quality-tests.log",
+                                                              "bytes":  18778,
+                                                              "sha256":  "aac190d9192a173e0f34da7945b6925f315bd37208750d24c57ef09bc95428f1"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-native-session-tests.log",
+                                                              "bytes":  14212,
+                                                              "sha256":  "c398ce6299eb6c535b2af8990c259926983b533d3a3d4a5bd2117e9293c36e5d"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-network-discovery-tests.log",
+                                                              "bytes":  33255,
+                                                              "sha256":  "c12b9435a9cf7fa2196423ce748a7963c74f1501874148af22ce2b0b27c5e42f"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-node-relay-metadata-tests.log",
+                                                              "bytes":  14927,
+                                                              "sha256":  "d752db573a776b22157c24c09f7e93249d5dcf35bfa53c4bfe59cc470c879917"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-pcp-tests.log",
+                                                              "bytes":  91834,
+                                                              "sha256":  "dcd5c2f9d68f411c6fbfb41c550bd04473f33a4bbaab696bf7f0aabcdfeac7cf"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-private-web-and-diagnostic-tests.log",
+                                                              "bytes":  74669,
+                                                              "sha256":  "cacdf9b34c7ecb9cff4d5ae707e01ce810e2806ca0f1713821098ecf851a05b4"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-sdk-network-relay-tests.log",
+                                                              "bytes":  38096,
+                                                              "sha256":  "f443cda87c22142848d0caf6864e77f757fa853e8d2f47d65786f47c763f5472"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-sdk-routed-tests.json",
+                                                              "bytes":  7919,
+                                                              "sha256":  "7e5714ce846dd36ce3c86f3556ebf20e0d57d4897ae42329dc8e0012759e4efd"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-sdk-routed-tests.log",
+                                                              "bytes":  21839,
+                                                              "sha256":  "28ec51fda3b6f9a42aba4e22448770422083f352e08d63103f4914b970de74ed"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-selected-relay-tests.log",
+                                                              "bytes":  28580,
+                                                              "sha256":  "d0f2c54dde1e1b626eaf1f9a2f5db8e7480f879d17a85e80eae07aebdd0e28f9"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-space-dns-tests.log",
+                                                              "bytes":  67727,
+                                                              "sha256":  "237a8455f9436efd1dced086308fedfbe184b8b29c7b1cdcc523310520f0860d"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-spaces-tests.log",
+                                                              "bytes":  18145,
+                                                              "sha256":  "b5aaed34f75006adf0fe850c17d950ef1e0b0d26f218b7b8797ff271cb0eb090"
+                                                          }
+                                                      ],
+                        "source_inventory_receipt":  {
+                                                         "source_revision":  "c82bd8d9d47165d14acaf7f1c3ed26c942bee10a",
+                                                         "run_id":  "41372155731",
+                                                         "source_modules":  {
+                                                                                "crates/sdk/src/network/routed_tests.rs":  "network::routed::tests",
+                                                                                "crates/sdk/src/network/routed_tests/chain.rs":  "network::routed::tests::chain",
+                                                                                "crates/sdk/src/network/routed_tests/route_set.rs":  "network::routed::tests::route_sets"
+                                                                            },
+                                                         "expected_tests":  [
+                                                                                "network::routed::tests::a_verified_readback_cannot_cross_logout_login_server_or_business_generation",
+                                                                                "network::routed::tests::chain::sdk_four_node_chain_preserves_host_initiated_quic_and_controller_file_permissions",
+                                                                                "network::routed::tests::chain::sdk_four_node_chain_reads_an_approved_os_file_after_both_business_proofs",
+                                                                                "network::routed::tests::existing_carrier_lifecycle_is_rejected_before_business_proof_and_releases_original_sockets",
+                                                                                "network::routed::tests::external_cancel_and_source_drop_interrupt_business_proof_with_physical_cleanup",
+                                                                                "network::routed::tests::external_cancel_and_source_drop_interrupt_inner_setup_with_physical_cleanup",
+                                                                                "network::routed::tests::management_readback_binds_both_device_roles_and_the_original_network_pin",
+                                                                                "network::routed::tests::management_readback_rejects_retargeted_corrupted_and_obsolete_credentials",
+                                                                                "network::routed::tests::ready_current_readback_cannot_bypass_the_final_deadline_or_terminal_sources",
+                                                                                "network::routed::tests::required_peer_capability_rejection_never_opens_business_and_releases_original_route",
+                                                                                "network::routed::tests::route_sets::original_route_set_readback_preserves_distinct_routes_at_the_same_address_and_gates_availability",
+                                                                                "network::routed::tests::route_sets::route_set_readback_rejects_crossed_group_transits_retargeted_members_wrong_pins_and_stale_source",
+                                                                                "network::routed::tests::sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_establishment",
+                                                                                "network::routed::tests::sdk_business_renewal_preserves_the_original_route_ceiling_and_synchronous_stop_handler",
+                                                                                "network::routed::tests::sdk_host_initiated_inner_quic_still_proves_controller_business_and_releases_original_sockets",
+                                                                                "network::routed::tests::sdk_preflight_rejects_an_existing_stop_and_a_dropped_stop_source_with_socket_receipts",
+                                                                                "network::routed::tests::sdk_route_admission_rejects_another_business_permit_peer_key_and_direct_only_business",
+                                                                                "network::routed::tests::sdk_stop_interrupts_routed_establishment_before_the_inner_peer_starts",
+                                                                                "network::routed::tests::sdk_three_node_business_proof_limits_channels_and_releases_every_physical_socket",
+                                                                                "network::routed::tests::sdk_waiting_business_proof_ignores_none_updates_and_stops_on_revocation_or_source_drop",
+                                                                                "network::routed::tests::signed_direct_readback_keeps_membership_business_pin_path_and_login_independent",
+                                                                                "network::routed::tests::terminal_route_hook_revokes_the_same_authorization_before_returning_to_its_caller"
+                                                                            ],
+                                                         "tokio_tests":  [
+                                                                             "network::routed::tests::chain::sdk_four_node_chain_preserves_host_initiated_quic_and_controller_file_permissions",
+                                                                             "network::routed::tests::chain::sdk_four_node_chain_reads_an_approved_os_file_after_both_business_proofs",
+                                                                             "network::routed::tests::existing_carrier_lifecycle_is_rejected_before_business_proof_and_releases_original_sockets",
+                                                                             "network::routed::tests::external_cancel_and_source_drop_interrupt_business_proof_with_physical_cleanup",
+                                                                             "network::routed::tests::external_cancel_and_source_drop_interrupt_inner_setup_with_physical_cleanup",
+                                                                             "network::routed::tests::ready_current_readback_cannot_bypass_the_final_deadline_or_terminal_sources",
+                                                                             "network::routed::tests::required_peer_capability_rejection_never_opens_business_and_releases_original_route",
+                                                                             "network::routed::tests::sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_establishment",
+                                                                             "network::routed::tests::sdk_business_renewal_preserves_the_original_route_ceiling_and_synchronous_stop_handler",
+                                                                             "network::routed::tests::sdk_host_initiated_inner_quic_still_proves_controller_business_and_releases_original_sockets",
+                                                                             "network::routed::tests::sdk_preflight_rejects_an_existing_stop_and_a_dropped_stop_source_with_socket_receipts",
+                                                                             "network::routed::tests::sdk_route_admission_rejects_another_business_permit_peer_key_and_direct_only_business",
+                                                                             "network::routed::tests::sdk_stop_interrupts_routed_establishment_before_the_inner_peer_starts",
+                                                                             "network::routed::tests::sdk_three_node_business_proof_limits_channels_and_releases_every_physical_socket",
+                                                                             "network::routed::tests::sdk_waiting_business_proof_ignores_none_updates_and_stops_on_revocation_or_source_drop"
+                                                                         ],
+                                                         "results":  [
+                                                                         [
+                                                                             "network::routed::tests::a_verified_readback_cannot_cross_logout_login_server_or_business_generation",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::chain::sdk_four_node_chain_preserves_host_initiated_quic_and_controller_file_permissions",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::chain::sdk_four_node_chain_reads_an_approved_os_file_after_both_business_proofs",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::existing_carrier_lifecycle_is_rejected_before_business_proof_and_releases_original_sockets",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::external_cancel_and_source_drop_interrupt_business_proof_with_physical_cleanup",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::external_cancel_and_source_drop_interrupt_inner_setup_with_physical_cleanup",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::management_readback_binds_both_device_roles_and_the_original_network_pin",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::management_readback_rejects_retargeted_corrupted_and_obsolete_credentials",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::ready_current_readback_cannot_bypass_the_final_deadline_or_terminal_sources",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::required_peer_capability_rejection_never_opens_business_and_releases_original_route",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::route_sets::original_route_set_readback_preserves_distinct_routes_at_the_same_address_and_gates_availability",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::route_sets::route_set_readback_rejects_crossed_group_transits_retargeted_members_wrong_pins_and_stale_source",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_establishment",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_business_renewal_preserves_the_original_route_ceiling_and_synchronous_stop_handler",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_host_initiated_inner_quic_still_proves_controller_business_and_releases_original_sockets",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_preflight_rejects_an_existing_stop_and_a_dropped_stop_source_with_socket_receipts",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_route_admission_rejects_another_business_permit_peer_key_and_direct_only_business",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_stop_interrupts_routed_establishment_before_the_inner_peer_starts",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_three_node_business_proof_limits_channels_and_releases_every_physical_socket",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_waiting_business_proof_ignores_none_updates_and_stops_on_revocation_or_source_drop",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::signed_direct_readback_keeps_membership_business_pin_path_and_login_independent",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::terminal_route_hook_revokes_the_same_authorization_before_returning_to_its_caller",
+                                                                             "ok"
+                                                                         ]
+                                                                     ],
+                                                         "summaries":  [
+                                                                           [
+                                                                               "22",
+                                                                               "0",
+                                                                               "0"
+                                                                           ]
+                                                                       ],
+                                                         "missing_tests":  [
+
+                                                                           ],
+                                                         "unexpected_tests":  [
+
+                                                                              ],
+                                                         "passed":  true
+                                                     }
+                    },
+                    {
+                        "target":  "x86_64-pc-windows-msvc",
+                        "runner":  "windows-2022 ordinary user token",
+                        "job_id":  125044720463,
+                        "job_conclusion":  "failure",
+                        "scoped_routed_step":  "success",
+                        "source_inventory_step":  "success",
+                        "artifact_id":  13109559996,
+                        "artifact_name":  "nestlink-sdk-routed-tests-x86_64-pc-windows-msvc",
+                        "artifact_digest_reported_by_github":  "sha256:a0b9143038eaecb06e621fcf520a19487f43df82c40d8661a737bc0bc892bdeb",
+                        "downloaded_file_inventory":  [
+                                                          {
+                                                              "name":  "first-party-format.json",
+                                                              "bytes":  6041,
+                                                              "sha256":  "b440d8e43703b6bcdd1c5a49cf6c39e0d15d05c598c42cfee207c791f01373b3"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-ice-quic-tests.log",
+                                                              "bytes":  15382,
+                                                              "sha256":  "174d469ff7a64366f1e2ad79c7c2921fe1fdb06a7d575199d2e49c755e8d7294"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-native-inbox-tests.log",
+                                                              "bytes":  14297,
+                                                              "sha256":  "68fb9f5c89fcf10a3fb3f2c0c384147232d9f23ba74f57f32dc845da31c96a35"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-native-quality-tests.log",
+                                                              "bytes":  19049,
+                                                              "sha256":  "149f6cf727ed72eb01acef048819796042e9595c41a2537899b3415e51b607b2"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-native-session-tests.log",
+                                                              "bytes":  14393,
+                                                              "sha256":  "5dbf20a619d879b5136be4839942d459196b81f021896a7d786f9d31f81079e7"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-network-discovery-tests.log",
+                                                              "bytes":  33339,
+                                                              "sha256":  "a8112aa2eeaf4d900c20999ae7e792e86402a668c2f9424690cb58c83369939f"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-node-relay-metadata-tests.log",
+                                                              "bytes":  15114,
+                                                              "sha256":  "c147d69524a7fb4aa8235e4eccbcf11a1ebb7b9cf19e8db1cae1398bdd4242f1"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-pcp-tests.log",
+                                                              "bytes":  91493,
+                                                              "sha256":  "045aa4b65b32c7c74867471d6fbcbd73551dcaec371a188a9f266748de7b1e55"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-private-web-and-diagnostic-tests.log",
+                                                              "bytes":  72819,
+                                                              "sha256":  "c8e5dab3fe2f410469b7215047a4c75fe49644761139092ecd66c2a59b30f7db"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-sdk-network-relay-tests.log",
+                                                              "bytes":  39063,
+                                                              "sha256":  "434580dfc60631f5ab412d4216f9e0cec2a08850643572e68e6036f503bd6011"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-sdk-routed-tests.json",
+                                                              "bytes":  8069,
+                                                              "sha256":  "a9b366577d3be33d30d9c12345644ed6a40560dbec398617f179830160a03a61"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-sdk-routed-tests.log",
+                                                              "bytes":  22116,
+                                                              "sha256":  "857483c05023fcccf92d9cf44b9791cb1c591395c44f0dde1842c274534fd293"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-selected-relay-tests.log",
+                                                              "bytes":  28935,
+                                                              "sha256":  "8c8b797cba6988518d54d92433b4775301b735835aabb2108bd1a74e403d8149"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-space-dns-tests.log",
+                                                              "bytes":  66970,
+                                                              "sha256":  "b49144b63dca53ae39ceaa694eb0161b0fd20d5edad71f169d6971a8a251a5b3"
+                                                          },
+                                                          {
+                                                              "name":  "nestlink-spaces-tests.log",
+                                                              "bytes":  18355,
+                                                              "sha256":  "3e8f622f67efe401986d8120afc3732c5a9fcd00e4dec7accd40d08450083dd2"
+                                                          }
+                                                      ],
+                        "source_inventory_receipt":  {
+                                                         "source_revision":  "c82bd8d9d47165d14acaf7f1c3ed26c942bee10a",
+                                                         "run_id":  "41372155731",
+                                                         "source_modules":  {
+                                                                                "crates/sdk/src/network/routed_tests.rs":  "network::routed::tests",
+                                                                                "crates/sdk/src/network/routed_tests/chain.rs":  "network::routed::tests::chain",
+                                                                                "crates/sdk/src/network/routed_tests/route_set.rs":  "network::routed::tests::route_sets"
+                                                                            },
+                                                         "expected_tests":  [
+                                                                                "network::routed::tests::a_verified_readback_cannot_cross_logout_login_server_or_business_generation",
+                                                                                "network::routed::tests::chain::sdk_four_node_chain_preserves_host_initiated_quic_and_controller_file_permissions",
+                                                                                "network::routed::tests::chain::sdk_four_node_chain_reads_an_approved_os_file_after_both_business_proofs",
+                                                                                "network::routed::tests::existing_carrier_lifecycle_is_rejected_before_business_proof_and_releases_original_sockets",
+                                                                                "network::routed::tests::external_cancel_and_source_drop_interrupt_business_proof_with_physical_cleanup",
+                                                                                "network::routed::tests::external_cancel_and_source_drop_interrupt_inner_setup_with_physical_cleanup",
+                                                                                "network::routed::tests::management_readback_binds_both_device_roles_and_the_original_network_pin",
+                                                                                "network::routed::tests::management_readback_rejects_retargeted_corrupted_and_obsolete_credentials",
+                                                                                "network::routed::tests::ready_current_readback_cannot_bypass_the_final_deadline_or_terminal_sources",
+                                                                                "network::routed::tests::required_peer_capability_rejection_never_opens_business_and_releases_original_route",
+                                                                                "network::routed::tests::route_sets::original_route_set_readback_preserves_distinct_routes_at_the_same_address_and_gates_availability",
+                                                                                "network::routed::tests::route_sets::route_set_readback_rejects_crossed_group_transits_retargeted_members_wrong_pins_and_stale_source",
+                                                                                "network::routed::tests::sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_establishment",
+                                                                                "network::routed::tests::sdk_business_renewal_preserves_the_original_route_ceiling_and_synchronous_stop_handler",
+                                                                                "network::routed::tests::sdk_host_initiated_inner_quic_still_proves_controller_business_and_releases_original_sockets",
+                                                                                "network::routed::tests::sdk_preflight_rejects_an_existing_stop_and_a_dropped_stop_source_with_socket_receipts",
+                                                                                "network::routed::tests::sdk_route_admission_rejects_another_business_permit_peer_key_and_direct_only_business",
+                                                                                "network::routed::tests::sdk_stop_interrupts_routed_establishment_before_the_inner_peer_starts",
+                                                                                "network::routed::tests::sdk_three_node_business_proof_limits_channels_and_releases_every_physical_socket",
+                                                                                "network::routed::tests::sdk_waiting_business_proof_ignores_none_updates_and_stops_on_revocation_or_source_drop",
+                                                                                "network::routed::tests::signed_direct_readback_keeps_membership_business_pin_path_and_login_independent",
+                                                                                "network::routed::tests::terminal_route_hook_revokes_the_same_authorization_before_returning_to_its_caller"
+                                                                            ],
+                                                         "tokio_tests":  [
+                                                                             "network::routed::tests::chain::sdk_four_node_chain_preserves_host_initiated_quic_and_controller_file_permissions",
+                                                                             "network::routed::tests::chain::sdk_four_node_chain_reads_an_approved_os_file_after_both_business_proofs",
+                                                                             "network::routed::tests::existing_carrier_lifecycle_is_rejected_before_business_proof_and_releases_original_sockets",
+                                                                             "network::routed::tests::external_cancel_and_source_drop_interrupt_business_proof_with_physical_cleanup",
+                                                                             "network::routed::tests::external_cancel_and_source_drop_interrupt_inner_setup_with_physical_cleanup",
+                                                                             "network::routed::tests::ready_current_readback_cannot_bypass_the_final_deadline_or_terminal_sources",
+                                                                             "network::routed::tests::required_peer_capability_rejection_never_opens_business_and_releases_original_route",
+                                                                             "network::routed::tests::sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_establishment",
+                                                                             "network::routed::tests::sdk_business_renewal_preserves_the_original_route_ceiling_and_synchronous_stop_handler",
+                                                                             "network::routed::tests::sdk_host_initiated_inner_quic_still_proves_controller_business_and_releases_original_sockets",
+                                                                             "network::routed::tests::sdk_preflight_rejects_an_existing_stop_and_a_dropped_stop_source_with_socket_receipts",
+                                                                             "network::routed::tests::sdk_route_admission_rejects_another_business_permit_peer_key_and_direct_only_business",
+                                                                             "network::routed::tests::sdk_stop_interrupts_routed_establishment_before_the_inner_peer_starts",
+                                                                             "network::routed::tests::sdk_three_node_business_proof_limits_channels_and_releases_every_physical_socket",
+                                                                             "network::routed::tests::sdk_waiting_business_proof_ignores_none_updates_and_stops_on_revocation_or_source_drop"
+                                                                         ],
+                                                         "results":  [
+                                                                         [
+                                                                             "network::routed::tests::a_verified_readback_cannot_cross_logout_login_server_or_business_generation",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::chain::sdk_four_node_chain_preserves_host_initiated_quic_and_controller_file_permissions",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::chain::sdk_four_node_chain_reads_an_approved_os_file_after_both_business_proofs",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::existing_carrier_lifecycle_is_rejected_before_business_proof_and_releases_original_sockets",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::external_cancel_and_source_drop_interrupt_business_proof_with_physical_cleanup",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::external_cancel_and_source_drop_interrupt_inner_setup_with_physical_cleanup",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::management_readback_binds_both_device_roles_and_the_original_network_pin",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::management_readback_rejects_retargeted_corrupted_and_obsolete_credentials",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::ready_current_readback_cannot_bypass_the_final_deadline_or_terminal_sources",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::required_peer_capability_rejection_never_opens_business_and_releases_original_route",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::route_sets::original_route_set_readback_preserves_distinct_routes_at_the_same_address_and_gates_availability",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::route_sets::route_set_readback_rejects_crossed_group_transits_retargeted_members_wrong_pins_and_stale_source",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_establishment",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_business_renewal_preserves_the_original_route_ceiling_and_synchronous_stop_handler",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_host_initiated_inner_quic_still_proves_controller_business_and_releases_original_sockets",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_preflight_rejects_an_existing_stop_and_a_dropped_stop_source_with_socket_receipts",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_route_admission_rejects_another_business_permit_peer_key_and_direct_only_business",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_stop_interrupts_routed_establishment_before_the_inner_peer_starts",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_three_node_business_proof_limits_channels_and_releases_every_physical_socket",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::sdk_waiting_business_proof_ignores_none_updates_and_stops_on_revocation_or_source_drop",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::signed_direct_readback_keeps_membership_business_pin_path_and_login_independent",
+                                                                             "ok"
+                                                                         ],
+                                                                         [
+                                                                             "network::routed::tests::terminal_route_hook_revokes_the_same_authorization_before_returning_to_its_caller",
+                                                                             "ok"
+                                                                         ]
+                                                                     ],
+                                                         "summaries":  [
+                                                                           [
+                                                                               "22",
+                                                                               "0",
+                                                                               "0"
+                                                                           ]
+                                                                       ],
+                                                         "missing_tests":  [
+
+                                                                           ],
+                                                         "unexpected_tests":  [
+
+                                                                              ],
+                                                         "passed":  true
+                                                     }
+                    }
+                ],
+    "verification":  "Original JSON receipts copied as structured values. All extracted artifact files were SHA-256 hashed; these artifacts supply no producer per-file hash inventory, so the hashes are retained local download fingerprints rather than a claimed producer inventory comparison.",
+    "limitations":  [
+                        "The full workflow failed; this is scoped positive evidence, not full-workspace or release acceptance.",
+                        "AppCore-dependent scopes and full check/test compilation stopped on native_media_provider.rs:130 assigning a u16 canonical version to a u32 field. Parent reports the later source fixes this; this old-source failure remains retained.",
+                        "First-party formatting also failed.",
+                        "The dependencies job failed while installing cargo-deny 0.20.2 on a crates.io HTTP/2 fetch, before the audit. Only that job was requested for retry after the run completed.",
+                        "No physical NAT, GPU, mobile or release artifact acceptance is claimed."
+                    ],
+    "highlighted_regressions":  [
+                                    "required_peer_capability_rejection_never_opens_business_and_releases_original_route",
+                                    "sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_establishment",
+                                    "sdk_waiting_business_proof_ignores_none_updates_and_stops_on_revocation_or_source_drop",
+                                    "external_cancel_and_source_drop_interrupt_business_proof_with_physical_cleanup"
+                                ]
+}
