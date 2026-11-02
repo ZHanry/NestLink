@@ -12,6 +12,12 @@ mod offline;
 pub(crate) use offline::OfflinePrivateAuthority;
 mod relay;
 
+/// Request-local decoded data, never a cache of a later authority decision.
+struct PrivateServiceReadback {
+    lease: VerifiedPrivateServiceLease,
+    network: Option<PrivateServiceNetworkPath>,
+}
+
 fn mode(value: &str) -> Result<ServiceAccessMode, StorageError> {
     match value {
         "private" => Ok(ServiceAccessMode::Private),
@@ -771,6 +777,7 @@ impl Store {
     ) -> Result<SignedPrivateServiceLease, StorageError> {
         Ok(self
             .private_service_verified(actor, service, grant, signer, now)?
+            .lease
             .signed()
             .clone())
     }
@@ -781,16 +788,16 @@ impl Store {
         grant: &str,
         signer: &ServiceLeaseSigner,
         now: u64,
-    ) -> Result<VerifiedPrivateServiceLease, StorageError> {
+    ) -> Result<PrivateServiceReadback, StorageError> {
         require_id(grant)?;
         self.validate_access(actor, now / 1000)?;
-        let verified = self.private_service_lease_current_verified(service, grant, signer, now)?;
-        if actor.account_id != verified.lease().claims().account_id
-            && actor.account_id != verified.claims().consumer_account_id
+        let current = self.private_service_lease_current_verified(service, grant, signer, now)?;
+        if actor.account_id != current.lease.lease().claims().account_id
+            && actor.account_id != current.lease.claims().consumer_account_id
         {
             return Err(StorageError::Forbidden);
         }
-        Ok(verified)
+        Ok(current)
     }
     pub(crate) fn private_service_lease_current(
         &self,
@@ -801,6 +808,7 @@ impl Store {
     ) -> Result<SignedPrivateServiceLease, StorageError> {
         Ok(self
             .private_service_lease_current_verified(service, grant, signer, now)?
+            .lease
             .signed()
             .clone())
     }
@@ -810,7 +818,7 @@ impl Store {
         grant: &str,
         signer: &ServiceLeaseSigner,
         now: u64,
-    ) -> Result<VerifiedPrivateServiceLease, StorageError> {
+    ) -> Result<PrivateServiceReadback, StorageError> {
         let row:Option<(String,String)>=self.connection.query_row("SELECT l.lease_json,l.consumer_device_id FROM private_service_leases l JOIN service_usage_grants g ON g.grant_id=l.grant_id WHERE l.service_id=?1 AND l.grant_id=?2 AND l.revoked=0 AND g.terminal=0",params![service,grant],|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
         let (json, consumer) = row.ok_or(StorageError::Forbidden)?;
         let signed: SignedPrivateServiceLease = serde_json::from_str(&json)?;
@@ -822,17 +830,20 @@ impl Store {
         let (account, account_epoch, consumer_epoch, key) =
             self.private_member(&view.space_id, &consumer, now)?;
         let c = verified.claims();
-        if !self.service_login_live(&c.consumer_account_id, &c.consumer_login_id, now / 1000)?
-            || !self
-                .private_service_paths(
-                    &c.consumer_login_id,
-                    &consumer,
-                    &verified.lease().claims().definition.host_device_id,
-                    service,
-                    now / 1000,
-                )?
-                .contains(self.private_service_selected_path(grant)?)
-        {
+        if !self.service_login_live(&c.consumer_account_id, &c.consumer_login_id, now / 1000)? {
+            return Err(StorageError::Forbidden);
+        }
+        let paths = self.private_service_paths(
+            &c.consumer_login_id,
+            &consumer,
+            &verified.lease().claims().definition.host_device_id,
+            service,
+            now / 1000,
+        )?;
+        // Preserve the original policy/read ordering. The decoded path is
+        // retained only for the rest of this same currentness invocation.
+        let (selected, network) = self.private_service_selected_path(grant)?;
+        if !paths.contains(selected) {
             return Err(StorageError::Forbidden);
         }
         let active:bool=self.connection.query_row("SELECT EXISTS(SELECT 1 FROM private_service_acl WHERE rule_id=?1 AND service_id=?2 AND exposure_revision=?3 AND revoked=0 AND expires_at>?4 AND host_epoch=?5 AND subject_epoch=?6 AND ((subject_kind='account' AND subject_id=?7 AND subject_epoch=?8) OR (subject_kind='installation' AND subject_id=?9 AND subject_epoch=?10)))",params![c.acl_rule_id,service,view.revision,now,host_epoch,c.subject_epoch,account,account_epoch,consumer,consumer_epoch],|r|r.get(0))?;
@@ -851,7 +862,10 @@ impl Store {
         {
             return Err(StorageError::Forbidden);
         }
-        Ok(verified)
+        Ok(PrivateServiceReadback {
+            lease: verified,
+            network,
+        })
     }
     pub fn accept_private_service_usage(
         &mut self,

@@ -263,16 +263,12 @@ impl Store {
         now: u64,
     ) -> Result<(SignedPrivateServiceLease, PrivateServiceNetworkPath), StorageError> {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
-        let lease = self.private_service_verified(actor, service, grant_id, signer, now)?;
+        let current = self.private_service_verified(actor, service, grant_id, signer, now)?;
+        let lease = current.lease;
         let snapshot = crate::network_policy::read_snapshot(&tx, &lease.claims().space_id, now)?;
-        let json: Option<String> = tx.query_row(
-            "SELECT network_json FROM private_service_leases WHERE grant_id=?1",
-            [grant_id],
-            |r| r.get(0),
-        )?;
-        let path = serde_json::from_str(&json.ok_or(StorageError::Forbidden)?)?;
+        let path = current.network.ok_or(StorageError::Forbidden)?;
         verify(&snapshot, &path, &lease)?;
-        self.private_service_relay_current(&tx, grant_id, &lease, now)?;
+        self.private_service_relay_current_path(&tx, grant_id, &lease, &path, now)?;
         tx.commit()?;
         Ok((lease.signed().clone(), path))
     }

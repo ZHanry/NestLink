@@ -43,23 +43,20 @@ impl Store {
     pub(super) fn private_service_selected_path(
         &self,
         grant: &str,
-    ) -> Result<nestlink_protocol::Path, StorageError> {
+    ) -> Result<(nestlink_protocol::Path, Option<PrivateServiceNetworkPath>), StorageError> {
         let json: Option<String> = self.connection.query_row(
             "SELECT network_json FROM private_service_leases WHERE grant_id=?1",
             [grant],
             |r| r.get(0),
         )?;
-        let relay = match json {
-            Some(json) => serde_json::from_str::<PrivateServiceNetworkPath>(&json)?
-                .relay
-                .is_some(),
-            None => false,
-        };
-        Ok(if relay {
+        let network: Option<PrivateServiceNetworkPath> =
+            json.as_deref().map(serde_json::from_str).transpose()?;
+        let selected = if network.as_ref().is_some_and(|path| path.relay.is_some()) {
             nestlink_protocol::Path::Relay
         } else {
             nestlink_protocol::Path::Direct
-        })
+        };
+        Ok((selected, network))
     }
 
     /// The lease, one shared plaintext reservation and every ordered relay hop
@@ -385,7 +382,20 @@ impl Store {
             return Ok(());
         };
         let network: PrivateServiceNetworkPath = serde_json::from_str(&json)?;
-        let Some(route) = network.relay else {
+        self.private_service_relay_current_path(tx, grant, business, &network, now)
+    }
+
+    /// Reuse only the decoded path read within this same Store transaction.
+    /// Standalone callers retain the database-reading wrapper above.
+    pub(super) fn private_service_relay_current_path(
+        &self,
+        tx: &Transaction<'_>,
+        grant: &str,
+        business: &VerifiedPrivateServiceLease,
+        network: &PrivateServiceNetworkPath,
+        now: u64,
+    ) -> Result<(), StorageError> {
+        let Some(route) = &network.relay else {
             return Ok(());
         };
         let quota = self.relay_quota_current()?;

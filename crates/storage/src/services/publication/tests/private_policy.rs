@@ -176,6 +176,63 @@ fn combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_a
         &access.network,
         now()?,
     )?;
+    let original_network = serde_json::to_string(&path)?;
+    let (initial_lease, initial_path) = f.store.private_service_current_authority(
+        &f.creator,
+        &f.view.id,
+        &usage.grant_id,
+        &f.service_signer,
+        now()?,
+    )?;
+    assert_eq!(serde_json::to_vec(&initial_lease)?, serde_json::to_vec(&lease)?);
+    assert_eq!(serde_json::to_string(&initial_path)?, original_network);
+    let mut corrupt_path = path.clone();
+    let mut signature = URL_SAFE_NO_PAD.decode(&corrupt_path.path.signature)?;
+    signature[0] ^= 1;
+    corrupt_path.path.signature = URL_SAFE_NO_PAD.encode(signature);
+    let mut foreign_reservation = path.clone();
+    foreign_reservation.grant_id = random_id();
+    // Every invocation must read its current stored path, even after a previous
+    // successful lookup. Missing, malformed, tampered and mismatched paths do
+    // not become authority merely because the business lease is still valid.
+    for stored in [
+        None,
+        Some("{".to_owned()),
+        Some(serde_json::to_string(&corrupt_path)?),
+        Some(serde_json::to_string(&foreign_reservation)?),
+    ] {
+        f.store.connection.execute(
+            "UPDATE private_service_leases SET network_json=?1 WHERE grant_id=?2",
+            params![stored, usage.grant_id],
+        )?;
+        if stored.is_none() {
+            // The standalone business-lease API retains its original direct
+            // fallback before a network path has been issued.
+            let business = f.store.private_service_lease(
+                &f.creator,
+                &f.view.id,
+                &usage.grant_id,
+                &f.service_signer,
+                now()?,
+            )?;
+            assert_eq!(serde_json::to_vec(&business)?, serde_json::to_vec(&lease)?);
+        }
+        assert!(
+            f.store
+                .private_service_current_authority(
+                    &f.creator,
+                    &f.view.id,
+                    &usage.grant_id,
+                    &f.service_signer,
+                    now()?,
+                )
+                .is_err()
+        );
+    }
+    f.store.connection.execute(
+        "UPDATE private_service_leases SET network_json=?1 WHERE grant_id=?2",
+        params![original_network, usage.grant_id],
+    )?;
     let (observed, observed_path) = f.store.private_service_current_authority(
         &f.approver,
         &f.view.id,
