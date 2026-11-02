@@ -108,7 +108,15 @@ the gate remains10 seconds, and metadata cannot convert failure to success.
 ## Next exact-source hosted work
 
 The f570 focused matrix completed with the original failures above. The next
-source requires hosted formatting and a new exact-source complete matrix.
+source `1dd4efd03b201d31744a716b4f99d73fd0d9c657` includes the production budget
+readback/diagnostic commit `c0bb7ac` and the additional original Session::stop
+reason/previous-state diagnostic `54ba6cf`. The main task pushed it and started
+the complete original focused matrix as
+[41461596961](https://github.com/ZHanry/NestLink/actions/runs/41461596961).
+Linux job125331747406 and Windows job125331747712 are pending here. The main
+task separately owns the source1dd hosted formatter run41461476335. No newer
+source compilation, runtime or formatting success is claimed until receipts
+are downloaded and checked.
 Require all four original resident tests to execute and pass before marking
 resident completion. Follow the real protected-login stage and pending-case
 operation, and repair only confirmed failures. Preserve every failed receipt,
