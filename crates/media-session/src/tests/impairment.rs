@@ -420,7 +420,10 @@ async fn actual_tc_step_original_vp8_files_and_input() -> Result {
     }
     let post_step_stats = video.stats();
     eprintln!("actual stepped producer: {post_step_stats:?}; presented={step_frames}");
-    fs::write(root.join("post-step-stats.txt"),format!("producer={post_step_stats:?}\npresented={step_frames}\n"))?;
+    fs::write(
+        root.join("post-step-stats.txt"),
+        format!("producer={post_step_stats:?}\npresented={step_frames}\n"),
+    )?;
     let downshift_unix_ns = downshift_unix_ns.ok_or("no actual downshift within step")?;
     assert!(
         step_frames > 20,

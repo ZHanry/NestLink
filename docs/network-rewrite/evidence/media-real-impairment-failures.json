@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "task_ids": [
+    "W31"
+  ],
+  "whole_task_passed": false,
+  "release_qualification_claimed": false,
+  "build_provenance": {
+    "kind": "github_hosted_actions",
+    "workflow": ".github/workflows/media-impairment.yml",
+    "runs": [
+      {
+        "source_revision": "69aee0a1f8d9e0cfce525a1c4a6fd010294bde78",
+        "run_id": 41368476001,
+        "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41368476001",
+        "job_id": 125033624333,
+        "artifact_id": 13107819591,
+        "github_artifact_digest": "sha256:81db1c7633a0ee30db5a86dc16fb308323f4a5f12ab8c2da3013a455c5e6f5a9",
+        "workflow_conclusion": "failure",
+        "strict_lint_conclusion": "success",
+        "receipt_sha256": "bca0ddeb67a50b805b352931f9019fe5c5bb04d3fe025306f459c0287e3a9609",
+        "all_referenced_file_hashes_verified": true,
+        "files": {
+          "build.jsonl": "2276a2eb996d9807d14eddb8fdcd0b241cae5371c405067d3f2fc6192f9b6e62",
+          "build.log": "d73762bf829157f98cc0b15b934d0d65a492debc2f32c026807bb18f088115f1",
+          "inventory.log": "ab16f75fc871931ced2593e87fce23e05a8c77e57d205a2d7d4583ddddb8753f",
+          "tests.log": "62dd5ca23c13927208dc0f739a1b1deb6a66e0e7ba5c0a730b51185aa7ee9929"
+        },
+        "build_exit_code": 0,
+        "original_failure": "AssertionError('original test ended before ready.json; see tests.log')",
+        "owned_qdisc_removed": null,
+        "scope_failure": "Original15s lease validation rejected invalid60s fixture before business; corrected to next original15s signed leases within finite60s authority."
+      },
+      {
+        "source_revision": "b376928d40e24dbbfebc58a32b6c69685a59df0e",
+        "run_id": 41368961040,
+        "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41368961040",
+        "job_id": 125035064905,
+        "artifact_id": 13108861271,
+        "github_artifact_digest": "sha256:2ff8c74eeba532c63618f9a7fe18281080190124721c5e3977bf5849d1228a32",
+        "workflow_conclusion": "failure",
+        "strict_lint_conclusion": "success",
+        "receipt_sha256": "2d70d57d5664eaf2e9e45cad903c228eabc01d87ac842c9217b88c294de425b9",
+        "all_referenced_file_hashes_verified": true,
+        "files": {
+          "build.jsonl": "5bfbaea42a8d57b2e78c8e972a0929998fe07482bca72168189223d52d038f33",
+          "build.log": "ef60d5d9ec17d3899351c8887d31c07068ac72d0317e442604f00e5811c6986d",
+          "configured": "084fe09c71b87a10131ae17355211acbbdbdbf7c229c499efdbe73171e8795a2",
+          "inventory.log": "ab16f75fc871931ced2593e87fce23e05a8c77e57d205a2d7d4583ddddb8753f",
+          "payload.bin": "1daa308fc5875f51fdaf44c00f1aa3263930913fae2c405ece0272dac3cf6b9a",
+          "ready.json": "47cf6d42f723b1cd5d03477eb7dc3915340b52c3cc35688dd07cd17443026f56",
+          "tests.log": "91523ee44ffca56d0ad1bc17368f450de902b1915b917da32b6c8d0844134138"
+        },
+        "build_exit_code": 0,
+        "original_failure": "AssertionError('original test ended before step-request; see tests.log')",
+        "owned_qdisc_removed": true,
+        "scope_failure": "Real kernel20Mbps+loss configured, video decode and file traffic ran; original producer-budget>5Mbps pre-step assertion failed. No step/downshift qualification."
+      },
+      {
+        "source_revision": "efec94fe20273f27a32ff0a64856315776f8ef7f",
+        "run_id": 41369633024,
+        "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41369633024",
+        "job_id": 125037113903,
+        "artifact_id": 13108532241,
+        "github_artifact_digest": "sha256:d4e85ad1cd4d3f15f7393c0b5dfeb36ad8fbc17352937d1c92d93c9a3f9bd0cd",
+        "workflow_conclusion": "failure",
+        "strict_lint_conclusion": "success",
+        "receipt_sha256": "78c255730fc444bb681a4e17271bfb94442ab8d6d6cf73a9e3c566e42e2f8726",
+        "all_referenced_file_hashes_verified": true,
+        "files": {
+          "build.jsonl": "f6c6b96ac5a3ae6d9483312be5ac9233926c44c17c359976d3e5dfa60b703784",
+          "build.log": "7cfffc3d216e4745a61303d2efe64b355e2b9ceed9ad7354779b8b6e751dec46",
+          "configured": "084fe09c71b87a10131ae17355211acbbdbdbf7c229c499efdbe73171e8795a2",
+          "inventory.log": "ab16f75fc871931ced2593e87fce23e05a8c77e57d205a2d7d4583ddddb8753f",
+          "payload.bin": "1daa308fc5875f51fdaf44c00f1aa3263930913fae2c405ece0272dac3cf6b9a",
+          "pre-step-stats.txt": "9e5a6a70c24fffdca33503ba77f411075b8b5d999428a61e906f467cc773aa4f",
+          "ready.json": "668a38d0d3ea2b937054ec1d376ce3833645b9f33c9ef0d58654260a9aef3831",
+          "step-request": "8f144a181947338e011551e3534b29f8ac104f7f838dca5d9281f6383e409b5a",
+          "stepped": "c3cdc98ef2c39a8a15718e4c678c876eee75f9d4a2e88cdadb4e73b6186f1709",
+          "tests.log": "975919f4ab39f0409a627da829bf0e687f1222433db99967df05a0a30edf447e"
+        },
+        "build_exit_code": 0,
+        "original_failure": "AssertionError()",
+        "owned_qdisc_removed": true,
+        "scope_failure": "Baseline actual target8000kbps, loaded6000kbps; actual tc step executed but original producer did not downshift<=5000kbps during5s. This fails original2s gate; no p95+10ms qualification.",
+        "actual_pre_step_stats": "baseline=VideoSenderStats { receiver_reports: 7, feedback_requests: 0, duplicate_requests: 0, keyframes_encoded: 1, last_budget: Some(ProducerBudgetObservation { source: 42, cadence_fps: 30, bitrate_kbps: 8000, observed_at: Instant { tv_sec: 115, tv_nsec: 85843052 }, encoding_time: 22.02504ms, enqueue_time: 37.515µs, receiver_condition: Some(Healthy) }), enqueued_video_bytes: 1904615 }\nfile_loaded=VideoSenderStats { receiver_reports: 14, feedback_requests: 0, duplicate_requests: 0, keyframes_encoded: 2, last_budget: Some(ProducerBudgetObservation { source: 42, cadence_fps: 30, bitrate_kbps: 6000, observed_at: Instant { tv_sec: 119, tv_nsec: 108459647 }, encoding_time: 22.148092ms, enqueue_time: 28.261µs, receiver_condition: Some(Healthy) }), enqueued_video_bytes: 3286452 }\n"
+      }
+    ]
+  },
+  "execution_provenance": {
+    "kind": "github_hosted_lab",
+    "scope": "Actual original QUIC/mTLS VP8 sender/receiver plus4MiB disk FileRead and InputController observer; exact original UDP ports under HTB/netem/fq_codel20-to5Mbps and configured1percent randomloss. Synthetic capture, input dispatch observation only.",
+    "result": "failed",
+    "limits": [
+      "No OS input-to-display, physical GPU, Windows exact H264/Core or completeAC53 acceptance",
+      "Configured loss probability is not independently measured per-datagram loss under GSO/GRO",
+      "All original assertions retained; no timeout/sample-count/p95/downshift gate weakened"
+    ]
+  },
+  "followup": {
+    "source_revision": "adef4826c5e6d2ba52f40aab2ca70a39d4deb2f8",
+    "run_id": 41370354628,
+    "state": "pending",
+    "change": "Actual production cadence now includes encoding/enqueue elapsed time instead of adding another full frame period; preserve no catch-up bursts and original approval ceilings."
+  }
+}

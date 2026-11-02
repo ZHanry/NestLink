@@ -3081,7 +3081,7 @@
         "docs/network-rewrite/evidence/linux-package-upgrade-index.json"
       ],
       "blockers": [],
-      "implementation_notes": "Exactc0fc249 run41236630410 x64+ARM64 Linux headless network/gateway DEB matrix success, with actual daemon install/reinstall/upgrade/uninstall, port-error cleanup and candidate-integrity/Python checks; every retained receipt/hash checked. Candidate producer adds both Linux network roles,16 artifact roles and21 installation cases. Full same-source release candidate, Windows signing/production update and target matrix still required; Linux desktop remains retired."
+      "implementation_notes": "Exactc0fc249 run41236630410 x64+ARM64 Linux headless network/gateway DEB matrix success, with actual daemon install/reinstall/uninstall/hash/sentinel checks,12CLI helps, missing-login/root-runtime refusal and candidate-integrity/Python checks; every retained receipt/hash checked. Candidate producer adds both Linux network roles,16 artifact roles and21 installation cases. Full same-source release candidate, Windows signing/production update and target matrix still required; Linux desktop remains retired."
     },
     {
       "id": "W35",
