@@ -1,6 +1,6 @@
 //! Shared original-process input and local logout/identity/maintenance fence.
 use nestlink_identity::offline::{OfflineProcess, OfflineProcessStop};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
     io::{self, BufRead, Read, Write},
@@ -12,6 +12,16 @@ use std::{
     time::Duration,
 };
 pub(crate) type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+/// Serde's internally tagged unit variants otherwise ignore trailing fields.
+/// Reuse the original application IPC's strict empty-map decoding boundary.
+pub(crate) fn empty_command<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> std::result::Result<(), D::Error> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Empty {}
+    Empty::deserialize(deserializer).map(|_| ())
+}
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
 }

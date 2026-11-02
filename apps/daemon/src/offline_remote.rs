@@ -81,12 +81,15 @@ pub(crate) struct OfflineRemoteArgs {
 #[derive(Deserialize)]
 #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
 enum Command {
+    #[serde(deserialize_with = "crate::offline_resident::empty_command")]
     Help,
+    #[serde(deserialize_with = "crate::offline_resident::empty_command")]
     Policy,
     Enable {
         expected_revision: u64,
         enabled: bool,
     },
+    #[serde(deserialize_with = "crate::offline_resident::empty_command")]
     Begin,
     Draft {
         request: OfflineRemoteDraftRequest,
@@ -100,13 +103,18 @@ enum Command {
     Activate {
         draft_digest: [u8; 32],
     },
+    #[serde(deserialize_with = "crate::offline_resident::empty_command")]
     Start,
+    #[serde(deserialize_with = "crate::offline_resident::empty_command")]
     Rebuild,
+    #[serde(deserialize_with = "crate::offline_resident::empty_command")]
     Status,
+    #[serde(deserialize_with = "crate::offline_resident::empty_command")]
     Recover,
     Revoke {
         bundle_id: String,
     },
+    #[serde(deserialize_with = "crate::offline_resident::empty_command")]
     Stop,
 }
 impl Command {
