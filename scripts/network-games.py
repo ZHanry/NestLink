@@ -232,6 +232,10 @@ def teeworlds():
         def console(command):
             actors.run(["xdotool", "key", "F1"], env=env)
             time.sleep(0.15)
+            # The upstream animated console can retain a gameplay text event.
+            # Its ordinary Down key clears a draft when no history is selected;
+            # never append the next command to that pending input (e.g. dquit).
+            actors.run(["xdotool", "key", "Down"], env=env)
             actors.run(["xdotool", "type", "--clearmodifiers", "--delay", "2", command], env=env)
             actors.run(["xdotool", "key", "Return"], env=env)
             time.sleep(0.1)
