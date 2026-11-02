@@ -19,7 +19,7 @@ regexTarget = "secret"
 paths = ['''^scripts/refactor\-service\-caddy\-contract\.py$''']
 regexes = ['''^dGhlIHNhbXBsZSBub25jZQ==$''']
 
-# Six public provenance digests reviewed against exact historical scan locations.
+# Six public provenance/identifier findings reviewed at exact historical locations.
 # Each exclusion binds one rule, one file and one complete public digest.
 # See docs/network-rewrite/SECRET-SCAN-REVIEW-2026-11-02.md.
 [[allowlists]]
@@ -31,20 +31,20 @@ paths = ['''^docs/network-rewrite/evidence/production-capability-47a0cec\.json$'
 regexes = ['''^c43085cb7af77230c355f88323c7340cc8c78247cd1ee5d5688d06312119dc7b$''']
 
 [[allowlists]]
-description = "Public pinned cloudflared release binary SHA256"
+description = "Public pinned cloudflared source revision"
 targetRules = ["cloudflare-api-key"]
 condition = "AND"
 regexTarget = "secret"
 paths = ['''^scripts/network-rewrite-windows-tun\.py$''']
-regexes = ['''^2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343$''']
+regexes = ['''^872b241f94871665c1c157adefcf90c11f0ead96$''']
 
 [[allowlists]]
-description = "Public WireGuard Wintun source revision"
+description = "Public Windows MIB_IF_ROW2.Mtu API field identifier"
 targetRules = ["generic-api-key"]
 condition = "AND"
 regexTarget = "secret"
 paths = ['''^docs/adr/network/0045-windows-managed-tun-boundary\.md$''']
-regexes = ['''^bfef136abfa1665c2592be09a7e383d646cdbe6e$''']
+regexes = ['''^MIB_IF_ROW2\.Mtu$''']
 
 [[allowlists]]
 description = "Public official-driver Authenticode report SHA256"
