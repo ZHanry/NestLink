@@ -71,9 +71,11 @@ pub fn hevc_execution_receipt_matches(
     receipt.check_current()?;
     let owner = receipt.identity()?;
     let selected = receipt.target().encoder();
-    if (owner.direction() == nestlink_media_codec::ExecutionDirection::Decode && selected != nestlink_media_codec::HevcEncoderSelection::default())
+    if (owner.direction() == nestlink_media_codec::ExecutionDirection::Decode
+        && selected != nestlink_media_codec::HevcEncoderSelection::default())
         || receipt.target()
-        != hevc_execution_target(format, owner.adapter_luid(), owner.driver_version())?.with_encoder(selected)
+            != hevc_execution_target(format, owner.adapter_luid(), owner.driver_version())?
+                .with_encoder(selected)
     {
         return Err(io::Error::other(
             "live HEVC execution differs from frozen signed format",
@@ -132,7 +134,10 @@ mod tests {
             nestlink_protocol::NativeVideoCodec::HevcMain10
         );
         assert_ne!(target, hevc_execution_target(format, 7, 10)?);
-        let selected = nestlink_media_codec::HevcEncoderSelection::new(nestlink_media_codec::HevcEncoderBackend::AmdAmf, Some(1 << 48))?;
+        let selected = nestlink_media_codec::HevcEncoderSelection::new(
+            nestlink_media_codec::HevcEncoderBackend::AmdAmf,
+            Some(1 << 48),
+        )?;
         let amf = target.with_encoder(selected);
         assert_ne!(amf, target);
         assert_eq!(amf.contract(), target.contract());

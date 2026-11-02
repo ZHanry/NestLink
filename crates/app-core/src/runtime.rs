@@ -1869,7 +1869,10 @@ impl AppCore {
         }
         let runtime = tokio::runtime::Handle::try_current().map_err(|_| StartError::Runtime)?;
         let shared = Shared::new(limits);
-        if let Some(provider) = native.as_ref().and_then(|config| config.media_provider.clone()) {
+        if let Some(provider) = native
+            .as_ref()
+            .and_then(|config| config.media_provider.clone())
+        {
             let _ = shared.native_media_provider.set(provider);
         }
         let (commands, incoming) = mpsc::channel(limits.operations);

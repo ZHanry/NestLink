@@ -279,7 +279,14 @@ impl MfHevcTextureEncoder {
         authority: Arc<AtomicBool>,
     ) -> io::Result<Self> {
         // SAFETY: original caller contract, unchanged MF default selection.
-        unsafe { Self::with_gpu_device_and_encoder(target, device, authority, crate::HevcEncoderSelection::default()) }
+        unsafe {
+            Self::with_gpu_device_and_encoder(
+                target,
+                device,
+                authority,
+                crate::HevcEncoderSelection::default(),
+            )
+        }
     }
     /// # Safety
     /// The supplied device and every input texture obey `with_gpu_device`'s
@@ -298,7 +305,12 @@ impl MfHevcTextureEncoder {
         }
         // SAFETY: caller supplies the original owner-thread device; selected owner retains COM refs.
         let mut inner = unsafe {
-            crate::hevc_encoder::Encoder::open(target.config(), device, target.bit_depth(), encoder.backend())
+            crate::hevc_encoder::Encoder::open(
+                target.config(),
+                device,
+                target.bit_depth(),
+                encoder.backend(),
+            )
         }?;
         let identity = match inner.owner_observation() {
             Ok(identity)
@@ -336,7 +348,8 @@ impl MfHevcTextureEncoder {
         }
         if self.inner.backend() != self.encoder.backend()
             || self.inner.runtime_version()? != self.encoder.runtime_version()
-            || !self.identity.same_identity(self.inner.owner_observation()?) {
+            || !self.identity.same_identity(self.inner.owner_observation()?)
+        {
             return Err(io::Error::other(
                 "HEVC original resource/adapter/driver identity changed",
             ));

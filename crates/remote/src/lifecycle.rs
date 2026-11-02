@@ -773,10 +773,20 @@ impl LeaseControl {
     ) -> Result<Option<nestlink_protocol::media_authority::ProbeIdentity>, RemoteError> {
         let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
-        managed.session.authorize(Permission::View, self.inner.path, self.inner.clock.monotonic_ms())?;
+        managed.session.authorize(
+            Permission::View,
+            self.inner.path,
+            self.inner.clock.monotonic_ms(),
+        )?;
         match managed.session.local_media_binding() {
-            Some(binding) if binding.local_direction() == direction => Ok(Some(binding.probe_identity().clone())),
-            Some(_) => Err(io::Error::new(io::ErrorKind::PermissionDenied, "local media probe direction differs").into()),
+            Some(binding) if binding.local_direction() == direction => {
+                Ok(Some(binding.probe_identity().clone()))
+            }
+            Some(_) => Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "local media probe direction differs",
+            )
+            .into()),
             None => Ok(None),
         }
     }

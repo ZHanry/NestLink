@@ -155,16 +155,27 @@ impl NativeSessionConfig {
     ) -> io::Result<Self> {
         self.with_gpu_hevc_main8_encoder(target, nestlink_media_codec::HevcEncoderBackend::SystemMf)
     }
-    pub fn with_gpu_hevc_main8_encoder(self, target: nestlink_media_codec::VideoConfig, encoder: nestlink_media_codec::HevcEncoderBackend) -> io::Result<Self> {
+    pub fn with_gpu_hevc_main8_encoder(
+        self,
+        target: nestlink_media_codec::VideoConfig,
+        encoder: nestlink_media_codec::HevcEncoderBackend,
+    ) -> io::Result<Self> {
         self.with_gpu_hevc_target(target, HEVC_FORMAT_VERSION, encoder)
     }
     pub fn with_gpu_hevc_main10_target(
         self,
         target: nestlink_media_codec::VideoConfig,
     ) -> io::Result<Self> {
-        self.with_gpu_hevc_main10_encoder(target, nestlink_media_codec::HevcEncoderBackend::SystemMf)
+        self.with_gpu_hevc_main10_encoder(
+            target,
+            nestlink_media_codec::HevcEncoderBackend::SystemMf,
+        )
     }
-    pub fn with_gpu_hevc_main10_encoder(self, target: nestlink_media_codec::VideoConfig, encoder: nestlink_media_codec::HevcEncoderBackend) -> io::Result<Self> {
+    pub fn with_gpu_hevc_main10_encoder(
+        self,
+        target: nestlink_media_codec::VideoConfig,
+        encoder: nestlink_media_codec::HevcEncoderBackend,
+    ) -> io::Result<Self> {
         self.with_gpu_hevc_target(
             target,
             nestlink_protocol::media_authority::HEVC_MAIN10_FORMAT_VERSION,
@@ -613,9 +624,15 @@ mod tests {
         );
         let gpu = config()?.with_gpu_hevc_main8_target(target())?;
         assert!(gpu.validate());
-        let amf = config()?.with_gpu_hevc_main8_encoder(target(), nestlink_media_codec::HevcEncoderBackend::AmdAmf)?;
+        let amf = config()?.with_gpu_hevc_main8_encoder(
+            target(),
+            nestlink_media_codec::HevcEncoderBackend::AmdAmf,
+        )?;
         assert!(amf.validate());
-        assert_eq!(amf.gpu_media_provider()?.hevc_encoder_backend(), nestlink_media_codec::HevcEncoderBackend::AmdAmf);
+        assert_eq!(
+            amf.gpu_media_provider()?.hevc_encoder_backend(),
+            nestlink_media_codec::HevcEncoderBackend::AmdAmf
+        );
         let mut replaced = amf;
         replaced.media_provider = Some(crate::NativeMediaProvider::gpu_hevc_main8(target())?);
         assert!(!replaced.validate());

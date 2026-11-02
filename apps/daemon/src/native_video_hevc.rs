@@ -235,7 +235,8 @@ pub(super) fn stream<D: CaptureDevice>(
                 format,
                 hardware.adapter_luid,
                 hardware.driver_version,
-            )?.with_encoder(core.native_video_hevc_encoder_selection(identity)?);
+            )?
+            .with_encoder(core.native_video_hevc_encoder_selection(identity)?);
             if active != Some((binding, target)) {
                 capture.configure(binding.source, target)?;
                 active = Some((binding, target));

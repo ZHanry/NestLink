@@ -136,7 +136,12 @@ impl HevcProbeEncoder {
         config: VideoConfig,
         authority: Arc<AtomicBool>,
     ) -> io::Result<Self> {
-        Self::new_with_backend(source, config, authority, crate::HevcEncoderBackend::SystemMf)
+        Self::new_with_backend(
+            source,
+            config,
+            authority,
+            crate::HevcEncoderBackend::SystemMf,
+        )
     }
     pub fn new_with_backend(
         source: &HevcSyntheticSource,

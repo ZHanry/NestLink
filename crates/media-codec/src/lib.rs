@@ -42,14 +42,14 @@ pub use windows_hevc::{
     HevcBackendObservation, HevcProbeDecodeStep, HevcProbeDecoder, HevcProbeEncoder,
     HevcProbePacket, HevcProbePicture, HevcSyntheticSource,
 };
-mod hevc_main8;
 mod hevc_backend;
+mod hevc_main8;
 pub use hevc_backend::{HevcEncoderBackend, HevcEncoderSelection};
-#[cfg(windows)]
-mod windows_amf;
 #[cfg(windows)]
 mod hevc_encoder;
 mod hevc_probe;
+#[cfg(windows)]
+mod windows_amf;
 pub use hevc_main8::{HevcContract, HevcMain8Admission, HevcMain8Contract};
 #[cfg(windows)]
 mod windows_hevc_owner;
@@ -100,5 +100,6 @@ pub use execution::{
 mod hevc_direction_probe;
 #[cfg(windows)]
 pub use hevc_direction_probe::{
-    HevcDirectionProbe, probe_hevc_direction, probe_hevc_direction_depth, probe_hevc_direction_with_encoder,
+    HevcDirectionProbe, probe_hevc_direction, probe_hevc_direction_depth,
+    probe_hevc_direction_with_encoder,
 };

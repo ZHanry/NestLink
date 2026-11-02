@@ -128,7 +128,9 @@ impl HevcExecutionTarget {
         self.encoder = encoder;
         self
     }
-    pub fn encoder(self) -> crate::HevcEncoderSelection { self.encoder }
+    pub fn encoder(self) -> crate::HevcEncoderSelection {
+        self.encoder
+    }
     pub(crate) fn check_owner(self, owner: OwnerObservation) -> io::Result<()> {
         if owner.resource_id == [0; 16]
             || owner.adapter_luid != Some(self.adapter_luid)
@@ -637,9 +639,13 @@ impl Engine {
                     state.target.encoder,
                 )
                 .map(Self::Encode),
-                ExecutionDirection::Decode if state.target.encoder != crate::HevcEncoderSelection::default() => {
-                    Err(io::Error::other("HEVC decode owner cannot use an encoder runtime selection"))
-                },
+                ExecutionDirection::Decode
+                    if state.target.encoder != crate::HevcEncoderSelection::default() =>
+                {
+                    Err(io::Error::other(
+                        "HEVC decode owner cannot use an encoder runtime selection",
+                    ))
+                }
                 ExecutionDirection::Decode => MfHevcHardwareDecoder::with_gpu_device(
                     state.target.contract,
                     device,
@@ -914,16 +920,22 @@ mod tests {
     fn encoder_runtime_is_part_of_frozen_target_and_cannot_open_a_decoder() -> io::Result<()> {
         let mut state = lifecycle_fixture(ExecutionDirection::Decode)?;
         let original = state.target;
-        let selected = crate::HevcEncoderSelection::new(crate::HevcEncoderBackend::AmdAmf, Some(1 << 48))?;
+        let selected =
+            crate::HevcEncoderSelection::new(crate::HevcEncoderBackend::AmdAmf, Some(1 << 48))?;
         let target = original.with_encoder(selected);
         assert_ne!(target, original);
         assert_eq!(target.contract(), original.contract());
         assert_eq!(target.format_digest(), original.format_digest());
         assert_eq!(target.encoder(), selected);
-        Arc::get_mut(&mut state).ok_or_else(|| io::Error::other("fixture state unexpectedly shared"))?.target = target;
+        Arc::get_mut(&mut state)
+            .ok_or_else(|| io::Error::other("fixture state unexpectedly shared"))?
+            .target = target;
         // SAFETY: the incompatible decoder selection must fail before any
         // device access or codec open. This fixture has no GPU or driver.
-        assert!(unsafe { Engine::open(ExecutionDirection::Decode, &state, std::ptr::null_mut()) }.is_err());
+        assert!(
+            unsafe { Engine::open(ExecutionDirection::Decode, &state, std::ptr::null_mut()) }
+                .is_err()
+        );
         Ok(())
     }
     #[test]

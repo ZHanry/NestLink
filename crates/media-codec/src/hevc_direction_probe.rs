@@ -174,7 +174,13 @@ pub fn probe_hevc_direction_depth(
     cancel: &AtomicBool,
     bit_depth: u8,
 ) -> io::Result<HevcDirectionProbe> {
-    probe_hevc_direction_with_encoder(config, direction, cancel, bit_depth, crate::HevcEncoderBackend::SystemMf)
+    probe_hevc_direction_with_encoder(
+        config,
+        direction,
+        cancel,
+        bit_depth,
+        crate::HevcEncoderBackend::SystemMf,
+    )
 }
 /// The original workload and acceptance with one explicitly selected encoder.
 /// Decode remains the exact original MF hardware owner on the supplied device.
@@ -197,7 +203,8 @@ pub fn probe_hevc_direction_with_encoder(
     check(cancel, deadline)?;
     let authority = Arc::new(AtomicBool::new(true));
     let source = HevcSyntheticSource::with_depth(config.width, config.height, bit_depth)?;
-    let mut encoder = HevcProbeEncoder::new_with_backend(&source, config, authority.clone(), backend)?;
+    let mut encoder =
+        HevcProbeEncoder::new_with_backend(&source, config, authority.clone(), backend)?;
     let mut gpu =
         HevcProbeDecoder::with_depth(Some(&source), config, authority.clone(), bit_depth)?;
     let mut independent = HevcProbeDecoder::with_depth(None, config, authority.clone(), bit_depth)?;
