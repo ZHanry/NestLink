@@ -58,9 +58,12 @@ try:
     initial = json.loads(tc('-json', 'qdisc', 'show', 'dev', 'lo'))
     assert all(item['kind'] == 'noqueue' for item in initial), 'refuse replacing an unrelated loopback qdisc'
     with (output / 'build.jsonl').open('w') as events, (output / 'build.log').open('w') as errors:
-        build = ['cargo', 'test', '--locked', '-p', 'nestlink-media-session', '--lib', '--features', 'network-impairment-lab', '--no-run', '--message-format=json']
+        build = ['cargo', 'test', '--locked', '--release', '-p', 'nestlink-media-session', '--lib', '--features', 'network-impairment-lab', '--no-run', '--message-format=json']
         built = subprocess.run(build, stdout=events, stderr=errors, check=False)
     receipt['build_command'] = build
+    receipt['build_profile'] = 'release'
+    receipt['debug_assertions'] = False
+    receipt['performance_profile_reason'] = 'Measure original production optimized codec/transport scheduling; default debug codec CPU pressure may lower actual traffic below the intended physical5Mbps step. Original geometry, authority, load and all acceptance gates remain unchanged.'
     receipt['build_exit_code'] = built.returncode
     assert built.returncode == 0, 'see retained build.jsonl and build.log'
     executables = [entry['executable'] for line in (output / 'build.jsonl').read_text().splitlines()
