@@ -91,3 +91,22 @@ Reviewed original sources:
 - <https://github.com/webmproject/libvpx/blob/1024874c5919305883187e2953de8fcb4c3d7fa6/third_party/libyuv/source/row_common.cc>
 - <https://github.com/webmproject/libvpx/blob/1024874c5919305883187e2953de8fcb4c3d7fa6/third_party/libyuv/README.libvpx>
 - <https://github.com/webmproject/libvpx/blob/1024874c5919305883187e2953de8fcb4c3d7fa6/examples.mk>
+
+Follow-up actual execution: source `e2026fb523db32c45a14ec66f01a4a22a964d38e`,
+run41478056075, built and verified the17-file native x64 closure on both OS,
+including Windows dynamic CRT. Original Rust consumers linked and ran; all
+focused strict clippy commands passed. Windows original resident passed4/4,
+including QUIC/TLS actual pixels, two completed files, original rebuild and
+EOF/IPC Exit. Initial/rebuilt Windows Rust decode totals were28–33ms, with
+whole FFI22–25ms; later observed FFI was1.6–3.1ms. Original Linux passed3/4,
+including complete TLS; its initial/rebuilt first decode totals were5–6ms,
+FFI about1ms. These observations keep the original unoptimized Rust test
+profile, validated-ingress60ms anchor and40ms late threshold unchanged and
+include lazy native decoder setup in first FFI. No finer C timing is warranted
+by this result. Linux's remaining case failed before native media, at the
+original protected-login Secret Service gate. Full independent hashes and
+original failure are in
+[native-offline-resident-e2026fb.json](../../network-rewrite/evidence/native-offline-resident-e2026fb.json).
+Broader VP8 quality/sanitizer/notice and ARM64 checks remain separate evidence;
+both-OS original resident completion still requires the newer Linux setup repair
+and a complete exact-source run. No local project execution was performed.

@@ -293,3 +293,59 @@ Keep the60ms immutable validated-ingress anchor,40ms late threshold, original
 PTS/clocks/deadlines and cumulative authority meter unchanged. Resident
 completion still requires all four original cases to execute and pass on
 both OS; physical devices and public-NAT acceptance remain separate.
+
+## Sourcee202 actual mature conversion and remaining Linux store failure
+
+Run [41478056075](https://github.com/ZHanry/NestLink/actions/runs/41478056075),
+exact source `e2026fb523db32c45a14ec66f01a4a22a964d38e`, completed with
+Windows success and Linux failure. Full receipts, both original native supplier
+records, fixed Rust stage observations and every downloaded file digest are in
+[native-offline-resident-e2026fb.json](evidence/native-offline-resident-e2026fb.json).
+All44 downloaded files were independently byte-counted/SHA256-hashed; all36
+producer entries match. Both downloaded source-before/after files are identical
+and clean. Static archive hashes inside the native receipts are retained as
+producer inventory; those archive binaries are not part of this focused
+download and are not claimed independently hashed. GitHub ZIP digests also
+remain explicitly GitHub-reported metadata.
+
+Both original native x64 suppliers actually built and verified the fixed17
+unmodified bundled libyuv source units, Release optimization and Windows dynamic
+CRT, with source-tree/installed-file checks. Original Rust consumers linked and
+ran. All focused AppCore/daemon/desktop cases, the signed/proved capture-terminal
+and download-consent regressions, and all three strict clippy commands passed
+on both OS. Full Rust quality/sanitizer/notice and ARM64 qualification are
+separate runs owned by the main task.
+
+Original Windows resident is now4/4 in314.78s: management8, pending4, complete
+QUIC/TLS initial and rebuilt real pixels, two262144-byte completed files per
+carrier, and EOF/IPC Exit all pass. Actual QUIC initial/rebuilt decode totals
+were28307/27889us, with whole FFI22748/21953us. TLS was32666/30407us, with
+FFI24752/23629us; later observed FFI was1619–3105us. First FFI still includes
+lazy libvpx context work. These are debug-context observations, not a pure
+libvpx benchmark. The original60ms immutable anchor,40ms late threshold,
+frame/IPC deadlines, PTS/clocks, profile and cumulative budget were unchanged.
+
+Original Linux is3/4 in236.56s. Management8, pending4 and complete TLS pixels/
+two files/rebuild/IPC Exit passed. TLS initial first decode total5802us included
+allocation4775us and FFI1026us; rebuilt first5053us included4179/873us. Later
+observed FFI was534–741us; the retained allocation spike12419us was not removed.
+QUIC failed before starting that case's real native session, at the new fixed
+`source_protected_login` stage: the unchanged ten-second Secret Service gate
+made187 attempts, last exit2. All three helpers were sleeping/alive and the
+original login collection reported Locked=false. That original failure remains.
+
+Read-only pinned libsecret0.21.4 source distinguishes parser/usage exit2 from
+an actual Secret Service store failure1. Both original production and fixture
+store/lookup argv lacked `--` before opaque URL-safe base64 attributes, which
+can begin with a hyphen. Commit `d6c19c4a3d9a856521976f98b337415989681361`
+adds the standard literal-attribute boundary through one tiny shared argv
+helper, preserving the binding format, OS service, login/key/cipher, original
+ten-second gate and all four original cases. A separate real CLI/Secret Service
+regression requires both retired calls to exit2 and the repaired production
+argv to actually store/read a leading-hyphen attribute. See
+[ADR0074](../adr/network/0074-literal-secret-service-cli-attributes.md).
+Sourcee202 did not log its exact binding prefix, so the value is not reconstructed
+or claimed proven; the new regression and full original matrix still need
+their own exact-source execution. Earlier unrelated SDK Invalid and independent
+fixture DNS failures remain historical evidence. No local project execution
+or new hosted dispatch occurred in this evidence work.
