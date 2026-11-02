@@ -129,6 +129,16 @@ def main():
             ip("namespace-address-" + str(index), "-n", namespace, "addr", "add", prefix + ".3/24", "dev", peer)
             ip("namespace-up-" + str(index), "-n", namespace, "link", "set", peer, "up")
             ip("namespace-loopback-" + str(index), "-n", namespace, "link", "set", "lo", "up")
+            if args.game:
+                # The upstream LAN browser sends INADDR_BROADCAST, not the
+                # subnet-directed address used by the DNS mechanism fixture.
+                # This isolated namespace deliberately has no default route;
+                # give only that one limited broadcast an explicit LAN route.
+                ip("game-limited-broadcast-" + str(index), "-n", namespace,
+                   "route", "add", "broadcast", "255.255.255.255/32", "dev", peer, "scope", "link")
+                route = json.loads(ip("game-broadcast-route-readback-" + str(index), "-n", namespace,
+                                      "-j", "route", "get", "255.255.255.255").stdout)
+                assert len(route) == 1 and route[0].get("type") == "broadcast" and route[0].get("dev") == peer
             observed = ip("host-readback-" + str(index), "-j", "address", "show", "dev", host)
             interface = json.loads(observed.stdout)[0]
             assert any(row.get("local") == prefix + ".2" and row.get("prefixlen") == 24
