@@ -122,6 +122,7 @@ impl DesktopApp {
     }
 
     pub(crate) fn local_network_settings(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+        self.setup_guide(ui, snapshot);
         ui.add_space(24.);
         ui.separator();
         ui.heading(self.t("本机连接设置", "Local connection settings"));
@@ -142,6 +143,103 @@ impl DesktopApp {
                     .complete(Err(nestlink_app_core::NativeNetworkError::Unavailable));
             }
         }
+    }
+
+    fn setup_guide(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+        ui.add_space(24.);
+        ui.separator();
+        ui.heading(self.t("配置向导与运行状态", "Setup and current status"));
+        let verified = snapshot.server.as_ref().is_some_and(|server| server.error.is_none() && server.verified_health.is_some());
+        let signed_in = verified && snapshot.authentication == Authentication::SignedIn && snapshot.principal.is_some();
+        let enrolled = signed_in && snapshot.installation.as_ref().is_some_and(|local| {
+            snapshot.devices.error.is_none() && snapshot.devices.loading.is_none()
+                && snapshot.devices.data.as_ref().is_some_and(|devices| {
+                    devices.iter().any(|view| view.device.id == local.device_id && !view.revoked)
+                })
+        });
+        for (title, value) in [
+            (self.t("控制中心", "Control center"), self.t(if verified { "身份已验证" } else { "等待连接并验证" }, if verified { "Identity verified" } else { "Connect and verify" })),
+            (self.t("账号", "Account"), self.t(if signed_in { "已登录" } else { "等待登录" }, if signed_in { "Signed in" } else { "Sign in required" })),
+            (self.t("此设备", "This device"), self.t(if enrolled { "服务器列表中已登记" } else { "尚未确认登记，请读取设备列表" }, if enrolled { "Enrolled in the server device list" } else { "Enrollment unconfirmed; read the device list" })),
+        ] {
+            ui.horizontal_wrapped(|ui| { ui.strong(title); ui.label(value); });
+        }
+        if let Some(error) = &snapshot.devices.error {
+            ui.colored_label(ui.visuals().error_fg_color, widgets::failure(error, self.english));
+        }
+        ui.horizontal_wrapped(|ui| {
+            if ui.add_enabled(verified && !signed_in, egui::Button::new(self.t("继续登录", "Continue to sign in"))).clicked() {
+                self.screen = Screen::Remote;
+            }
+            if ui.add_enabled(signed_in && snapshot.devices.loading.is_none(), egui::Button::new(self.t("读取当前设备状态", "Read current device status"))).clicked() {
+                self.load(snapshot, nestlink_app_core::Page::Devices);
+            }
+        });
+        ui.small(self.t("这里显示最近一次实际读取的结果。登记、配置保存和服务连通分别确认；连接结果在开始实际会话后显示。", "These are the last actual readback results. Enrollment, saved configuration and reachability are confirmed separately; connection results appear after starting a real session."));
+        egui::CollapsingHeader::new(self.t("查看连接检查", "Connection checks")).show(ui, |ui| {
+            ui.label(self.t(
+                if snapshot.native_network.use_deployment_stun { "STUN：已允许当前设备使用部署地址；可达性需在实际会话中确认。" } else { "STUN：当前设备未启用部署地址发现。" },
+                if snapshot.native_network.use_deployment_stun { "STUN: deployment discovery is allowed on this device; reachability is confirmed during an actual session." } else { "STUN: deployment discovery is disabled on this device." },
+            ));
+            ui.label(if snapshot.native_network.space_path.is_some() {
+                self.t("空间路径：本机已保存仅直连批准。直连失败时停止。", "Space path: direct-only consent is saved locally. A failed direct connection stops.")
+            } else if snapshot.native_network.route_set.is_some() {
+                self.t("空间路径：本机已保存指定双中继批准；节点和会话仍需各自授权及实际可达。", "Space path: consent for the specified two relays is saved locally. Nodes and sessions still require their own authorization and actual reachability.")
+            } else {
+                self.t("连接路径：使用部署和本次会话策略。是否允许中继还取决于双方设备批准。", "Connection path: follows deployment and session policy. Relay use also requires both devices' consent.")
+            });
+            if let Some(durable) = snapshot.native_network_durable {
+                ui.label(self.t(if durable { "本机配置：已确认保存。" } else { "本机配置：已应用，持久保存尚未确认。" }, if durable { "Local configuration: persistence confirmed." } else { "Local configuration: applied; persistence unconfirmed." }));
+            }
+            if let Some(session) = snapshot.native_session.data.as_ref().filter(|session| session.status == nestlink_app_core::NativeSessionStatus::Connected) {
+                ui.label(match session.path {
+                    Some(1) => self.t("当前远控：实际直连已建立。", "Current remote session: a direct connection is established."),
+                    Some(2) => self.t("当前远控：实际中继连接已建立。", "Current remote session: a relayed connection is established."),
+                    _ => self.t("当前远控：已连接，路径类型尚未确认。", "Current remote session: connected; path type unconfirmed."),
+                });
+            } else {
+                ui.label(self.t("当前远控：尚无已连接会话。", "Current remote session: no connected session."));
+            }
+            ui.small(self.t("浏览器远控使用 WebRTC。TURN、中继、公网入口和本机服务目标分别在实际连接或发布时检查；未检查的项目没有通过状态。可先从设备发起一次已批准的远控，再查看连接诊断。", "Browser remote access uses WebRTC. TURN, relays, public ingress and local service targets are checked when actually connecting or publishing. Unchecked items have no passing status. Start an approved session from Devices, then inspect connection diagnostics."));
+        });
+        let mode_id = ui.make_persistent_id("setup-purpose");
+        let mut mode = ui.ctx().data_mut(|data| data.get_temp::<u8>(mode_id)).unwrap_or(0);
+        ui.add_space(12.);
+        ui.horizontal_wrapped(|ui| {
+            for (value, zh, en) in [(0, "远程桌面", "Remote desktop"), (1, "私有服务", "Private services"), (2, "公网发布", "Public publishing"), (3, "空间与虚拟网络", "Spaces and virtual networks")] {
+                ui.selectable_value(&mut mode, value, self.t(zh, en));
+            }
+        });
+        ui.ctx().data_mut(|data| data.insert_temp(mode_id, mode));
+        match mode {
+            0 => {
+                ui.label(self.t("先在双方登记设备，再选择目标发起远控。画面、输入、文件和剪贴板按本次批准的权限开放；默认远控无需虚拟网卡。", "Enroll both devices, then choose the target and request a session. Screen, input, files and clipboard use the permissions approved for that session. Ordinary remote access needs no virtual adapter."));
+                if ui.add_enabled(signed_in, egui::Button::new(self.t("打开远程桌面", "Open remote desktop"))).clicked() { self.navigate(Screen::Remote, snapshot); }
+            }
+            1 => {
+                ui.label(self.t("在服务中选择私有范围，确认固定目标、允许访问的设备和本机同意。访问端通过本地代理或获准的私有 Web 入口连接；加入空间不会自动授权本机端口。", "Choose private exposure in Services and confirm the fixed target, permitted devices and local consent. Connect through a local proxy or approved private web entry. Space membership alone does not authorize local ports."));
+                if ui.add_enabled(signed_in, egui::Button::new(self.t("配置私有服务", "Configure private services"))).clicked() { self.navigate(Screen::Services, snapshot); }
+            }
+            2 => {
+                ui.label(self.t("在服务中显式选择公网范围，再读取节点和入口状态并批准发布。只有实际发布就绪后才能使用公网地址；保存配置不会开启公网访问。", "Explicitly choose public exposure in Services, read the node and entry status, then approve publishing. Use the public address after actual publication is ready. Saving configuration does not enable public access."));
+                if ui.add_enabled(signed_in, egui::Button::new(self.t("配置公网服务", "Configure public services"))).clicked() { self.navigate(Screen::Services, snapshot); }
+            }
+            _ => {
+                ui.label(self.t("在控制中心的网络管理中配置空间成员、地址与名称、子网和 WireGuard。系统虚拟网卡和转发需要另行批准并在运行设备上启用；浏览器只管理配置，不安装网卡或提供通用网络出口。", "Use control-center network management for space members, addresses, names, subnets and WireGuard. Approve system adapters and forwarding separately on the runtime device. The browser manages configuration; it does not install adapters or provide general network egress."));
+                if signed_in && snapshot.principal.as_ref().is_some_and(|principal| principal.is_admin) {
+                    if let Some(server) = &snapshot.server { ui.hyperlink_to(self.t("打开控制中心", "Open control center"), &server.origin); }
+                } else {
+                    ui.small(self.t("请由空间或控制中心管理员配置成员和网络授权。", "Ask a space or control-center administrator to configure membership and network authorization."));
+                }
+            }
+        }
+        ui.horizontal_wrapped(|ui| {
+            if ui.add_enabled(signed_in, egui::Button::new(self.t("登记与管理设备", "Enroll and manage devices"))).clicked() { self.navigate(Screen::Devices, snapshot); }
+            if ui.add_enabled(self.network_diagnostics.has_observations(), egui::Button::new(self.t("复制连接诊断", "Copy connection diagnostics"))).clicked()
+                && let Ok(report) = serde_json::to_string_pretty(&self.network_diagnostics.export()) {
+                ui.ctx().copy_text(report);
+            }
+        });
     }
 
     pub(crate) fn sign_in_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
