@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "scope": "Original parameter NAL bytes from the finite synthetic Windows Main8 direction probe. No VCL, image, desktop capture or decode acceptance claim.",
+  "source_evidence": "docs/network-rewrite/evidence/windows-hevc-target-b6b5520.json",
+  "build_provenance": {
+    "source_revision": "b6b5520418756712c6c833c86e0a153dff394d1a",
+    "run_id": 41460661662,
+    "artifact_id": 13149411140,
+    "official_artifact_digest": "sha256:053ffa7691a7e775f0077472f129a720db0e048bdb49591e3155f198409370be",
+    "executable_sha256": "5fe381d88ec7ca5443591c7b9eeb0eb286bcd8b23408f652a75e21ff1dfdd5a9"
+  },
+  "original_rejection": {
+    "code": "sps.color",
+    "field": "vui.colour_primaries",
+    "actual": 0,
+    "required": 1,
+    "rbsp_bit": 263
+  },
+  "nals": [
+    {
+      "kind": 32,
+      "bytes": 23,
+      "hex": "40 01 0c 01 ff ff 01 60 00 00 03 00 b0 00 00 03 00 00 03 00 78 2c 09"
+    },
+    {
+      "kind": 33,
+      "bytes": 52,
+      "hex": "42 01 01 01 60 00 00 03 00 b0 00 00 03 00 00 03 00 78 a0 03 c0 80 11 07 cb cb 92 42 95 92 e3 ff 00 01 00 01 6a 00 02 04 08 00 00 03 00 08 00 00 03 01 e6 20"
+    },
+    {
+      "kind": 34,
+      "bytes": 7,
+      "hex": "44 01 e0 f3 c0 4c 90"
+    }
+  ]
+}

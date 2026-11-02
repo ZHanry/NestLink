@@ -1,0 +1,142 @@
+name: Independent FFmpeg HEVC parameter diagnostic
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Exact main source revision containing the retained parameter fixture
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  independent-parameters:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EXPECTED_SOURCE: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select the runner FFmpeg or install the official Ubuntu package
+        shell: bash
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y ffmpeg
+          fi
+      - name: Trace original parameter bytes with mature independent parsers
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, re, shutil, subprocess
+          output = pathlib.Path(os.environ['RUNNER_TEMP'])/'hevc-parameter-diagnostic'
+          output.mkdir()
+          receipt = {'schema_version':1, 'diagnostic_completed':False, 'acceptance_passed':False,
+            'scope':'Parameter-only independent FFmpeg trace. No picture, decode, GPU, performance or product acceptance claim.',
+            'source_revision':os.environ['EXPECTED_SOURCE'], 'workflow_revision':os.environ['GITHUB_WORKFLOW_SHA'],
+            'run_id':os.environ['GITHUB_RUN_ID'], 'attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+            'runner_environment':os.environ['RUNNER_ENVIRONMENT'], 'runner_os':os.environ['RUNNER_OS'],
+            'commands':[], 'tools':{}}
+          def digest(path):
+              return hashlib.sha256(path.read_bytes()).hexdigest()
+          def run(name, argv):
+              result = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
+              (output/(name+'.stdout')).write_bytes(result.stdout)
+              (output/(name+'.stderr')).write_bytes(result.stderr)
+              receipt['commands'].append({'name':name,'argv':argv,'return_code':result.returncode})
+              return result
+          try:
+              source = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+              assert re.fullmatch('[0-9a-f]{40}',source) and source == receipt['source_revision']
+              assert receipt['runner_environment'] == 'github-hosted'
+              subprocess.run(['git','merge-base','--is-ancestor',source,'origin/main'],check=True)
+              assert subprocess.check_output(['git','status','--porcelain=v1']) == b''
+              fixture_path = pathlib.Path('docs/network-rewrite/fixtures/hevc-main8-b6b5520-parameters.json')
+              fixture = json.loads(fixture_path.read_text())
+              receipt['fixture_sha256'] = digest(fixture_path)
+              receipt['original_build_provenance'] = fixture['build_provenance']
+              receipt['original_rejection'] = fixture['original_rejection']
+              original_path = pathlib.Path(fixture['source_evidence'])
+              original = json.loads(original_path.read_text())
+              receipt['original_evidence_sha256'] = digest(original_path)
+              for key in ['source_revision','run_id','artifact_id','official_artifact_digest']:
+                  assert original['build_provenance'][key] == fixture['build_provenance'][key], key
+              assert [entry['kind'] for entry in fixture['nals']] == [32,33,34]
+              expected = [(entry['kind'],entry['bytes'],bytes.fromhex(entry['hex'])) for entry in fixture['nals']]
+              assert all(length == len(data) and length <= 256 for _,length,data in expected)
+              commands = original['execution_provenance']['commands']
+              assert len(commands) == 2
+              assert {command['args'][0] for command in commands} == {'encode','decode'}
+              for command in commands:
+                  assert command['name'] == 'windows-hevc-direction-probe'
+                  assert command['executable_sha256'] == fixture['build_provenance']['executable_sha256']
+                  assert command['args'][0] in ['encode','decode'] and command['args'][1:] == ['main8','1920','1080','60','8000']
+                  # Extract only the original textual hex records; FFmpeg below
+                  # performs all SPS syntax/bit parsing independently.
+                  records = re.findall(r'hevc_mf_rejected_parameter_set kind=(\d+) bytes=(\d+) recorded=(\d+) hex=\[([^\]]+)\]',command['stderr'])
+                  actual = []
+                  for kind,length,recorded,hex_text in records:
+                      assert length == recorded
+                      actual.append((int(kind),int(length),bytes.fromhex(hex_text.replace(',',' '))))
+                  assert actual == expected, 'fixture differs from the retained original parameter NALs'
+              receipt['fixture_verified_against_both_original_commands'] = True
+              (output/'fixture.json').write_bytes(fixture_path.read_bytes())
+              parameters = output/'original-parameters.hevc'
+              # Only Annex-B delimiters are supplied. Every logged NAL byte,
+              # including emulation-prevention bytes, is retained unchanged.
+              parameters.write_bytes(b''.join(b'\x00\x00\x00\x01'+data for _,_,data in expected))
+              receipt['annex_b_sha256'] = digest(parameters)
+              for name in ['ffmpeg','ffprobe']:
+                  executable = pathlib.Path(shutil.which(name)).resolve()
+                  receipt['tools'][name] = {'path':str(executable),'sha256':digest(executable)}
+                  version = run(name+'-version',[str(executable),'-version'])
+                  assert version.returncode == 0
+                  receipt['tools'][name]['version'] = version.stdout.decode(errors='replace')
+              run('ubuntu-package',['dpkg-query','-W','ffmpeg'])
+              probe = run('ffprobe',[str(receipt['tools']['ffprobe']['path']),'-v','trace','-f','hevc',
+                '-show_streams','-show_format','-of','json',str(parameters)])
+              trace = run('ffmpeg-trace',[str(receipt['tools']['ffmpeg']['path']),'-hide_banner','-loglevel','trace',
+                '-f','hevc','-i',str(parameters),'-map','0:v:0','-c:v','copy','-bsf:v','trace_headers','-f','null','-'])
+              section = None
+              fields = []
+              for line in trace.stderr.decode(errors='replace').splitlines():
+                  if '[trace_headers ' not in line:
+                      continue
+                  for label in ['Video Parameter Set','Sequence Parameter Set','Picture Parameter Set']:
+                      if label in line:
+                          section = label
+                  match = re.search(r'\]\s+(\d+)\s+([A-Za-z0-9_\[\]]+)\s+[01]+\s*=\s*(-?\d+)\s*$',line)
+                  if match:
+                      fields.append({'section':section,'bit_position':int(match[1]),'field':match[2],'value':int(match[3])})
+              (output/'independent-fields.json').write_text(json.dumps(fields,indent=2)+'\n')
+              required = ['pic_width_in_luma_samples','pic_height_in_luma_samples','video_full_range_flag',
+                'colour_primaries','transfer_characteristics','matrix_coefficients']
+              summary = {key:[field for field in fields if field['section']=='Sequence Parameter Set' and field['field']==key] for key in required}
+              receipt['independent_sps_fields'] = summary
+              receipt['ffprobe_return_code'] = probe.returncode
+              receipt['trace_return_code'] = trace.returncode
+              receipt['parameter_only_exit_codes_are_not_acceptance'] = True
+              assert all(summary.values()), 'independent SPS field extraction incomplete; retain raw tool diagnostics'
+              receipt['original_colour_rejection_agrees_with_independent_trace'] = all(
+                field['value']==fixture['original_rejection']['actual'] for field in summary['colour_primaries'])
+              receipt['diagnostic_completed'] = True
+          except BaseException as error:
+              receipt['failure'] = repr(error)
+              raise
+          finally:
+              receipt['files'] = [{'path':path.name,'bytes':path.stat().st_size,'sha256':digest(path)}
+                for path in sorted(output.iterdir()) if path.is_file()]
+              (output/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: hevc-parameter-diagnostic-${{ inputs.source_revision }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/hevc-parameter-diagnostic/
+          if-no-files-found: error
+          retention-days: 30

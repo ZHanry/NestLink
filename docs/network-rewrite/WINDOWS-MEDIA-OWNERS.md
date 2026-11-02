@@ -197,3 +197,26 @@ need an exact-source hosted build and original target reruns. The native
 metadata/property boundary test does not establish encoder signalling or GPU
 execution. The separate original Main10 `0x8000ffff` creation failure remains
 failed and is not explained by the Main8 SPS colour rejection.
+
+The `b6b5520` target rerun still failed the original Main8 SPS colour assertion:
+all eight standard colour properties reported `E_NOTIMPL`, while both current
+MF types retained matrix/primaries/transfer/range 1/2/5/2. The bounded diagnostic
+retained the exact 23-byte VPS, 52-byte SPS and 7-byte PPS. The fixed
+[`hevc-main8-b6b5520-parameters.json`](fixtures/hevc-main8-b6b5520-parameters.json)
+contains those original synthetic parameter NAL bytes and tool provenance, with
+no VCL or image data. The original failed commands remain separately recorded.
+
+The exact-source `hevc-parameter-diagnostic.yml` workflow submits this fixture to
+the runner's FFmpeg `trace_headers` bitstream filter and ffprobe, using the
+official Ubuntu package if the tools are absent. It first compares every fixture
+byte with both original command logs, then supplies Annex-B delimiters without
+changing the NAL payload. Its artifact records executable versions and SHA256,
+source/workflow revisions, fixture and original-evidence hashes, raw stdout and
+stderr, return codes, and the independently traced SPS field values/positions.
+The small extractor reads only FFmpeg's textual field results; it does not parse
+SPS bits. FFmpeg trace positions retain its own convention and must not be
+equated directly with the local validator's `rbsp_bit` convention. Parameter-only
+input contains no picture: exit codes and metadata extraction are retained as
+diagnostics, with product/decode/GPU acceptance false. This independent hosted
+comparison is pending; it must establish any parser discrepancy before changing
+the original strict parser or attributing the failure to the encoder.
