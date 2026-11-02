@@ -130,22 +130,23 @@ HRESULT media_type(Codec& state, bool compressed, uint32_t kbps, IMFMediaType** 
     ComPtr<IMFMediaType> type;
     HRESULT hr = MFCreateMediaType(&type);
     if (FAILED(hr)) return hr;
-    type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-    type->SetGUID(MF_MT_SUBTYPE, compressed ? (state.hevc ? MFVideoFormat_HEVC : MFVideoFormat_H264) : (state.main10 ? MFVideoFormat_P010 : MFVideoFormat_NV12));
-    type->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
-    MFSetAttributeSize(type.Get(), MF_MT_FRAME_SIZE, state.width, state.height);
-    MFSetAttributeRatio(type.Get(), MF_MT_FRAME_RATE, state.fps, 1);
-    MFSetAttributeRatio(type.Get(), MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
-    type->SetUINT32(MF_MT_YUV_MATRIX, MFVideoTransferMatrix_BT709);
-    type->SetUINT32(MF_MT_VIDEO_PRIMARIES, MFVideoPrimaries_BT709);
-    type->SetUINT32(MF_MT_TRANSFER_FUNCTION, MFVideoTransFunc_709);
-    type->SetUINT32(MF_MT_VIDEO_NOMINAL_RANGE, MFNominalRange_16_235);
-    if (compressed && state.hevc) type->SetUINT32(MF_MT_MPEG2_PROFILE, state.main10 ? 2u : 1u);
+    hr = type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+    if (SUCCEEDED(hr)) hr = type->SetGUID(MF_MT_SUBTYPE, compressed ? (state.hevc ? MFVideoFormat_HEVC : MFVideoFormat_H264) : (state.main10 ? MFVideoFormat_P010 : MFVideoFormat_NV12));
+    if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+    if (SUCCEEDED(hr)) hr = MFSetAttributeSize(type.Get(), MF_MT_FRAME_SIZE, state.width, state.height);
+    if (SUCCEEDED(hr)) hr = MFSetAttributeRatio(type.Get(), MF_MT_FRAME_RATE, state.fps, 1);
+    if (SUCCEEDED(hr)) hr = MFSetAttributeRatio(type.Get(), MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
+    if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_YUV_MATRIX, MFVideoTransferMatrix_BT709);
+    if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_VIDEO_PRIMARIES, MFVideoPrimaries_BT709);
+    if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_TRANSFER_FUNCTION, MFVideoTransFunc_709);
+    if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_VIDEO_NOMINAL_RANGE, MFNominalRange_16_235);
+    if (SUCCEEDED(hr) && compressed && state.hevc) hr = type->SetUINT32(MF_MT_MPEG2_PROFILE, state.main10 ? 2u : 1u);
     if (compressed && state.encoder) {
-        type->SetUINT32(MF_MT_AVG_BITRATE, kbps * 1000);
-        type->SetUINT32(MF_MT_MPEG2_PROFILE, state.hevc ? (state.main10 ? 2u : 1u) : 66u);
-        if (state.level) type->SetUINT32(MF_MT_MPEG2_LEVEL, state.level);
+        if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_AVG_BITRATE, kbps * 1000);
+        if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_MPEG2_PROFILE, state.hevc ? (state.main10 ? 2u : 1u) : 66u);
+        if (SUCCEEDED(hr) && state.level) hr = type->SetUINT32(MF_MT_MPEG2_LEVEL, state.level);
     }
+    if (FAILED(hr)) return hr;
     *result = type.Detach();
     return S_OK;
 }
@@ -160,11 +161,95 @@ HRESULT hevc_sdr(IMFMediaType* type, bool negotiate) {
     }
     return S_OK;
 }
+struct CodecColorReceipt {
+    HRESULT supported=E_PENDING,set=E_PENDING,read=E_PENDING;
+    VARTYPE actual_type=VT_EMPTY;
+    ULONG actual=0;
+};
+// IsSupported explicitly permits S_FALSE or E_NOTIMPL for an absent property.
+// SetValue's S_FALSE means read-only, so it must never be treated as a set.
+// A supported property must round-trip the documented VT_UI4 enum exactly.
+template<class Supported,class Set,class Get>
+HRESULT codec_color_property(ULONG expected,Supported supported,Set set,Get get,CodecColorReceipt& receipt) {
+    receipt.supported=supported();
+    if(receipt.supported==S_FALSE || receipt.supported==E_NOTIMPL)return S_OK;
+    if(receipt.supported!=S_OK)return FAILED(receipt.supported)?receipt.supported:E_UNEXPECTED;
+    VARIANT requested{};requested.vt=VT_UI4;requested.ulVal=expected;
+    receipt.set=set(&requested);
+    if(receipt.set!=S_OK)return FAILED(receipt.set)?receipt.set:E_UNEXPECTED;
+    VARIANT actual{};
+    receipt.read=get(&actual);receipt.actual_type=actual.vt;
+    if(actual.vt==VT_UI4)receipt.actual=actual.ulVal;
+    const bool matches=actual.vt==VT_UI4 && actual.ulVal==expected;
+    const HRESULT cleared=VariantClear(&actual);
+    if(receipt.read!=S_OK)return FAILED(receipt.read)?receipt.read:E_UNEXPECTED;
+    if(FAILED(cleared))return cleared;
+    return matches?S_OK:MF_E_INVALIDMEDIATYPE;
+}
+HRESULT hevc_encoder_color(IMFTransform* transform) {
+    ComPtr<ICodecAPI> api;
+    HRESULT hr=transform->QueryInterface(IID_PPV_ARGS(&api));
+    std::fprintf(stderr,"hevc_mf_color_codecapi hr=0x%08lx\n",static_cast<unsigned long>(hr));
+    std::fflush(stderr);
+    if(hr==E_NOINTERFACE)return S_OK; // MF types and the original actual SPS check still apply.
+    if(FAILED(hr))return hr;
+    if(hr!=S_OK || !api)return E_UNEXPECTED;
+    // These are codecapi.h enum values, not H.265 VUI code points. In particular
+    // Windows BT.709 primaries=2 and transfer=5 map to VUI code point 1.
+    struct Property {const GUID* key;const char* name;ULONG expected;};
+    const Property properties[]={
+        {&CODECAPI_AVEncVideoInputColorPrimaries,"input.primaries",eAVEncVideoColorPrimaries_BT709},
+        {&CODECAPI_AVEncVideoOutputColorPrimaries,"output.primaries",eAVEncVideoColorPrimaries_BT709},
+        {&CODECAPI_AVEncVideoInputColorTransferFunction,"input.transfer",eAVEncVideoColorTransferFunction_22_709},
+        {&CODECAPI_AVEncVideoOutputColorTransferFunction,"output.transfer",eAVEncVideoColorTransferFunction_22_709},
+        {&CODECAPI_AVEncVideoInputColorTransferMatrix,"input.matrix",eAVEncVideoColorTransferMatrix_BT709},
+        {&CODECAPI_AVEncVideoOutputColorTransferMatrix,"output.matrix",eAVEncVideoColorTransferMatrix_BT709},
+        {&CODECAPI_AVEncVideoInputColorNominalRange,"input.range",eAVEncVideoColorNominalRange_16_235},
+        {&CODECAPI_AVEncVideoOutputColorNominalRange,"output.range",eAVEncVideoColorNominalRange_16_235},
+    };
+    for(const auto& property:properties) {
+        CodecColorReceipt receipt{};
+        hr=codec_color_property(property.expected,[&](){return api->IsSupported(property.key);},
+            [&](VARIANT* value){return api->SetValue(property.key,value);},
+            [&](VARIANT* value){return api->GetValue(property.key,value);},receipt);
+        std::fprintf(stderr,"hevc_mf_color_property name=%s expected=%lu supported=0x%08lx set=0x%08lx read=0x%08lx actual_vt=%u actual=%lu result=0x%08lx\n",
+            property.name,property.expected,static_cast<unsigned long>(receipt.supported),
+            static_cast<unsigned long>(receipt.set),static_cast<unsigned long>(receipt.read),
+            static_cast<unsigned>(receipt.actual_type),receipt.actual,static_cast<unsigned long>(hr));
+        std::fflush(stderr);
+        if(FAILED(hr))return hr;
+    }
+    return S_OK;
+}
+HRESULT hevc_current_types(Codec& state) {
+    const GUID* keys[]={&MF_MT_YUV_MATRIX,&MF_MT_VIDEO_PRIMARIES,&MF_MT_TRANSFER_FUNCTION,&MF_MT_VIDEO_NOMINAL_RANGE};
+    const char* names[]={"matrix","primaries","transfer","range"};
+    for(unsigned output=0;output<2;++output) {
+        ComPtr<IMFMediaType> actual;
+        HRESULT hr=output?state.transform->GetOutputCurrentType(0,&actual):state.transform->GetInputCurrentType(0,&actual);
+        if(FAILED(hr))return hr;
+        for(size_t i=0;i<4;++i) {
+            UINT32 value=0;hr=actual->GetUINT32(*keys[i],&value);
+            std::fprintf(stderr,"hevc_mf_current_type encoder=%u output=%u attribute=%s hr=0x%08lx value=%u\n",
+                state.encoder?1u:0u,output,names[i],static_cast<unsigned long>(hr),value);
+        }
+        std::fflush(stderr);
+        hr=hevc_sdr(actual.Get(),false);if(FAILED(hr))return hr;
+    }
+    return S_OK;
+}
+void hevc_configure_result(Codec& state,const char* stage,HRESULT hr) {
+    if(!state.hevc)return;
+    std::fprintf(stderr,"hevc_mf_configure encoder=%u stage=%s hr=0x%08lx\n",
+        state.encoder?1u:0u,stage,static_cast<unsigned long>(hr));
+    std::fflush(stderr);
+}
 HRESULT configure(Codec& state, IMFTransform* transform, uint32_t kbps) {
     state.transform = transform;
     ComPtr<IMFAttributes> attributes;
     if (SUCCEEDED(transform->GetAttributes(&attributes))) {
-        attributes->SetUINT32(MF_LOW_LATENCY, TRUE);
+        const HRESULT low_latency=attributes->SetUINT32(MF_LOW_LATENCY, TRUE);
+        if(FAILED(low_latency))return low_latency;
         UINT32 asynchronous = FALSE;
         if (SUCCEEDED(attributes->GetUINT32(MF_TRANSFORM_ASYNC, &asynchronous)) && asynchronous) {
             HRESULT hr = attributes->SetUINT32(MF_TRANSFORM_ASYNC_UNLOCK, TRUE);
@@ -206,13 +291,23 @@ HRESULT configure(Codec& state, IMFTransform* transform, uint32_t kbps) {
     if (FAILED(hr)) return hr;
     if (state.encoder) {
         hr = transform->SetOutputType(0, compressed.Get(), 0);
-        if (SUCCEEDED(hr)) hr = transform->SetInputType(0, raw.Get(), 0);
+        hevc_configure_result(state,"set_compressed_output",hr);
+        if (SUCCEEDED(hr)) {
+            hr = transform->SetInputType(0, raw.Get(), 0);
+            hevc_configure_result(state,"set_raw_input",hr);
+        }
     } else {
         hr = transform->SetInputType(0, compressed.Get(), 0);
-        if (SUCCEEDED(hr)) hr = transform->SetOutputType(0, raw.Get(), 0);
+        hevc_configure_result(state,"set_compressed_input",hr);
+        if (SUCCEEDED(hr)) {
+            hr = transform->SetOutputType(0, raw.Get(), 0);
+            hevc_configure_result(state,"set_raw_output",hr);
+        }
     }
     if (FAILED(hr)) return hr;
     if (state.hevc) {
+        if(state.encoder) {hr=hevc_encoder_color(transform);if(FAILED(hr))return hr;}
+        hr=hevc_current_types(state);if(FAILED(hr))return hr;
         ComPtr<IMFMediaType> actual_raw;
         hr = state.encoder ? transform->GetInputCurrentType(0,&actual_raw) : transform->GetOutputCurrentType(0,&actual_raw);
         GUID subtype{};
@@ -222,7 +317,11 @@ HRESULT configure(Codec& state, IMFTransform* transform, uint32_t kbps) {
         if (FAILED(hr)) return hr;
     }
     hr = transform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
-    if (SUCCEEDED(hr)) hr = transform->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
+    hevc_configure_result(state,"begin_streaming",hr);
+    if (SUCCEEDED(hr)) {
+        hr = transform->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
+        hevc_configure_result(state,"start_of_stream",hr);
+    }
     return hr;
 }
 HRESULT poll_events(Codec& state) {
@@ -889,6 +988,60 @@ extern "C" uint32_t nl_mf_gpu_pool_contract() noexcept {
         callback.Reset();
         return weak.expired() ? 1 : 0;
     } catch (...) { return 0; }
+}
+
+// Same property decision path used by the real encoder, plus actual MF types.
+// No decoder, GPU device, window or capture resource is opened by this test.
+extern "C" uint32_t nl_hevc_color_contract() noexcept {
+    uint32_t passed=0;
+    const auto scenario=[](HRESULT support,HRESULT set,HRESULT get,VARTYPE type,ULONG value,unsigned& calls) {
+        CodecColorReceipt receipt{};
+        return codec_color_property(2,[&](){return support;},[&](VARIANT* requested){
+            ++calls;return requested->vt==VT_UI4 && requested->ulVal==2?set:E_INVALIDARG;
+        },[&](VARIANT* actual){
+            calls+=2;actual->vt=type;
+            if(type==VT_UI4)actual->ulVal=value;
+            else if(type==VT_I4)actual->lVal=static_cast<LONG>(value);
+            return get;
+        },receipt);
+    };
+    unsigned calls=0;
+    if(scenario(S_OK,S_OK,S_OK,VT_UI4,2,calls)==S_OK && calls==3)passed|=1;
+    calls=0;
+    if(scenario(S_FALSE,S_OK,S_OK,VT_UI4,2,calls)==S_OK && !calls)passed|=2;
+    if(scenario(E_NOTIMPL,S_OK,S_OK,VT_UI4,2,calls)==S_OK && !calls)passed|=4;
+    if(scenario(E_ACCESSDENIED,S_OK,S_OK,VT_UI4,2,calls)==E_ACCESSDENIED && !calls)passed|=8;
+    calls=0;
+    bool rejected=scenario(S_OK,E_INVALIDARG,S_OK,VT_UI4,2,calls)==E_INVALIDARG && calls==1;
+    calls=0;
+    rejected=rejected && FAILED(scenario(S_OK,S_FALSE,S_OK,VT_UI4,2,calls)) && calls==1;
+    if(rejected)passed|=16;
+    calls=0;
+    rejected=scenario(S_OK,S_OK,E_FAIL,VT_UI4,2,calls)==E_FAIL && calls==3;
+    calls=0;
+    rejected=rejected && FAILED(scenario(S_OK,S_OK,S_FALSE,VT_UI4,2,calls)) && calls==3;
+    if(rejected)passed|=32;
+    calls=0;
+    rejected=scenario(S_OK,S_OK,S_OK,VT_UI4,0,calls)==MF_E_INVALIDMEDIATYPE;
+    rejected=rejected && scenario(S_OK,S_OK,S_OK,VT_I4,2,calls)==MF_E_INVALIDMEDIATYPE;
+    if(rejected)passed|=64;
+    const HRESULT com=CoInitializeEx(nullptr,COINIT_MULTITHREADED);
+    if(FAILED(com))return passed;
+    if(FAILED(MFStartup(MF_VERSION,MFSTARTUP_NOSOCKET))){CoUninitialize();return passed;}
+    {
+        Codec state;state.hevc=true;state.encoder=true;
+        state.width=1920;state.height=1080;state.fps=60;
+        ComPtr<IMFMediaType> raw,compressed;
+        if(SUCCEEDED(media_type(state,false,8000,&raw)) && SUCCEEDED(media_type(state,true,8000,&compressed)) &&
+            SUCCEEDED(hevc_sdr(raw.Get(),false)) && SUCCEEDED(hevc_sdr(compressed.Get(),false))) {
+            UINT32 primaries=0,transfer=0;
+            if(SUCCEEDED(raw->GetUINT32(MF_MT_VIDEO_PRIMARIES,&primaries)) && primaries==2 &&
+                SUCCEEDED(compressed->GetUINT32(MF_MT_TRANSFER_FUNCTION,&transfer)) && transfer==5 &&
+                SUCCEEDED(compressed->SetUINT32(MF_MT_VIDEO_PRIMARIES,0)) &&
+                hevc_sdr(compressed.Get(),false)==MF_E_INVALIDMEDIATYPE)passed|=128;
+        }
+    }
+    MFShutdown();CoUninitialize();return passed;
 }
 
 // Explicit prototype entry points. No product VideoCodec/wire identity is changed.

@@ -972,3 +972,17 @@ mod gpu_input_tests {
         assert_eq!(unsafe { nl_mf_gpu_pool_contract() }, 1);
     }
 }
+
+#[cfg(test)]
+mod hevc_color_tests {
+    unsafe extern "C" {
+        fn nl_hevc_color_contract() -> u32;
+    }
+    #[test]
+    fn supported_color_properties_must_roundtrip_and_mf_enums_remain_exact() {
+        // SAFETY: no pointers or borrowed resources. The native routine owns
+        // and closes its COM/MF metadata objects without opening hardware.
+        let passed = unsafe { nl_hevc_color_contract() };
+        assert_eq!(passed, 255, "HEVC color boundary bitmask: {passed:#x}");
+    }
+}

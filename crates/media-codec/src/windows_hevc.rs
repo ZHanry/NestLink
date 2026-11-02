@@ -123,6 +123,7 @@ pub struct HevcProbeEncoder {
     config: VideoConfig,
     validator: Validator,
     scratch: Vec<u8>,
+    rejection_logged: bool,
     authority: Arc<AtomicBool>,
 }
 impl HevcProbeEncoder {
@@ -154,8 +155,40 @@ impl HevcProbeEncoder {
                 Validator::default()
             },
             scratch: vec![0; 8 * 1024 * 1024],
+            rejection_logged: false,
             authority,
         })
+    }
+    fn validate_output(&mut self, length: usize) -> io::Result<()> {
+        let data = &self.scratch[..length];
+        let result = self
+            .validator
+            .validate(data, self.config.width, self.config.height);
+        if result.is_err() && !self.rejection_logged {
+            self.rejection_logged = true;
+            // A bounded original parameter-set record helps distinguish native
+            // encoder signalling from parser errors. No VCL/pixel bytes are logged,
+            // and the exact original validator result still controls acceptance.
+            if let Ok(nals) = crate::h264::nals(data) {
+                for nal in nals
+                    .into_iter()
+                    .filter(|nal| {
+                        nal.first()
+                            .is_some_and(|byte| (32..=34).contains(&((byte >> 1) & 63)))
+                    })
+                    .take(3)
+                {
+                    let recorded = &nal[..nal.len().min(256)];
+                    eprintln!(
+                        "hevc_mf_rejected_parameter_set kind={} bytes={} recorded={} hex={recorded:02x?}",
+                        (nal[0] >> 1) & 63,
+                        nal.len(),
+                        recorded.len(),
+                    );
+                }
+            }
+        }
+        result
     }
     pub fn submit(
         &mut self,
@@ -171,11 +204,7 @@ impl HevcProbeEncoder {
         }?;
         authorized(&self.authority)?;
         let packet = if let Some((length, actual_pts)) = output {
-            self.validator.validate(
-                &self.scratch[..length],
-                self.config.width,
-                self.config.height,
-            )?;
+            self.validate_output(length)?;
             Some(HevcProbePacket {
                 pts_90khz: actual_pts,
                 data: self.scratch[..length].to_vec(),
@@ -190,11 +219,7 @@ impl HevcProbeEncoder {
         let output = self.inner.receive(&mut self.scratch)?;
         authorized(&self.authority)?;
         if let Some((length, pts)) = output {
-            self.validator.validate(
-                &self.scratch[..length],
-                self.config.width,
-                self.config.height,
-            )?;
+            self.validate_output(length)?;
             Ok(Some(HevcProbePacket {
                 pts_90khz: pts,
                 data: self.scratch[..length].to_vec(),

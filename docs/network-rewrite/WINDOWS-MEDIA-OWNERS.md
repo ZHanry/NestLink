@@ -150,3 +150,39 @@ remain invalid. The ordinary-token hosted metadata regression uses the same
 production reader on real IMFMediaType objects. The corrected tool still needs
 its own same-source hosted build and original target rerun; these metadata
 checks do not establish GPU execution or physical scanout.
+
+The retained `2ffc870` Main8 encode and decode direction attempts both stopped
+while validating the encoder-generated fixture: the original SPS reported
+`vui.colour_primaries=0`, where the unchanged contract requires H.265 code point
+1. No decoder-output success follows from those attempts. Both requested MF
+types already used the correct Windows BT.709 enums (matrix 1, primaries 2,
+transfer 5, limited range 2), and output-before-input type configuration follows
+the [Microsoft HEVC encoder documentation](https://learn.microsoft.com/en-us/windows/win32/medfound/h-265---hevc-video-encoder).
+Windows primaries enum 1 is reserved; replacing the correct MF value 2 with the
+bitstream code point 1 would be incorrect.
+
+The HEVC encoder now also negotiates the eight standard input/output
+`ICodecAPI` primaries, transfer, matrix and range properties after setting the
+media types and before beginning streaming. It uses the official
+[`eAVEncVideoColorPrimaries`](https://learn.microsoft.com/en-us/windows/win32/api/codecapi/ne-codecapi-eavencvideocolorprimaries),
+[`eAVEncVideoColorTransferFunction`](https://learn.microsoft.com/en-us/windows/win32/api/codecapi/ne-codecapi-eavencvideocolortransferfunction),
+[`eAVEncVideoColorTransferMatrix`](https://learn.microsoft.com/en-us/windows/win32/api/codecapi/ne-codecapi-eavencvideocolortransfermatrix)
+and [`eAVEncVideoColorNominalRange`](https://learn.microsoft.com/en-us/windows/win32/api/codecapi/ne-codecapi-eavencvideocolornominalrange)
+enums. The documented
+[`IsSupported`](https://learn.microsoft.com/en-us/windows/win32/api/strmif/nf-strmif-icodecapi-issupported)
+results `S_FALSE` and `E_NOTIMPL` mean an absent property; they retain the correct
+MF media type path and the original actual-AU acceptance gate. Supported
+properties require `SetValue` and `GetValue` to return `S_OK` with the exact
+`VT_UI4` value. In particular,
+[`SetValue` returning `S_FALSE`](https://learn.microsoft.com/en-us/windows/win32/api/strmif/nf-strmif-icodecapi-setvalue)
+means read-only and fails configuration. Unexpected support-call errors,
+set/read errors, wrong variant types and conflicting values also fail.
+
+Configuration logs each property receipt and both current MF media types. On
+the first encoder validation rejection, the diagnostic records at most three
+original VPS/SPS/PPS NALs, at most 256 bytes each, with their original lengths;
+it never rewrites parameter sets, AUs or colour metadata. These changes still
+need an exact-source hosted build and original target reruns. The native
+metadata/property boundary test does not establish encoder signalling or GPU
+execution. The separate original Main10 `0x8000ffff` creation failure remains
+failed and is not explained by the Main8 SPS colour rejection.
