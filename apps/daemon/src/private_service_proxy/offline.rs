@@ -2,9 +2,9 @@
 //! JSON is an interaction format; signed authority and target consent are never
 //! restored from a file, command line, IPC caller or another process.
 use super::Result;
+use crate::offline_resident::{LocalGuard, emit, input};
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_identity::offline::OfflineProcess;
-use crate::offline_resident::{LocalGuard, emit, input};
 use nestlink_protocol::{offline::management::*, services::private::*};
 use nestlink_sdk::{
     DeviceIdentity, Sdk,

@@ -385,7 +385,10 @@ async fn exercise(transport: NativeOfflineTransport) -> Result {
                     OfflineRemoteOperation::FileRead
                 ]
             );
-            assert_eq!(offline.budget.connection_attempts, if offline.is_host { 1 } else { 2 });
+            assert_eq!(
+                offline.budget.connection_attempts,
+                if offline.is_host { 1 } else { 2 }
+            );
             assert!(handle.native_input_layout().is_err());
             assert!(handle.native_audio_binding().is_none());
         }

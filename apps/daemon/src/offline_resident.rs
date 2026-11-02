@@ -5,11 +5,16 @@ use sha2::{Digest, Sha256};
 use std::{
     io::{self, BufRead, Read, Write},
     path::PathBuf,
-    sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    },
     time::Duration,
 };
 pub(crate) type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
-fn invalid(message: &str) -> io::Error { io::Error::new(io::ErrorKind::InvalidInput, message) }
+fn invalid(message: &str) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidInput, message)
+}
 pub(crate) fn emit(event: &str, value: impl Serialize) -> Result<()> {
     let mut output = io::stdout().lock();
     serde_json::to_writer(

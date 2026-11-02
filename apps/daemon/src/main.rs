@@ -11,8 +11,6 @@ mod native_files;
 #[cfg(windows)]
 mod native_gpu_diagnostics;
 mod native_video;
-mod offline_remote;
-mod offline_resident;
 #[cfg(any(target_os = "linux", windows))]
 mod network_lan;
 #[cfg(any(target_os = "linux", windows))]
@@ -21,6 +19,8 @@ mod network_packet_runtime;
 mod network_subnet_system;
 #[cfg(any(target_os = "linux", windows))]
 mod network_tun_system;
+mod offline_remote;
+mod offline_resident;
 mod private_service_proxy;
 mod private_web_gateway;
 mod privileged_input;
@@ -484,7 +484,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Their inline union can overflow the Windows main stack before the
     // selected command (including a synchronous quota inspection) even starts.
     match args.command.take() {
-        Some(Command::OfflineRemote(command)) => return Box::pin(offline_remote::run(command)).await,
+        Some(Command::OfflineRemote(command)) => {
+            return Box::pin(offline_remote::run(command)).await;
+        }
         #[cfg(any(target_os = "linux", windows))]
         Some(Command::LocalPortGate(command)) => {
             return Box::pin(local_port_gate::run(command)).await;
