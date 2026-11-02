@@ -6,7 +6,7 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "5797def05d72706dffff78b0e428fa82f68e561d",
+  "source_revision": "c9ba19425f413cec1820ce217dce1dcd7b1f5507",
   "checkpoint_kind": "source_bound_failure_preserving_continuation",
   "active_tasks": [
     "W00",
@@ -250,7 +250,11 @@
     "docs/network-rewrite/evidence/format-10d6224.json",
     "docs/network-rewrite/evidence/format-91509d1.json",
     "docs/network-rewrite/evidence/network-contract-10d6224.json",
-    "docs/network-rewrite/evidence/windows-media-owner-10d6224.json"
+    "docs/network-rewrite/evidence/windows-media-owner-10d6224.json",
+    "docs/network-rewrite/evidence/format-af59a94.json",
+    "docs/network-rewrite/evidence/format-4031432.json",
+    "docs/network-rewrite/evidence/windows-adapter-build-af59a94-failed.json",
+    "docs/network-rewrite/evidence/native-offline-resident-1dd4efd.json"
   ],
   "observed_actions": [
     {
@@ -735,6 +739,18 @@
       "run_id": 41466479064,
       "source_revision": "91509d13f8aa52fff19f31e2fb77c5c702da0dc1",
       "state": "success_empty_patch_no_changes"
+    },
+    "adapter_tools": {
+      "run_id": 41467970616,
+      "source_revision": "af59a9496161a5faca8915134ce01d92663cb67a",
+      "state": "failed_original_strict_cpp_shadow_warning",
+      "whole_task_passed": false
+    },
+    "adapter_owner": {
+      "run_id": 41468016820,
+      "source_revision": "af59a9496161a5faca8915134ce01d92663cb67a",
+      "state": "running_windows2022_failed_strict_compile_peer_jobs_passed",
+      "whole_task_passed": false
     }
   },
   "branch_inventory": {
@@ -798,6 +814,18 @@
       "run_id": 41466479064,
       "source_revision": "91509d13f8aa52fff19f31e2fb77c5c702da0dc1",
       "state": "success_empty_patch_no_changes"
+    },
+    "adapter_tools": {
+      "run_id": 41467970616,
+      "source_revision": "af59a9496161a5faca8915134ce01d92663cb67a",
+      "state": "failed_original_strict_cpp_shadow_warning",
+      "whole_task_passed": false
+    },
+    "adapter_owner": {
+      "run_id": 41468016820,
+      "source_revision": "af59a9496161a5faca8915134ce01d92663cb67a",
+      "state": "running_windows2022_failed_strict_compile_peer_jobs_passed",
+      "whole_task_passed": false
     }
   },
   "continuation_checkpoint": {

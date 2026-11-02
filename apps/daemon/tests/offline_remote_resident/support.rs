@@ -760,11 +760,15 @@ impl Fixture {
         platform
             .protect_login(&source, &source_sdk)
             .await
-            .inspect_err(|error| fixture_setup_diagnostic("source_protected_login", error.as_ref()))?;
+            .inspect_err(|error| {
+                fixture_setup_diagnostic("source_protected_login", error.as_ref())
+            })?;
         platform
             .protect_login(&host, &host_sdk)
             .await
-            .inspect_err(|error| fixture_setup_diagnostic("host_protected_login", error.as_ref()))?;
+            .inspect_err(|error| {
+                fixture_setup_diagnostic("host_protected_login", error.as_ref())
+            })?;
         setup.store(false, Ordering::Release);
         Ok(Self {
             source,

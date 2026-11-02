@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "status": "failed_original_strict_compile",
+  "source_revision": "af59a9496161a5faca8915134ce01d92663cb67a",
+  "run_id": 41467970616,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41467970616",
+  "artifact_id": 13154411436,
+  "official_artifact_digest": "sha256:f6694f269519001ccd1d76b5ef873d7a1284faa158f7231dcc62074421229004",
+  "all_receipt_payloads_verified": true,
+  "receipt": {
+    "source_revision": "af59a9496161a5faca8915134ce01d92663cb67a",
+    "workflow_revision": "af59a9496161a5faca8915134ce01d92663cb67a",
+    "workflow": "ZHanry/NestLink/.github/workflows/windows-media-target-tools.yml@refs/heads/main",
+    "run_id": "41467970616",
+    "run_attempt": "1",
+    "runner_environment": "github-hosted",
+    "runner_os": "Windows",
+    "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+    "scope": "Finite original native direction workloads with synthetic input. No desktop capture, transport, scanout, sustained performance, HDR or native ten-bit capture qualification.",
+    "target_execution_performed": false,
+    "commands": [
+      {
+        "name": "build",
+        "argv": [
+          "cargo",
+          "build",
+          "--release",
+          "--locked",
+          "-p",
+          "nestlink-media-codec",
+          "--examples"
+        ],
+        "return_code": 101
+      }
+    ],
+    "passed": false,
+    "files": [
+      {
+        "path": "build.log",
+        "bytes": 31476,
+        "sha256": "daab116733f121014533537117f473a363fb746a538f1b780e5cd2b4345a4c48"
+      }
+    ]
+  },
+  "owner_windows2022": {
+    "run_id": 41468016820,
+    "artifact_id": 13154756828,
+    "official_artifact_digest": "sha256:20d973f25dad5283b253bd0462704fa5f868bdafa36fb46be76c162db4e01e61",
+    "artifact_files": [
+      {
+        "path": "compressed-native-tests.log",
+        "bytes": 47411,
+        "sha256": "3643b4105350e993981e47b587e2b0e57fe2fe9b3ea88968c1a52e7dc9a169fe"
+      },
+      {
+        "path": "daemon-hevc-selection-tests.log",
+        "bytes": 28332,
+        "sha256": "426d55c8a34263eba1a9e4fba290854d9f8e38828eeb5863b094a886edf8dea6"
+      },
+      {
+        "path": "desktop-clippy.log",
+        "bytes": 41853,
+        "sha256": "c15221bce9c06c011f6cc4b082d66f2f11e33d5422423eba738dc9c3c4fdbc58"
+      },
+      {
+        "path": "h264-output-geometry-tests.log",
+        "bytes": 27778,
+        "sha256": "6febe32442f714683daad432ce07d3c62389cef472730c83b9dbd9b14d4e205e"
+      },
+      {
+        "path": "media-opt-in-config-tests.log",
+        "bytes": 28036,
+        "sha256": "bf72a952dd10b4a397aaf16930f6860ae30a7dc6c720f77219127de42cb461ad"
+      },
+      {
+        "path": "media-provider-tests.log",
+        "bytes": 27814,
+        "sha256": "a0ff334c69595b9c301fc9942bf2ef73a23cff1c77ee2ff870f3fc30ec65df01"
+      },
+      {
+        "path": "signed-store-media-tests.log",
+        "bytes": 4043,
+        "sha256": "53fc7da27f6eb5aa42aa2151742f90fb6482154c4e7d11b8845462131b46456d"
+      },
+      {
+        "path": "source-receipt.json",
+        "bytes": 689,
+        "sha256": "580a4c6def495a5b1eff9914fd0c1ed360a4ce252efed00ba21b14c85580084c"
+      }
+    ],
+    "receipt": {
+      "source_revision": "af59a9496161a5faca8915134ce01d92663cb67a",
+      "workflow_revision": "af59a9496161a5faca8915134ce01d92663cb67a",
+      "run_id": "41468016820",
+      "attempt": "1",
+      "runner_environment": "github-hosted",
+      "runner_os": "Windows",
+      "runner_label": "windows-2022",
+      "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+      "hardware_or_target_acceptance_claimed": false,
+      "tool_sources": {
+        "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+        "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+      }
+    }
+  },
+  "failure": "Original MSVC /W4 /WX rejects C4456 at windows_mf.cpp:675 because desc shadows new source adapter descriptor at644. No failed executable was used. Source c9ba194 only renames new descriptor to source_desc and retains the warning gate; fresh build and target commands remain necessary."
+}
