@@ -1,6 +1,12 @@
 name: Network authorized service capacity
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Explicit carrier mode; independent-grant failure records remain retained
+        type: choice
+        options: [independent, multiplexed]
+        default: independent
 permissions:
   contents: read
 jobs:
@@ -12,6 +18,7 @@ jobs:
       CARGO_PROFILE_DEV_DEBUG: "0"
       CARGO_PROFILE_TEST_DEBUG: "0"
       RUST_BACKTRACE: "1"
+      CAPACITY_MODE: ${{ inputs.mode }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -47,6 +54,12 @@ jobs:
             'limitations':['one hosted process; not physical nodes or independently deployed relay runtimes',
               'short-run samples cannot qualify cross-day soak, complete E2E or all bounded queues'],
             'passed':False,'commands':[]}
+          mode = os.environ['CAPACITY_MODE']
+          assert mode in ('independent','multiplexed')
+          receipt['load_mode'] = mode
+          receipt['offered_load']['management_logins_per_active_consumer'] = 1
+          receipt['offered_load']['streams_per_pair'] = 50
+          receipt['offered_load']['same_lease_control_owners_per_wave'] = 20 if mode == 'multiplexed' else 1000
           def execute(name, command, timeout):
               started = time.monotonic()
               with (output/(name+'.log')).open('wb') as stream, (output/(name+'.stderr.log')).open('wb') as errors:
@@ -61,8 +74,12 @@ jobs:
               assert len(artifacts)==1, artifacts
               executable = pathlib.Path(artifacts[0])
               receipt['executable_sha256'] = hashlib.sha256(executable.read_bytes()).hexdigest()
-              execute('execution',[str(executable),'--exact','hundred_enrolled_nodes_twenty_pairs_thousand_simultaneous_authorized_streams','--ignored','--nocapture','--test-threads=1'],660)
-              execute('strict-capacity',['cargo','clippy','--locked','-p','nestlink-sdk','--test','capacity','--','-D','warnings'],300)
+              if mode == 'multiplexed':
+                  execute('explicit-negotiation',['cargo','test','--locked','-p','nestlink-sdk','--lib','explicit_negotiation_preserves_legacy_wire_and_old_host_refusal','--','--show-output'],300)
+                  execute('multiplex-original-owners',['cargo','test','--locked','-p','nestlink-sdk','--test','private_services','multiplex::','--','--show-output','--test-threads=1'],300)
+              case = 'hundred_enrolled_nodes_twenty_pairs_thousand_'+('multiplexed' if mode == 'multiplexed' else 'simultaneous')+'_authorized_streams'
+              execute('execution',[str(executable),'--exact',case,'--ignored','--nocapture','--test-threads=1'],660)
+              execute('strict-capacity',['cargo','clippy','--locked','-p','nestlink-sdk','--test','capacity','--test','private_services','--','-D','warnings'],300)
               receipt['passed'] = True
           except BaseException as error:
               receipt['failure'] = repr(error)
@@ -75,7 +92,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: network-capacity-${{ github.sha }}-${{ github.run_attempt }}
+          name: network-capacity-${{ inputs.mode }}-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/network-capacity/
           if-no-files-found: error
           retention-days: 30

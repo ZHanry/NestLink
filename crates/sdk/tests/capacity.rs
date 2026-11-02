@@ -8,8 +8,9 @@ use nestlink_identity::PermitSigner;
 use nestlink_protocol::{api::*, service_plane::*, services::private::*, spaces::*};
 use nestlink_sdk::{
     DeploymentTrust, DeviceIdentity, Sdk,
-    services::{LocalServiceTargetConsent, PrivateServiceHost, PrivateServiceHostConfig},
+    services::{LocalServiceTargetConsent, PrivateServiceConnection, PrivateServiceHost, PrivateServiceHostConfig},
 };
+use nestlink_transport_quic::service::BiStream;
 use nestlink_server::{AppState, router};
 use nestlink_storage::Store;
 use serde_json::json;
@@ -25,7 +26,7 @@ use std::{
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
-    sync::{mpsc, watch},
+    sync::{mpsc, watch, Semaphore},
     task::JoinSet,
 };
 
@@ -142,9 +143,38 @@ impl Pair {
     }
 }
 
+enum Flow {
+    Independent(Box<PrivateServiceConnection>),
+    Multiplexed(BiStream),
+}
+impl Flow {
+    fn stream(&mut self) -> Result<&mut BiStream> {
+        match self {
+            Self::Independent(owner) => Ok(owner.stream()?),
+            Self::Multiplexed(stream) => Ok(stream),
+        }
+    }
+    async fn close(&mut self) -> Result {
+        if let Self::Independent(owner) = self {
+            owner.close().await?;
+        }
+        Ok(())
+    }
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 #[ignore = "explicit hosted capacity workflow retains build, samples and failures"]
 async fn hundred_enrolled_nodes_twenty_pairs_thousand_simultaneous_authorized_streams() -> Result {
+    run_capacity(false).await
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[ignore = "explicit hosted capacity workflow retains build, samples and failures"]
+async fn hundred_enrolled_nodes_twenty_pairs_thousand_multiplexed_authorized_streams() -> Result {
+    run_capacity(true).await
+}
+
+async fn run_capacity(multiplexed: bool) -> Result {
     assert_eq!(
         std::env::var("RUNNER_ENVIRONMENT").as_deref(),
         Ok("github-hosted")
@@ -155,6 +185,9 @@ async fn hundred_enrolled_nodes_twenty_pairs_thousand_simultaneous_authorized_st
 
 async fn capacity() -> Result {
     resource_sample("before_setup")?;
+    record(json!({"stage":"load_mode","multiplexed":multiplexed,
+        "registered_installations":NODES,"active_pairs":PAIRS,"simultaneous_actual_tcp_targets":PAIRS*FLOWS,
+        "management_logins_per_consumer":1,"original_rate_lease_quota_rules":true}))?;
     let directory = tempfile::tempdir()?;
     // The original durable meter refuses a permissive parent. This directory
     // is freshly owned by this fixture; retain the production privacy gate.
@@ -357,6 +390,27 @@ async fn capacity() -> Result {
     resource_sample("all_hosts_ready")?;
     for wave in 0..WAVES {
         let started = Instant::now();
+        let mut owners = vec![None; PAIRS];
+        if multiplexed {
+            let mut connecting = JoinSet::new();
+            for (index, pair) in pairs.iter().enumerate() {
+                let sdk = pair.client.clone();
+                let consumer = pair.consumer.clone();
+                let service = pair.view.id.clone();
+                let request = pair.request(&consumer);
+                connecting.spawn(async move {
+                    let lease = sdk.request_private_service(&service, request).await?;
+                    let owner = sdk.connect_private_service_multiplexed(&consumer, lease).await?;
+                    assert!(owner.is_multiplexed());
+                    Ok::<_, Box<dyn std::error::Error + Send + Sync>>((index, Arc::new(owner)))
+                });
+            }
+            while let Some(joined) = connecting.join_next().await {
+                let (index, owner) = joined??;
+                owners[index] = Some(owner);
+            }
+        }
+        let opening_windows: Vec<_> = (0..PAIRS).map(|_| Arc::new(Semaphore::new(8))).collect();
         let (release, released) = watch::channel(false);
         let (ready, mut readiness) = mpsc::channel(PAIRS * FLOWS);
         let mut workers = JoinSet::new();
@@ -366,12 +420,21 @@ async fn capacity() -> Result {
                 let consumer = pair.consumer.clone();
                 let service = pair.view.id.clone();
                 let request = pair.request(&consumer);
+                let owner = owners[index].clone();
+                let opening_window = opening_windows[index].clone();
                 let ready = ready.clone();
                 let mut released = released.clone();
                 workers.spawn(async move {
                     let start = Instant::now();
-                    let lease = sdk.request_private_service(&service, request).await?;
-                    let mut connection = sdk.connect_private_service(&consumer, lease).await?;
+                    let mut connection = if let Some(owner) = owner {
+                        // Respect the original finite negotiation window. The
+                        // full 1000 live TCP targets remain an exact assertion.
+                        let _opening = opening_window.acquire_owned().await?;
+                        Flow::Multiplexed(owner.open_stream(&consumer).await?)
+                    } else {
+                        let lease = sdk.request_private_service(&service, request).await?;
+                        Flow::Independent(Box::new(sdk.connect_private_service(&consumer, lease).await?))
+                    };
                     let mut payload = [0; 16];
                     payload[..4].copy_from_slice(&(wave as u32).to_be_bytes());
                     payload[4..8].copy_from_slice(&(index as u32).to_be_bytes());
@@ -435,6 +498,11 @@ async fn capacity() -> Result {
         release.send_replace(true);
         while let Some(joined) = workers.join_next().await {
             joined??;
+        }
+        for owner in owners.into_iter().flatten() {
+            let mut owner = Arc::try_unwrap(owner)
+                .map_err(|_| "a flow retained the original multiplex control owner")?;
+            owner.close().await?;
         }
         tokio::time::timeout(Duration::from_secs(5), async {
             while pairs
