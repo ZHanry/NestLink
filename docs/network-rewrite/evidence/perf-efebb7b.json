@@ -1,0 +1,1441 @@
+{
+  "schema_version": 1,
+  "source_revision": "efebb7b6a07545f92b421481ab6fb9b9ada55bc5",
+  "work_packages": [
+    "W39"
+  ],
+  "acceptance": [
+    "AC68"
+  ],
+  "status": "phase_diagnostic_recorded_original_capacity_failed",
+  "build_provenance": {
+    "workflow": ".github/workflows/network-capacity.yml",
+    "workflow_revision": "efebb7b6a07545f92b421481ab6fb9b9ada55bc5",
+    "run_id": 41476929737,
+    "attempt": 1,
+    "job_id": 125384866025,
+    "runner": "ubuntu-24.04",
+    "runner_environment": "github-hosted",
+    "runner_image_version": "20261026.354.1",
+    "kernel": [
+      "Linux",
+      "runnervm48cm3",
+      "7.0.0-1017-azure",
+      "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+      "x86_64"
+    ],
+    "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+    "conclusion": "failure",
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41476929737",
+    "diagnostic_build_overrides": {
+      "CARGO_PROFILE_RELEASE_DEBUG": "1",
+      "CARGO_PROFILE_RELEASE_STRIP": "none"
+    },
+    "target_executable_sha256": "56768a23ebe4a530dcf07a854ec24f10c90d9f44f320d353b773b13a5bf28232",
+    "target_executable_matches_e226eec_flat_diagnostic": true
+  },
+  "artifact_verification": {
+    "artifact_id": 13158338704,
+    "artifact_name": "network-capacity-multiplexed-release-pair-windows-efebb7b6a07545f92b421481ab6fb9b9ada55bc5-1",
+    "archive_bytes": 116946,
+    "official_artifact_digest": "sha256:c2ee94b1696197fcdab1b256cfefbb10d7ba69e61bfb102246e2516c3b184751",
+    "downloaded_archive_sha256": "c2ee94b1696197fcdab1b256cfefbb10d7ba69e61bfb102246e2516c3b184751",
+    "archive_digest_matches": true,
+    "receipt_sha256": "b271f9c40f7bc5537959072bfa105d2ef60e907a76ebddda60317ed9f1e72209",
+    "verified_payload_files": 58,
+    "all_payload_sizes_and_sha256_verified": true,
+    "all_manifest_paths_contained_and_unique": true,
+    "manifest_is_only_unlisted_file": true,
+    "unlisted_payloads": [],
+    "independent_perf_metadata_matches_receipt_sampling": true,
+    "exact_source_workflow_run_attempt_and_hosted_provenance_verified": true,
+    "verification_scope": "Official artifact download, provenance, complete producer/file inventory, hashes and phase data review only; no local project build, test, formatter, lint or syntax check."
+  },
+  "producer_inventory": {
+    "original_commands": [
+      {
+        "name": "perf-orchestration-tests",
+        "argv": [
+          "python3",
+          "-B",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "scripts",
+          "-p",
+          "test_capacity_perf.py",
+          "-v"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.1642673899999636
+      },
+      {
+        "name": "build-currentness",
+        "argv": [
+          "cargo",
+          "test",
+          "--release",
+          "--locked",
+          "-p",
+          "nestlink-storage",
+          "-p",
+          "nestlink-identity",
+          "--lib",
+          "--test",
+          "network_policy",
+          "--no-run",
+          "--message-format=json-render-diagnostics"
+        ],
+        "timeout_seconds": 1200,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 159.710578515
+      },
+      {
+        "name": "strict-currentness",
+        "argv": [
+          "cargo",
+          "clippy",
+          "--release",
+          "--locked",
+          "-p",
+          "nestlink-storage",
+          "-p",
+          "nestlink-identity",
+          "--lib",
+          "--tests",
+          "--",
+          "-D",
+          "warnings"
+        ],
+        "timeout_seconds": 300,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 31.22506420100001
+      },
+      {
+        "name": "currentness-authority",
+        "argv": [
+          "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_storage-c287ebbbbe9b6e19",
+          "combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_and_revoke",
+          "--show-output"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.16445916100002478
+      },
+      {
+        "name": "delegation-verified-lease",
+        "argv": [
+          "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_identity-4a4d0fc6f0850271",
+          "delegation_verified_lease_reuse_keeps_exact_issuer_scope_and_original_deadlines",
+          "--show-output"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.0037811560000022837
+      },
+      {
+        "name": "sealed-usage-claims",
+        "argv": [
+          "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_identity-4a4d0fc6f0850271",
+          "sealed_usage_retains_exact_verified_claims_and_rejects_nested_substitution",
+          "--show-output"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.003581054999983735
+      },
+      {
+        "name": "canonical-view-claims",
+        "argv": [
+          "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_identity-4a4d0fc6f0850271",
+          "private_network_view_reuse_preserves_original_canonical_and_live_checks",
+          "--show-output"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.00352784699998665
+      },
+      {
+        "name": "snapshot-live-rows",
+        "argv": [
+          "/home/runner/work/NestLink/NestLink/target/release/deps/network_policy-5b97c18b5df97d1b",
+          "--exact",
+          "external_device_revocation_expiry_and_key_corruption_enter_the_live_snapshot",
+          "--show-output"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.7158405119999998
+      },
+      {
+        "name": "snapshot-restart-revocation",
+        "argv": [
+          "/home/runner/work/NestLink/NestLink/target/release/deps/network_policy-5b97c18b5df97d1b",
+          "--exact",
+          "signed_membership_and_revocation_survive_restart_without_reissuing_the_id",
+          "--show-output"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.21445100699997965
+      },
+      {
+        "name": "snapshot-clock-and-restore",
+        "argv": [
+          "/home/runner/work/NestLink/NestLink/target/release/deps/network_policy-5b97c18b5df97d1b",
+          "--exact",
+          "restart_cannot_roll_the_authorization_clock_back_and_restore_fences_old_spaces",
+          "--show-output"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.2645604150000054
+      },
+      {
+        "name": "build",
+        "argv": [
+          "cargo",
+          "test",
+          "--release",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--lib",
+          "--test",
+          "capacity",
+          "--test",
+          "private_services",
+          "--no-run",
+          "--message-format=json-render-diagnostics"
+        ],
+        "timeout_seconds": 1200,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 631.8567926630001
+      },
+      {
+        "name": "native-http-backpressure",
+        "argv": [
+          "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_sdk-f5764923b349523b",
+          "http_admission::tests::",
+          "--show-output",
+          "--test-threads=1"
+        ],
+        "timeout_seconds": 180,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 16.011899433000053
+      },
+      {
+        "name": "explicit-negotiation",
+        "argv": [
+          "/home/runner/work/NestLink/NestLink/target/release/deps/nestlink_sdk-f5764923b349523b",
+          "explicit_negotiation_preserves_legacy_wire_and_old_host_refusal",
+          "--show-output"
+        ],
+        "timeout_seconds": 300,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.0037024340001607925
+      },
+      {
+        "name": "multiplex-original-owners",
+        "argv": [
+          "/home/runner/work/NestLink/NestLink/target/release/deps/private_services-ca199234124a907b",
+          "multiplex::",
+          "--show-output",
+          "--test-threads=1"
+        ],
+        "timeout_seconds": 300,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 12.498023337999939
+      },
+      {
+        "name": "execution",
+        "argv": [
+          "/home/runner/work/NestLink/NestLink/target/release/deps/capacity-d71216f584dd5f47",
+          "--exact",
+          "hundred_enrolled_nodes_twenty_pairs_thousand_multiplexed_authorized_streams",
+          "--ignored",
+          "--nocapture",
+          "--test-threads=1"
+        ],
+        "timeout_seconds": 660,
+        "return_code": 101,
+        "timed_out": false,
+        "seconds": 254.66089671200007,
+        "diagnostic_total_seconds": 255.14383635499985
+      }
+    ],
+    "sampler_commands": [
+      {
+        "name": "perf-install",
+        "argv": [
+          "sudo",
+          "-n",
+          "apt-get",
+          "install",
+          "-y",
+          "linux-tools-common",
+          "linux-tools-generic"
+        ],
+        "timeout_seconds": 300,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 2.770199429999991
+      },
+      {
+        "name": "perf-packages",
+        "argv": [
+          "dpkg-query",
+          "-W",
+          "-f=${binary:Package} ${Version}\n",
+          "linux-tools*"
+        ],
+        "timeout_seconds": 30,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.016374788000007356
+      },
+      {
+        "name": "perf-package-sources",
+        "argv": [
+          "apt-cache",
+          "policy",
+          "linux-tools-common",
+          "linux-tools-generic"
+        ],
+        "timeout_seconds": 30,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.03653754999999137
+      },
+      {
+        "name": "perf-package-owner",
+        "argv": [
+          "dpkg-query",
+          "-S",
+          "/usr/lib/linux-tools-6.8.0-147/perf"
+        ],
+        "timeout_seconds": 30,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.11419118199995637
+      },
+      {
+        "name": "perf-version",
+        "argv": [
+          "/usr/lib/linux-tools-6.8.0-147/perf",
+          "version",
+          "--build-options"
+        ],
+        "timeout_seconds": 30,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.03198914400002195
+      },
+      {
+        "name": "perf-record",
+        "argv": [
+          "sudo",
+          "-n",
+          "env",
+          "PERF_CONFIG=/dev/null",
+          "LC_ALL=C",
+          "/usr/lib/linux-tools-6.8.0-147/perf",
+          "record",
+          "-e",
+          "cpu-clock:u",
+          "-F",
+          "99",
+          "--no-buildid-cache",
+          "-o",
+          "/home/runner/work/_temp/network-capacity-perf-private-xyrrm6qw/perf.data",
+          "--pid",
+          "17165",
+          "--timestamp",
+          "--clockid",
+          "CLOCK_REALTIME"
+        ],
+        "return_code": 0,
+        "timed_out": false,
+        "target_threads_inherited": true
+      },
+      {
+        "name": "perf-data-size",
+        "argv": [
+          "sudo",
+          "-n",
+          "stat",
+          "--printf=%s",
+          "/home/runner/work/_temp/network-capacity-perf-private-xyrrm6qw/perf.data"
+        ],
+        "timeout_seconds": 30,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.01593531699995765
+      },
+      {
+        "name": "perf-data-sha256",
+        "argv": [
+          "sudo",
+          "-n",
+          "sha256sum",
+          "--",
+          "/home/runner/work/_temp/network-capacity-perf-private-xyrrm6qw/perf.data"
+        ],
+        "timeout_seconds": 30,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.01585784199983209
+      },
+      {
+        "name": "perf-report",
+        "argv": [
+          "sudo",
+          "-n",
+          "env",
+          "PERF_CONFIG=/dev/null",
+          "LC_ALL=C",
+          "/usr/lib/linux-tools-6.8.0-147/perf",
+          "report",
+          "--stdio",
+          "--stdio-color",
+          "never",
+          "--no-children",
+          "--show-nr-samples",
+          "--sort",
+          "dso,symbol",
+          "--percent-limit",
+          "0",
+          "-i",
+          "/home/runner/work/_temp/network-capacity-perf-private-xyrrm6qw/perf.data"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.06405685700019603
+      },
+      {
+        "name": "perf-phase-header",
+        "argv": [
+          "sudo",
+          "-n",
+          "env",
+          "PERF_CONFIG=/dev/null",
+          "LC_ALL=C",
+          "/usr/lib/linux-tools-6.8.0-147/perf",
+          "report",
+          "--header-only",
+          "-i",
+          "/home/runner/work/_temp/network-capacity-perf-private-xyrrm6qw/perf.data"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.01586332300007598
+      },
+      {
+        "name": "perf-phase-setup",
+        "argv": [
+          "sudo",
+          "-n",
+          "env",
+          "PERF_CONFIG=/dev/null",
+          "LC_ALL=C",
+          "/usr/lib/linux-tools-6.8.0-147/perf",
+          "report",
+          "--stdio",
+          "--stdio-color",
+          "never",
+          "--no-children",
+          "--show-nr-samples",
+          "--sort",
+          "dso,symbol",
+          "--percent-limit",
+          "0",
+          "--time",
+          "1793636062.166000000,1793636307.327999999",
+          "-i",
+          "/home/runner/work/_temp/network-capacity-perf-private-xyrrm6qw/perf.data"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.06404719800002567
+      },
+      {
+        "name": "perf-phase-hosted-ready-to-all-controls-recorded",
+        "argv": [
+          "sudo",
+          "-n",
+          "env",
+          "PERF_CONFIG=/dev/null",
+          "LC_ALL=C",
+          "/usr/lib/linux-tools-6.8.0-147/perf",
+          "report",
+          "--stdio",
+          "--stdio-color",
+          "never",
+          "--no-children",
+          "--show-nr-samples",
+          "--sort",
+          "dso,symbol",
+          "--percent-limit",
+          "0",
+          "--time",
+          "1793636307.329000000,1793636307.767999999",
+          "-i",
+          "/home/runner/work/_temp/network-capacity-perf-private-xyrrm6qw/perf.data"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.06422390499983521
+      },
+      {
+        "name": "perf-phase-after-all-controls-recorded",
+        "argv": [
+          "sudo",
+          "-n",
+          "env",
+          "PERF_CONFIG=/dev/null",
+          "LC_ALL=C",
+          "/usr/lib/linux-tools-6.8.0-147/perf",
+          "report",
+          "--stdio",
+          "--stdio-color",
+          "never",
+          "--no-children",
+          "--show-nr-samples",
+          "--sort",
+          "dso,symbol",
+          "--percent-limit",
+          "0",
+          "--time",
+          "1793636307.769000000,1793636316.823674139",
+          "-i",
+          "/home/runner/work/_temp/network-capacity-perf-private-xyrrm6qw/perf.data"
+        ],
+        "timeout_seconds": 60,
+        "return_code": 0,
+        "timed_out": false,
+        "seconds": 0.06422864999990452
+      }
+    ],
+    "hosted_unit_tests": {
+      "return_code": 0,
+      "count": 14,
+      "exact_unique_inventory_verified": true,
+      "summary": "Ran 14 tests in 0.026s; OK",
+      "names": [
+        "test_install_failure_still_executes_original_and_retains_real_return_code",
+        "test_natural_target_exit_race_does_not_mark_recorder_premature",
+        "test_nonzero_report_can_pass_only_diagnostic_without_exporting_raw_data",
+        "test_perf_failure_cannot_replace_workload_error_or_output",
+        "test_timeout_kills_waits_only_original_target_and_stops_its_own_recorder",
+        "test_zero_samples_cannot_pass_diagnostic",
+        "test_header_clock_must_attest_realtime_before_any_phase_report",
+        "test_mature_perf_filters_all_three_windows_without_exporting_private_raw",
+        "test_missing_duplicate_reversed_and_unquantified_boundaries_are_refused",
+        "test_observed_forward_and_backward_clock_jumps_refuse_phase_attribution",
+        "test_only_phase_recorder_adds_realtime_flags_original_target_is_unchanged",
+        "test_phase_windows_use_existing_records_with_excluded_millisecond_bands",
+        "test_uncertain_endpoint_anchor_is_refused",
+        "test_zero_phase_samples_and_report_failure_cannot_replace_original_failure"
+      ]
+    },
+    "all_preceding_original_regressions_and_strict_currentness_passed": true,
+    "strict_capacity_after_failed_original_execution_executed": false,
+    "receipt_payload_manifest": [
+      {
+        "path": "build-currentness.log",
+        "bytes": 159922,
+        "sha256": "e804a72a8ca5386ae369378822d04ee26e8e0a7d6761cb94a452531d078826b3"
+      },
+      {
+        "path": "build-currentness.stderr.log",
+        "bytes": 13787,
+        "sha256": "65811cffdd7237851ade6e046573dad867123e6aa26f8d6cb6a4e08776763728"
+      },
+      {
+        "path": "build.log",
+        "bytes": 460083,
+        "sha256": "834dc166c1b1a956a79221c81885e6f67f59ef52735ef77ff7f6fc8e58a299fb"
+      },
+      {
+        "path": "build.stderr.log",
+        "bytes": 51270,
+        "sha256": "05c8b539ed9170c6310c8c6acffed49f677a399ff781b4938d22b66003b75280"
+      },
+      {
+        "path": "canonical-view-claims.log",
+        "bytes": 359,
+        "sha256": "477f216466b63ec50fc66744c2f24b154afc2c1c70d941adcec9cc44adeb4850"
+      },
+      {
+        "path": "canonical-view-claims.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "currentness-authority.log",
+        "bytes": 419,
+        "sha256": "1b8dcac66787a9aaf784bde1a4b2dde2f638ac0bba1702c43684787a5605ee45"
+      },
+      {
+        "path": "currentness-authority.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "delegation-verified-lease.log",
+        "bytes": 357,
+        "sha256": "503ce19220e1755cb8a3f4fe5245beae11bdb979707632e1ca58609371b92ae2"
+      },
+      {
+        "path": "delegation-verified-lease.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "execution.log",
+        "bytes": 312,
+        "sha256": "4820d18b2141f6eda5156db7c386d6f222e8f2551e64326e1de331b71f82a57e"
+      },
+      {
+        "path": "execution.stderr.log",
+        "bytes": 115,
+        "sha256": "287d52d1d429305018f72b595c99107abb4705dfd1a1516a39bbd48cf5ffd251"
+      },
+      {
+        "path": "explicit-negotiation.log",
+        "bytes": 374,
+        "sha256": "d70a340704109595a9e8ed79f0488ae9061a901ffd7107d3622bd40b220d93c1"
+      },
+      {
+        "path": "explicit-negotiation.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "multiplex-original-owners.log",
+        "bytes": 1201,
+        "sha256": "52192d14955a4e94beaeb7fcc9293d8a7e69cda846c1bf9d28eecd9bcba09472"
+      },
+      {
+        "path": "multiplex-original-owners.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "native-http-backpressure.log",
+        "bytes": 1570,
+        "sha256": "60707540a2f2e557f3267616847989a47b8a6de4bcd6dc3db6b89fdaa1d39a70"
+      },
+      {
+        "path": "native-http-backpressure.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-data-sha256.log",
+        "bytes": 139,
+        "sha256": "ac30d69991cb0e16a5595aa06b65dcd2c2320ef353af03738e1cbb7f72b2da5b"
+      },
+      {
+        "path": "perf-data-sha256.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-data-size.log",
+        "bytes": 6,
+        "sha256": "a1ae390e374a66cc844e6414e5c6f98269d77f99d33b35838096ded7b9a83b43"
+      },
+      {
+        "path": "perf-data-size.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-install.log",
+        "bytes": 2425,
+        "sha256": "a25b2046d442280ad29c6f4442efbc0d9a53422728ea4c45e4308ddb202cc9bb"
+      },
+      {
+        "path": "perf-install.stderr.log",
+        "bytes": 237,
+        "sha256": "3b419c69ff321ee6851fa5489a2bb0c9a2ef093815a709dbd05391f89767267f"
+      },
+      {
+        "path": "perf-metadata.json",
+        "bytes": 58998,
+        "sha256": "fd28b5ffc56cdffe0ecc54e91a57d9b9fbaaa3d0e77322880964bcf427aa37ab"
+      },
+      {
+        "path": "perf-orchestration-tests.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-orchestration-tests.stderr.log",
+        "bytes": 2573,
+        "sha256": "1c56537da8b45db43fff1f6b95930a2309c3f0a1bdbea653cffdf37860bdedb6"
+      },
+      {
+        "path": "perf-package-owner.log",
+        "bytes": 59,
+        "sha256": "ffaadb4530d85e6131ad5e0b99f320a62f250bcb1ffc4f78a0ccc266c40989a2"
+      },
+      {
+        "path": "perf-package-owner.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-package-sources.log",
+        "bytes": 4151,
+        "sha256": "f94d70996029977be41a0a0eeb7ebccac8494a552b3726af9b08ea6a8efc4a07"
+      },
+      {
+        "path": "perf-package-sources.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-packages.log",
+        "bytes": 251,
+        "sha256": "83bbdf9a156c0df6de1063f572bb689ff9cee158d8c592484972c71340e1b8d4"
+      },
+      {
+        "path": "perf-packages.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-phase-after-all-controls-recorded.log",
+        "bytes": 197168,
+        "sha256": "56c7a8c2adf739038789ac74ad860acd01b72b101a95237c4ce42390af6a9897"
+      },
+      {
+        "path": "perf-phase-after-all-controls-recorded.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-phase-header.log",
+        "bytes": 3639,
+        "sha256": "9612cd5521f686b927f0c8e8f9499ff85205c066b361ef02a9e3bcc6e79c5751"
+      },
+      {
+        "path": "perf-phase-header.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-phase-hosted-ready-to-all-controls-recorded.log",
+        "bytes": 15401,
+        "sha256": "8788b037443e266eb7886c4c4d5bef90a485569722d075641d8e4a4f25abe618"
+      },
+      {
+        "path": "perf-phase-hosted-ready-to-all-controls-recorded.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-phase-setup.log",
+        "bytes": 7705,
+        "sha256": "3955bfe31c7b429ec2fd14890ccede07d9b99189d636409da2164435dc572056"
+      },
+      {
+        "path": "perf-phase-setup.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-record.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-record.stderr.log",
+        "bytes": 184,
+        "sha256": "0f8e5072e0734b7349d7e380c3c547b4171ef85f4542c33bd203ebcfb0ac7b55"
+      },
+      {
+        "path": "perf-report.log",
+        "bytes": 205849,
+        "sha256": "b995850a8c2c2e3aca236528afba1459135df97d80f33250ab465ce83d639e66"
+      },
+      {
+        "path": "perf-report.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "perf-version.log",
+        "bytes": 1295,
+        "sha256": "eb06dca892ecf70fe2e86e80e1dc2acb8103249c671a21299261e9b705f73236"
+      },
+      {
+        "path": "perf-version.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "samples.jsonl",
+        "bytes": 55223,
+        "sha256": "219ade1264611202908990b632719e6a292d333a37b6b41317e8d3d7d4955555"
+      },
+      {
+        "path": "sealed-usage-claims.log",
+        "bytes": 347,
+        "sha256": "8a628246cff27d877f00ff8855623910b14f69626e5f19a6b10491859414442f"
+      },
+      {
+        "path": "sealed-usage-claims.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "snapshot-clock-and-restore.log",
+        "bytes": 311,
+        "sha256": "e10c0510f2bb6ef3c20e60677e532cd9413d9fe666fb0f33c6f1a7fc6837d552"
+      },
+      {
+        "path": "snapshot-clock-and-restore.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "snapshot-live-rows.log",
+        "bytes": 307,
+        "sha256": "294302ae0a23f2c98a472976658a7a730760475dd27184bd85bf5d15f7f33fef"
+      },
+      {
+        "path": "snapshot-live-rows.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "snapshot-restart-revocation.log",
+        "bytes": 301,
+        "sha256": "5d150e3401265de9504a64237630e954ad2f61a02e03c96208d685a5edcf38cb"
+      },
+      {
+        "path": "snapshot-restart-revocation.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "strict-currentness.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "strict-currentness.stderr.log",
+        "bytes": 4455,
+        "sha256": "6b77962e72cfb71dfbbf43f03a7d010bf56259076b5cfc3873cb07f09ea437af"
+      }
+    ]
+  },
+  "original_result": {
+    "offered_load": {
+      "registered_installations_in_one_space": 100,
+      "active_pairs": 20,
+      "simultaneous_flows": 1000,
+      "reconnect_waves": 3,
+      "management_logins_per_active_consumer": 1,
+      "streams_per_pair": 50,
+      "same_lease_control_owners_per_wave": 20
+    },
+    "build_profile": "release",
+    "opening_schedule": "pair-windows",
+    "original_assertions_and_deadlines_preserved": true,
+    "passed": false,
+    "ac68_passed": false,
+    "diagnostic_passed": false,
+    "original_workload_passed": false,
+    "original_failure": "AssertionError('execution failed; original failure retained')",
+    "execution_return_code": 101,
+    "execution_timed_out": false,
+    "execution_seconds": 254.66089671200007,
+    "execution_timeout_seconds": 660,
+    "stderr": "wave 0 pair 0 flow 35 open_stream: service carrier failed: connection lost",
+    "wave0_unique_flow_ready": 640,
+    "flow_ready_per_pair": 32,
+    "ready_pairs": 20,
+    "multiplex_lease_issued": 20,
+    "multiplex_control_ready": 20,
+    "thousand_live_sample_count": 0,
+    "wave_live_sample_count": 0,
+    "complete_sample_count": 0,
+    "ready_flow_open_microseconds": {
+      "minimum": 1478677,
+      "maximum": 8191626,
+      "mean": 4823707.9734375
+    },
+    "before_setup_to_all_hosts_ready_wall_seconds": 245.163,
+    "existing_rate_limit_setup_waits": "capacity.rs sleeps 61 seconds after each of the first four groups of 20 installations: 244 seconds in total. These waits and original buckets remain unchanged.",
+    "historical_failures": "The earlier e226eec HTTP 403 PermissionRequired result and all prior failures remain failed; this run's actual error is carrier connection lost. Neither readiness count nor diagnostic sampling success replaces those failures."
+  },
+  "phase_verification": {
+    "sampler_status": "passed",
+    "phase_status": "passed",
+    "phase_scope": "Existing first-wave record boundaries; the last window extends to original target exit.",
+    "clock_source": "CLOCK_REALTIME",
+    "event_clock_source": "capacity.rs wall_ms / SystemTime since UNIX_EPOCH",
+    "boundary_quantization_ns": 1000000,
+    "clock_jump_tolerance_ns": 5000000,
+    "maximum_anchor_uncertainty_ns": 1000000,
+    "clock_anchor_count": 256,
+    "independently_recomputed_offset_span_ns": 0,
+    "maximum_observed_anchor_bracket_ns": 2494,
+    "first_anchor": {
+      "label": "target_start",
+      "realtime_ns": 1793636062162781000,
+      "monotonic_before_ns": 1122608585784,
+      "monotonic_after_ns": 1122608588278
+    },
+    "last_anchor": {
+      "label": "target_end",
+      "realtime_ns": 1793636316823674000,
+      "monotonic_before_ns": 1377269479941,
+      "monotonic_after_ns": 1377269481013
+    },
+    "perf_header_attests_realtime": true,
+    "header_sha256": "9612cd5521f686b927f0c8e8f9499ff85205c066b361ef02a9e3bcc6e79c5751",
+    "all_phase_boundaries_recomputed_from_original_events": true,
+    "all_exact_perf_time_arguments_and_return_codes_verified": true,
+    "all_phase_symbol_counts_recomputed": true,
+    "phase_sample_sum": 1550,
+    "full_report_and_record_sample_count": 1550,
+    "lost_samples": 0,
+    "windows": [
+      {
+        "name": "setup",
+        "start_ns": 1793636062166000000,
+        "stop_ns": 1793636307328000000,
+        "start_source": "before_setup",
+        "stop_source": "all_hosts_ready",
+        "clock_source": "CLOCK_REALTIME",
+        "boundary_quantization_ns": 1000000,
+        "time_argument": "1793636062.166000000,1793636307.327999999",
+        "symbol_samples": 55,
+        "report_sha256": "3955bfe31c7b429ec2fd14890ccede07d9b99189d636409da2164435dc572056"
+      },
+      {
+        "name": "hosted-ready-to-all-controls-recorded",
+        "start_ns": 1793636307329000000,
+        "stop_ns": 1793636307768000000,
+        "start_source": "all_hosts_ready",
+        "stop_source": "max first-wave multiplex_control_ready (20 unique pairs)",
+        "clock_source": "CLOCK_REALTIME",
+        "boundary_quantization_ns": 1000000,
+        "time_argument": "1793636307.329000000,1793636307.767999999",
+        "symbol_samples": 63,
+        "report_sha256": "8788b037443e266eb7886c4c4d5bef90a485569722d075641d8e4a4f25abe618"
+      },
+      {
+        "name": "after-all-controls-recorded",
+        "start_ns": 1793636307769000000,
+        "stop_ns": 1793636316823674000,
+        "start_source": "max first-wave multiplex_control_ready (20 unique pairs)",
+        "stop_source": "target_end clock anchor",
+        "clock_source": "CLOCK_REALTIME",
+        "boundary_quantization_ns": 1000000,
+        "time_argument": "1793636307.769000000,1793636316.823674139",
+        "symbol_samples": 1432,
+        "report_sha256": "56c7a8c2adf739038789ac74ad860acd01b72b101a95237c4ce42390af6a9897"
+      }
+    ],
+    "limitations": [
+      "Existing event timestamps are truncated to milliseconds; each internal boundary has an excluded one-millisecond band.",
+      "The third window is after-all-controls-recorded, including scheduler handoff, flow opening and any later hold, waves or teardown; it is not pure opening or currentness.",
+      "No absolute timestamp is inferred from flow_ready.open_microseconds, and no call graph is recorded.",
+      "Realtime/monotonic anchors at target start/end and existing one-second waits reject observed offset jumps; transient changes between observations cannot be ruled out."
+    ]
+  },
+  "profile_provenance": {
+    "script_sha256": "61d01ad6ff63e32d79b4ae44d29307a0638ab5485cc1ee781484928d924e80a9",
+    "perf_binary": "/usr/lib/linux-tools-6.8.0-147/perf",
+    "perf_binary_sha256": "2927eb0973fd937bdd417622531c95f1e6e19307a29c3e05a2c6198e12af6e56",
+    "perf_package": "linux-tools-6.8.0-147 6.8.0-147.147",
+    "perf_version": "6.8.12",
+    "event": "cpu-clock:u",
+    "frequency_hz": 99,
+    "call_graph": false,
+    "raw_user_stack": false,
+    "user_registers": false,
+    "memory_sampling": false,
+    "raw_data_exported": false,
+    "private_raw_data_bytes": 100825,
+    "private_raw_data_sha256_attested_by_hosted_producer": "653b45f000355cec2b4f127374d4b842a765daca7b5a29d5035aa4b3dc705e22",
+    "full_report_sha256": "b995850a8c2c2e3aca236528afba1459135df97d80f33250ab465ce83d639e66",
+    "first_sample_realtime_seconds": "1793636123.419129",
+    "last_sample_realtime_seconds": "1793636316.799358",
+    "profiles": [
+      {
+        "report": "perf-report.log",
+        "rows": 398,
+        "samples": 1550,
+        "top_symbols": [
+          {
+            "overhead_percent": 7.42,
+            "samples": 115,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<&curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as <&curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as core::ops::arith::Mul>::mul::__Impl_mul__>::_impl_mul"
+          },
+          {
+            "overhead_percent": 5.23,
+            "samples": 81,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "curve25519_dalek::backend::serial::u64::field::FieldElement51::pow2k"
+          },
+          {
+            "overhead_percent": 3.1,
+            "samples": 48,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "sqlite3VdbeExec"
+          },
+          {
+            "overhead_percent": 2.9,
+            "samples": 45,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "curve25519_dalek::backend::vector::scalar_mul::vartime_double_base::spec_avx2::mul::_impl_mul"
+          },
+          {
+            "overhead_percent": 2.65,
+            "samples": 41,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4::square_and_negate_D::__Impl_square_and_negate_D__>::_impl_square_and_negate_D"
+          },
+          {
+            "overhead_percent": 2.06,
+            "samples": 32,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "argon2::Argon2::compress::compress_avx2"
+          },
+          {
+            "overhead_percent": 2.06,
+            "samples": 32,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "sqlite3RunParser"
+          },
+          {
+            "overhead_percent": 1.74,
+            "samples": 27,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<serde_json::de::SeqAccess<R> as serde_core::de::SeqAccess>::next_element_seed::has_next_element"
+          },
+          {
+            "overhead_percent": 1.61,
+            "samples": 25,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<&curve25519_dalek::backend::serial::u64::field::FieldElement51 as core::ops::arith::Mul>::mul"
+          }
+        ],
+        "explicit_symbol_groups": [
+          {
+            "category": "curve25519",
+            "symbol_pattern": "curve25519_dalek",
+            "samples": 325,
+            "percent": 20.967741935483872
+          },
+          {
+            "category": "sha2",
+            "symbol_pattern": "sha2::",
+            "samples": 36,
+            "percent": 2.3225806451612905
+          },
+          {
+            "category": "argon2",
+            "symbol_pattern": "argon2::",
+            "samples": 34,
+            "percent": 2.193548387096774
+          },
+          {
+            "category": "serde",
+            "symbol_pattern": "serde_json::|serde_core::|serde::",
+            "samples": 282,
+            "percent": 18.193548387096776
+          },
+          {
+            "category": "sqlite_prefix",
+            "symbol_pattern": "sqlite3",
+            "samples": 295,
+            "percent": 19.032258064516128
+          },
+          {
+            "category": "mutex",
+            "symbol_pattern": "pthread_mutex",
+            "samples": 18,
+            "percent": 1.1612903225806452
+          },
+          {
+            "category": "unresolved_address",
+            "symbol_pattern": "^0x[0-9a-f]+$",
+            "samples": 169,
+            "percent": 10.903225806451612
+          }
+        ]
+      },
+      {
+        "report": "perf-phase-setup.log",
+        "rows": 23,
+        "samples": 55,
+        "top_symbols": [
+          {
+            "overhead_percent": 58.18,
+            "samples": 32,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "argon2::Argon2::compress::compress_avx2"
+          },
+          {
+            "overhead_percent": 3.64,
+            "samples": 2,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "argon2::Argon2::fill_blocks"
+          },
+          {
+            "overhead_percent": 1.82,
+            "samples": 1,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<&mut serde_json::ser::Serializer<W,F> as serde_core::ser::Serializer>::serialize_str"
+          },
+          {
+            "overhead_percent": 1.82,
+            "samples": 1,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4::square_and_negate_D::__Impl_square_and_negate_D__>::_impl_square_and_negate_D"
+          },
+          {
+            "overhead_percent": 1.82,
+            "samples": 1,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "_ZN5prost7message7Message13encode_to_vec17h57079c40149af8edE.llvm.4616617327215703704"
+          },
+          {
+            "overhead_percent": 1.82,
+            "samples": 1,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "curve25519_dalek::backend::vector::scalar_mul::vartime_double_base::spec_avx2::mul::_impl_mul"
+          },
+          {
+            "overhead_percent": 1.82,
+            "samples": 1,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "exprAnalyze"
+          },
+          {
+            "overhead_percent": 1.82,
+            "samples": 1,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "findConstInWhere"
+          },
+          {
+            "overhead_percent": 1.82,
+            "samples": 1,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "moveToRoot"
+          }
+        ],
+        "explicit_symbol_groups": [
+          {
+            "category": "curve25519",
+            "symbol_pattern": "curve25519_dalek",
+            "samples": 2,
+            "percent": 3.6363636363636362
+          },
+          {
+            "category": "sha2",
+            "symbol_pattern": "sha2::",
+            "samples": 0,
+            "percent": 0
+          },
+          {
+            "category": "argon2",
+            "symbol_pattern": "argon2::",
+            "samples": 34,
+            "percent": 61.81818181818182
+          },
+          {
+            "category": "serde",
+            "symbol_pattern": "serde_json::|serde_core::|serde::",
+            "samples": 1,
+            "percent": 1.8181818181818181
+          },
+          {
+            "category": "sqlite_prefix",
+            "symbol_pattern": "sqlite3",
+            "samples": 7,
+            "percent": 12.727272727272727
+          },
+          {
+            "category": "mutex",
+            "symbol_pattern": "pthread_mutex",
+            "samples": 1,
+            "percent": 1.8181818181818181
+          },
+          {
+            "category": "unresolved_address",
+            "symbol_pattern": "^0x[0-9a-f]+$",
+            "samples": 3,
+            "percent": 5.454545454545454
+          }
+        ]
+      },
+      {
+        "report": "perf-phase-hosted-ready-to-all-controls-recorded.log",
+        "rows": 49,
+        "samples": 63,
+        "top_symbols": [
+          {
+            "overhead_percent": 6.35,
+            "samples": 4,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<&curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as <&curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as core::ops::arith::Mul>::mul::__Impl_mul__>::_impl_mul"
+          },
+          {
+            "overhead_percent": 4.76,
+            "samples": 3,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4::square_and_negate_D::__Impl_square_and_negate_D__>::_impl_square_and_negate_D"
+          },
+          {
+            "overhead_percent": 4.76,
+            "samples": 3,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<serde_json::de::SeqAccess<R> as serde_core::de::SeqAccess>::next_element_seed::has_next_element"
+          },
+          {
+            "overhead_percent": 4.76,
+            "samples": 3,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<serde_json::ser::Compound<W,F> as serde_core::ser::SerializeStruct>::serialize_field"
+          },
+          {
+            "overhead_percent": 4.76,
+            "samples": 3,
+            "dso": "libc.so.6",
+            "symbol": "malloc"
+          },
+          {
+            "overhead_percent": 3.17,
+            "samples": 2,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "ring_core_0_17_14__x25519_ge_scalarmult_base_adx"
+          },
+          {
+            "overhead_percent": 3.17,
+            "samples": 2,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "sqlite3GetToken"
+          },
+          {
+            "overhead_percent": 3.17,
+            "samples": 2,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "whereLoopOutputAdjust"
+          },
+          {
+            "overhead_percent": 1.59,
+            "samples": 1,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<&curve25519_dalek::backend::serial::u64::field::FieldElement51 as core::ops::arith::Mul>::mul"
+          }
+        ],
+        "explicit_symbol_groups": [
+          {
+            "category": "curve25519",
+            "symbol_pattern": "curve25519_dalek",
+            "samples": 10,
+            "percent": 15.873015873015873
+          },
+          {
+            "category": "sha2",
+            "symbol_pattern": "sha2::",
+            "samples": 2,
+            "percent": 3.1746031746031744
+          },
+          {
+            "category": "argon2",
+            "symbol_pattern": "argon2::",
+            "samples": 0,
+            "percent": 0
+          },
+          {
+            "category": "serde",
+            "symbol_pattern": "serde_json::|serde_core::|serde::",
+            "samples": 15,
+            "percent": 23.80952380952381
+          },
+          {
+            "category": "sqlite_prefix",
+            "symbol_pattern": "sqlite3",
+            "samples": 10,
+            "percent": 15.873015873015873
+          },
+          {
+            "category": "mutex",
+            "symbol_pattern": "pthread_mutex",
+            "samples": 1,
+            "percent": 1.5873015873015872
+          },
+          {
+            "category": "unresolved_address",
+            "symbol_pattern": "^0x[0-9a-f]+$",
+            "samples": 8,
+            "percent": 12.698412698412698
+          }
+        ]
+      },
+      {
+        "report": "perf-phase-after-all-controls-recorded.log",
+        "rows": 381,
+        "samples": 1432,
+        "top_symbols": [
+          {
+            "overhead_percent": 7.75,
+            "samples": 111,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<&curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as <&curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as core::ops::arith::Mul>::mul::__Impl_mul__>::_impl_mul"
+          },
+          {
+            "overhead_percent": 5.59,
+            "samples": 80,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "curve25519_dalek::backend::serial::u64::field::FieldElement51::pow2k"
+          },
+          {
+            "overhead_percent": 3.28,
+            "samples": 47,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "sqlite3VdbeExec"
+          },
+          {
+            "overhead_percent": 3,
+            "samples": 43,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "curve25519_dalek::backend::vector::scalar_mul::vartime_double_base::spec_avx2::mul::_impl_mul"
+          },
+          {
+            "overhead_percent": 2.58,
+            "samples": 37,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4 as curve25519_dalek::backend::vector::avx2::field::FieldElement2625x4::square_and_negate_D::__Impl_square_and_negate_D__>::_impl_square_and_negate_D"
+          },
+          {
+            "overhead_percent": 2.16,
+            "samples": 31,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "sqlite3RunParser"
+          },
+          {
+            "overhead_percent": 1.68,
+            "samples": 24,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<&curve25519_dalek::backend::serial::u64::field::FieldElement51 as core::ops::arith::Mul>::mul"
+          },
+          {
+            "overhead_percent": 1.68,
+            "samples": 24,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "<serde_json::de::SeqAccess<R> as serde_core::de::SeqAccess>::next_element_seed::has_next_element"
+          },
+          {
+            "overhead_percent": 1.68,
+            "samples": 24,
+            "dso": "capacity-d71216f584dd5f47",
+            "symbol": "resolveExprStep"
+          }
+        ],
+        "explicit_symbol_groups": [
+          {
+            "category": "curve25519",
+            "symbol_pattern": "curve25519_dalek",
+            "samples": 313,
+            "percent": 21.85754189944134
+          },
+          {
+            "category": "sha2",
+            "symbol_pattern": "sha2::",
+            "samples": 34,
+            "percent": 2.374301675977654
+          },
+          {
+            "category": "argon2",
+            "symbol_pattern": "argon2::",
+            "samples": 0,
+            "percent": 0
+          },
+          {
+            "category": "serde",
+            "symbol_pattern": "serde_json::|serde_core::|serde::",
+            "samples": 266,
+            "percent": 18.575418994413408
+          },
+          {
+            "category": "sqlite_prefix",
+            "symbol_pattern": "sqlite3",
+            "samples": 278,
+            "percent": 19.41340782122905
+          },
+          {
+            "category": "mutex",
+            "symbol_pattern": "pthread_mutex",
+            "samples": 16,
+            "percent": 1.1173184357541899
+          },
+          {
+            "category": "unresolved_address",
+            "symbol_pattern": "^0x[0-9a-f]+$",
+            "samples": 158,
+            "percent": 11.033519553072626
+          }
+        ]
+      }
+    ]
+  },
+  "interpretation": [
+    "The after-all-controls-recorded flat window contains 1432 samples: curve25519 names 313 (21.8575%), serde names 266 (18.5754%) and sqlite3-prefixed names 278 (19.4134%). Argon2 has zero samples in this window. These are descriptive symbol matches, not complete disjoint cost attribution.",
+    "The setup report contains only 55 samples, 34 from Argon2 names. Its 245.163 seconds of wall time includes the original 244 seconds of explicit rate-limit waits. Wall time is not CPU cost; attachment follows target creation and may miss initial work.",
+    "The third report also retains sqlite3RunParser 31 samples (2.16%), resolveExprStep 24 and yy_reduce 17. Existing snapshot prepare_cached reuse is already in the tested production source, so these symbols alone do not prove a missing index or identify the SQL statement being compiled.",
+    "The original target binary hash is identical to the earlier e226eec flat diagnostic. Different readiness counts in separate short hosted runs cannot establish a production regression, an optimization win or the overhead of phase recording."
+  ],
+  "next_minimal_candidate": {
+    "status": "proposed_not_implemented_by_this_evidence",
+    "scope": "Store same-invocation canonical NetworkGrantView decode reuse",
+    "source_locations": [
+      "crates/storage/src/services/private/network.rs:22",
+      "crates/storage/src/services/private/network.rs:56",
+      "crates/storage/src/network_policy.rs:165",
+      "crates/identity/src/network.rs:465"
+    ],
+    "reason": "Store signed(view) canonical-decodes exact claims for envelope metadata, discards that decoded value, then snapshot.verify_member or verify_network_grant canonical-decodes the same immutable bytes again. Identity private_service already reuses its existing canonical candidate, but Store's independent path still repeats it.",
+    "required_invariants": "Retain base64/canonical and metadata-before-signature order, active member/role checks, every original signature and full fresh snapshot/currentness check. No authorization, deadline, row or time cache.",
+    "claim_limit": "The phase's serde samples justify investigating the visible duplicate, but no call graph identifies its measured share and no capacity improvement is established."
+  },
+  "limits": [
+    "No call graph, SQL timing, mutex wait, DB admission wait or per-open_stream cost was collected. User-space sampled CPU percentages are not elapsed wall-clock percentages.",
+    "after-all-controls-recorded may include scheduler handoff, opening, continued currentness, error handling and teardown. It is not a pure opening phase or a per-query measurement.",
+    "Early target work can precede perf attachment, and the first sample occurs later than target launch. Phase counts describe captured samples only; absence of a sample does not establish absence of work.",
+    "640 readiness records do not prove 1000 simultaneously live targets, the original two-second hold, complete durable accounting or three successful waves.",
+    "One hosted process does not qualify 100 physical nodes, independent relay/management capacity, all queue bounds or cross-day soak. AC68 remains failed.",
+    "The complete original receipt and all 256 clock anchors remain in the officially hashed archive; this focused document retains their SHA256, complete file manifest, exact producer commands and independently checked summaries."
+  ]
+}

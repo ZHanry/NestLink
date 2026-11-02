@@ -101,3 +101,17 @@ the cost of currentness or opening alone. The official ZIP digest and all 50
 receipt payload hashes were verified; `evidence/perf-e226eec.json` preserves the
 original receipt, failure, exact counts, limitations and mature perf references.
 This diagnostic does not qualify AC68 or replace any previous failed attempt.
+
+The explicit perf-phases run 41476929737 at efebb7b passed all 14 sampler
+regressions, the original preceding checks and its three clock-verified flat
+reports, but the original load failed with carrier connection lost at wave zero,
+pair zero, flow 35 after 640 ready flows (32 per pair). The prior 403 failure
+remains failed. The setup, control-record interval and after-all-controls-recorded
+windows contain 55, 63 and 1432 samples respectively, totaling all 1550 captured
+samples with zero lost samples. The final window includes 313 curve25519, 266
+serde and 278 sqlite3-prefixed samples; it has no call graph or per-query/queue
+timings and is not a pure opening phase. Setup wall time includes the original
+244 seconds of rate-limit waits. `evidence/perf-efebb7b.json` records the official
+ZIP digest, all 58 verified payloads, exact producer inventory, independently
+checked realtime boundaries and original failure. No thousand-live hold,
+completed wave, AC68 or soak qualification follows from diagnostic success.
