@@ -112,8 +112,12 @@ pub(crate) struct Sps {
     pub coded_height: u32,
     pub crop: [u32; 4],
     pub explicit_bt709_limited: bool,
+    pub stream_timing: Option<[u32; 2]>,
 }
 fn sps(nal: &[u8], width: u32, height: u32) -> io::Result<Sps> {
+    sps_inner(nal, width, height, false)
+}
+fn sps_inner(nal: &[u8], width: u32, height: u32, complete: bool) -> io::Result<Sps> {
     let mut b = Bits::new(nal)?;
     b.field = "sps.vps_id";
     let vps = b.read(4)?;
@@ -322,6 +326,7 @@ fn sps(nal: &[u8], width: u32, height: u32) -> io::Result<Sps> {
     b.read(1)?;
     b.field = "sps.vui_parameters_present_flag";
     let mut explicit_bt709_limited = false;
+    let mut stream_timing = None;
     if b.read(1)? != 0 {
         b.field = "vui.aspect_ratio_info_present_flag";
         if b.read(1)? != 0 {
@@ -371,6 +376,46 @@ fn sps(nal: &[u8], width: u32, height: u32) -> io::Result<Sps> {
                 explicit_bt709_limited = true;
             }
         }
+        if complete {
+            b.field = "vui.chroma_loc_info_present_flag";
+            if b.read(1)? != 0 { return Err(rejection("sps.chroma_location", "explicit chroma location is outside the exact Main8 contract")); }
+            for field in ["vui.neutral_chroma_indication_flag", "vui.field_seq_flag", "vui.frame_field_info_present_flag", "vui.default_display_window_flag"] {
+                b.field = field;
+                if b.read(1)? != 0 { return Err(rejection("sps.unsupported_vui", field)); }
+            }
+            b.field = "vui.timing_info_present_flag";
+            if b.read(1)? != 0 {
+                b.field = "vui.num_units_in_tick";
+                let units = b.read(32)?;
+                b.field = "vui.time_scale";
+                let scale = b.read(32)?;
+                if units == 0 || scale == 0 { return Err(rejection("sps.invalid_timing", "zero VUI clock")); }
+                stream_timing = Some([units, scale]);
+                b.field = "vui.poc_proportional_to_timing_flag";
+                if b.read(1)? != 0 { return Err(rejection("sps.poc_timing", "POC-derived rate is outside the exact contract")); }
+                b.field = "vui.hrd_parameters_present_flag";
+                if b.read(1)? != 0 { return Err(rejection("sps.hrd", "HRD syntax is outside the bounded Main8 contract")); }
+            }
+            b.field = "vui.bitstream_restriction_flag";
+            if b.read(1)? != 0 {
+                b.field = "vui.restriction_flags";
+                b.read(3)?;
+                for field in ["vui.min_spatial_segmentation_idc", "vui.max_bytes_per_pic_denom", "vui.max_bits_per_min_cu_denom", "vui.log2_max_mv_length_horizontal", "vui.log2_max_mv_length_vertical"] {
+                    b.field = field;
+                    b.ue(4096)?;
+                }
+            }
+        }
+    }
+    if complete {
+        b.field = "sps.extension_present_flag";
+        if b.read(1)? != 0 { return Err(rejection("sps.extension", "extension syntax is outside the exact Main8 contract")); }
+        b.field = "sps.rbsp_stop_one_bit";
+        if b.read(1)? != 1 { return Err(rejection("sps.rbsp_stop", "missing stop bit")); }
+        if b.bytes.len() * 8 - b.pos > 7 { return Err(rejection("sps.rbsp_tail", "extra SPS bytes after syntax")); }
+        while b.pos < b.bytes.len() * 8 {
+            if b.read(1)? != 0 { return Err(rejection("sps.rbsp_padding", "nonzero trailing padding")); }
+        }
     }
     Ok(Sps {
         profile,
@@ -386,6 +431,7 @@ fn sps(nal: &[u8], width: u32, height: u32) -> io::Result<Sps> {
         coded_height,
         crop: [left * 2, right * 2, top * 2, bottom * 2],
         explicit_bt709_limited,
+        stream_timing,
     })
 }
 #[derive(Clone, Default)]
@@ -393,8 +439,10 @@ pub(crate) struct Validator {
     vps: Option<u32>,
     sps: Option<Sps>,
     pps: Option<u32>,
+    complete_sps: bool,
 }
 impl Validator {
+    pub(crate) fn exact_main8() -> Self { Self { complete_sps: true, ..Self::default() } }
     pub fn info(&self) -> Option<Sps> {
         self.sps
     }
@@ -433,7 +481,7 @@ impl Validator {
                     next.vps = Some(b.read(4)?);
                 }
                 33 => {
-                    let info = sps(nal, width, height)?;
+                    let info = if next.complete_sps { sps_inner(nal, width, height, true)? } else { sps(nal, width, height)? };
                     if next.vps != Some(info.vps) {
                         return Err(rejection(
                             "sps.vps_reference",
@@ -542,6 +590,9 @@ mod tests {
         }
         let high_tier = access_unit(replace_ptl(rbsp, 1, 0x20), &[0x28, 1, 0xb0]);
         assert!(HevcMain8Contract::observe(&high_tier, config).is_err());
+        let mut extra_sps = sps.clone();
+        extra_sps.push(0x55);
+        assert!(HevcMain8Contract::observe(&access_unit(extra_sps, &[0x28, 1, 0xb0]), config).is_err());
         assert!(HevcMain8Contract::observe(&valid, VideoConfig { fps: 0, ..config }).is_err());
         assert!(HevcMain8Contract::observe(&valid, VideoConfig { bitrate_kbps: 1, ..config }).is_err());
         Ok(())
@@ -611,6 +662,8 @@ mod tests {
         bits(&mut b, 8, 1);
         bits(&mut b, 8, 1);
         bits(&mut b, 8, matrix);
+        bits(&mut b, 7, 0); // remaining VUI flags absent, including timing/restriction.
+        bits(&mut b, 1, 0); // no SPS extension.
         bits(&mut b, 1, 1);
         while b.len() % 8 != 0 {
             b.push(0);

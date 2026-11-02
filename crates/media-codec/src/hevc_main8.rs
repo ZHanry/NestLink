@@ -24,6 +24,7 @@ impl HevcMain8Contract {
             || info.crop != [0; 4] || !(1..=120).contains(&config.fps)
             || !(64..=100_000).contains(&config.bitrate_kbps)
             || u64::from(config.width) * u64::from(config.height) * 4 > 64 * 1024 * 1024
+            || info.stream_timing.is_some_and(|[units, scale]| u64::from(scale) != u64::from(units) * u64::from(config.fps))
         {
             return Err(io::Error::other("HEVC Main8 requires exact uncropped target, Main tier and explicitly signalled BT709 limited color"));
         }
@@ -36,7 +37,7 @@ impl HevcMain8Contract {
             display: [info.width, info.height], fps: config.fps, kbps: config.bitrate_kbps })
     }
     pub fn observe(access_unit: &[u8], config: VideoConfig) -> io::Result<Self> {
-        let mut validator = Validator::default();
+        let mut validator = Validator::exact_main8();
         validator.validate(access_unit, config.width, config.height)?;
         Self::from_sps(validator.info().ok_or_else(|| io::Error::other("missing actual HEVC SPS"))?, config)
     }
@@ -64,7 +65,7 @@ pub struct HevcMain8Admission {
 }
 impl HevcMain8Admission {
     pub fn new(expected: HevcMain8Contract) -> Self {
-        Self { expected, validator: Validator::default() }
+        Self { expected, validator: Validator::exact_main8() }
     }
     pub fn validate(&mut self, bytes: &[u8]) -> io::Result<()> {
         let config = self.expected.config();
