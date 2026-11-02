@@ -1,4 +1,4 @@
-//! A bounded finite set of exact targets; actual CPU direction evidence only.
+//! Bounded exact targets with separately measured CPU H264 or GPU HEVC directions.
 //! Probe resources are closed historical observations. Live media owners are
 //! owned/stopped/joined by the media runtime and have independent UUIDs.
 use nestlink_media_codec::VideoConfig;
@@ -20,10 +20,13 @@ use std::{
 
 #[derive(Clone)]
 pub struct NativeMediaProvider {
+    backend: ProviderBackend,
     target: VideoConfig,
     targets: Arc<[VideoConfig]>,
     state: Arc<Mutex<ProviderState>>,
 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ProviderBackend { CpuH264, GpuHevcMain8 }
 #[derive(Default)]
 struct ProviderState {
     encode: Option<MediaAnnouncement>,
@@ -34,6 +37,9 @@ struct ProbeResult {
     format: VideoFormat,
     additional_formats: Vec<VideoFormat>,
     resource_id: String,
+    backend: &'static str,
+    adapter_luid: Option<u64>,
+    driver_version: Option<u64>,
 }
 struct ProbeJob {
     id: u64,
@@ -121,7 +127,7 @@ fn make_announcement(
     )
     .map_err(io::Error::other)?;
     let announcement = MediaAnnouncement {
-        version: 2,
+        version: formats.canonical_version(),
         device_id: device_id.into(),
         direction,
         revision: id,
@@ -131,9 +137,9 @@ fn make_announcement(
         probe: ProbeIdentity {
             generation: id,
             resource_id: receipt.resource_id,
-            backend: "cpu-software".into(),
-            adapter_luid: None,
-            driver_version: None,
+            backend: receipt.backend.into(),
+            adapter_luid: receipt.adapter_luid,
+            driver_version: receipt.driver_version,
         },
         formats: formats
             .formats()
@@ -194,10 +200,23 @@ impl NativeMediaProvider {
             ));
         }
         Ok(Self {
+            backend: ProviderBackend::CpuH264,
             target,
             targets: Arc::from([target]),
             state: Arc::new(Mutex::new(ProviderState::default())),
         })
+    }
+    /// One explicitly requested Main8 target, with independent actual hardware
+    /// encode/decode workloads. Configuration does not probe hardware or add a
+    /// product capability; publication still needs completed native close/join.
+    pub fn gpu_hevc_main8(target: VideoConfig) -> io::Result<Self> {
+        if !(16..=1920).contains(&target.width) || !(16..=1080).contains(&target.height)
+            || !target.width.is_multiple_of(8) || !target.height.is_multiple_of(8)
+            || !(1..=120).contains(&target.fps) || !(64..=100_000).contains(&target.bitrate_kbps) {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "unsupported exact GPU HEVC product target"));
+        }
+        Ok(Self { backend: ProviderBackend::GpuHevcMain8, target, targets: Arc::from([target]),
+            state: Arc::new(Mutex::new(ProviderState::default())) })
     }
     /// Each of at most three budgets runs the original full direction probe.
     /// No lower geometry, rate or bitrate is inferred from the maximum receipt.
@@ -246,7 +265,7 @@ impl NativeMediaProvider {
         mut self,
         formats: &nestlink_protocol::media_format::FormatSet,
     ) -> io::Result<Self> {
-        if formats.formats().is_empty() || formats.formats().len() > 3 {
+        if self.backend != ProviderBackend::CpuH264 || formats.formats().is_empty() || formats.formats().len() > 3 {
             return Err(io::Error::other(
                 "candidate requires at most three exact targets",
             ));
@@ -438,9 +457,10 @@ impl NativeMediaProvider {
             let cancel = Arc::new(AtomicBool::new(false));
             let worker_cancel = cancel.clone();
             let targets = self.targets.clone();
+            let backend = self.backend;
             let worker = thread::Builder::new()
                 .name("nestlink-media-renewal-probe".into())
-                .spawn(move || run_probes(&targets, direction, &worker_cancel))?;
+                .spawn(move || run_probes(&targets, backend, direction, &worker_cancel))?;
             *registry = ProbeSlot::Running(ProbeJob {
                 id,
                 cancel,
@@ -479,10 +499,11 @@ impl NativeMediaProvider {
                 ));
             }
             let targets = self.targets.clone();
+            let backend = self.backend;
             let worker_cancel = cancel.clone();
             let worker = thread::Builder::new()
                 .name("nestlink-media-direction-probe".into())
-                .spawn(move || run_probes(&targets, direction, &worker_cancel))?;
+                .spawn(move || run_probes(&targets, backend, direction, &worker_cancel))?;
             *guard = ProbeSlot::Running(ProbeJob {
                 id,
                 cancel: cancel.clone(),
@@ -554,6 +575,7 @@ async fn fenced_network<T>(
 }
 fn run_probes(
     targets: &[VideoConfig],
+    backend: ProviderBackend,
     direction: MediaDirection,
     cancel: &AtomicBool,
 ) -> io::Result<ProbeResult> {
@@ -567,7 +589,10 @@ fn run_probes(
         }
         // Each mature MF owner completes checked flush and close before the
         // next exact target starts on this same original bounded worker.
-        receipts.push(run_probe(*target, direction, cancel)?);
+        receipts.push(match backend {
+            ProviderBackend::CpuH264 => run_probe(*target, direction, cancel)?,
+            ProviderBackend::GpuHevcMain8 => run_hevc_probe(*target, direction, cancel)?,
+        });
     }
     let mut receipts = receipts.into_iter();
     let mut primary = receipts
@@ -622,6 +647,9 @@ fn run_probe(
         format,
         additional_formats: Vec::new(),
         resource_id: format_uuid(owner.resource_id),
+        backend: "cpu-software",
+        adapter_luid: None,
+        driver_version: None,
     })
 }
 #[cfg(windows)]
@@ -635,6 +663,32 @@ fn format_uuid(b: [u8; 16]) -> String {
         &h[16..20],
         &h[20..]
     )
+}
+#[cfg(windows)]
+fn run_hevc_probe(target: VideoConfig, direction: MediaDirection, cancel: &AtomicBool) -> io::Result<ProbeResult> {
+    let actual_direction = match direction { MediaDirection::Encode => nestlink_media_codec::ExecutionDirection::Encode,
+        MediaDirection::Decode => nestlink_media_codec::ExecutionDirection::Decode };
+    let receipt = nestlink_media_codec::probe_hevc_direction(target, actual_direction, cancel)?;
+    let contract = receipt.contract();
+    let config = contract.config();
+    let owner = receipt.owner();
+    owner.require_hardware_identity()?;
+    if receipt.direction() != actual_direction || !receipt.owner_closed() || !receipt.checked_flush()
+        || receipt.outputs() < 16 || (config.width, config.height, config.fps, config.bitrate_kbps)
+            != (target.width, target.height, target.fps, target.bitrate_kbps) {
+        return Err(io::Error::other("HEVC direction receipt differs from exact product target/backend"));
+    }
+    let format = VideoFormat::hevc_main8_observed(
+        contract.general_profile_tier_level(),
+        config.width, config.height, FrameRate::new(config.fps, 1).map_err(io::Error::other)?, config.bitrate_kbps,
+    ).map_err(io::Error::other)?;
+    Ok(ProbeResult { format, additional_formats: Vec::new(), resource_id: format_uuid(owner.resource_id),
+        backend: match direction { MediaDirection::Encode => "gpu-hevc-encoder", MediaDirection::Decode => "gpu-hevc-decoder" },
+        adapter_luid: owner.adapter_luid, driver_version: owner.driver_version })
+}
+#[cfg(not(windows))]
+fn run_hevc_probe(_target: VideoConfig, _direction: MediaDirection, _cancel: &AtomicBool) -> io::Result<ProbeResult> {
+    Err(io::Error::new(io::ErrorKind::Unsupported, "actual GPU HEVC direction probe unavailable on this platform"))
 }
 #[cfg(not(windows))]
 fn run_probe(
@@ -651,6 +705,23 @@ fn run_probe(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn explicit_hevc_target_is_single_exact_and_cannot_enter_the_cpu_candidate() -> io::Result<()> {
+        let target = VideoConfig { width: 1920, height: 1080, fps: 60, bitrate_kbps: 8000 };
+        let provider = NativeMediaProvider::gpu_hevc_main8(target)?;
+        assert_eq!(provider.backend, ProviderBackend::GpuHevcMain8);
+        assert_eq!(provider.targets.len(), 1);
+        let h264 = VideoFormat::legacy_h264(42, 1920, 1080,
+            nestlink_protocol::media_format::FrameRate::new(60, 1).map_err(io::Error::other)?, 8000)
+            .map_err(io::Error::other)?;
+        assert!(provider.with_exact_formats(&nestlink_protocol::media_format::FormatSet::new(vec![h264])
+            .map_err(io::Error::other)?).is_err());
+        for bad in [VideoConfig { width: 1918, ..target }, VideoConfig { height: 2160, ..target },
+            VideoConfig { fps: 0, ..target }, VideoConfig { bitrate_kbps: 1, ..target }] {
+            assert!(NativeMediaProvider::gpu_hevc_main8(bad).is_err());
+        }
+        Ok(())
+    }
     #[test]
     fn explicit_cpu_target_rejects_unsupported_geometry_rate_and_bitrate() {
         let valid = VideoConfig {
@@ -782,6 +853,9 @@ mod tests {
             .map_err(io::Error::other)?,
             additional_formats: Vec::new(),
             resource_id: nestlink_auth::random_id(),
+            backend: "cpu-software",
+            adapter_luid: None,
+            driver_version: None,
         })
     }
     fn wait_finished(slot: &ProbeSlot) -> io::Result<()> {

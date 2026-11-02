@@ -114,6 +114,10 @@ pub struct HevcProbeEncoder {
     authority: Arc<AtomicBool>,
 }
 impl HevcProbeEncoder {
+    pub fn owner_observation(&self) -> io::Result<crate::OwnerObservation> {
+        authorized(&self.authority)?;
+        crate::windows_hevc_owner::observation(&self.inner)
+    }
     pub fn new(
         source: &HevcSyntheticSource,
         config: VideoConfig,
@@ -214,6 +218,10 @@ pub struct HevcProbeDecoder {
     authority: Arc<AtomicBool>,
 }
 impl HevcProbeDecoder {
+    pub fn owner_observation(&self) -> io::Result<crate::OwnerObservation> {
+        authorized(&self.authority)?;
+        crate::windows_hevc_owner::observation(&self.inner)
+    }
     /// Some(source) requests real same-device DXGI output. None is a separate
     /// synchronous software decoder, never a hardware fallback success claim.
     pub fn new(

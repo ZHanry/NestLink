@@ -197,7 +197,7 @@ pub struct MfHevcTextureEncoder {
     failed: bool,
     draining: bool,
 }
-fn observation(inner: &Transform) -> io::Result<OwnerObservation> {
+pub(crate) fn observation(inner: &Transform) -> io::Result<OwnerObservation> {
     unsafe extern "C" {
         fn nl_mf_owner_observation(
             handle: *mut c_void,

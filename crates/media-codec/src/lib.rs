@@ -80,3 +80,7 @@ pub use execution::{
     ExecutionDirection, ExecutionIdentity, ExecutionOutput, ExecutionReceipt, ExecutionTicket,
     H264ExecutionTarget, SoftwareH264Execution,
 };
+#[cfg(windows)]
+mod hevc_direction_probe;
+#[cfg(windows)]
+pub use hevc_direction_probe::{HevcDirectionProbe, probe_hevc_direction};
