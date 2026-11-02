@@ -179,11 +179,11 @@ async fn run_capacity(multiplexed: bool) -> Result {
         std::env::var("RUNNER_ENVIRONMENT").as_deref(),
         Ok("github-hosted")
     );
-    tokio::time::timeout(Duration::from_secs(600), capacity()).await??;
+    tokio::time::timeout(Duration::from_secs(600), capacity(multiplexed)).await??;
     Ok(())
 }
 
-async fn capacity() -> Result {
+async fn capacity(multiplexed: bool) -> Result {
     resource_sample("before_setup")?;
     record(json!({"stage":"load_mode","multiplexed":multiplexed,
         "registered_installations":NODES,"active_pairs":PAIRS,"simultaneous_actual_tcp_targets":PAIRS*FLOWS,
