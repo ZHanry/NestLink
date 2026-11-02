@@ -788,6 +788,14 @@ pub(crate) async fn run(args: OfflineRemoteArgs) -> Result<()> {
                 if let Err(error) = resident.poll_establishment().await { operation = Err(error); break; }
                 if !resident.retired && resident.session.as_ref().is_some_and(|session| matches!(session.view().status, NativeSessionStatus::Stopped | NativeSessionStatus::Failed)) {
                     if let Err(error) = resident.retire_session().await { operation = Err(error); break; }
+                    if resident.session.is_none() {
+                        // Every old stream is bound to its original CoreHandle.
+                        // Platform/input cleanup is already confirmed above;
+                        // disconnect these streams so a desktop can reconnect
+                        // to the rebuilt lifecycle's newer local generation.
+                        clients.abort_all();
+                        while clients.join_next().await.is_some() {}
+                    }
                 }
             },
             accepted = server.accept() => match accepted {
