@@ -169,7 +169,9 @@ impl Store {
         let h = self
             .current_media_announcement(host, MediaDirection::Encode, now)?
             .ok_or(StorageError::Forbidden)?;
-        if c.version != h.version { return Err(StorageError::Forbidden); }
+        if c.version != h.version {
+            return Err(StorageError::Forbidden);
+        }
         let set = h
             .validate(now.saturating_mul(1000))?
             .intersection(&c.validate(now.saturating_mul(1000))?);

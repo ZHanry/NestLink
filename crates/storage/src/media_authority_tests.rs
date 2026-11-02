@@ -9,51 +9,128 @@ use nestlink_protocol::media_authority::{MediaAnnouncement, MediaDirection, Prob
 use nestlink_protocol::media_format::{FrameRate, VideoFormat};
 type TestResult<T = ()> = Result<T, Box<dyn std::error::Error>>;
 #[test]
-fn v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain() -> TestResult {
+fn v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain()
+-> TestResult {
     let mut store = Store::in_memory(&random_id())?;
     let vault = VaultKey::from_bytes([9; 32]);
     let password = "integration-only-password";
     store.bootstrap_admin("Admin", password)?;
     let dummy = hash_password(password)?;
-    let principal = store.login("admin", password, None, 1000, &vault, &dummy)?.principal;
+    let principal = store
+        .login("admin", password, None, 1000, &vault, &dummy)?
+        .principal;
     let controller = InstallationIdentity::generate();
     let host = InstallationIdentity::generate();
     let cid = enroll(&mut store, &principal, &controller)?;
     let hid = enroll(&mut store, &principal, &host)?;
-    let mut ptl = [0; 12]; ptl[0] = 1; ptl[11] = 120;
+    let mut ptl = [0; 12];
+    ptl[0] = 1;
+    ptl[11] = 120;
     let format = VideoFormat::hevc_main8_observed(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
-    for (key, id, direction, backend) in [(&controller, &cid, MediaDirection::Decode, "gpu-hevc-decoder"),
-            (&host, &hid, MediaDirection::Encode, "gpu-hevc-encoder")] {
+    for (key, id, direction, backend) in [
+        (
+            &controller,
+            &cid,
+            MediaDirection::Decode,
+            "gpu-hevc-decoder",
+        ),
+        (&host, &hid, MediaDirection::Encode, "gpu-hevc-encoder"),
+    ] {
         let challenge = store.enrollment_challenge(&principal, 1000)?;
-        let mut submission = MediaAnnouncementSubmission { challenge_id: challenge.id,
-            announcement: MediaAnnouncement { version: 3, device_id: id.clone(), direction, revision: 1,
-                expires_at_unix_ms: 1_200_000, probe: ProbeIdentity { generation: 1, resource_id: random_id(),
-                    backend: backend.into(), adapter_luid: Some(7), driver_version: Some(9) }, formats: vec![format.encode()?] },
-            signature: String::new() };
+        let mut submission = MediaAnnouncementSubmission {
+            challenge_id: challenge.id,
+            announcement: MediaAnnouncement {
+                version: 3,
+                device_id: id.clone(),
+                direction,
+                revision: 1,
+                expires_at_unix_ms: 1_200_000,
+                probe: ProbeIdentity {
+                    generation: 1,
+                    resource_id: random_id(),
+                    backend: backend.into(),
+                    adapter_luid: Some(7),
+                    driver_version: Some(9),
+                },
+                formats: vec![format.encode()?],
+            },
+            signature: String::new(),
+        };
         let action = store.media_announcement_transcript(&principal, &submission, 1000)?;
         submission.signature = URL_SAFE_NO_PAD.encode(key.sign_action(&action)?);
         let mut tampered = submission.clone();
         tampered.announcement.formats[0][58] ^= 1;
-        assert!(store.replace_media_announcement(&principal, tampered, 1000).is_err());
+        assert!(
+            store
+                .replace_media_announcement(&principal, tampered, 1000)
+                .is_err()
+        );
         store.replace_media_announcement(&principal, submission, 1000)?;
     }
-    let request = RemoteRequest { id: random_id(), controller_device_id: cid,
-        host_device_id: hid, permissions: vec![Permission::View as i32], path_mode: "direct_only".into() };
+    let request = RemoteRequest {
+        id: random_id(),
+        controller_device_id: cid,
+        host_device_id: hid,
+        permissions: vec![Permission::View as i32],
+        path_mode: "direct_only".into(),
+    };
     // This tests signed dormant lifecycle data, not a hardware execution claim.
-    assert!(store.create_media_remote(&principal, nestlink_protocol::api::MediaRemoteRequest { request: request.clone(), media_format_version: 3 }, 1000).is_err());
+    assert!(
+        store
+            .create_media_remote(
+                &principal,
+                nestlink_protocol::api::MediaRemoteRequest {
+                    request: request.clone(),
+                    media_format_version: 3
+                },
+                1000
+            )
+            .is_err()
+    );
     let view = store.create_remote_kind(&principal, request, 1000, false, true)?;
-    let scope = store.remote_media_scope(&principal, &view.id, 1000)?.ok_or("missing exact scope")?;
+    let scope = store
+        .remote_media_scope(&principal, &view.id, 1000)?
+        .ok_or("missing exact scope")?;
     assert_eq!(scope.version, 3);
     assert_eq!(scope.formats, vec![format.encode()?]);
-    let choice = MediaApprovalChoice { choice: ApprovalChoice { approved: true,
-        permissions: vec![Permission::View as i32], paths: vec![1] }, media_format_sha256: scope.sha256.clone() };
+    let choice = MediaApprovalChoice {
+        choice: ApprovalChoice {
+            approved: true,
+            permissions: vec![Permission::View as i32],
+            paths: vec![1],
+        },
+        media_format_sha256: scope.sha256.clone(),
+    };
     let proof = store.media_approval_transcript(&principal, &view.id, &choice, 1000)?;
     let mut legacy_proof = proof.clone();
-    legacy_proof.payload_sha256 = nestlink_identity::digest(&serde_json::to_vec(&("nestlink/media-approval/v2", &choice, &scope))?).to_vec();
-    assert!(store.approve_media_remote(&principal, &view.id, MediaApprovalSubmission { choice: choice.clone(),
-        signature: URL_SAFE_NO_PAD.encode(host.sign_action(&legacy_proof)?) }, 1000).is_err());
-    store.approve_media_remote(&principal, &view.id, MediaApprovalSubmission { choice,
-        signature: URL_SAFE_NO_PAD.encode(host.sign_action(&proof)?) }, 1000)?;
+    legacy_proof.payload_sha256 = nestlink_identity::digest(&serde_json::to_vec(&(
+        "nestlink/media-approval/v2",
+        &choice,
+        &scope,
+    ))?)
+    .to_vec();
+    assert!(
+        store
+            .approve_media_remote(
+                &principal,
+                &view.id,
+                MediaApprovalSubmission {
+                    choice: choice.clone(),
+                    signature: URL_SAFE_NO_PAD.encode(host.sign_action(&legacy_proof)?)
+                },
+                1000
+            )
+            .is_err()
+    );
+    store.approve_media_remote(
+        &principal,
+        &view.id,
+        MediaApprovalSubmission {
+            choice,
+            signature: URL_SAFE_NO_PAD.encode(host.sign_action(&proof)?),
+        },
+        1000,
+    )?;
     assert!(store.initial_permit(&principal, &view.id, 1000).is_err());
     Ok(())
 }
