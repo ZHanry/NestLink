@@ -2,16 +2,27 @@ name: Pinned official game interoperability
 
 on:
   workflow_dispatch:
+    inputs:
+      game:
+        description: Exact game experiment to execute (all for combined qualification)
+        type: choice
+        required: true
+        default: all
+        options:
+          - all
+          - teeworlds
+          - luanti
 
 permissions:
   contents: read
 
 concurrency:
-  group: network-games-${{ github.ref }}
+  group: network-games-${{ github.ref }}-${{ inputs.game || 'all' }}
   cancel-in-progress: true
 
 jobs:
   teeworlds:
+    if: ${{ inputs.game == 'all' || inputs.game == 'teeworlds' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 50
     env:
@@ -59,6 +70,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
   luanti:
+    if: ${{ inputs.game == 'all' || inputs.game == 'luanti' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
