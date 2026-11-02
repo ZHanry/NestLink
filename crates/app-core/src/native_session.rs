@@ -1,7 +1,7 @@
-use nestlink_sdk::{NetworkMonitor, native::AddressPolicy};
 use nestlink_protocol::media_authority::{
-    FrozenMediaScope, MediaAnnouncement, MediaDirection, FORMAT_VERSION, HEVC_FORMAT_VERSION,
+    FORMAT_VERSION, FrozenMediaScope, HEVC_FORMAT_VERSION, MediaAnnouncement, MediaDirection,
 };
+use nestlink_sdk::{NetworkMonitor, native::AddressPolicy};
 use std::{io, net::SocketAddr, sync::Arc};
 
 use crate::{
@@ -116,7 +116,9 @@ impl NativeSessionConfig {
         target: nestlink_media_codec::VideoConfig,
     ) -> std::io::Result<Self> {
         if self.gpu_hevc_main8_target.is_some() {
-            return Err(io::Error::other("CPU and GPU media targets are mutually exclusive"));
+            return Err(io::Error::other(
+                "CPU and GPU media targets are mutually exclusive",
+            ));
         }
         self.media_provider = Some(crate::NativeMediaProvider::cpu_software_adaptive(target)?);
         if !self
@@ -148,16 +150,19 @@ impl NativeSessionConfig {
         target: nestlink_media_codec::VideoConfig,
     ) -> io::Result<Self> {
         if self.media_provider.is_some() || self.internal_software_media_candidate.is_some() {
-            return Err(io::Error::other("GPU media cannot replace a configured CPU target or candidate"));
+            return Err(io::Error::other(
+                "GPU media cannot replace a configured CPU target or candidate",
+            ));
         }
         self.media_provider = Some(crate::NativeMediaProvider::gpu_hevc_main8(target)?);
         self.gpu_hevc_main8_target = Some(target);
-        if !self.supported_capabilities.iter().any(|value| {
-            value == nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY
-        }) {
-            self.supported_capabilities.push(
-                nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY.into(),
-            );
+        if !self
+            .supported_capabilities
+            .iter()
+            .any(|value| value == nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY)
+        {
+            self.supported_capabilities
+                .push(nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY.into());
         }
         Ok(self)
     }
@@ -167,7 +172,9 @@ impl NativeSessionConfig {
         policy: nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate,
     ) -> std::io::Result<Self> {
         if self.gpu_hevc_main8_target.is_some() {
-            return Err(io::Error::other("software candidate cannot authorize GPU media"));
+            return Err(io::Error::other(
+                "software candidate cannot authorize GPU media",
+            ));
         }
         let format = policy.validate().map_err(std::io::Error::other)?;
         let target = self
@@ -212,22 +219,36 @@ impl NativeSessionConfig {
         let Some(policy) = self.internal_software_media_candidate.as_ref() else {
             return Ok(None);
         };
-        policy.authorize_scope(deployment, account, controller, host,
-            &policy.formats().map_err(io::Error::other)?)
+        policy
+            .authorize_scope(
+                deployment,
+                account,
+                controller,
+                host,
+                &policy.formats().map_err(io::Error::other)?,
+            )
             .map_err(io::Error::other)?;
-        Ok(Some((self.media_provider.as_ref()
-            .ok_or_else(|| io::Error::other("explicit media provider unavailable"))?, FORMAT_VERSION)))
+        Ok(Some((
+            self.media_provider
+                .as_ref()
+                .ok_or_else(|| io::Error::other("explicit media provider unavailable"))?,
+            FORMAT_VERSION,
+        )))
     }
     pub(crate) fn requires_local_media_approval(&self) -> bool {
         self.gpu_hevc_main8_target.is_some()
     }
     fn gpu_media_provider(&self) -> io::Result<&crate::NativeMediaProvider> {
-        let target = self.gpu_hevc_main8_target
+        let target = self
+            .gpu_hevc_main8_target
             .ok_or_else(|| io::Error::other("explicit GPU target unavailable"))?;
-        self.media_provider.as_ref().filter(|provider| {
-            self.internal_software_media_candidate.is_none()
-                && provider.matches_gpu_hevc_main8_target(target)
-        }).ok_or_else(|| io::Error::other("configured GPU media provider changed"))
+        self.media_provider
+            .as_ref()
+            .filter(|provider| {
+                self.internal_software_media_candidate.is_none()
+                    && provider.matches_gpu_hevc_main8_target(target)
+            })
+            .ok_or_else(|| io::Error::other("configured GPU media provider changed"))
     }
     pub(crate) fn media_provider_for_approval(
         &self,
@@ -240,18 +261,31 @@ impl NativeSessionConfig {
     ) -> io::Result<&crate::NativeMediaProvider> {
         validate_media_peers(deployment, account, controller, host)?;
         if local_host != host {
-            return Err(io::Error::other("media approval is not addressed to the local key"));
+            return Err(io::Error::other(
+                "media approval is not addressed to the local key",
+            ));
         }
         let formats = scope.validate().map_err(io::Error::other)?;
         if let Some(target) = self.gpu_hevc_main8_target {
             validate_gpu_formats(scope.version, &formats, target)?;
             return self.gpu_media_provider();
         }
-        let policy = self.internal_software_media_candidate.as_ref()
+        let policy = self
+            .internal_software_media_candidate
+            .as_ref()
             .ok_or_else(|| io::Error::other("explicit media approval configuration unavailable"))?;
-        policy.authorize_host_approval(deployment, account, local_host, controller, host,
-            &scope.formats).map_err(io::Error::other)?;
-        self.media_provider.as_ref()
+        policy
+            .authorize_host_approval(
+                deployment,
+                account,
+                local_host,
+                controller,
+                host,
+                &scope.formats,
+            )
+            .map_err(io::Error::other)?;
+        self.media_provider
+            .as_ref()
             .ok_or_else(|| io::Error::other("explicit media provider unavailable"))
     }
     pub(crate) fn validate_media_publication(
@@ -263,15 +297,19 @@ impl NativeSessionConfig {
     ) -> io::Result<()> {
         let formats = publication.validate(now).map_err(io::Error::other)?;
         if publication.device_id != local_device || publication.direction != direction {
-            return Err(io::Error::other("media publication differs from local direction"));
+            return Err(io::Error::other(
+                "media publication differs from local direction",
+            ));
         }
         if let Some(target) = self.gpu_hevc_main8_target {
             self.gpu_media_provider()?;
             validate_gpu_formats(publication.version, &formats, target)
         } else {
-            self.internal_software_media_candidate.as_ref()
+            self.internal_software_media_candidate
+                .as_ref()
                 .ok_or_else(|| io::Error::other("explicit media policy unavailable"))?
-                .authorize_announcement(publication, now).map_err(io::Error::other)
+                .authorize_announcement(publication, now)
+                .map_err(io::Error::other)
         }
     }
     pub fn with_browser_host(mut self, config: BrowserHostConfig) -> Self {
@@ -387,8 +425,15 @@ impl NativeSessionConfig {
     }
 }
 
-fn validate_media_peers(deployment: &str, account: &str, controller: &str, host: &str) -> io::Result<()> {
-    if [deployment, account, controller, host].iter().any(|id| !nestlink_protocol::valid_id(id))
+fn validate_media_peers(
+    deployment: &str,
+    account: &str,
+    controller: &str,
+    host: &str,
+) -> io::Result<()> {
+    if [deployment, account, controller, host]
+        .iter()
+        .any(|id| !nestlink_protocol::valid_id(id))
         || controller == host
     {
         return Err(io::Error::other("invalid explicit media peer scope"));
@@ -401,13 +446,17 @@ fn validate_gpu_formats(
     target: nestlink_media_codec::VideoConfig,
 ) -> io::Result<()> {
     if version != HEVC_FORMAT_VERSION || formats.formats().len() != 1 {
-        return Err(io::Error::other("GPU media requires one exact v3 Main8 format"));
+        return Err(io::Error::other(
+            "GPU media requires one exact v3 Main8 format",
+        ));
     }
     let config = nestlink_media_session::hevc_main8_contract(formats.formats()[0])?.config();
     if (config.width, config.height, config.fps, config.bitrate_kbps)
         != (target.width, target.height, target.fps, target.bitrate_kbps)
     {
-        return Err(io::Error::other("GPU media format differs from explicit target"));
+        return Err(io::Error::other(
+            "GPU media format differs from explicit target",
+        ));
     }
     Ok(())
 }
@@ -434,65 +483,126 @@ mod tests {
     }
 
     fn target() -> nestlink_media_codec::VideoConfig {
-        nestlink_media_codec::VideoConfig { width: 640, height: 480, fps: 30, bitrate_kbps: 4000 }
+        nestlink_media_codec::VideoConfig {
+            width: 640,
+            height: 480,
+            fps: 30,
+            bitrate_kbps: 4000,
+        }
     }
     fn config() -> Result<NativeSessionConfig> {
         Ok(NativeSessionConfig::new(Arc::new(NetworkMonitor::start()?)))
     }
-    fn hevc_format(target: nestlink_media_codec::VideoConfig) -> Result<nestlink_protocol::media_format::VideoFormat> {
+    fn hevc_format(
+        target: nestlink_media_codec::VideoConfig,
+    ) -> Result<nestlink_protocol::media_format::VideoFormat> {
         let mut ptl = [0; 12];
         ptl[0] = 1;
         ptl[11] = 120;
-        Ok(nestlink_protocol::media_format::VideoFormat::hevc_main8_observed(
-            ptl, target.width, target.height,
-            nestlink_protocol::media_format::FrameRate::new(target.fps, 1)?, target.bitrate_kbps,
-        )?)
+        Ok(
+            nestlink_protocol::media_format::VideoFormat::hevc_main8_observed(
+                ptl,
+                target.width,
+                target.height,
+                nestlink_protocol::media_format::FrameRate::new(target.fps, 1)?,
+                target.bitrate_kbps,
+            )?,
+        )
     }
-    fn scope(formats: Vec<nestlink_protocol::media_format::VideoFormat>) -> Result<FrozenMediaScope> {
+    fn scope(
+        formats: Vec<nestlink_protocol::media_format::VideoFormat>,
+    ) -> Result<FrozenMediaScope> {
         let set = nestlink_protocol::media_format::FormatSet::new(formats)?;
         Ok(FrozenMediaScope {
             version: u32::from(set.canonical_version()),
-            controller_revision: 1, host_revision: 2,
-            formats: set.formats().iter().map(|format| format.encode()).collect::<std::result::Result<_, _>>()?,
+            controller_revision: 1,
+            host_revision: 2,
+            formats: set
+                .formats()
+                .iter()
+                .map(|format| format.encode())
+                .collect::<std::result::Result<_, _>>()?,
             sha256: set.digest().to_vec(),
         })
     }
-    fn software_policy() -> Result<nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate> {
+    fn software_policy()
+    -> Result<nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate>
+    {
         let format = nestlink_protocol::media_format::VideoFormat::legacy_h264(
-            31, 640, 480, nestlink_protocol::media_format::FrameRate::new(30, 1)?, 4000,
+            31,
+            640,
+            480,
+            nestlink_protocol::media_format::FrameRate::new(30, 1)?,
+            4000,
         )?;
-        Ok(nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate {
-            deployment_id: nestlink_auth::random_id(), account_id: nestlink_auth::random_id(),
-            controller_device_id: nestlink_auth::random_id(), host_device_id: nestlink_auth::random_id(),
-            format: format.encode()?, format_sha256: format.digest()?, additional_formats: vec![],
-        })
+        Ok(
+            nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate {
+                deployment_id: nestlink_auth::random_id(),
+                account_id: nestlink_auth::random_id(),
+                controller_device_id: nestlink_auth::random_id(),
+                host_device_id: nestlink_auth::random_id(),
+                format: format.encode()?,
+                format_sha256: format.digest()?,
+                additional_formats: vec![],
+            },
+        )
     }
 
     #[tokio::test]
     async fn gpu_opt_in_routes_v3_only_and_rejects_provider_replacement_and_cpu_policy() -> Result {
         let ids: Vec<_> = (0..4).map(|_| nestlink_auth::random_id()).collect();
-        assert!(config()?.with_cpu_media_target(target())?
-            .media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3])?.is_none());
+        assert!(
+            config()?
+                .with_cpu_media_target(target())?
+                .media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3])?
+                .is_none()
+        );
         let gpu = config()?.with_gpu_hevc_main8_target(target())?;
         assert!(gpu.validate());
         assert!(gpu.requires_local_media_approval());
-        let (provider, version) = gpu.media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3])?
+        let (provider, version) = gpu
+            .media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3])?
             .ok_or("explicit GPU route missing")?;
         assert_eq!(version, HEVC_FORMAT_VERSION);
         assert!(provider.matches_gpu_hevc_main8_target(target()));
-        assert!(gpu.media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[2]).is_err());
-        assert!(gpu.media_provider_for_request("invalid", &ids[1], &ids[2], &ids[3]).is_err());
+        assert!(
+            gpu.media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[2])
+                .is_err()
+        );
+        assert!(
+            gpu.media_provider_for_request("invalid", &ids[1], &ids[2], &ids[3])
+                .is_err()
+        );
         assert!(gpu.clone().with_cpu_media_target(target()).is_err());
-        assert!(gpu.clone().with_internal_software_media_candidate(software_policy()?).is_err());
-        assert!(config()?.with_cpu_media_target(target())?.with_gpu_hevc_main8_target(target()).is_err());
+        assert!(
+            gpu.clone()
+                .with_internal_software_media_candidate(software_policy()?)
+                .is_err()
+        );
+        assert!(
+            config()?
+                .with_cpu_media_target(target())?
+                .with_gpu_hevc_main8_target(target())
+                .is_err()
+        );
         let mut changed = gpu.clone();
         changed.media_provider = Some(crate::NativeMediaProvider::cpu_software(target())?);
         assert!(!changed.validate());
-        assert!(changed.media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3]).is_err());
+        assert!(
+            changed
+                .media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3])
+                .is_err()
+        );
         changed.media_provider = None;
-        assert!(changed.media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3]).is_err());
+        assert!(
+            changed
+                .media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3])
+                .is_err()
+        );
         changed = gpu;
-        changed.supported_capabilities.retain(|value| value != nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY);
+        changed
+            .supported_capabilities
+            .retain(|value| value != nestlink_protocol::media_authority::HEVC_FORMAT_CAPABILITY);
         assert!(!changed.validate());
         Ok(())
     }
@@ -502,61 +612,128 @@ mod tests {
         let ids: Vec<_> = (0..4).map(|_| nestlink_auth::random_id()).collect();
         let gpu = config()?.with_gpu_hevc_main8_target(target())?;
         let exact = scope(vec![hevc_format(target())?])?;
-        let approve = |local: &str, scope: &FrozenMediaScope| gpu.media_provider_for_approval(
-            &ids[0], &ids[1], local, &ids[2], &ids[3], scope,
-        );
+        let approve = |local: &str, scope: &FrozenMediaScope| {
+            gpu.media_provider_for_approval(&ids[0], &ids[1], local, &ids[2], &ids[3], scope)
+        };
         assert!(approve(&ids[3], &exact).is_ok());
         assert!(approve(&ids[2], &exact).is_err());
-        for different in [nestlink_media_codec::VideoConfig { width: 320, ..target() },
-            nestlink_media_codec::VideoConfig { fps: 60, ..target() },
-            nestlink_media_codec::VideoConfig { bitrate_kbps: 8000, ..target() }] {
+        for different in [
+            nestlink_media_codec::VideoConfig {
+                width: 320,
+                ..target()
+            },
+            nestlink_media_codec::VideoConfig {
+                fps: 60,
+                ..target()
+            },
+            nestlink_media_codec::VideoConfig {
+                bitrate_kbps: 8000,
+                ..target()
+            },
+        ] {
             assert!(approve(&ids[3], &scope(vec![hevc_format(different)?])?).is_err());
         }
-        assert!(approve(&ids[3], &scope(vec![hevc_format(target())?, hevc_format(
-            nestlink_media_codec::VideoConfig { fps: 15, ..target() })?])?).is_err());
+        assert!(
+            approve(
+                &ids[3],
+                &scope(vec![
+                    hevc_format(target())?,
+                    hevc_format(nestlink_media_codec::VideoConfig {
+                        fps: 15,
+                        ..target()
+                    })?
+                ])?
+            )
+            .is_err()
+        );
         let h264 = nestlink_protocol::media_format::VideoFormat::legacy_h264(
-            31, 640, 480, nestlink_protocol::media_format::FrameRate::new(30, 1)?, 4000,
+            31,
+            640,
+            480,
+            nestlink_protocol::media_format::FrameRate::new(30, 1)?,
+            4000,
         )?;
         assert!(approve(&ids[3], &scope(vec![h264])?).is_err());
         Ok(())
     }
 
     #[tokio::test]
-    async fn gpu_publication_data_checks_bind_exact_direction_target_and_reject_withdrawal() -> Result {
+    async fn gpu_publication_data_checks_bind_exact_direction_target_and_reject_withdrawal()
+    -> Result {
         // Synthetic announcements exercise data checks only, never native probe success.
         let gpu = config()?.with_gpu_hevc_main8_target(target())?;
         let device = nestlink_auth::random_id();
         let mut publication = MediaAnnouncement {
-            version: HEVC_FORMAT_VERSION, device_id: device.clone(), direction: MediaDirection::Decode,
-            revision: 1, expires_at_unix_ms: 2000,
+            version: HEVC_FORMAT_VERSION,
+            device_id: device.clone(),
+            direction: MediaDirection::Decode,
+            revision: 1,
+            expires_at_unix_ms: 2000,
             probe: nestlink_protocol::media_authority::ProbeIdentity {
-                generation: 1, resource_id: nestlink_auth::random_id(), backend: "gpu-hevc-decoder".into(),
-                adapter_luid: Some(7), driver_version: Some(8),
+                generation: 1,
+                resource_id: nestlink_auth::random_id(),
+                backend: "gpu-hevc-decoder".into(),
+                adapter_luid: Some(7),
+                driver_version: Some(8),
             },
             formats: vec![hevc_format(target())?.encode()?],
         };
-        assert!(gpu.validate_media_publication(&publication, &device, MediaDirection::Decode, 1000).is_ok());
-        assert!(gpu.validate_media_publication(&publication, &device, MediaDirection::Encode, 1000).is_err());
-        assert!(gpu.validate_media_publication(&publication, &nestlink_auth::random_id(), MediaDirection::Decode, 1000).is_err());
+        assert!(
+            gpu.validate_media_publication(&publication, &device, MediaDirection::Decode, 1000)
+                .is_ok()
+        );
+        assert!(
+            gpu.validate_media_publication(&publication, &device, MediaDirection::Encode, 1000)
+                .is_err()
+        );
+        assert!(
+            gpu.validate_media_publication(
+                &publication,
+                &nestlink_auth::random_id(),
+                MediaDirection::Decode,
+                1000
+            )
+            .is_err()
+        );
         publication.probe.adapter_luid = None;
-        assert!(gpu.validate_media_publication(&publication, &device, MediaDirection::Decode, 1000).is_err());
+        assert!(
+            gpu.validate_media_publication(&publication, &device, MediaDirection::Decode, 1000)
+                .is_err()
+        );
         publication.probe.adapter_luid = Some(7);
         publication.formats.clear();
         assert!(publication.validate(1000).is_ok());
-        assert!(gpu.validate_media_publication(&publication, &device, MediaDirection::Decode, 1000).is_err());
+        assert!(
+            gpu.validate_media_publication(&publication, &device, MediaDirection::Decode, 1000)
+                .is_err()
+        );
         Ok(())
     }
 
     #[tokio::test]
     async fn explicit_software_scope_mismatch_fails_without_legacy_downgrade() -> Result {
         let policy = software_policy()?;
-        let cpu = config()?.with_cpu_media_target(target())?
+        let cpu = config()?
+            .with_cpu_media_target(target())?
             .with_internal_software_media_candidate(policy.clone())?;
-        let (_, version) = cpu.media_provider_for_request(&policy.deployment_id, &policy.account_id,
-            &policy.controller_device_id, &policy.host_device_id)?.ok_or("candidate route absent")?;
+        let (_, version) = cpu
+            .media_provider_for_request(
+                &policy.deployment_id,
+                &policy.account_id,
+                &policy.controller_device_id,
+                &policy.host_device_id,
+            )?
+            .ok_or("candidate route absent")?;
         assert_eq!(version, FORMAT_VERSION);
-        assert!(cpu.media_provider_for_request(&nestlink_auth::random_id(), &policy.account_id,
-            &policy.controller_device_id, &policy.host_device_id).is_err());
+        assert!(
+            cpu.media_provider_for_request(
+                &nestlink_auth::random_id(),
+                &policy.account_id,
+                &policy.controller_device_id,
+                &policy.host_device_id
+            )
+            .is_err()
+        );
         assert!(cpu.with_gpu_hevc_main8_target(target()).is_err());
         Ok(())
     }

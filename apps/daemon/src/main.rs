@@ -865,22 +865,48 @@ mod media_cli_tests {
     #[test]
     fn explicit_gpu_target_cannot_mix_with_software_or_infer_other_formats() -> io::Result<()> {
         let args = Args::try_parse_from([
-            "nestlink-daemon", "--native-gpu-hevc-target", "1920x1080@60:8000",
-        ]).map_err(io::Error::other)?;
-        let target = args.native_gpu_hevc_target.ok_or_else(|| io::Error::other("GPU target absent"))?;
-        assert_eq!((target.width, target.height, target.fps, target.bitrate_kbps), (1920, 1080, 60, 8000));
+            "nestlink-daemon",
+            "--native-gpu-hevc-target",
+            "1920x1080@60:8000",
+        ])
+        .map_err(io::Error::other)?;
+        let target = args
+            .native_gpu_hevc_target
+            .ok_or_else(|| io::Error::other("GPU target absent"))?;
+        assert_eq!(
+            (target.width, target.height, target.fps, target.bitrate_kbps),
+            (1920, 1080, 60, 8000)
+        );
         assert!(args.native_media_target.is_none());
         assert!(args.internal_software_media_candidate.is_none());
-        assert!(Args::try_parse_from([
-            "nestlink-daemon", "--native-gpu-hevc-target", "1920x1080@60:8000",
-            "--native-media-target", "1920x1080@30:4000",
-        ]).is_err());
-        assert!(Args::try_parse_from([
-            "nestlink-daemon", "--native-gpu-hevc-target", "1920x1080@60:8000",
-            "--internal-software-media-candidate", "candidate.json",
-        ]).is_err());
-        for invalid in ["1918x1080@60:8000", "1920x2160@60:8000", "1920x1080@0:8000",
-            "1920x1080@60:0", "1920x1080@60/1:8000", "1920x1080@60:8000:10"] {
+        assert!(
+            Args::try_parse_from([
+                "nestlink-daemon",
+                "--native-gpu-hevc-target",
+                "1920x1080@60:8000",
+                "--native-media-target",
+                "1920x1080@30:4000",
+            ])
+            .is_err()
+        );
+        assert!(
+            Args::try_parse_from([
+                "nestlink-daemon",
+                "--native-gpu-hevc-target",
+                "1920x1080@60:8000",
+                "--internal-software-media-candidate",
+                "candidate.json",
+            ])
+            .is_err()
+        );
+        for invalid in [
+            "1918x1080@60:8000",
+            "1920x2160@60:8000",
+            "1920x1080@0:8000",
+            "1920x1080@60:0",
+            "1920x1080@60/1:8000",
+            "1920x1080@60:8000:10",
+        ] {
             assert!(parse_native_gpu_hevc_target(invalid).is_err(), "{invalid}");
         }
         Ok(())

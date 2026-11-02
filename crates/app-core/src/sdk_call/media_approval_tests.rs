@@ -1,6 +1,10 @@
 //! Review predicates only. These format fixtures are not hardware evidence.
 use super::*;
-use nestlink_protocol::{Path, Permission, media_authority::FrozenMediaScope, media_format::{FormatSet, FrameRate, VideoFormat}};
+use nestlink_protocol::{
+    Path, Permission,
+    media_authority::FrozenMediaScope,
+    media_format::{FormatSet, FrameRate, VideoFormat},
+};
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -48,14 +52,44 @@ fn review_rejects_changed_nonce_revision_scope_host_state_or_deadline_before_pro
     let view = view();
     let scope = scope()?;
     let choice = choice();
-    let check = |current: &RemoteView, local: &str, expected: (&str, u64), current_scope: Option<&FrozenMediaScope>, now| {
-        validate_media_review(current, local, expected, &choice, &scope, current_scope, now)
+    let check = |current: &RemoteView,
+                 local: &str,
+                 expected: (&str, u64),
+                 current_scope: Option<&FrozenMediaScope>,
+                 now| {
+        validate_media_review(
+            current,
+            local,
+            expected,
+            &choice,
+            &scope,
+            current_scope,
+            now,
+        )
     };
     let expected = (view.nonce.as_str(), view.policy_revision);
     assert!(check(&view, &view.host_device_id, expected, Some(&scope), 1000).is_ok());
     assert!(check(&view, &random_id(), expected, Some(&scope), 1000).is_err());
-    assert!(check(&view, &view.host_device_id, ("old", view.policy_revision), Some(&scope), 1000).is_err());
-    assert!(check(&view, &view.host_device_id, (&view.nonce, 6), Some(&scope), 1000).is_err());
+    assert!(
+        check(
+            &view,
+            &view.host_device_id,
+            ("old", view.policy_revision),
+            Some(&scope),
+            1000
+        )
+        .is_err()
+    );
+    assert!(
+        check(
+            &view,
+            &view.host_device_id,
+            (&view.nonce, 6),
+            Some(&scope),
+            1000
+        )
+        .is_err()
+    );
     assert!(check(&view, &view.host_device_id, expected, None, 1000).is_err());
     assert!(check(&view, &view.host_device_id, expected, Some(&scope), 2000).is_err());
     let mut replaced = scope.clone();
@@ -71,22 +105,50 @@ fn review_rejects_changed_nonce_revision_scope_host_state_or_deadline_before_pro
 fn approved_media_requires_view_and_exact_permission_path_subsets() -> Result {
     let view = view();
     let scope = scope()?;
-    let check = |choice: &ApprovalChoice| validate_media_review(
-        &view, &view.host_device_id, (&view.nonce, view.policy_revision),
-        choice, &scope, Some(&scope), 1000,
-    );
+    let check = |choice: &ApprovalChoice| {
+        validate_media_review(
+            &view,
+            &view.host_device_id,
+            (&view.nonce, view.policy_revision),
+            choice,
+            &scope,
+            Some(&scope),
+            1000,
+        )
+    };
     assert!(check(&choice()).is_ok());
-    for permissions in [vec![], vec![Permission::Input as i32],
+    for permissions in [
+        vec![],
+        vec![Permission::Input as i32],
         vec![Permission::View as i32, Permission::FileWrite as i32],
         vec![Permission::View as i32, Permission::View as i32],
         vec![Permission::View as i32, Permission::Unspecified as i32],
-        vec![Permission::View as i32, i32::MAX]] {
-        assert!(check(&ApprovalChoice { permissions, ..choice() }).is_err());
+        vec![Permission::View as i32, i32::MAX],
+    ] {
+        assert!(
+            check(&ApprovalChoice {
+                permissions,
+                ..choice()
+            })
+            .is_err()
+        );
     }
-    for paths in [vec![], vec![Path::Relay as i32], vec![Path::Direct as i32, Path::Direct as i32], vec![i32::MAX]] {
+    for paths in [
+        vec![],
+        vec![Path::Relay as i32],
+        vec![Path::Direct as i32, Path::Direct as i32],
+        vec![i32::MAX],
+    ] {
         assert!(check(&ApprovalChoice { paths, ..choice() }).is_err());
     }
     // A local rejection needs no configured GPU or direction probe.
-    assert!(check(&ApprovalChoice { approved: false, permissions: vec![], paths: vec![] }).is_ok());
+    assert!(
+        check(&ApprovalChoice {
+            approved: false,
+            permissions: vec![],
+            paths: vec![]
+        })
+        .is_ok()
+    );
     Ok(())
 }
