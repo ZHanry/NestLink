@@ -19,6 +19,99 @@ pub struct HevcOwnerOutput {
     pub owner: OwnerObservation,
     pub local_contract_sha256: [u8; 32],
 }
+pub struct HevcDecodedOutput {
+    pub pts_90khz: u64,
+    pub bgra: Zeroizing<Vec<u8>>,
+    pub owner: OwnerObservation,
+    pub local_contract_sha256: [u8; 32],
+}
+
+/// An independent exact hardware decode owner. No software or guessed-device
+/// fallback is permitted under a GPU-only exact announcement.
+pub struct MfHevcHardwareDecoder {
+    inner: Transform,
+    target: HevcMain8Contract,
+    admission: HevcMain8Admission,
+    identity: OwnerObservation,
+    authority: Arc<AtomicBool>,
+    scratch: Zeroizing<Vec<u8>>,
+    failed: bool,
+    draining: bool,
+}
+impl MfHevcHardwareDecoder {
+    /// # Safety
+    /// `device` is a live original ID3D11Device on the current decode worker.
+    /// It stays retained until open completes; this owner retains native refs.
+    pub unsafe fn with_gpu_device(target: HevcMain8Contract, device: *mut c_void, authority: Arc<AtomicBool>) -> io::Result<Self> {
+        if device.is_null() || !authority.load(Ordering::Acquire) {
+            return Err(io::Error::new(io::ErrorKind::PermissionDenied, "HEVC decode original device/authority unavailable"));
+        }
+        // SAFETY: explicit original worker-thread device, hardware-only transform.
+        let mut inner = unsafe { Transform::new_hevc(target.config(), device, false, true) }?;
+        let identity = match observation(&inner) {
+            Ok(identity) if identity.adapter_luid.is_some() && identity.driver_version.is_some() => identity,
+            result => { inner.close()?; return Err(result.err().unwrap_or_else(|| io::Error::other("HEVC decode original hardware identity is incomplete"))); }
+        };
+        let bytes = inner.raw_bytes;
+        let owner = Self { inner, target, admission: HevcMain8Admission::new(target), identity,
+            authority, scratch: Zeroizing::new(vec![0; bytes]), failed: false, draining: false };
+        owner.check()?;
+        Ok(owner)
+    }
+    fn check(&self) -> io::Result<()> {
+        if self.failed || !self.authority.load(Ordering::Acquire) {
+            return Err(io::Error::new(io::ErrorKind::PermissionDenied, "HEVC original decode owner retired or failed"));
+        }
+        if !self.identity.same_identity(observation(&self.inner)?) {
+            return Err(io::Error::other("HEVC original decode resource/adapter/driver identity changed"));
+        }
+        Ok(())
+    }
+    fn finish(&mut self, output: Option<(usize, u64)>) -> io::Result<Option<HevcDecodedOutput>> {
+        self.check()?;
+        let Some((size, pts_90khz)) = output else { return Ok(None); };
+        let result = (|| {
+            if size != self.inner.raw_bytes { return Err(io::Error::other("HEVC decoded pixels differ from the exact surface budget")); }
+            let owner = observation(&self.inner)?;
+            owner.require_hardware_identity()?;
+            self.check()?;
+            Ok(Some(HevcDecodedOutput { pts_90khz, bgra: Zeroizing::new(self.scratch[..size].to_vec()), owner,
+                local_contract_sha256: self.target.digest() }))
+        })();
+        if result.is_err() { self.failed = true; }
+        result
+    }
+    pub fn submit(&mut self, bytes: &[u8], pts_90khz: u64) -> io::Result<(bool, Option<HevcDecodedOutput>)> {
+        self.check()?;
+        if self.draining { return Err(io::Error::other("HEVC drained decoder cannot accept another AU")); }
+        let mut admission = self.admission.clone();
+        admission.validate(bytes)?;
+        let (accepted, output) = match self.inner.process(bytes, pts_90khz, false, &mut self.scratch) {
+            Ok(result) => result,
+            Err(error) => { self.failed = true; return Err(error); }
+        };
+        self.check()?;
+        if accepted { self.admission = admission; }
+        Ok((accepted, self.finish(output)?))
+    }
+    pub fn poll(&mut self) -> io::Result<Option<HevcDecodedOutput>> {
+        self.check()?;
+        let output = match self.inner.receive(&mut self.scratch) {
+            Ok(output) => output,
+            Err(error) => { self.failed = true; return Err(error); }
+        };
+        self.finish(output)
+    }
+    pub fn begin_drain(&mut self) -> io::Result<()> {
+        self.check()?;
+        if self.draining { return Err(io::Error::other("HEVC decoder already draining")); }
+        self.inner.begin_hevc_drain()?;
+        self.draining = true;
+        Ok(())
+    }
+    pub fn pending_frames(&self) -> usize { self.inner.pending_frames() }
+    pub fn close(mut self) -> io::Result<()> { self.failed = true; self.inner.close() }
+}
 
 /// COM/D3D objects remain !Send on the original capture/encoding worker.
 /// Input acceptance and an actual output are separate facts.

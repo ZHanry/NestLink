@@ -91,6 +91,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-media-codec --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/hevc-clippy.log"
           exit $LASTEXITCODE
+      - name: Verify actual signed Store v2 and exact v3 frozen media lifecycles
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log"
+          exit $LASTEXITCODE
       - name: Retain exact-source evidence including failures
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

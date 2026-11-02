@@ -46,7 +46,7 @@ pub use hevc_main8::{HevcMain8Admission, HevcMain8Contract};
 #[cfg(windows)]
 mod windows_hevc_owner;
 #[cfg(windows)]
-pub use windows_hevc_owner::{HevcOwnerOutput, MfHevcTextureEncoder};
+pub use windows_hevc_owner::{HevcDecodedOutput, HevcOwnerOutput, MfHevcHardwareDecoder, MfHevcTextureEncoder};
 
 #[cfg(windows)]
 mod owner_observation;

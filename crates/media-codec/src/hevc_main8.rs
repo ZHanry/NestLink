@@ -96,6 +96,7 @@ impl HevcMain8Contract {
 
 /// Transactional parameter-set history pinned to an exact observed target.
 /// A rejected changed AU never replaces previously accepted parser state.
+#[derive(Clone)]
 pub struct HevcMain8Admission {
     expected: HevcMain8Contract,
     validator: Validator,
