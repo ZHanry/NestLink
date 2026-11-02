@@ -138,7 +138,7 @@ pub(super) fn collect_revocations(
     now: u64,
     revoked: &mut BTreeSet<String>,
 ) -> Result<(), StorageError> {
-    let mut statement = connection.prepare(
+    let mut statement = connection.prepare_cached(
         "SELECT e.grant_id, (e.revoked=1 OR n.id IS NULL OR n.revoked=1 OR n.public_key!=e.public_key
           OR n.last_issued_at>?3 OR ?3-n.last_issued_at>=?4 OR n.lease_policy_revision!=d.policy_revision
           OR NOT EXISTS(SELECT 1 FROM json_each(n.roles_json) WHERE value=1)

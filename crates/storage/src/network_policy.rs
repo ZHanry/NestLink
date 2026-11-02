@@ -585,9 +585,9 @@ pub(crate) fn read_snapshot(
 ) -> Result<TrustedNetworkPolicySnapshot, StorageError> {
     require_id(space_id)?;
     check_clock(now_ms)?;
-    let row: Option<AuthoritySnapshotRow> = connection.query_row(
+    let row: Option<AuthoritySnapshotRow> = connection.prepare_cached(
         "SELECT a.public_key,d.id,a.revision,a.policy_epoch,a.last_observed_ms,a.restore_fenced,a.security_epoch=d.security_epoch FROM network_authorities a JOIN deployment d ON d.singleton=1 WHERE a.space_id=?1 AND a.authority_revoked=0 AND NOT EXISTS(SELECT 1 FROM network_spaces s WHERE s.space_id=a.space_id AND s.archived=1)",
-        [space_id], |r|Ok(AuthoritySnapshotRow {
+    )?.query_row([space_id], |r|Ok(AuthoritySnapshotRow {
             public_key: r.get(0)?, deployment_id: r.get(1)?, revision: r.get(2)?, policy_epoch: r.get(3)?,
             last_observed_ms: r.get(4)?, restore_fenced: r.get(5)?, same_security_epoch: r.get(6)?,
         }),
@@ -610,7 +610,9 @@ pub(crate) fn read_snapshot(
     let authority_key = key
         .try_into()
         .map_err(|_| StorageError::Invalid("invalid stored network authority key"))?;
-    let mut statement = connection.prepare("SELECT m.installation_id,m.public_key,m.membership_epoch,m.role,
+    // Reuse SQLite's bounded compiled statements, never policy rows. Every
+    // execution below binds this readback's clock and reads its transaction.
+    let mut statement = connection.prepare_cached("SELECT m.installation_id,m.public_key,m.membership_epoch,m.role,
         (m.revoked=0 AND d.revoked=0 AND a.disabled=0 AND (d.expires_at IS NULL OR d.expires_at>?2) AND x.public_key=m.public_key
          AND (NOT EXISTS(SELECT 1 FROM network_spaces s WHERE s.space_id=m.space_id)
               OR EXISTS(SELECT 1 FROM network_space_members u WHERE u.space_id=m.space_id AND u.account_id=d.account_id AND u.revoked=0 AND u.role=m.role))),d.key_sha256
@@ -650,7 +652,7 @@ pub(crate) fn read_snapshot(
             return Err(StorageError::RateLimited);
         }
     }
-    let mut statement = connection.prepare("SELECT g.grant_id,g.installation_id,g.membership_epoch,(r.grant_id IS NOT NULL)
+    let mut statement = connection.prepare_cached("SELECT g.grant_id,g.installation_id,g.membership_epoch,(r.grant_id IS NOT NULL)
         FROM network_grants g LEFT JOIN network_grant_revocations r ON r.space_id=g.space_id AND r.grant_id=g.grant_id
         WHERE g.space_id=?1 AND g.policy_epoch=?2 AND g.expires_at_ms>?3 ORDER BY g.grant_id LIMIT ?4")?;
     let rows = statement.query_map(
@@ -683,7 +685,7 @@ pub(crate) fn read_snapshot(
             revoked_grant_ids.insert(id);
         }
     }
-    let mut paths = connection.prepare("SELECT connectivity_grant_id,path_grant_id FROM network_remote_paths WHERE space_id=?1 AND policy_epoch=?2 AND expires_at_ms>?3 AND revoked=1 LIMIT ?4")?;
+    let mut paths = connection.prepare_cached("SELECT connectivity_grant_id,path_grant_id FROM network_remote_paths WHERE space_id=?1 AND policy_epoch=?2 AND expires_at_ms>?3 AND revoked=1 LIMIT ?4")?;
     for (count, row) in paths
         .query_map(
             params![
@@ -703,7 +705,7 @@ pub(crate) fn read_snapshot(
         revoked_grant_ids.insert(connectivity);
         revoked_grant_ids.insert(path);
     }
-    let mut transits = connection.prepare("SELECT r.transit_grant_id FROM network_remote_relays r JOIN network_remote_paths p ON p.space_id=r.space_id AND p.path_grant_id=r.path_grant_id WHERE r.space_id=?1 AND p.policy_epoch=?2 AND p.expires_at_ms>?3 AND (r.closed=1 OR p.revoked=1) UNION ALL SELECT h.transit_grant_id FROM network_remote_chain_hops h JOIN network_remote_chains c ON c.route_id=h.route_id JOIN network_remote_paths p ON p.space_id=c.space_id AND p.path_grant_id=c.path_grant_id WHERE h.space_id=?1 AND p.policy_epoch=?2 AND p.expires_at_ms>?3 AND (h.closed=1 OR p.revoked=1) UNION ALL SELECT m.transit_grant_id FROM network_remote_route_set_members m JOIN network_remote_route_sets s ON s.set_id=m.set_id AND s.space_id=m.space_id JOIN network_remote_paths p ON p.space_id=s.space_id AND p.path_grant_id=s.path_grant_id WHERE m.space_id=?1 AND p.policy_epoch=?2 AND p.expires_at_ms>?3 AND (m.closed=1 OR p.revoked=1) LIMIT ?4")?;
+    let mut transits = connection.prepare_cached("SELECT r.transit_grant_id FROM network_remote_relays r JOIN network_remote_paths p ON p.space_id=r.space_id AND p.path_grant_id=r.path_grant_id WHERE r.space_id=?1 AND p.policy_epoch=?2 AND p.expires_at_ms>?3 AND (r.closed=1 OR p.revoked=1) UNION ALL SELECT h.transit_grant_id FROM network_remote_chain_hops h JOIN network_remote_chains c ON c.route_id=h.route_id JOIN network_remote_paths p ON p.space_id=c.space_id AND p.path_grant_id=c.path_grant_id WHERE h.space_id=?1 AND p.policy_epoch=?2 AND p.expires_at_ms>?3 AND (h.closed=1 OR p.revoked=1) UNION ALL SELECT m.transit_grant_id FROM network_remote_route_set_members m JOIN network_remote_route_sets s ON s.set_id=m.set_id AND s.space_id=m.space_id JOIN network_remote_paths p ON p.space_id=s.space_id AND p.path_grant_id=s.path_grant_id WHERE m.space_id=?1 AND p.policy_epoch=?2 AND p.expires_at_ms>?3 AND (m.closed=1 OR p.revoked=1) LIMIT ?4")?;
     for (count, id) in transits
         .query_map(
             params![

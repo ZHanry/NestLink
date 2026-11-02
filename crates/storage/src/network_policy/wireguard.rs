@@ -376,7 +376,7 @@ pub(super) fn collect_revocations(
     now: u64,
     revoked: &mut BTreeSet<String>,
 ) -> Result<(), StorageError> {
-    let mut statement=connection.prepare("SELECT b.grant_id,b.access_grant_id,p.connectivity_grant_id,p.path_grant_id,(b.revoked=1 OR c.revoked=1 OR b.client_revision!=c.revision OR b.expires_at_ms<=?2) FROM network_wireguard_bindings b JOIN network_wireguard_clients c ON c.space_id=b.space_id AND c.client_id=b.client_id JOIN network_packet_access p ON p.space_id=b.space_id AND p.access_grant_id=b.access_grant_id WHERE b.space_id=?1 LIMIT ?3")?;
+    let mut statement=connection.prepare_cached("SELECT b.grant_id,b.access_grant_id,p.connectivity_grant_id,p.path_grant_id,(b.revoked=1 OR c.revoked=1 OR b.client_revision!=c.revision OR b.expires_at_ms<=?2) FROM network_wireguard_bindings b JOIN network_wireguard_clients c ON c.space_id=b.space_id AND c.client_id=b.client_id JOIN network_packet_access p ON p.space_id=b.space_id AND p.access_grant_id=b.access_grant_id WHERE b.space_id=?1 LIMIT ?3")?;
     for (index, row) in statement
         .query_map(params![space, now, MAX_HISTORY + 1], |r| {
             Ok((

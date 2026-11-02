@@ -752,7 +752,7 @@ pub(super) fn collect_revocations(
     if observed.is_some_and(|observed| observed > now) {
         return Err(StorageError::Conflict);
     }
-    let mut statement = connection.prepare(
+    let mut statement = connection.prepare_cached(
         "SELECT e.access_grant_id,e.connectivity_grant_id,e.path_grant_id,
         (e.revoked=1 OR (SELECT count(*) FROM network_subnet_packet_bindings b WHERE b.space_id=e.space_id AND b.access_grant_id=e.access_grant_id)!=e.subnet_binding_count
          OR sa.installation_id IS NULL OR da.installation_id IS NULL

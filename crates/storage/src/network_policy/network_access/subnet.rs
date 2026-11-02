@@ -192,7 +192,7 @@ pub(super) fn collect_revocations(
     now: u64,
     revoked: &mut BTreeSet<String>,
 ) -> Result<(), StorageError> {
-    let mut statement = connection.prepare("SELECT e.access_grant_id,e.connectivity_grant_id,e.path_grant_id,b.mapping_id,
+    let mut statement = connection.prepare_cached("SELECT e.access_grant_id,e.connectivity_grant_id,e.path_grant_id,b.mapping_id,
         (m.grant_id IS NULL OR a.mapping_id IS NULL OR m.revoked=1 OR m.expires_at_ms<=?2 OR m.digest!=b.mapping_digest OR m.mapping_revision!=b.mapping_revision
         OR b.access_digest!=e.digest OR a.mapping_digest!=b.mapping_digest OR a.mapping_revision!=b.mapping_revision OR a.public_key!=m.public_key
         OR g.grant_id IS NULL OR a.membership_digest!=g.digest OR g.expires_at_ms<=?2
