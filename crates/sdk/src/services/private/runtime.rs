@@ -158,10 +158,12 @@ impl PrivateServiceConnection {
     }
     /// This stream carries bytes for the one locally approved TCP/HTTP target.
     pub fn stream(&mut self) -> Result<&mut BiStream, SdkError> {
-        if self.is_multiplexed() || matches!(
-            self.lease.lease().claims().definition.requested_ingress,
-            ServiceIngress::Udp { .. }
-        ) {
+        if self.is_multiplexed()
+            || matches!(
+                self.lease.lease().claims().definition.requested_ingress,
+                ServiceIngress::Udp { .. }
+            )
+        {
             return Err(SdkError::Invalid);
         }
         self.lease.check_time(private_wall_ms()?)?;
@@ -171,10 +173,12 @@ impl PrivateServiceConnection {
     /// This connection remains the single carrier owner and must be physically
     /// closed after the worker and any upgraded streams have finished.
     pub(in crate::services) fn take_stream(&mut self) -> Result<BiStream, SdkError> {
-        if self.is_multiplexed() || matches!(
-            self.lease.lease().claims().definition.requested_ingress,
-            ServiceIngress::Udp { .. }
-        ) {
+        if self.is_multiplexed()
+            || matches!(
+                self.lease.lease().claims().definition.requested_ingress,
+                ServiceIngress::Udp { .. }
+            )
+        {
             return Err(SdkError::Invalid);
         }
         self.lease.check_time(private_wall_ms()?)?;
@@ -389,7 +393,8 @@ impl Sdk {
         lease: VerifiedPrivateServiceLease,
         relay_policy: &PrivateServiceRelayPolicy,
     ) -> Result<PrivateServiceConnection, SdkError> {
-        self.connect_private_service_mode(consumer, lease, relay_policy, None).await
+        self.connect_private_service_mode(consumer, lease, relay_policy, None)
+            .await
     }
     /// Explicit opt-in: one original lease/owner with independently admitted
     /// application streams. This never renews authority or requests a grant.
@@ -399,8 +404,11 @@ impl Sdk {
         lease: VerifiedPrivateServiceLease,
     ) -> Result<PrivateServiceConnection, SdkError> {
         self.connect_private_service_multiplexed_with_relay_policy(
-            consumer, lease, &PrivateServiceRelayPolicy::default(),
-        ).await
+            consumer,
+            lease,
+            &PrivateServiceRelayPolicy::default(),
+        )
+        .await
     }
     pub async fn connect_private_service_multiplexed_with_relay_policy(
         self: &Arc<Self>,
@@ -408,7 +416,8 @@ impl Sdk {
         lease: VerifiedPrivateServiceLease,
         relay_policy: &PrivateServiceRelayPolicy,
     ) -> Result<PrivateServiceConnection, SdkError> {
-        self.connect_private_service_mode(consumer, lease, relay_policy, Some(self.clone())).await
+        self.connect_private_service_mode(consumer, lease, relay_policy, Some(self.clone()))
+            .await
     }
     async fn connect_private_service_mode(
         &self,
@@ -417,7 +426,12 @@ impl Sdk {
         relay_policy: &PrivateServiceRelayPolicy,
         multiplex: Option<Arc<Sdk>>,
     ) -> Result<PrivateServiceConnection, SdkError> {
-        if multiplex.is_some() && matches!(lease.lease().claims().definition.requested_ingress, ServiceIngress::Udp { .. }) {
+        if multiplex.is_some()
+            && matches!(
+                lease.lease().claims().definition.requested_ingress,
+                ServiceIngress::Udp { .. }
+            )
+        {
             return Err(SdkError::Invalid);
         }
         let grant = usage_claims(&lease)?;
@@ -788,7 +802,12 @@ async fn serve_established_connection(
         if lease.lease().claims().edge_runtime_id != presence.runtime_id {
             return Err(SdkError::Trust);
         }
-        if multiplex && matches!(lease.lease().claims().definition.requested_ingress, ServiceIngress::Udp { .. }) {
+        if multiplex
+            && matches!(
+                lease.lease().claims().definition.requested_ingress,
+                ServiceIngress::Udp { .. }
+            )
+        {
             return Err(SdkError::Invalid);
         }
         match expected {
@@ -815,7 +834,15 @@ async fn serve_established_connection(
                 return Err(SdkError::Trust);
             }
         }
-        Ok::<_, SdkError>((send, recv, lease, open, nonce, multiplex, super::network::fingerprint(&bundle)?))
+        Ok::<_, SdkError>((
+            send,
+            recv,
+            lease,
+            open,
+            nonce,
+            multiplex,
+            super::network::fingerprint(&bundle)?,
+        ))
     });
     let admitted = tokio::select! {biased;
         _=stopped(&mut stop)=>return Ok(()),
@@ -850,9 +877,21 @@ async fn serve_established_connection(
     let mut stream = BiStream::new(send, recv);
     if multiplex {
         return multiplex::serve(
-            sdk, host, consent, usage, stop, connection, stream, ready,
-            lease, fingerprint, grant, publication, target,
-        ).await;
+            sdk,
+            host,
+            consent,
+            usage,
+            stop,
+            connection,
+            stream,
+            ready,
+            lease,
+            fingerprint,
+            grant,
+            publication,
+            target,
+        )
+        .await;
     }
     let forward = async {
         let prepared = publication.prepare(&target, &open, nonce, &host.identity)?;

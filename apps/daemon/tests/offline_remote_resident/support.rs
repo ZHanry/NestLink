@@ -323,11 +323,19 @@ impl Server {
     fn start(listener: tokio::net::TcpListener, router: axum::Router) -> Self {
         let (shutdown, stopped) = oneshot::channel();
         let task = tokio::spawn(async move {
-            axum::serve(listener, router.into_make_service_with_connect_info::<std::net::SocketAddr>())
-                .with_graceful_shutdown(async { let _ = stopped.await; })
-                .await
+            axum::serve(
+                listener,
+                router.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+            )
+            .with_graceful_shutdown(async {
+                let _ = stopped.await;
+            })
+            .await
         });
-        Self { task, shutdown: Some(shutdown) }
+        Self {
+            task,
+            shutdown: Some(shutdown),
+        }
     }
     async fn stop(mut self) -> Result {
         if let Some(shutdown) = self.shutdown.take() {
@@ -338,7 +346,9 @@ impl Server {
     }
 }
 impl Drop for Server {
-    fn drop(&mut self) { self.task.abort(); }
+    fn drop(&mut self) {
+        self.task.abort();
+    }
 }
 
 pub struct Fixture {
@@ -376,7 +386,10 @@ impl Fixture {
         let setup = Arc::new(AtomicBool::new(true));
         let scope = https::Scope {
             space: space.clone(),
-            devices: [source_identity.device_id.clone(), host_identity.device_id.clone()],
+            devices: [
+                source_identity.device_id.clone(),
+                host_identity.device_id.clone(),
+            ],
             sessions: sessions.clone(),
             setup: setup.clone(),
         };
@@ -393,29 +406,44 @@ impl Fixture {
         let (gate, _) = watch::channel(false);
         let requests = Arc::new(AtomicUsize::new(0));
         let (held, observed) = (gate.clone(), requests.clone());
-        let router = app.layer(axum::middleware::from_fn(
-            move |request: axum::extract::Request, next: axum::middleware::Next| {
-                let mut held = held.subscribe();
-                let observed = observed.clone();
-                async move {
-                    observed.fetch_add(1, Ordering::AcqRel);
-                    loop {
-                        let waiting = *held.borrow_and_update();
-                        if !waiting || held.changed().await.is_err() {
-                            break;
+        let router = app
+            .layer(axum::middleware::from_fn(
+                move |request: axum::extract::Request, next: axum::middleware::Next| {
+                    let mut held = held.subscribe();
+                    let observed = observed.clone();
+                    async move {
+                        observed.fetch_add(1, Ordering::AcqRel);
+                        loop {
+                            let waiting = *held.borrow_and_update();
+                            if !waiting || held.changed().await.is_err() {
+                                break;
+                            }
                         }
+                        next.run(request).await
                     }
-                    next.run(request).await
-                }
-            },
-        )).layer(axum::middleware::from_fn(move |request, next| scope.clone().serve(request, next)));
+                },
+            ))
+            .layer(axum::middleware::from_fn(move |request, next| {
+                scope.clone().serve(request, next)
+            }));
         let server_router = router.clone();
         let server = Server::start(listener, server_router);
-        let source_sdk = https::login(&origin, &deployment, issuer, &source_account, &source_password).await?;
+        let source_sdk = https::login(
+            &origin,
+            &deployment,
+            issuer,
+            &source_account,
+            &source_password,
+        )
+        .await?;
         source_sdk
-            .create_account(host_account.clone(), Secret::from_text(host_password.expose().into()))
+            .create_account(
+                host_account.clone(),
+                Secret::from_text(host_password.expose().into()),
+            )
             .await?;
-        let host_sdk = https::login(&origin, &deployment, issuer, &host_account, &host_password).await?;
+        let host_sdk =
+            https::login(&origin, &deployment, issuer, &host_account, &host_password).await?;
         for (sdk, identity, role) in [
             (&source_sdk, &source_identity, "controller"),
             (&host_sdk, &host_identity, "host"),
@@ -445,7 +473,9 @@ impl Fixture {
             permissions: vec![Permission::View as i32, Permission::FileRead as i32],
             path_mode: "direct_only".into(),
         };
-        let pending = source_sdk.create_remote(request(sessions[0].clone())).await?;
+        let pending = source_sdk
+            .create_remote(request(sessions[0].clone()))
+            .await?;
         host_sdk
             .approve(
                 &host_identity,
@@ -468,7 +498,9 @@ impl Fixture {
                 },
             )
             .await?;
-        let trusted = source_sdk.create_trusted_remote(request(sessions[1].clone())).await?;
+        let trusted = source_sdk
+            .create_trusted_remote(request(sessions[1].clone()))
+            .await?;
         let original = source_sdk.permit(&trusted.id).await?;
         source_sdk.configure_network_authority(&space, 0).await?;
         for (revision, identity) in [(1, &source_identity), (2, &host_identity)] {

@@ -45,7 +45,11 @@ pub(super) struct Client {
 }
 impl Client {
     pub(super) fn new(sdk: Arc<Sdk>, fingerprint: [u8; 32]) -> Self {
-        Self { sdk, fingerprint, handshakes: Arc::new(Semaphore::new(HANDSHAKES)) }
+        Self {
+            sdk,
+            fingerprint,
+            handshakes: Arc::new(Semaphore::new(HANDSHAKES)),
+        }
     }
 }
 
@@ -54,22 +58,37 @@ pub(super) async fn open_stream(
     consumer: &DeviceIdentity,
 ) -> Result<BiStream, SdkError> {
     let client = owner.multiplex.as_ref().ok_or(SdkError::Invalid)?;
-    let _handshake = client.handshakes.clone().try_acquire_owned().map_err(|_| SdkError::Invalid)?;
+    let _handshake = client
+        .handshakes
+        .clone()
+        .try_acquire_owned()
+        .map_err(|_| SdkError::Invalid)?;
     let lease = &owner.lease;
     lease.check_time(private_wall_ms()?)?;
     if consumer.device_id != lease.claims().consumer_device_id
-        || consumer.identity.public_key() != lease.claims().consumer_public_key {
+        || consumer.identity.public_key() != lease.claims().consumer_public_key
+    {
         return Err(SdkError::Trust);
     }
     let grant = usage_claims(lease)?;
     tokio::time::timeout(Duration::from_secs(3), async {
         current(&client.sdk, lease, client.fingerprint, &grant).await?;
-        let connection = owner.connected.as_ref().ok_or(SdkError::Trust)?.connection()?;
+        let connection = owner
+            .connected
+            .as_ref()
+            .ok_or(SdkError::Trust)?
+            .connection()?;
         let (mut send, mut recv) = connection.open_bi().await.map_err(std::io::Error::other)?;
-        write_message(&mut send, &Hello {
-            service_id: grant.service_id.clone(), grant_id: grant.grant_id.clone(),
-            version: Some(VERSION), mode: Some(Mode::Stream),
-        }).await?;
+        write_message(
+            &mut send,
+            &Hello {
+                service_id: grant.service_id.clone(),
+                grant_id: grant.grant_id.clone(),
+                version: Some(VERSION),
+                mode: Some(Mode::Stream),
+            },
+        )
+        .await?;
         let nonce: [u8; 32] = read_message(&mut recv).await?;
         let open = consumer.identity.private_service_open(lease, nonce)?;
         write_message(&mut send, &open).await?;
@@ -77,7 +96,9 @@ pub(super) async fn open_stream(
         verify_private_service_ready(lease, &open, &ready)?;
         current(&client.sdk, lease, client.fingerprint, &grant).await?;
         Ok(BiStream::new(send, recv))
-    }).await.map_err(|_| SdkError::Timeout)?
+    })
+    .await
+    .map_err(|_| SdkError::Timeout)?
 }
 
 async fn current(
@@ -87,8 +108,12 @@ async fn current(
     grant: &ServiceUsageBudgetGrantClaims,
 ) -> Result<(), SdkError> {
     lease.check_time(private_wall_ms()?)?;
-    let (bundle, verified) = sdk.current_private_service_bundle(&grant.service_id, &grant.grant_id).await?;
-    if verified.digest() != lease.digest() || super::super::network::fingerprint(&bundle)? != fingerprint {
+    let (bundle, verified) = sdk
+        .current_private_service_bundle(&grant.service_id, &grant.grant_id)
+        .await?;
+    if verified.digest() != lease.digest()
+        || super::super::network::fingerprint(&bundle)? != fingerprint
+    {
         return Err(SdkError::Trust);
     }
     Ok(())
@@ -122,12 +147,30 @@ pub(super) async fn serve(
     publication: PrivateServicePublication,
     target: LocalTargetOwner,
 ) -> Result<(), SdkError> {
-    let workers_limit = usize::from(lease.lease().claims().effective_limits().maximum_connections) + HANDSHAKES;
-    let deadline = tokio::time::Instant::now() + Duration::from_millis(
-        lease.lease().claims().expires_at_unix_ms.saturating_sub(private_wall_ms().unwrap_or(u64::MAX)));
+    let workers_limit = usize::from(
+        lease
+            .lease()
+            .claims()
+            .effective_limits()
+            .maximum_connections,
+    ) + HANDSHAKES;
+    let deadline = tokio::time::Instant::now()
+        + Duration::from_millis(
+            lease
+                .lease()
+                .claims()
+                .expires_at_unix_ms
+                .saturating_sub(private_wall_ms().unwrap_or(u64::MAX)),
+        );
     let context = Arc::new(FlowContext {
-        sdk: sdk.clone(), host: host.clone(), consent, lease, fingerprint, grant,
-        publication: Arc::new(publication), target: Arc::new(target),
+        sdk: sdk.clone(),
+        host: host.clone(),
+        consent,
+        lease,
+        fingerprint,
+        grant,
+        publication: Arc::new(publication),
+        target: Arc::new(target),
         handshakes: Arc::new(Semaphore::new(HANDSHAKES)),
     });
     let (flow_stop, flow_stopped) = watch::channel(false);
@@ -146,7 +189,8 @@ pub(super) async fn serve(
             tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             loop {
                 tick.tick().await;
-                if let Err(error) = current(&sdk, &context.lease, fingerprint, &context.grant).await {
+                if let Err(error) = current(&sdk, &context.lease, fingerprint, &context.grant).await
+                {
                     return Err::<(), SdkError>(error);
                 }
                 flush_report(&sdk, &usage, &host, &context.grant.grant_id, false).await?;
@@ -187,14 +231,20 @@ pub(super) async fn serve(
     connection.close(0u32.into(), b"private multiplex owner ended");
     drop(control);
     while let Some(result) = flows.join_next().await {
-        if result.is_err() { failed = true; }
+        if result.is_err() {
+            failed = true;
+        }
     }
     let token = context.publication.handle().wait_drained().await?;
     usage.confirm_drained(&token).map_err(usage_error)?;
     for _ in 0..2 {
-        if flush_report(&sdk, &usage, &host, &context.grant.grant_id, true).await? { break; }
+        if flush_report(&sdk, &usage, &host, &context.grant.grant_id, true).await? {
+            break;
+        }
     }
-    if failed { return Err(SdkError::Trust); }
+    if failed {
+        return Err(SdkError::Trust);
+    }
     Ok(())
 }
 
@@ -207,19 +257,42 @@ async fn forward(
 ) -> Result<(), SdkError> {
     let handshake = tokio::time::timeout(Duration::from_secs(3), async {
         let hello: Hello = read_message(&mut recv).await?;
-        if hello.version != Some(VERSION) || hello.mode != Some(Mode::Stream)
-            || hello.service_id != context.grant.service_id || hello.grant_id != context.grant.grant_id {
+        if hello.version != Some(VERSION)
+            || hello.mode != Some(Mode::Stream)
+            || hello.service_id != context.grant.service_id
+            || hello.grant_id != context.grant.grant_id
+        {
             return Err(SdkError::Trust);
         }
-        current(&context.sdk, &context.lease, context.fingerprint, &context.grant).await?;
+        current(
+            &context.sdk,
+            &context.lease,
+            context.fingerprint,
+            &context.grant,
+        )
+        .await?;
         let nonce = random_bytes::<32>();
         write_message(&mut send, &nonce).await?;
         let open: PrivateServiceOpen = read_message(&mut recv).await?;
-        if open.nonce != nonce { return Err(SdkError::Trust); }
+        if open.nonce != nonce {
+            return Err(SdkError::Trust);
+        }
         verify_private_service_open(&context.lease, &open)?;
-        current(&context.sdk, &context.lease, context.fingerprint, &context.grant).await?;
-        let prepared = context.publication.prepare(&context.target, &open, nonce, &context.host.identity)?;
-        let ready = context.host.identity.private_service_ready(&context.lease, &open)?;
+        current(
+            &context.sdk,
+            &context.lease,
+            context.fingerprint,
+            &context.grant,
+        )
+        .await?;
+        let prepared =
+            context
+                .publication
+                .prepare(&context.target, &open, nonce, &context.host.identity)?;
+        let ready = context
+            .host
+            .identity
+            .private_service_ready(&context.lease, &open)?;
         write_message(&mut send, &ready).await?;
         Ok::<_, SdkError>(prepared)
     });
@@ -231,7 +304,9 @@ async fn forward(
     let mut stream = BiStream::new(send, recv);
     let forward = async {
         if let Some(tls) = context.consent.backend_tls.clone() {
-            prepared.forward_https(&mut stream, move |socket| tls.connect(socket)).await?;
+            prepared
+                .forward_https(&mut stream, move |socket| tls.connect(socket))
+                .await?;
         } else {
             prepared.forward_stream(&mut stream).await?;
         }

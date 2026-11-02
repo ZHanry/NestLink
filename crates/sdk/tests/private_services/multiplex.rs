@@ -10,9 +10,11 @@ use serde_json::json;
 use std::{io, path::Path};
 use tokio::{sync::Barrier, task::JoinSet};
 
-const REQUEST: &[u8] = b"GET /fixed HTTP/1.1\r\nHost: private.svc.example.test\r\nConnection: close\r\n\r\n";
+const REQUEST: &[u8] =
+    b"GET /fixed HTTP/1.1\r\nHost: private.svc.example.test\r\nConnection: close\r\n\r\n";
 const BODY: &str = "Independent HTTP through the original private target";
-const HELD_RESPONSE: &[u8] = b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n4\r\nheld\r\n";
+const HELD_RESPONSE: &[u8] =
+    b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n4\r\nheld\r\n";
 
 async fn start_host(
     sdk: &Arc<Sdk>,
@@ -20,11 +22,17 @@ async fn start_host(
     consent: LocalServiceTargetConsent,
     usage: &Path,
 ) -> Result<PrivateServiceHost> {
-    Ok(sdk.start_private_service_host(identity, consent, PrivateServiceHostConfig {
-        listen: "127.0.0.1:0".parse()?,
-        advertised_ip: "127.0.0.1".parse()?,
-        usage_directory: usage.join("ledger"),
-    }).await?)
+    Ok(sdk
+        .start_private_service_host(
+            identity,
+            consent,
+            PrivateServiceHostConfig {
+                listen: "127.0.0.1:0".parse()?,
+                advertised_ip: "127.0.0.1".parse()?,
+                usage_directory: usage.join("ledger"),
+            },
+        )
+        .await?)
 }
 
 async fn finish_host(mut host: PrivateServiceHost, usage: &Path, owner_failure: bool) -> Result {
@@ -46,9 +54,12 @@ async fn finish_host(mut host: PrivateServiceHost, usage: &Path, owner_failure: 
 async fn terminal_usage(sdk: &Sdk, service: &str, host: &str, spent: u64) -> Result {
     tokio::time::timeout(Duration::from_secs(3), async {
         loop {
-            let usage = sdk.service_quota_usage(ServiceQuotaUsageQuery {
-                scope: ServiceQuotaScope::Resource, scope_key: service.into(),
-            }).await?;
+            let usage = sdk
+                .service_quota_usage(ServiceQuotaUsageQuery {
+                    scope: ServiceQuotaScope::Resource,
+                    scope_key: service.into(),
+                })
+                .await?;
             if usage.outstanding_bytes == 0 {
                 assert_eq!(usage.spent_bytes, spent);
                 assert_eq!(usage.active_grants, 0);
@@ -57,16 +68,24 @@ async fn terminal_usage(sdk: &Sdk, service: &str, host: &str, spent: u64) -> Res
             tokio::time::sleep(Duration::from_millis(20)).await;
         }
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
-    }).await??;
-    let account = sdk.principal().ok_or("private fixture login missing")?.account_id.clone();
+    })
+    .await??;
+    let account = sdk
+        .principal()
+        .ok_or("private fixture login missing")?
+        .account_id
+        .clone();
     for (scope, key) in [
         (ServiceQuotaScope::Account, account),
         (ServiceQuotaScope::Device, host.into()),
         (ServiceQuotaScope::Node, host.into()),
     ] {
-        let usage = sdk.service_quota_usage(ServiceQuotaUsageQuery {
-            scope, scope_key: key,
-        }).await?;
+        let usage = sdk
+            .service_quota_usage(ServiceQuotaUsageQuery {
+                scope,
+                scope_key: key,
+            })
+            .await?;
         assert_eq!(usage.spent_bytes, spent);
         assert_eq!(usage.outstanding_bytes, 0);
         assert_eq!(usage.active_grants, 0);
@@ -90,15 +109,18 @@ async fn multiplex_real_http_shares_one_grant_and_refuses_fifth_original_flow() 
         let backend = TcpListener::bind("127.0.0.1:0").await?;
         let address = backend.local_addr()?;
         let overlap = Arc::new(Barrier::new(2));
-        let app = axum::Router::new().route("/fixed", axum::routing::get(move || {
-            let overlap = overlap.clone();
-            async move {
-                // A serialized forwarding implementation cannot finish either
-                // request. Both independent HTTP handlers must really be live.
-                overlap.wait().await;
-                BODY
-            }
-        }));
+        let app = axum::Router::new().route(
+            "/fixed",
+            axum::routing::get(move || {
+                let overlap = overlap.clone();
+                async move {
+                    // A serialized forwarding implementation cannot finish either
+                    // request. Both independent HTTP handlers must really be live.
+                    overlap.wait().await;
+                    BODY
+                }
+            }),
+        );
         let _backend = Abort(tokio::spawn(async move { axum::serve(backend, app).await }));
         let f = Fixture::new("http", address).await?;
         let request = f.request(&f.consumer);
@@ -106,19 +128,27 @@ async fn multiplex_real_http_shares_one_grant_and_refuses_fifth_original_flow() 
         let lease = f.sdk.request_private_service(&f.view.id, request).await?;
         let original_digest = lease.digest();
         let original_expiry = lease.lease().claims().expires_at_unix_ms;
-        let mut connection = f.sdk.connect_private_service_multiplexed(&f.consumer, lease).await?;
+        let mut connection = f
+            .sdk
+            .connect_private_service_multiplexed(&f.consumer, lease)
+            .await?;
         assert!(connection.is_multiplexed());
         assert!(connection.stream().is_err());
         assert!(connection.open_stream(&f.outsider).await.is_err());
         let (first, second) = tokio::try_join!(
-            connection.open_stream(&f.consumer), connection.open_stream(&f.consumer)
+            connection.open_stream(&f.consumer),
+            connection.open_stream(&f.consumer)
         )?;
         let third = connection.open_stream(&f.consumer).await?;
         let fourth = connection.open_stream(&f.consumer).await?;
         assert!(connection.open_stream(&f.consumer).await.is_err());
-        let usage = f.sdk.service_quota_usage(ServiceQuotaUsageQuery {
-            scope: ServiceQuotaScope::Resource, scope_key: f.view.id.clone(),
-        }).await?;
+        let usage = f
+            .sdk
+            .service_quota_usage(ServiceQuotaUsageQuery {
+                scope: ServiceQuotaScope::Resource,
+                scope_key: f.view.id.clone(),
+            })
+            .await?;
         assert_eq!(usage.active_grants, 1);
         assert_eq!(usage.outstanding_bytes, 4096);
         assert_eq!(usage.spent_bytes, 0);
@@ -126,11 +156,15 @@ async fn multiplex_real_http_shares_one_grant_and_refuses_fifth_original_flow() 
         drop(fourth);
         let (first, second) = tokio::try_join!(http_exchange(first), http_exchange(second))?;
         assert_eq!(connection.lease().digest(), original_digest);
-        assert_eq!(connection.lease().lease().claims().expires_at_unix_ms, original_expiry);
+        assert_eq!(
+            connection.lease().lease().claims().expires_at_unix_ms,
+            original_expiry
+        );
         connection.close().await?;
         terminal_usage(&f.sdk, &f.view.id, &f.host.device_id, first + second).await?;
         finish_host(host, &f.usage, false).await
-    }).await??;
+    })
+    .await??;
     Ok(())
 }
 
@@ -203,9 +237,14 @@ async fn multiplex_acl_revocation_drains_every_original_flow_and_actual_usage() 
         let request = f.request(&f.consumer);
         let host = start_host(&f.sdk, f.host.clone(), f.consent, &f.usage).await?;
         let lease = f.sdk.request_private_service(&f.view.id, request).await?;
-        let mut owner = f.sdk.connect_private_service_multiplexed(&f.consumer, lease).await?;
+        let mut owner = f
+            .sdk
+            .connect_private_service_multiplexed(&f.consumer, lease)
+            .await?;
         let mut streams = two_held_streams(&owner, &f.consumer).await?;
-        f.sdk.revoke_private_service(&f.view.id, &f.rule, f.exposure.revision).await?;
+        f.sdk
+            .revoke_private_service(&f.view.id, &f.rule, f.exposure.revision)
+            .await?;
         ended(&mut streams).await?;
         assert!(owner.open_stream(&f.consumer).await.is_err());
         drop(streams);
@@ -213,7 +252,8 @@ async fn multiplex_acl_revocation_drains_every_original_flow_and_actual_usage() 
         tokio::time::timeout(Duration::from_secs(3), &mut backend.0).await???;
         terminal_usage(&f.sdk, &f.view.id, &f.host.device_id, HELD_SPENT).await?;
         finish_host(host, &f.usage, false).await
-    }).await??;
+    })
+    .await??;
     Ok(())
 }
 
@@ -225,13 +265,18 @@ async fn raw_open(
     replay: Option<&PrivateServiceOpen>,
 ) -> Result<(BiStream, PrivateServiceOpen)> {
     let grant: ServiceUsageBudgetGrantClaims = decode_service_message(
-        &lease.lease().claims().usage_grant.claims, SERVICE_USAGE_BYTES,
+        &lease.lease().claims().usage_grant.claims,
+        SERVICE_USAGE_BYTES,
     )?;
     let (mut send, mut recv) = connection.open_bi().await?;
-    write_message(&mut send, &json!({
-        "service_id": grant.service_id, "grant_id": grant.grant_id,
-        "version": 1, "mode": mode,
-    })).await?;
+    write_message(
+        &mut send,
+        &json!({
+            "service_id": grant.service_id, "grant_id": grant.grant_id,
+            "version": 1, "mode": mode,
+        }),
+    )
+    .await?;
     let nonce: [u8; 32] = read_message(&mut recv).await?;
     let open = match replay {
         Some(open) => {
@@ -255,23 +300,48 @@ async fn multiplex_control_fin_closes_two_flows_and_replayed_stream_proof_is_ref
         let host = start_host(&f.sdk, f.host.clone(), f.consent, &f.usage).await?;
         let lease = f.sdk.request_private_service(&f.view.id, request).await?;
         let connected = carrier::connect(
-            lease.lease().claims().edge_service_address.parse()?, &f.consumer.identity,
+            lease.lease().claims().edge_service_address.parse()?,
+            &f.consumer.identity,
             nestlink_identity::digest(&lease.claims().host_public_key),
-        ).await?;
+        )
+        .await?;
         let (mut control, control_open) = raw_open(
-            &connected.connection, &lease, &f.consumer, "multiplex-control", None,
-        ).await?;
+            &connected.connection,
+            &lease,
+            &f.consumer,
+            "multiplex-control",
+            None,
+        )
+        .await?;
         let accepted: serde_json::Value = read_message(control.parts_mut().1).await?;
         assert_eq!(accepted, json!({"version": 1, "mode": "multiplex-control"}));
-        assert!(raw_open(
-            &connected.connection, &lease, &f.consumer, "multiplex-stream", Some(&control_open),
-        ).await.is_err());
+        assert!(
+            raw_open(
+                &connected.connection,
+                &lease,
+                &f.consumer,
+                "multiplex-stream",
+                Some(&control_open),
+            )
+            .await
+            .is_err()
+        );
         let (mut first, _) = raw_open(
-            &connected.connection, &lease, &f.consumer, "multiplex-stream", None,
-        ).await?;
+            &connected.connection,
+            &lease,
+            &f.consumer,
+            "multiplex-stream",
+            None,
+        )
+        .await?;
         let (mut second, _) = raw_open(
-            &connected.connection, &lease, &f.consumer, "multiplex-stream", None,
-        ).await?;
+            &connected.connection,
+            &lease,
+            &f.consumer,
+            "multiplex-stream",
+            None,
+        )
+        .await?;
         tokio::try_join!(hold_http(&mut first), hold_http(&mut second))?;
         let mut streams = [first, second];
         // FIN only the authenticated control stream while retaining this real
@@ -284,7 +354,8 @@ async fn multiplex_control_fin_closes_two_flows_and_replayed_stream_proof_is_ref
         terminal_usage(&f.sdk, &f.view.id, &f.host.device_id, HELD_SPENT).await?;
         connected.close_and_wait().await?;
         finish_host(host, &f.usage, false).await
-    }).await??;
+    })
+    .await??;
     Ok(())
 }
 
@@ -296,14 +367,26 @@ async fn multiplex_duplicate_owner_is_fenced_and_owner_drop_drains_original_flow
         let request = f.request(&f.consumer);
         let host = start_host(&f.sdk, f.host.clone(), f.consent, &f.usage).await?;
         let lease = f.sdk.request_private_service(&f.view.id, request).await?;
-        let owner = f.sdk.connect_private_service_multiplexed(&f.consumer, lease.clone()).await?;
-        assert!(f.sdk.connect_private_service_multiplexed(&f.consumer, lease).await.is_err());
+        let owner = f
+            .sdk
+            .connect_private_service_multiplexed(&f.consumer, lease.clone())
+            .await?;
+        assert!(
+            f.sdk
+                .connect_private_service_multiplexed(&f.consumer, lease)
+                .await
+                .is_err()
+        );
         // A refused second durable owner cannot retire the first owner or
         // create another grant. Its real HTTP flows still use the same gate.
         let mut streams = two_held_streams(&owner, &f.consumer).await?;
-        let usage = f.sdk.service_quota_usage(ServiceQuotaUsageQuery {
-            scope: ServiceQuotaScope::Resource, scope_key: f.view.id.clone(),
-        }).await?;
+        let usage = f
+            .sdk
+            .service_quota_usage(ServiceQuotaUsageQuery {
+                scope: ServiceQuotaScope::Resource,
+                scope_key: f.view.id.clone(),
+            })
+            .await?;
         assert_eq!(usage.active_grants, 1);
         drop(owner);
         ended(&mut streams).await?;
@@ -311,7 +394,8 @@ async fn multiplex_duplicate_owner_is_fenced_and_owner_drop_drains_original_flow
         tokio::time::timeout(Duration::from_secs(3), &mut backend.0).await???;
         terminal_usage(&f.sdk, &f.view.id, &f.host.device_id, HELD_SPENT).await?;
         finish_host(host, &f.usage, true).await
-    }).await??;
+    })
+    .await??;
     Ok(())
 }
 
@@ -323,7 +407,12 @@ async fn multiplex_udp_refusal_keeps_original_datagram_entry() -> Result {
         let request = f.request(&f.consumer);
         let host = start_host(&f.sdk, f.host.clone(), f.consent, &f.usage).await?;
         let lease = f.sdk.request_private_service(&f.view.id, request).await?;
-        assert!(f.sdk.connect_private_service_multiplexed(&f.consumer, lease.clone()).await.is_err());
+        assert!(
+            f.sdk
+                .connect_private_service_multiplexed(&f.consumer, lease.clone())
+                .await
+                .is_err()
+        );
         let mut legacy = f.sdk.connect_private_service(&f.consumer, lease).await?;
         assert!(!legacy.is_multiplexed());
         assert!(legacy.open_stream(&f.consumer).await.is_err());
@@ -334,6 +423,7 @@ async fn multiplex_udp_refusal_keeps_original_datagram_entry() -> Result {
         legacy.close().await?;
         terminal_usage(&f.sdk, &f.view.id, &f.host.device_id, length as u64).await?;
         finish_host(host, &f.usage, false).await
-    }).await??;
+    })
+    .await??;
     Ok(())
 }
