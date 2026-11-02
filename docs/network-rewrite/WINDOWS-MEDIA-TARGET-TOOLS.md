@@ -26,6 +26,30 @@ Examples, executed from the verified extracted artifact folder:
 .\windows-hevc-direction-probe.exe decode main10 1920 1080 60 8000
 ```
 
+The separate `windows-amf-hevc-direction-probe.exe` explicitly selects the
+installed AMD AMF hardware encoder with the same supplied D3D11 device. Its
+decoder remains the original hardware MF decoder plus independent software
+decoder. Run the following additional commands independently; preserve all
+four original MF results above as separate evidence:
+
+```powershell
+.\windows-amf-hevc-direction-probe.exe encode main8 1920 1080 60 8000
+.\windows-amf-hevc-direction-probe.exe decode main8 1920 1080 60 8000
+.\windows-amf-hevc-direction-probe.exe encode main10 1920 1080 60 8000
+.\windows-amf-hevc-direction-probe.exe decode main10 1920 1080 60 8000
+```
+
+The official AMF 1.5.3 headers are built into the Actions artifact. The runtime
+comes only from the existing driver at the absolute Windows System32 path;
+the tool installs no SDK or driver and distributes no AMD runtime. Header
+version does not prove installed runtime support. Each run records the queried
+runtime version and actual property types/readback before requiring the
+unchanged original SPS, BT.709 limited color, exact uncropped geometry,
+32 accepted inputs, at least 16 outputs before EOS, exact two-decoder accounting
+and original ten-second budget. The tool never rewrites a parameter set or
+retries another backend, device, depth or source after a failure. A successful
+finite probe does not enable the product's live encoder by itself.
+
 Record the complete arguments, exit status, stdout/stderr, wall time, actual
 Windows build and GPU/driver inventory, tool receipt, exact source and all
 executable digests. An unsupported hardware/parser/runtime result is a failure

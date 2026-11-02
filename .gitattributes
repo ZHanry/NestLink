@@ -64,6 +64,7 @@ docs/refactor/history-audit/firebase-upstream-provenance-2026-10-13.json -text w
 
 # Keep the reviewed upstream license bytes, including its final empty line.
 packaging/notices/libvpx-1.16.0-LICENSE.txt -text whitespace=-blank-at-eof
+packaging/notices/amf-1.5.3-LICENSE.txt -text
 
 *.crate binary
 

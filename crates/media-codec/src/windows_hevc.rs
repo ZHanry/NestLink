@@ -94,7 +94,7 @@ pub struct HevcBackendObservation {
     pub drain_complete: bool,
     pub adapter_luid: Option<u64>,
 }
-fn observation(transform: &Transform) -> io::Result<HevcBackendObservation> {
+pub(crate) fn observation(transform: &Transform) -> io::Result<HevcBackendObservation> {
     let (mut luid, mut flags) = (0, 0);
     // SAFETY: owned live transform, initialized scalar outputs, owner thread.
     checked(unsafe { nl_hevc_observation(transform.handle.as_ptr(), &mut luid, &mut flags) })?;
@@ -119,7 +119,7 @@ impl Drop for HevcProbePacket {
     }
 }
 pub struct HevcProbeEncoder {
-    inner: Transform,
+    inner: crate::hevc_encoder::Encoder,
     config: VideoConfig,
     validator: Validator,
     scratch: Vec<u8>,
@@ -129,22 +129,26 @@ pub struct HevcProbeEncoder {
 impl HevcProbeEncoder {
     pub fn owner_observation(&self) -> io::Result<crate::OwnerObservation> {
         authorized(&self.authority)?;
-        crate::windows_hevc_owner::observation(&self.inner)
+        self.inner.owner_observation()
     }
     pub fn new(
         source: &HevcSyntheticSource,
         config: VideoConfig,
         authority: Arc<AtomicBool>,
     ) -> io::Result<Self> {
+        Self::new_with_backend(source, config, authority, crate::HevcEncoderBackend::SystemMf)
+    }
+    pub fn new_with_backend(
+        source: &HevcSyntheticSource,
+        config: VideoConfig,
+        authority: Arc<AtomicBool>,
+        backend: crate::HevcEncoderBackend,
+    ) -> io::Result<Self> {
         authorized(&authority)?;
         let (device, _) = source.borrow()?;
         // SAFETY: same owner/device; native retains its device and four input textures.
         let inner = unsafe {
-            if source.bit_depth == 8 {
-                Transform::new_hevc(config, device, true, true)
-            } else {
-                Transform::new_hevc_depth(config, device, true, true, source.bit_depth)
-            }
+            crate::hevc_encoder::Encoder::open(config, device, source.bit_depth, backend)
         }?;
         Ok(Self {
             inner,
@@ -179,8 +183,12 @@ impl HevcProbeEncoder {
                     .take(3)
                 {
                     let recorded = &nal[..nal.len().min(256)];
+                    let backend = match self.inner.backend() {
+                        crate::HevcEncoderBackend::SystemMf => "mf",
+                        crate::HevcEncoderBackend::AmdAmf => "amf",
+                    };
                     eprintln!(
-                        "hevc_mf_rejected_parameter_set kind={} bytes={} recorded={} hex={recorded:02x?}",
+                        "hevc_{backend}_rejected_parameter_set kind={} bytes={} recorded={} hex={recorded:02x?}",
                         (nal[0] >> 1) & 63,
                         nal.len(),
                         recorded.len(),
@@ -236,7 +244,10 @@ impl HevcProbeEncoder {
         self.inner.pending_frames()
     }
     pub fn backend(&self) -> io::Result<HevcBackendObservation> {
-        observation(&self.inner)
+        self.inner.backend_observation()
+    }
+    pub fn runtime_version(&self) -> io::Result<Option<u64>> {
+        self.inner.runtime_version()
     }
     pub fn profile(&self) -> Option<(u32, u32, u32, u32)> {
         self.validator

@@ -37,6 +37,25 @@ def static_archive(*machines):
 
 
 class NativeSupplyTests(unittest.TestCase):
+    def test_amf_release_redirect_is_narrow_and_never_applies_to_codec_sources(self):
+        amf = {"name": "amf", "url": SUPPLY.AMF_HEADER_URL}
+        allowed = "https://release-assets.githubusercontent.com/github-production-release-asset/123/456?signature=fixture"
+        self.assertTrue(SUPPLY.source_download_url(amf, allowed))
+        for url in ("http://release-assets.githubusercontent.com/github-production-release-asset/123/456",
+                    "https://release-assets.githubusercontent.com.evil.test/github-production-release-asset/123/456",
+                    "https://release-assets.githubusercontent.com:444/github-production-release-asset/123/456",
+                    "https://release-assets.githubusercontent.com:bad/github-production-release-asset/123/456",
+                    "https://release-assets.githubusercontent.com:99999/github-production-release-asset/123/456",
+                    "https://user@release-assets.githubusercontent.com/github-production-release-asset/123/456",
+                    "https://release-assets.githubusercontent.com/other/123/456",
+                    "https://github.com/other/release.tar.gz"):
+            with self.subTest(url=url):
+                self.assertFalse(SUPPLY.source_download_url(amf, url))
+                with self.assertRaises(SUPPLY.SupplyError):
+                    SUPPLY.AmfHeaderRedirect().redirect_request(None, None, 302, "redirect", {}, url)
+        for name in ("libvpx", "opus"):
+            self.assertFalse(SUPPLY.source_download_url({"name": name, "url": "https://codeload.github.com/fixed"}, allowed))
+
     def test_linux_arm64_requires_a_real_matching_host_and_compiler(self):
         target = "aarch64-unknown-linux-gnu"
         SUPPLY.verify_build_host(target, "aarch64", "Linux", "posix")
@@ -151,7 +170,7 @@ class NativeSupplyTests(unittest.TestCase):
             file = prefix / relative
             file.parent.mkdir(parents=True, exist_ok=True)
             file.write_bytes(static_archive(machine or 62))
-        for relative in ("include/vpx/vpx_encoder.h", "include/vpx/vpx_decoder.h", "include/opus/opus.h", "include/opus/opus_defines.h", "include/libyuv/convert_argb.h", "include/libyuv/version.h", "share/licenses/libvpx/third_party/libyuv/LICENSE", "share/licenses/libvpx/third_party/libyuv/README.libvpx"):
+        for relative in ("include/vpx/vpx_encoder.h", "include/vpx/vpx_decoder.h", "include/opus/opus.h", "include/opus/opus_defines.h", "include/libyuv/convert_argb.h", "include/libyuv/version.h", "share/licenses/libvpx/third_party/libyuv/LICENSE", "share/licenses/libvpx/third_party/libyuv/README.libvpx", "include/AMF/core/Factory.h", "include/AMF/components/VideoEncoderHEVC.h", "share/licenses/amf/AMF/core/Factory.h"):
             file = prefix / relative
             file.parent.mkdir(parents=True, exist_ok=True)
             file.write_bytes(b"fixture-header")

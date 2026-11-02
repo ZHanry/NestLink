@@ -28,6 +28,8 @@ fn fixture(prefix: &Path) -> io::Result<(Vec<u8>, Value)> {
         ("include/opus/opus.h", "header"),
         ("include/libyuv/convert_argb.h", "header"),
         ("include/libyuv/version.h", "header"),
+        ("include/AMF/core/Factory.h", "header"),
+        ("include/AMF/components/VideoEncoderHEVC.h", "header"),
     ] {
         let absolute = prefix.join(path);
         fs::create_dir_all(
@@ -55,7 +57,7 @@ fn write_receipt(prefix: &Path, receipt: &Value) -> io::Result<()> {
 fn correct_prefix_and_tampered_library() -> io::Result<()> {
     let root = tempfile::tempdir()?;
     let (lock, _) = fixture(root.path())?;
-    assert_eq!(build_support::verify(root.path(), &lock, TARGET)?.len(), 9);
+    assert_eq!(build_support::verify(root.path(), &lock, TARGET)?.len(), 11);
     fs::write(root.path().join("lib/libvpx.a"), b"changed")?;
     assert!(build_support::verify(root.path(), &lock, TARGET).is_err());
     Ok(())

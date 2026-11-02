@@ -22,6 +22,8 @@ pub struct HevcDirectionProbe {
     direction: ExecutionDirection,
     owner: OwnerObservation,
     outputs: u64,
+    encoder_backend: crate::HevcEncoderBackend,
+    encoder_runtime: Option<u64>,
 }
 impl HevcDirectionProbe {
     pub fn contract(self) -> HevcMain8Contract {
@@ -35,6 +37,12 @@ impl HevcDirectionProbe {
     }
     pub fn outputs(self) -> u64 {
         self.outputs
+    }
+    pub fn encoder_backend(self) -> crate::HevcEncoderBackend {
+        self.encoder_backend
+    }
+    pub fn encoder_runtime_version(self) -> Option<u64> {
+        self.encoder_runtime
     }
     pub fn owner_closed(self) -> bool {
         true
@@ -166,6 +174,17 @@ pub fn probe_hevc_direction_depth(
     cancel: &AtomicBool,
     bit_depth: u8,
 ) -> io::Result<HevcDirectionProbe> {
+    probe_hevc_direction_with_encoder(config, direction, cancel, bit_depth, crate::HevcEncoderBackend::SystemMf)
+}
+/// The original workload and acceptance with one explicitly selected encoder.
+/// Decode remains the exact original MF hardware owner on the supplied device.
+pub fn probe_hevc_direction_with_encoder(
+    config: VideoConfig,
+    direction: ExecutionDirection,
+    cancel: &AtomicBool,
+    bit_depth: u8,
+    backend: crate::HevcEncoderBackend,
+) -> io::Result<HevcDirectionProbe> {
     if !matches!(bit_depth, 8 | 10) {
         return Err(io::Error::other("unsupported HEVC probe depth"));
     }
@@ -178,7 +197,7 @@ pub fn probe_hevc_direction_depth(
     check(cancel, deadline)?;
     let authority = Arc::new(AtomicBool::new(true));
     let source = HevcSyntheticSource::with_depth(config.width, config.height, bit_depth)?;
-    let mut encoder = HevcProbeEncoder::new(&source, config, authority.clone())?;
+    let mut encoder = HevcProbeEncoder::new_with_backend(&source, config, authority.clone(), backend)?;
     let mut gpu =
         HevcProbeDecoder::with_depth(Some(&source), config, authority.clone(), bit_depth)?;
     let mut independent = HevcProbeDecoder::with_depth(None, config, authority.clone(), bit_depth)?;
@@ -268,6 +287,8 @@ pub fn probe_hevc_direction_depth(
             ));
         }
         Ok(HevcDirectionProbe {
+            encoder_backend: backend,
+            encoder_runtime: encoder.runtime_version()?,
             contract: workload
                 .contract
                 .ok_or_else(|| io::Error::other("HEVC actual SPS absent"))?,

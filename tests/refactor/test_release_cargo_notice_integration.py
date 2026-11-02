@@ -39,6 +39,7 @@ class ReleaseNoticeIntegrationTests(unittest.TestCase):
                       'docs/refactor/native-codecs.lock.json': (ROOT / 'docs/refactor/native-codecs.lock.json').read_bytes(),
                       'packaging/notices/libyuv-1711-LICENSE.txt': (ROOT / 'packaging/notices/libyuv-1711-LICENSE.txt').read_bytes(),
                       'packaging/notices/libyuv-1711-README.libvpx.txt': (ROOT / 'packaging/notices/libyuv-1711-README.libvpx.txt').read_bytes(),
+                      'packaging/notices/amf-1.5.3-LICENSE.txt': (ROOT / 'packaging/notices/amf-1.5.3-LICENSE.txt').read_bytes(),
                       'docs/refactor/cargo-notice-supplements.json': b'{"schema_version":1,"packages":[]}',
                       'scripts/refactor-cargo-notices.py': (ROOT / 'scripts/refactor-cargo-notices.py').read_bytes(),
                       'config/release-producer.json': b'{}',
@@ -89,6 +90,11 @@ class ReleaseNoticeIntegrationTests(unittest.TestCase):
             sbom = json.loads((output / 'NestLink-build-sbom.spdx.json').read_bytes())
             self.assertEqual(sbom['packages'][0]['licenseDeclared'], 'Apache-2.0 OR MIT')
             self.assertIn('Apache-2.0/MIT', sbom['packages'][0]['sourceInfo'])
+            amf = next(item for item in sbom['packages'] if item['name'] == 'amf')
+            self.assertEqual(amf['licenseDeclared'], 'MIT')
+            self.assertIn('Official interface headers only', amf['sourceInfo'])
+            self.assertIn('not distributed', amf['sourceInfo'])
+            self.assertEqual(amf['checksums'], [{'algorithm': 'SHA256', 'checksumValue': '0f521ad98041f8001147cded4a660127f18b1c27a801a5cd691bda1fa48381be'}])
             bundled = next(item for item in sbom['packages'] if item['name'] == 'libyuv')
             self.assertEqual(bundled['licenseDeclared'], 'BSD-3-Clause')
             self.assertEqual(bundled['downloadLocation'], 'NOASSERTION')
@@ -107,7 +113,7 @@ class ReleaseNoticeIntegrationTests(unittest.TestCase):
                 with tarfile.open(output / 'NestLink-build-licenses.tar.gz', 'r:gz') as stream:
                     self.assertEqual(stream.extractfile('cargo/demo-1.2.3/LICENSE-MIT').read(), original_license)
                     self.assertEqual(json.loads(stream.extractfile('cargo/index.json').read()), index)
-                    for name in ('libyuv-1711-LICENSE.txt', 'libyuv-1711-README.libvpx.txt'):
+                    for name in ('libyuv-1711-LICENSE.txt', 'libyuv-1711-README.libvpx.txt', 'amf-1.5.3-LICENSE.txt'):
                         self.assertEqual(stream.extractfile('notices/' + name).read(), (ROOT / 'packaging/notices' / name).read_bytes())
                 receipt = json.loads((output / 'parts/metadata.json').read_bytes())
                 self.assertTrue(any(p['role'] == 'cargo-notice-index' for p in receipt['evidence']))

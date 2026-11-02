@@ -2504,6 +2504,16 @@
     },
     "scope": "Build-input provenance only; organizational license approval, complete non-Cargo runtime inventory, final SBOM/material binding and product acceptance remain open."
   },
+  "explicit_amf_hevc_owner_review_20261103": {
+    "source": "First-party same-thread adapter to official AMD AMF public interfaces; no sample/helper or FFmpeg implementation copied",
+    "paths": ["crates/media-codec/src/windows_amf.cpp", "crates/media-codec/src/windows_amf.rs", "crates/media-codec/src/hevc_encoder.rs", "crates/media-codec/src/hevc_backend.rs", "crates/media-codec/examples/windows-amf-hevc-direction-probe.rs"],
+    "official_headers": {"version": "1.5.3", "commit": "57ee0cfb0e1a08d9041f77435653794c1b012be0", "repository": "https://github.com/GPUOpen-LibrariesAndSDKs/AMF", "url": "https://github.com/GPUOpen-LibrariesAndSDKs/AMF/releases/download/v1.5.3/AMF-headers-v1.5.3.tar.gz", "archive_bytes": 88584, "archive_sha256": "0f521ad98041f8001147cded4a660127f18b1c27a801a5cd691bda1fa48381be", "license": "MIT", "notice": "packaging/notices/amf-1.5.3-LICENSE.txt", "notice_sha256": "eb297397aaa455b5668ab67d216b83828466152dab123fa92384c6ec16b74170"},
+    "runtime": "Installed driver only; absolute System32 amfrt64.dll safe load and actual QueryVersion; no runtime, driver or SDK installer distributed",
+    "read_reference": "Official current API/context/surface/property/caps/HEVC/version sources; older AMF 1.4.21 and 1.4.23 HEVC range/profile headers; FFmpeg n8.1.2 commit 38b88335f99e76ed89ff3c93f877fdefce736c13 AMF device/surface/HEVC integration (not imported)",
+    "boundary": "Explicit SystemMf(default) or AmdAmf; exact supplied AMD DX11 device; hardware/native format caps; before/after Init property readback; original surfaces, PTS, AU/SPS/color/geometry and finite workload; checked close with sticky quarantine; no fallback or byte rewriting",
+    "verification": "Initial source adapter and independent diagnostic tool implemented; hosted build, original target output and production provider/live backend freeze pending. Original MF failures and 511+255 adapter assertions retained; no W27/AC44 completion or performance/HDR/native-ten-bit/scanout claim.",
+    "decision": "docs/adr/network/0075-explicit-amf-hevc-owner.md"
+  },
   "native_recovery_focused_linux_20261016": {
     "status": "passed",
     "passed": 1,

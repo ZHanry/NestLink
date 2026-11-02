@@ -3,6 +3,23 @@
   "kind": "nestlink-native-codecs-lock",
   "sources": [
     {
+      "name": "amf",
+      "version": "1.5.3",
+      "repository": "https://github.com/GPUOpen-LibrariesAndSDKs/AMF",
+      "commit": "57ee0cfb0e1a08d9041f77435653794c1b012be0",
+      "url": "https://github.com/GPUOpen-LibrariesAndSDKs/AMF/releases/download/v1.5.3/AMF-headers-v1.5.3.tar.gz",
+      "archive_sha256": "0f521ad98041f8001147cded4a660127f18b1c27a801a5cd691bda1fa48381be",
+      "archive_bytes": 88584,
+      "archive_prefix": "amf-headers-v1.5.3",
+      "max_unpacked_bytes": 2097152,
+      "max_members": 512,
+      "license": "MIT",
+      "license_files": ["AMF/core/Factory.h"],
+      "distribution_notice": "packaging/notices/amf-1.5.3-LICENSE.txt",
+      "distribution_notice_sha256": "eb297397aaa455b5668ab67d216b83828466152dab123fa92384c6ec16b74170",
+      "scope": "Official interface headers only; AMD driver runtime is dynamically loaded from System32 on explicit Windows AMF selection and is not distributed."
+    },
+    {
       "name": "libvpx",
       "version": "1.16.0",
       "repository": "https://github.com/webmproject/libvpx",

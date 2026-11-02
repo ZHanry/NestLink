@@ -452,7 +452,7 @@ def metadata(args):
         packages.append(package)
     codec_lock = read_json(ROOT / "docs/refactor/native-codecs.lock.json")
     for item in codec_lock["sources"]:
-        packages.append({"SPDXID": "SPDXRef-Native-" + item["name"], "name": item["name"], "versionInfo": item["version"], "downloadLocation": item["url"], "filesAnalyzed": False, "licenseConcluded": "NOASSERTION", "licenseDeclared": "BSD-3-Clause", "checksums": [{"algorithm": "SHA256", "checksumValue": item["archive_sha256"]}], "sourceInfo": "Pinned source commit " + item["commit"]})
+        packages.append({"SPDXID": "SPDXRef-Native-" + item["name"], "name": item["name"], "versionInfo": item["version"], "downloadLocation": item["url"], "filesAnalyzed": False, "licenseConcluded": "NOASSERTION", "licenseDeclared": item.get("license", "BSD-3-Clause"), "checksums": [{"algorithm": "SHA256", "checksumValue": item["archive_sha256"]}], "sourceInfo": "Pinned source commit " + item["commit"] + "; " + item.get("scope", "Native codec source")})
     relationships = []
     for item in codec_lock.get("bundled_components", []):
         parent = next(source for source in codec_lock["sources"] if source["name"] == item["parent_source"])

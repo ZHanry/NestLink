@@ -242,6 +242,8 @@ pub fn verify(prefix: &Path, lock_bytes: &[u8], target: &str) -> io::Result<Vec<
         "include/opus/opus.h",
         "include/libyuv/convert_argb.h",
         "include/libyuv/version.h",
+        "include/AMF/core/Factory.h",
+        "include/AMF/components/VideoEncoderHEVC.h",
     ] {
         if declared.get(header).map(|v| v.as_str()) != Some("header") {
             return Err(invalid("missing pinned native header"));

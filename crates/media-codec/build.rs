@@ -50,6 +50,8 @@ fn main() -> io::Result<()> {
             .cpp(true)
             .std("c++17")
             .flag_if_supported("/EHsc")
+            .include(&include)
+            .file("src/windows_amf.cpp")
             .file("src/windows_mf.cpp")
             .file("src/windows_gpu_presenter.cpp")
             .warnings(true)
@@ -68,6 +70,7 @@ fn main() -> io::Result<()> {
             println!("cargo:rustc-link-lib={library}");
         }
         println!("cargo:rerun-if-changed=src/windows_mf.cpp");
+        println!("cargo:rerun-if-changed=src/windows_amf.cpp");
         println!("cargo:rerun-if-changed=src/windows_gpu_presenter.cpp");
     }
     println!("cargo:rustc-link-search=native={}", library.display());

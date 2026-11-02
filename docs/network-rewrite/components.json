@@ -15,6 +15,23 @@
   "research_runtime_exclusion": "EasyTier is idea_reference only; no executable, library, FFI, forked core or adapted code is selected.",
   "components": [
     {
+      "id": "C31",
+      "purpose": "Explicit AMD AMF HEVC hardware encoder on the original supplied D3D11 owner device",
+      "existing_implementation": ["Original strict System MF HEVC encoder/decoder and direction workload", "Existing owner identity, bounded worker, SPS admission and checked cleanup", "Installed AMD driver runtime; no locally installed SDK"],
+      "candidates": ["Original System MF (retained default; observed Main8 color and Main10 activation failures remain)", "Official AMF 1.5.3 headers plus existing driver runtime and thin owner adapter (selected explicit additional encoder)", "FFmpeg n8.1.2 AMF/libavcodec/libavutil integration (mature reference; unnecessary additional linkage and lifecycle closure for this boundary)"],
+      "official_sources": ["https://github.com/GPUOpen-LibrariesAndSDKs/AMF/tree/57ee0cfb0e1a08d9041f77435653794c1b012be0", "https://github.com/FFmpeg/FFmpeg/tree/38b88335f99e76ed89ff3c93f877fdefce736c13/libavcodec"],
+      "maintenance_status": {"reviewed_at": "2026-11-03", "evidence": "Read pinned official API/context/surface/property/caps/HEVC/version documentation, old published color range layouts, and FFmpeg same-device and surface lifetime adapters. Current headers do not certify installed runtime support."},
+      "platforms": ["x86_64-pc-windows-msvc"],
+      "version": {"headers": "1.5.3", "commit": "57ee0cfb0e1a08d9041f77435653794c1b012be0", "archive_sha256": "0f521ad98041f8001147cded4a660127f18b1c27a801a5cd691bda1fa48381be", "archive_bytes": 88584, "runtime": "QueryVersion from the existing absolute System32 AMD runtime; not distributed"},
+      "license": "MIT official headers; original standards notice retained. No FFmpeg code, library, sample helper, SDK installer or AMD runtime distributed.",
+      "selection_reason": "Use the vendor's supported public device/surface/property interfaces while retaining the original exact HEVC contract and independent decoders. Local backend selection must be explicit and frozen; no automatic fallback from MF.",
+      "adapter_boundary": "Safe System32 load; exact supplied AMD device identity; hardware/native-format caps; typed validated/read-back properties before and after Init; four retained GPU slots with atomic release observers; original 16ms copy bound; 16-entry accepted/output PTS ledger; original bytes and strict SPS/color/geometry; checked close with sticky native quarantine on unknown cleanup. Default SystemMf API remains.",
+      "security_and_operations_cost": ["New native ABI boundary and installed driver dependency", "Old and new runtime property range layouts selected from actual declared types/ranges", "Runtime query and original output required; no capability inferred from latest headers", "Original MF failures, 511+255 adapter regression, ten-second/32-input workload and release gates retained", "Production provider/live backend freeze and target qualification remain separately required"],
+      "work_packages": ["W27"],
+      "validation_status": "initial_adapter_and_explicit_direction_tool_implemented_pending_hosted_build_and_target_execution; production_provider_and_live_backend_freeze_in_progress",
+      "decision_ref": "docs/adr/network/0075-explicit-amf-hevc-owner.md"
+    },
+    {
       "id": "C30",
       "purpose": "Mature I420 to BGRA conversion directly from the existing VP8 decoder planes",
       "existing_implementation": ["Existing pinned libvpx 1.16.0 archive already contains libyuv 1711", "Original Rust VP8 scalar conversion and wiping frame owners", "Existing packed-BGRA scaler does not implement I420 conversion"],

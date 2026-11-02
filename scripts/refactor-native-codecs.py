@@ -1,4 +1,4 @@
-"""Supply pinned native VP8/Opus libraries and verifiable installation receipts.
+"""Supply pinned VP8/Opus libraries, AMF headers and verifiable receipts.
 
 Requires Python 3.10+. Build targets are explicit: Windows x64, native Linux
 x64/ARM64 for shared core validation and backend services. Every build uses a new work
@@ -23,6 +23,7 @@ import sys
 import tarfile
 import tempfile
 import urllib.request
+import urllib.parse
 import xml.etree.ElementTree as ET
 
 
@@ -82,13 +83,24 @@ def safe_relative(value):
 def load_lock(path):
     data = json.loads(path.read_text(encoding="utf-8"))
     require(data.get("schema_version") == 1 and data.get("kind") == "nestlink-native-codecs-lock", "Unsupported native codec lock")
-    require({item["name"] for item in data["sources"]} == {"libvpx", "opus"} and len(data["sources"]) == 2, "Lock must identify exactly libvpx and Opus")
+    require({item["name"] for item in data["sources"]} == {"libvpx", "opus", "amf"} and len(data["sources"]) == 3, "Lock must identify exactly libvpx, Opus and AMF headers")
     for item in data["sources"]:
         require(re.fullmatch(r"[0-9a-f]{40}", item["commit"]) and HASH.fullmatch(item["archive_sha256"]), "Malformed source digest")
         require(type(item["archive_bytes"]) is int and 0 < item["archive_bytes"] <= 32 * 1024 * 1024, "Invalid source archive size")
-        require(item["archive_prefix"] == f"{item['name']}-{item['commit']}", "Unexpected source archive prefix")
-        repository = "webmproject/libvpx" if item["name"] == "libvpx" else "xiph/opus"
-        require(item["url"] == f"https://codeload.github.com/{repository}/tar.gz/{item['commit']}", "Source URL must identify the pinned public repository and commit")
+        if item["name"] == "amf":
+            require(item["version"] == "1.5.3" and item["commit"] == "57ee0cfb0e1a08d9041f77435653794c1b012be0"
+                    and item["archive_prefix"] == "amf-headers-v1.5.3"
+                    and item["url"] == "https://github.com/GPUOpen-LibrariesAndSDKs/AMF/releases/download/v1.5.3/AMF-headers-v1.5.3.tar.gz"
+                    and item["archive_sha256"] == "0f521ad98041f8001147cded4a660127f18b1c27a801a5cd691bda1fa48381be"
+                    and item["archive_bytes"] == 88584 and item.get("license") == "MIT"
+                    and item.get("license_files") == ["AMF/core/Factory.h"]
+                    and item.get("distribution_notice") == "packaging/notices/amf-1.5.3-LICENSE.txt"
+                    and item.get("distribution_notice_sha256") == "eb297397aaa455b5668ab67d216b83828466152dab123fa92384c6ec16b74170", "AMF must identify the reviewed official header-only release")
+            require(file_sha256(ROOT / item["distribution_notice"]) == item["distribution_notice_sha256"], "AMF original distribution notice differs from the reviewed source")
+        else:
+            require(item["archive_prefix"] == f"{item['name']}-{item['commit']}", "Unexpected source archive prefix")
+            repository = "webmproject/libvpx" if item["name"] == "libvpx" else "xiph/opus"
+            require(item["url"] == f"https://codeload.github.com/{repository}/tar.gz/{item['commit']}", "Source URL must identify the pinned public repository and commit")
         require(0 < item["max_unpacked_bytes"] <= 512 * 1024 * 1024 and 0 < item["max_members"] <= 100000, "Unbounded extraction budget")
     require(set(data["targets"]) == set(SUPPORTED), "Supplier target matrix differs from its reviewed implementations")
     require(data["profile"] == "release" and data["linkage"] == "static", "Unsupported build profile")
@@ -110,6 +122,29 @@ def verify_archive(path, spec):
     require(file_sha256(path) == spec["archive_sha256"], f"Archive SHA256 mismatch: {spec['name']}")
 
 
+AMF_HEADER_URL = "https://github.com/GPUOpen-LibrariesAndSDKs/AMF/releases/download/v1.5.3/AMF-headers-v1.5.3.tar.gz"
+
+
+def source_download_url(spec, url):
+    if url == spec["url"]:
+        return True
+    if spec["name"] != "amf" or spec["url"] != AMF_HEADER_URL:
+        return False
+    try:
+        parsed = urllib.parse.urlsplit(url)
+        return (parsed.scheme == "https" and parsed.hostname == "release-assets.githubusercontent.com"
+                and parsed.username is None and parsed.password is None and parsed.port in (None, 443)
+                and not parsed.fragment and parsed.path.startswith("/github-production-release-asset/"))
+    except ValueError:
+        return False
+
+
+class AmfHeaderRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, request, fp, code, message, headers, newurl):
+        require(source_download_url({"name": "amf", "url": AMF_HEADER_URL}, newurl), "Unexpected AMF header download redirect")
+        return super().redirect_request(request, fp, code, message, headers, newurl)
+
+
 def get_archive(cache, spec, offline=False):
     cache.mkdir(parents=True, exist_ok=True)
     path = cache / f"{spec['name']}-{spec['commit']}.tar.gz"
@@ -120,8 +155,9 @@ def get_archive(cache, spec, offline=False):
     request = urllib.request.Request(spec["url"], headers={"User-Agent": "NestLink-native-codec-supplier/1", "Accept-Encoding": "identity"})
     temporary = None
     try:
-        with urllib.request.urlopen(request, timeout=60) as response:
-            require(response.geturl() == spec["url"], "Unexpected source download redirect")
+        opener = urllib.request.build_opener(AmfHeaderRedirect()).open if spec["name"] == "amf" and spec["url"] == AMF_HEADER_URL else urllib.request.urlopen
+        with opener(request, timeout=60) as response:
+            require(source_download_url(spec, response.geturl()), "Unexpected source download redirect")
             length = response.headers.get("Content-Length")
             require(length is None or int(length) == spec["archive_bytes"], "HTTP source size differs from lock")
             with tempfile.NamedTemporaryFile(dir=cache, prefix=spec["name"] + "-", suffix=".partial", delete=False) as output:
@@ -459,7 +495,7 @@ def verify_receipt(prefix, target, lock_path):
         require(receipt.get(key) == value, f"Native receipt mismatch: {key}")
     require(all(type(value) is bool for value in receipt["features"].values()), "Receipt feature values must be booleans")
     sources = receipt.get("sources", [])
-    require(len(sources) == len(lock["sources"]) and {item["name"] for item in sources} == {"libvpx", "opus"}, "Receipt source list differs from lock")
+    require(len(sources) == len(lock["sources"]) and {item["name"] for item in sources} == {"libvpx", "opus", "amf"}, "Receipt source list differs from lock")
     for spec in lock["sources"]:
         item = next(source for source in sources if source["name"] == spec["name"])
         require(all(item.get(key) == spec[key] for key in ("name", "version", "commit", "archive_sha256", "archive_bytes")), "Receipt source identity differs from lock")
@@ -467,7 +503,7 @@ def verify_receipt(prefix, target, lock_path):
     records = receipt.get("files", [])
     require(records == install_manifest(prefix, expected["libraries"], target), "Installed files differ from receipt (missing, extra, modified, or invalid entry)")
     paths = {record["path"] for record in records}
-    required = set(expected["libraries"].values()) | {"include/vpx/vpx_encoder.h", "include/vpx/vpx_decoder.h", "include/opus/opus.h", "include/opus/opus_defines.h", "include/libyuv/convert_argb.h", "include/libyuv/version.h", "share/licenses/libvpx/third_party/libyuv/LICENSE", "share/licenses/libvpx/third_party/libyuv/README.libvpx"}
+    required = set(expected["libraries"].values()) | {"include/vpx/vpx_encoder.h", "include/vpx/vpx_decoder.h", "include/opus/opus.h", "include/opus/opus_defines.h", "include/libyuv/convert_argb.h", "include/libyuv/version.h", "share/licenses/libvpx/third_party/libyuv/LICENSE", "share/licenses/libvpx/third_party/libyuv/README.libvpx", "include/AMF/core/Factory.h", "include/AMF/components/VideoEncoderHEVC.h", "share/licenses/amf/AMF/core/Factory.h"}
     require(required <= paths, "Required native library/header missing")
     machine = target_machine(target)
     if machine is not None:
@@ -588,7 +624,7 @@ def build(args, lock):
                 make_command = [tools["make"], f"-j{args.jobs}"]
                 run(make_command, build_dir, "vpx-build")
                 run([tools["make"], "install"], build_dir, "vpx-install")
-        else:
+        elif spec["name"] == "opus":
             options = ["-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_INSTALL_PREFIX=" + str(prefix), "-DCMAKE_INSTALL_LIBDIR=lib", "-DCMAKE_C_COMPILER=" + tools["cc"].as_posix(), "-DCMAKE_MAKE_PROGRAM=" + tools["ninja"].as_posix(), "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON", "-DOPUS_PACKAGE_VERSION=" + spec["version"], "-DBUILD_SHARED_LIBS=OFF", "-DOPUS_BUILD_SHARED_LIBRARY=OFF", "-DOPUS_DRED=OFF", "-DOPUS_DEEP_PLC=OFF", "-DOPUS_OSCE=OFF", "-DOPUS_CUSTOM_MODES=OFF", "-DOPUS_BUILD_PROGRAMS=OFF", "-DOPUS_BUILD_TESTING=OFF", "-DBUILD_TESTING=OFF", "-DOPUS_FIXED_POINT=OFF", "-DOPUS_ENABLE_FLOAT_API=ON", "-DOPUS_NONTHREADSAFE_PSEUDOSTACK=OFF", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"]
             if windows:
                 options += ["-DOPUS_STATIC_RUNTIME=OFF", "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL"]
@@ -596,6 +632,15 @@ def build(args, lock):
             run([tools["cmake"], "-S", source, "-B", build_dir, "-G", "Ninja", *options], work, "opus-configure")
             run([tools["cmake"], "--build", build_dir, "--config", "Release", "--parallel", str(args.jobs)], work, "opus-build")
             run([tools["cmake"], "--install", build_dir, "--config", "Release"], work, "opus-install")
+        else:
+            # The official release contains only public interface headers. No
+            # samples, FFmpeg, runtime DLL, SDK installer or upstream helper is built.
+            header_root = source / "AMF"
+            require((header_root / "core/Factory.h").is_file()
+                    and (header_root / "components/VideoEncoderHEVC.h").is_file(), "AMF header layout differs from the official publisher")
+            require(all(path.suffix == ".h" for path in header_root.rglob("*") if path.is_file()), "Unexpected non-header AMF payload")
+            shutil.copytree(header_root, prefix / "include/AMF")
+            configuration["amf"] = {"headers_only": True, "runtime_distributed": False, "runtime_load_scope": "Windows System32; explicit AMD AMF encoder selection only"}
         for filename in spec["license_files"]:
             safe_relative(filename)
             destination = prefix / "share/licenses" / spec["name"] / filename
@@ -628,7 +673,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--lock", type=Path, default=DEFAULT_LOCK)
     sub = parser.add_subparsers(dest="command", required=True)
-    fetch = sub.add_parser("fetch", help="Download and verify the two pinned source archives")
+    fetch = sub.add_parser("fetch", help="Download and verify the three pinned source archives")
     fetch.add_argument("--cache-dir", type=Path, required=True)
     fetch.add_argument("--offline", action="store_true")
     supply = sub.add_parser("build", help="Build in a new work directory and emit a complete installation receipt")

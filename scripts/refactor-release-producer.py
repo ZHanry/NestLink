@@ -728,8 +728,8 @@ def metadata(args):
     for item in native_lock["sources"]:
         packages.append({"SPDXID": "SPDXRef-Native-" + item["name"], "name": item["name"], "versionInfo": item["version"],
                          "downloadLocation": item["url"], "filesAnalyzed": False, "licenseConcluded": "NOASSERTION",
-                         "licenseDeclared": "BSD-3-Clause", "checksums": [{"algorithm": "SHA256", "checksumValue": item["archive_sha256"]}],
-                         "sourceInfo": "Pinned source commit " + item["commit"] + "; complete upstream license/patent notices are in the license archive."})
+                         "licenseDeclared": item.get("license", "BSD-3-Clause"), "checksums": [{"algorithm": "SHA256", "checksumValue": item["archive_sha256"]}],
+                         "sourceInfo": "Pinned source commit " + item["commit"] + "; " + item.get("scope", "native static library") + "; complete upstream license/patent notices are in the license archive."})
     relationships = []
     for item in native_lock.get("bundled_components", []):
         parent = next(source for source in native_lock["sources"] if source["name"] == item["parent_source"])
