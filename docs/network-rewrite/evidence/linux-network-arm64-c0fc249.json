@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "source_revision": "c0fc249fc24c4bab389fe10690a2becb1b71257e",
+  "version": "0.7.0-rc.1",
+  "build_provenance": {
+    "workflow": "ZHanry/NestLink/.github/workflows/linux-network-package.yml@refs/heads/main",
+    "run_id": "41236630410",
+    "run_attempt": "1",
+    "target": "aarch64-unknown-linux-gnu",
+    "cargo_lock_sha256": "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+    "binary_sha256": "fa3b71597cd3b5742054142d5cca09b897e32731bb38a162c011427cc5f86d3d"
+  },
+  "execution_provenance": {
+    "runner_environment": "github-hosted",
+    "machine": "aarch64",
+    "ordinary_uid": 1001,
+    "kernel": "7.0.0-1017-azure"
+  },
+  "status": "passed",
+  "commands": [
+    {
+      "name": "ordinary-install-refused",
+      "return_code": 2,
+      "log": "ordinary-install-refused.log",
+      "log_sha256": "a4b1b48c8d7c05be0963428783ecb11f0807964813f4462693261bc31c6a3463"
+    },
+    {
+      "name": "install",
+      "return_code": 0,
+      "log": "install.log",
+      "log_sha256": "0fb3db03fa5b04bbde01b551bd85e8bbd051a429b234ea0acf93e637739b1ef9"
+    },
+    {
+      "name": "version",
+      "return_code": 0,
+      "log": "version.log",
+      "log_sha256": "0b859399d1202213b6ac05a3fa098a958d5bb3d5b9c02cf226d0a193d128820e"
+    },
+    {
+      "name": "help-network-tun",
+      "return_code": 0,
+      "log": "help-network-tun.log",
+      "log_sha256": "3a3fb5f2c702b89ad4f4018cc87b4501c109e5d1a0e2eba264008e03340bc8da"
+    },
+    {
+      "name": "help-network-tun-system",
+      "return_code": 0,
+      "log": "help-network-tun-system.log",
+      "log_sha256": "83613a4e51fef612ba370d08d9a43c11afe10d6f73b865ab4bc91120796c085d"
+    },
+    {
+      "name": "help-network-subnet",
+      "return_code": 0,
+      "log": "help-network-subnet.log",
+      "log_sha256": "82f75a12f3a6837998b9269f6ab6fb9f2eb755395f33423ead1d56bf32849129"
+    },
+    {
+      "name": "help-network-subnet-system",
+      "return_code": 0,
+      "log": "help-network-subnet-system.log",
+      "log_sha256": "24d137f79cf866757844d14f9376a016e82f4ff56d87979892c5c39a03b0e64a"
+    },
+    {
+      "name": "help-network-lan",
+      "return_code": 0,
+      "log": "help-network-lan.log",
+      "log_sha256": "cdba0b263bc2acd2d36d2b1463fc5455ad24fc15a5a9cea45205a69c0a36b221"
+    },
+    {
+      "name": "help-space-dns",
+      "return_code": 0,
+      "log": "help-space-dns.log",
+      "log_sha256": "56efcbcd814f5079e361e663d2f47d1e7bbd548c7eb8e32dffade5681b239cf0"
+    },
+    {
+      "name": "help-space-dns-system",
+      "return_code": 0,
+      "log": "help-space-dns-system.log",
+      "log_sha256": "9efe5e33800d48954c95dcd9b5f571f32ee517868cedf34beb4b068cff9b0550"
+    },
+    {
+      "name": "help-wireguard",
+      "return_code": 0,
+      "log": "help-wireguard.log",
+      "log_sha256": "65b7d90f9178dd58d2eaaf5d01667aab5d67d2ba84f478f2a200343d09daaf8a"
+    },
+    {
+      "name": "help-private-service-proxy",
+      "return_code": 0,
+      "log": "help-private-service-proxy.log",
+      "log_sha256": "b663651bc7ca316fba48f68c5d8881e5dffed295a1a562d73beef7b145f23e97"
+    },
+    {
+      "name": "help-private-web-gateway",
+      "return_code": 0,
+      "log": "help-private-web-gateway.log",
+      "log_sha256": "f70694f9a561c9d4f52a4bac2b4a68eee0f75f611c58a52da9adddf1c3e407b6"
+    },
+    {
+      "name": "help-maintenance",
+      "return_code": 0,
+      "log": "help-maintenance.log",
+      "log_sha256": "702edb813b773fcac550394f5b4c6c8ac19a9ea112cf2bfa733e63148806879a"
+    },
+    {
+      "name": "help-diagnostics",
+      "return_code": 0,
+      "log": "help-diagnostics.log",
+      "log_sha256": "0ffb37355897536988a3dab456f080f6b07ca100f8705e85c9e6793b30cc1bc0"
+    },
+    {
+      "name": "missing-login-refused",
+      "return_code": 1,
+      "log": "missing-login-refused.log",
+      "log_sha256": "7a4c908eedfaf463cd65642226996d1820b26aa4d8a412585dc5d03e6e697865"
+    },
+    {
+      "name": "root-runtime-refused",
+      "return_code": 1,
+      "log": "root-runtime-refused.log",
+      "log_sha256": "574e8c9046a28093c78f10e2cb48da648756aa66ba6c2c9b790e1f1bb9cc315a"
+    },
+    {
+      "name": "reinstall",
+      "return_code": 0,
+      "log": "reinstall.log",
+      "log_sha256": "7d161a9bbf73c70beaadad9ac263b59047c63e976561dba47dbbbad30574de52"
+    },
+    {
+      "name": "uninstall",
+      "return_code": 0,
+      "log": "uninstall.log",
+      "log_sha256": "7275317ab2e871a6c87da9b5c5773a9e330c81a7d1ec850bca5587cce22c16e8"
+    }
+  ],
+  "production_update_eligible": false,
+  "limitations": [
+    "Unsigned development package; no installed signed update or formal lifecycle claim",
+    "CLI admission/refusal and actual DEB install/reinstall/uninstall only; physical TUN, subnet, DNS and WireGuard have separate experiments",
+    "No graphical Linux desktop, phone or physical ARM64 target acceptance"
+  ],
+  "package": {
+    "path": "NestLink-candidate-linux-arm64-network.deb",
+    "bytes": 13123688,
+    "sha256": "bc519b67affd1f45b437a4bc0dee8bbd50cd1e282931aeedaa923d0c1e2ac2f6"
+  },
+  "files": [
+    {
+      "path": "NestLink-candidate-linux-arm64-network.deb",
+      "bytes": 13123688,
+      "sha256": "bc519b67affd1f45b437a4bc0dee8bbd50cd1e282931aeedaa923d0c1e2ac2f6"
+    },
+    {
+      "path": "help-diagnostics.log",
+      "bytes": 391,
+      "sha256": "0ffb37355897536988a3dab456f080f6b07ca100f8705e85c9e6793b30cc1bc0"
+    },
+    {
+      "path": "help-maintenance.log",
+      "bytes": 686,
+      "sha256": "702edb813b773fcac550394f5b4c6c8ac19a9ea112cf2bfa733e63148806879a"
+    },
+    {
+      "path": "help-network-lan.log",
+      "bytes": 990,
+      "sha256": "cdba0b263bc2acd2d36d2b1463fc5455ad24fc15a5a9cea45205a69c0a36b221"
+    },
+    {
+      "path": "help-network-subnet-system.log",
+      "bytes": 530,
+      "sha256": "24d137f79cf866757844d14f9376a016e82f4ff56d87979892c5c39a03b0e64a"
+    },
+    {
+      "path": "help-network-subnet.log",
+      "bytes": 1312,
+      "sha256": "82f75a12f3a6837998b9269f6ab6fb9f2eb755395f33423ead1d56bf32849129"
+    },
+    {
+      "path": "help-network-tun-system.log",
+      "bytes": 660,
+      "sha256": "83613a4e51fef612ba370d08d9a43c11afe10d6f73b865ab4bc91120796c085d"
+    },
+    {
+      "path": "help-network-tun.log",
+      "bytes": 1380,
+      "sha256": "3a3fb5f2c702b89ad4f4018cc87b4501c109e5d1a0e2eba264008e03340bc8da"
+    },
+    {
+      "path": "help-private-service-proxy.log",
+      "bytes": 1098,
+      "sha256": "b663651bc7ca316fba48f68c5d8881e5dffed295a1a562d73beef7b145f23e97"
+    },
+    {
+      "path": "help-private-web-gateway.log",
+      "bytes": 1348,
+      "sha256": "f70694f9a561c9d4f52a4bac2b4a68eee0f75f611c58a52da9adddf1c3e407b6"
+    },
+    {
+      "path": "help-space-dns-system.log",
+      "bytes": 687,
+      "sha256": "9efe5e33800d48954c95dcd9b5f571f32ee517868cedf34beb4b068cff9b0550"
+    },
+    {
+      "path": "help-space-dns.log",
+      "bytes": 656,
+      "sha256": "56efcbcd814f5079e361e663d2f47d1e7bbd548c7eb8e32dffade5681b239cf0"
+    },
+    {
+      "path": "help-wireguard.log",
+      "bytes": 754,
+      "sha256": "65b7d90f9178dd58d2eaaf5d01667aab5d67d2ba84f478f2a200343d09daaf8a"
+    },
+    {
+      "path": "install.log",
+      "bytes": 300,
+      "sha256": "0fb3db03fa5b04bbde01b551bd85e8bbd051a429b234ea0acf93e637739b1ef9"
+    },
+    {
+      "path": "missing-login-refused.log",
+      "bytes": 100,
+      "sha256": "7a4c908eedfaf463cd65642226996d1820b26aa4d8a412585dc5d03e6e697865"
+    },
+    {
+      "path": "ordinary-install-refused.log",
+      "bytes": 62,
+      "sha256": "a4b1b48c8d7c05be0963428783ecb11f0807964813f4462693261bc31c6a3463"
+    },
+    {
+      "path": "reinstall.log",
+      "bytes": 257,
+      "sha256": "7d161a9bbf73c70beaadad9ac263b59047c63e976561dba47dbbbad30574de52"
+    },
+    {
+      "path": "root-runtime-refused.log",
+      "bytes": 66,
+      "sha256": "574e8c9046a28093c78f10e2cb48da648756aa66ba6c2c9b790e1f1bb9cc315a"
+    },
+    {
+      "path": "uninstall.log",
+      "bytes": 119,
+      "sha256": "7275317ab2e871a6c87da9b5c5773a9e330c81a7d1ec850bca5587cce22c16e8"
+    },
+    {
+      "path": "version.log",
+      "bytes": 27,
+      "sha256": "0b859399d1202213b6ac05a3fa098a958d5bb3d5b9c02cf226d0a193d128820e"
+    }
+  ]
+}

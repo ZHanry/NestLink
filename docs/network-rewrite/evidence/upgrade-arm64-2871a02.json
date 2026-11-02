@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "source_revision": "2871a02c0e5b8978cb015f9e9c9bc16dbc23029a",
+  "build_provenance": {
+    "workflow": "ZHanry/NestLink/.github/workflows/network-upgrade.yml@refs/heads/main",
+    "run_id": "41236371694",
+    "run_attempt": "1",
+    "cargo_lock_sha256": "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+    "current_server_sha256": "86bfcf85a2306996589f4749c035fa42ceb37f4a4858e81770971db68861f3b6"
+  },
+  "execution_provenance": {
+    "runner_environment": "github-hosted",
+    "machine": "aarch64",
+    "ordinary_uid": 1001
+  },
+  "old_release": {
+    "tag": "v0.7.0-rc.1",
+    "source_revision": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+    "manifest_sha256": "2d5a7768424f6cc2ea8875ba2b8cb8fb21ff360911b084ed4a95e2bc07fd793c",
+    "package_sha256": "91ef3c6ab8e3a00e98a21ecfe8bcdff500e0a785c75ac15cc6d81c0aaf39514a",
+    "server_sha256": "e8a6fec29b04b7d84d9c8ce25bd71d7d99e003a7ff624836c6ea5157a0143a49"
+  },
+  "old_schema": 25,
+  "current_schema": 50,
+  "commands": [
+    {
+      "name": "extract-pinned-old-package",
+      "return_code": 0,
+      "log": "extract-pinned-old-package.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "old-version",
+      "return_code": 0,
+      "log": "old-version.log",
+      "sha256": "9d8c21e2c980082ce3b189483791fbc3fa32c5effbab6688b762f126e1098899"
+    },
+    {
+      "name": "current-version",
+      "return_code": 0,
+      "log": "current-version.log",
+      "sha256": "9d8c21e2c980082ce3b189483791fbc3fa32c5effbab6688b762f126e1098899"
+    },
+    {
+      "name": "old-init",
+      "return_code": 0,
+      "log": "old-init.log",
+      "sha256": "e53274f46102fe194092a9f6fe60997187b34404817a8bb11914b67a246e9489"
+    },
+    {
+      "name": "old-check-old-schema",
+      "return_code": 0,
+      "log": "old-check-old-schema.log",
+      "sha256": "1016ed46ef9e43143f04b32e58a0833171ccad100b9ec3ae4204d9a2a9065ba2"
+    },
+    {
+      "name": "new-refuses-old-schema",
+      "return_code": 1,
+      "log": "new-refuses-old-schema.log",
+      "sha256": "8b0630bca47aadceb85080397d6221370bf492b18a4f7d1493d9f5adcadb3550"
+    },
+    {
+      "name": "fenced-forward-migration",
+      "return_code": 0,
+      "log": "fenced-forward-migration.log",
+      "sha256": "4cdba40a93110835c369ce87d70f400c0d4ba180369a8c83222873e4a747f0d1"
+    },
+    {
+      "name": "new-business-refuses-fenced-transaction",
+      "return_code": 1,
+      "log": "new-business-refuses-fenced-transaction.log",
+      "sha256": "6368395b142d70740bcd76e244a7b3b060bb810561f4aa8d0b5575e23265461e"
+    },
+    {
+      "name": "explicit-pre-admission-rollback",
+      "return_code": 0,
+      "log": "explicit-pre-admission-rollback.log",
+      "sha256": "4cdba40a93110835c369ce87d70f400c0d4ba180369a8c83222873e4a747f0d1"
+    },
+    {
+      "name": "old-works-after-exact-rollback",
+      "return_code": 0,
+      "log": "old-works-after-exact-rollback.log",
+      "sha256": "1016ed46ef9e43143f04b32e58a0833171ccad100b9ec3ae4204d9a2a9065ba2"
+    },
+    {
+      "name": "admitted-forward-migration",
+      "return_code": 0,
+      "log": "admitted-forward-migration.log",
+      "sha256": "fafd30945412aec6fd892c27d0d7157c5908173ab94b1203aa88c31484197544"
+    },
+    {
+      "name": "new-check-new-schema",
+      "return_code": 0,
+      "log": "new-check-new-schema.log",
+      "sha256": "1016ed46ef9e43143f04b32e58a0833171ccad100b9ec3ae4204d9a2a9065ba2"
+    },
+    {
+      "name": "new-accepts-old-config-new-schema",
+      "return_code": 0,
+      "log": "new-accepts-old-config-new-schema.log",
+      "sha256": "1016ed46ef9e43143f04b32e58a0833171ccad100b9ec3ae4204d9a2a9065ba2"
+    },
+    {
+      "name": "old-refuses-new-schema",
+      "return_code": 1,
+      "log": "old-refuses-new-schema.log",
+      "sha256": "d8f6e3de96c0bd41530e736a7544e14bdc00a0325aa7d4f907477ad87e122996"
+    },
+    {
+      "name": "post-admission-rollback-refused",
+      "return_code": 1,
+      "log": "post-admission-rollback-refused.log",
+      "sha256": "2337f219fe15e834fd8def80a57d1154e028fc997b31f9de7acfb07f645366cf"
+    },
+    {
+      "name": "restore-old-backup-new-directory",
+      "return_code": 0,
+      "log": "restore-old-backup-new-directory.log",
+      "sha256": "e2f271582fc8f078349688ecace3e63c5eacaa5f1fa3bbb460ccccc0e7dedec3"
+    }
+  ],
+  "limitations": [
+    "Real retained Linux server executables and CLI schema transactions only; no mixed-client or node transport negotiation claim",
+    "Quota/revocation rows are owned SQLite fixtures; live authorization and accounting use their separate regression suites",
+    "Unsigned old/new development bytes; certificate-backed installed upgrades and physical targets remain pending"
+  ],
+  "facts": {
+    "original": {
+      "schema": 25,
+      "epoch": 6267924763880400537,
+      "revoked": 1,
+      "later_revoked": 0,
+      "spent": 4173,
+      "quota_fenced": 0
+    },
+    "migrated": {
+      "schema": 50,
+      "epoch": 6267924763880400537,
+      "revoked": 1,
+      "later_revoked": 0,
+      "spent": 4173,
+      "quota_fenced": 0
+    },
+    "post_admission": {
+      "schema": 50,
+      "epoch": 6267924763880400537,
+      "revoked": 1,
+      "later_revoked": 1,
+      "spent": 9111,
+      "quota_fenced": 0
+    },
+    "restored": {
+      "schema": 50,
+      "epoch": 9072009993720872824,
+      "revoked": 1,
+      "later_revoked": 0,
+      "spent": 4173,
+      "quota_fenced": 1
+    }
+  },
+  "files": [
+    {
+      "path": "admitted-forward-migration.log",
+      "bytes": 618,
+      "sha256": "fafd30945412aec6fd892c27d0d7157c5908173ab94b1203aa88c31484197544"
+    },
+    {
+      "path": "current-version.log",
+      "bytes": 27,
+      "sha256": "9d8c21e2c980082ce3b189483791fbc3fa32c5effbab6688b762f126e1098899"
+    },
+    {
+      "path": "explicit-pre-admission-rollback.log",
+      "bytes": 618,
+      "sha256": "4cdba40a93110835c369ce87d70f400c0d4ba180369a8c83222873e4a747f0d1"
+    },
+    {
+      "path": "extract-pinned-old-package.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "fenced-forward-migration.log",
+      "bytes": 618,
+      "sha256": "4cdba40a93110835c369ce87d70f400c0d4ba180369a8c83222873e4a747f0d1"
+    },
+    {
+      "path": "new-accepts-old-config-new-schema.log",
+      "bytes": 123,
+      "sha256": "1016ed46ef9e43143f04b32e58a0833171ccad100b9ec3ae4204d9a2a9065ba2"
+    },
+    {
+      "path": "new-business-refuses-fenced-transaction.log",
+      "bytes": 70,
+      "sha256": "6368395b142d70740bcd76e244a7b3b060bb810561f4aa8d0b5575e23265461e"
+    },
+    {
+      "path": "new-check-new-schema.log",
+      "bytes": 123,
+      "sha256": "1016ed46ef9e43143f04b32e58a0833171ccad100b9ec3ae4204d9a2a9065ba2"
+    },
+    {
+      "path": "new-refuses-old-schema.log",
+      "bytes": 101,
+      "sha256": "8b0630bca47aadceb85080397d6221370bf492b18a4f7d1493d9f5adcadb3550"
+    },
+    {
+      "path": "old-candidate-build-manifest.json",
+      "bytes": 7237,
+      "sha256": "2d5a7768424f6cc2ea8875ba2b8cb8fb21ff360911b084ed4a95e2bc07fd793c"
+    },
+    {
+      "path": "old-check-old-schema.log",
+      "bytes": 123,
+      "sha256": "1016ed46ef9e43143f04b32e58a0833171ccad100b9ec3ae4204d9a2a9065ba2"
+    },
+    {
+      "path": "old-init.log",
+      "bytes": 174,
+      "sha256": "e53274f46102fe194092a9f6fe60997187b34404817a8bb11914b67a246e9489"
+    },
+    {
+      "path": "old-refuses-new-schema.log",
+      "bytes": 63,
+      "sha256": "d8f6e3de96c0bd41530e736a7544e14bdc00a0325aa7d4f907477ad87e122996"
+    },
+    {
+      "path": "old-version.log",
+      "bytes": 27,
+      "sha256": "9d8c21e2c980082ce3b189483791fbc3fa32c5effbab6688b762f126e1098899"
+    },
+    {
+      "path": "old-works-after-exact-rollback.log",
+      "bytes": 123,
+      "sha256": "1016ed46ef9e43143f04b32e58a0833171ccad100b9ec3ae4204d9a2a9065ba2"
+    },
+    {
+      "path": "post-admission-rollback-refused.log",
+      "bytes": 71,
+      "sha256": "2337f219fe15e834fd8def80a57d1154e028fc997b31f9de7acfb07f645366cf"
+    },
+    {
+      "path": "restore-old-backup-new-directory.log",
+      "bytes": 213,
+      "sha256": "e2f271582fc8f078349688ecace3e63c5eacaa5f1fa3bbb460ccccc0e7dedec3"
+    }
+  ]
+}

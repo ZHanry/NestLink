@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "verification": "Downloaded all four GitHub-hosted artifacts and verified every receipt file inventory with SHA256; no project compilation or tests ran locally.",
+  "package_run": {
+    "run_id": 41236630410,
+    "run_attempt": 1,
+    "source_revision": "c0fc249fc24c4bab389fe10690a2becb1b71257e",
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41236630410",
+    "conclusion": "success",
+    "scope": "Actual native x64 and ARM64 DEB installation, reinstall, installed binary hashes, ordinary-user install refusal, missing authorization refusal, CLI inventory and uninstall preserving private state.",
+    "artifacts": [
+      {"architecture": "arm64", "id": 13055977059, "digest": "sha256:bde3779b2c60c9bfa7994b59a9bf1c9cab34f35681c99f7c39a07f045a3be21a", "receipt": "linux-network-arm64-c0fc249.json", "receipt_sha256": "e8e1f21fae8a749616cc8107e7f256341ab9273a59020516990b9420caf32308", "verified_inventory_files": 20},
+      {"architecture": "x64", "id": 13055507795, "digest": "sha256:cfaef16fd89a66c5a211e9fd17eefe2235bd66d88683f115040b9df7b062c8f1", "receipt": "linux-network-x64-c0fc249.json", "receipt_sha256": "3df9f4cdb545dfebab10d10159b57f88b805523723f77bf993d9d84b409b5d46", "verified_inventory_files": 20}
+    ]
+  },
+  "upgrade_run": {
+    "run_id": 41236371694,
+    "run_attempt": 1,
+    "source_revision": "2871a02c0e5b8978cb015f9e9c9bc16dbc23029a",
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41236371694",
+    "conclusion": "success",
+    "scope": "Actual retained v0.7.0-rc.1 x64 and ARM64 server executables with schema25, current schema50, encrypted migration and pre-admission rollback, post-admission rollback refusal, restore epoch rotation and cumulative debt restore fence.",
+    "artifacts": [
+      {"architecture": "arm64", "id": 13055866330, "digest": "sha256:655609c026d67fc366366c33418831bb82c24aa34ca02f5a921b57560df32051", "receipt": "upgrade-arm64-2871a02.json", "receipt_sha256": "d478200ef4926c2955c25a3335dfe96f8a41f79a1594ab27fa2e8812c1c6af23", "verified_inventory_files": 17},
+      {"architecture": "x64", "id": 13055711505, "digest": "sha256:f574817095c29ffc4fdc7c6f3d291724a3f64abf3e3f1f14f90dd94345aa25bb", "receipt": "upgrade-x64-2871a02.json", "receipt_sha256": "70ae9923ba840738cde1e642342aa5c9b1199a70b503e508ba8d1db04107b1fa", "verified_inventory_files": 17}
+    ]
+  },
+  "limitations": [
+    "Each receipt qualifies only its exact source; a final release requires successful same-source checks.",
+    "Development candidate packages are unsigned and do not qualify the formal signed installation/update lifecycle.",
+    "Upgrade revocation and debt rows are explicitly owned SQLite fixtures, not live mixed-client traffic.",
+    "No Windows, physical target, mobile, TUN or mixed-version production capability acceptance is claimed by these receipts."
+  ]
+}
