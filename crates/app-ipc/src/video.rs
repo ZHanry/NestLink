@@ -2,7 +2,7 @@
 //! never used for pixels; one authenticated TLS connection switches to a
 //! binary-only stream after a session-bound OpenNativeVideo request.
 use crate::wire::{Command, Reply, Request, Response};
-use nestlink_app_core::{CoreHandle, NativeSessionStatus, VideoLayout};
+use nestlink_app_core::{CoreHandle, DecodedExportLedger, DecodedFrameExport, NativeSessionStatus, VideoLayout};
 use nestlink_local_ipc::{
     Error as LocalError, LocalStream, VIDEO_CHUNK_BYTES, VIDEO_HEADER_BYTES, VIDEO_PAYLOAD_BYTES,
 };
@@ -366,6 +366,7 @@ pub(crate) async fn serve_video_stream(
         .and_then(|state| state.selected)
         .filter(|selection| selection.source == binding.source)
         .ok_or(crate::Error::Protocol)?;
+    let mut exports = DecodedExportLedger::default();
 
     loop {
         if !video_binding_is_live(&core, &binding) {
@@ -438,6 +439,7 @@ pub(crate) async fn serve_video_stream(
                             .map_err(|_| crate::Error::Protocol)?,
                     },
                 )?;
+                let export = exports.begin(&frame).map_err(|_| crate::Error::Protocol)?;
                 send_frame_monitored(
                     &mut connection,
                     &core,
@@ -448,6 +450,7 @@ pub(crate) async fn serve_video_stream(
                         expected_layout: last_layout,
                         header: &header,
                         pixels: &frame.pixels,
+                        export,
                     },
                 )
                 .await?;
@@ -483,6 +486,7 @@ struct FrameTransfer<'a> {
     expected_layout: Option<(u64, u32, u32)>,
     header: &'a [u8; VIDEO_HEADER_BYTES],
     pixels: &'a [u8],
+    export: DecodedFrameExport<'a>,
 }
 
 async fn send_frame_monitored(
@@ -498,24 +502,24 @@ async fn send_frame_monitored(
         expected_layout,
         header,
         pixels,
+        mut export,
     } = frame;
-    connection.send_video_header(header, pixels.len()).await?;
-    for chunk in pixels.chunks(VIDEO_CHUNK_BYTES) {
-        if !frame_authority_is_live(core, binding, expected_layout) {
-            return Err(crate::Error::Protocol);
-        }
-        let sending = connection.send_video_payload_chunk(chunk);
+    if export.check_current().is_err() || !frame_authority_is_live(core, binding, expected_layout) {
+        return Err(crate::Error::Protocol);
+    }
+    {
+        let sending = connection.send_video_header(header, pixels.len());
         tokio::pin!(sending);
         loop {
             tokio::select! {
                 biased;
                 changed = updates.changed() => {
-                    if changed.is_err() || !frame_authority_is_live(core, binding, expected_layout) {
+                    if changed.is_err() || export.check_current().is_err() || !frame_authority_is_live(core, binding, expected_layout) {
                         return Err(crate::Error::Protocol);
                     }
                 }
                 _ = authorize.tick() => {
-                    if !frame_authority_is_live(core, binding, expected_layout) {
+                    if export.check_current().is_err() || !frame_authority_is_live(core, binding, expected_layout) {
                         return Err(crate::Error::Protocol);
                     }
                 }
@@ -527,7 +531,38 @@ async fn send_frame_monitored(
             }
         }
     }
-    Ok(())
+    for chunk in pixels.chunks(VIDEO_CHUNK_BYTES) {
+        if export.check_current().is_err() || !frame_authority_is_live(core, binding, expected_layout) {
+            return Err(crate::Error::Protocol);
+        }
+        let sending = connection.send_video_payload_chunk(chunk);
+        tokio::pin!(sending);
+        loop {
+            tokio::select! {
+                biased;
+                changed = updates.changed() => {
+                    if changed.is_err() || export.check_current().is_err() || !frame_authority_is_live(core, binding, expected_layout) {
+                        return Err(crate::Error::Protocol);
+                    }
+                }
+                _ = authorize.tick() => {
+                    if export.check_current().is_err() || !frame_authority_is_live(core, binding, expected_layout) {
+                        return Err(crate::Error::Protocol);
+                    }
+                }
+                result = &mut sending => {
+                    result?;
+                    export.transferred(chunk.len()).map_err(|_| crate::Error::Protocol)?;
+                    break;
+                }
+                _ = tokio::time::sleep_until(deadline) => return Err(crate::Error::Transport(LocalError::Timeout)),
+            }
+        }
+    }
+    if !frame_authority_is_live(core, binding, expected_layout) {
+        return Err(crate::Error::Protocol);
+    }
+    export.finish().map_err(|_| crate::Error::Protocol)
 }
 
 fn frame_authority_is_live(

@@ -33,7 +33,7 @@ mod hevc;
 /// Packed BGRA for presentation. Every encoded reference is decoded before an
 /// older presentation image may be replaced in this per-source mailbox.
 pub struct DecodedVideo {
-    execution: Option<crate::LiveExecutionReceipt>,
+    pub(crate) execution: Option<crate::LiveExecutionReceipt>,
     /// Encoded YUV source conversion; does not label the returned BGRA as
     /// limited-range RGB, establish capture transfer, or prove display HDR.
     pub source_color: nestlink_protocol::media_format::Color,
@@ -47,6 +47,28 @@ pub struct DecodedVideo {
     pub height: u32,
     pub pixels: Vec<u8>,
     pub repeated_source: bool,
+}
+impl DecodedVideo {
+    pub(crate) fn export_execution(&self) -> io::Result<Option<crate::LiveExecutionReceipt>> {
+        let Some(execution) = &self.execution else {
+            if self.codec > nestlink_protocol::NativeVideoCodec::H264Baseline as u8 {
+                return Err(io::Error::other("HEVC export lacks original sealed decoder output"));
+            }
+            return Ok(None);
+        };
+        execution.check_decoded(self.pts_90khz, &self.pixels)?;
+        let config = execution.target().config();
+        let codec_matches = match execution {
+            crate::LiveExecutionReceipt::H264(_) => self.codec == nestlink_protocol::NativeVideoCodec::H264Baseline as u8
+                && self.hardware_decode == execution.identity()?.adapter_luid().is_some(),
+            #[cfg(windows)]
+            crate::LiveExecutionReceipt::Hevc(_) => self.codec == nestlink_protocol::NativeVideoCodec::HevcMain8 as u8 && self.hardware_decode,
+        };
+        if !codec_matches || (config.width, config.height) != (self.width, self.height) {
+            return Err(io::Error::other("decoded export differs from original execution target"));
+        }
+        Ok(Some(execution.clone()))
+    }
 }
 impl Drop for DecodedVideo {
     fn drop(&mut self) {
@@ -649,9 +671,9 @@ impl VideoPresentation {
                     && v.epoch.layout == context.layout_epoch
             })
             .ok_or_else(|| io::Error::other("external selection differs"))?;
-        if hevc && state.execution.is_some() {
+        if hevc {
             return Err(io::Error::other(
-                "HEVC original readback execution must transfer and join through a proved live GPU handoff",
+                "HEVC external decode requires native shared-surface ownership proof; IPC feedback cannot replace the original execution",
             ));
         }
         let signed_formats = self.lease.media_formats().map_err(io::Error::other)?;

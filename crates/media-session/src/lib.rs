@@ -4,6 +4,8 @@
 #![cfg(any(target_os = "windows", target_os = "linux"))]
 
 mod audio;
+mod decoded_export;
+pub use decoded_export::{DecodedExportLedger, DecodedFrameExport};
 mod timing;
 pub use timing::{
     AudioCaptureTimeline, MAX_PLAYOUT_LATE, PLAYOUT_DELAY, PlayoutDecision, SessionCaptureClock,

@@ -1,0 +1,135 @@
+{
+    "schema_version":  1,
+    "source_revision":  "2f79d4bfbad6c5588104fe9cae55294314b5b183",
+    "work_packages":  [
+                          "W32",
+                          "W33"
+                      ],
+    "status":  "qualified_hosted_checks_passed_without_physical_gpu_acceptance",
+    "build_provenance":  {
+                             "workflow":  ".github/workflows/windows-media-owner.yml",
+                             "workflow_revision":  "2f79d4bfbad6c5588104fe9cae55294314b5b183",
+                             "checkout_input_revision":  "2f79d4bfbad6c5588104fe9cae55294314b5b183",
+                             "run_id":  41412712183,
+                             "attempt":  1,
+                             "job_id":  125169309284,
+                             "runner":  "windows-2025",
+                             "runner_environment":  "github-hosted",
+                             "dependency_lock_sha256":  "0f9030375f913804083a36639607f434a5a1cb707002746ca619face961c7ef7",
+                             "conclusion":  "success",
+                             "url":  "https://github.com/ZHanry/NestLink/actions/runs/41412712183"
+                         },
+    "execution_provenance":  {
+                                 "environment":  "same-source GitHub-hosted Windows ordinary user token",
+                                 "physical_gpu_or_desktop_execution":  false,
+                                 "target_acceptance_claimed":  false,
+                                 "production_issuance_enabled":  false
+                             },
+    "artifact":  {
+                     "id":  13126423930,
+                     "name":  "windows-media-owner-2f79d4bfbad6c5588104fe9cae55294314b5b183-1",
+                     "archive_sha256":  "3a13bbf4d16ace17f26571344977cfee17cb065a225cc4abed85a711b381fda0",
+                     "source_receipt_sha256":  "26479d1813008eedc1d249259c010e441e6cfa6aff2fa90d44628adec0b1e67e"
+                 },
+    "contract_tests_passed":  81,
+    "passed_checks":  [
+                          {
+                              "log":  "compressed-context-tests.log",
+                              "sha256":  "90c41bd70c0ed0254c3507e1a016472c5bb60a36681a02328a48296f9038ac81",
+                              "tests_passed":  4
+                          },
+                          {
+                              "log":  "daemon-hevc-selection-tests.log",
+                              "sha256":  "995cded0ec8368ed681a5eb92e5df491e664c27351bda83c343516fabd2896b9",
+                              "tests_passed":  2
+                          },
+                          {
+                              "log":  "daemon-media-clippy.log",
+                              "sha256":  "b90d824e6f1968f1571552faf68acdbd43d44493da46410ab7344c8a39aae975"
+                          },
+                          {
+                              "log":  "desktop-clippy.log",
+                              "sha256":  "468ffc4efdbb8fcc22a58a346647635ff1afdd06a35911a509970d7a3ec9587a"
+                          },
+                          {
+                              "log":  "hevc-clippy.log",
+                              "sha256":  "33e76893ab72ffe7ce014d9aea976f72949325c7334f43308ca5a50c00e24ad1"
+                          },
+                          {
+                              "log":  "hevc-contract-tests.log",
+                              "sha256":  "a185ca254b96be25a2bbdbd2f46dde8e5213b671d8927c9c436abf5217e24d5d",
+                              "tests_passed":  5
+                          },
+                          {
+                              "log":  "hevc-execution-tests.log",
+                              "sha256":  "e993045e3d4e35fb4aa3b7f1da7d6c5631f2175ec0ef967c1a64183bd5097cbf",
+                              "tests_passed":  4
+                          },
+                          {
+                              "log":  "hevc-target-tests.log",
+                              "sha256":  "46f98989bd059d8a610848ab1fd2ab919bc53098b5e6978b4c22bd1fb5d9da33",
+                              "tests_passed":  2
+                          },
+                          {
+                              "log":  "media-opt-in-approval-tests.log",
+                              "sha256":  "de4df1cff59214f9f65b77c54dfb97938cbacc62cfedea42e6f3da4f935184b8",
+                              "tests_passed":  2
+                          },
+                          {
+                              "log":  "media-opt-in-cli-tests.log",
+                              "sha256":  "5c93dd602dfdf61efc4631ac9fb24333f0d9ea1ddb49c7d3cdb4f773c1f2de2c",
+                              "tests_passed":  1
+                          },
+                          {
+                              "log":  "media-opt-in-config-tests.log",
+                              "sha256":  "853b63a87ad8eb39bed68177b51ce0bff4581024da432f7328548fb35d183442",
+                              "tests_passed":  5
+                          },
+                          {
+                              "log":  "media-opt-in-http-tests.log",
+                              "sha256":  "30f46cc2e54a12b685b8d0b9e8d68a7c4d7ef8e16710d95cc295ad63ff08df02",
+                              "tests_passed":  2
+                          },
+                          {
+                              "log":  "media-provider-tests.log",
+                              "sha256":  "1485cbc86fb5f3c50d51a29536213243b082c4222147ac09353dd56b91f90c2d",
+                              "tests_passed":  10
+                          },
+                          {
+                              "log":  "native-media-wire-tests.log",
+                              "sha256":  "f7436bc3ed1110a67389bb9975ce7f29017e4ef0b3f83da4b6b682567a177e16",
+                              "tests_passed":  8
+                          },
+                          {
+                              "log":  "presenter-tests.log",
+                              "sha256":  "c6b3f98924189288fa1b0e58ec1e1d3be19bc2289c67db019ce77b073e8da32a",
+                              "tests_passed":  5
+                          },
+                          {
+                              "log":  "readback-ipc-tests.log",
+                              "sha256":  "a9a368b6d2a54e87e8300e3c01d2ff6080845d8f00e34015d4e227aeb9f2841f",
+                              "tests_passed":  13
+                          },
+                          {
+                              "log":  "receiver-tests.log",
+                              "sha256":  "bc459cafb815fd02c899dd29b97eee1a8de0add619630e15b72c5190be4649eb",
+                              "tests_passed":  9
+                          },
+                          {
+                              "log":  "signed-store-media-tests.log",
+                              "sha256":  "b6617a0eb7a70b032507b4d2f70d3385210691e2e1d2132fc892ace26215ace3",
+                              "tests_passed":  9
+                          }
+                      ],
+    "prior_failures_retained":  [
+                                    "hevc-production-owner-61aee1f.json",
+                                    "hevc-original-receiver-46c389b.json"
+                                ],
+    "limits":  [
+                   "The explicit GPU target/configuration, exact publication, v3 request routing, local approval refusal boundaries and legacy contracts passed. These tests do not execute a physical GPU probe or establish performance.",
+                   "All media-codec, complete desktop and daemon/app-core/media-session strict checks passed on this exact source. Later decoded-export ledger changes are outside source 2f79d4b and require their own hosted checks.",
+                   "W32/W33 physical cadence, device loss, display/DPI/multiple-adapter, advanced-format matrix, weak-network and concurrent-file target cases remain open.",
+                   "Original daemon readback receipts do not attest to an independent desktop GPU owner; unproven ownership transfer remains rejected.",
+                   "Production issuance remains disabled. Earlier failed runs and existing Luanti 25-second failure remain preserved; this workflow success does not satisfy the full release gate."
+               ]
+}
