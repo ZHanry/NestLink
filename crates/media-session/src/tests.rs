@@ -3,6 +3,8 @@ mod advertised;
 mod dynamic;
 mod feedback;
 mod receiver_qos;
+#[cfg(all(target_os = "linux", feature = "network-impairment-lab"))]
+mod impairment;
 use nestlink_auth::random_id;
 use nestlink_identity::{InstallationIdentity, PermitSigner, verify_permit};
 use nestlink_media_codec::{VideoConfig, Vp8Encoder};
@@ -51,6 +53,8 @@ pub(super) struct Pair {
     pub(super) revoke: watch::Sender<Option<StopReason>>,
     pub(super) controller_revoke: watch::Sender<Option<StopReason>>,
     bridge: Option<feedback::FrameBridge>,
+    #[cfg(all(target_os = "linux", feature = "network-impairment-lab"))]
+    quic_addresses: Option<[std::net::SocketAddr; 2]>,
 }
 #[test]
 fn extreme_untrusted_stream_geometry_is_rejected_without_overflow() {
@@ -77,11 +81,23 @@ async fn pair_with_features(
     h264: bool,
     qos: bool,
 ) -> Result<Pair> {
+    pair_for_network_lab(quic, dropped_video, h264, qos, false).await
+}
+async fn pair_for_network_lab(
+    quic: bool,
+    dropped_video: Option<u64>,
+    h264: bool,
+    qos: bool,
+    input: bool,
+) -> Result<Pair> {
     let controller = InstallationIdentity::generate();
     let host = InstallationIdentity::generate();
     let clock = RuntimeClock::default();
     let now = clock.sample()?;
-    let permissions = vec![Permission::View, Permission::Audio, Permission::FileRead];
+    let mut permissions = vec![Permission::View, Permission::Audio, Permission::FileRead];
+    if input {
+        permissions.push(Permission::Input);
+    }
     let mut binding = SessionBinding {
         media: None,
         deployment_id: random_id(),
@@ -132,7 +148,7 @@ async fn pair_with_features(
         connection_generation: 9,
         lease_sequence: 1,
         issued_at_unix_ms: now.unix_ms,
-        expires_at_unix_ms: now.unix_ms + 15000,
+        expires_at_unix_ms: now.unix_ms + if input { 60_000 } else { 15_000 },
         capability_sha256: vec![9; 32],
         required_capabilities: binding.supported_capabilities.clone(),
     };
@@ -161,6 +177,8 @@ async fn pair_with_features(
         let server = listener("127.0.0.1:0".parse()?, &host, controller.fingerprint())?;
         let client = connector("127.0.0.1:0".parse()?, &controller, host.fingerprint())?;
         let address = server.local_addr()?;
+        #[cfg(all(target_os = "linux", feature = "network-impairment-lab"))]
+        let addresses = [address, client.local_addr()?];
         let accept = async {
             server
                 .accept()
@@ -206,6 +224,8 @@ async fn pair_with_features(
             revoke,
             controller_revoke: controller_stop,
             bridge: None,
+            #[cfg(all(target_os = "linux", feature = "network-impairment-lab"))]
+            quic_addresses: Some(addresses),
         });
     }
     let (host_wire, controller_wire, bridge): (
@@ -334,6 +354,8 @@ async fn pair_with_features(
         revoke,
         controller_revoke: controller_stop,
         bridge,
+        #[cfg(all(target_os = "linux", feature = "network-impairment-lab"))]
+        quic_addresses: None,
     })
 }
 pub(super) async fn wait_until(predicate: impl FnMut() -> Result<bool>) -> Result {

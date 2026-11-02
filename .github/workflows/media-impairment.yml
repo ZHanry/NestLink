@@ -1,0 +1,55 @@
+name: Actual kernel media impairment and original file concurrency
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'crates/media-session/**'
+      - 'crates/remote/**'
+      - 'scripts/network-rewrite-media-impairment.py'
+      - '.github/workflows/media-impairment.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  original-media:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_DEBUG: '0'
+      CARGO_PROFILE_TEST_DEBUG: '0'
+      RUST_BACKTRACE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: '1.96.0'
+          components: clippy
+      - name: Prepare original mature codecs on GitHub
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config iproute2 ethtool
+          echo "NESTLINK_CODEC_PREFIX=$RUNNER_TEMP/nestlink-codecs/x86_64-unknown-linux-gnu" >> "$GITHUB_ENV"
+          python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/nestlink-codec-sources" --work-dir "$RUNNER_TEMP/nestlink-codecs"
+          python3 scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "$RUNNER_TEMP/nestlink-codecs/x86_64-unknown-linux-gnu"
+      - name: Build and execute exact original business under physical kernel impairment
+        run: python3 -B scripts/network-rewrite-media-impairment.py --output "$RUNNER_TEMP/media-impairment"
+      - name: Strict first-party media and experiment lint
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo clippy --locked -p nestlink-media-session --all-targets --features network-impairment-lab -- -D warnings 2>&1 | tee "$RUNNER_TEMP/media-impairment/clippy.log"
+      - name: Retain exact failed and successful scope with original samples
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: media-impairment-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/media-impairment/
+          if-no-files-found: error
+          retention-days: 30

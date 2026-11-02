@@ -82,6 +82,17 @@ pub struct VideoSenderStats {
     pub feedback_requests: u64,
     pub duplicate_requests: u64,
     pub keyframes_encoded: u64,
+    pub last_budget: Option<ProducerBudgetObservation>,
+    pub enqueued_video_bytes: u64,
+}
+/// Local facts after a real codec bitrate change or producer cadence decision.
+/// This does not assert network delivery, receiver presentation or target fps.
+#[derive(Debug, Clone, Copy)]
+pub struct ProducerBudgetObservation {
+    pub source: u32,
+    pub cadence_fps: u32,
+    pub bitrate_kbps: u32,
+    pub observed_at: Instant,
 }
 impl VideoSender {
     /// Binds capture and sending to the same authorized session. There is no
@@ -534,6 +545,16 @@ fn send<D: CaptureDevice>(
             if let Some(kbps) = changed {
                 encoder.codec.set_bitrate(kbps)?;
                 encoder.config.bitrate_kbps = kbps;
+            }
+            {
+                let mut stats = stats.lock().map_err(|_| io::Error::other("video stats poisoned"))?;
+                stats.last_budget = Some(ProducerBudgetObservation {
+                    source,
+                    cadence_fps: encoder.quality.fps(),
+                    bitrate_kbps: encoder.config.bitrate_kbps,
+                    observed_at: now,
+                });
+                stats.enqueued_video_bytes = stats.enqueued_video_bytes.saturating_add(bytes.len() as u64);
             }
             encoder.next_frame = Instant::now()
                 + Duration::from_nanos(1_000_000_000 / u64::from(encoder.quality.fps()));

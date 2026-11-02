@@ -5,6 +5,9 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
+[features]
+network-impairment-lab = []
+
 [target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
 nestlink-media-codec.workspace = true
 nestlink-protocol.workspace = true

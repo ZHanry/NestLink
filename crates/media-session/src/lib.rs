@@ -29,7 +29,7 @@ pub use receiver::{
     DecodedVideo, ExternalVideoCleanup, VideoLayout, VideoPresentation, VideoReceiver,
     VideoReceiverStats,
 };
-pub use video::{VideoSender, VideoSenderStats, VideoStream};
+pub use video::{ProducerBudgetObservation, VideoSender, VideoSenderStats, VideoStream};
 pub use worker::{ShutdownReport, WorkerMonitor, WorkerStatus};
 
 #[cfg(test)]
