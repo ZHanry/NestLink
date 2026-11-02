@@ -35,7 +35,7 @@ impl Capture {
         if state.target == Some((source, target)) && state.execution.is_some() { return Ok(()); }
         if let Some(mut old) = state.execution.take() { old.shutdown()?; }
         state.target = None;
-        let mut owner = selected.start_hevc_encode(target, self.authority.clone())?;
+        let mut owner = selected.start_hevc_encode(target, self.authority.clone(), self.stopped.clone())?;
         if self.stopped.load(Ordering::Acquire) || !self.authority.load(Ordering::Acquire) {
             owner.shutdown()?;
             return Err(io::Error::other("HEVC capture retired during exact preparation"));
@@ -45,6 +45,10 @@ impl Capture {
         Ok(())
     }
     fn capture(&self, pts: u64, repeated: bool) -> io::Result<Option<(HevcOwnerOutput, HevcExecutionReceipt)>> {
+        if self.stopped.load(Ordering::Acquire) || !self.authority.load(Ordering::Acquire) {
+            self.authority.store(false, Ordering::Release);
+            return Err(io::Error::other("HEVC capture authorization retired before submit"));
+        }
         let state = self.state.lock().map_err(|_| io::Error::other("HEVC capture owner poisoned"))?;
         let owner = state.execution.as_ref().ok_or_else(|| io::Error::other("HEVC capture is not configured"))?;
         let mut ticket = owner.submit_capture(pts, repeated)?;
@@ -82,6 +86,13 @@ impl CaptureDevice for Capture {
         let mut state = self.state.lock().map_err(|_| io::Error::other("HEVC capture owner poisoned"))?;
         state.target = None;
         if let Some(mut owner) = state.execution.take() { owner.shutdown()?; }
+        Ok(())
+    }
+    fn reset_before(&mut self, deadline: Instant) -> io::Result<()> {
+        self.reset()?;
+        if Instant::now() > deadline {
+            return Err(io::Error::new(io::ErrorKind::TimedOut, "HEVC capture checked join exceeded original cleanup deadline"));
+        }
         Ok(())
     }
 }
@@ -179,6 +190,21 @@ mod tests {
         let h264 = VideoFormat::legacy_h264(31, 640, 480,
             FrameRate::new(30, 1).map_err(io::Error::other)?, 4000).map_err(io::Error::other)?;
         assert!(select_target(&FormatSet::new(vec![h264]).map_err(io::Error::other)?, binding).is_err());
+        Ok(())
+    }
+    #[test]
+    fn original_capture_cancel_latch_denies_submit_and_cannot_revive_after_checked_reset() -> io::Result<()> {
+        let mut capture = Capture::new(Vec::new());
+        let latch = capture.cancellation().ok_or_else(|| io::Error::other("capture cancellation absent"))?;
+        latch.store(true, Ordering::Release);
+        assert!(capture.capture(1, false).is_err());
+        assert!(capture.check().is_err());
+        capture.reset()?;
+        // Clearing a stale external copy cannot restore an authority generation.
+        latch.store(false, Ordering::Release);
+        assert!(capture.check().is_err());
+        assert!(capture.capture(2, true).is_err());
+        assert!(capture.state.lock().map_err(|_| io::Error::other("fixture owner poisoned"))?.execution.is_none());
         Ok(())
     }
 }

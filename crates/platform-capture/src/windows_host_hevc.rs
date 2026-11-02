@@ -10,6 +10,7 @@ struct HevcMonitorSource {
     capture: Option<GpuCapture>,
     observer: WindowsSessionObserver,
     invalidated: Arc<AtomicBool>,
+    cancelled: Arc<AtomicBool>,
     original: Arc<Context>,
     _dpi: DpiScope,
 }
@@ -40,7 +41,8 @@ unsafe impl HevcTextureSource for HevcMonitorSource {
     }
     fn check_current(&self) -> io::Result<()> {
         self.observer.pump();
-        if self.invalidated.load(Ordering::Acquire) || context()? != *self.original {
+        if self.cancelled.load(Ordering::Acquire)
+            || self.invalidated.load(Ordering::Acquire) || context()? != *self.original {
             return Err(denied("HEVC original desktop/session/monitor/DPI changed"));
         }
         Ok(())
@@ -60,6 +62,7 @@ impl WindowsCaptureSource {
         &self,
         target: HevcExecutionTarget,
         authority: Arc<AtomicBool>,
+        cancelled: Arc<AtomicBool>,
     ) -> io::Result<HardwareHevcExecution> {
         let config = target.contract().config();
         let display = self.display();
@@ -75,7 +78,8 @@ impl WindowsCaptureSource {
             let mut observer = WindowsSessionObserver::open(invalidated.clone(), true)?;
             let result = (|| {
                 observer.pump();
-                if invalidated.load(Ordering::Acquire) || context()? != *selection.original {
+                if cancelled.load(Ordering::Acquire)
+                    || invalidated.load(Ordering::Acquire) || context()? != *selection.original {
                     return Err(denied("HEVC approved capture selection is stale"));
                 }
                 let monitor = selection
@@ -96,6 +100,7 @@ impl WindowsCaptureSource {
                 capture: Some(capture),
                 observer,
                 invalidated,
+                cancelled,
                 original: selection.original,
                 _dpi: dpi,
             };
