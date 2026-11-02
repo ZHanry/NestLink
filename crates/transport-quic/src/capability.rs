@@ -47,6 +47,9 @@ pub async fn exchange(
     deadline: Instant,
 ) -> crate::Result<NegotiatedProtocol> {
     let mut pending = Pending(Some(connection));
+    if Instant::now() >= deadline {
+        return Err(io::Error::from(io::ErrorKind::TimedOut).into());
+    }
     binding.expected_peer.validate()?;
     local.validate()?;
     let alpn = connection
@@ -95,6 +98,11 @@ pub async fn exchange(
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(negotiate(local, &remote.offer)?)
     })
     .await??;
+    // A ready operation can win timeout_at even after its timer expired.
+    // Never hand a capability selection to the business owner past its bound.
+    if Instant::now() >= deadline {
+        return Err(io::Error::from(io::ErrorKind::TimedOut).into());
+    }
     pending.0 = None;
     Ok(selected)
 }

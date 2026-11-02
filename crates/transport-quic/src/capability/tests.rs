@@ -299,6 +299,29 @@ async fn oversized_malformed_and_unknown_field_authenticated_offers_are_bounded(
 }
 
 #[tokio::test]
+async fn expired_absolute_deadline_cannot_admit_an_already_ready_connection() -> crate::Result<()> {
+    let pair = Pair::new().await?;
+    let local = offer(false, false);
+    let error = exchange(
+        &pair.first,
+        true,
+        ALPN,
+        &pair.first_binding,
+        &local,
+        Instant::now() - Duration::from_millis(1),
+    )
+    .await
+    .err()
+    .ok_or("expired capabilities unexpectedly admitted")?;
+    assert_eq!(
+        error.downcast_ref::<io::Error>().map(io::Error::kind),
+        Some(io::ErrorKind::TimedOut)
+    );
+    tokio::time::timeout(Duration::from_secs(3), pair.second.closed()).await?;
+    pair.close().await
+}
+
+#[tokio::test]
 async fn cancellation_and_deadline_close_the_original_connection() -> crate::Result<()> {
     for cancel in [false, true] {
         let pair = Pair::new().await?;
