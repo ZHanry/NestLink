@@ -159,10 +159,7 @@ fn decode_view_bytes(view: &NetworkGrantView) -> Result<SignedNetworkGrant, Cont
     })
 }
 
-fn check_view_metadata(
-    view: &NetworkGrantView,
-    claims: &GrantClaims,
-) -> Result<(), ContractError> {
+fn check_view_metadata(view: &NetworkGrantView, claims: &GrantClaims) -> Result<(), ContractError> {
     if view.schema_version != SCHEMA_VERSION || view.grant_id != claims.scope().grant_id {
         return Err(denied());
     }

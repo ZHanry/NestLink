@@ -498,7 +498,8 @@ impl<'a> DecodedNetworkGrant<'a> {
         };
         let authority =
             VerifyingKey::from_bytes(context.authority_key).map_err(|_| invalid_signature())?;
-        let signature = Signature::from_slice(&signed.signature).map_err(|_| invalid_signature())?;
+        let signature =
+            Signature::from_slice(&signed.signature).map_err(|_| invalid_signature())?;
         authority
             .verify_strict(&message, &signature)
             .map_err(|_| invalid_signature())?;

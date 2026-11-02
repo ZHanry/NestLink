@@ -111,9 +111,8 @@ pub fn verify_private_service_grant(
         now_ms: now,
         revoked_grant_ids: &revoked,
     };
-    let decode = |view: &nestlink_protocol::api::NetworkGrantView| {
-        remote::verify_view(view, &context)
-    };
+    let decode =
+        |view: &nestlink_protocol::api::NetworkGrantView| remote::verify_view(view, &context);
     let member = |view: &nestlink_protocol::api::NetworkGrantView,
                   installation: &str,
                   key: &[u8; 32],

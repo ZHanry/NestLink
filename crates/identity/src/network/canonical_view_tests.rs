@@ -126,6 +126,9 @@ fn private_network_view_reuse_preserves_original_canonical_and_live_checks()
     );
     assert!(verified.check_current(&context).is_err());
     context.revoked_grant_ids = &empty_revocations;
-    assert_eq!(remote::verify_view(&envelope, &context)?.digest(), original.digest());
+    assert_eq!(
+        remote::verify_view(&envelope, &context)?.digest(),
+        original.digest()
+    );
     Ok(())
 }
