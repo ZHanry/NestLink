@@ -394,6 +394,7 @@ impl Store {
                 &body.request.host_device_id,
                 now,
             )?;
+            if scope.version != body.media_format_version { return Err(StorageError::Forbidden); }
             self.candidate_media_request(
                 &actor.account_id,
                 &body.request.controller_device_id,
@@ -402,12 +403,15 @@ impl Store {
                 now,
             )
         };
-        if body.media_format_version != 2
+        if !matches!(body.media_format_version, nestlink_protocol::media_authority::FORMAT_VERSION | nestlink_protocol::media_authority::HEVC_FORMAT_VERSION)
             || (!self.media_issuance_enabled_for_request(&body.request.id) && candidate().is_err())
         {
             return Err(StorageError::Invalid(
                 "media authority runtime is not enabled",
             ));
+        }
+        if self.intersect_media(&body.request.controller_device_id, &body.request.host_device_id, now)?.version != body.media_format_version {
+            return Err(StorageError::Forbidden);
         }
         self.create_remote_kind(actor, body.request, now, false, true)
     }
@@ -1027,7 +1031,7 @@ impl Store {
         }
         if media_format_version != 0 {
             required_capabilities
-                .push(nestlink_protocol::media_authority::FORMAT_CAPABILITY.into());
+                .push(nestlink_protocol::media_authority::capability_for_version(media_format_version)?.into());
         }
         // Candidate CPU direction evidence, not the legacy hardware cache,
         // authorizes its exact H264 codec route. Availability was checked above.

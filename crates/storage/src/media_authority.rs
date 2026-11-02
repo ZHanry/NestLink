@@ -169,11 +169,12 @@ impl Store {
         let h = self
             .current_media_announcement(host, MediaDirection::Encode, now)?
             .ok_or(StorageError::Forbidden)?;
+        if c.version != h.version { return Err(StorageError::Forbidden); }
         let set = h
             .validate(now.saturating_mul(1000))?
             .intersection(&c.validate(now.saturating_mul(1000))?);
         let scope = FrozenMediaScope {
-            version: 2,
+            version: c.version,
             controller_revision: c.revision,
             host_revision: h.revision,
             formats: set
@@ -276,7 +277,7 @@ impl Store {
         let mut claims = self.approval_transcript_base(actor, id, &choice.choice, now)?;
         // Separate signed shape binds explicit reviewed digest and frozen revisions.
         claims.payload_sha256 = digest(&serde_json::to_vec(&(
-            "nestlink/media-approval/v2",
+            nestlink_protocol::media_authority::approval_domain(scope.version)?,
             choice,
             &scope,
         ))?)
@@ -302,6 +303,7 @@ impl Store {
                 if !self.media_issuance_enabled_for_request(id)
                     || set.digest().as_slice() != scope.sha256
                     || claims.media_formats != scope.formats
+                    || claims.media_format_version != scope.version
                 {
                     return Err(StorageError::Forbidden);
                 }

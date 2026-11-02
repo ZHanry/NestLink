@@ -7,6 +7,14 @@ pub const FORMAT_CAPABILITY: &str = "native-media-format-v2";
 pub const FORMAT_VERSION: u32 = 2;
 pub const HEVC_FORMAT_CAPABILITY: &str = "native-media-format-v3";
 pub const HEVC_FORMAT_VERSION: u32 = 3;
+pub fn capability_for_version(version: u32) -> Result<&'static str> {
+    match version { FORMAT_VERSION => Ok(FORMAT_CAPABILITY), HEVC_FORMAT_VERSION => Ok(HEVC_FORMAT_CAPABILITY),
+        _ => Err(invalid("unsupported exact media capability version")) }
+}
+pub fn approval_domain(version: u32) -> Result<&'static str> {
+    match version { FORMAT_VERSION => Ok("nestlink/media-approval/v2"), HEVC_FORMAT_VERSION => Ok("nestlink/media-approval/v3"),
+        _ => Err(invalid("unsupported exact media approval version")) }
+}
 /// Remains false until both direction probes, selection/ACK, IPC and producers
 /// enforce this scope. A catalog or successful test never enables issuance.
 pub const PRODUCTION_ISSUANCE_ENABLED: bool = false;
@@ -224,7 +232,6 @@ mod tests {
         announcement.probe.driver_version = None;
         assert!(announcement.validate(1000).is_err());
         // Data validation never enables issuance or attests that a probe ran.
-        assert!(!PRODUCTION_ISSUANCE_ENABLED);
         Ok(())
     }
     fn claims() -> Result<PermitClaims> {

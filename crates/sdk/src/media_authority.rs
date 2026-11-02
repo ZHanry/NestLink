@@ -75,12 +75,18 @@ impl Sdk {
         &self,
         request: RemoteRequest,
     ) -> Result<RemoteView, SdkError> {
+        self.request_media_remote_versioned(request, nestlink_protocol::media_authority::FORMAT_VERSION).await
+    }
+    /// Explicit independent format version; never infers an upgrade from a
+    /// changed announcement or rewrites an already approved v2 request.
+    pub async fn request_media_remote_versioned(&self, request: RemoteRequest, version: u32) -> Result<RemoteView, SdkError> {
+        nestlink_protocol::media_authority::capability_for_version(version)?;
         self.required(
             Method::POST,
             "/remote/media",
             Some(&MediaRemoteRequest {
                 request,
-                media_format_version: 2,
+                media_format_version: version,
             }),
         )
         .await
@@ -129,7 +135,7 @@ impl Sdk {
                 .decode(&view.nonce)
                 .map_err(|_| SdkError::Invalid)?,
             payload_sha256: digest(&serde_json::to_vec(&(
-                "nestlink/media-approval/v2",
+                nestlink_protocol::media_authority::approval_domain(reviewed_scope.version)?,
                 &choice,
                 reviewed_scope,
             ))?)
