@@ -6,6 +6,9 @@ use std::time::{Duration, Instant};
 pub enum ReceiverCondition {
     Unknown,
     Healthy,
+    /// Actual receiver codec cost or decode progress exceeds its cadence.
+    /// This is not evidence of available network bandwidth.
+    DecoderLimited,
     Congested,
 }
 
@@ -71,7 +74,8 @@ impl VideoQuality {
         self.last_observation = now;
         let network_limited =
             enqueue >= Duration::from_millis(40) || receiver == Some(ReceiverCondition::Congested);
-        let encoder_limited = encoding > Duration::from_secs_f64(1.25 / f64::from(self.fps));
+        let encoder_limited = encoding > Duration::from_secs_f64(1.25 / f64::from(self.fps))
+            || receiver == Some(ReceiverCondition::DecoderLimited);
         if network_limited || encoder_limited || receiver == Some(ReceiverCondition::Unknown) {
             self.healthy_since = now;
         }
@@ -100,6 +104,18 @@ impl VideoQuality {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn actual_decoder_pressure_reduces_cadence_without_inventing_network_congestion() {
+        let start = Instant::now();
+        let mut quality = VideoQuality::new(60, 8000, start);
+        assert_eq!(quality.observe_with_receiver(start,Duration::from_millis(2),Duration::ZERO,ReceiverCondition::DecoderLimited),None);
+        assert_eq!((quality.fps(),quality.bitrate_kbps()),(45,8000));
+        for step in 1..=2 {
+            quality.observe_with_receiver(start+Duration::from_millis(step*500),Duration::from_millis(2),Duration::ZERO,ReceiverCondition::Congested);
+        }
+        assert_eq!(quality.fps(),45);
+        assert!(quality.bitrate_kbps()<=5000,"real transport pressure still lowers bitrate within original2s");
+    }
     #[test]
     fn remote_congestion_reduces_without_local_pressure_and_missing_feedback_never_upgrades() {
         let start = Instant::now();

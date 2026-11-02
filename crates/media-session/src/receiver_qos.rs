@@ -114,14 +114,19 @@ impl ReceiverReportTracker {
             * u64::try_from(age.as_millis().saturating_add(200)).unwrap_or(u64::MAX)
             / 1000)
             .max(3);
-        let congested = highest_sequence.saturating_sub(report.last_sequence) > normal_lag
-            || report
+        let decoder_limited = report
                 .decoded_frames
                 .is_some_and(|decoded| decoded.saturating_mul(2) < report.received_frames)
             || report
                 .maximum_decode_us
                 .is_some_and(|us| us > 1_250_000 / u64::from(fps.max(1)));
-        if congested {
+        // A slow decoder can itself explain an acknowledgement lag. Its
+        // measured cost must first reduce cadence, not pretend to measure a
+        // smaller path bandwidth. Fresh lag without that CPU fact is still
+        // congestion and retains the original bitrate reduction behavior.
+        if decoder_limited {
+            ReceiverCondition::DecoderLimited
+        } else if highest_sequence.saturating_sub(report.last_sequence) > normal_lag {
             ReceiverCondition::Congested
         } else {
             ReceiverCondition::Healthy
@@ -300,6 +305,20 @@ mod tests {
             ),
             (2, 400, Some(1))
         );
+        Ok(())
+    }
+    #[test]
+    fn actual_decode_cost_and_transport_lag_are_separate_observations() -> io::Result<()> {
+        let now=Instant::now();
+        let current=context();
+        let mut tracker=ReceiverReportTracker::default();
+        let mut report=ReceiverReport{context:current.clone(),report_sequence:1,last_sequence:5,window_ms:500,received_payload_bytes:500,received_frames:5,decoded_frames:Some(5),maximum_decode_us:Some(100_000)};
+        tracker.accept(report.clone(),&current,50,now)?;
+        assert_eq!(tracker.condition(&current,50,60,now),ReceiverCondition::DecoderLimited);
+        report.report_sequence=2;
+        report.maximum_decode_us=Some(1000);
+        tracker.accept(report,&current,50,now)?;
+        assert_eq!(tracker.condition(&current,50,60,now),ReceiverCondition::Congested);
         Ok(())
     }
     #[test]
