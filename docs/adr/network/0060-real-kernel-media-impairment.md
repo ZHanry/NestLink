@@ -13,7 +13,9 @@
 VideoReceiver 的 VP8 编码解码与接收反馈、FileReadServer/FileReadClient
 及整文件 SHA 验证、InputController 的 epoch 和序号检查。新增 feature
 只启用 Linux 专用实验，普通测试库存与原 15 秒 fixture 保持不变；仅
-本实验显式授予 Input 和 60 秒有限签名。真实磁盘读取使用固定根 UUID
+本实验显式授予 Input，由独立 fixture authority 在固定 60 秒总期限内，
+每 5 秒签发并验证原 15 秒租约的下一序号；不延长单张租约或产品门槛。
+真实磁盘读取使用固定根 UUID
 和唯一文件名；不把测试文件适配器暴露给产品。
 
 driver 从已完成原身份和 Session 证明的两端获取实际 UDP 端口，只匹配

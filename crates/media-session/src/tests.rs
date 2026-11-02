@@ -55,6 +55,8 @@ pub(super) struct Pair {
     bridge: Option<feedback::FrameBridge>,
     #[cfg(all(target_os = "linux", feature = "network-impairment-lab"))]
     quic_addresses: Option<[std::net::SocketAddr; 2]>,
+    #[cfg(all(target_os = "linux", feature = "network-impairment-lab"))]
+    lab_authority: Option<(PermitSigner, PermitClaims)>,
 }
 #[test]
 fn extreme_untrusted_stream_geometry_is_rejected_without_overflow() {
@@ -148,7 +150,7 @@ async fn pair_for_network_lab(
         connection_generation: 9,
         lease_sequence: 1,
         issued_at_unix_ms: now.unix_ms,
-        expires_at_unix_ms: now.unix_ms + if input { 60_000 } else { 15_000 },
+        expires_at_unix_ms: now.unix_ms + 15_000,
         capability_sha256: vec![9; 32],
         required_capabilities: binding.supported_capabilities.clone(),
     };
@@ -226,6 +228,8 @@ async fn pair_for_network_lab(
             bridge: None,
             #[cfg(all(target_os = "linux", feature = "network-impairment-lab"))]
             quic_addresses: Some(addresses),
+            #[cfg(all(target_os = "linux", feature = "network-impairment-lab"))]
+            lab_authority: input.then_some((signer, claims)),
         });
     }
     let (host_wire, controller_wire, bridge): (
@@ -356,6 +360,8 @@ async fn pair_for_network_lab(
         bridge,
         #[cfg(all(target_os = "linux", feature = "network-impairment-lab"))]
         quic_addresses: None,
+        #[cfg(all(target_os = "linux", feature = "network-impairment-lab"))]
+        lab_authority: None,
     })
 }
 pub(super) async fn wait_until(predicate: impl FnMut() -> Result<bool>) -> Result {
