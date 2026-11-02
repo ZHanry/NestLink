@@ -770,6 +770,7 @@ fn check_execution_platform(
     lease: &LeaseControl,
     execution: &nestlink_media_session::LiveExecutionReceipt,
     direction: nestlink_protocol::media_authority::MediaDirection,
+    provider: Option<&crate::NativeMediaProvider>,
 ) -> io::Result<()> {
     use nestlink_protocol::media_authority::MediaDirection;
     let identity = execution.identity()?;
@@ -807,6 +808,18 @@ fn check_execution_platform(
             "actual execution original hardware platform differs from local evidence",
         ));
     }
+    #[cfg(windows)]
+    if let nestlink_media_session::LiveExecutionReceipt::Hevc(actual) = execution
+        && direction == MediaDirection::Encode {
+        let probe = lease.local_media_probe_identity(direction).map_err(io::Error::other)?
+            .ok_or_else(|| denied("HEVC original local probe absent"))?;
+        let expected = provider.ok_or_else(|| denied("HEVC original local provider absent"))?.encoder_for_probe(&probe)?;
+        if actual.target().encoder() != expected {
+            return Err(denied("live HEVC backend/runtime differs from authorized local probe"));
+        }
+    }
+    #[cfg(not(windows))]
+    let _ = provider;
     execution.check_current()
 }
 fn route_execution(
@@ -838,7 +851,8 @@ fn route_execution(
     }
     .ok_or_else(|| denied("no live execution owner"))?;
     execution.check_current()?;
-    check_execution_platform(&route.lease, &execution, direction)?;
+    let shared = route.shared.upgrade().ok_or_else(|| denied("media route owner absent"))?;
+    check_execution_platform(&route.lease, &execution, direction, shared.native_media_provider.get())?;
     let format = formats
         .formats()
         .iter()
@@ -987,6 +1001,7 @@ impl CoreHandle {
             &route.lease,
             &execution,
             nestlink_protocol::media_authority::MediaDirection::Encode,
+            self.shared.native_media_provider.get(),
         )?;
         let video = route.video()?;
         let _send_order = video.ordered_send().await.map_err(io::Error::other)?;
@@ -1038,6 +1053,16 @@ impl CoreHandle {
             .lease
             .local_media_hardware_target(nestlink_protocol::media_authority::MediaDirection::Encode)
             .map_err(io::Error::other)
+    }
+    /// Exact local implementation/runtime for the current authorized probe.
+    pub fn native_video_hevc_encoder_selection(
+        &self,
+        binding: &NativeSessionBinding,
+    ) -> io::Result<nestlink_media_codec::HevcEncoderSelection> {
+        let route = self.display_route(binding)?;
+        let probe = route.lease.local_media_probe_identity(nestlink_protocol::media_authority::MediaDirection::Encode)
+            .map_err(io::Error::other)?.ok_or_else(|| denied("HEVC authorized local probe absent"))?;
+        self.shared.native_media_provider.get().ok_or_else(|| denied("HEVC original local provider absent"))?.encoder_for_probe(&probe)
     }
     pub fn native_video_formats(
         &self,

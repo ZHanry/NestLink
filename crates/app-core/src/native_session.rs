@@ -34,6 +34,7 @@ pub struct NativeSessionConfig {
     // Explicit local selection intent, never a probe or capture permission.
     gpu_hevc_main8_target: Option<nestlink_media_codec::VideoConfig>,
     gpu_hevc_version: u32,
+    gpu_hevc_encoder: nestlink_media_codec::HevcEncoderBackend,
     pub internal_software_media_candidate: Option<
         nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate,
     >,
@@ -104,6 +105,7 @@ impl NativeSessionConfig {
             media_provider: None,
             gpu_hevc_main8_target: None,
             gpu_hevc_version: 0,
+            gpu_hevc_encoder: nestlink_media_codec::HevcEncoderBackend::SystemMf,
             internal_software_media_candidate: None,
             management_login_store: None,
             network,
@@ -151,21 +153,29 @@ impl NativeSessionConfig {
         self,
         target: nestlink_media_codec::VideoConfig,
     ) -> io::Result<Self> {
-        self.with_gpu_hevc_target(target, HEVC_FORMAT_VERSION)
+        self.with_gpu_hevc_main8_encoder(target, nestlink_media_codec::HevcEncoderBackend::SystemMf)
+    }
+    pub fn with_gpu_hevc_main8_encoder(self, target: nestlink_media_codec::VideoConfig, encoder: nestlink_media_codec::HevcEncoderBackend) -> io::Result<Self> {
+        self.with_gpu_hevc_target(target, HEVC_FORMAT_VERSION, encoder)
     }
     pub fn with_gpu_hevc_main10_target(
         self,
         target: nestlink_media_codec::VideoConfig,
     ) -> io::Result<Self> {
+        self.with_gpu_hevc_main10_encoder(target, nestlink_media_codec::HevcEncoderBackend::SystemMf)
+    }
+    pub fn with_gpu_hevc_main10_encoder(self, target: nestlink_media_codec::VideoConfig, encoder: nestlink_media_codec::HevcEncoderBackend) -> io::Result<Self> {
         self.with_gpu_hevc_target(
             target,
             nestlink_protocol::media_authority::HEVC_MAIN10_FORMAT_VERSION,
+            encoder,
         )
     }
     fn with_gpu_hevc_target(
         mut self,
         target: nestlink_media_codec::VideoConfig,
         version: u32,
+        encoder: nestlink_media_codec::HevcEncoderBackend,
     ) -> io::Result<Self> {
         if self.media_provider.is_some() || self.internal_software_media_candidate.is_some() {
             return Err(io::Error::other(
@@ -173,12 +183,13 @@ impl NativeSessionConfig {
             ));
         }
         self.media_provider = Some(if version == HEVC_FORMAT_VERSION {
-            crate::NativeMediaProvider::gpu_hevc_main8(target)?
+            crate::NativeMediaProvider::gpu_hevc_main8_with_encoder(target, encoder)?
         } else {
-            crate::NativeMediaProvider::gpu_hevc_main10(target)?
+            crate::NativeMediaProvider::gpu_hevc_main10_with_encoder(target, encoder)?
         });
         self.gpu_hevc_main8_target = Some(target);
         self.gpu_hevc_version = version;
+        self.gpu_hevc_encoder = encoder;
         let capability = nestlink_protocol::media_authority::capability_for_version(version)
             .map_err(io::Error::other)?;
         if !self
@@ -270,6 +281,7 @@ impl NativeSessionConfig {
             .as_ref()
             .filter(|provider| {
                 self.internal_software_media_candidate.is_none()
+                    && provider.hevc_encoder_backend() == self.gpu_hevc_encoder
                     && provider.matches_gpu_hevc_target(target, self.gpu_hevc_version)
             })
             .ok_or_else(|| io::Error::other("configured GPU media provider changed"))
@@ -601,6 +613,12 @@ mod tests {
         );
         let gpu = config()?.with_gpu_hevc_main8_target(target())?;
         assert!(gpu.validate());
+        let amf = config()?.with_gpu_hevc_main8_encoder(target(), nestlink_media_codec::HevcEncoderBackend::AmdAmf)?;
+        assert!(amf.validate());
+        assert_eq!(amf.gpu_media_provider()?.hevc_encoder_backend(), nestlink_media_codec::HevcEncoderBackend::AmdAmf);
+        let mut replaced = amf;
+        replaced.media_provider = Some(crate::NativeMediaProvider::gpu_hevc_main8(target())?);
+        assert!(!replaced.validate());
         assert!(gpu.requires_local_media_approval());
         let (provider, version) = gpu
             .media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3])?

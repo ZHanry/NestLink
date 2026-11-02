@@ -44,7 +44,7 @@ pub use windows_hevc::{
 };
 mod hevc_main8;
 mod hevc_backend;
-pub use hevc_backend::HevcEncoderBackend;
+pub use hevc_backend::{HevcEncoderBackend, HevcEncoderSelection};
 #[cfg(windows)]
 mod windows_amf;
 #[cfg(windows)]

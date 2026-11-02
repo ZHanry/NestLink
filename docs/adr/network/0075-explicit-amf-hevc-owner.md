@@ -1,7 +1,7 @@
 # ADR 0075: Explicit AMF encoder with the original HEVC owner contract
 
-Date: 2026-11-03. Status: initial adapter implemented; hosted and target
-qualification pending; production provider/live selection integration in progress.
+Date: 2026-11-03. Status: adapter and explicit provider/live selection implemented;
+hosted build, real target output and complete product qualification pending.
 
 The existing System MF path can activate a Main8 encoder on the current AMD
 device, but its original SPS declares primaries 0 where the signed BT.709
@@ -36,9 +36,21 @@ choice, with a separate diagnostic executable using the same original workload.
 No production CLI or wire codec is added. The decoder remains the original
 hardware MF decoder on the same supplied device plus the independent software
 decoder. A completed diagnostic owner grants no live execution authority.
-Production integration must freeze the successful local backend and AMF
-runtime version through provider selection and the actual live owner; it must
-never probe AMF and later open MF as if it were the same selection.
+`NativeSessionConfig::with_gpu_hevc_main8_encoder` and the Main10 counterpart
+select the local backend explicitly. Existing target constructors select MF.
+The provider freezes the successful backend and queried runtime in a local
+registry keyed by the complete original authorized ProbeIdentity. The registry
+has at most 16 entries, retains each original four-minute expiry, removes only
+expired entries and rejects capacity exhaustion instead of evicting a live
+entry. A changed runtime does not replace an old probe's selection. The typed
+selection enters the daemon's live capture target and actual native encoder;
+the encoder rechecks it on every owner observation. Registration and subsequent
+route/frame access compare it against the current View-authorized local probe.
+The shared provider is retained from the validated original configuration.
+Replacing the public provider with one using another backend fails configuration
+validation. Decode remains MF and rejects an encoder runtime selection. No
+wire schema or production CLI is added, and no default is changed. This local
+programmatic opt-in does not claim a completed ordinary-user UI or acceptance.
 
 The native adapter loads only the absolute System32 `amfrt64.dll`, validates
 the actual loaded path and queries the installed version. It neither installs
@@ -88,7 +100,8 @@ latency, scanout or W27/AC44 completion.
 R02 applies to every build, dependency installation, formatter, automated
 check/test and artifact. Local work was source reads/edits/manual review and
 Git only. Pending assumptions include actual installed ABI/property support,
-strict output color/geometry, pool/drain/cleanup behavior, production freeze
+strict output color/geometry, pool/drain/cleanup behavior, hosted verification
+of the production freeze
 and actual target performance. The driver may expose the same underlying
 encoder as MF and still fail the original contract; this ADR makes no promise
 that another API repairs its output.

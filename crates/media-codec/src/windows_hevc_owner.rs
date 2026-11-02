@@ -238,7 +238,8 @@ impl MfHevcHardwareDecoder {
 /// COM/D3D objects remain !Send on the original capture/encoding worker.
 /// Input acceptance and an actual output are separate facts.
 pub struct MfHevcTextureEncoder {
-    inner: Transform,
+    inner: crate::hevc_encoder::Encoder,
+    encoder: crate::HevcEncoderSelection,
     target: HevcMain8Contract,
     admission: HevcMain8Admission,
     identity: OwnerObservation,
@@ -267,7 +268,7 @@ pub(crate) fn observation(inner: &Transform) -> io::Result<OwnerObservation> {
 impl MfHevcTextureEncoder {
     pub fn owner_observation(&self) -> io::Result<OwnerObservation> {
         self.check()?;
-        observation(&self.inner)
+        self.inner.owner_observation()
     }
     /// # Safety
     /// `device` is a live ID3D11Device on this thread, retained throughout open.
@@ -277,17 +278,29 @@ impl MfHevcTextureEncoder {
         device: *mut c_void,
         authority: Arc<AtomicBool>,
     ) -> io::Result<Self> {
+        // SAFETY: original caller contract, unchanged MF default selection.
+        unsafe { Self::with_gpu_device_and_encoder(target, device, authority, crate::HevcEncoderSelection::default()) }
+    }
+    /// # Safety
+    /// The supplied device and every input texture obey `with_gpu_device`'s
+    /// original same-thread lifetime. Selection is frozen from the local probe.
+    pub unsafe fn with_gpu_device_and_encoder(
+        target: HevcMain8Contract,
+        device: *mut c_void,
+        authority: Arc<AtomicBool>,
+        encoder: crate::HevcEncoderSelection,
+    ) -> io::Result<Self> {
         if device.is_null() || !authority.load(Ordering::Acquire) {
             return Err(io::Error::new(
                 io::ErrorKind::PermissionDenied,
                 "HEVC original device/authority unavailable",
             ));
         }
-        // SAFETY: caller supplies the original owner-thread device; MF retains COM refs.
+        // SAFETY: caller supplies the original owner-thread device; selected owner retains COM refs.
         let mut inner = unsafe {
-            Transform::new_hevc_depth(target.config(), device, true, true, target.bit_depth())
+            crate::hevc_encoder::Encoder::open(target.config(), device, target.bit_depth(), encoder.backend())
         }?;
-        let identity = match observation(&inner) {
+        let identity = match inner.owner_observation() {
             Ok(identity)
                 if identity.adapter_luid.is_some() && identity.driver_version.is_some() =>
             {
@@ -302,6 +315,7 @@ impl MfHevcTextureEncoder {
         };
         let owner = Self {
             inner,
+            encoder,
             target,
             admission: HevcMain8Admission::new(target),
             identity,
@@ -320,7 +334,9 @@ impl MfHevcTextureEncoder {
                 "HEVC original owner retired or failed",
             ));
         }
-        if !self.identity.same_identity(observation(&self.inner)?) {
+        if self.inner.backend() != self.encoder.backend()
+            || self.inner.runtime_version()? != self.encoder.runtime_version()
+            || !self.identity.same_identity(self.inner.owner_observation()?) {
             return Err(io::Error::other(
                 "HEVC original resource/adapter/driver identity changed",
             ));
@@ -334,7 +350,7 @@ impl MfHevcTextureEncoder {
         };
         let result = (|| {
             self.admission.validate(&self.scratch[..size])?;
-            let owner = observation(&self.inner)?;
+            let owner = self.inner.owner_observation()?;
             owner.require_hardware_identity()?;
             self.check()?;
             Ok(Some(HevcOwnerOutput {

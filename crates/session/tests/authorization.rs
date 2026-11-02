@@ -1194,6 +1194,7 @@ fn local_media_binding_refresh_requires_advanced_probe_and_preserves_signed_scop
         1_000_000,
     )?;
     assert_eq!(data.backend(), "cpu-software");
+    assert_eq!(data.probe_identity(), &local.probe);
     assert_eq!(data.local_direction(), MediaDirection::Encode);
     assert!(
         MediaSessionBinding::from_local_announcement(
@@ -1215,6 +1216,7 @@ fn local_media_binding_refresh_requires_advanced_probe_and_preserves_signed_scop
         1_001_000,
     )?;
     assert_eq!(refreshed.expires_at_unix_ms(), 1_020_000);
+    assert_eq!(refreshed.probe_identity(), &local.probe);
     local.probe.generation = 2;
     local.probe.resource_id = id(9);
     assert!(

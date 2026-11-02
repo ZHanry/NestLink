@@ -174,6 +174,9 @@ impl MediaSessionBinding {
     pub fn probe_generation(&self) -> u64 {
         self.probe.generation
     }
+    pub fn probe_identity(&self) -> &nestlink_protocol::media_authority::ProbeIdentity {
+        &self.probe
+    }
     pub fn resource_id(&self) -> &str {
         &self.probe.resource_id
     }

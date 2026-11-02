@@ -298,6 +298,7 @@ struct Shared {
     operations: Arc<Semaphore>,
     controls: Arc<Semaphore>,
     native_video: Mutex<Option<Arc<NativeVideoRoute>>>,
+    native_media_provider: std::sync::OnceLock<crate::NativeMediaProvider>,
     native_displays: Mutex<Option<Arc<NativeDisplayRoute>>>,
     native_video_presentation: Mutex<Option<Arc<NativeVideoPresentationRoute>>>,
     native_input: Mutex<Option<Arc<NativeInputRoute>>>,
@@ -319,6 +320,7 @@ impl Shared {
             operations: Arc::new(Semaphore::new(limits.operations)),
             controls: Arc::new(Semaphore::new(limits.controls)),
             native_video: Mutex::new(None),
+            native_media_provider: std::sync::OnceLock::new(),
             native_displays: Mutex::new(None),
             native_video_presentation: Mutex::new(None),
             native_input: Mutex::new(None),
@@ -1867,6 +1869,9 @@ impl AppCore {
         }
         let runtime = tokio::runtime::Handle::try_current().map_err(|_| StartError::Runtime)?;
         let shared = Shared::new(limits);
+        if let Some(provider) = native.as_ref().and_then(|config| config.media_provider.clone()) {
+            let _ = shared.native_media_provider.set(provider);
+        }
         let (commands, incoming) = mpsc::channel(limits.operations);
         let (controls, controlling) = mpsc::channel(limits.controls);
         let mut view = Snapshot {

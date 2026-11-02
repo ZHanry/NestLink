@@ -1,7 +1,7 @@
 //! Bounded exact targets with separately measured CPU H264 or GPU HEVC directions.
 //! Probe resources are closed historical observations. Live media owners are
 //! owned/stopped/joined by the media runtime and have independent UUIDs.
-use nestlink_media_codec::VideoConfig;
+use nestlink_media_codec::{VideoConfig, HevcEncoderBackend, HevcEncoderSelection};
 #[cfg(windows)]
 use nestlink_protocol::media_format::{FrameRate, Geometry};
 use nestlink_protocol::{
@@ -21,6 +21,7 @@ use std::{
 #[derive(Clone)]
 pub struct NativeMediaProvider {
     backend: ProviderBackend,
+    hevc_encoder: HevcEncoderBackend,
     target: VideoConfig,
     targets: Arc<[VideoConfig]>,
     state: Arc<Mutex<ProviderState>>,
@@ -36,6 +37,29 @@ struct ProviderState {
     encode: Option<MediaAnnouncement>,
     decode: Option<MediaAnnouncement>,
     fallback_reason: Option<String>,
+    hevc_encoders: std::collections::VecDeque<FrozenEncoder>,
+}
+struct FrozenEncoder {
+    probe: ProbeIdentity,
+    expires_at_unix_ms: u64,
+    selection: HevcEncoderSelection,
+}
+impl ProviderState {
+    fn remember_encoder(&mut self, local: &MediaAnnouncement, selection: Option<HevcEncoderSelection>) -> io::Result<()> {
+        match (local.direction, local.probe.backend.as_str(), selection) {
+            (MediaDirection::Encode, "gpu-hevc-encoder", Some(selection)) => {
+                let wall = now()?;
+                self.hevc_encoders.retain(|entry| entry.expires_at_unix_ms > wall);
+                if self.hevc_encoders.iter().any(|entry| entry.probe == local.probe) || self.hevc_encoders.len() >= 16 {
+                    return Err(io::Error::other("HEVC local probe selection registry is full or repeated"));
+                }
+                self.hevc_encoders.push_back(FrozenEncoder { probe: local.probe.clone(), expires_at_unix_ms: local.expires_at_unix_ms, selection });
+                Ok(())
+            },
+            (_, "gpu-hevc-encoder", _) | (_, _, Some(_)) => Err(io::Error::other("HEVC local encoder selection differs from announcement")),
+            _ => Ok(()),
+        }
+    }
 }
 struct ProbeResult {
     format: VideoFormat,
@@ -44,6 +68,7 @@ struct ProbeResult {
     backend: &'static str,
     adapter_luid: Option<u64>,
     driver_version: Option<u64>,
+    encoder: Option<HevcEncoderSelection>,
 }
 struct ProbeJob {
     id: u64,
@@ -105,7 +130,10 @@ fn reap_abandoned(slot: &mut ProbeSlot) {
         && prewarm.fence.check().is_ok()
     {
         match result.and_then(|(id, receipt)| {
-            make_announcement(id, &prewarm.device_id, prewarm.direction, receipt)
+            let encoder = receipt.encoder;
+            let local = make_announcement(id, &prewarm.device_id, prewarm.direction, receipt)?;
+            state.remember_encoder(&local, encoder)?;
+            Ok(local)
         }) {
             Ok(local) => {
                 match prewarm.direction {
@@ -205,6 +233,7 @@ impl NativeMediaProvider {
         }
         Ok(Self {
             backend: ProviderBackend::CpuH264,
+            hevc_encoder: HevcEncoderBackend::SystemMf,
             target,
             targets: Arc::from([target]),
             state: Arc::new(Mutex::new(ProviderState::default())),
@@ -214,19 +243,33 @@ impl NativeMediaProvider {
     /// encode/decode workloads. Configuration does not probe hardware or add a
     /// product capability; publication still needs completed native close/join.
     pub fn gpu_hevc_main8(target: VideoConfig) -> io::Result<Self> {
+        Self::gpu_hevc_main8_with_encoder(target, HevcEncoderBackend::SystemMf)
+    }
+    pub fn gpu_hevc_main8_with_encoder(target: VideoConfig, hevc_encoder: HevcEncoderBackend) -> io::Result<Self> {
         nestlink_media_codec::HevcMain8Contract::validate_config(target)?;
         Ok(Self {
             backend: ProviderBackend::GpuHevcMain8,
+            hevc_encoder,
             target,
             targets: Arc::from([target]),
             state: Arc::new(Mutex::new(ProviderState::default())),
         })
     }
     pub fn gpu_hevc_main10(target: VideoConfig) -> io::Result<Self> {
+        Self::gpu_hevc_main10_with_encoder(target, HevcEncoderBackend::SystemMf)
+    }
+    pub fn gpu_hevc_main10_with_encoder(target: VideoConfig, hevc_encoder: HevcEncoderBackend) -> io::Result<Self> {
         nestlink_media_codec::HevcMain8Contract::validate_main10_config(target)?;
-        let mut provider = Self::gpu_hevc_main8(target)?;
+        let mut provider = Self::gpu_hevc_main8_with_encoder(target, hevc_encoder)?;
         provider.backend = ProviderBackend::GpuHevcMain10;
         Ok(provider)
+    }
+    pub(crate) fn hevc_encoder_backend(&self) -> HevcEncoderBackend { self.hevc_encoder }
+    pub(crate) fn encoder_for_probe(&self, probe: &ProbeIdentity) -> io::Result<HevcEncoderSelection> {
+        let wall = now()?;
+        self.state.lock().map_err(|_| io::Error::other("media provider poisoned"))?
+            .hevc_encoders.iter().find(|entry| entry.probe == *probe && entry.expires_at_unix_ms > wall && entry.selection.backend() == self.hevc_encoder)
+            .map(|entry| entry.selection).ok_or_else(|| io::Error::other("authorized HEVC probe has no original local backend/runtime selection"))
     }
     pub(crate) fn matches_gpu_hevc_target(&self, target: VideoConfig, version: u32) -> bool {
         let expected = match version {
@@ -486,9 +529,10 @@ impl NativeMediaProvider {
             let worker_cancel = cancel.clone();
             let targets = self.targets.clone();
             let backend = self.backend;
+            let hevc_encoder = self.hevc_encoder;
             let worker = thread::Builder::new()
                 .name("nestlink-media-renewal-probe".into())
-                .spawn(move || run_probes(&targets, backend, direction, &worker_cancel))?;
+                .spawn(move || run_probes(&targets, backend, hevc_encoder, direction, &worker_cancel))?;
             *registry = ProbeSlot::Running(ProbeJob {
                 id,
                 cancel,
@@ -528,10 +572,11 @@ impl NativeMediaProvider {
             }
             let targets = self.targets.clone();
             let backend = self.backend;
+            let hevc_encoder = self.hevc_encoder;
             let worker_cancel = cancel.clone();
             let worker = thread::Builder::new()
                 .name("nestlink-media-direction-probe".into())
-                .spawn(move || run_probes(&targets, backend, direction, &worker_cancel))?;
+                .spawn(move || run_probes(&targets, backend, hevc_encoder, direction, &worker_cancel))?;
             *guard = ProbeSlot::Running(ProbeJob {
                 id,
                 cancel: cancel.clone(),
@@ -566,7 +611,10 @@ impl NativeMediaProvider {
             }
             tokio::time::sleep(Duration::from_millis(20)).await;
         };
-        make_announcement(id, device_id, direction, receipt)
+        let encoder = receipt.encoder;
+        let local = make_announcement(id, device_id, direction, receipt)?;
+        self.state.lock().map_err(|_| io::Error::other("media provider poisoned"))?.remember_encoder(&local, encoder)?;
+        Ok(local)
     }
 }
 fn prewarm_needed(value: Option<&MediaAnnouncement>, wall: u64) -> bool {
@@ -604,6 +652,7 @@ async fn fenced_network<T>(
 fn run_probes(
     targets: &[VideoConfig],
     backend: ProviderBackend,
+    hevc_encoder: HevcEncoderBackend,
     direction: MediaDirection,
     cancel: &AtomicBool,
 ) -> io::Result<ProbeResult> {
@@ -619,8 +668,8 @@ fn run_probes(
         // next exact target starts on this same original bounded worker.
         receipts.push(match backend {
             ProviderBackend::CpuH264 => run_probe(*target, direction, cancel)?,
-            ProviderBackend::GpuHevcMain8 => run_hevc_probe(*target, direction, cancel, 8)?,
-            ProviderBackend::GpuHevcMain10 => run_hevc_probe(*target, direction, cancel, 10)?,
+            ProviderBackend::GpuHevcMain8 => run_hevc_probe(*target, direction, cancel, 8, hevc_encoder)?,
+            ProviderBackend::GpuHevcMain10 => run_hevc_probe(*target, direction, cancel, 10, hevc_encoder)?,
         });
     }
     let mut receipts = receipts.into_iter();
@@ -679,6 +728,7 @@ fn run_probe(
         backend: "cpu-software",
         adapter_luid: None,
         driver_version: None,
+        encoder: None,
     })
 }
 #[cfg(windows)]
@@ -699,22 +749,25 @@ fn run_hevc_probe(
     direction: MediaDirection,
     cancel: &AtomicBool,
     bit_depth: u8,
+    encoder: HevcEncoderBackend,
 ) -> io::Result<ProbeResult> {
     let actual_direction = match direction {
         MediaDirection::Encode => nestlink_media_codec::ExecutionDirection::Encode,
         MediaDirection::Decode => nestlink_media_codec::ExecutionDirection::Decode,
     };
-    let receipt = nestlink_media_codec::probe_hevc_direction_depth(
+    let receipt = nestlink_media_codec::probe_hevc_direction_with_encoder(
         target,
         actual_direction,
         cancel,
         bit_depth,
+        encoder,
     )?;
     let contract = receipt.contract();
     let config = contract.config();
     let owner = receipt.owner();
     owner.require_hardware_identity()?;
     if receipt.direction() != actual_direction
+        || receipt.encoder_backend() != encoder
         || !receipt.owner_closed()
         || !receipt.checked_flush()
         || receipt.outputs() < 16
@@ -753,6 +806,9 @@ fn run_hevc_probe(
         },
         adapter_luid: owner.adapter_luid,
         driver_version: owner.driver_version,
+        encoder: if direction == MediaDirection::Encode {
+            Some(HevcEncoderSelection::new(receipt.encoder_backend(), receipt.encoder_runtime_version())?)
+        } else { None },
     })
 }
 #[cfg(not(windows))]
@@ -761,6 +817,7 @@ fn run_hevc_probe(
     _direction: MediaDirection,
     _cancel: &AtomicBool,
     _bit_depth: u8,
+    _encoder: HevcEncoderBackend,
 ) -> io::Result<ProbeResult> {
     Err(io::Error::new(
         io::ErrorKind::Unsupported,
@@ -782,6 +839,60 @@ fn run_probe(
 #[cfg(test)]
 mod tests {
     use super::*;
+    // Local registry fixtures only; no hardware or driver execution claim.
+    fn hevc_announcement(id: u64, selection: HevcEncoderSelection) -> io::Result<MediaAnnouncement> {
+        let mut ptl = [0; 12];
+        ptl[0] = 1;
+        ptl[11] = 120;
+        make_announcement(id, &nestlink_auth::random_id(), MediaDirection::Encode, ProbeResult {
+            format: VideoFormat::hevc_main8_observed(ptl, 640, 480, nestlink_protocol::media_format::FrameRate::new(30, 1).map_err(io::Error::other)?, 4000).map_err(io::Error::other)?,
+            additional_formats: Vec::new(), resource_id: nestlink_auth::random_id(), backend: "gpu-hevc-encoder", adapter_luid: Some(7), driver_version: Some(8), encoder: Some(selection),
+        })
+    }
+    #[test]
+    fn local_encoder_selection_binds_whole_probe_and_original_expiry() -> io::Result<()> {
+        let target = VideoConfig { width: 640, height: 480, fps: 30, bitrate_kbps: 4000 };
+        let selection = HevcEncoderSelection::new(HevcEncoderBackend::AmdAmf, Some(1 << 48))?;
+        let provider = NativeMediaProvider::gpu_hevc_main8_with_encoder(target, HevcEncoderBackend::AmdAmf)?;
+        let first = hevc_announcement(1, selection)?;
+        provider.state.lock().map_err(|_| io::Error::other("fixture state poisoned"))?.remember_encoder(&first, Some(selection))?;
+        assert_eq!(provider.encoder_for_probe(&first.probe)?, selection);
+        for field in 0..5 {
+            let mut changed = first.probe.clone();
+            match field {
+                0 => changed.generation += 1,
+                1 => changed.resource_id = nestlink_auth::random_id(),
+                2 => changed.backend = "cpu-software".into(),
+                3 => changed.adapter_luid = Some(9),
+                _ => changed.driver_version = Some(9),
+            }
+            assert!(provider.encoder_for_probe(&changed).is_err());
+        }
+        let next = HevcEncoderSelection::new(HevcEncoderBackend::AmdAmf, Some((1 << 48) | 1))?;
+        let second = hevc_announcement(2, next)?;
+        provider.state.lock().map_err(|_| io::Error::other("fixture state poisoned"))?.remember_encoder(&second, Some(next))?;
+        assert_eq!(provider.encoder_for_probe(&first.probe)?, selection);
+        assert_eq!(provider.encoder_for_probe(&second.probe)?, next);
+        provider.state.lock().map_err(|_| io::Error::other("fixture state poisoned"))?.hevc_encoders[0].expires_at_unix_ms = 0;
+        assert!(provider.encoder_for_probe(&first.probe).is_err());
+        assert_eq!(provider.encoder_for_probe(&second.probe)?, next);
+        Ok(())
+    }
+    #[test]
+    fn local_selection_history_has_a_hard_bound_and_never_evicts_valid_old_probes() -> io::Result<()> {
+        let mut state = ProviderState::default();
+        let selected = HevcEncoderSelection::default();
+        let mut retained = Vec::new();
+        for id in 1..=16 {
+            let local = hevc_announcement(id, selected)?;
+            state.remember_encoder(&local, Some(selected))?;
+            retained.push(local.probe);
+        }
+        assert!(state.remember_encoder(&hevc_announcement(17, selected)?, Some(selected)).is_err());
+        assert_eq!(state.hevc_encoders.iter().map(|entry| entry.probe.clone()).collect::<Vec<_>>(), retained);
+        assert!(state.remember_encoder(&hevc_announcement(18, selected)?, None).is_err());
+        Ok(())
+    }
     #[test]
     fn main10_allocation_is_rejected_before_probing_and_keeps_main8_budget() -> io::Result<()> {
         let target = VideoConfig {
@@ -1005,6 +1116,7 @@ mod tests {
             backend: "cpu-software",
             adapter_luid: None,
             driver_version: None,
+            encoder: None,
         })
     }
     fn wait_finished(slot: &ProbeSlot) -> io::Result<()> {

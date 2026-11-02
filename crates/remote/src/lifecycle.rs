@@ -765,8 +765,22 @@ impl LeaseControl {
             None => Ok(None),
         }
     }
-    /// Frozen hardware platform only after the current View authorization and
-    /// endpoint direction checks. It does not attest a new/live owner UUID.
+    /// Original local probe identity after current View and direction checks.
+    /// This is historical data, not a new/live owner UUID or output receipt.
+    pub fn local_media_probe_identity(
+        &self,
+        direction: nestlink_protocol::media_authority::MediaDirection,
+    ) -> Result<Option<nestlink_protocol::media_authority::ProbeIdentity>, RemoteError> {
+        let mut managed = self.inner.lock()?;
+        self.inner.check(&mut managed)?;
+        managed.session.authorize(Permission::View, self.inner.path, self.inner.clock.monotonic_ms())?;
+        match managed.session.local_media_binding() {
+            Some(binding) if binding.local_direction() == direction => Ok(Some(binding.probe_identity().clone())),
+            Some(_) => Err(io::Error::new(io::ErrorKind::PermissionDenied, "local media probe direction differs").into()),
+            None => Ok(None),
+        }
+    }
+    /// Frozen hardware platform after current View and direction checks.
     pub fn local_media_hardware_target(
         &self,
         direction: nestlink_protocol::media_authority::MediaDirection,
