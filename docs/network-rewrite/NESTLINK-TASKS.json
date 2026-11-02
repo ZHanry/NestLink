@@ -1295,7 +1295,8 @@
       ],
       "evidence_refs": [
         "docs/network-rewrite/IMPLEMENTATION-2026-10-30.md",
-        "docs/network-rewrite/evidence/development-run-1249075.json"
+        "docs/network-rewrite/evidence/development-run-1249075.json",
+        "docs/network-rewrite/evidence/production-carriers-e2e3657.json"
       ],
       "blockers": []
     },
@@ -1414,7 +1415,8 @@
         "docs/adr/network/0004-mature-ice-quinn-same-socket-prototype.md",
         "docs/network-rewrite/evidence/development-run-1249075.json",
         "docs/network-rewrite/evidence/development-run-4492f59.json",
-        "docs/network-rewrite/evidence/development-run-bd1f298.json"
+        "docs/network-rewrite/evidence/development-run-bd1f298.json",
+        "docs/network-rewrite/evidence/production-carriers-e2e3657.json"
       ],
       "blockers": []
     },
@@ -1742,7 +1744,8 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/adr/network/0027-quinn-carrier-replacement-feasibility.md"
+        "docs/adr/network/0027-quinn-carrier-replacement-feasibility.md",
+        "docs/network-rewrite/evidence/production-carriers-e2e3657.json"
       ],
       "blockers": [],
       "implementation_notes": [
@@ -2821,7 +2824,8 @@
         "additional_scoped_evidence": [
           "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json"
         ]
-      }
+      },
+      "implementation_notes": "Native desktop setup guide projects actual server/account/device/session and local-consent facts, then navigates original devices/remote/services/diagnostics owners. Web setup guide explicitly reads real pinned SDK account, device, discovery, service publication and administrator policy per purpose; no write/probe or permission expansion. Old snapshots, partial read errors, expired account and unmounted/late replies do not become success. NewUI still awaits exact-source hosted compilation/browser execution and complete installed onboarding; W30/AC51/AC52 remain in_progress."
     },
     {
       "id": "W31",

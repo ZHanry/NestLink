@@ -1,0 +1,436 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "e2e3657a671578441ccf67ca472c508e482ee7e1",
+  "run_id": 41373710195,
+  "run_attempt": 1,
+  "workflow": ".github/workflows/network-rewrite.yml",
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41373710195",
+  "workflow_conclusion": "failure",
+  "whole_task_passed": false,
+  "release_qualification_claimed": false,
+  "jobs": [
+    {
+      "id": 125049354876,
+      "name": "topology-carrier",
+      "conclusion": "success"
+    },
+    {
+      "id": 125049354911,
+      "name": "topology-journal",
+      "conclusion": "success"
+    },
+    {
+      "id": 125049354955,
+      "name": "production-socket-slice",
+      "conclusion": "success"
+    },
+    {
+      "id": 125049354963,
+      "name": "contract (windows-2022)",
+      "conclusion": "failure"
+    },
+    {
+      "id": 125049355006,
+      "name": "contract (ubuntu-24.04)",
+      "conclusion": "failure"
+    },
+    {
+      "id": 125049355019,
+      "name": "routed-kernel-nat-slice",
+      "conclusion": "success"
+    },
+    {
+      "id": 125049355047,
+      "name": "independent-vectors",
+      "conclusion": "success"
+    },
+    {
+      "id": 125049355064,
+      "name": "native-ice-kernel-nat-slice",
+      "conclusion": "success"
+    },
+    {
+      "id": 125049355169,
+      "name": "quinn-carrier-replacement-feasibility",
+      "conclusion": "success"
+    }
+  ],
+  "qualified_artifact_receipts": [
+    {
+      "artifact_id": 13109878107,
+      "artifact_name": "network-migration-feasibility-e2e3657a671578441ccf67ca472c508e482ee7e1-1",
+      "github_archive_digest": "sha256:86a0f40183a6ef459a099ec091fac20d5733de21fe98707266c78cb4be7a9613",
+      "receipt": "network-migration-evidence.json",
+      "receipt_sha256": "b4afcad671e572e37463a700813a9e36d8d13baa25d3446dd0906f3400004b9a",
+      "job_id": 125049355169,
+      "job_name": "quinn-carrier-replacement-feasibility",
+      "job_conclusion": "success",
+      "passed": true,
+      "source_revision": "e2e3657a671578441ccf67ca472c508e482ee7e1",
+      "cargo_lock_sha256": "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+      "executable_sha256": "a47086356e07359ec1c2d4d81e84b3caf1c07d6f5dfdd415c0f35bf046a6c7f0",
+      "runner": {
+        "environment": "github-hosted",
+        "name": "GitHub Actions 1000011304",
+        "os": "Linux",
+        "architecture": "X64"
+      },
+      "execution_environment": "github-hosted-linux-network-namespaces",
+      "execution_uid": 1001,
+      "verified_inventory_files": 309,
+      "commands": [],
+      "cases": [
+        {
+          "name": "switch",
+          "passed": true,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true,
+          "actual_nat": false,
+          "same_inner_connection": true
+        },
+        {
+          "name": "cancel",
+          "passed": true,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true,
+          "actual_nat": false,
+          "same_inner_connection": true
+        }
+      ],
+      "limitations": [
+        "Private cfg(test,Linux) prototype uses Quinn rebind_abstract after out-of-band fixture agreement; no production migration negotiation",
+        "Production path epoch remains one; no simultaneous proposal, lost ACK, bounded epoch drain, grant renewal or old-v15 semantic change",
+        "Same original PathGrant, Permit and transport group; each real preauthenticated relay has its own signed TransitGrant and unchanged deadlines/quotas",
+        "Fresh phase-tagged OS file bytes traverse one pinned inner QUIC stream after all old physical sockets release and old interfaces are down",
+        "No business endpoint SessionPermit proof, actual FileRead worker, input/media/TCP recovery, SDK signaling or full AC22 qualification",
+        "RTT, congestion and logical PLPMTUD trajectories are observations; Quinn local_address_changed changes CID and sends ping without resetting these estimates",
+        "NRD fragmentation adapts logical packets up to 1400 bytes onto outer QUIC fixed at 1200 bytes; logical PMTU is not physical dynamic PMTU convergence",
+        "Four isolated kernel namespaces and actual netem loss/delay/rate, no NAT/public Internet/installed device acceptance; private credentials are excluded from artifacts"
+      ]
+    },
+    {
+      "artifact_id": 13111005867,
+      "artifact_name": "network-native-ice-e2e3657a671578441ccf67ca472c508e482ee7e1-1",
+      "github_archive_digest": "sha256:1749dac162107f84660a71dfcb6d7ade62e518f98d881f9212f3d83c9595e782",
+      "receipt": "network-native-ice-evidence.json",
+      "receipt_sha256": "13cfb0dbfc374bd0d81d9b40785f9c4bcefbc533e3f394de0994bba9ec3dd202",
+      "job_id": 125049355064,
+      "job_name": "native-ice-kernel-nat-slice",
+      "job_conclusion": "success",
+      "passed": true,
+      "source_revision": "e2e3657a671578441ccf67ca472c508e482ee7e1",
+      "cargo_lock_sha256": "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+      "executable_sha256": "c58bd015e0b00d16cf15bd85dbadfb0ac90eb3020f7d816c739b153c935c50fc",
+      "runner": {
+        "environment": "github-hosted",
+        "name": "GitHub Actions 1000011302",
+        "os": "Linux",
+        "architecture": "X64"
+      },
+      "execution_environment": "github-hosted-linux-network-namespaces",
+      "execution_uid": 1001,
+      "verified_inventory_files": 642,
+      "scope": "signed SDK native ICE and FileRead across two real Linux 1:1 UDP NAT gateways, plus forced destination-dependent port-change rejection",
+      "commands": [],
+      "cases": [
+        {
+          "name": "success",
+          "passed": true,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true,
+          "actual_nat": "two independent 1:1 UDP address NAT gateways with fixed ports and peer-restricted ingress"
+        },
+        {
+          "name": "blackhole",
+          "passed": true,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true,
+          "actual_nat": "two independent 1:1 UDP address NAT gateways with fixed ports and peer-restricted ingress"
+        },
+        {
+          "name": "cancel",
+          "passed": true,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true,
+          "actual_nat": "two independent 1:1 UDP address NAT gateways with fixed ports and peer-restricted ingress"
+        },
+        {
+          "name": "port_change",
+          "passed": true,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true,
+          "actual_nat": "two destination-dependent UDP SNAT gateways with forced peer port changes"
+        }
+      ],
+      "limitations": [
+        "Successful business scope is owned Linux 1:1 UDP address mappings with peer-restricted ingress; the forced destination-dependent case proves refusal only, without external-router, general symmetric NAT, CGNAT or IPv6 NAT qualification",
+        "Actual signed remote SessionPermit, SDK signaling, bilateral ICE and pinned Quinn run; no screen, input injection, audio or installed Windows acceptance",
+        "FileRead frames carry a complete owned random 256KiB payload in both directions; no file browser, filesystem grant, download/resume or file worker claim",
+        "Both original legacy and ICE physical sockets must be rebound after explicit owner cleanup; success cannot fall back to legacy",
+        "Management uses unchanged loopback-only HTTP development policy with namespace-local transparent TCP forwarders; no SDK TLS rules changed",
+        "Credentials, identities, ICE passwords and signaling payloads remain in private temporary storage outside artifacts; captures contain UDP only"
+      ]
+    },
+    {
+      "artifact_id": 13110622222,
+      "artifact_name": "network-rewrite-ubuntu-24.04-e2e3657a671578441ccf67ca472c508e482ee7e1-1",
+      "github_archive_digest": "sha256:7d88dbfeab17eb6dec436324d50b1f9397cd6173092b013903558331417a34b9",
+      "receipt": "network-rewrite-evidence.json",
+      "receipt_sha256": "7ab75329114b4b5dfd2c1bf5a300ad54ab5c20692f7aedf27be2b49b2aff2c8b",
+      "job_id": 125049355006,
+      "job_name": "contract (ubuntu-24.04)",
+      "job_conclusion": "failure",
+      "passed": "failed",
+      "source_revision": "e2e3657a671578441ccf67ca472c508e482ee7e1",
+      "cargo_lock_sha256": "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+      "runner": {
+        "environment": "github-hosted",
+        "name": "GitHub Actions 1000011296",
+        "os": "Linux",
+        "architecture": "X64"
+      },
+      "verified_inventory_files": 13,
+      "commands": [
+        {
+          "name": "rust-toolchain",
+          "return_code": 0,
+          "log_sha256": "4e5f8d93e6723e5e4ab20c3917d617a831e65f47b09ad397690e243345f2b99e"
+        },
+        {
+          "name": "format-check",
+          "return_code": 1,
+          "log_sha256": "ff5ac94423f594299536e0fafaffa86d77e6cbac3245e7fee4725ae4fb9d80a0"
+        },
+        {
+          "name": "format-worktree-create",
+          "return_code": 0,
+          "log_sha256": "4b38dd07ff0a3e6d37436bbf55793c27404d985ffa7d2f6a9102b8269c4a2783"
+        },
+        {
+          "name": "format-patch-generate",
+          "return_code": 1,
+          "log_sha256": "3cd2103838bd2b5c7d5d7f7729c73a3f6605ba2dcbdd9bc49676c54a36cd0972"
+        },
+        {
+          "name": "format-worktree-remove",
+          "return_code": 0,
+          "log_sha256": "f4bb98d5297a31a3cb41334e36430f6c98b5f426d6d058236a19ec5ee23be70b"
+        },
+        {
+          "name": "contract-clippy",
+          "return_code": 0,
+          "log_sha256": "53fa08d66709e533479113ca51f60311b186c9e9c2579bf9a5b2a97737a1c425"
+        },
+        {
+          "name": "contract-tests",
+          "return_code": 0,
+          "log_sha256": "a66e787df4a8c6116f8abd50b78eefc73113b47a790c651f353f9b61943cb355"
+        },
+        {
+          "name": "ci-evidence-tests",
+          "return_code": 0,
+          "log_sha256": "3c64aa6947b97d29d775cb3b25a9f338337f88279b2024f420a8116571f1b3db"
+        }
+      ],
+      "limitations": [
+        "L0/L1 contract and CI receipt checks only; AC04 production-socket fault experiments have not run here.",
+        "No target GPU, phone, physical NAT, TUN, public HA, game or cross-day acceptance is claimed.",
+        "A formatting patch is review material; failing source is not replaced or counted as passing."
+      ]
+    },
+    {
+      "artifact_id": 13110752727,
+      "artifact_name": "network-rewrite-windows-2022-e2e3657a671578441ccf67ca472c508e482ee7e1-1",
+      "github_archive_digest": "sha256:66088c0688df30b68d3f979bba941fb29935da4ce76b3f307e982f99601826d8",
+      "receipt": "network-rewrite-evidence.json",
+      "receipt_sha256": "1a17c63a4928c4170d367a9abfdff41981596cac7fa8388e1fa94566d8896434",
+      "job_id": 125049354963,
+      "job_name": "contract (windows-2022)",
+      "job_conclusion": "failure",
+      "passed": "failed",
+      "source_revision": "e2e3657a671578441ccf67ca472c508e482ee7e1",
+      "cargo_lock_sha256": "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+      "runner": {
+        "environment": "github-hosted",
+        "name": "GitHub Actions 1000011298",
+        "os": "Windows",
+        "architecture": "X64"
+      },
+      "verified_inventory_files": 14,
+      "commands": [
+        {
+          "name": "ordinary-windows-token",
+          "return_code": 0,
+          "log_sha256": "1a3b6b80a403e819349753382ab338b45746583b982bcb54429be1d02854efb1"
+        },
+        {
+          "name": "rust-toolchain",
+          "return_code": 0,
+          "log_sha256": "0c2521688d6df6a59d681298dda7d12d51f70b3236177adb43bea664c84f3260"
+        },
+        {
+          "name": "format-check",
+          "return_code": 1,
+          "log_sha256": "e62b5ef11ae8a39577a0927e269944829179e29ca0d4115fa34a0100e0c3cc2c"
+        },
+        {
+          "name": "format-worktree-create",
+          "return_code": 0,
+          "log_sha256": "a3227aae7575149cf4a921ad0fe547a3dbd1747355769225f65d0598b7b4a63a"
+        },
+        {
+          "name": "format-patch-generate",
+          "return_code": 1,
+          "log_sha256": "5d26ab40b8e51c21747b6f17187aeaa16dfcbab472c08bc7d3386b2a46e35229"
+        },
+        {
+          "name": "format-worktree-remove",
+          "return_code": 0,
+          "log_sha256": "a81575bfd1182c9093676212f48e52a6d0825e716f8ca52f6b7f4bb63c3299b2"
+        },
+        {
+          "name": "contract-clippy",
+          "return_code": 0,
+          "log_sha256": "1a2a3b42ccc3a06dd37092deddbe0dcd5ab7d53112f5c238fc8d26481deb2067"
+        },
+        {
+          "name": "contract-tests",
+          "return_code": 0,
+          "log_sha256": "aa46684607a271d0b02b74a1dc4ac1cad18d4d6d7cd351b7f7a526a8ffbaffd1"
+        },
+        {
+          "name": "ci-evidence-tests",
+          "return_code": 0,
+          "log_sha256": "f67af3cc848623ec106125616bb45846091ee55d299f4d7c4d760d0aee5ebc42"
+        }
+      ],
+      "limitations": [
+        "L0/L1 contract and CI receipt checks only; AC04 production-socket fault experiments have not run here.",
+        "No target GPU, phone, physical NAT, TUN, public HA, game or cross-day acceptance is claimed.",
+        "A formatting patch is review material; failing source is not replaced or counted as passing."
+      ]
+    },
+    {
+      "artifact_id": 13110466534,
+      "artifact_name": "network-routed-e2e3657a671578441ccf67ca472c508e482ee7e1-1",
+      "github_archive_digest": "sha256:51bd9350cb452d7114c9cbe38e1e30a39440e9d3f7586f791a5ba334687cdc81",
+      "receipt": "network-routed-evidence.json",
+      "receipt_sha256": "018210bc95615f9231fe448a8203ebb63128dc88e93294e24a1e2cabb97af462",
+      "job_id": 125049355019,
+      "job_name": "routed-kernel-nat-slice",
+      "job_conclusion": "success",
+      "passed": true,
+      "source_revision": "e2e3657a671578441ccf67ca472c508e482ee7e1",
+      "cargo_lock_sha256": "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+      "executable_sha256": "b560d9a445381c5a59f89375dce4dc344c3033399bdca666af8f50ac637ee629",
+      "runner": {
+        "environment": "github-hosted",
+        "name": "GitHub Actions 1000011299",
+        "os": "Linux",
+        "architecture": "X64"
+      },
+      "execution_environment": "github-hosted-linux-network-namespaces",
+      "execution_uid": 1001,
+      "verified_inventory_files": 464,
+      "scope": "two endpoints, one authenticated relay, two actual Linux SNAT gateways; raw routed transport only",
+      "commands": [],
+      "cases": [
+        {
+          "name": "success",
+          "passed": true,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true,
+          "actual_nat": "two independent fixed-source-port SNAT gateways"
+        },
+        {
+          "name": "blackhole",
+          "passed": true,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true,
+          "actual_nat": "two independent fixed-source-port SNAT gateways"
+        },
+        {
+          "name": "cancel",
+          "passed": true,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true,
+          "actual_nat": "two independent fixed-source-port SNAT gateways"
+        }
+      ],
+      "limitations": [
+        "No bilateral ICE/STUN nomination, consent or same-socket hole-punching qualification",
+        "No public/external NAT, dual relay, multi-hop discovery or path migration",
+        "Inner QUIC handshakes and complete 1280-byte IPv6-shaped payloads run through the production routed adapter; no TUN injection",
+        "No business SessionPermit endpoint proof, actual FileRead worker or SDK signaling; framed bytes are transport checks only",
+        "Physical captures show encrypted outer UDP and actual SNAT tuples; they do not decrypt inner Initial packets",
+        "Credentials/seeds remain in an owned temporary fixture outside artifact output; no installed-device or full acceptance qualification"
+      ]
+    },
+    {
+      "artifact_id": 13109799687,
+      "artifact_name": "network-socket-e2e3657a671578441ccf67ca472c508e482ee7e1-1",
+      "github_archive_digest": "sha256:6849e7950e48dead06d8a6e8a7884cbdae3d75adbcd7f2a5b38095923db94576",
+      "receipt": "network-socket-evidence.json",
+      "receipt_sha256": "430163e228bf22ded69cdeb0e0709ee973dfc282e8b83124d1428cdc2e48e107",
+      "job_id": 125049354955,
+      "job_name": "production-socket-slice",
+      "job_conclusion": "success",
+      "passed": true,
+      "source_revision": "e2e3657a671578441ccf67ca472c508e482ee7e1",
+      "cargo_lock_sha256": "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+      "executable_sha256": "c45616344105aaa1945d5140c2fbd9fb4059943d6820499874206a048c8d8b36",
+      "runner": {
+        "environment": "github-hosted",
+        "name": "GitHub Actions 1000011300",
+        "os": "Linux",
+        "architecture": "X64"
+      },
+      "execution_environment": "github-hosted-linux-network-namespaces",
+      "execution_uid": 1001,
+      "verified_inventory_files": 167,
+      "scope": "partial production socket development experiment; two endpoints, zero relays, no NAT",
+      "commands": [],
+      "cases": [
+        {
+          "name": "success",
+          "passed": true,
+          "cleanup_failures": [],
+          "verified_file_bytes": 262144
+        },
+        {
+          "name": "blackhole",
+          "passed": true,
+          "cleanup_failures": []
+        },
+        {
+          "name": "cancel",
+          "passed": true,
+          "cleanup_failures": []
+        },
+        {
+          "name": "peer-close",
+          "passed": true,
+          "cleanup_failures": [],
+          "verified_file_bytes": 262144
+        }
+      ],
+      "limitations": [
+        "No two-relay or NAT topology, real LAN or target device qualification",
+        "No SDK signaling/discovery, TLS/WSS fallback, new network routing or migration qualification",
+        "FileRead uses production client/server with a fixture adapter approving one real file",
+        "Success/cancel isolate teardown packets to measure independent local ExplicitExit; peer-close separately verifies unisolated code-0 close maps to host Revoked",
+        "No screen capture, OS input injection, installation, performance, 24h or UU acceptance",
+        "Environment guards prevent accidental local execution; GitHub run/job/artifact records remain authoritative"
+      ]
+    }
+  ],
+  "verification": "Downloaded extracted Actions artifacts. Every receipt-referenced inventory entry was compared by SHA256 and byte size; the receipt itself was hashed. GitHub archive digests are metadata, not a separately locally hashed ZIP. No project compilation, formatter, lint or tests ran locally.",
+  "remaining_failure": "Both contract jobs failed only format-check and format-patch-generate because the shared fixture relative https module path did not resolve under the formatter. Strict lint, original contract tests and CI receipt tests passed on both OSs. Fixed in6b5d3f7; no partial failed formatter patch was imported.",
+  "scope_summary": [
+    "Original same-socket signed SDK ICE/FileRead frames through two real Linux1:1 UDP NAT gateways; blackhole, cancellation and forced port-change refusal all passed.",
+    "Production routed Quinn through two real Linux SNAT gateways; original endpoint/relay close and physical socket rebind passed.",
+    "Private Quinn carrier-rebind feasibility with old paths physically closed passed. This is not production path migration negotiation or fullW14/AC22.",
+    "Production FileRead worker over actual sockets passed success/blackhole/cancel/peer-close with actual disk SHA; no OS screen/input or physical target qualification."
+  ]
+}

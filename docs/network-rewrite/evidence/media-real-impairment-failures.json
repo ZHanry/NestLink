@@ -178,6 +178,35 @@
         "owned_qdisc_removed": true,
         "scope_failure": "Debug codec/capture CPU limited actualcadence20to25fps; target8000kbps and Healthy pre-step, real step executed but no<=5000budget during5s. Original2s and p95 gates not qualified. Actual briefCongested between healthy polls was not acted on. Followup uses releasebuild and stricter actualpre-step>5Mbps payload gate; production cooldown now consumed only by actualbudget changes.",
         "actual_pre_step_stats": "baseline=VideoSenderStats { receiver_reports: 7, feedback_requests: 0, duplicate_requests: 0, keyframes_encoded: 2, last_budget: Some(ProducerBudgetObservation { source: 42, cadence_fps: 22, bitrate_kbps: 8000, observed_at: Instant { tv_sec: 147, tv_nsec: 874362422 }, encoding_time: 28.279645ms, enqueue_time: 42.73µs, receiver_condition: Some(Healthy) }), enqueued_video_bytes: 2554126 }\nfile_loaded=VideoSenderStats { receiver_reports: 14, feedback_requests: 0, duplicate_requests: 0, keyframes_encoded: 3, last_budget: Some(ProducerBudgetObservation { source: 42, cadence_fps: 20, bitrate_kbps: 8000, observed_at: Instant { tv_sec: 151, tv_nsec: 921264986 }, encoding_time: 47.096641ms, enqueue_time: 39.133µs, receiver_condition: Some(Healthy) }), enqueued_video_bytes: 4491093 }\n"
+      },
+      {
+        "source_revision": "abf6499c545974f5f113ffe51e06cdf83dd8f365",
+        "run_id": 41372948671,
+        "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41372948671",
+        "job_id": 125047108778,
+        "artifact_id": 13109529680,
+        "github_artifact_digest": "sha256:3559b9e7fc53d3f9fabdc115e21f95d9775d816c513b5e60b9b76f4efadf379b",
+        "workflow_conclusion": "failure",
+        "receipt_sha256": "c1ec972158ee411321b3d7622fffcf76cd35ee58b6977165dd25495f2e8283f1",
+        "all_referenced_file_hashes_verified": true,
+        "files": {
+          "build.jsonl": "7a0d8d56cd279d6f0c240a357d4876037946299227081e651aa07f9ebd879063",
+          "build.log": "8825c411e12f987a15d92a5075150f90b31c51ed0396f17e02c2c3992ae9d1e4",
+          "configured": "084fe09c71b87a10131ae17355211acbbdbdbf7c229c499efdbe73171e8795a2",
+          "inventory.log": "ab16f75fc871931ced2593e87fce23e05a8c77e57d205a2d7d4583ddddb8753f",
+          "payload.bin": "1daa308fc5875f51fdaf44c00f1aa3263930913fae2c405ece0272dac3cf6b9a",
+          "pre-step-stats.txt": "b241643d48b8637204db6f4b1961aed77b44a5ff75cb44a474545d37eed1f247",
+          "ready.json": "ef34c4f0af8eadf2782414483379502508bd3c02036f116a218c03294e6dbacd",
+          "step-budget-observations.txt": "46c5aa0fc79c2eed918fd2b3fed05c83baa6505510673c3286e7c82489c82dfa",
+          "step-request": "8f144a181947338e011551e3534b29f8ac104f7f838dca5d9281f6383e409b5a",
+          "stepped": "c3cdc98ef2c39a8a15718e4c678c876eee75f9d4a2e88cdadb4e73b6186f1709",
+          "tests.log": "b0e7a427ee2c2636a462138a2990794ad30c04158207aaec8dae9098c28e570c"
+        },
+        "build_exit_code": 0,
+        "test_exit_code": 101,
+        "owned_qdisc_removed": true,
+        "original_failure": "actual producer downshift exceeded original2s; observed2010157us after step marker",
+        "scope_failure": "Original optimized build carried actual7.183Mbps video before real20-to5Mbps rate step but reached4500kbps only at2.010157s, failing unchanged2s. Subsequent09fee95fix qualified separately; this failure is retained."
       }
     ]
   },
@@ -192,9 +221,10 @@
     ]
   },
   "followup": {
-    "source_revision": "abf6499c545974f5f113ffe51e06cdf83dd8f365",
-    "run_id": 41372948671,
-    "state": "running",
-    "change": "Original Cargo release performance build, stricter actualpayload>5Mbps precondition, samegeometry/content/fps/fileandinputload and originalassertions. New09fee95productioncooldownfix awaits subsequent exactrun."
+    "source_revision": "09fee9572e77d72a522a35dfcdc33a90327426a1",
+    "run_id": 41373125182,
+    "state": "scoped_success",
+    "evidence_ref": "docs/network-rewrite/evidence/media-real-impairment-09fee95.json",
+    "change": "Only actual producer budget changes consume adjustment cooldown. Original2s and inputp95/sample/frame/file assertions pass in that later hosted scope; original failures remain."
   }
 }
