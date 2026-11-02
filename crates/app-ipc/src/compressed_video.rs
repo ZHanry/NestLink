@@ -36,13 +36,13 @@ pub struct WireVideoFormat(Vec<u8>);
 impl WireVideoFormat {
     pub fn new(format: nestlink_protocol::media_format::VideoFormat) -> Result<Self, Error> {
         let bytes = format.encode().map_err(|_| Error::Protocol)?;
-        if bytes.len() != 57 {
+        if ![57, 69].contains(&bytes.len()) {
             return Err(Error::Protocol);
         }
         Ok(Self(bytes))
     }
     pub fn decode(&self) -> Result<nestlink_protocol::media_format::VideoFormat, Error> {
-        if self.0.len() != 57 {
+        if ![57, 69].contains(&self.0.len()) {
             return Err(Error::Protocol);
         }
         nestlink_protocol::media_format::VideoFormat::decode(&self.0).map_err(|_| Error::Protocol)

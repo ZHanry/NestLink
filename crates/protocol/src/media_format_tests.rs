@@ -3,8 +3,50 @@ use super::*;
 fn rate(fps: u32) -> FrameRate {
     FrameRate::new(fps, 1).unwrap_or_else(|error| panic!("valid fixture rejected: {error}"))
 }
+#[test]
+fn independently_versioned_hevc_ptl_is_exact_and_cannot_change_v2_h264_bytes() -> std::result::Result<(), ContractError> {
+    let h264 = VideoFormat::legacy_h264(31, 640, 480, rate(30), 4000)?;
+    let old_bytes = h264.encode()?;
+    let old_digest = h264.digest()?;
+    assert_eq!(old_bytes.len(), 57);
+    assert_eq!(&old_bytes[..2], &2_u16.to_be_bytes());
+    assert_eq!(VideoFormat::decode(&old_bytes)?, h264);
+    let mut ptl = [0; 12];
+    ptl[0] = 1;
+    ptl[11] = 120;
+    let exact = VideoFormat::hevc_main8_observed(ptl, 640, 480, rate(30), 4000)?;
+    let wire = exact.encode()?;
+    assert_eq!(wire.len(), 69);
+    assert_eq!(&wire[..2], &3_u16.to_be_bytes());
+    assert_eq!(&wire[57..], &ptl);
+    assert_eq!(VideoFormat::decode(&wire)?, exact);
+    for field in 1..11 {
+        let mut next_ptl = ptl;
+        next_ptl[field] ^= 1;
+        let next = VideoFormat::hevc_main8_observed(next_ptl, 640, 480, rate(30), 4000)?;
+        assert_ne!(next.digest()?, exact.digest()?);
+        assert!(FormatSet::new(vec![exact])?.intersection(&FormatSet::new(vec![next])?).formats().is_empty());
+    }
+    assert!(FormatSet::new(vec![h264, exact]).is_err());
+    assert!(FormatSet::from_versioned(2, vec![exact]).is_err());
+    assert!(FormatSet::from_versioned(3, vec![h264]).is_err());
+    for end in 0..wire.len() { assert!(VideoFormat::decode(&wire[..end]).is_err()); }
+    let mut version_spoof = wire.clone();
+    version_spoof[..2].copy_from_slice(&2_u16.to_be_bytes());
+    assert!(VideoFormat::decode(&version_spoof).is_err());
+    let mut appended = wire;
+    appended.push(0);
+    assert!(VideoFormat::decode(&appended).is_err());
+    assert!(VideoFormat { codec: Codec::H264, ..exact }.validate().is_err());
+    assert!(VideoFormat { level: 123, ..exact }.validate().is_err());
+    assert!(VideoFormat { tier: Tier::High, ..exact }.validate().is_err());
+    assert_eq!(h264.encode()?, old_bytes);
+    assert_eq!(h264.digest()?, old_digest);
+    Ok(())
+}
 fn hevc(width: u32, height: u32, fps: u32, level: u8) -> VideoFormat {
     VideoFormat {
+        hevc_ptl: None,
         codec: Codec::Hevc,
         profile: Profile::HevcMain,
         level,

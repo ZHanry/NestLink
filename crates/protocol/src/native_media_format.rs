@@ -77,7 +77,7 @@ impl FormatEnvelope {
         }
         let length = u16::from_be_bytes([bytes[6], bytes[7]]) as usize;
         let end = 8usize.checked_add(length).ok_or_else(invalid)?;
-        if end.checked_add(8 + 32 + 57) != Some(bytes.len()) {
+        if ![57, 69].into_iter().any(|format_bytes| end.checked_add(8 + 32 + format_bytes) == Some(bytes.len())) {
             return Err(invalid());
         }
         let DisplayEnvelope::Selected(display) = DisplayEnvelope::decode(&bytes[8..end])? else {

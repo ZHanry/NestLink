@@ -4,10 +4,13 @@ use crate::{ContractError, ErrorCode, RAW_FRAME_BYTES, VIDEO_DIMENSION};
 use sha2::{Digest, Sha256};
 
 const VERSION: u16 = 2;
+pub const HEVC_FORMAT_VERSION: u16 = 3;
 const MAX_FORMATS: usize = 64;
 const MAX_FPS: u32 = 144;
 const FORMAT_DOMAIN: &[u8] = b"nestlink/media-format/v2\0";
 const SET_DOMAIN: &[u8] = b"nestlink/media-format-set/v2\0";
+const HEVC_FORMAT_DOMAIN: &[u8] = b"nestlink/media-format/v3\0";
+const HEVC_SET_DOMAIN: &[u8] = b"nestlink/media-format-set/v3\0";
 type Result<T> = std::result::Result<T, ContractError>;
 fn invalid(reason: &'static str) -> ContractError {
     ContractError::new(ErrorCode::InvalidMessage, reason)
@@ -182,6 +185,20 @@ impl Geometry {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct HevcPtl([u8; 12]);
+impl HevcPtl {
+    /// Exact general_profile_tier_level bytes from the actual SPS. This first
+    /// contract admits Main profile, Main tier only; it never attests a probe.
+    pub fn main8(bytes: [u8; 12]) -> Result<Self> {
+        if bytes[0] != 1 || hevc_limits(bytes[11]).is_none() {
+            return Err(invalid("unsupported exact HEVC Main8 general PTL"));
+        }
+        Ok(Self(bytes))
+    }
+    pub fn general_bytes(self) -> [u8; 12] { self.0 }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct VideoFormat {
     pub codec: Codec,
     pub profile: Profile,
@@ -202,9 +219,19 @@ pub struct VideoFormat {
     /// capability admission requires separate probe evidence; this value cannot
     /// synthesize a different resolution/fps/chroma combination.
     pub max_kbps: u32,
+    /// Present only in independently versioned v3 exact HEVC formats. Existing
+    /// v2 descriptors and H264 canonical bytes/digests remain unchanged.
+    pub hevc_ptl: Option<HevcPtl>,
 }
 impl VideoFormat {
     pub fn validate(self) -> Result<()> {
+        if let Some(ptl) = self.hevc_ptl {
+            if self.codec != Codec::Hevc || self.profile != Profile::HevcMain
+                || self.tier != Tier::Main || self.chroma != Chroma::Yuv420
+                || self.bit_depth != BitDepth::Eight || self.color != Color::SDR_BT709_LIMITED
+                || ptl.0[0] != 1 || ptl.0[11] != self.level
+            { return Err(invalid("exact HEVC PTL differs from the discrete Main8 format")); }
+        }
         self.geometry.validate(self)?;
         self.frame_rate.validate()?;
         self.color.validate(self.bit_depth)?;
@@ -355,6 +382,15 @@ impl VideoFormat {
         format.validate()?;
         Ok(format)
     }
+    pub fn hevc_main8_observed(ptl: [u8; 12], width: u32, height: u32, frame_rate: FrameRate, max_kbps: u32) -> Result<Self> {
+        let hevc_ptl = HevcPtl::main8(ptl)?;
+        let format = Self { codec: Codec::Hevc, profile: Profile::HevcMain, level: ptl[11],
+            h264_constraints: 0, geometry: Geometry::uncropped(width, height), tier: Tier::Main,
+            chroma: Chroma::Yuv420, bit_depth: BitDepth::Eight, color: Color::SDR_BT709_LIMITED,
+            width, height, frame_rate, max_kbps, hevc_ptl: Some(hevc_ptl) };
+        format.validate()?;
+        Ok(format)
+    }
     fn legacy(
         codec: Codec,
         profile: Profile,
@@ -369,6 +405,7 @@ impl VideoFormat {
             profile,
             level,
             h264_constraints: 0,
+            hevc_ptl: None,
             geometry: if codec == Codec::H264 {
                 let coded_width = width
                     .checked_add(15)
@@ -411,7 +448,8 @@ impl VideoFormat {
         Ok(self.canonical())
     }
     pub fn decode(bytes: &[u8]) -> Result<Self> {
-        if bytes.len() != 57 || bytes[..2] != VERSION.to_be_bytes() {
+        let exact_hevc = bytes.len() == 69 && bytes[..2] == HEVC_FORMAT_VERSION.to_be_bytes();
+        if !exact_hevc && (bytes.len() != 57 || bytes[..2] != VERSION.to_be_bytes()) {
             return Err(invalid("invalid canonical video format envelope"));
         }
         let u32_at = |offset| {
@@ -448,6 +486,7 @@ impl VideoFormat {
                 denominator: u32_at(49),
             },
             max_kbps: u32_at(53),
+            hevc_ptl: if exact_hevc { Some(HevcPtl::main8(bytes[57..69].try_into().map_err(|_| invalid("invalid HEVC PTL length"))?)?) } else { None },
         };
         format.validate()?;
         if format.canonical() != bytes {
@@ -456,8 +495,8 @@ impl VideoFormat {
         Ok(format)
     }
     fn canonical(self) -> Vec<u8> {
-        let mut bytes = Vec::with_capacity(57);
-        bytes.extend_from_slice(&VERSION.to_be_bytes());
+        let mut bytes = Vec::with_capacity(if self.hevc_ptl.is_some() { 69 } else { 57 });
+        bytes.extend_from_slice(&self.canonical_version().to_be_bytes());
         bytes.extend_from_slice(&[
             self.codec as u8,
             self.profile as u8,
@@ -486,15 +525,17 @@ impl VideoFormat {
         ] {
             bytes.extend_from_slice(&value.to_be_bytes());
         }
+        if let Some(ptl) = self.hevc_ptl { bytes.extend_from_slice(&ptl.0); }
         bytes
     }
     pub fn digest(self) -> Result<[u8; 32]> {
         self.validate()?;
         let mut hash = Sha256::new();
-        hash.update(FORMAT_DOMAIN);
+        hash.update(if self.hevc_ptl.is_some() { HEVC_FORMAT_DOMAIN } else { FORMAT_DOMAIN });
         hash.update(self.canonical());
         Ok(hash.finalize().into())
     }
+    pub fn canonical_version(self) -> u16 { if self.hevc_ptl.is_some() { HEVC_FORMAT_VERSION } else { VERSION } }
 }
 
 /// Exact probed configurations. Private storage prevents post-validation mutation.
@@ -503,10 +544,14 @@ impl VideoFormat {
 pub struct FormatSet(Vec<VideoFormat>);
 impl FormatSet {
     pub fn from_versioned(version: u16, formats: Vec<VideoFormat>) -> Result<Self> {
-        if version != VERSION {
+        if version != VERSION && version != HEVC_FORMAT_VERSION {
             return Err(invalid("unsupported media format version"));
         }
-        Self::new(formats)
+        let result = Self::new(formats)?;
+        if !result.formats().is_empty() && result.canonical_version() != version {
+            return Err(invalid("media catalog differs from selected canonical version"));
+        }
+        Ok(result)
     }
     pub fn new(mut formats: Vec<VideoFormat>) -> Result<Self> {
         if formats.len() > MAX_FORMATS {
@@ -514,6 +559,9 @@ impl FormatSet {
         }
         for format in &formats {
             format.validate()?;
+        }
+        if formats.first().is_some_and(|first| formats.iter().any(|next| first.canonical_version() != next.canonical_version())) {
+            return Err(invalid("independently versioned media formats cannot share a catalog"));
         }
         formats.sort_unstable();
         // Duplicate wire entries are rejected, not silently laundered.
@@ -539,14 +587,16 @@ impl FormatSet {
     }
     pub fn digest(&self) -> [u8; 32] {
         let mut hash = Sha256::new();
-        hash.update(SET_DOMAIN);
-        hash.update(VERSION.to_be_bytes());
+        let version = self.canonical_version();
+        hash.update(if version == HEVC_FORMAT_VERSION { HEVC_SET_DOMAIN } else { SET_DOMAIN });
+        hash.update(version.to_be_bytes());
         hash.update((self.0.len() as u32).to_be_bytes());
         for format in &self.0 {
             hash.update(format.canonical());
         }
         hash.finalize().into()
     }
+    pub fn canonical_version(&self) -> u16 { self.0.first().map_or(VERSION, |format| format.canonical_version()) }
     /// Preferences are ordered exact configurations, never unsigned widening.
     /// Empty/no-common sets return None; caller must perform explicit fallback.
     pub fn select(&self, preferences: &[VideoFormat]) -> Result<Option<VideoFormat>> {
