@@ -1,0 +1,1280 @@
+{
+    "schema_version":  1,
+    "scope":  "Complete original focused offline AppCore/daemon/desktop and all original resident cases on hosted Linux/Windows; no full Rust-core, physical target, public NAT or advanced-media acceptance",
+    "source_revision":  "1dd4efd03b201d31744a716b4f99d73fd0d9c657",
+    "workflow":  ".github/workflows/offline-resident.yml",
+    "run_id":  41461596961,
+    "run_attempt":  1,
+    "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41461596961",
+    "build_provenance":  "The original GitHub-hosted Linux/Windows jobs compiled the exact locked source. Both original before/after revision/tree/clean status/Cargo.lock and frozen HTTPS executable hashes match.",
+    "execution_provenance":  "Every original scoped command plus dedicated download-consent regression and three strict clippy commands passed on both OS. Original resident Linux1/4 and Windows3/4: complete TLS real data/rebuild/immediate budget/IPC Exit passed on both. Both QUIC original rebuilds failed; Linux management and pending independent fixture setup also failed.",
+    "targets":  [
+                    {
+                        "platform":  "linux",
+                        "job_id":  125331747406,
+                        "runner_os":  "Linux",
+                        "runner_environment":  "github-hosted",
+                        "image_os":  "ubuntu24",
+                        "image_version":  "20261026.354.1",
+                        "execution_identity":  "original non-root hosted runner and original PAM desktop session",
+                        "conclusion":  "failure",
+                        "source_before":  {
+                                              "revision":  "1dd4efd03b201d31744a716b4f99d73fd0d9c657",
+                                              "tree":  "9e882a8d010be9a84694aacbde54096145c68553",
+                                              "status":  "",
+                                              "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+                                          },
+                        "source_after":  {
+                                             "revision":  "1dd4efd03b201d31744a716b4f99d73fd0d9c657",
+                                             "tree":  "9e882a8d010be9a84694aacbde54096145c68553",
+                                             "status":  "",
+                                             "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+                                         },
+                        "source_unchanged":  true,
+                        "https_tool_sha256_before":  "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872",
+                        "https_tool_sha256_after":  "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872",
+                        "https_tool_matches_frozen_receipt":  true,
+                        "commands":  [
+                                         {
+                                             "name":  "rustc-version",
+                                             "command":  [
+                                                             "rustc",
+                                                             "--version",
+                                                             "--verbose"
+                                                         ],
+                                             "log":  "rustc-version.log",
+                                             "started_unix":  1793630533.7645235,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793630542.5461924
+                                         },
+                                         {
+                                             "name":  "cargo-version",
+                                             "command":  [
+                                                             "cargo",
+                                                             "--version"
+                                                         ],
+                                             "log":  "cargo-version.log",
+                                             "started_unix":  1793630542.5462923,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793630542.5782743
+                                         },
+                                         {
+                                             "name":  "app-core",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-app-core",
+                                                             "--test",
+                                                             "native_offline",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "app-core.log",
+                                             "started_unix":  1793630542.6078339,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "expected_tests":  [
+                                                                    "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+                                                                    "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry"
+                                                                ],
+                                             "finished_unix":  1793630730.4856093
+                                         },
+                                         {
+                                             "name":  "daemon-remote-unit",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "offline_remote::tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-remote-unit.log",
+                                             "started_unix":  1793630730.4857008,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "offline_remote::tests::original_resident_entry_requires_an_explicit_direct_carrier_and_controller_peer",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "offline_remote::tests::original_resident_json_cannot_import_authority_or_enable_carrier_fallback",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793630801.2140281
+                                         },
+                                         {
+                                             "name":  "daemon-private-unit",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "private_service_proxy::offline::tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-private-unit.log",
+                                             "started_unix":  1793630801.214124,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "private_service_proxy::offline::tests::original_private_resident_empty_actions_reject_injected_authority_fields",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793630803.7343013
+                                         },
+                                         {
+                                             "name":  "daemon-download-consent-unit",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-download-consent-unit.log",
+                                             "started_unix":  1793630803.7343981,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793630804.199814
+                                         },
+                                         {
+                                             "name":  "daemon-entry-unit",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "entry_tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-entry-unit.log",
+                                             "started_unix":  1793630804.1999128,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "entry_tests::command_dispatch_keeps_the_windows_main_future_bounded",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793630804.6151085
+                                         },
+                                         {
+                                             "name":  "desktop-layout",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-desktop",
+                                                             "--lib",
+                                                             "layout_tests::independent_offline_",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "desktop-layout.log",
+                                             "started_unix":  1793630804.615204,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "layout_tests::independent_offline_viewport_close_requires_exact_local_receipts_without_online_inspect_or_revoke",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "layout_tests::independent_offline_workspace_displays_finite_scope_without_management_login",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793630914.3441362
+                                         },
+                                         {
+                                             "name":  "resident",
+                                             "command":  [
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--test",
+                                                             "offline_remote_resident",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "resident.log",
+                                             "started_unix":  1793630914.3442483,
+                                             "passed":  false,
+                                             "exit_code":  101,
+                                             "cases":  [
+                                                           [
+                                                               "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                                                               "FAILED"
+                                                           ],
+                                                           [
+                                                               "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                                                               "FAILED"
+                                                           ],
+                                                           [
+                                                               "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                               "FAILED"
+                                                           ],
+                                                           [
+                                                               "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "3",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "expected_tests":  [
+                                                                    "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                                                                    "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                                                                    "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                                    "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit"
+                                                                ],
+                                             "finished_unix":  1793631147.5572746
+                                         },
+                                         {
+                                             "name":  "app-core-clippy",
+                                             "command":  [
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-app-core",
+                                                             "--test",
+                                                             "native_offline",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "app-core-clippy.log",
+                                             "started_unix":  1793631147.5573912,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793631220.7901232
+                                         },
+                                         {
+                                             "name":  "daemon-clippy",
+                                             "command":  [
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "daemon-clippy.log",
+                                             "started_unix":  1793631220.7902205,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793631266.392784
+                                         },
+                                         {
+                                             "name":  "resident-clippy",
+                                             "command":  [
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--test",
+                                                             "offline_remote_resident",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "resident-clippy.log",
+                                             "started_unix":  1793631266.3928907,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793631305.0213816
+                                         }
+                                     ],
+                        "resident":  {
+                                         "passed":  1,
+                                         "failed":  3,
+                                         "ignored":  0,
+                                         "elapsed_seconds":  218.5,
+                                         "observations":  [
+                                                              "All original scoped tests/regression and all three strict clippy commands passed.",
+                                                              "The complete original Linux TLS real green pixels, both completed262144-byte files, actual rebuild/new generation/same runtime, original immediate cumulative-budget assertion, stale generation rejection, authenticated IPC Exit and original cleanup/socket assertions passed. This verifies the exact original Linux quota-readback repair case only.",
+                                                              "QUIC initial original pixels and first completed262144-byte file passed; original rebuild failed. Host records PlatformChanged previous_state=Stopped(TransportLost), then explicit authority stop with about76339 ms left; supervisor eventually records stop_owner=false. No rollback/expiry category appears in this failure.",
+                                                              "Management cases0..2 completed; case3 independent fixture setup returned management response invalid. No Secret Service timeout/metadata was emitted; this is not attributed to the prior keyring failure. Specific original SDK operation is not yet located.",
+                                                              "Pending case0 EOF and case1 TLSstop completed; case2 independent original public-PKI system DNS readiness failed at60 seconds. No insecure TLS, resolver bypass, shared tunnel or widened timeout is used."
+                                                          ]
+                                     },
+                        "artifact_id":  13152790017,
+                        "artifact_name":  "original-offline-resident-ubuntu-24.04-1dd4efd03b201d31744a716b4f99d73fd0d9c657-1",
+                        "artifact_archive_bytes":  68799,
+                        "artifact_digest_reported_by_github":  "sha256:4c4b6ebf31e941ae27315f570356f203ccb5a752d25355ed8fb49373488745e3",
+                        "downloaded_files":  [
+                                                 {
+                                                     "name":  "nestlink-codecs/x86_64-unknown-linux-gnu/nestlink-codecs.json",
+                                                     "bytes":  20593,
+                                                     "sha256":  "e00ae8426aa9b8d0023758481774048b61e4f7dd90ead0fcb2fa2c12ee0cebcf"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-native-offline-https-license.txt",
+                                                     "bytes":  11357,
+                                                     "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-native-offline-https-tool.json",
+                                                     "bytes":  871,
+                                                     "sha256":  "a446332f6ba9cf552e2124e9fdecc2d927865d26f85f4c6185b44f210318e415"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core.log",
+                                                     "bytes":  44820,
+                                                     "sha256":  "defe5932412e8ea9af39f2213bf87a33a6e6457b45c6d6a04943373c00344c50"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core-clippy.log",
+                                                     "bytes":  27573,
+                                                     "sha256":  "e7ec38897562d965c28b1cda03e390e5894a1245b9a33bbe53844f308db2c8e6"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/cargo-version.log",
+                                                     "bytes":  36,
+                                                     "sha256":  "b6ef6807dd96d18b833474ad68e7a23a29e562a29c67afa71a59fb9a73df0068"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-clippy.log",
+                                                     "bytes":  17722,
+                                                     "sha256":  "78dd728c04e9ba77637c527f404663dabb7d130d5b029afb3297d4ebaf825e85"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-download-consent-unit.log",
+                                                     "bytes":  14157,
+                                                     "sha256":  "3ec9aafa24c29a4a915fbd240a6e62ee3e00562cc66016d4c2631e2a74ef15cf"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-entry-unit.log",
+                                                     "bytes":  14228,
+                                                     "sha256":  "6e14a1414aa403ca5ea0d1172465e38007a419d218af495516ed33e1564cc645"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-private-unit.log",
+                                                     "bytes":  15786,
+                                                     "sha256":  "a6ab62fefb3081de80d129474d3099f76d0a53072bde76f11f665da78d0e96f9"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-remote-unit.log",
+                                                     "bytes":  18556,
+                                                     "sha256":  "0933e6ede536168294803888c7cbb206c410ea11853c63711cc6f94ed8477903"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/desktop-layout.log",
+                                                     "bytes":  28085,
+                                                     "sha256":  "a6666b7c255d8df90b911e4e9be653afdeb6d33cfb8e183b101b5b33a6e2df14"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-codecs.json",
+                                                     "bytes":  20593,
+                                                     "sha256":  "e00ae8426aa9b8d0023758481774048b61e4f7dd90ead0fcb2fa2c12ee0cebcf"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
+                                                     "bytes":  11357,
+                                                     "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
+                                                     "bytes":  871,
+                                                     "sha256":  "a446332f6ba9cf552e2124e9fdecc2d927865d26f85f4c6185b44f210318e415"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/receipt.json",
+                                                     "bytes":  13068,
+                                                     "sha256":  "c649b8d38ad549ed7735a6a5b1dea42ce7be57c6cfde01333e63b0af2f731615"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/resident.log",
+                                                     "bytes":  32234,
+                                                     "sha256":  "f6bfbebbd12a862ccfe04bbc3325bb433ad56e05d4f16a0269a4759ba868945e"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/resident-clippy.log",
+                                                     "bytes":  17605,
+                                                     "sha256":  "8ab7220cf8da71a19cc4199c543e92c86ab084645afdc4ac6fd2792ee313d55f"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/rustc-version.log",
+                                                     "bytes":  633,
+                                                     "sha256":  "c21d4eda194b86fd08d5f56a5a74a7753ac880789ca7703e9e18d8e899e8a408"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/source-after.json",
+                                                     "bytes":  222,
+                                                     "sha256":  "1f37ae89f6ffef024507fbd7f7062c80ebc8e0d426d0ff574e35e1f7c62f53b7"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/source-before.json",
+                                                     "bytes":  222,
+                                                     "sha256":  "1f37ae89f6ffef024507fbd7f7062c80ebc8e0d426d0ff574e35e1f7c62f53b7"
+                                                 }
+                                             ],
+                        "producer_inventory_comparison":  [
+                                                              {
+                                                                  "name":  "app-core-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "app-core.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "cargo-version.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-download-consent-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-entry-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-private-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-remote-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "desktop-layout.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-codecs.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-native-offline-https-license.txt",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-native-offline-https-tool.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "resident-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "resident.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "rustc-version.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "source-after.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "source-before.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              }
+                                                          ],
+                        "independently_hashed_file_count":  21,
+                        "producer_inventory_matched_files":  17
+                    },
+                    {
+                        "platform":  "windows",
+                        "job_id":  125331747712,
+                        "runner_os":  "Windows",
+                        "runner_environment":  "github-hosted",
+                        "image_os":  "win22",
+                        "image_version":  "20261026.347.1",
+                        "execution_identity":  "verified original medium non-admin wrapper",
+                        "conclusion":  "failure",
+                        "source_before":  {
+                                              "revision":  "1dd4efd03b201d31744a716b4f99d73fd0d9c657",
+                                              "tree":  "9e882a8d010be9a84694aacbde54096145c68553",
+                                              "status":  "",
+                                              "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+                                          },
+                        "source_after":  {
+                                             "revision":  "1dd4efd03b201d31744a716b4f99d73fd0d9c657",
+                                             "tree":  "9e882a8d010be9a84694aacbde54096145c68553",
+                                             "status":  "",
+                                             "cargo_lock_sha256":  "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+                                         },
+                        "source_unchanged":  true,
+                        "https_tool_sha256_before":  "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343",
+                        "https_tool_sha256_after":  "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343",
+                        "https_tool_matches_frozen_receipt":  true,
+                        "commands":  [
+                                         {
+                                             "name":  "rustc-version",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "rustc",
+                                                             "--version",
+                                                             "--verbose"
+                                                         ],
+                                             "log":  "rustc-version.log",
+                                             "started_unix":  1793629622.3005326,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793629632.9593709
+                                         },
+                                         {
+                                             "name":  "cargo-version",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "--version"
+                                                         ],
+                                             "log":  "cargo-version.log",
+                                             "started_unix":  1793629632.9593709,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793629634.756935
+                                         },
+                                         {
+                                             "name":  "app-core",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-app-core",
+                                                             "--test",
+                                                             "native_offline",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "app-core.log",
+                                             "started_unix":  1793629634.8038166,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "expected_tests":  [
+                                                                    "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+                                                                    "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry"
+                                                                ],
+                                             "finished_unix":  1793629891.3517194
+                                         },
+                                         {
+                                             "name":  "daemon-remote-unit",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "offline_remote::tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-remote-unit.log",
+                                             "started_unix":  1793629891.3517194,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "offline_remote::tests::original_resident_entry_requires_an_explicit_direct_carrier_and_controller_peer",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "offline_remote::tests::original_resident_json_cannot_import_authority_or_enable_carrier_fallback",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793629994.2754424
+                                         },
+                                         {
+                                             "name":  "daemon-private-unit",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "private_service_proxy::offline::tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-private-unit.log",
+                                             "started_unix":  1793629994.2754424,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "private_service_proxy::offline::tests::original_private_resident_empty_actions_reject_injected_authority_fields",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793629997.3623624
+                                         },
+                                         {
+                                             "name":  "daemon-download-consent-unit",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-download-consent-unit.log",
+                                             "started_unix":  1793629997.3623624,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793629998.1138647
+                                         },
+                                         {
+                                             "name":  "daemon-entry-unit",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "entry_tests::",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "daemon-entry-unit.log",
+                                             "started_unix":  1793629998.1138647,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "entry_tests::command_dispatch_keeps_the_windows_main_future_bounded",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "1",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793629998.8193827
+                                         },
+                                         {
+                                             "name":  "desktop-layout",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-desktop",
+                                                             "--lib",
+                                                             "layout_tests::independent_offline_",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "desktop-layout.log",
+                                             "started_unix":  1793629998.8349912,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "cases":  [
+                                                           [
+                                                               "layout_tests::independent_offline_viewport_close_requires_exact_local_receipts_without_online_inspect_or_revoke",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "layout_tests::independent_offline_workspace_displays_finite_scope_without_management_login",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "2",
+                                                                   "0",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "finished_unix":  1793630110.2627254
+                                         },
+                                         {
+                                             "name":  "resident",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "test",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--test",
+                                                             "offline_remote_resident",
+                                                             "--",
+                                                             "--show-output",
+                                                             "--test-threads=1",
+                                                             "--color",
+                                                             "never"
+                                                         ],
+                                             "log":  "resident.log",
+                                             "started_unix":  1793630110.2627254,
+                                             "passed":  false,
+                                             "exit_code":  101,
+                                             "cases":  [
+                                                           [
+                                                               "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                                                               "ok"
+                                                           ],
+                                                           [
+                                                               "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                               "FAILED"
+                                                           ],
+                                                           [
+                                                               "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                                                               "ok"
+                                                           ]
+                                                       ],
+                                             "summaries":  [
+                                                               [
+                                                                   "3",
+                                                                   "1",
+                                                                   "0"
+                                                               ]
+                                                           ],
+                                             "expected_tests":  [
+                                                                    "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                                                                    "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                                                                    "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                                                                    "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit"
+                                                                ],
+                                             "finished_unix":  1793630413.1714432
+                                         },
+                                         {
+                                             "name":  "app-core-clippy",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-app-core",
+                                                             "--test",
+                                                             "native_offline",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "app-core-clippy.log",
+                                             "started_unix":  1793630413.1714432,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793630492.3914084
+                                         },
+                                         {
+                                             "name":  "daemon-clippy",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--bin",
+                                                             "nestlink-daemon",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "daemon-clippy.log",
+                                             "started_unix":  1793630492.3914084,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793630547.39883
+                                         },
+                                         {
+                                             "name":  "resident-clippy",
+                                             "command":  [
+                                                             "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+                                                             "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+                                                             "cargo",
+                                                             "clippy",
+                                                             "--locked",
+                                                             "-p",
+                                                             "nestlink-daemon",
+                                                             "--test",
+                                                             "offline_remote_resident",
+                                                             "--",
+                                                             "-D",
+                                                             "warnings"
+                                                         ],
+                                             "log":  "resident-clippy.log",
+                                             "started_unix":  1793630547.39883,
+                                             "passed":  true,
+                                             "exit_code":  0,
+                                             "finished_unix":  1793630587.785905
+                                         }
+                                     ],
+                        "resident":  {
+                                         "passed":  3,
+                                         "failed":  1,
+                                         "ignored":  0,
+                                         "elapsed_seconds":  284.1,
+                                         "observations":  [
+                                                              "All original scoped tests/regression and all three strict clippy commands passed.",
+                                                              "All eight original management cases and all four pending-listener cases passed. Full original TLS real pixels/two completed files/rebuild/cumulative quota/stale generation/IPC Exit/cleanup passed.",
+                                                              "QUIC initial original pixels and first completed262144-byte file passed; original rebuild failed. Host records PlatformChanged previous_state=Stopped(TransportLost), then explicit authority stop with about75490 ms left. Supervisor eventually records stop_owner=false. No rollback/expiry category appears in this failure."
+                                                          ]
+                                     },
+                        "artifact_id":  13150188323,
+                        "artifact_name":  "original-offline-resident-windows-2022-1dd4efd03b201d31744a716b4f99d73fd0d9c657-1",
+                        "artifact_archive_bytes":  71714,
+                        "artifact_digest_reported_by_github":  "sha256:facf8308ae1abb7e3147d5484ab8fea1cbae34e52078c8afd830b3fa12d958a7",
+                        "downloaded_files":  [
+                                                 {
+                                                     "name":  "nestlink-codecs/x86_64-pc-windows-msvc/nestlink-codecs.json",
+                                                     "bytes":  23792,
+                                                     "sha256":  "456af451167c0e5249c035127b3843390f681f6ffc62b0ca0b9e648241ca9f77"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-native-offline-https-license.txt",
+                                                     "bytes":  11357,
+                                                     "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-native-offline-https-tool.json",
+                                                     "bytes":  895,
+                                                     "sha256":  "df9b8d39d72e37726e60a61fbbfd8ae65cab44a4f36868f154294e864b9275fd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core.log",
+                                                     "bytes":  44004,
+                                                     "sha256":  "616d1c7d3ea881185cff38ef7d2a9ebc660ff4db1f66abbddc813c65d2bd01da"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/app-core-clippy.log",
+                                                     "bytes":  26978,
+                                                     "sha256":  "d61caa917fea2fcd7fece59a2b56ae0413ed1fd05d423f6d478d695cdf50409b"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/cargo-version.log",
+                                                     "bytes":  123,
+                                                     "sha256":  "d23c4c65b8674a054de5e636a3a8a764f439ce1ebffd9dc967c550b1298f9ed1"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-clippy.log",
+                                                     "bytes":  18620,
+                                                     "sha256":  "0357ade8873bbb0851fec53e60fa634e2f216350e6a67bfc20eb90b0c47aab49"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-download-consent-unit.log",
+                                                     "bytes":  14015,
+                                                     "sha256":  "bc6c9abcba2168e39abbc9ca057aa713b4080eecf487b7f9a7c4c72147a03951"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-entry-unit.log",
+                                                     "bytes":  14087,
+                                                     "sha256":  "3e311519caa071fd0fd2d1aea957b2db3924debcd448ca51a2db8293434e82b2"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-private-unit.log",
+                                                     "bytes":  15644,
+                                                     "sha256":  "9b8d0a61503d66517a712def0d1e55ced0c9cbb462581b823edf675e35b025c2"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/daemon-remote-unit.log",
+                                                     "bytes":  19813,
+                                                     "sha256":  "ca27b8bcb57bc595880a8775809c7c031410691a2e3401dc58f7cef703368b48"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/desktop-layout.log",
+                                                     "bytes":  23398,
+                                                     "sha256":  "7c2283afd17658647fa89d289c0099373eae5370759eda164aae3b3229780724"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-codecs.json",
+                                                     "bytes":  23792,
+                                                     "sha256":  "456af451167c0e5249c035127b3843390f681f6ffc62b0ca0b9e648241ca9f77"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
+                                                     "bytes":  11357,
+                                                     "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
+                                                     "bytes":  895,
+                                                     "sha256":  "df9b8d39d72e37726e60a61fbbfd8ae65cab44a4f36868f154294e864b9275fd"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/receipt.json",
+                                                     "bytes":  15388,
+                                                     "sha256":  "ca38de9c03e57613ef3882ffdd66055bc7444e072e7c01c1abd448faf7e16761"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/resident.log",
+                                                     "bytes":  39198,
+                                                     "sha256":  "5505d0bbf8c1d75f442642c84251d1f648788893a3edd7b3c16f1c3c44064589"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/resident-clippy.log",
+                                                     "bytes":  17316,
+                                                     "sha256":  "89c05219eb83e9ab7cfd3f7896ef14210a9bee4f7753fa6fcc7b780e06350339"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/rustc-version.log",
+                                                     "bytes":  714,
+                                                     "sha256":  "28a4631a2b64df26ae9a4c2b585ab6d75e8c29ce917e588c8fdec54fc8f16c15"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/source-after.json",
+                                                     "bytes":  228,
+                                                     "sha256":  "6b6738ca76520640f9640827692d15a3c5daa3c29289d6c11df7de1ec42c6cf4"
+                                                 },
+                                                 {
+                                                     "name":  "nestlink-offline-resident-focused/source-before.json",
+                                                     "bytes":  228,
+                                                     "sha256":  "6b6738ca76520640f9640827692d15a3c5daa3c29289d6c11df7de1ec42c6cf4"
+                                                 }
+                                             ],
+                        "producer_inventory_comparison":  [
+                                                              {
+                                                                  "name":  "app-core-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "app-core.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "cargo-version.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-download-consent-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-entry-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-private-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "daemon-remote-unit.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "desktop-layout.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-codecs.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-native-offline-https-license.txt",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "nestlink-native-offline-https-tool.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "resident-clippy.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "resident.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "rustc-version.log",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "source-after.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              },
+                                                              {
+                                                                  "name":  "source-before.json",
+                                                                  "bytes_match":  true,
+                                                                  "sha256_match":  true
+                                                              }
+                                                          ],
+                        "independently_hashed_file_count":  21,
+                        "producer_inventory_matched_files":  17
+                    }
+                ],
+    "verification":  "All42 downloaded files independently hashed; all34 producer inventory byte/SHA entries match. GitHub-reported archive digests are separate from these downloaded payload hashes; no independent ZIP-hash claim.",
+    "confirmed_follow_up":  {
+                                "budget_commit":  "c0bb7ac",
+                                "budget_result":  "Exact source1dd original Linux immediate cumulative-quota assertion now passed as part of the complete TLS resident case, and new immediate AppCore real-file snapshot assertions passed on both OS. No test waiting, relaxed assertion, quota renewal or bypass.",
+                                "quic_diagnosis":  "The exact original host diagnostic on both OS is PlatformChanged after Stopped(TransportLost), with eventual supervisor stop_owner=false. A late capture failure can see terminal lease authorization while its Core snapshot still indicates connected during original carrier cleanup; unconditional PlatformChanged can terminate the retained independent owner without changing the historical stop reason.",
+                                "new_capture_repair_commit":  "91509d13f8aa52fff19f31e2fb77c5c702da0dc1",
+                                "new_capture_repair_status":  "implemented_unverified_on_this_receipt",
+                                "new_capture_repair":  "Reuse original atomic stop_if_running(PlatformChanged) for the exact old producer failure notification. Real active capture failures, explicit platform changes and actual cleanup/authority failures keep their original terminal paths. Added real signed/proved lease regression checks actual recovery eligibility as well as historical reason.",
+                                "next_run":  41466485538,
+                                "next_source":  "91509d13f8aa52fff19f31e2fb77c5c702da0dc1",
+                                "next_state":  "Original complete matrix in progress; no success claimed."
+                            },
+    "limitations":  [
+                        "Full original resident is failed on both systems; all original assertions and deadlines remain gates.",
+                        "Linux management case3 Invalid still lacks the exact SDK operation; prior Secret Service failure did not recur and is not claimed resolved by this run.",
+                        "Linux independent HTTPS DNS failure remains an actual external fixture failure with original PKI/resolver/time bound intact.",
+                        "The Cloudflare management fixture terminates public PKI at Cloudflare and uses original disposable HTTP loopback upstream; no peer E2E/public NAT/physical/media/mobile/full-release qualification.",
+                        "The original Luanti25-second check and its failure status remain unchanged."
+                    ]
+}

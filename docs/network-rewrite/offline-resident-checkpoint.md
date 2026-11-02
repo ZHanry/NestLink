@@ -39,11 +39,19 @@ The original Luanti 25-second check and its failure status remain unchanged.
   See `evidence/native-offline-resident-f570243.json`.
 - Source `1dd4efd03b201d31744a716b4f99d73fd0d9c657`, original focused run
   [41461596961](https://github.com/ZHanry/NestLink/actions/runs/41461596961):
-  Windows job125331747712 completed. All scoped commands and strict clippy
-  passed; original resident3/4, with management8/pending4/full TLS passed and
-  QUIC original rebuild failed. All21 downloaded Windows files independently
-  hashed; all17 producer inventory entries match. Linux is still running.
-  See `evidence/native-offline-resident-1dd4efd-windows.json`.
+  Linux job125331747406 and Windows job125331747712 completed. All scoped
+  commands and strict clippy passed on both OS. Original resident Linux1/4,
+  Windows3/4. The entire original TLS real-data/rebuild/immediate-budget/IPC
+  Exit and cleanup case passed on both systems; the Linux original immediate
+  cumulative-quota failure is now repaired. Both original QUIC rebuilds still
+  failed with the same confirmed late capture termination. Windows management8
+  and pending4 passed. Linux management cases0..2 completed, then independent
+  case3 setup returned management response Invalid; the exact SDK operation is
+  not yet located. Linux pending0/1 completed, then independent case2 public-PKI
+  system-DNS readiness failed within its original60 seconds. All42 downloaded
+  files independently hashed; all34 producer inventory entries match. See
+  `evidence/native-offline-resident-1dd4efd.json`; the earlier Windows-only
+  evidence is preserved.
 
 ## Confirmed changes and remaining failures
 
@@ -67,7 +75,7 @@ The original Luanti 25-second check and its failure status remain unchanged.
    Bounded fixed-category original supervisor/authority diagnostics are next.
    No rollback tolerance, authority/deadline/quota renewal or attempt refund
    is justified by the current evidence.
-   Source1dd Windows now identifies the actual extra termination:
+   Source1dd on both OS now identifies the actual extra termination:
    `PlatformChanged previous_state=Stopped(TransportLost)`. The original
    products supervisor observed the final Stopped/successful-cleanup receipt
    and `stop_owner=false`. There was no expiry/rollback category in this failure.
@@ -94,6 +102,17 @@ The original Luanti 25-second check and its failure status remain unchanged.
    changing it. Windows's four original pending-listener subcases passed.
    On sourcef570 Linux pending case0 passed, and case1 failed its independent
    original public-PKI system-DNS readiness. The bare Invalid did not recur.
+   On source1dd management cases0..2 completed and case3's independent
+   Fixture::new returned management response Invalid. This run contains no
+   Secret Service timeout or associated metadata; it neither establishes that
+   previous keyring cause nor proves it resolved. A diagnostic-only follow-up
+   adds fixed original SDK-operation stage, SDK category/HTTP status and I/O
+   kind to Fixture::new failures using inspect_err. It returns the same error
+   and leaves operations, assertions, authority and all time bounds intact.
+   No raw error, endpoint, account, token, key or secret is printed. Pending
+   cases0/1 completed, and independent case2 then failed its original60-second
+   public-PKI system-DNS readiness. No retry, shared tunnel or DNS fallback is
+   introduced.
 
 ## New source, awaiting hosted verification
 
@@ -106,16 +125,19 @@ polling faster, a direct meter read gives every authenticated IPC/UI caller the
 current cumulative facts. If that read fails, the view reports stopped/zero
 remaining authority. The original resident assertion and its timing are intact;
 the existing real AppCore integration also asserts immediate snapshot budgets
-after actual completed files before and after rebuild.
+after actual completed files before and after rebuild. Source1dd now confirms
+those AppCore assertions on both OS and the complete original Linux TLS
+resident immediate-budget case, with both real files and cleanup passing.
 
 Diagnostic-only changes identify the first products actor, its fixed result,
 the original lifecycle/status/reason/cleanup/failure and whether the supervisor
 stops the owner. Original admission/process/session termination records static
 source location and fixed rollback/wall-expiry/monotonic-expiry categories only.
 Original rollback, expiry, quota, process-stop and revocation checks are intact.
-No QUIC authority repair is claimed until the next actual run identifies it.
+These diagnostics identified the exact late-capture path on both source1dd
+original QUIC failures; the repair below still requires its own actual run.
 
-The source1dd Windows diagnostic now identifies the path described above. The
+The source1dd diagnostic on both OS identifies the path described above. The
 new capture-failure notification delegates to existing
 `LeaseControl::stop_if_running(PlatformChanged)` after retiring the exact bound
 route. An active capture failure still stops immediately. A stopped producer's
@@ -159,17 +181,17 @@ and
 
 ## Next exact-source hosted work
 
-The f570 focused matrix completed with the original failures above. The next
-source `1dd4efd03b201d31744a716b4f99d73fd0d9c657` includes the production budget
-readback/diagnostic commit `c0bb7ac` and the additional original Session::stop
-reason/previous-state diagnostic `54ba6cf`. The main task pushed it and started
-the complete original focused matrix as
-[41461596961](https://github.com/ZHanry/NestLink/actions/runs/41461596961).
-Linux job125331747406 is still running; Windows job125331747712 completed with
-the original3/4 failure above. The main
-task separately owns the source1dd hosted formatter run41461476335. No newer
-source compilation, runtime or formatting success is claimed until receipts
-are downloaded and checked.
+Source1dd includes production budget readback/diagnostic commit `c0bb7ac`
+and original Session::stop reason/previous-state diagnostic `54ba6cf`. The
+complete run41461596961 is now downloaded and verified as above. The new source
+`91509d13f8aa52fff19f31e2fb77c5c702da0dc1` contains the confirmed late-capture
+repair and real lease regression. The main task pushed it and dispatched the
+complete original focused matrix as
+[41466485538](https://github.com/ZHanry/NestLink/actions/runs/41466485538).
+Windows job125348642149 and Linux job125348643070 are currently executing the
+original compile/lint/test step. The main task separately owns its hosted
+formatter run41466479064 and formatter patch review. No new source runtime
+success is claimed until receipts are downloaded and checked.
 Require all four original resident tests to execute and pass before marking
 resident completion. Follow the real protected-login stage and pending-case
 operation, and repair only confirmed failures. Preserve every failed receipt,

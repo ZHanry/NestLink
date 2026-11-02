@@ -508,6 +508,18 @@ pub struct Fixture {
     pub gate: watch::Sender<bool>,
     pub requests: Arc<AtomicUsize>,
 }
+fn fixture_setup_diagnostic(stage: &'static str, error: &(dyn std::error::Error + 'static)) {
+    let sdk = error.downcast_ref::<nestlink_sdk::SdkError>();
+    let status = match sdk {
+        Some(nestlink_sdk::SdkError::Api(status, _)) => Some(status.as_u16()),
+        _ => None,
+    };
+    let kind = error.downcast_ref::<io::Error>().map(io::Error::kind);
+    eprintln!(
+        "original_fixture_setup stage={stage} category={:?} http_status={status:?} io_kind={kind:?}",
+        sdk.map(nestlink_sdk::SdkError::diagnostic_failure)
+    );
+}
 impl Fixture {
     pub async fn new(area: &Path, platform: &Platform) -> Result<Self> {
         let deployment = random_id();
@@ -585,15 +597,18 @@ impl Fixture {
             &source_account,
             &source_password,
         )
-        .await?;
+        .await
+        .inspect_err(|error| fixture_setup_diagnostic("source_login", error.as_ref()))?;
         source_sdk
             .create_account(
                 host_account.clone(),
                 Secret::from_text(host_password.expose().into()),
             )
-            .await?;
-        let host_sdk =
-            https::login(&origin, &deployment, issuer, &host_account, &host_password).await?;
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("create_host_account", error))?;
+        let host_sdk = https::login(&origin, &deployment, issuer, &host_account, &host_password)
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("host_login", error.as_ref()))?;
         for (sdk, identity, role) in [
             (&source_sdk, &source_identity, "controller"),
             (&host_sdk, &host_identity, "host"),
@@ -614,13 +629,15 @@ impl Fixture {
                 ],
                 "direct_only".into(),
             )
-            .await?;
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("enroll_device", error))?;
         }
         let created = source_sdk
             .create_space(SpaceCreateRequest {
                 name: "Original resident protected HTTPS space".into(),
             })
-            .await?;
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("create_space", error))?;
         let space = created.space_id;
         pinned_space
             .set(space.clone())
@@ -641,7 +658,8 @@ impl Fixture {
                     expires_at_unix_ms: wall()? + 120_000,
                 },
             )
-            .await?;
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("invite_host", error))?;
         let accepted = host_sdk
             .accept_space_invitation(
                 &space,
@@ -650,7 +668,8 @@ impl Fixture {
                     token: invitation.token,
                 },
             )
-            .await?;
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("accept_host_invitation", error))?;
         assert_eq!(accepted.role, SpaceRole::Member);
         let mut revision = accepted.revision;
         for (sdk, identity) in [(&source_sdk, &source_identity), (&host_sdk, &host_identity)] {
@@ -663,7 +682,8 @@ impl Fixture {
                         installation_id: identity.device_id.clone(),
                     },
                 )
-                .await?
+                .await
+                .inspect_err(|error| fixture_setup_diagnostic("join_space_device", error))?
                 .revision;
         }
         assert!(
@@ -671,7 +691,11 @@ impl Fixture {
             Err(nestlink_sdk::SdkError::Api(status, _)) if status.as_u16() == 403),
             "the actual host account must retain the original admin-only policy denial"
         );
-        let member_view = host_sdk.space_details(&space).await?.space;
+        let member_view = host_sdk
+            .space_details(&space)
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("host_space_details", error))?
+            .space;
         assert_eq!(member_view.role, SpaceRole::Member);
         assert_eq!(
             member_view.authority_public_key,
@@ -686,7 +710,8 @@ impl Fixture {
         };
         let pending = source_sdk
             .create_remote(request(sessions[0].clone()))
-            .await?;
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("create_remote", error))?;
         host_sdk
             .approve(
                 &host_identity,
@@ -697,8 +722,12 @@ impl Fixture {
                     paths: vec![NetworkPath::Direct as i32],
                 },
             )
-            .await?;
-        let original = source_sdk.permit(&pending.id).await?;
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("approve_remote", error))?;
+        let original = source_sdk
+            .permit(&pending.id)
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("approved_remote_permit", error))?;
         host_sdk
             .trust_remote(
                 &host_identity,
@@ -708,11 +737,16 @@ impl Fixture {
                     expires_at_unix_ms: wall()? + 120_000,
                 },
             )
-            .await?;
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("trust_remote", error))?;
         let trusted = source_sdk
             .create_trusted_remote(request(sessions[1].clone()))
-            .await?;
-        let original = source_sdk.permit(&trusted.id).await?;
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("create_trusted_remote", error))?;
+        let original = source_sdk
+            .permit(&trusted.id)
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("trusted_remote_permit", error))?;
         source_sdk
             .set_offline_enabled(
                 &space,
@@ -721,9 +755,16 @@ impl Fixture {
                     enabled: true,
                 },
             )
-            .await?;
-        platform.protect_login(&source, &source_sdk).await?;
-        platform.protect_login(&host, &host_sdk).await?;
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("enable_offline", error))?;
+        platform
+            .protect_login(&source, &source_sdk)
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("source_protected_login", error.as_ref()))?;
+        platform
+            .protect_login(&host, &host_sdk)
+            .await
+            .inspect_err(|error| fixture_setup_diagnostic("host_protected_login", error.as_ref()))?;
         setup.store(false, Ordering::Release);
         Ok(Self {
             source,
