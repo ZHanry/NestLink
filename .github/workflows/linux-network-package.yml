@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['Cargo.*', 'rust-toolchain.toml', 'apps/daemon/**', 'apps/server/**', 'crates/**', 'third-party/**', 'packaging/**', 'config/product-scope.json', 'scripts/refactor-candidate-producer.py', 'scripts/refactor-linux-network-package.py', 'scripts/refactor-linux-package-faults.py', 'scripts/refactor-required-checks.py', 'tests/refactor/test_candidate_producer.py', 'tests/refactor/test_product_scope.py', '.github/workflows/linux-network-package.yml']
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'apps/daemon/**', 'apps/server/**', 'crates/**', 'third-party/**', 'packaging/**', 'config/product-scope.json', 'scripts/refactor-candidate-producer.py', 'scripts/refactor-windows-candidate-install.py', 'scripts/refactor-linux-network-package.py', 'scripts/refactor-linux-package-faults.py', 'scripts/refactor-required-checks.py', 'tests/refactor/test_candidate_producer.py', 'tests/refactor/test_product_scope.py', '.github/workflows/linux-network-package.yml']
   pull_request:
-    paths: ['Cargo.*', 'rust-toolchain.toml', 'apps/daemon/**', 'apps/server/**', 'crates/**', 'third-party/**', 'packaging/**', 'config/product-scope.json', 'scripts/refactor-candidate-producer.py', 'scripts/refactor-linux-network-package.py', 'scripts/refactor-linux-package-faults.py', 'scripts/refactor-required-checks.py', 'tests/refactor/test_candidate_producer.py', 'tests/refactor/test_product_scope.py', '.github/workflows/linux-network-package.yml']
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'apps/daemon/**', 'apps/server/**', 'crates/**', 'third-party/**', 'packaging/**', 'config/product-scope.json', 'scripts/refactor-candidate-producer.py', 'scripts/refactor-windows-candidate-install.py', 'scripts/refactor-linux-network-package.py', 'scripts/refactor-linux-package-faults.py', 'scripts/refactor-required-checks.py', 'tests/refactor/test_candidate_producer.py', 'tests/refactor/test_product_scope.py', '.github/workflows/linux-network-package.yml']
 
 permissions:
   contents: read
@@ -66,7 +66,7 @@ jobs:
           python3 -B scripts/refactor-native-codecs.py verify --target ${{ matrix.target }} --prefix "$NESTLINK_CODEC_PREFIX"
           cargo build --locked --release -p nestlink-daemon -p nestlink-server 2>&1 | tee "$RUNNER_TEMP/linux-network-build-evidence/cargo-build.log"
       - name: Parse original package coordinator and fault fixtures on GitHub
-        run: python3 -B -c 'import ast,pathlib; [ast.parse(path.read_text()) for path in map(pathlib.Path,["scripts/refactor-linux-network-package.py","scripts/refactor-linux-package-faults.py"])]'
+        run: python3 -B -c 'import ast,pathlib; [ast.parse(path.read_text()) for path in map(pathlib.Path,["scripts/refactor-linux-network-package.py","scripts/refactor-linux-package-faults.py","scripts/refactor-windows-candidate-install.py"])]'
       - name: Install exact bytes, require explicit authority and remove only package files
         env:
           GITHUB_TOKEN: ${{ github.token }}
