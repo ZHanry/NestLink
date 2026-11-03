@@ -9,6 +9,11 @@ use prost::Message;
 
 pub const H264_CAPABILITY: &str = "h264-baseline-v1";
 pub fn negotiated_video_codec(claims: &crate::PermitClaims) -> crate::NativeVideoCodec {
+    if claims.media_format_version == crate::media_authority::VP9_RGB444_FORMAT_VERSION
+        && crate::media_authority::permit_formats(claims).ok().flatten()
+            .is_some_and(|formats| formats.formats().iter().all(|f| f.codec == crate::media_format::Codec::Vp9)) {
+        return crate::NativeVideoCodec::Vp9Rgb444;
+    }
     if matches!(
         claims.media_format_version,
         crate::media_authority::HEVC_FORMAT_VERSION
@@ -156,6 +161,16 @@ impl NativeVideo {
         }
         match crate::NativeVideoCodec::try_from(self.codec) {
             Ok(crate::NativeVideoCodec::Vp8) => {}
+            Ok(crate::NativeVideoCodec::Vp9Rgb444) => {
+                if self.format_epoch == 0 || self.format_sha256.len() != 32
+                    || self.width < 16 || self.height < 16 || !self.keyframe
+                    || packet.is_empty() {
+                    return Err(invalid("VP9 RGB444 requires exact format identity and an independent keyframe envelope"));
+                }
+                // The fixed libvpx public parser and the actual decoder verify
+                // exact keyframe geometry/profile/color/depth and I444 output.
+                return Ok(());
+            }
             Ok(crate::NativeVideoCodec::H264Baseline) => {
                 if !(packet.starts_with(&[0, 0, 1]) || packet.starts_with(&[0, 0, 0, 1])) {
                     return Err(invalid("invalid H.264 envelope geometry or Annex B prefix"));

@@ -1,7 +1,7 @@
 # ADR 0083: Explicit software VP9 sRGB 4:4:4
 
-Date: 2026-11-03. Status: native adapter and shared execution source implemented;
-hosted validation, independent wire contract and product wiring pending.
+Date: 2026-11-03. Status: native adapter, shared execution and independent v6
+production source implemented; hosted validation and product qualification pending.
 
 W33 requires actual full-resolution color components. The existing Windows MF
 HEVC decoder publicly exposes NV12/P010 and Main/Main10. Its public contract

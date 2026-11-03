@@ -441,6 +441,8 @@ fn a_changed_node_endpoint_only_withdraws_that_original_candidate_without_refund
         NOW,
     )?;
     let read = f.read(&set)?;
+    assert!(read.members[0].authorized);
+    assert!(read.members[1].authorized);
     assert!(!read.members[0].available);
     assert!(read.members[1].available);
     assert_eq!(read.members[0].node.revision, 1);
@@ -460,6 +462,8 @@ fn revoking_one_node_preserves_the_other_original_grant_and_node_admission_resou
         .store
         .revoke_node(&f.base.controller, &f.nodes[0].0)?;
     let read = f.read(&set)?;
+    assert!(!read.members[0].authorized);
+    assert!(read.members[1].authorized);
     assert!(!read.members[0].available);
     assert!(read.members[1].available);
     assert_eq!(read.path.path.claims, issued.path.path.claims);

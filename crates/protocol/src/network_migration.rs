@@ -1,6 +1,8 @@
 //! A closed control transcript for a separately authorized path transition.
 //! Parsing these bytes grants neither a path nor permission to move a socket.
 use crate::{ContractError, ErrorCode, network::PeerPair};
+pub mod packet;
+pub mod request;
 
 pub const VERSION: u8 = 1;
 pub const MAX_BYTES: usize = 6 + 12 * 32 + 4 * 8 + 2 * 32 + 64;

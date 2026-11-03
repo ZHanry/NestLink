@@ -16,7 +16,7 @@ fn fixture(prefix: &Path) -> io::Result<(Vec<u8>, Value)> {
     let lock = serde_json::to_vec(
         &json!({"schema_version":1, "kind":"nestlink-native-codecs-lock",
         "sources":sources, "bundled_components":bundled, "targets": {TARGET: {"crt":"system", "libraries":libraries}},
-        "profile":"release", "linkage":"static", "features":{"vp8":true,"vp9":false}}),
+        "profile":"release", "linkage":"static", "features":{"vp8":true,"vp9":true,"vp9_encoder":true,"libyuv_rgb444":true}}),
     )?;
     let mut files = Vec::new();
     for (path, kind) in [
@@ -42,7 +42,7 @@ fn fixture(prefix: &Path) -> io::Result<(Vec<u8>, Value)> {
     }
     let receipt = json!({"schema_version":1,"kind":"nestlink-native-codecs", "target":TARGET,
         "profile":"release","linkage":"static","crt":"system", "lock_sha256":hash(&lock),
-        "sources":sources,"bundled_components":bundled,"libraries":libraries,"features":{"vp8":true,"vp9":false},"files":files});
+        "sources":sources,"bundled_components":bundled,"libraries":libraries,"features":{"vp8":true,"vp9":true,"vp9_encoder":true,"libyuv_rgb444":true},"files":files});
     write_receipt(prefix, &receipt)?;
     Ok((lock, receipt))
 }
@@ -69,7 +69,9 @@ fn reject_wrong_target_source_features_and_untracked_files() -> io::Result<()> {
     for (path, replacement) in [
         ("/target", json!("aarch64-unknown-linux-gnu")),
         ("/crt", json!("static")),
-        ("/features/vp9", json!(true)),
+        ("/features/vp9", json!(false)),
+        ("/features/vp9_encoder", json!(false)),
+        ("/features/libyuv_rgb444", json!(false)),
         ("/sources/0/commit", json!("another-commit")),
         (
             "/bundled_components/0/commit",

@@ -6,6 +6,7 @@ use nestlink_protocol::{
 };
 use rand_core::{OsRng, RngCore};
 mod offline_remote;
+mod explicit_media;
 pub use offline_remote::{OfflineRemoteAuthority, OfflineRemoteStatus};
 #[cfg(all(feature = "media-runtime-test-support", not(debug_assertions)))]
 compile_error!("media-runtime-test-support is restricted to debug regression builds");
@@ -38,6 +39,7 @@ pub struct SessionBinding {
 /// retain and continuously check the actual probe owner and generation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MediaSessionBinding {
+    explicit_selection: Option<explicit_media::ExplicitSelection>,
     internal_candidate: Option<
         nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate,
     >,
@@ -58,6 +60,9 @@ impl MediaSessionBinding {
         local: &nestlink_protocol::media_authority::MediaAnnouncement,
         now_unix_ms: u64,
     ) -> Result<Self, ContractError> {
+        if self.explicit_selection.is_some() {
+            return Err(error(ErrorCode::PlatformUnsupported, "explicit media cannot enter the internal candidate route"));
+        }
         policy.authorize_permit(permit.claims())?;
         policy.authorize_announcement(local, now_unix_ms)?;
         if self.probe != local.probe
@@ -120,6 +125,7 @@ impl MediaSessionBinding {
             ));
         }
         Ok(Self {
+            explicit_selection: None,
             internal_candidate: None,
             direction,
             probe: local.probe.clone(),
@@ -147,6 +153,10 @@ impl MediaSessionBinding {
             policy.authorize_permit(permit.claims())?;
             policy.authorize_announcement(local, now_unix_ms)?;
             next.internal_candidate = Some(policy.clone());
+        }
+        if let Some(selection) = &self.explicit_selection {
+            selection.authorize(permit.claims())?;
+            next = next.with_explicit_media_selection(selection.formats().clone(), permit, local, now_unix_ms)?;
         }
         let replaced = next.probe != self.probe;
         if (replaced
@@ -906,9 +916,19 @@ fn validate_binding_with_rollout(
     } else {
         false
     };
+    let scoped_explicit = if let Some(local) = &b.media
+        && let Some(selection) = &local.explicit_selection
+    {
+        selection.authorize(c)?;
+        selection.check_probe(local.direction, &local.probe)?;
+        true
+    } else {
+        false
+    };
     if nestlink_protocol::media_authority::permit_formats(c)?.is_some()
         && !scoped_regression
         && !scoped_candidate
+        && !scoped_explicit
     {
         return Err(error(
             ErrorCode::PlatformUnsupported,

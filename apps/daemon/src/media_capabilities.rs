@@ -13,6 +13,7 @@ use std::{
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 enum Mode {
     CpuH264,
+    Vp9Rgb444,
     HevcMain8,
     HevcMain10,
     HevcHdr10,
@@ -21,6 +22,7 @@ impl Mode {
     fn name(self) -> &'static str {
         match self {
             Self::CpuH264 => "cpu-h264",
+            Self::Vp9Rgb444 => "vp9-rgb444",
             Self::HevcMain8 => "hevc-main8",
             Self::HevcMain10 => "hevc-main10",
             Self::HevcHdr10 => "hevc-hdr10",
@@ -66,7 +68,7 @@ pub(crate) struct InspectArgs {
     /// HEVC encoder (also the decode probe's sample producer). Decoder stays MF.
     #[arg(long, value_enum)]
     encoder: Option<NativeHevcEncoder>,
-    /// Current owners support 420 only; an explicit 444 request reports unavailable.
+    /// VP9 RGB444 requires explicit 444; H264/HEVC modes retain 420 only.
     #[arg(long, value_enum, default_value = "420")]
     chroma: Chroma,
     /// Independent hevc-hdr10 mode requires hdr10. Main10 remains SDR.
@@ -75,7 +77,7 @@ pub(crate) struct InspectArgs {
 }
 impl InspectArgs {
     fn encoder_name(&self) -> Option<&'static str> {
-        if self.mode == Mode::CpuH264 && self.encoder.is_none() {
+        if matches!(self.mode, Mode::CpuH264 | Mode::Vp9Rgb444) && self.encoder.is_none() {
             return None;
         }
         Some(match self.encoder.unwrap_or(NativeHevcEncoder::SystemMf) {
@@ -84,10 +86,16 @@ impl InspectArgs {
         })
     }
     fn provider(&self) -> io::Result<NativeMediaProvider> {
+        if self.mode == Mode::Vp9Rgb444 {
+            if self.chroma != Chroma::Yuv444 || self.dynamic_range != DynamicRange::Sdr || self.encoder.is_some() {
+                return Err(io::Error::new(io::ErrorKind::InvalidInput, "VP9 RGB444 requires explicit 444, SDR and its software encoder; no HEVC encoder applies"));
+            }
+            return NativeMediaProvider::software_vp9_rgb444(self.target);
+        }
         if self.chroma != Chroma::Yuv420 {
             return Err(io::Error::new(
                 io::ErrorKind::Unsupported,
-                "no exact 4:4:4 product capture/codec/presenter owner; select 420 explicitly to request a different mode",
+                "the selected H264/HEVC mode has no exact 4:4:4 owner; no replacement was attempted",
             ));
         }
         if (self.mode == Mode::HevcHdr10 && self.dynamic_range != DynamicRange::Hdr10)
@@ -100,6 +108,7 @@ impl InspectArgs {
         }
         let encoder = self.encoder.unwrap_or(NativeHevcEncoder::SystemMf).into();
         match self.mode {
+            Mode::Vp9Rgb444 => Err(io::Error::other("VP9 mode must use its exact RGB444 configuration")),
             Mode::CpuH264 if self.encoder.is_some() => Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "HEVC encoder selection cannot apply to the explicit CPU H.264 mode",
@@ -127,7 +136,7 @@ impl InspectArgs {
                 "mode": self.mode.name(),
                 "direction": direction.as_str(),
                 "encoder": self.encoder_name(),
-                "decoder": if self.mode == Mode::CpuH264 { "system-mf-software" } else { "system-mf-hardware" },
+                "decoder": if self.mode == Mode::Vp9Rgb444 { "libvpx-software" } else if self.mode == Mode::CpuH264 { "system-mf-software" } else { "system-mf-hardware" },
                 "chroma": if self.chroma == Chroma::Yuv420 { "420" } else { "444" },
                 "dynamic_range": match self.dynamic_range {
                     DynamicRange::Sdr => "sdr", DynamicRange::Hdr10 => "hdr10", DynamicRange::Hlg => "hlg",
@@ -135,7 +144,9 @@ impl InspectArgs {
                 "width": self.target.width, "height": self.target.height,
                 "fps": self.target.fps, "bitrate_kbps": self.target.bitrate_kbps,
             },
-            "probe_dependencies": if self.mode == Mode::CpuH264 {
+            "probe_dependencies": if self.mode == Mode::Vp9Rgb444 {
+                "actual libvpx profile1 sRGB/full 8-bit I444 encode and independent decode with adjacent single-pixel color validation"
+            } else if self.mode == Mode::CpuH264 {
                 "actual CPU H.264 encode and independent decode validation"
             } else {
                 "selected hardware encoder, original MF hardware decoder, independent software decoder; sample production is required for either direction"
@@ -205,6 +216,20 @@ mod tests {
     struct Cli {
         #[command(flatten)]
         args: InspectArgs,
+    }
+    #[test]
+    fn rgb444_inspection_requires_explicit_chroma_and_software_mode() -> io::Result<()> {
+        let args = Cli::try_parse_from(["media-capabilities", "--mode", "vp9-rgb444", "--chroma", "444", "--direction", "decode", "--target", "641x481@144:8000"]).map_err(io::Error::other)?.args;
+        args.provider()?;
+        assert_eq!(args.report()["requested"]["mode"], "vp9-rgb444");
+        assert_eq!(args.report()["requested"]["decoder"], "libvpx-software");
+        assert!(args.encoder_name().is_none());
+        for extra in [vec![], vec!["--chroma", "420"], vec!["--chroma", "444", "--encoder", "amd-amf"], vec!["--chroma", "444", "--dynamic-range", "hdr10"]] {
+            let mut input = vec!["media-capabilities", "--mode", "vp9-rgb444", "--direction", "encode", "--target", "640x480@60:8000"];
+            input.extend(extra);
+            assert!(Cli::try_parse_from(input).map_err(io::Error::other)?.args.provider().is_err());
+        }
+        Ok(())
     }
     fn parse(extra: &[&str]) -> Result<InspectArgs, clap::Error> {
         let mut args = vec![

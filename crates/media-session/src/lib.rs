@@ -17,10 +17,14 @@ mod hevc_negotiated_format;
 pub use hevc_budget::select_hevc_budget;
 pub use hevc_negotiated_format::{hevc_contract, hevc_main8_contract, hevc_wire_codec};
 mod legacy_format;
+mod software_prepare;
+pub use software_prepare::SoftwareVideoPrepare;
 mod live_execution;
 pub use live_execution::{LiveExecutionIdentity, LiveExecutionReceipt, LiveExecutionTarget};
 mod negotiated_budget;
 mod negotiated_format;
+mod vp9_negotiated_format;
+pub use vp9_negotiated_format::{vp9_rgb444_execution_target, vp9_rgb444_execution_receipt_matches};
 #[cfg(windows)]
 pub use hevc_negotiated_format::{
     hevc_execution_receipt_matches, hevc_execution_target, hevc_submission_receipt_matches,

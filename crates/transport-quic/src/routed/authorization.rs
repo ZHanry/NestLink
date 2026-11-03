@@ -22,6 +22,31 @@ struct Binding {
     chain: Option<RemoteChainBinding>,
     byte_limit: u64,
     deadline: Instant,
+    migration_scope: Option<RemoteMigrationScope>,
+}
+#[derive(Clone, PartialEq, Eq)]
+pub(super) struct RemoteMigrationScope {
+    deployment: [u8; 32], space: [u8; 32], session: [u8; 32], permit: [u8; 32],
+    path_grant: [u8; 32], transport_group: [u8; 32], business_generation: u64,
+}
+impl RemoteMigrationScope {
+    fn new(context: &NetworkVerification<'_>, path: &VerifiedNetworkPath, permit: &VerifiedPermit) -> io::Result<Self> {
+        Ok(Self {
+            deployment: nestlink_identity::digest(context.deployment_id.as_bytes()),
+            space: nestlink_identity::digest(context.space_id.as_bytes()),
+            session: nestlink_identity::digest(permit.claims().session_id.as_bytes()),
+            permit: permit.digest(),
+            path_grant: nestlink_identity::digest(&nestlink_protocol::network::GrantClaims::Path(path.claims().clone()).signing_message().map_err(io::Error::other)?),
+            transport_group: path.transport_group_id(),
+            business_generation: permit.claims().connection_generation,
+        })
+    }
+    pub(super) fn matches(&self, binding: &nestlink_protocol::network_migration::Binding) -> bool {
+        self.deployment == binding.deployment && self.space == binding.space
+            && self.session == binding.session && self.permit == binding.permit
+            && self.path_grant == binding.path_grant && self.transport_group == binding.transport_group
+            && self.business_generation == binding.business_generation
+    }
 }
 /// No unchecked public constructor. All binding fields follow verified signed
 /// objects. The initial policy snapshot never becomes indefinite authority.
@@ -110,6 +135,7 @@ impl RouteAuthorization {
                 binding: Arc::new(Binding {
                     digest: route.digest,
                     purpose: Purpose::PrivateService,
+                    migration_scope: None,
                     peers: route.peers,
                     relay: route.relay,
                     chain: None,
@@ -162,6 +188,7 @@ impl RouteAuthorization {
                 binding: Arc::new(Binding {
                     digest: route.digest,
                     purpose: Purpose::PrivateService,
+                    migration_scope: None,
                     peers: route.peers,
                     relay: route.relays[0],
                     chain: Some(route),
@@ -216,6 +243,7 @@ impl RouteAuthorization {
                 binding: Arc::new(Binding {
                     digest: route.digest,
                     purpose: Purpose::RemoteControl,
+                    migration_scope: Some(RemoteMigrationScope::new(&current, path, permit)?),
                     peers: route.peers,
                     relay: route.relay,
                     chain: None,
@@ -267,6 +295,7 @@ impl RouteAuthorization {
                 binding: Arc::new(Binding {
                     digest: route.digest,
                     purpose: Purpose::RemoteControl,
+                    migration_scope: Some(RemoteMigrationScope::new(&current, path, permit)?),
                     peers: route.peers,
                     relay: route.relays[0],
                     chain: Some(route),
@@ -369,6 +398,7 @@ impl RouteAuthorization {
     pub fn peers(&self) -> PeerPair {
         self.binding.peers
     }
+    pub(super) fn migration_scope(&self) -> Option<&RemoteMigrationScope> { self.binding.migration_scope.as_ref() }
     pub fn relay(&self) -> PeerId {
         self.binding.relay
     }

@@ -76,6 +76,38 @@ pub async fn authorize(
     identity: &InstallationIdentity,
     peer_key: &[u8; 32],
 ) -> Result<ChannelRuntime, RemoteError> {
+    authorize_inner(connection, endpoint, setup, identity, peer_key, false).await
+}
+
+/// Explicit file-only admission for the negotiated path-migration ALPN.
+/// The original permit must contain only FileRead/FileWrite. The same mutual
+/// endpoint proof, profile, per-channel authorization and byte quota remain.
+/// Legacy authorize keeps its original View admission requirement.
+pub async fn authorize_file_only_path_migration(
+    connection: quinn::Connection,
+    endpoint: Option<quinn::Endpoint>,
+    setup: SessionSetup,
+    identity: &InstallationIdentity,
+    peer_key: &[u8; 32],
+) -> Result<ChannelRuntime, RemoteError> {
+    let negotiated = connection.handshake_data()
+        .and_then(|data| data.downcast::<quinn::crypto::rustls::HandshakeData>().ok())
+        .is_some_and(|data| data.protocol.as_deref() == Some(nestlink_protocol::network_migration::packet::REMOTE_ALPN));
+    if !negotiated {
+        connection.close(1u32.into(), b"file-only migration ALPN mismatch");
+        return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
+    }
+    authorize_inner(connection, endpoint, setup, identity, peer_key, true).await
+}
+
+async fn authorize_inner(
+    connection: quinn::Connection,
+    endpoint: Option<quinn::Endpoint>,
+    setup: SessionSetup,
+    identity: &InstallationIdentity,
+    peer_key: &[u8; 32],
+    file_only: bool,
+) -> Result<ChannelRuntime, RemoteError> {
     let mut guard = SetupGuard {
         connection: Some(connection.clone()),
         lease: None,
@@ -148,7 +180,9 @@ pub async fn authorize(
             format!("QUIC {role:?} session setup budget exhausted while {stage}"),
         )
     })??;
-    let lease = LeaseControl::new(session, path, clock, lifecycle)?;
+    let lease = if file_only {
+        LeaseControl::new_file_only(session, path, clock, lifecycle)?
+    } else { LeaseControl::new(session, path, clock, lifecycle)? };
     guard.lease = Some(lease.clone());
     let renewal = if lease.native_renewal_required()? {
         crate::native_renewal::negotiate(&mut control_read, &mut control_write, &lease).await?;

@@ -159,6 +159,9 @@ pub struct NetworkRemoteRouteSetMemberView {
     pub allocation_id: String,
     pub transit: NetworkGrantView,
     pub node: NodeEndpointsView,
+    /// Current authorization of the original node identity and relay role.
+    /// Unlike availability, explicit withdrawal must stop a retained path.
+    pub authorized: bool,
     /// Current management observation of this original node binding. An
     /// unavailable member does not revoke another member's original authority.
     pub available: bool,

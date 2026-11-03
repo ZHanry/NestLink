@@ -207,6 +207,43 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --lib video::tests:: -- --show-output 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/media-owner-evidence/readback-ipc-tests.log"
           exit $LASTEXITCODE
+      - name: Verify ordinary RGB444 pacing with the actual original sealed encoder owner
+        if: ${{ !cancelled() }}
+        shell: python
+        run: |
+          import os, pathlib, re, subprocess, sys
+          name = 'runtime::native_intra::tests::ordinary_rgb444_pacing_requires_exact_live_sealed_output'
+          command = [sys.executable, 'scripts/refactor-windows-normal-user.py',
+              'cargo', 'test', '--locked', '-p', 'nestlink-app-core', '--lib', name,
+              '--', '--ignored', '--exact', '--show-output', '--test-threads=1']
+          log_path = pathlib.Path(os.environ['RUNNER_TEMP'])/'media-owner-evidence'/'vp9-ordinary-pacing-owner.log'
+          with log_path.open('wb') as log:
+              result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=600)
+          output = log_path.read_text(encoding='utf-8', errors='replace')
+          print(output)
+          assert result.returncode == 0, 'actual RGB444 pacing owner failed; original diagnostic retained'
+          assert re.search(r'test '+re.escape(name)+r' \.\.\. ok', output), 'exact actual owner test did not execute'
+          assert re.search(r'test result: ok\. 1 passed; 0 failed; 0 ignored;', output), 'expected exactly one passing actual owner test and zero ignored'
+      - name: Verify exact production opt-in and actual RGB444 Core ACK AU decoded export
+        if: ${{ !cancelled() }}
+        shell: python
+        run: |
+          import os, pathlib, re, subprocess, sys
+          cases = [
+              ('explicit-selection', 'nestlink-session', 'explicit_media::tests::explicit_v3_to_v6_require_local_selection_and_preserve_exact_scope_across_renewal', []),
+              ('vp9-core-ack-au-export', 'nestlink-app-core', 'runtime::native_displays::positive_runtime_test::rgb444::positive_signed_rgb444_core_ack_au_and_original_decoded_export', ['--features', 'media-runtime-test-support'])]
+          for label, package, name, features in cases:
+              command = [sys.executable, 'scripts/refactor-windows-normal-user.py',
+                  'cargo', 'test', '--locked', '-p', package, '--lib'] + features + [name,
+                  '--', '--exact', '--show-output', '--test-threads=1']
+              log_path = pathlib.Path(os.environ['RUNNER_TEMP'])/'media-owner-evidence'/(label+'.log')
+              with log_path.open('wb') as log:
+                  result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=600)
+              output = log_path.read_text(encoding='utf-8', errors='replace')
+              print(output)
+              assert result.returncode == 0, label+' failed; original diagnostic retained'
+              assert re.search(r'test '+re.escape(name)+r' \.\.\. ok', output), label+' exact test did not execute'
+              assert re.search(r'test result: ok\. 1 passed; 0 failed; 0 ignored;', output), label+' expected exactly one passing test and zero ignored'
       - name: Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries
         if: ${{ !cancelled() }}
         shell: pwsh

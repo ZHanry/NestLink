@@ -7,6 +7,7 @@ const VERSION: u16 = 2;
 pub const HEVC_FORMAT_VERSION: u16 = 3;
 pub const HEVC_MAIN10_FORMAT_VERSION: u16 = 4;
 pub const HEVC_HDR10_FORMAT_VERSION: u16 = 5;
+pub const VP9_RGB444_FORMAT_VERSION: u16 = 6;
 const MAX_FORMATS: usize = 64;
 const MAX_FPS: u32 = 144;
 const FORMAT_DOMAIN: &[u8] = b"nestlink/media-format/v2\0";
@@ -17,6 +18,8 @@ const MAIN10_FORMAT_DOMAIN: &[u8] = b"nestlink/media-format/v4\0";
 const MAIN10_SET_DOMAIN: &[u8] = b"nestlink/media-format-set/v4\0";
 const HDR10_FORMAT_DOMAIN: &[u8] = b"nestlink/media-format/v5\0";
 const HDR10_SET_DOMAIN: &[u8] = b"nestlink/media-format-set/v5\0";
+const RGB444_FORMAT_DOMAIN: &[u8] = b"nestlink/media-format/v6\0";
+const RGB444_SET_DOMAIN: &[u8] = b"nestlink/media-format-set/v6\0";
 type Result<T> = std::result::Result<T, ContractError>;
 fn invalid(reason: &'static str) -> ContractError {
     ContractError::new(ErrorCode::InvalidMessage, reason)
@@ -38,14 +41,14 @@ macro_rules! field {
         }
     };
 }
-field!(Codec { Vp8 = 1, H264 = 2, Hevc = 3 });
-field!(Profile { Vp8 = 1, H264Baseline = 2, HevcMain = 3, HevcMain10 = 4, HevcRange444 = 5 });
+field!(Codec { Vp8 = 1, H264 = 2, Hevc = 3, Vp9 = 4 });
+field!(Profile { Vp8 = 1, H264Baseline = 2, HevcMain = 3, HevcMain10 = 4, HevcRange444 = 5, Vp9Profile1 = 6 });
 field!(Tier { NotApplicable = 0, Main = 1, High = 2 });
 field!(Chroma { Yuv420 = 1, Yuv444 = 2 });
 field!(BitDepth { Eight = 8, Ten = 10 });
 field!(Primaries { Unspecified = 0, Bt709 = 1, Bt2020 = 2 });
 field!(Transfer { Unspecified = 0, Bt709 = 1, Srgb = 2, Pq = 3, Hlg = 4 });
-field!(Matrix { Bt709 = 1, Bt2020NonConstant = 2, Bt601 = 3 });
+field!(Matrix { Bt709 = 1, Bt2020NonConstant = 2, Bt601 = 3, Identity = 4 });
 field!(Range { Limited = 1, Full = 2 });
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -56,6 +59,12 @@ pub struct Color {
     pub range: Range,
 }
 impl Color {
+    pub const RGB_SRGB_FULL: Self = Self {
+        primaries: Primaries::Bt709,
+        transfer: Transfer::Srgb,
+        matrix: Matrix::Identity,
+        range: Range::Full,
+    };
     /// Existing VP8 Rust conversion is BT601 studio range; capture does not
     /// establish complete primaries/transfer metadata. Do not invent BT709.
     pub const LEGACY_VP8_BT601: Self = Self {
@@ -175,6 +184,9 @@ impl Geometry {
             return Err(invalid("invalid coded/display/crop geometry"));
         }
         match format.codec {
+            Codec::Vp9 if self != Self::uncropped(format.width, format.height) => {
+                return Err(invalid("VP9 RGB444 requires exact uncropped geometry"));
+            }
             Codec::Vp8 if self != Self::uncropped(format.width, format.height) => {
                 return Err(invalid("VP8 does not expose SPS cropping"));
             }
@@ -295,6 +307,19 @@ impl VideoFormat {
         }
         let legacy_pixels = self.chroma == Chroma::Yuv420 && self.bit_depth == BitDepth::Eight;
         match (self.codec, self.profile) {
+            (Codec::Vp9, Profile::Vp9Profile1) => {
+                if self.chroma != Chroma::Yuv444
+                    || self.bit_depth != BitDepth::Eight
+                    || self.color != Color::RGB_SRGB_FULL
+                    || self.level != 0 || self.h264_constraints != 0
+                    || self.tier != Tier::NotApplicable || self.hevc_ptl.is_some()
+                    || self.width < 16 || self.height < 16
+                    || self.frame_rate.denominator != 1
+                    || !(64..=100_000).contains(&self.max_kbps)
+                {
+                    return Err(invalid("unsupported VP9 profile1 RGB444 format combination"));
+                }
+            }
             (Codec::Vp8, Profile::Vp8) => {
                 if !legacy_pixels
                     || self.h264_constraints != 0
@@ -380,6 +405,18 @@ impl VideoFormat {
 
     pub fn legacy_vp8(width: u32, height: u32, fps: FrameRate, kbps: u32) -> Result<Self> {
         Self::legacy(Codec::Vp8, Profile::Vp8, 0, width, height, fps, kbps)
+    }
+    /// Independent v6 software RGB444 contract. Actual native direction work
+    /// and original executable owners must be proved separately.
+    pub fn vp9_rgb444(width: u32, height: u32, frame_rate: FrameRate, max_kbps: u32) -> Result<Self> {
+        let format = Self {
+            codec: Codec::Vp9, profile: Profile::Vp9Profile1, level: 0,
+            h264_constraints: 0, geometry: Geometry::uncropped(width, height),
+            tier: Tier::NotApplicable, chroma: Chroma::Yuv444, bit_depth: BitDepth::Eight,
+            color: Color::RGB_SRGB_FULL, width, height, frame_rate, max_kbps, hevc_ptl: None,
+        };
+        format.validate()?;
+        Ok(format)
     }
     /// Target description only. Actual sender receipts use h264_observed.
     pub fn legacy_h264(
@@ -547,7 +584,7 @@ impl VideoFormat {
                 || bytes[..2] == HEVC_HDR10_FORMAT_VERSION.to_be_bytes());
         let exact_hevc =
             bytes.len() == 69 && (bytes[..2] == HEVC_FORMAT_VERSION.to_be_bytes() || main10);
-        if !exact_hevc && (bytes.len() != 57 || bytes[..2] != VERSION.to_be_bytes()) {
+        if !exact_hevc && (bytes.len() != 57 || (bytes[..2] != VERSION.to_be_bytes() && bytes[..2] != VP9_RGB444_FORMAT_VERSION.to_be_bytes())) {
             return Err(invalid("invalid canonical video format envelope"));
         }
         let u32_at = |offset| {
@@ -642,7 +679,9 @@ impl VideoFormat {
     pub fn digest(self) -> Result<[u8; 32]> {
         self.validate()?;
         let mut hash = Sha256::new();
-        hash.update(if self.canonical_version() == HEVC_HDR10_FORMAT_VERSION {
+        hash.update(if self.canonical_version() == VP9_RGB444_FORMAT_VERSION {
+            RGB444_FORMAT_DOMAIN
+        } else if self.canonical_version() == HEVC_HDR10_FORMAT_VERSION {
             HDR10_FORMAT_DOMAIN
         } else if self.canonical_version() == HEVC_MAIN10_FORMAT_VERSION {
             MAIN10_FORMAT_DOMAIN
@@ -655,7 +694,9 @@ impl VideoFormat {
         Ok(hash.finalize().into())
     }
     pub fn canonical_version(self) -> u16 {
-        if self.hevc_ptl.is_some()
+        if self.codec == Codec::Vp9 {
+            VP9_RGB444_FORMAT_VERSION
+        } else if self.hevc_ptl.is_some()
             && self.profile == Profile::HevcMain10
             && self.color == Color::HDR10_BT2020_LIMITED
         {
@@ -680,6 +721,7 @@ impl FormatSet {
             && version != HEVC_FORMAT_VERSION
             && version != HEVC_MAIN10_FORMAT_VERSION
             && version != HEVC_HDR10_FORMAT_VERSION
+            && version != VP9_RGB444_FORMAT_VERSION
         {
             return Err(invalid("unsupported media format version"));
         }
@@ -732,7 +774,9 @@ impl FormatSet {
     pub fn digest(&self) -> [u8; 32] {
         let mut hash = Sha256::new();
         let version = self.canonical_version();
-        hash.update(if version == HEVC_HDR10_FORMAT_VERSION {
+        hash.update(if version == VP9_RGB444_FORMAT_VERSION {
+            RGB444_SET_DOMAIN
+        } else if version == HEVC_HDR10_FORMAT_VERSION {
             HDR10_SET_DOMAIN
         } else if version == HEVC_MAIN10_FORMAT_VERSION {
             MAIN10_SET_DOMAIN

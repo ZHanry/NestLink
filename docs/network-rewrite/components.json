@@ -15,6 +15,23 @@
   "research_runtime_exclusion": "EasyTier is idea_reference only; no executable, library, FFI, forked core or adapted code is selected.",
   "components": [
     {
+      "id": "C32",
+      "purpose": "Independent software VP9 profile1 sRGB full-range eight-bit RGB444 native mode",
+      "existing_implementation": ["Fixed libvpx 1.16.0 and same-archive bundled libyuv 1711", "Existing software execution owner queue, exact signed targets, sealing, cancellation fences and checked join/quarantine", "Existing BGRA capture, authenticated original-decoder export and desktop CPU presenter"],
+      "candidates": ["Pinned libvpx VP9 profile1 and public stream-info parser with libyuv RGB split/merge (selected)", "Existing MF HEVC Main/Main10 decoder (NV12/P010 only; cannot prove HEVC RExt444)", "NVENC FRExt with a new NVDEC or mature software HEVC444 decoder (separate GPU/HEVC444 owner gap; not selected for this software mode)"],
+      "official_sources": ["https://github.com/webmproject/libvpx/tree/1024874c5919305883187e2953de8fcb4c3d7fa6/vpx", "https://github.com/webmproject/libvpx/blob/1024874c5919305883187e2953de8fcb4c3d7fa6/vp9/vp9_cx_iface.c", "https://github.com/webmproject/libvpx/tree/1024874c5919305883187e2953de8fcb4c3d7fa6/third_party/libyuv/include/libyuv", "https://learn.microsoft.com/en-us/windows/win32/medfound/h-265---hevc-video-decoder"],
+      "maintenance_status": {"reviewed_at": "2026-11-03", "evidence": "Read fixed public profile, image format, color space/range, encoder controls, keyframe peek parser and RGB converter interfaces. Exact-source hosted build, strict checks, malformed/wrong-format tests, product ACK/IPC and target execution remain required; no local toolchain executed."},
+      "platforms": ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"],
+      "version": {"libvpx": "1.16.0", "commit": "1024874c5919305883187e2953de8fcb4c3d7fa6", "archive_sha256": "274c00c0b21f03a9152e324b1989f73b74268aa8545b39ef5faccc50fdb56393", "bundled_libyuv": "1711", "libyuv_commit": "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1"},
+      "license": "Existing pinned BSD-style libvpx/license/patents and bundled libyuv BSD-3-Clause/source-modification notices; no new codec archive or standards license claim.",
+      "selection_reason": "Reuse mature full-resolution profile1 RGB codec and conversion APIs without a new codec implementation, general VP9 parser, YUV matrix conversion or second scheduler. Enable actual VP9 encoder/decoder features and add only convert_from_argb.cc to the fixed libyuv closure.",
+      "adapter_boundary": "Explicit v6 descriptor/catalog/domain/approval and wire codec4; lossily encoded sRGB/full I444 G/B/R planes; complete visible independent keyframes only; public mature peek admission before native decode; actual I444/eight-bit/no-chroma-shift/sRGB/full/exact geometry/single-output metadata; 8MiB packet and 64MiB raw bounds; sealed original CPU owners and checked close/join; explicit one-target provider and host approval; existing capture to software owner to NLMF exact ACK to original decode to independent NLVID006 BGRA IPC and existing CPU presenter.",
+      "security_and_operations_cost": ["Native libvpx VP9 attack surface is now actually compiled and receipt-verified", "Private original context IDs, exact output hashes, sticky error quarantine and no implicit codec/backend/rate fallback", "Finite adjacent single-pixel color probes are functional evidence, never sustainable fps or capture/display qualification", "Software RGB444 does not satisfy HEVC444, GPU444, HDR or hardware high-frame-rate requirements", "User explicitly authorized supplier tamper input migration; original assertions and existing performance/time/Luanti gates remain"],
+      "work_packages": ["W32", "W33"],
+      "validation_status": "native_and_production_v6_source_in_progress_pending_hosted_build_strict_boundary_tests_actual_product_ack_ipc_and_target_execution",
+      "decision_ref": "docs/adr/network/0083-explicit-software-vp9-rgb444.md"
+    },
+    {
       "id": "C31",
       "purpose": "Explicit AMD AMF HEVC hardware encoder on the original supplied D3D11 owner device",
       "existing_implementation": ["Original strict System MF HEVC encoder/decoder and direction workload", "Existing owner identity, bounded worker, SPS admission and checked cleanup", "Installed AMD driver runtime; no locally installed SDK"],

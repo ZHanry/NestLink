@@ -11,6 +11,8 @@ pub const HEVC_MAIN10_FORMAT_CAPABILITY: &str = "native-media-format-v4";
 pub const HEVC_MAIN10_FORMAT_VERSION: u32 = 4;
 pub const HEVC_HDR10_FORMAT_CAPABILITY: &str = "native-media-format-v5";
 pub const HEVC_HDR10_FORMAT_VERSION: u32 = 5;
+pub const VP9_RGB444_FORMAT_CAPABILITY: &str = "native-media-format-v6";
+pub const VP9_RGB444_FORMAT_VERSION: u32 = 6;
 /// Expected original hardware platform from local generation-bound evidence.
 /// These scalars are configuration, never a live decoder/output receipt.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -25,6 +27,7 @@ pub fn capability_for_version(version: u32) -> Result<&'static str> {
         HEVC_FORMAT_VERSION => Ok(HEVC_FORMAT_CAPABILITY),
         HEVC_MAIN10_FORMAT_VERSION => Ok(HEVC_MAIN10_FORMAT_CAPABILITY),
         HEVC_HDR10_FORMAT_VERSION => Ok(HEVC_HDR10_FORMAT_CAPABILITY),
+        VP9_RGB444_FORMAT_VERSION => Ok(VP9_RGB444_FORMAT_CAPABILITY),
         _ => Err(invalid("unsupported exact media capability version")),
     }
 }
@@ -34,6 +37,7 @@ pub fn approval_domain(version: u32) -> Result<&'static str> {
         HEVC_FORMAT_VERSION => Ok("nestlink/media-approval/v3"),
         HEVC_MAIN10_FORMAT_VERSION => Ok("nestlink/media-approval/v4"),
         HEVC_HDR10_FORMAT_VERSION => Ok("nestlink/media-approval/v5"),
+        VP9_RGB444_FORMAT_VERSION => Ok("nestlink/media-approval/v6"),
         _ => Err(invalid("unsupported exact media approval version")),
     }
 }
@@ -80,6 +84,7 @@ pub fn decode_formats_for_version(
             | HEVC_FORMAT_VERSION
             | HEVC_MAIN10_FORMAT_VERSION
             | HEVC_HDR10_FORMAT_VERSION
+            | VP9_RGB444_FORMAT_VERSION
     ) {
         return Err(invalid("unsupported media catalog version"));
     }
@@ -97,6 +102,7 @@ pub fn decode_formats_for_version(
         u32::from(f.canonical_version()) != version
             || match version {
                 FORMAT_VERSION => f.codec != Codec::H264,
+                VP9_RGB444_FORMAT_VERSION => f.codec != Codec::Vp9,
                 HEVC_FORMAT_VERSION | HEVC_MAIN10_FORMAT_VERSION | HEVC_HDR10_FORMAT_VERSION => {
                     f.codec != Codec::Hevc || f.hevc_ptl.is_none()
                 }
@@ -136,7 +142,9 @@ pub fn permit_formats(claims: &PermitClaims) -> Result<Option<FormatSet>> {
         .iter()
         .filter(|s| s.as_str() == HEVC_HDR10_FORMAT_CAPABILITY)
         .count();
-    if markers == 0 && hevc_markers == 0 && main10_markers == 0 && hdr10_markers == 0 {
+    let rgb444_markers = claims.required_capabilities.iter()
+        .filter(|s| s.as_str() == VP9_RGB444_FORMAT_CAPABILITY).count();
+    if markers == 0 && hevc_markers == 0 && main10_markers == 0 && hdr10_markers == 0 && rgb444_markers == 0 {
         if claims.media_format_version != 0
             || !claims.media_formats.is_empty()
             || !claims.media_format_sha256.is_empty()
@@ -146,7 +154,7 @@ pub fn permit_formats(claims: &PermitClaims) -> Result<Option<FormatSet>> {
         return Ok(None);
     }
     let expected = capability_for_version(claims.media_format_version)?;
-    if markers + hevc_markers + main10_markers + hdr10_markers != 1
+    if markers + hevc_markers + main10_markers + hdr10_markers + rgb444_markers != 1
         || !claims
             .required_capabilities
             .iter()
@@ -205,6 +213,7 @@ impl MediaAnnouncement {
                 | HEVC_FORMAT_VERSION
                 | HEVC_MAIN10_FORMAT_VERSION
                 | HEVC_HDR10_FORMAT_VERSION
+                | VP9_RGB444_FORMAT_VERSION
         ) || !crate::valid_id(&self.device_id)
             || self.revision == 0
             || self.revision > i64::MAX as u64
@@ -248,6 +257,9 @@ impl MediaAnnouncement {
                 "exact HEVC announcement requires its original hardware direction",
             ));
         }
+        if self.version == VP9_RGB444_FORMAT_VERSION && self.probe.backend != "cpu-software" {
+            return Err(invalid("exact VP9 RGB444 requires its original software direction owner"));
+        }
         decode_formats_for_version(&self.formats, true, self.version)
     }
 }
@@ -268,6 +280,7 @@ impl FrozenMediaScope {
                 | HEVC_FORMAT_VERSION
                 | HEVC_MAIN10_FORMAT_VERSION
                 | HEVC_HDR10_FORMAT_VERSION
+                | VP9_RGB444_FORMAT_VERSION
         ) || self.controller_revision == 0
             || self.host_revision == 0
         {
@@ -287,6 +300,29 @@ mod tests {
     use crate::media_format::FrameRate;
     fn format() -> Result<VideoFormat> {
         VideoFormat::legacy_h264(31, 320, 240, FrameRate::new(30, 1)?, 2000)
+    }
+    #[test]
+    fn rgb444_v6_requires_its_own_marker_scope_domain_and_software_owner() -> Result<()> {
+        let format = VideoFormat::vp9_rgb444(641, 481, FrameRate::new(60, 1)?, 8000)?;
+        let set = FormatSet::new(vec![format])?;
+        let mut claims = PermitClaims { media_format_version: 6, media_formats: vec![format.encode()?], media_format_sha256: set.digest().to_vec(), required_capabilities: vec![VP9_RGB444_FORMAT_CAPABILITY.into()], ..Default::default() };
+        assert_eq!(permit_formats(&claims)?, Some(set));
+        assert_eq!(crate::media::negotiated_video_codec(&claims), crate::NativeVideoCodec::Vp9Rgb444);
+        for version in [2, 3, 4, 5] {
+            assert!(decode_formats_for_version(&claims.media_formats, false, version).is_err());
+            assert_ne!(approval_domain(version)?, approval_domain(6)?);
+        }
+        for markers in [vec![], vec![FORMAT_CAPABILITY.into()], vec![VP9_RGB444_FORMAT_CAPABILITY.into(), HEVC_HDR10_FORMAT_CAPABILITY.into()]] {
+            claims.required_capabilities = markers;
+            assert!(permit_formats(&claims).is_err());
+        }
+        let mut announcement = MediaAnnouncement { version: 6, device_id: "device_rgb444".into(), direction: MediaDirection::Decode, revision: 1, expires_at_unix_ms: 200, probe: ProbeIdentity { generation: 1, resource_id: "resource_rgb444".into(), backend: "cpu-software".into(), adapter_luid: None, driver_version: None }, formats: vec![format.encode()?] };
+        announcement.validate(100)?;
+        announcement.probe.backend = "cpu-hardware-readback".into();
+        announcement.probe.adapter_luid = Some(1);
+        announcement.probe.driver_version = Some(1);
+        assert!(announcement.validate(100).is_err());
+        Ok(())
     }
     #[test]
     fn hdr_requires_v5_marker_and_independent_scope_and_approval_domain() -> Result<()> {

@@ -30,6 +30,7 @@ impl Sdk {
             address_policy,
             cancel,
             deadline,
+            false,
         )
         .await
     }
@@ -45,6 +46,7 @@ impl Sdk {
         address_policy: &AddressPolicy,
         mut cancel: watch::Receiver<bool>,
         deadline: Instant,
+        migratable: bool,
     ) -> Result<ChannelRuntime, SessionEstablishError> {
         let permit = setup.session.current_verified_permit().clone();
         let candidate = route
@@ -136,7 +138,10 @@ impl Sdk {
             ),
             fingerprint: route.fingerprint,
             deadline: route.deadline,
-            kind: ReadbackKind::RouteSet { selected },
+            kind: ReadbackKind::RouteSet {
+                selected: Arc::new(std::sync::atomic::AtomicUsize::new(selected)),
+                migratable,
+            },
             cancel: Some(cancel.clone()),
         };
         let proved = super::super::super::authorize_remote_observed(
@@ -153,6 +158,7 @@ impl Sdk {
             deadline,
             Some(observer),
             Some(cancel.clone()),
+            migratable.then_some(1),
         )
         .await;
         let mut channels = match proved {

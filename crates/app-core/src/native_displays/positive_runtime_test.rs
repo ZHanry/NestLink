@@ -212,6 +212,7 @@ impl Drop for PresentationObserver {
 }
 
 struct ActualEncoder {
+    rgb444: bool,
     requests_seen: std::sync::atomic::AtomicUsize,
     requests: Option<std::sync::mpsc::Sender<()>>,
     packets: std::sync::mpsc::Receiver<
@@ -230,17 +231,21 @@ impl ActualEncoder {
         capture_origin: Arc<Mutex<Instant>>,
         source: (u32, u32),
     ) -> Self {
+        let rgb444 = target.codec == nestlink_protocol::media_format::Codec::Vp9;
         let (requests, receive) = std::sync::mpsc::channel();
         let (send, packets) = std::sync::mpsc::channel();
         let worker = std::thread::spawn(move || {
-            let mut encoder = VideoEncoder::with_execution_target(
-                nestlink_media_session::h264_execution_target(target, config)?,
-            )?;
-            let mut prepare = nestlink_media_session::LegacyPrepare::new(
-                nestlink_media_codec::VideoCodec::H264Baseline,
-                config.width,
-                config.height,
-            )?;
+            let mut encoder = if rgb444 {
+                VideoEncoder::with_vp9_rgb444_execution_target(nestlink_media_session::vp9_rgb444_execution_target(target)?)?
+            } else {
+                VideoEncoder::with_execution_target(nestlink_media_session::h264_execution_target(target, config)?)?
+            };
+            let mut prepare = if rgb444 {
+                nestlink_media_session::SoftwareVideoPrepare::with_format(nestlink_media_codec::VideoCodec::Vp9Rgb444, config.width, config.height, Some(target))?
+            } else {
+                nestlink_media_session::SoftwareVideoPrepare::Legacy(nestlink_media_session::LegacyPrepare::new(
+                    nestlink_media_codec::VideoCodec::H264Baseline, config.width, config.height)?)
+            };
             let original_pixels =
                 Zeroizing::new([16, 128, 240, 255].repeat((source.0 * source.1) as usize));
             let pixels = nestlink_media_codec::scale_bgra(
@@ -317,6 +322,7 @@ impl ActualEncoder {
             encoder.close()
         });
         Self {
+            rgb444,
             requests_seen: std::sync::atomic::AtomicUsize::new(0),
             requests: Some(requests),
             packets,
@@ -334,14 +340,14 @@ impl ActualEncoder {
         // This fixture intentionally generates only independent IDRs. Core
         // rate-limits IDRs; wait before capturing their timestamp, rather than
         // presenting an already sealed AU after the pacing deadline expires.
-        let deadline = route
+        let deadline = if self.rgb444 { None } else { route
             .cursor
             .lock()
             .map_err(|_| "fixture video cursor poisoned")?
             .last_keyframe
             .map(|last| {
                 last + Duration::from_millis(nestlink_protocol::VIDEO_KEYFRAME_INTERVAL_MS)
-            });
+            }) };
         if let Some(deadline) = deadline {
             tokio::time::sleep_until(deadline.into()).await;
         }
@@ -369,6 +375,9 @@ impl ActualEncoder {
         Ok(())
     }
 }
+
+#[path = "positive_rgb444_test.rs"]
+mod rgb444;
 
 impl Drop for ActualEncoder {
     fn drop(&mut self) {

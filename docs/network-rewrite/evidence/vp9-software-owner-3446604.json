@@ -1,0 +1,442 @@
+{
+  "scope": "Actual Windows and Linux pinned software VP9 RGB444 outputs, finite original encode/decode probes, sealed owner, cancellation and supply-chain rejection",
+  "whole_task_passed": false,
+  "schema_version": 1,
+  "target_or_sustained_performance_claimed": false,
+  "limitations": [
+    "No desktop capture/network/physical display/sustained fps qualification",
+    "No HEVC444/GPU444/HDR claim",
+    "Production v6 integration remains unverified"
+  ],
+  "source_revision": "3446604bdfbc94008dde49538b0996969eb24dd1",
+  "url": "https://github.com/ZHanry/NestLink/actions/runs/41599542120",
+  "historical_failed_reason": "Example invoked without required encode or decode direction. Original failures retained.",
+  "repository": "ZHanry/NestLink",
+  "run_id": 41599542120,
+  "reports": [
+    {
+      "exact_inputs_verified": 5,
+      "archive_sha256": "26f2b8ed0db49ab748b63ded0b15cd5def3f7bfce6798956dd275345609e2b7e",
+      "official_zip_digest_verified": true,
+      "producer_files_verified": 9,
+      "receipt": {
+        "source_revision": "3446604bdfbc94008dde49538b0996969eb24dd1",
+        "workflow": "ZHanry/NestLink/.github/workflows/media-vp9-owner.yml@refs/heads/main",
+        "workflow_revision": "3446604bdfbc94008dde49538b0996969eb24dd1",
+        "run_id": "41599542120",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Windows",
+        "target": "x86_64-pc-windows-msvc",
+        "inputs": {
+          "Cargo.lock": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "docs/refactor/native-codecs.lock.json": "7b529084629ed34e5c62838680c764f2730227740cd92e2dc079bf16a058d3df",
+          "crates/media-codec/src/vp9.c": "63fa4dff96b2160c55e8deff57c340bb6a3530faf17b4805b3e9c7427e00d2ec",
+          "crates/media-codec/src/vp9.rs": "ed7b1e56fc3cc3eb1ae802d47fc0fcbdcc3b41b6be911ec8b4afcd7c569293f2",
+          "crates/media-codec/src/vp9_direction_probe.rs": "1848651afbba61f07568be041d401ad456739494be01c8ed51b25bead1590240"
+        },
+        "target_device_or_sustained_performance_claimed": false,
+        "passed": true,
+        "commands": [
+          {
+            "name": "supply-negatives",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+              "-B",
+              "-m",
+              "unittest",
+              "discover",
+              "-s",
+              "tests/refactor",
+              "-p",
+              "test_native_codecs.py",
+              "-v"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "vp9-tests",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+              "scripts/refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-media-codec",
+              "--lib",
+              "vp9_direction_probe::tests::",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "owner-fence-tests",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+              "scripts/refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-media-codec",
+              "--lib",
+              "execution::tests::",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "strict",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+              "scripts/refactor-windows-normal-user.py",
+              "cargo",
+              "clippy",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-media-codec",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "direction-build",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+              "scripts/refactor-windows-normal-user.py",
+              "cargo",
+              "build",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-media-codec",
+              "--example",
+              "vp9-rgb444-direction-probe"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "encode-direction",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+              "scripts/refactor-windows-normal-user.py",
+              "target\\release\\examples\\vp9-rgb444-direction-probe.exe",
+              "encode",
+              "65",
+              "33",
+              "60",
+              "10000"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "decode-direction",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+              "scripts/refactor-windows-normal-user.py",
+              "target\\release\\examples\\vp9-rgb444-direction-probe.exe",
+              "decode",
+              "65",
+              "33",
+              "60",
+              "10000"
+            ],
+            "return_code": 0
+          }
+        ],
+        "scope": "Actual pinned software VP9 profile1/sRGB/full/I444 codec output, finite 32-frame/10-second direction probes, odd dimensions, original bounded execution owner and negative inputs. No desktop capture, network, display, GPU or sustainable frame-rate qualification.",
+        "expected_tests": [
+          "actual_libvpx_rgb444_preserves_adjacent_colors_and_odd_geometry",
+          "public_libvpx_parser_rejects_truncation_and_wrong_geometry",
+          "actual_decoder_rejects_other_codec_and_resized_output",
+          "actual_software_owner_seals_output_and_retires_receipts",
+          "cancelled_probe_does_not_report_capability"
+        ],
+        "every_expected_test_passed": true,
+        "no_ignored_cases": true,
+        "executable_sha256": "20f4d2d34a01f7891e6595cca4a94808ffad8c285760a073bd8479d8fc07ec0e",
+        "files": [
+          {
+            "path": "decode-direction.log",
+            "bytes": 309,
+            "sha256": "68e037a8c544578e1cd49cda2cb1895016443829913a46c82480f554cc8a2ed6"
+          },
+          {
+            "path": "direction-build.log",
+            "bytes": 266,
+            "sha256": "7a4ee0d4e57bda39467b284dadbb70653526d81c3d3500b4ab354395a6fec260"
+          },
+          {
+            "path": "encode-direction.log",
+            "bytes": 309,
+            "sha256": "7263cee799e4b8f942253b9f02bb542d1065fca5dfa0c12b94717b80f06a0835"
+          },
+          {
+            "path": "native-build.log",
+            "bytes": 260,
+            "sha256": "0f79fd878e30860e8958a86d878a37d92247d46b97b3256f31b760751d1cadf9"
+          },
+          {
+            "path": "owner-fence-tests.log",
+            "bytes": 2818,
+            "sha256": "4872256ff28bc05b5d15c9e84970a363d02aa64a5fbf79b0ebd1513843898abd"
+          },
+          {
+            "path": "source.json",
+            "bytes": 1000,
+            "sha256": "506ae2456b69ab3ac57d4618219b91947acb0c0307d829d1daeb974a674dc86d"
+          },
+          {
+            "path": "strict.log",
+            "bytes": 1963,
+            "sha256": "0112c313b9d0886e8262c4e777aea4d71cd84b5552b417a6376f8eb4292df238"
+          },
+          {
+            "path": "supply-negatives.log",
+            "bytes": 1874,
+            "sha256": "84d81f52e42be9a39b56cb34004c75461823a6581463e35e36ff50d9d38649d2"
+          },
+          {
+            "path": "vp9-tests.log",
+            "bytes": 6507,
+            "sha256": "ea4ba3d908092ebd25ff7add9cae9f3090069cbd117519d923757004bb69aa61"
+          }
+        ]
+      },
+      "raw_logs": {
+        "decode-direction.log": "Windows test token verified: medium integrity, non-elevated, interactive user session\r\ncodec=vp9 profile=1 bit_depth=8 chroma=444 color=srgb range=full backend=cpu-software direction=Decode width=65 height=33 fps=60 kbps=10000 output_frames=32 elapsed_us=15442 checked_close=true sustainable_fps_proven=false\n",
+        "strict.log": "Windows test token verified: medium integrity, non-elevated, interactive user session\r\n\u001b[1m\u001b[92m    Checking\u001b[0m windows-link v0.2.1\n\u001b[1m\u001b[92m    Checking\u001b[0m typenum v1.20.1\n\u001b[1m\u001b[92m    Checking\u001b[0m cfg-if v1.0.5\n\u001b[1m\u001b[92m    Checking\u001b[0m serde_core v1.0.229\n\u001b[1m\u001b[92m    Checking\u001b[0m windows-sys v0.61.2\n\u001b[1m\u001b[92m    Checking\u001b[0m pin-project-lite v0.2.17\n\u001b[1m\u001b[92m    Checking\u001b[0m bytes v1.12.1\n\u001b[1m\u001b[92m    Checking\u001b[0m zmij v1.0.23\n\u001b[1m\u001b[92m    Checking\u001b[0m getrandom v0.4.3\n\u001b[1m\u001b[92m    Checking\u001b[0m windows_x86_64_msvc v0.52.6\n\u001b[1m\u001b[92m    Checking\u001b[0m generic-array v0.14.7\n\u001b[1m\u001b[92m    Checking\u001b[0m itoa v1.0.18\n\u001b[1m\u001b[92m    Checking\u001b[0m futures-sink v0.3.34\n\u001b[1m\u001b[92m    Checking\u001b[0m memchr v2.8.3\n\u001b[1m\u001b[92m    Checking\u001b[0m block-buffer v0.10.4\n\u001b[1m\u001b[92m    Checking\u001b[0m crypto-common v0.1.7\n\u001b[1m\u001b[92m    Checking\u001b[0m futures-core v0.3.34\n\u001b[1m\u001b[92m    Checking\u001b[0m digest v0.10.7\n\u001b[1m\u001b[92m    Checking\u001b[0m thiserror v2.0.21\n\u001b[1m\u001b[92m    Checking\u001b[0m windows-targets v0.52.6\n\u001b[1m\u001b[92m    Checking\u001b[0m num-traits v0.2.19\n\u001b[1m\u001b[92m   Compiling\u001b[0m nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)\n\u001b[1m\u001b[92m    Checking\u001b[0m serde_json v1.0.154\n\u001b[1m\u001b[92m    Checking\u001b[0m serde v1.0.229\n\u001b[1m\u001b[92m    Checking\u001b[0m zeroize v1.9.1\n\u001b[1m\u001b[92m    Checking\u001b[0m cpufeatures v0.2.17\n\u001b[1m\u001b[92m    Checking\u001b[0m sha2 v0.10.9\n\u001b[1m\u001b[92m    Checking\u001b[0m fast_image_resize v6.1.0\n\u001b[1m\u001b[92m    Checking\u001b[0m windows-sys v0.59.0\n\u001b[1m\u001b[92m    Checking\u001b[0m uuid v1.28.0\n\u001b[1m\u001b[92m    Checking\u001b[0m once_cell v1.21.4\n\u001b[1m\u001b[92m    Checking\u001b[0m fastrand v2.5.0\n\u001b[1m\u001b[92m    Checking\u001b[0m tempfile v3.27.0\n\u001b[1m\u001b[92m    Checking\u001b[0m socket2 v0.6.5\n\u001b[1m\u001b[92m    Checking\u001b[0m mio v1.2.4\n\u001b[1m\u001b[92m    Checking\u001b[0m tokio v1.53.3\n\u001b[1m\u001b[92m    Checking\u001b[0m tokio-util v0.7.20\n\u001b[1m\u001b[92m    Checking\u001b[0m nestlink-platform-security v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\platform-security)\n\u001b[1m\u001b[92m    Finished\u001b[0m `release` profile [optimized] target(s) in 9.71s\n",
+        "encode-direction.log": "Windows test token verified: medium integrity, non-elevated, interactive user session\r\ncodec=vp9 profile=1 bit_depth=8 chroma=444 color=srgb range=full backend=cpu-software direction=Encode width=65 height=33 fps=60 kbps=10000 output_frames=32 elapsed_us=16131 checked_close=true sustainable_fps_proven=false\n",
+        "native-build.log": "Running vpx-configure\r\nRunning vpx-project\r\nRunning vpx-build\r\nRunning opus-configure\r\nRunning opus-build\r\nRunning opus-install\r\nRunning yuv-configure\r\nRunning yuv-build\r\nRunning yuv-install\r\nNESTLINK_CODEC_PREFIX=D:\\a\\_temp\\vp9-codecs\\x86_64-pc-windows-msvc\r\n",
+        "vp9-tests.log": "Windows test token verified: medium integrity, non-elevated, interactive user session\r\ninfo: syncing channel updates for 1.96.0-x86_64-pc-windows-msvc\ninfo: latest update on 2026-05-28 for version 1.96.0 (ac68faa20 2026-05-25)\ninfo: component clippy is up to date\ninfo: downloading component rustfmt\n\u001b[1m\u001b[92m    Updating\u001b[0m git repository `https://github.com/ZHanry/NestLink-dependencies.git`\n\u001b[1m\u001b[92m    Updating\u001b[0m crates.io index\n\u001b[1m\u001b[92m Downloading\u001b[0m crates ...\n\u001b[1m\u001b[92m  Downloaded\u001b[0m block-buffer v0.10.4\n\u001b[1m\u001b[92m  Downloaded\u001b[0m autocfg v1.5.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m bytes v1.12.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m cfg-if v1.0.5\n\u001b[1m\u001b[92m  Downloaded\u001b[0m cc v1.8.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m crypto-common v0.1.7\n\u001b[1m\u001b[92m  Downloaded\u001b[0m cpufeatures v0.2.17\n\u001b[1m\u001b[92m  Downloaded\u001b[0m digest v0.10.7\n\u001b[1m\u001b[92m  Downloaded\u001b[0m document-features v0.2.12\n\u001b[1m\u001b[92m  Downloaded\u001b[0m fast_image_resize v6.1.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m find-msvc-tools v0.1.14\n\u001b[1m\u001b[92m  Downloaded\u001b[0m futures-sink v0.3.34\n\u001b[1m\u001b[92m  Downloaded\u001b[0m futures-core v0.3.34\n\u001b[1m\u001b[92m  Downloaded\u001b[0m fastrand v2.5.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m getrandom v0.4.3\n\u001b[1m\u001b[92m  Downloaded\u001b[0m litrs v1.0.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m mio v1.2.4\n\u001b[1m\u001b[92m  Downloaded\u001b[0m once_cell v1.21.4\n\u001b[1m\u001b[92m  Downloaded\u001b[0m proc-macro2 v1.0.107\n\u001b[1m\u001b[92m  Downloaded\u001b[0m serde v1.0.229\n\u001b[1m\u001b[92m  Downloaded\u001b[0m serde_derive v1.0.229\n\u001b[1m\u001b[92m  Downloaded\u001b[0m sha2 v0.10.9\n\u001b[1m\u001b[92m  Downloaded\u001b[0m socket2 v0.6.5\n\u001b[1m\u001b[92m  Downloaded\u001b[0m shlex v2.0.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m syn v3.0.8\n\u001b[1m\u001b[92m  Downloaded\u001b[0m thiserror v2.0.21\n\u001b[1m\u001b[92m  Downloaded\u001b[0m thiserror-impl v2.0.21\n\u001b[1m\u001b[92m  Downloaded\u001b[0m tokio-macros v2.7.2\n\u001b[1m\u001b[92m  Downloaded\u001b[0m tokio-util v0.7.20\n\u001b[1m\u001b[92m  Downloaded\u001b[0m typenum v1.20.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m unicode-ident v1.0.27\n\u001b[1m\u001b[92m  Downloaded\u001b[0m uuid v1.28.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m windows-link v0.2.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m version_check v0.9.5\n\u001b[1m\u001b[92m  Downloaded\u001b[0m tokio v1.53.3\n\u001b[1m\u001b[92m  Downloaded\u001b[0m tempfile v3.27.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m syn v2.0.119\n\u001b[1m\u001b[92m  Downloaded\u001b[0m serde_json v1.0.154\n\u001b[1m\u001b[92m  Downloaded\u001b[0m serde_core v1.0.229\n\u001b[1m\u001b[92m  Downloaded\u001b[0m quote v1.0.47\n\u001b[1m\u001b[92m  Downloaded\u001b[0m pin-project-lite v0.2.17\n\u001b[1m\u001b[92m  Downloaded\u001b[0m num-traits v0.2.19\n\u001b[1m\u001b[92m  Downloaded\u001b[0m memchr v2.8.3\n\u001b[1m\u001b[92m  Downloaded\u001b[0m itoa v1.0.18\n\u001b[1m\u001b[92m  Downloaded\u001b[0m generic-array v0.14.7\n\u001b[1m\u001b[92m  Downloaded\u001b[0m windows-sys v0.59.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m windows-targets v0.52.6\n\u001b[1m\u001b[92m  Downloaded\u001b[0m windows-sys v0.61.2\n\u001b[1m\u001b[92m  Downloaded\u001b[0m zeroize v1.9.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m windows_x86_64_msvc v0.52.6\n\u001b[1m\u001b[92m  Downloaded\u001b[0m zeroize_derive v1.5.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m zmij v1.0.23\n\u001b[1m\u001b[92m   Compiling\u001b[0m proc-macro2 v1.0.107\n\u001b[1m\u001b[92m   Compiling\u001b[0m unicode-ident v1.0.27\n\u001b[1m\u001b[92m   Compiling\u001b[0m quote v1.0.47\n\u001b[1m\u001b[92m   Compiling\u001b[0m version_check v0.9.5\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde_core v1.0.229\n\u001b[1m\u001b[92m   Compiling\u001b[0m generic-array v0.14.7\n\u001b[1m\u001b[92m   Compiling\u001b[0m zmij v1.0.23\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde v1.0.229\n\u001b[1m\u001b[92m   Compiling\u001b[0m typenum v1.20.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde_json v1.0.154\n\u001b[1m\u001b[92m   Compiling\u001b[0m windows-link v0.2.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m windows-sys v0.61.2\n\u001b[1m\u001b[92m   Compiling\u001b[0m cfg-if v1.0.5\n\u001b[1m\u001b[92m   Compiling\u001b[0m syn v3.0.8\n\u001b[1m\u001b[92m   Compiling\u001b[0m windows_x86_64_msvc v0.52.6\n\u001b[1m\u001b[92m   Compiling\u001b[0m crypto-common v0.1.7\n\u001b[1m\u001b[92m   Compiling\u001b[0m block-buffer v0.10.4\n\u001b[1m\u001b[92m   Compiling\u001b[0m getrandom v0.4.3\n\u001b[1m\u001b[92m   Compiling\u001b[0m autocfg v1.5.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m num-traits v0.2.19\n\u001b[1m\u001b[92m   Compiling\u001b[0m digest v0.10.7\n\u001b[1m\u001b[92m   Compiling\u001b[0m syn v2.0.119\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde_derive v1.0.229\n\u001b[1m\u001b[92m   Compiling\u001b[0m socket2 v0.6.5\n\u001b[1m\u001b[92m   Compiling\u001b[0m mio v1.2.4\n\u001b[1m\u001b[92m   Compiling\u001b[0m tokio-macros v2.7.2\n\u001b[1m\u001b[92m   Compiling\u001b[0m memchr v2.8.3\n\u001b[1m\u001b[92m   Compiling\u001b[0m find-msvc-tools v0.1.14\n\u001b[1m\u001b[92m   Compiling\u001b[0m shlex v2.0.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m thiserror v2.0.21\n\u001b[1m\u001b[92m   Compiling\u001b[0m cpufeatures v0.2.17\n\u001b[1m\u001b[92m   Compiling\u001b[0m itoa v1.0.18\n\u001b[1m\u001b[92m   Compiling\u001b[0m pin-project-lite v0.2.17\n\u001b[1m\u001b[92m   Compiling\u001b[0m bytes v1.12.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m tokio v1.53.3\n\u001b[1m\u001b[92m   Compiling\u001b[0m sha2 v0.10.9\n\u001b[1m\u001b[92m   Compiling\u001b[0m cc v1.8.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m zeroize_derive v1.5.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m thiserror-impl v2.0.21\n\u001b[1m\u001b[92m   Compiling\u001b[0m windows-targets v0.52.6\n\u001b[1m\u001b[92m   Compiling\u001b[0m litrs v1.0.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m futures-core v0.3.34\n\u001b[1m\u001b[92m   Compiling\u001b[0m futures-sink v0.3.34\n\u001b[1m\u001b[92m   Compiling\u001b[0m nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)\n\u001b[1m\u001b[92m   Compiling\u001b[0m document-features v0.2.12\n\u001b[1m\u001b[92m   Compiling\u001b[0m windows-sys v0.59.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m zeroize v1.9.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m tokio-util v0.7.20\n\u001b[1m\u001b[92m   Compiling\u001b[0m fastrand v2.5.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m once_cell v1.21.4\n\u001b[1m\u001b[92m   Compiling\u001b[0m nestlink-platform-security v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\platform-security)\n\u001b[1m\u001b[92m   Compiling\u001b[0m tempfile v3.27.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m fast_image_resize v6.1.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m uuid v1.28.0\n\u001b[1m\u001b[92m    Finished\u001b[0m `release` profile [optimized] target(s) in 1m 42s\n\u001b[1m\u001b[92m     Running\u001b[0m unittests src\\lib.rs (target\\release\\deps\\nestlink_media_codec-f43a0b45a9c6b020.exe)\n\nrunning 5 tests\ntest vp9_direction_probe::tests::actual_decoder_rejects_other_codec_and_resized_output ... ok\ntest vp9_direction_probe::tests::actual_libvpx_rgb444_preserves_adjacent_colors_and_odd_geometry ... ok\ntest vp9_direction_probe::tests::actual_software_owner_seals_output_and_retires_receipts ... ok\ntest vp9_direction_probe::tests::cancelled_probe_does_not_report_capability ... ok\ntest vp9_direction_probe::tests::public_libvpx_parser_rejects_truncation_and_wrong_geometry ... ok\n\nsuccesses:\n\nsuccesses:\n    vp9_direction_probe::tests::actual_decoder_rejects_other_codec_and_resized_output\n    vp9_direction_probe::tests::actual_libvpx_rgb444_preserves_adjacent_colors_and_odd_geometry\n    vp9_direction_probe::tests::actual_software_owner_seals_output_and_retires_receipts\n    vp9_direction_probe::tests::cancelled_probe_does_not_report_capability\n    vp9_direction_probe::tests::public_libvpx_parser_rejects_truncation_and_wrong_geometry\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 74 filtered out; finished in 0.05s\n\n",
+        "supply-negatives.log": "test_amf_release_redirect_is_narrow_and_never_applies_to_codec_sources (test_native_codecs.NativeSupplyTests.test_amf_release_redirect_is_narrow_and_never_applies_to_codec_sources) ... ok\r\ntest_archive_architecture_is_checked_for_every_elf_member (test_native_codecs.NativeSupplyTests.test_archive_architecture_is_checked_for_every_elf_member) ... ok\r\ntest_archive_traversal_links_collisions_and_budget_are_rejected (test_native_codecs.NativeSupplyTests.test_archive_traversal_links_collisions_and_budget_are_rejected) ... ok\r\ntest_existing_work_is_preserved_before_any_tool_or_network_call (test_native_codecs.NativeSupplyTests.test_existing_work_is_preserved_before_any_tool_or_network_call) ... ok\r\ntest_fresh_extraction_hashes_bytes_and_never_reuses_source (test_native_codecs.NativeSupplyTests.test_fresh_extraction_hashes_bytes_and_never_reuses_source) ... ok\r\ntest_linux_arm64_requires_a_real_matching_host_and_compiler (test_native_codecs.NativeSupplyTests.test_linux_arm64_requires_a_real_matching_host_and_compiler) ... ok\r\ntest_native_arm64_receipt_and_each_archive_object_bind_the_architecture (test_native_codecs.NativeSupplyTests.test_native_arm64_receipt_and_each_archive_object_bind_the_architecture) ... ok\r\ntest_offline_missing_or_tampered_archive_never_falls_back_to_download (test_native_codecs.NativeSupplyTests.test_offline_missing_or_tampered_archive_never_falls_back_to_download) ... ok\r\ntest_receipt_cannot_relabel_foreign_architecture_objects (test_native_codecs.NativeSupplyTests.test_receipt_cannot_relabel_foreign_architecture_objects) ... ok\r\ntest_receipt_wrong_target_features_source_and_installed_bytes_are_rejected (test_native_codecs.NativeSupplyTests.test_receipt_wrong_target_features_source_and_installed_bytes_are_rejected) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 10 tests in 0.129s\r\n\r\nOK\r\n",
+        "direction-build.log": "Windows test token verified: medium integrity, non-elevated, interactive user session\r\n\u001b[1m\u001b[92m   Compiling\u001b[0m nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)\n\u001b[1m\u001b[92m    Finished\u001b[0m `release` profile [optimized] target(s) in 37.11s\n",
+        "owner-fence-tests.log": "Windows test token verified: medium integrity, non-elevated, interactive user session\r\n\u001b[1m\u001b[92m    Finished\u001b[0m `release` profile [optimized] target(s) in 0.20s\n\u001b[1m\u001b[92m     Running\u001b[0m unittests src\\lib.rs (target\\release\\deps\\nestlink_media_codec-f43a0b45a9c6b020.exe)\n\nrunning 12 tests\ntest execution::tests::cancelled_ticket_fences_shared_marker_without_claiming_join ... ok\ntest execution::tests::directional_slots_are_distinct ... ok\ntest execution::tests::expired_ticket_fences_even_if_reply_already_queued ... ok\ntest execution::tests::normal_worker_exit_also_fences_before_receipt_reuse ... ok\ntest execution::tests::panic_fences_before_owner_cleanup_and_invalidates_shared_receipts ... ok\ntest execution::tests::sealed_output_binds_bytes_pts_and_keyframe_and_retirement ... ok\ntest execution::tests::unverified_startup_failure_poisons_slot_without_join_or_release ... ok\ntest hevc_execution::tests::abandoned_and_late_command_fence_the_original_generation ... ok\ntest hevc_execution::tests::checked_native_close_failure_poisoned_slot_never_becomes_joined ... ok\ntest hevc_execution::tests::encoder_runtime_is_part_of_frozen_target_and_cannot_open_a_decoder ... ok\ntest hevc_execution::tests::registration_is_not_output_and_exact_bytes_pts_direction_are_sealed ... ok\ntest hevc_execution::tests::revoked_start_never_constructs_a_native_source ... ok\n\nsuccesses:\n\n---- execution::tests::panic_fences_before_owner_cleanup_and_invalidates_shared_receipts stdout ----\n\nthread 'execution::tests::panic_fences_before_owner_cleanup_and_invalidates_shared_receipts' (6508) panicked at crates\\media-codec\\src\\execution.rs:1090:13:\nsynthetic owner panic\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nsuccesses:\n    execution::tests::cancelled_ticket_fences_shared_marker_without_claiming_join\n    execution::tests::directional_slots_are_distinct\n    execution::tests::expired_ticket_fences_even_if_reply_already_queued\n    execution::tests::normal_worker_exit_also_fences_before_receipt_reuse\n    execution::tests::panic_fences_before_owner_cleanup_and_invalidates_shared_receipts\n    execution::tests::sealed_output_binds_bytes_pts_and_keyframe_and_retirement\n    execution::tests::unverified_startup_failure_poisons_slot_without_join_or_release\n    hevc_execution::tests::abandoned_and_late_command_fence_the_original_generation\n    hevc_execution::tests::checked_native_close_failure_poisoned_slot_never_becomes_joined\n    hevc_execution::tests::encoder_runtime_is_part_of_frozen_target_and_cannot_open_a_decoder\n    hevc_execution::tests::registration_is_not_output_and_exact_bytes_pts_direction_are_sealed\n    hevc_execution::tests::revoked_start_never_constructs_a_native_source\n\ntest result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.00s\n\n"
+      },
+      "platform": "windows"
+    },
+    {
+      "exact_inputs_verified": 5,
+      "archive_sha256": "664caf0dc7b66bfe195e3aaa8fbb91812bee5d2dbef6b77573b38ee1403e052d",
+      "official_zip_digest_verified": true,
+      "producer_files_verified": 9,
+      "receipt": {
+        "source_revision": "3446604bdfbc94008dde49538b0996969eb24dd1",
+        "workflow": "ZHanry/NestLink/.github/workflows/media-vp9-owner.yml@refs/heads/main",
+        "workflow_revision": "3446604bdfbc94008dde49538b0996969eb24dd1",
+        "run_id": "41599542120",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Linux",
+        "target": "x86_64-unknown-linux-gnu",
+        "inputs": {
+          "Cargo.lock": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "docs/refactor/native-codecs.lock.json": "7b529084629ed34e5c62838680c764f2730227740cd92e2dc079bf16a058d3df",
+          "crates/media-codec/src/vp9.c": "63fa4dff96b2160c55e8deff57c340bb6a3530faf17b4805b3e9c7427e00d2ec",
+          "crates/media-codec/src/vp9.rs": "ed7b1e56fc3cc3eb1ae802d47fc0fcbdcc3b41b6be911ec8b4afcd7c569293f2",
+          "crates/media-codec/src/vp9_direction_probe.rs": "1848651afbba61f07568be041d401ad456739494be01c8ed51b25bead1590240"
+        },
+        "target_device_or_sustained_performance_claimed": false,
+        "passed": true,
+        "commands": [
+          {
+            "name": "supply-negatives",
+            "argv": [
+              "/usr/bin/python",
+              "-B",
+              "-m",
+              "unittest",
+              "discover",
+              "-s",
+              "tests/refactor",
+              "-p",
+              "test_native_codecs.py",
+              "-v"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "vp9-tests",
+            "argv": [
+              "cargo",
+              "test",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-media-codec",
+              "--lib",
+              "vp9_direction_probe::tests::",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "owner-fence-tests",
+            "argv": [
+              "cargo",
+              "test",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-media-codec",
+              "--lib",
+              "execution::tests::",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "strict",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-media-codec",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "direction-build",
+            "argv": [
+              "cargo",
+              "build",
+              "--release",
+              "--locked",
+              "-p",
+              "nestlink-media-codec",
+              "--example",
+              "vp9-rgb444-direction-probe"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "encode-direction",
+            "argv": [
+              "target/release/examples/vp9-rgb444-direction-probe",
+              "encode",
+              "65",
+              "33",
+              "60",
+              "10000"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "decode-direction",
+            "argv": [
+              "target/release/examples/vp9-rgb444-direction-probe",
+              "decode",
+              "65",
+              "33",
+              "60",
+              "10000"
+            ],
+            "return_code": 0
+          }
+        ],
+        "scope": "Actual pinned software VP9 profile1/sRGB/full/I444 codec output, finite 32-frame/10-second direction probes, odd dimensions, original bounded execution owner and negative inputs. No desktop capture, network, display, GPU or sustainable frame-rate qualification.",
+        "expected_tests": [
+          "actual_libvpx_rgb444_preserves_adjacent_colors_and_odd_geometry",
+          "public_libvpx_parser_rejects_truncation_and_wrong_geometry",
+          "actual_decoder_rejects_other_codec_and_resized_output",
+          "actual_software_owner_seals_output_and_retires_receipts",
+          "cancelled_probe_does_not_report_capability"
+        ],
+        "every_expected_test_passed": true,
+        "no_ignored_cases": true,
+        "executable_sha256": "c40f5c2ab8f97f800bac49be19e59ce24b7bec2fd3238edcd97d835fcee117b6",
+        "files": [
+          {
+            "path": "decode-direction.log",
+            "bytes": 222,
+            "sha256": "a98073ef1ec38e65f8a433f001cf0189dede930f8a3da468508b1d56a79d0aaa"
+          },
+          {
+            "path": "direction-build.log",
+            "bytes": 192,
+            "sha256": "5ee96c9cae161db2fc0000fdc088e2b054c4ebbf959feca17f80c6e3692fde5a"
+          },
+          {
+            "path": "encode-direction.log",
+            "bytes": 222,
+            "sha256": "4728493e89df86599fb62a1a9d4cbb792f12bb19b970ee2674f88bdf79ac94dc"
+          },
+          {
+            "path": "native-build.log",
+            "bytes": 265,
+            "sha256": "e06ff4a90635e745a1bde174713fff7bee2305001e3693afd9de687ce8945d0a"
+          },
+          {
+            "path": "owner-fence-tests.log",
+            "bytes": 1809,
+            "sha256": "3976f9f58030ca87d0c907f160389898077482fac4864a16458b472a63f09c99"
+          },
+          {
+            "path": "source.json",
+            "bytes": 982,
+            "sha256": "bc0ef8b1868f20480c8c28226042ac13e7094eb20fb89a5d8f42b19dd05e5fdd"
+          },
+          {
+            "path": "strict.log",
+            "bytes": 1355,
+            "sha256": "65e5e899c2cf1991f32d1154cec455c7e10de93091fbbce5bfdca00ef73a3e33"
+          },
+          {
+            "path": "supply-negatives.log",
+            "bytes": 1859,
+            "sha256": "8443051a8820bbe69f03ea9ab87d0cf29a5509c85b36ccc6c364584a9a16f601"
+          },
+          {
+            "path": "vp9-tests.log",
+            "bytes": 5426,
+            "sha256": "3037ec4776a847f7c5ee390a1822190bfca728e4ce1b5486a7e6d948f4a5b535"
+          }
+        ]
+      },
+      "raw_logs": {
+        "decode-direction.log": "codec=vp9 profile=1 bit_depth=8 chroma=444 color=srgb range=full backend=cpu-software direction=Decode width=65 height=33 fps=60 kbps=10000 output_frames=32 elapsed_us=24771 checked_close=true sustainable_fps_proven=false\n",
+        "strict.log": "\u001b[1m\u001b[92m    Checking\u001b[0m cfg-if v1.0.5\n\u001b[1m\u001b[92m    Checking\u001b[0m typenum v1.20.1\n\u001b[1m\u001b[92m    Checking\u001b[0m libc v0.2.190\n\u001b[1m\u001b[92m    Checking\u001b[0m serde_core v1.0.229\n\u001b[1m\u001b[92m    Checking\u001b[0m thiserror v2.0.21\n\u001b[1m\u001b[92m    Checking\u001b[0m num-traits v0.2.19\n\u001b[1m\u001b[92m   Compiling\u001b[0m nestlink-media-codec v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/media-codec)\n\u001b[1m\u001b[92m    Checking\u001b[0m generic-array v0.14.7\n\u001b[1m\u001b[92m    Checking\u001b[0m getrandom v0.4.3\n\u001b[1m\u001b[92m    Checking\u001b[0m bitflags v2.13.2\n\u001b[1m\u001b[92m    Checking\u001b[0m linux-raw-sys v0.12.1\n\u001b[1m\u001b[92m    Checking\u001b[0m crypto-common v0.1.7\n\u001b[1m\u001b[92m    Checking\u001b[0m block-buffer v0.10.4\n\u001b[1m\u001b[92m    Checking\u001b[0m digest v0.10.7\n\u001b[1m\u001b[92m    Checking\u001b[0m cpufeatures v0.2.17\n\u001b[1m\u001b[92m    Checking\u001b[0m rustix v1.1.5\n\u001b[1m\u001b[92m    Checking\u001b[0m sha2 v0.10.9\n\u001b[1m\u001b[92m    Checking\u001b[0m zmij v1.0.23\n\u001b[1m\u001b[92m    Checking\u001b[0m uuid v1.28.0\n\u001b[1m\u001b[92m    Checking\u001b[0m fast_image_resize v6.1.0\n\u001b[1m\u001b[92m    Checking\u001b[0m zeroize v1.9.1\n\u001b[1m\u001b[92m    Checking\u001b[0m memchr v2.8.3\n\u001b[1m\u001b[92m    Checking\u001b[0m itoa v1.0.18\n\u001b[1m\u001b[92m    Checking\u001b[0m fastrand v2.5.0\n\u001b[1m\u001b[92m    Checking\u001b[0m once_cell v1.21.4\n\u001b[1m\u001b[92m    Checking\u001b[0m serde_json v1.0.154\n\u001b[1m\u001b[92m    Checking\u001b[0m serde v1.0.229\n\u001b[1m\u001b[92m    Checking\u001b[0m tempfile v3.27.0\n\u001b[1m\u001b[92m    Finished\u001b[0m `release` profile [optimized] target(s) in 5.75s\n",
+        "encode-direction.log": "codec=vp9 profile=1 bit_depth=8 chroma=444 color=srgb range=full backend=cpu-software direction=Encode width=65 height=33 fps=60 kbps=10000 output_frames=32 elapsed_us=24941 checked_close=true sustainable_fps_proven=false\n",
+        "native-build.log": "Running vpx-configure\nRunning vpx-build\nRunning vpx-install\nRunning opus-configure\nRunning opus-build\nRunning opus-install\nRunning yuv-configure\nRunning yuv-build\nRunning yuv-install\nNESTLINK_CODEC_PREFIX=/home/runner/work/_temp/vp9-codecs/x86_64-unknown-linux-gnu\n",
+        "vp9-tests.log": "info: syncing channel updates for 1.96.0-x86_64-unknown-linux-gnu\ninfo: latest update on 2026-05-28 for version 1.96.0 (ac68faa20 2026-05-25)\ninfo: component clippy is up to date\ninfo: downloading component rustfmt\n\u001b[1m\u001b[92m    Updating\u001b[0m git repository `https://github.com/ZHanry/NestLink-dependencies.git`\n\u001b[1m\u001b[92m    Updating\u001b[0m crates.io index\n\u001b[1m\u001b[92m Downloading\u001b[0m crates ...\n\u001b[1m\u001b[92m  Downloaded\u001b[0m autocfg v1.5.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m bitflags v2.13.2\n\u001b[1m\u001b[92m  Downloaded\u001b[0m block-buffer v0.10.4\n\u001b[1m\u001b[92m  Downloaded\u001b[0m cc v1.8.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m cfg-if v1.0.5\n\u001b[1m\u001b[92m  Downloaded\u001b[0m cpufeatures v0.2.17\n\u001b[1m\u001b[92m  Downloaded\u001b[0m crypto-common v0.1.7\n\u001b[1m\u001b[92m  Downloaded\u001b[0m digest v0.10.7\n\u001b[1m\u001b[92m  Downloaded\u001b[0m document-features v0.2.12\n\u001b[1m\u001b[92m  Downloaded\u001b[0m errno v0.3.14\n\u001b[1m\u001b[92m  Downloaded\u001b[0m fastrand v2.5.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m fast_image_resize v6.1.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m generic-array v0.14.7\n\u001b[1m\u001b[92m  Downloaded\u001b[0m find-msvc-tools v0.1.14\n\u001b[1m\u001b[92m  Downloaded\u001b[0m itoa v1.0.18\n\u001b[1m\u001b[92m  Downloaded\u001b[0m getrandom v0.4.3\n\u001b[1m\u001b[92m  Downloaded\u001b[0m libc v0.2.190\n\u001b[1m\u001b[92m  Downloaded\u001b[0m litrs v1.0.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m linux-raw-sys v0.12.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m num-traits v0.2.19\n\u001b[1m\u001b[92m  Downloaded\u001b[0m memchr v2.8.3\n\u001b[1m\u001b[92m  Downloaded\u001b[0m proc-macro2 v1.0.107\n\u001b[1m\u001b[92m  Downloaded\u001b[0m once_cell v1.21.4\n\u001b[1m\u001b[92m  Downloaded\u001b[0m quote v1.0.47\n\u001b[1m\u001b[92m  Downloaded\u001b[0m serde v1.0.229\n\u001b[1m\u001b[92m  Downloaded\u001b[0m rustix v1.1.5\n\u001b[1m\u001b[92m  Downloaded\u001b[0m serde_derive v1.0.229\n\u001b[1m\u001b[92m  Downloaded\u001b[0m serde_core v1.0.229\n\u001b[1m\u001b[92m  Downloaded\u001b[0m serde_json v1.0.154\n\u001b[1m\u001b[92m  Downloaded\u001b[0m sha2 v0.10.9\n\u001b[1m\u001b[92m  Downloaded\u001b[0m shlex v2.0.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m syn v2.0.119\n\u001b[1m\u001b[92m  Downloaded\u001b[0m tempfile v3.27.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m syn v3.0.8\n\u001b[1m\u001b[92m  Downloaded\u001b[0m thiserror-impl v2.0.21\n\u001b[1m\u001b[92m  Downloaded\u001b[0m thiserror v2.0.21\n\u001b[1m\u001b[92m  Downloaded\u001b[0m unicode-ident v1.0.27\n\u001b[1m\u001b[92m  Downloaded\u001b[0m typenum v1.20.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m version_check v0.9.5\n\u001b[1m\u001b[92m  Downloaded\u001b[0m uuid v1.28.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m zeroize v1.9.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m zeroize_derive v1.5.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m zmij v1.0.23\n\u001b[1m\u001b[92m   Compiling\u001b[0m version_check v0.9.5\n\u001b[1m\u001b[92m   Compiling\u001b[0m proc-macro2 v1.0.107\n\u001b[1m\u001b[92m   Compiling\u001b[0m quote v1.0.47\n\u001b[1m\u001b[92m   Compiling\u001b[0m unicode-ident v1.0.27\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde_core v1.0.229\n\u001b[1m\u001b[92m   Compiling\u001b[0m zmij v1.0.23\n\u001b[1m\u001b[92m   Compiling\u001b[0m generic-array v0.14.7\n\u001b[1m\u001b[92m   Compiling\u001b[0m typenum v1.20.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde_json v1.0.154\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde v1.0.229\n\u001b[1m\u001b[92m   Compiling\u001b[0m cfg-if v1.0.5\n\u001b[1m\u001b[92m   Compiling\u001b[0m libc v0.2.190\n\u001b[1m\u001b[92m   Compiling\u001b[0m syn v3.0.8\n\u001b[1m\u001b[92m   Compiling\u001b[0m crypto-common v0.1.7\n\u001b[1m\u001b[92m   Compiling\u001b[0m block-buffer v0.10.4\n\u001b[1m\u001b[92m   Compiling\u001b[0m autocfg v1.5.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m getrandom v0.4.3\n\u001b[1m\u001b[92m   Compiling\u001b[0m num-traits v0.2.19\n\u001b[1m\u001b[92m   Compiling\u001b[0m digest v0.10.7\n\u001b[1m\u001b[92m   Compiling\u001b[0m memchr v2.8.3\n\u001b[1m\u001b[92m   Compiling\u001b[0m shlex v2.0.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m itoa v1.0.18\n\u001b[1m\u001b[92m   Compiling\u001b[0m rustix v1.1.5\n\u001b[1m\u001b[92m   Compiling\u001b[0m cpufeatures v0.2.17\n\u001b[1m\u001b[92m   Compiling\u001b[0m find-msvc-tools v0.1.14\n\u001b[1m\u001b[92m   Compiling\u001b[0m thiserror v2.0.21\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde_derive v1.0.229\n\u001b[1m\u001b[92m   Compiling\u001b[0m sha2 v0.10.9\n\u001b[1m\u001b[92m   Compiling\u001b[0m thiserror-impl v2.0.21\n\u001b[1m\u001b[92m   Compiling\u001b[0m cc v1.8.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m syn v2.0.119\n\u001b[1m\u001b[92m   Compiling\u001b[0m linux-raw-sys v0.12.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m litrs v1.0.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m bitflags v2.13.2\n\u001b[1m\u001b[92m   Compiling\u001b[0m nestlink-media-codec v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/media-codec)\n\u001b[1m\u001b[92m   Compiling\u001b[0m document-features v0.2.12\n\u001b[1m\u001b[92m   Compiling\u001b[0m once_cell v1.21.4\n\u001b[1m\u001b[92m   Compiling\u001b[0m fastrand v2.5.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m fast_image_resize v6.1.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m tempfile v3.27.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m zeroize_derive v1.5.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m zeroize v1.9.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m uuid v1.28.0\n\u001b[1m\u001b[92m    Finished\u001b[0m `release` profile [optimized] target(s) in 1m 21s\n\u001b[1m\u001b[92m     Running\u001b[0m unittests src/lib.rs (target/release/deps/nestlink_media_codec-973af3040ba5cd92)\n\nrunning 5 tests\ntest vp9_direction_probe::tests::actual_decoder_rejects_other_codec_and_resized_output ... ok\ntest vp9_direction_probe::tests::actual_libvpx_rgb444_preserves_adjacent_colors_and_odd_geometry ... ok\ntest vp9_direction_probe::tests::actual_software_owner_seals_output_and_retires_receipts ... ok\ntest vp9_direction_probe::tests::cancelled_probe_does_not_report_capability ... ok\ntest vp9_direction_probe::tests::public_libvpx_parser_rejects_truncation_and_wrong_geometry ... ok\n\nsuccesses:\n\nsuccesses:\n    vp9_direction_probe::tests::actual_decoder_rejects_other_codec_and_resized_output\n    vp9_direction_probe::tests::actual_libvpx_rgb444_preserves_adjacent_colors_and_odd_geometry\n    vp9_direction_probe::tests::actual_software_owner_seals_output_and_retires_receipts\n    vp9_direction_probe::tests::cancelled_probe_does_not_report_capability\n    vp9_direction_probe::tests::public_libvpx_parser_rejects_truncation_and_wrong_geometry\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 47 filtered out; finished in 0.08s\n\n",
+        "supply-negatives.log": "test_amf_release_redirect_is_narrow_and_never_applies_to_codec_sources (test_native_codecs.NativeSupplyTests.test_amf_release_redirect_is_narrow_and_never_applies_to_codec_sources) ... ok\ntest_archive_architecture_is_checked_for_every_elf_member (test_native_codecs.NativeSupplyTests.test_archive_architecture_is_checked_for_every_elf_member) ... ok\ntest_archive_traversal_links_collisions_and_budget_are_rejected (test_native_codecs.NativeSupplyTests.test_archive_traversal_links_collisions_and_budget_are_rejected) ... ok\ntest_existing_work_is_preserved_before_any_tool_or_network_call (test_native_codecs.NativeSupplyTests.test_existing_work_is_preserved_before_any_tool_or_network_call) ... ok\ntest_fresh_extraction_hashes_bytes_and_never_reuses_source (test_native_codecs.NativeSupplyTests.test_fresh_extraction_hashes_bytes_and_never_reuses_source) ... ok\ntest_linux_arm64_requires_a_real_matching_host_and_compiler (test_native_codecs.NativeSupplyTests.test_linux_arm64_requires_a_real_matching_host_and_compiler) ... ok\ntest_native_arm64_receipt_and_each_archive_object_bind_the_architecture (test_native_codecs.NativeSupplyTests.test_native_arm64_receipt_and_each_archive_object_bind_the_architecture) ... ok\ntest_offline_missing_or_tampered_archive_never_falls_back_to_download (test_native_codecs.NativeSupplyTests.test_offline_missing_or_tampered_archive_never_falls_back_to_download) ... ok\ntest_receipt_cannot_relabel_foreign_architecture_objects (test_native_codecs.NativeSupplyTests.test_receipt_cannot_relabel_foreign_architecture_objects) ... ok\ntest_receipt_wrong_target_features_source_and_installed_bytes_are_rejected (test_native_codecs.NativeSupplyTests.test_receipt_wrong_target_features_source_and_installed_bytes_are_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 0.051s\n\nOK\n",
+        "direction-build.log": "\u001b[1m\u001b[92m   Compiling\u001b[0m nestlink-media-codec v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/media-codec)\n\u001b[1m\u001b[92m    Finished\u001b[0m `release` profile [optimized] target(s) in 35.91s\n",
+        "owner-fence-tests.log": "\u001b[1m\u001b[92m    Finished\u001b[0m `release` profile [optimized] target(s) in 0.22s\n\u001b[1m\u001b[92m     Running\u001b[0m unittests src/lib.rs (target/release/deps/nestlink_media_codec-973af3040ba5cd92)\n\nrunning 7 tests\ntest execution::tests::cancelled_ticket_fences_shared_marker_without_claiming_join ... ok\ntest execution::tests::directional_slots_are_distinct ... ok\ntest execution::tests::expired_ticket_fences_even_if_reply_already_queued ... ok\ntest execution::tests::normal_worker_exit_also_fences_before_receipt_reuse ... ok\ntest execution::tests::panic_fences_before_owner_cleanup_and_invalidates_shared_receipts ... ok\ntest execution::tests::sealed_output_binds_bytes_pts_and_keyframe_and_retirement ... ok\ntest execution::tests::unverified_startup_failure_poisons_slot_without_join_or_release ... ok\n\nsuccesses:\n\n---- execution::tests::panic_fences_before_owner_cleanup_and_invalidates_shared_receipts stdout ----\n\nthread 'execution::tests::panic_fences_before_owner_cleanup_and_invalidates_shared_receipts' (9652) panicked at crates/media-codec/src/execution.rs:1090:13:\nsynthetic owner panic\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nsuccesses:\n    execution::tests::cancelled_ticket_fences_shared_marker_without_claiming_join\n    execution::tests::directional_slots_are_distinct\n    execution::tests::expired_ticket_fences_even_if_reply_already_queued\n    execution::tests::normal_worker_exit_also_fences_before_receipt_reuse\n    execution::tests::panic_fences_before_owner_cleanup_and_invalidates_shared_receipts\n    execution::tests::sealed_output_binds_bytes_pts_and_keyframe_and_retirement\n    execution::tests::unverified_startup_failure_poisons_slot_without_join_or_release\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 45 filtered out; finished in 0.00s\n\n"
+      },
+      "platform": "linux"
+    }
+  ],
+  "workflow": ".github/workflows/media-vp9-owner.yml",
+  "conclusion": "success",
+  "historical_failed_run": 41598062120,
+  "historical_failed_source": "dd897d8d151dc363fbede843a19eaf97cf74e8c8"
+}

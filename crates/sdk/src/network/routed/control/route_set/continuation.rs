@@ -115,7 +115,8 @@ fn standby_guardian(
 
 /// Poll at least once per second while retained; each poll executes actual
 /// readback/work and returns a recovery proposal for the original application
-/// owner. It does not spawn another scheduler or change the active carrier.
+/// owner. poll_with_path_migration drives the same scheduler's bilateral
+/// transition; plain poll exposes its work and proposals to explicit callers.
 /// Cancellation retains pending physical owners and their original receipts;
 /// the next poll retires interrupted work before scheduling anything else.
 pub struct ContinuousRouteSetSession {
@@ -237,6 +238,7 @@ impl Sdk {
                 address_policy,
                 cancel.clone(),
                 deadline,
+                true,
             )
             .await?;
         let construct = (|| -> Result<_, SessionEstablishError> {
@@ -273,7 +275,7 @@ impl Sdk {
                 .filter_map(OriginalRoute::identity)
                 .collect();
             let active = *keys.get(selected).ok_or(SdkError::Invalid)?;
-            if observation.binding() != &originals[selected].binding {
+            if observation.binding().as_ref() != &originals[selected].binding {
                 return Err(SdkError::Trust.into());
             }
             let scheduler = Scheduler::for_established_group(
@@ -374,7 +376,9 @@ impl ContinuousRouteSetSession {
             .position(|k| *k == key)
             .ok_or(SdkError::Trust)
     }
-    pub(super) fn status(&self) -> Result<RouteSetContinuationStatus, SdkError> {
+    /// Current facts from this session's existing scheduler. Reading this
+    /// snapshot performs no I/O and grants no new route or business authority.
+    pub fn status(&self) -> Result<RouteSetContinuationStatus, SdkError> {
         let policy = self
             .scheduler
             .continuation_status()
@@ -451,6 +455,10 @@ impl ContinuousRouteSetSession {
             let token = pending.token.clone();
             let deadline = pending.deadline;
             if token.route() == self.keys[self.selected] {
+                // A prepared migration holds recoverable physical loss for
+                // one bounded interval. Keep the proved inner runtime alive
+                // while its peer-authenticated transition is still possible.
+                if self.channels.lease_control().remaining().is_ok() { break; }
                 // Only the original runtime's joined physical carrier receipt
                 // can acknowledge active retirement. stop/Drop is insufficient.
                 self.channels.wait_stopped_before(deadline).await?;
@@ -464,6 +472,7 @@ impl ContinuousRouteSetSession {
         Ok(work)
     }
     fn collect(&mut self, decision: ContinuationDecision, work: &mut Vec<WorkToken>) {
+        let terminal = decision.actions.iter().any(|action| matches!(action, ContinuationAction::Terminal(_)));
         for action in decision.actions {
             match action {
                 ContinuationAction::Prepare(token) | ContinuationAction::Probe(token) => {
@@ -471,7 +480,7 @@ impl ContinuousRouteSetSession {
                 }
                 ContinuationAction::Retire(token) => {
                     if token.route() == self.keys[self.selected] {
-                        let _ = self.channels.lease_control().stop(StopReason::Revoked);
+                        if terminal { let _ = self.channels.lease_control().stop(StopReason::Revoked); }
                     } else if let Some(standby) = &self.standby {
                         standby.request_close();
                     }
@@ -494,8 +503,9 @@ impl ContinuousRouteSetSession {
         }
     }
     /// Execute one bounded continuous turn using the actual current SDK/login.
-    /// A returned proposal is for safe application recovery; this owner offers
-    /// no Commit API until authenticated bilateral W14 switching is available.
+    /// A returned proposal alone grants no switch. poll_with_path_migration
+    /// performs bilateral control and either retained-file migration or the
+    /// existing complete generation teardown for input/media/clipboard.
     pub async fn poll(
         &mut self,
         sdk: &Sdk,
@@ -560,6 +570,12 @@ impl ContinuousRouteSetSession {
                 }
             }
         }
+        if !self.route.member_authorized(self.selected) {
+            let _ = self.channels.lease_control().stop(StopReason::Revoked);
+            let decision = self.scheduler.stop_continuation(nestlink_protocol::ErrorCode::PolicyRevoked);
+            self.consume(sdk, local, peer_key, decision).await?;
+            return Ok(self.status()?);
+        }
         if let Some((at, snapshot)) = self.observation.timed_snapshot()
             && self.active_feedback.is_none_or(|old| at > old)
         {
@@ -582,6 +598,14 @@ impl ContinuousRouteSetSession {
                 )?;
                 self.consume(sdk, local, peer_key, decision).await?;
             }
+        }
+        let held_loss = self.channels.transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
+            .is_some_and(|owner| owner.transport.held_path_loss_deadline().is_some());
+        if held_loss && let Some(observer) = self.scheduler.continuation_status().and_then(|status| status.active_observer) {
+            let decision = self.step(sdk, local, peer_key, ContinuationInput::RouteFailed {
+                observer, code: nestlink_protocol::ErrorCode::RelayUnavailable,
+            })?;
+            self.consume(sdk, local, peer_key, decision).await?;
         }
         let decision = self.step(sdk, local, peer_key, ContinuationInput::Tick { demand })?;
         let work = self.consume(sdk, local, peer_key, decision).await?;
@@ -737,7 +761,7 @@ impl ContinuousRouteSetSession {
                 .await
                 .map_err(SdkError::NodeQuic)?;
             slot.node = None;
-            slot.inner = Some(RoutedEstablishment::new(authorization, adjacency));
+            slot.inner = Some(RoutedEstablishment::migratable(authorization, adjacency, 0).map_err(SdkError::ServiceIo)?);
             let inner = slot.inner.as_mut().ok_or(SdkError::Invalid)?;
             inner
                 .establish(&local.identity, deadline)
@@ -745,6 +769,10 @@ impl ContinuousRouteSetSession {
                 .map_err(SdkError::NodeQuic)?;
             slot.transport = Some(inner.take_transport().map_err(SdkError::ServiceIo)?);
             slot.inner = None;
+            self.channels.transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
+                .ok_or(SdkError::Trust)?.transport.arm_prepared_migration(
+                    slot.transport.as_ref().ok_or(SdkError::Trust)?)
+                .map_err(SdkError::ServiceIo)?;
             let now = ms_between(self.started, Instant::now())?;
             sample(slot, now)?;
             Ok((

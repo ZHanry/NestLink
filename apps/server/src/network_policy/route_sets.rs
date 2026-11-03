@@ -9,7 +9,7 @@ use nestlink_storage::network_policy::{
 
 fn view(bundle: NetworkRemoteRouteSetBundle) -> Result<NetworkRemoteRouteSetView, StorageError> {
     let member = |member: nestlink_storage::network_policy::NetworkRemoteRouteSetMemberBundle| -> Result<NetworkRemoteRouteSetMemberView, StorageError> {
-        Ok(NetworkRemoteRouteSetMemberView { allocation_id: member.allocation_id, transit: grant_view(member.transit)?, node: member.node, available: member.available })
+        Ok(NetworkRemoteRouteSetMemberView { allocation_id: member.allocation_id, transit: grant_view(member.transit)?, node: member.node, authorized: member.authorized, available: member.available })
     };
     let [first, second] = bundle.members;
     Ok(NetworkRemoteRouteSetView {

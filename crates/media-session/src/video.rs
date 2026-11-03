@@ -500,6 +500,7 @@ fn send<D: CaptureDevice>(
                 format_epoch: 0,
                 format_sha256: Vec::new(),
                 codec: match codec_kind {
+                    VideoCodec::Vp9Rgb444 => return Err(io::Error::other("fixed-source sender cannot activate RGB444")),
                     VideoCodec::Vp8 => 0,
                     VideoCodec::H264Baseline => 1,
                 },

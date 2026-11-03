@@ -17,6 +17,7 @@ pub use recovery::{RecoveredNetworkSession, RouteSetRecoveryConfig, RouteSetReco
 pub(super) fn original_fingerprint(view: &NetworkRemoteRouteSetView) -> Result<[u8; 32], SdkError> {
     let mut original = view.clone();
     for member in &mut original.members {
+        member.authorized = false;
         member.available = false;
     }
     response_digest(&original)
@@ -70,6 +71,9 @@ impl VerifiedRemoteRouteCandidate<'_> {
     }
 }
 impl VerifiedRemoteRouteSet {
+    pub(super) fn member_authorized(&self, index: usize) -> bool {
+        self.view.members.get(index).is_some_and(|member| member.authorized)
+    }
     pub fn membership_grant_ids(&self) -> [&str; 2] {
         [
             &self.view.path.controller_membership.grant_id,
@@ -94,7 +98,7 @@ impl VerifiedRemoteRouteSet {
             node: &self.view.members[index].node,
             route_binding: self.grants.bindings[index].digest,
             byte_limit: self.grants.bindings[index].byte_limit,
-            available: self.view.members[index].available,
+            available: self.view.members[index].authorized && self.view.members[index].available,
             relay: self.grants.bindings[index].relay,
         })
     }
@@ -110,6 +114,7 @@ impl VerifiedRemoteRouteSet {
     ) -> Option<VerifiedRemoteRouteCandidate<'_>> {
         if index >= 2
             || !self.is_current_for(sdk, local, permit, peer_key)
+            || !self.view.members[index].authorized
             || !self.view.members[index].available
         {
             return None;

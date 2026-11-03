@@ -42,28 +42,103 @@ revocation takes precedence. It grants no socket switch by itself. Timeout
 after Commit is ambiguous and requires stop or safe application recovery; an
 endpoint cannot silently roll back while its peer might have committed.
 
-The current SDK entry lives on ContinuousRouteSetSession and consumes its
-actual prepared standby, pinned original metadata and proved original TLS
-binding. A completed opaque receipt may be consumed only by that owner, then
-the existing input/media/business/carrier cleanup runs before fresh-generation
-application recovery. An interrupted future fences the next attempt. New
-allocations, business permits and endpoint proof still follow existing safe
-recovery rules; old requests are not replayed.
+The SDK entry lives on ContinuousRouteSetSession and consumes its actual
+prepared standby, pinned original metadata and proved original TLS binding.
+poll_with_path_migration drives the existing scheduler and responds to a
+reliable, fixed 176-byte UNI-stream wake-up on that standby. Either endpoint
+may request a switch; the ordered pair still elects the sole signed proposer.
+The wake-up binds the original permit, group, TLS exporter, both route bindings
+and current path epoch. It is only an advisory request: both owners recheck
+their own prepared state, fresh feedback, hard constraints, original authority,
+cancellation and business lifetime before capability exchange and signatures.
+It is separate from the BI capability/transcript streams and creates no second
+scheduler or reservation. Cancellation fences another attempt; a timeout does
+not authorize a new proposal identity or rollback.
 
-Remaining work is explicit: transfer the unique raw candidate socket after
-its control endpoint and every Quinn poller are released, preserve the actual
-original inner connection, dynamically bind path epochs and observations,
-bound old-path draining and loss holdoff, and drive both product owners while
-only one side proposes. Until that is implemented and verified, this slice
-does not promise in-place continuity, does not advertise migration on ordinary
-active business sessions and does not close AC22. Existing independently
-executed carrier-rebind feasibility remains separate laboratory evidence.
+An explicitly negotiated ALPN adds endpoint-only framing inside the existing
+opaque routed packet. Control and Business(epoch) have separate receive queues
+with one aggregate bound of 32 packets and the original packet arrival age.
+This prevents a peer switching first from exposing the original business CID
+to the other peer's still-running control endpoint and receiving a stateless
+reset. The relay remains unaware of business CIDs and charges every framing
+byte to the same original cumulative quota. Ordinary constructors retain their
+old ALPN, bytes and capability exchange.
 
-Source regressions cover canonical bounds, signature tampering, phase replay,
-lost final-confirmation retry, clock rollback, terminal revocation and exact
-finite grace; real mutually pinned QUIC tests cover concurrent owners, new
-connection binding, scope/ALPN failures, cancellation and physical release. A
-real HTTP/two-node SDK test executes the original standby owner control path,
-proves business stays on its original route until explicit retirement, then
-requires original business and standby socket release receipts. None of these
-new tests has been run locally; R02 requires hosted Actions output.
+For file-only proved channels, commit transfers the actual candidate owner
+into the original business owner. The candidate control endpoint, connection
+and every tracked writable poller must release before its business socket view
+is handed to Quinn's existing rebind_abstract. The original inner stable ID,
+TLS exporter, reliable streams, business generation and group remain unchanged.
+The route binding and consecutive path epoch update every cloned observer;
+measurement revision tags prevent old ACK, throughput or loss windows from
+being relabeled as new-path facts. Fresh counters require a new baseline and
+subsequent real ACK. The initial inner MTU is conservatively fixed at 1200;
+production adaptive PMTU convergence is not claimed by this slice.
+
+The existing general remote runtime requires View to create its lifecycle.
+The new migration ALPN therefore has one explicit file-only admission adapter:
+the signed original permit must contain only FileRead/FileWrite, and at least
+one of them. It reuses the same endpoint proof and exact channel profile, and
+authorizes that original file permission to create the lifecycle. Every legacy
+entry keeps its View requirement. A View/Input/Audio/clipboard permission cannot
+be hidden by temporarily idling the corresponding channel or calling this
+adapter directly.
+
+A prepared independent standby permits one physical-loss hold of at most two
+seconds, capped by the original authority deadline. Its actual gate publishes
+held-loss facts to the same scheduler, separately from terminal lifecycle
+failure. Revocation, authenticated authority shutdown, protocol failure and
+expiry bypass the hold. Old-path receive drain has one absolute cutoff of at
+most 250 ms; repeated calls cannot renew it. After commit, errors from that old
+gate cannot overwrite the new carrier's lifecycle. Cancellation preserves the
+original, pending and draining owners and their actual completion receivers.
+
+The current route-set readback separates `authorized` from `available` for
+each immutable original member. Explicit node revocation, identity replacement
+or relay-role withdrawal clears authorization; lease/runtime/endpoint changes
+only affect availability. Path, business, membership and transit revocation
+still reject the complete authenticated GET through the original policy
+snapshot and signed-grant checks. The retained business observer requires its
+actual current member to remain authorized even during a physical-loss hold.
+Its shared selected-member index changes only after successful owner migration,
+so revoking a released old node cannot revoke the healthy current member.
+Independent standby withdrawal retains the existing healthy-member behavior.
+
+The current input/media/clipboard business formats have no per-frame path
+epoch. Even an idle permission could later admit an old frame already buffered
+in an existing reliable stream, so clearing a local queue or requesting one
+keyframe would be insufficient. The complete proved channel set therefore
+selects full safe recovery for any of those channels. After bilateral control,
+the original stop boundary releases held input and platform transient state,
+discards old queues, joins all business I/O and releases both physical owners.
+AppCore uses this automatic entry and then its existing recovery coordinator:
+the same application session receives a fresh business generation, new endpoint
+proof, fresh media owners and the required first keyframe. No old input or
+arbitrary request is replayed. Native media does not claim original-generation
+seamless continuity. The lower-level commit API independently rejects these
+unsafe channel sets, so callers cannot bypass the product boundary.
+
+This bounded two-member route set consumes each original node admission once.
+After a retained-file migration the old allocation is fully released and is
+not replayed as another standby. A later failure uses the existing independently
+authorized safe-recovery rules; no poll refreshes group lifetime or quota.
+
+Source regressions cover canonical packet/request bounds, signature tampering,
+phase replay, lost final-confirmation retry, clock rollback, terminal revocation,
+hold expiry and nonrenewing drain. Real pinned QUIC and HTTP/two-NodeControl
+tests cover bilateral control, a single larger-peer request with ordinary
+smaller-peer polling, retained original file streams after old UDP address
+release, unchanged TLS binding/generation/group, and observation epoch reset.
+The safe branch attaches the production InputController to a recording device,
+holds a key, queues old text/video, then requires release/reset and rejects old
+queue delivery after teardown. These are implementation regressions, not real
+OS input or media presentation evidence. No new tests were run locally; exact
+source hosted Actions are required by R02.
+
+AC22/W14 remain open until the production SDK/owner path runs through the
+Actions namespace fault matrix, including actual old-path DROP or external
+relay-process loss, cancellation at detach/rebind/drain, held external pollers,
+revocation during drain and target evidence. The existing carrier-rebind
+prototype is separate feasibility evidence. Windows interactive recovery,
+real input/media presentation, fresh keyframe and p95 recovery targets retain
+their original L3/L4 requirements; this source slice does not close them.

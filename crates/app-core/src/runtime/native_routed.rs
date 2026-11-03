@@ -161,7 +161,7 @@ impl NativeConnection {
                     .min(Duration::from_secs(3));
             let mut interrupted = None;
             let outcome = {
-                let turn = session.poll(&client.sdk, &request.identity, peer_key, true);
+                let turn = session.poll_with_path_migration(&client.sdk, &request.identity, peer_key, true);
                 tokio::pin!(turn);
                 tokio::select! { biased;
                     _ = wait_for_fence_invalidation(request.fence.clone()) => {

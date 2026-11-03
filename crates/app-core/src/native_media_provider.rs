@@ -29,6 +29,7 @@ pub struct NativeMediaProvider {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum ProviderBackend {
     CpuH264,
+    CpuVp9Rgb444,
     GpuHevcMain8,
     GpuHevcMain10,
     GpuHevcHdr10,
@@ -236,6 +237,16 @@ fn next_id() -> io::Result<u64> {
     .ok_or_else(|| io::Error::other("probe generation exhausted"))
 }
 impl NativeMediaProvider {
+    pub fn software_vp9_rgb444(target: VideoConfig) -> io::Result<Self> {
+        let format = VideoFormat::vp9_rgb444(target.width, target.height,
+            nestlink_protocol::media_format::FrameRate::new(target.fps, 1).map_err(io::Error::other)?, target.bitrate_kbps).map_err(io::Error::other)?;
+        nestlink_media_session::vp9_rgb444_execution_target(format)?;
+        Ok(Self { backend: ProviderBackend::CpuVp9Rgb444, hevc_encoder: HevcEncoderBackend::SystemMf,
+            target, targets: Arc::from([target]), state: Arc::new(Mutex::new(ProviderState::default())) })
+    }
+    pub(crate) fn matches_software_vp9_rgb444(&self, target: VideoConfig) -> bool {
+        self.backend == ProviderBackend::CpuVp9Rgb444 && self.targets.len() == 1 && same_config(self.target, target)
+    }
     pub fn cpu_software(target: VideoConfig) -> io::Result<Self> {
         if target.width == 0
             || target.height == 0
@@ -306,7 +317,7 @@ impl NativeMediaProvider {
     /// One user-selected lower budget, independently probed on the same backend.
     /// It does not authorize retrying a failed probe or changing codec/depth.
     pub(crate) fn with_hevc_fallback(mut self, fallback: VideoConfig) -> io::Result<Self> {
-        if self.backend == ProviderBackend::CpuH264 || self.targets.len() != 1 {
+        if matches!(self.backend, ProviderBackend::CpuH264 | ProviderBackend::CpuVp9Rgb444) || self.targets.len() != 1 {
             return Err(io::Error::other(
                 "HEVC fallback requires one original GPU target",
             ));
@@ -786,6 +797,7 @@ fn run_probes(
         // Each mature MF owner completes checked flush and close before the
         // next exact target starts on this same original bounded worker.
         receipts.push(match backend {
+            ProviderBackend::CpuVp9Rgb444 => run_vp9_rgb444_probe(*target, direction, cancel)?,
             ProviderBackend::CpuH264 => run_probe(*target, direction, cancel)?,
             ProviderBackend::GpuHevcMain8 => {
                 run_hevc_probe(*target, direction, cancel, 8, hevc_encoder, false)?
@@ -799,6 +811,15 @@ fn run_probes(
         });
     }
     merge_probe_results(receipts, backend)
+}
+fn run_vp9_rgb444_probe(target: VideoConfig, direction: MediaDirection, cancel: &AtomicBool) -> io::Result<ProbeResult> {
+    let actual = match direction { MediaDirection::Encode => nestlink_media_codec::ExecutionDirection::Encode, MediaDirection::Decode => nestlink_media_codec::ExecutionDirection::Decode };
+    let receipt = nestlink_media_codec::probe_vp9_rgb444_direction_with_cancel(actual, target, cancel)?;
+    if !same_config(receipt.config, target) || receipt.direction != actual || !receipt.checked_close || receipt.output_frames != 32 || receipt.resource_id() == [0; 16] {
+        return Err(io::Error::other("VP9 RGB444 actual direction differs from product target"));
+    }
+    let format = VideoFormat::vp9_rgb444(target.width, target.height, nestlink_protocol::media_format::FrameRate::new(target.fps, 1).map_err(io::Error::other)?, target.bitrate_kbps).map_err(io::Error::other)?;
+    Ok(ProbeResult { format, additional_formats: Vec::new(), resource_id: uuid::Uuid::from_bytes(receipt.resource_id()).to_string(), backend: "cpu-software", adapter_luid: None, driver_version: None, encoder: None, sample_encoder: None })
 }
 fn merge_probe_results(
     receipts: Vec<ProbeResult>,

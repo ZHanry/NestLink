@@ -164,8 +164,13 @@ impl nestlink_sdk::native_renewal::NativeRenewalSource for Source<'_> {
             self.dispatch
                 .check()
                 .map_err(|_| nestlink_sdk::SdkError::Trust)?;
+            self.config.validate_media_publication(&local, &identity.device_id, direction, unix_millis().unwrap_or(u64::MAX))
+                .map_err(|_| nestlink_sdk::SdkError::Trust)?;
+            let explicit_formats = self.config.explicit_media_formats(&frozen)
+                .map_err(|_| nestlink_sdk::SdkError::Trust)?;
             Ok(nestlink_sdk::native_renewal::PreparedNativeRenewal {
                 evidence: nestlink_sdk::native::NativeMediaEvidence {
+                    explicit_formats,
                     frozen,
                     local,
                     internal_candidate: self.config.internal_software_media_candidate.clone(),

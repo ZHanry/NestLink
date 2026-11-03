@@ -182,6 +182,7 @@ fn evidence(permit: &VerifiedPermit, role: EndpointRole) -> NativeMediaEvidence 
         formats: c.media_formats.clone(),
     };
     NativeMediaEvidence {
+        explicit_formats: None,
         internal_candidate: None,
         frozen: FrozenMediaScope {
             version: 2,

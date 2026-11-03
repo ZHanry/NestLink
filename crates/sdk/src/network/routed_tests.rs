@@ -1132,6 +1132,7 @@ fn terminal_route_hook_revokes_the_same_authorization_before_returning_to_its_ca
     let stops = Arc::new(AtomicUsize::new(0));
     let mut handler = super::RemoteRouteStop {
         revocation: Arc::new(revocation),
+        additional_revocations: Arc::new(std::sync::Mutex::new(Vec::new())),
         deadline: authorization.deadline(),
         previous: Some(Box::new(StopSpy {
             checks: checks.clone(),
@@ -1586,6 +1587,7 @@ async fn external_cancel_and_source_drop_interrupt_inner_setup_with_physical_cle
                         deadline,
                         None,
                         Some(cancel),
+                        None,
                     )
                     .await;
                     (Instant::now(), result)
@@ -1651,6 +1653,7 @@ async fn external_cancel_and_source_drop_interrupt_business_proof_with_physical_
                         deadline,
                         None,
                         Some(cancel),
+                        None,
                     )
                     .await;
                     (Instant::now(), result)

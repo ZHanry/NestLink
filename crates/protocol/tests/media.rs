@@ -35,6 +35,32 @@ fn audio() -> NativeAudio {
     }
 }
 #[test]
+fn rgb444_wire_marker_requires_independent_format_identity_and_keyframe() -> Result {
+    use nestlink_protocol::NativeVideoCodec;
+    let mut frame = video();
+    frame.codec = NativeVideoCodec::Vp9Rgb444 as i32;
+    frame.width = 33;
+    frame.height = 25;
+    frame.format_epoch = 1;
+    frame.format_sha256 = vec![6; 32];
+    // Structural envelope only; actual libvpx syntax/format is checked by owner.
+    frame.payload = vec![0x80];
+    assert_eq!(NativeVideoCodec::Vp9Rgb444 as i32, 4);
+    assert_eq!(NativeVideo::decode_validated(&frame.encode_validated()?)?, frame);
+    for case in 0..5 {
+        let mut changed = frame.clone();
+        match case {
+            0 => { changed.format_epoch = 0; changed.format_sha256.clear(); }
+            1 => changed.keyframe = false,
+            2 => changed.payload.clear(),
+            3 => changed.width = 15,
+            _ => changed.codec = NativeVideoCodec::Vp8 as i32,
+        }
+        assert!(changed.encode_validated().is_err());
+    }
+    Ok(())
+}
+#[test]
 fn hevc_wire_marker_requires_exact_identity_and_keeps_legacy_markers_strict() -> Result {
     use nestlink_protocol::NativeVideoCodec;
     let mut frame = video();

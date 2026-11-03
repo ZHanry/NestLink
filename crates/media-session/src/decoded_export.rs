@@ -60,8 +60,8 @@ impl DecodedExportLedger {
             || frame.height == 0
             || frame.width > 8192
             || frame.height > 8192
-            || !frame.width.is_multiple_of(2)
-            || !frame.height.is_multiple_of(2)
+            || (frame.codec != nestlink_protocol::NativeVideoCodec::Vp9Rgb444 as u8
+                && (!frame.width.is_multiple_of(2) || !frame.height.is_multiple_of(2)))
             || frame.pixels.len() > MAX_BYTES
             || expected_bytes != Some(frame.pixels.len())
             || frame.epoch.connection == 0
@@ -269,6 +269,15 @@ mod tests {
         assert!(ledger.begin(&different).is_err());
         assert!(ledger.retired);
         Ok(())
+    }
+    #[test]
+    fn rgb444_metadata_without_original_sealed_output_cannot_open_export() {
+        let mut ledger = DecodedExportLedger::default();
+        let mut rgb = frame(1, 0);
+        rgb.codec = nestlink_protocol::NativeVideoCodec::Vp9Rgb444 as u8;
+        rgb.source_color = nestlink_protocol::media_format::Color::RGB_SRGB_FULL;
+        assert!(ledger.begin(&rgb).is_err());
+        assert!(!ledger.pending);
     }
     #[test]
     fn hevc_metadata_without_original_sealed_output_cannot_open_export() {

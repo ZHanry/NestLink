@@ -941,7 +941,9 @@ impl super::DesktopApp {
             self.file_panel.disconnected();
             self.file_submission = None;
         }
-        if !self.connected {
+        // Closing owns the stop and revocation sequence. Background file and
+        // clipboard requests must not add work for the session being retired.
+        if !self.connected || self.remote_window_cleanup.is_some() {
             return;
         }
         if let Some(command) = self.recovery_panel.poll() {

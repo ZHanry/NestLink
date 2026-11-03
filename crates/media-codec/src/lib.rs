@@ -18,7 +18,7 @@ pub use video::{
 };
 pub use vp8::{EncodedVideo, VideoConfig, Vp8Decoder, Vp8Encoder};
 pub use vp9::{Vp9Rgb444Decoder, Vp9Rgb444Encoder, validate_vp9_rgb444_keyframe};
-pub use vp9_direction_probe::{Vp9Rgb444DirectionProbe, probe_vp9_rgb444_direction};
+pub use vp9_direction_probe::{Vp9Rgb444DirectionProbe, probe_vp9_rgb444_direction, probe_vp9_rgb444_direction_with_cancel};
 #[cfg(windows)]
 mod windows_mf;
 #[cfg(windows)]

@@ -112,7 +112,7 @@ pub async fn authorize_remote_chain(
     deadline: Instant,
 ) -> Result<ChannelRuntime, RemoteError> {
     authorize_remote_observed(
-        authority, adjacency, setup, local, peer_key, deadline, None, None,
+        authority, adjacency, setup, local, peer_key, deadline, None, None, None,
     )
     .await
 }
@@ -135,7 +135,7 @@ pub async fn authorize_remote(
     deadline: Instant,
 ) -> Result<ChannelRuntime, RemoteError> {
     authorize_remote_observed(
-        authority, adjacency, setup, local, peer_key, deadline, None, None,
+        authority, adjacency, setup, local, peer_key, deadline, None, None, None,
     )
     .await
 }
@@ -150,6 +150,7 @@ async fn authorize_remote_observed<'a>(
     deadline: Instant,
     observer: Option<control::RemoteRouteObserver>,
     mut cancel: Option<watch::Receiver<bool>>,
+    migration_epoch: Option<u64>,
 ) -> Result<ChannelRuntime, RemoteError> {
     let authority = authority.into();
     let mut stop = setup.lifecycle.stop.clone();
@@ -206,6 +207,7 @@ async fn authorize_remote_observed<'a>(
     let observation_binding =
         authority.observation_binding(setup.session.current_verified_permit(), &authorization);
     let revocation = Arc::new(revocation);
+    let additional_revocations = Arc::new(std::sync::Mutex::new(Vec::new()));
     let setup_deadline = deadline.min(route_deadline);
     let preparation = (|| -> Result<(), RemoteError> {
         let now = setup.clock.sample()?;
@@ -226,10 +228,13 @@ async fn authorize_remote_observed<'a>(
     }
     setup.lifecycle.resources = Some(Box::new(RemoteRouteStop {
         revocation: revocation.clone(),
+        additional_revocations: additional_revocations.clone(),
         deadline: route_deadline,
         previous: setup.lifecycle.resources.take(),
     }));
-    let mut pending = routed::RoutedEstablishment::new(authorization, adjacency);
+    let mut pending = if let Some(epoch) = migration_epoch {
+        routed::RoutedEstablishment::migratable(authorization, adjacency, epoch)?
+    } else { routed::RoutedEstablishment::new(authorization, adjacency) };
     let established = tokio::select! { biased;
         _ = wait_setup_stop(&mut stop) => {
             revocation.revoke();
@@ -258,7 +263,10 @@ async fn authorize_remote_observed<'a>(
     let mut owner = RemoteRouteOwner {
         transport,
         revocation,
+        additional_revocations,
+        observed_member: observer.as_ref().and_then(control::RemoteRouteObserver::selected_member),
         observer: None,
+        guardians: Vec::new(),
     };
     let connection = owner.transport.connection()?.clone();
     // The independently verified route selects an explicit new protocol. Its
@@ -267,13 +275,13 @@ async fn authorize_remote_observed<'a>(
     let capability_initiator = matches!(setup.role, EndpointRole::Controller);
     let capability = async {
         use nestlink_protocol::network::{
-            CORE_CAPABILITY, CapabilityOffer, NegotiatedProtocol, PeerId, REMOTE_CAPABILITY_ALPN,
+            CORE_CAPABILITY, MIGRATION_CAPABILITY, CapabilityOffer, NegotiatedProtocol, PeerId, REMOTE_CAPABILITY_ALPN,
         };
         use nestlink_transport_quic::capability::{CapabilityBinding, exchange};
         let selected = exchange(
             &connection,
             capability_initiator,
-            REMOTE_CAPABILITY_ALPN,
+            if migration_epoch.is_some() { nestlink_protocol::network_migration::packet::REMOTE_ALPN } else { REMOTE_CAPABILITY_ALPN },
             &CapabilityBinding {
                 expected_peer: PeerId(digest(peer_key)),
                 business_digest: observation_binding.business_grant_digest,
@@ -286,8 +294,8 @@ async fn authorize_remote_observed<'a>(
             },
             &CapabilityOffer {
                 schema_version: nestlink_protocol::network::SCHEMA_VERSION,
-                supported: vec![CORE_CAPABILITY.into()],
-                required: vec![CORE_CAPABILITY.into()],
+                supported: if migration_epoch.is_some() { vec![CORE_CAPABILITY.into(), MIGRATION_CAPABILITY.into()] } else { vec![CORE_CAPABILITY.into()] },
+                required: if migration_epoch.is_some() { vec![CORE_CAPABILITY.into(), MIGRATION_CAPABILITY.into()] } else { vec![CORE_CAPABILITY.into()] },
             },
             setup_deadline,
         )
@@ -295,7 +303,7 @@ async fn authorize_remote_observed<'a>(
         .map_err(io::Error::other)?;
         if selected
             != (NegotiatedProtocol::NetworkV1 {
-                path_migration: false,
+                path_migration: migration_epoch.is_some(),
             })
         {
             return Err(io::Error::new(
@@ -304,7 +312,15 @@ async fn authorize_remote_observed<'a>(
             )
             .into());
         }
-        nestlink_remote::quic::authorize(connection, None, setup, &local.identity, peer_key).await
+        let permissions = &setup.session.current_verified_permit().claims().permissions;
+        let file_only = migration_epoch.is_some() && !permissions.is_empty() && permissions.iter().all(|permission|
+            matches!(nestlink_protocol::Permission::try_from(*permission),
+                Ok(nestlink_protocol::Permission::FileRead | nestlink_protocol::Permission::FileWrite)));
+        if file_only {
+            nestlink_remote::quic::authorize_file_only_path_migration(connection, None, setup, &local.identity, peer_key).await
+        } else {
+            nestlink_remote::quic::authorize(connection, None, setup, &local.identity, peer_key).await
+        }
     };
     let proved = tokio::select! { biased;
         _ = wait_setup_stop(&mut stop) => Err(RemoteError::Stopped),
@@ -388,6 +404,7 @@ async fn wait_setup_cancel(cancel: &mut Option<watch::Receiver<bool>>) {
 /// at the business stop linearization point, before any async runtime wait.
 struct RemoteRouteStop {
     revocation: Arc<RouteRevocation>,
+    additional_revocations: Arc<std::sync::Mutex<Vec<Arc<RouteRevocation>>>>,
     deadline: Instant,
     previous: Option<Box<dyn StopHandler>>,
 }
@@ -395,6 +412,7 @@ impl StopHandler for RemoteRouteStop {
     fn check(&mut self) -> io::Result<()> {
         if Instant::now() >= self.deadline {
             self.revocation.revoke();
+            for revocation in self.additional_revocations.lock().unwrap_or_else(|error| error.into_inner()).iter() { revocation.revoke(); }
             return Err(io::ErrorKind::TimedOut.into());
         }
         match &mut self.previous {
@@ -408,8 +426,10 @@ impl StopHandler for RemoteRouteStop {
             StopReason::TransportLost | StopReason::NetworkChanged
         ) {
             self.revocation.retire_for_recovery();
+            for revocation in self.additional_revocations.lock().unwrap_or_else(|error| error.into_inner()).iter() { revocation.retire_for_recovery(); }
         } else {
             self.revocation.revoke();
+            for revocation in self.additional_revocations.lock().unwrap_or_else(|error| error.into_inner()).iter() { revocation.revoke(); }
         }
         match &mut self.previous {
             Some(previous) => previous.stop(reason, effects),
@@ -420,17 +440,23 @@ impl StopHandler for RemoteRouteStop {
 impl Drop for RemoteRouteStop {
     fn drop(&mut self) {
         self.revocation.stop_if_live();
+        for revocation in self.additional_revocations.lock().unwrap_or_else(|error| error.into_inner()).iter() { revocation.stop_if_live(); }
     }
 }
 
 struct RemoteRouteOwner {
     transport: RoutedTransport,
     revocation: Arc<RouteRevocation>,
+    additional_revocations: Arc<std::sync::Mutex<Vec<Arc<RouteRevocation>>>>,
+    observed_member: Option<Arc<std::sync::atomic::AtomicUsize>>,
     observer: Option<TaskOwner>,
+    guardians: Vec<TaskOwner>,
 }
 impl TransportOwner for RemoteRouteOwner {
+    fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> { Some(self) }
     fn request_close(&self) {
         self.revocation.stop_if_live();
+        for revocation in self.additional_revocations.lock().unwrap_or_else(|error| error.into_inner()).iter() { revocation.stop_if_live(); }
         if self.revocation.is_retired() {
             self.transport.request_close_for_recovery();
         } else {
@@ -439,6 +465,7 @@ impl TransportOwner for RemoteRouteOwner {
         if let Some(observer) = &self.observer {
             observer.request_close();
         }
+        for guardian in &self.guardians { guardian.request_close(); }
     }
     fn close_and_wait(
         &mut self,
@@ -450,6 +477,8 @@ impl TransportOwner for RemoteRouteOwner {
                 observer.close_and_wait(deadline).await?;
             }
             self.observer = None;
+            for guardian in &self.guardians { guardian.close_and_wait(deadline).await?; }
+            self.guardians.clear();
             self.transport.close_and_wait(deadline).await
         })
     }

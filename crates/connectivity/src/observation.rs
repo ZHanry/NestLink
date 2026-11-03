@@ -5,7 +5,8 @@ use std::time::Duration;
 
 pub const OBSERVATION_FRESHNESS_MS: u64 = 3_000;
 
-/// Original admission identity, frozen before observing the existing transport.
+/// Original business admission identity. A proved retained-inner path commit
+/// may update only route_binding and its separately reported path epoch.
 /// Legacy paths have no network PathGrant/group; routed paths without native
 /// candidates have no candidate/network generation. Absence is not a wildcard.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -52,6 +53,7 @@ impl BusinessThroughputWindow {
 pub struct PathObservationSnapshot {
     pub binding: PathObservationBinding,
     pub stopped: bool,
+    pub path_epoch: Option<u64>,
     /// Quinn's smoothed RTT, refreshed only after a newly observed ACK frame.
     pub rtt: Option<Duration>,
     /// Absolute change between consecutive locally observed smoothed RTTs;
@@ -173,6 +175,7 @@ impl LocalPathMeasurements {
     ) -> PathObservationSnapshot {
         let live = !stopped && self.previous.is_some_and(|(at, _)| now_ms >= at);
         PathObservationSnapshot {
+            path_epoch: None,
             binding: binding.clone(),
             stopped,
             rtt: live

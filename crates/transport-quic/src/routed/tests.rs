@@ -204,6 +204,7 @@ impl Fixture {
 mod chain;
 mod cleanup;
 mod node_admission;
+mod migration_gate;
 
 #[test]
 fn route_retirement_is_permanent_and_a_true_revocation_always_overrides_it() -> TestResult {

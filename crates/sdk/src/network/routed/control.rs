@@ -428,6 +428,7 @@ impl Sdk {
             deadline,
             Some(observer),
             Some(cancel.clone()),
+            None,
         )
         .await;
         let mut channels = match proved {
@@ -488,9 +489,15 @@ pub(super) struct RemoteRouteObserver {
 enum ReadbackKind {
     Relay,
     Chain,
-    RouteSet { selected: usize },
+    RouteSet { selected: Arc<std::sync::atomic::AtomicUsize>, migratable: bool },
 }
 impl RemoteRouteObserver {
+    pub(super) fn selected_member(&self) -> Option<Arc<std::sync::atomic::AtomicUsize>> {
+        match &self.kind {
+            ReadbackKind::RouteSet { selected, .. } => Some(selected.clone()),
+            _ => None,
+        }
+    }
     pub(super) fn spawn(self, lease: nestlink_remote::LeaseControl) -> TaskOwner {
         TaskOwner::new(tokio::spawn(async move {
             let _stop_on_drop = ObserverStop(lease.clone());
@@ -525,16 +532,20 @@ impl RemoteRouteObserver {
     }
 
     async fn matches_current(&self) -> bool {
-        match self.kind {
+        match &self.kind {
             ReadbackKind::Relay => self.matches_view::<NetworkRemoteRelayView>().await,
             ReadbackKind::Chain => self.matches_view::<NetworkRemoteRelayChainView>().await,
-            ReadbackKind::RouteSet { selected } => {
+            ReadbackKind::RouteSet { selected, migratable } => {
                 matches!(
                     crate::request::<nestlink_protocol::api::NetworkRemoteRouteSetView>(
                         &self.client, &self.origin, reqwest::Method::GET, &self.path,
                         None, Some(self.token.expose()),
                     ).await,
-                    Ok(Some(view)) if view.members.get(selected).is_some_and(|member| member.available)
+                    // The actual owner updates this index only after its
+                    // committed rebind. Physical loss may be held, while
+                    // explicit withdrawal of the current member may not.
+                    Ok(Some(view)) if view.members.get(selected.load(std::sync::atomic::Ordering::Acquire))
+                        .is_some_and(|member| member.authorized && (*migratable || member.available))
                         && route_set::original_fingerprint(&view).ok() == Some(self.fingerprint)
                 )
             }

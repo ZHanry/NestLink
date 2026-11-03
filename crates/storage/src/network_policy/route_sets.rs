@@ -18,6 +18,7 @@ pub struct NetworkRemoteRouteSetMemberBundle {
     pub allocation_id: String,
     pub transit: SignedNetworkGrant,
     pub node: NodeEndpointsView,
+    pub authorized: bool,
     pub available: bool,
 }
 pub struct NetworkRemoteRouteSetBundle {
@@ -188,6 +189,7 @@ impl Store {
                     revision: node.endpoint_revision,
                     endpoints: node.endpoints,
                 },
+                authorized: true,
                 available: true,
             });
         }
@@ -304,12 +306,20 @@ impl Store {
             {
                 return Err(StorageError::Forbidden);
             }
+            // Explicit identity/role withdrawal is not physical node loss.
+            // Preserve this independent fact for retained-path observers;
+            // the healthy original member remains separately admissible.
+            let authorized: bool = tx.query_row(
+                "SELECT EXISTS(SELECT 1 FROM data_nodes n WHERE n.id=?1 AND n.public_key=?2 AND n.revoked=0 AND EXISTS(SELECT 1 FROM json_each(n.roles_json) WHERE value=?3))",
+                params![row.node_id, row.key, nestlink_protocol::NodeRole::NodeRelay as i32],
+                |record| record.get(0),
+            )?;
             // A node's availability is not group revocation. Preserve every
             // original signed byte and endpoint mapping while independently
             // checking this member's current runtime and lease for admission.
             let available = match relay_node(self, &row.node_id, now) {
                 Ok(node) => {
-                    !row.closed
+                    authorized && !row.closed
                         && row.key == node.key
                         && row.runtime == node.runtime
                         && row.generation == node.generation
@@ -332,6 +342,7 @@ impl Store {
                     revision: row.revision,
                     endpoints,
                 },
+                authorized,
                 available,
             });
         }

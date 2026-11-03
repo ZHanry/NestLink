@@ -378,7 +378,12 @@ pub(super) async fn prepare_media(
         .map_err(Failure::from)?
         .ok_or_else(|| Failure::local(FailureKind::Trust))?;
     fence.check()?;
+    config.validate_media_publication(&local, &identity.device_id, direction, unix_millis().unwrap_or(u64::MAX))
+        .map_err(|_| Failure::local(FailureKind::Trust))?;
+    let explicit_formats = config.explicit_media_formats(&frozen)
+        .map_err(|_| Failure::local(FailureKind::Trust))?;
     Ok(Some(nestlink_sdk::native::NativeMediaEvidence {
+        explicit_formats,
         frozen,
         local,
         internal_candidate: config.internal_software_media_candidate.clone(),

@@ -229,6 +229,7 @@ mod tests {
 
     fn sample() -> PathObservationSnapshot {
         PathObservationSnapshot {
+            path_epoch: None,
             binding: PathObservationBinding {
                 business_grant_digest: [3; 32],
                 business_generation: 7,

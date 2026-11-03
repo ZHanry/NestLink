@@ -397,6 +397,8 @@ pub struct NativeSessionOptions {
 /// be used to construct this value by the application provider.
 #[derive(Clone, Debug)]
 pub struct NativeMediaEvidence {
+    /// Exact locally configured v3-v6 targets; absent for defaults and v2 candidates.
+    pub explicit_formats: Option<nestlink_protocol::media_format::FormatSet>,
     pub internal_candidate: Option<
         nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate,
     >,
@@ -417,13 +419,17 @@ impl NativeMediaEvidence {
             role,
             now,
         )?;
-        Ok(match &self.internal_candidate {
+        let binding = match &self.internal_candidate {
             Some(policy) => binding.with_internal_software_candidate(
                 policy.clone(),
                 permit,
                 &self.local,
                 now,
             )?,
+            None => binding,
+        };
+        Ok(match &self.explicit_formats {
+            Some(formats) => binding.with_explicit_media_selection(formats.clone(), permit, &self.local, now)?,
             None => binding,
         })
     }

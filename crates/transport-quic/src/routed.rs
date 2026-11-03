@@ -1,13 +1,18 @@
 //! Opaque network transport. Route permission is distinct from business
 //! stream proof: callers must still run the existing SessionPermit handshake.
-//! No migration, raw IP injection, automatic fallback or route discovery occurs.
+//! Explicit migration retains the original inner connection after a bilateral
+//! control transcript. Route discovery and scheduling belong to the SDK owner.
 mod adjacency;
 mod authorization;
 mod forwarding;
 mod listener;
+mod migration;
+mod migration_gate;
+mod migration_socket;
 mod socket;
 pub use adjacency::{Adjacency, AdjacencyEndpoint};
 pub use authorization::{RouteAuthorization, RouteRevocation};
+pub use migration::PathChange;
 pub use forwarding::{FragmentReplayWindow, RelayForwarder};
 pub use listener::{
     NetworkNodeListener, authenticated_peer_fingerprint, chain_node_client_config, node_listener,
@@ -51,6 +56,13 @@ pub struct RoutedTransport {
     receiver: TaskOwner,
     failure: tokio::sync::watch::Receiver<Option<io::ErrorKind>>,
     close_deadline: Option<Instant>,
+    raw: Option<Arc<socket::RoutedSocket>>,
+    gate: Option<Arc<migration_gate::Socket>>,
+    packet_hub: Option<Arc<migration_socket::Hub>>,
+    migration_mode: Option<nestlink_protocol::network_migration::packet::Mode>,
+    path_epoch: u64,
+    pending_migration: Option<Box<RoutedTransport>>,
+    draining: Option<Box<RoutedTransport>>,
 }
 impl RoutedTransport {
     /// Original carrier facts are published before inner Quinn I/O closes.
@@ -84,6 +96,9 @@ impl RoutedTransport {
             endpoint.close(0u32.into(), b"routed transport stopping");
         }
         self.receiver.request_close();
+        if let Some(hub) = &self.packet_hub { hub.request_close(); }
+        if let Some(candidate) = &self.pending_migration { candidate.request_close(); }
+        if let Some(old) = &self.draining { old.request_close(); }
         self.adjacency.request_close_with_code(code);
     }
     /// Cancellation retains all original task/socket receipts and the first
@@ -92,13 +107,27 @@ impl RoutedTransport {
         let deadline = *self.close_deadline.get_or_insert(deadline);
         self.request_close();
         self.receiver.close_and_wait(deadline).await?;
+        if let Some(hub) = &self.packet_hub { hub.close_and_wait(deadline).await?; }
+        if let Some(candidate) = &mut self.pending_migration { candidate.close_and_wait_boxed(deadline).await?; }
+        if let Some(old) = &mut self.draining { old.close_and_wait_boxed(deadline).await?; }
+        self.pending_migration = None;
+        self.draining = None;
         // A failed abstract receive can stop Quinn's endpoint driver before it
         // notifies wait_idle. Release our handles, then observe the real socket
         // and every writable poller dropping instead of waiting on that signal.
         self.connection = None;
         self.endpoint = None;
         wait_socket_released(&mut self.released, deadline).await?;
+        self.gate = None;
+        self.packet_hub = None;
+        self.raw = None;
         self.adjacency.close_and_wait(deadline).await
+    }
+    // Box only the recursive cleanup branch. The owned original receipts stay
+    // in place if a caller cancels this borrowed wait.
+    fn close_and_wait_boxed(&mut self, deadline: Instant)
+    -> std::pin::Pin<Box<dyn std::future::Future<Output = io::Result<()>> + Send + '_>> {
+        Box::pin(self.close_and_wait(deadline))
     }
 }
 impl Drop for RoutedTransport {
@@ -136,6 +165,10 @@ pub struct RoutedEstablishment {
     failure: Option<tokio::sync::watch::Receiver<Option<io::ErrorKind>>>,
     attempted: bool,
     close_deadline: Option<Instant>,
+    raw: Option<Arc<socket::RoutedSocket>>,
+    gate: Option<Arc<migration_gate::Socket>>,
+    packet_hub: Option<Arc<migration_socket::Hub>>,
+    migration_mode: Option<nestlink_protocol::network_migration::packet::Mode>,
 }
 impl RoutedEstablishment {
     pub fn new(authorization: RouteAuthorization, adjacency: Adjacency) -> Self {
@@ -149,7 +182,22 @@ impl RoutedEstablishment {
             failure: None,
             attempted: false,
             close_deadline: None,
+            raw: None,
+            gate: None,
+            packet_hub: None,
+            migration_mode: None,
         }
+    }
+    /// Explicit endpoint-only framing and ALPN. Epoch zero is control-only;
+    /// a nonzero epoch is the initial proved business path. Old constructors
+    /// preserve their original unframed bytes and capability behavior.
+    pub fn migratable(authorization: RouteAuthorization, adjacency: Adjacency, epoch: u64) -> io::Result<Self> {
+        if authorization.migration_scope().is_none() { return Err(io::ErrorKind::Unsupported.into()); }
+        let mut owner = Self::new(authorization, adjacency);
+        owner.migration_mode = Some(if epoch == 0 {
+            nestlink_protocol::network_migration::packet::Mode::Control
+        } else { nestlink_protocol::network_migration::packet::Mode::Business(epoch) });
+        Ok(owner)
     }
     pub async fn establish(
         &mut self,
@@ -166,6 +214,7 @@ impl RoutedEstablishment {
         // isolation. A caller cannot relabel a service grant as remote control
         // or supply an arbitrary ALPN for an authenticated route.
         let inner_alpn = match authorization.purpose() {
+            Purpose::RemoteControl if self.migration_mode.is_some() => nestlink_protocol::network_migration::packet::REMOTE_ALPN,
             Purpose::RemoteControl => nestlink_protocol::network::REMOTE_CAPABILITY_ALPN,
             Purpose::PrivateService => nestlink_protocol::service_plane::publication::SERVICE_ALPN,
             _ => return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()),
@@ -191,8 +240,11 @@ impl RoutedEstablishment {
         };
         let first = local == peers.first;
         let mut config = transport_value();
-        config.initial_mtu(wire::PACKET_BYTES as u16);
-        config.min_mtu(wire::PACKET_BYTES as u16);
+        let mtu = if self.migration_mode.is_some() {
+            nestlink_protocol::network_migration::packet::INNER_MTU
+        } else { wire::PACKET_BYTES as u16 };
+        config.initial_mtu(mtu);
+        config.min_mtu(mtu);
         config.mtu_discovery_config(None);
         let config = Arc::new(config);
         let mut server_tls = tls::server_config(identity, peer.0)?;
@@ -207,11 +259,21 @@ impl RoutedEstablishment {
         client.transport_config(config);
         let mut settings = quinn::EndpointConfig::default();
         settings.max_udp_payload_size(wire::PACKET_BYTES as u16)?;
+        let gate_authority = authorization.retained();
         let (socket, receiver) =
             socket::RoutedSocket::new(authorization, adjacency.connection()?.clone(), first)?;
         self.receiver = Some(receiver);
-        self.failure = Some(socket.subscribe_failure());
         let destination = socket.peer_addr();
+        self.raw = Some(socket.clone());
+        let socket: Arc<dyn quinn::AsyncUdpSocket> = if let Some(mode) = self.migration_mode {
+            let hub = migration_socket::Hub::new(socket);
+            let view = hub.view(mode);
+            self.packet_hub = Some(hub);
+            view
+        } else { socket };
+        let socket = migration_gate::Socket::new(socket, gate_authority);
+        self.failure = Some(socket.subscribe_failure()?);
+        self.gate = Some(socket.clone());
         // Reuse the physical carrier's existing tracking adapter. Quinn keeps
         // this owner in both Endpoint and Connection state; each writable
         // poller retains it too. External clones therefore keep release pending.
@@ -266,6 +328,7 @@ impl RoutedEstablishment {
             || self.adjacency.is_none()
             || self.receiver.is_none()
             || self.failure.is_none()
+            || self.raw.is_none() || self.gate.is_none()
         {
             return Err(not_connected());
         }
@@ -277,6 +340,16 @@ impl RoutedEstablishment {
             receiver: self.receiver.take().ok_or_else(not_connected)?,
             failure: self.failure.take().ok_or_else(not_connected)?,
             close_deadline: None,
+            raw: self.raw.take(),
+            gate: self.gate.take(),
+            packet_hub: self.packet_hub.take(),
+            migration_mode: self.migration_mode,
+            path_epoch: match self.migration_mode {
+                Some(nestlink_protocol::network_migration::packet::Mode::Business(epoch)) => epoch,
+                _ => 0,
+            },
+            pending_migration: None,
+            draining: None,
         })
     }
     pub fn request_close(&self) {
@@ -292,6 +365,7 @@ impl RoutedEstablishment {
         if let Some(receiver) = &self.receiver {
             receiver.request_close();
         }
+        if let Some(hub) = &self.packet_hub { hub.request_close(); }
     }
     pub async fn close_and_wait(&mut self, deadline: Instant) -> io::Result<()> {
         let deadline = *self.close_deadline.get_or_insert(deadline);
@@ -299,9 +373,13 @@ impl RoutedEstablishment {
         if let Some(receiver) = &mut self.receiver {
             receiver.close_and_wait(deadline).await?;
         }
+        if let Some(hub) = &self.packet_hub { hub.close_and_wait(deadline).await?; }
         self.connection = None;
         self.endpoint = None;
         wait_socket_released(&mut self.released, deadline).await?;
+        self.gate = None;
+        self.packet_hub = None;
+        self.raw = None;
         if let Some(adjacency) = &mut self.adjacency {
             adjacency.close_and_wait(deadline).await?;
         }

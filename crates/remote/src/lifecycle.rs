@@ -394,7 +394,7 @@ impl LeaseControl {
         clock: RuntimeClock,
         lifecycle: SessionLifecycle,
     ) -> Result<Self, RemoteError> {
-        Self::new_inner(session, path, clock, lifecycle, true)
+        Self::new_inner(session, path, clock, lifecycle, true, Permission::View)
     }
 
     pub(crate) fn new(
@@ -403,7 +403,23 @@ impl LeaseControl {
         clock: RuntimeClock,
         lifecycle: SessionLifecycle,
     ) -> Result<Self, RemoteError> {
-        Self::new_inner(session, path, clock, lifecycle, false)
+        Self::new_inner(session, path, clock, lifecycle, false, Permission::View)
+    }
+
+    pub(crate) fn new_file_only(
+        session: Session,
+        path: Path,
+        clock: RuntimeClock,
+        lifecycle: SessionLifecycle,
+    ) -> Result<Self, RemoteError> {
+        let permissions = &session.current_verified_permit().claims().permissions;
+        if permissions.is_empty() || permissions.iter().any(|permission|
+            !matches!(Permission::try_from(*permission), Ok(Permission::FileRead | Permission::FileWrite))) {
+            return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
+        }
+        let required = Permission::try_from(permissions[0])
+            .map_err(|_| io::Error::from(io::ErrorKind::PermissionDenied))?;
+        Self::new_inner(session, path, clock, lifecycle, false, required)
     }
 
     fn new_inner(
@@ -412,13 +428,14 @@ impl LeaseControl {
         clock: RuntimeClock,
         lifecycle: SessionLifecycle,
         allow_setup: bool,
+        required_permission: Permission,
     ) -> Result<Self, RemoteError> {
         let runtime = tokio::runtime::Handle::try_current().map_err(io::Error::other)?;
         session.check_clock(clock.sample()?)?;
         if allow_setup && session.is_setup_authorization() {
             session.check_proved_setup(path, clock.monotonic_ms())?;
         } else {
-            session.authorize(Permission::View, path, clock.monotonic_ms())?;
+            session.authorize(required_permission, path, clock.monotonic_ms())?;
         }
         let (updates, _) = watch::channel(0);
         let (reports, _) = watch::channel(None);

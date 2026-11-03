@@ -34,6 +34,7 @@ impl LegacyPrepare {
             return Err(io::Error::other("invalid legacy prepared surface"));
         }
         let (codec, color, h264) = match codec {
+            VideoCodec::Vp9Rgb444 => return Err(io::Error::other("VP9 RGB444 cannot enter legacy admission")),
             VideoCodec::Vp8 => (Codec::Vp8, Color::LEGACY_VP8_BT601, None),
             VideoCodec::H264Baseline => (
                 Codec::H264,
@@ -86,7 +87,8 @@ impl LegacyPrepare {
             Ok(nestlink_protocol::NativeVideoCodec::H264Baseline) => Ok(VideoCodec::H264Baseline),
             Ok(
                 nestlink_protocol::NativeVideoCodec::HevcMain8
-                | nestlink_protocol::NativeVideoCodec::HevcMain10,
+                | nestlink_protocol::NativeVideoCodec::HevcMain10
+                | nestlink_protocol::NativeVideoCodec::Vp9Rgb444,
             )
             | Err(_) => Err(io::Error::other("unsupported legacy codec")),
         }
@@ -168,7 +170,7 @@ impl LegacyPrepare {
                     config.bitrate_kbps,
                 )
             }
-            Codec::Hevc => {
+            Codec::Hevc | Codec::Vp9 => {
                 return Err(io::Error::other(
                     "HEVC requires a future atomic format negotiation",
                 ));

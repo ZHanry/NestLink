@@ -77,6 +77,7 @@ async fn route_set_http_binds_atomic_consent_and_keeps_healthy_member_after_othe
     assert_eq!(status, StatusCode::CREATED, "{issued}");
     assert_eq!(issued["set_id"], request.set_id);
     for index in 0..2 {
+        assert_eq!(issued["members"][index]["authorized"], true);
         assert_eq!(issued["members"][index]["available"], true);
         assert_eq!(
             issued["members"][index]["allocation_id"],
@@ -100,6 +101,8 @@ async fn route_set_http_binds_atomic_consent_and_keeps_healthy_member_after_othe
         .call("GET", &endpoint, Value::Null, Some(&f.admin_token))
         .await?;
     assert_eq!(status, StatusCode::OK, "{read}");
+    assert_eq!(read["members"][0]["authorized"], false);
+    assert_eq!(read["members"][1]["authorized"], true);
     assert_eq!(read["members"][0]["available"], false);
     assert_eq!(read["members"][1]["available"], true);
     assert_eq!(read["path"], issued["path"]);

@@ -32,6 +32,9 @@ pub trait DeliveryGuard: Send + Sync {
 /// An actual carrier cleanup owner. Returning success certifies its tasks have
 /// joined; transport adapters must retain unfinished handles across cancellation.
 pub trait TransportOwner: Send + Sync {
+    /// Typed in-crate adapters may recover their own unique transport owner.
+    /// This exposes no carrier type or authority through the remote API.
+    fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> { None }
     fn request_close(&self);
     fn close_and_wait(
         &mut self,
@@ -937,6 +940,15 @@ impl<R: AsyncRead + Unpin + Send + 'static, W: AsyncWrite + Unpin + Send + 'stat
     }
 }
 impl ChannelRuntime {
+    /// Keeping reliable file streams does not replay a new application request.
+    /// The current native input/media/clipboard formats have no path-epoch
+    /// envelope, so their in-flight bytes require full generation teardown.
+    /// Check the complete proved permission set, including idle channels.
+    pub fn can_retain_business_for_path_migration(&self) -> Result<bool, RemoteError> {
+        let (_, _, channels) = self.lease.transport_binding()?;
+        Ok(!channels.is_empty() && channels.iter().all(|channel|
+            matches!(channel, Channel::FileRead | Channel::FileWrite)))
+    }
     /// Opaque TLS exporter of this proved connection. This is a transcript
     /// binding only; it neither exposes transport handles nor grants new I/O.
     pub fn network_connection_binding(&self) -> Result<[u8; 32], RemoteError> {
@@ -1014,11 +1026,23 @@ impl ChannelRuntime {
             .as_ref()
             .map(|owner| owner.observation())
     }
+    /// A successful original-owner path commit updates every cloned observer.
+    /// This cannot change business authority, group, path rights or generation.
+    pub fn rebind_quic_path_observation(&mut self, binding: crate::PathObservationBinding, epoch: u64)
+    -> Result<(), RemoteError> {
+        self.lease.remaining()?;
+        self.path_observation.as_ref().ok_or_else(|| io::Error::from(io::ErrorKind::Unsupported))?
+            .rebind(binding, epoch)?;
+        Ok(())
+    }
     /// Retain a carrier's explicit close/cancellation owner. This grants no
     /// business authority; lease supervision still closes the inner transport.
     pub fn with_transport_owner(mut self, owner: impl TransportOwner + 'static) -> Self {
         self.transport_owner = Some(Box::new(owner));
         self
+    }
+    pub fn transport_owner_mut<T: std::any::Any>(&mut self) -> Option<&mut T> {
+        self.transport_owner.as_mut()?.as_any_mut()?.downcast_mut::<T>()
     }
     pub(crate) fn quic(
         lease: LeaseControl,

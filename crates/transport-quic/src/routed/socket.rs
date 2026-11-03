@@ -195,8 +195,29 @@ impl RoutedSocket {
     pub(super) fn peer_addr(&self) -> SocketAddr {
         self.peer
     }
+    #[cfg(test)]
     pub(super) fn subscribe_failure(&self) -> watch::Receiver<Option<io::ErrorKind>> {
         self.failure.subscribe()
+    }
+    pub(super) fn authorization(&self) -> &RouteAuthorization { &self.authorization }
+    /// Transfer the existing reassembly receipt without renewing packet age.
+    /// Only one endpoint adapter may consume this queue at a time.
+    pub(super) fn poll_packet(&self, cx: &mut Context<'_>) -> Poll<io::Result<Packet>> {
+        if let Err(error) = self.live() { return Poll::Ready(Err(error)); }
+        let Ok(mut incoming) = self.incoming.lock() else { return Poll::Ready(Err(stopped())); };
+        for _ in 0..wire::PENDING_PACKETS {
+            match incoming.poll_recv(cx) {
+                Poll::Pending => return Poll::Pending,
+                Poll::Ready(None) => return Poll::Ready(Err(stopped())),
+                Poll::Ready(Some(packet)) => {
+                    if Instant::now().saturating_duration_since(packet.born)
+                        < Duration::from_millis(wire::PACKET_AGE_MS)
+                    { return Poll::Ready(Ok(packet)); }
+                }
+            }
+        }
+        cx.waker().wake_by_ref();
+        Poll::Pending
     }
     fn live(&self) -> io::Result<()> {
         if let Err(error) = self.authorization.live() {
@@ -328,43 +349,19 @@ impl AsyncUdpSocket for RoutedSocket {
         bufs: &mut [IoSliceMut<'_>],
         meta: &mut [RecvMeta],
     ) -> Poll<io::Result<usize>> {
-        if let Err(error) = self.live() {
-            return Poll::Ready(Err(error));
-        }
         if bufs.is_empty() || meta.is_empty() {
             return Poll::Ready(Err(io::ErrorKind::InvalidInput.into()));
         }
-        let Ok(mut incoming) = self.incoming.lock() else {
-            return Poll::Ready(Err(stopped()));
+        let packet = match self.poll_packet(cx) {
+            Poll::Pending => return Poll::Pending,
+            Poll::Ready(Err(error)) => return Poll::Ready(Err(error)),
+            Poll::Ready(Ok(packet)) => packet,
         };
-        for _ in 0..wire::PENDING_PACKETS {
-            match incoming.poll_recv(cx) {
-                Poll::Pending => return Poll::Pending,
-                Poll::Ready(None) => return Poll::Ready(Err(stopped())),
-                Poll::Ready(Some(packet)) => {
-                    if Instant::now().saturating_duration_since(packet.born)
-                        >= Duration::from_millis(wire::PACKET_AGE_MS)
-                    {
-                        continue;
-                    }
-                    let bytes = packet.bytes;
-                    if bytes.len() > bufs[0].len() {
-                        return Poll::Ready(Err(io::ErrorKind::InvalidInput.into()));
-                    }
-                    bufs[0][..bytes.len()].copy_from_slice(&bytes);
-                    meta[0] = RecvMeta {
-                        addr: self.peer,
-                        len: bytes.len(),
-                        stride: bytes.len(),
-                        dst_ip: Some(self.local.ip()),
-                        ecn: None,
-                    };
-                    return Poll::Ready(Ok(1));
-                }
-            }
-        }
-        cx.waker().wake_by_ref();
-        Poll::Pending
+        if packet.bytes.len() > bufs[0].len() { return Poll::Ready(Err(io::ErrorKind::InvalidInput.into())); }
+        bufs[0][..packet.bytes.len()].copy_from_slice(&packet.bytes);
+        meta[0] = RecvMeta { addr: self.peer, len: packet.bytes.len(), stride: packet.bytes.len(),
+            dst_ip: Some(self.local.ip()), ecn: None };
+        Poll::Ready(Ok(1))
     }
     fn local_addr(&self) -> io::Result<SocketAddr> {
         Ok(self.local)

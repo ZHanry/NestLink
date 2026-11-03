@@ -84,6 +84,10 @@ struct Args {
     /// CPU media ceiling, e.g. 1920x1080@30:4000; probes at most two lower budgets.
     #[arg(long, value_parser=parse_native_media_target, conflicts_with_all = ["native_gpu_hevc_target","native_gpu_hevc_main10_target", "native_gpu_hevc_hdr10_target", "native_gpu_hevc_encoder"])]
     native_media_target: Option<nestlink_media_codec::VideoConfig>,
+    /// Exact software VP9 profile1 sRGB/full 8-bit 4:4:4 target. Requires
+    /// independent direction probes and normal local approval; no automatic fallback.
+    #[arg(long, value_parser=parse_native_vp9_rgb444_target, conflicts_with_all=["native_media_target","native_gpu_hevc_target","native_gpu_hevc_main10_target","native_gpu_hevc_hdr10_target","native_gpu_hevc_encoder","native_gpu_hevc_fallback_target","internal_software_media_candidate"])]
+    native_vp9_rgb444_target: Option<nestlink_media_codec::VideoConfig>,
     /// Exact Windows GPU HEVC Main8 target, e.g. 1920x1080@60:8000.
     /// Requires actual independent probes and local request approval; rollout stays closed.
     #[arg(long, value_parser=parse_native_gpu_hevc_target,
@@ -648,7 +652,9 @@ async fn serve(args: Args) -> Result<(), Box<dyn std::error::Error + Send + Sync
     let network = Arc::new(nestlink_sdk::NetworkMonitor::start()?);
     let browser_data_registry = Arc::new(browser_data::BrowserHostDataRegistry::default());
     let media_config = nestlink_app_core::NativeSessionConfig::new(network);
-    let mut native = if let Some(target) = args.native_gpu_hevc_hdr10_target {
+    let mut native = if let Some(target) = args.native_vp9_rgb444_target {
+        media_config.with_software_vp9_rgb444_target(target)?
+    } else if let Some(target) = args.native_gpu_hevc_hdr10_target {
         media_config.with_gpu_hevc_hdr10_encoder(
             target,
             args.native_gpu_hevc_encoder
@@ -949,6 +955,11 @@ fn parse_native_media_target(value: &str) -> Result<nestlink_media_codec::VideoC
     nestlink_app_core::NativeMediaProvider::cpu_software(target).map_err(|e| e.to_string())?;
     Ok(target)
 }
+fn parse_native_vp9_rgb444_target(value: &str) -> Result<nestlink_media_codec::VideoConfig, String> {
+    let target = parse_media_target_syntax(value)?;
+    nestlink_app_core::NativeMediaProvider::software_vp9_rgb444(target).map_err(|error| error.to_string())?;
+    Ok(target)
+}
 
 fn parse_native_gpu_hevc_target(value: &str) -> Result<nestlink_media_codec::VideoConfig, String> {
     let target = parse_media_target_syntax(value)?;
@@ -966,6 +977,20 @@ fn parse_native_gpu_hevc_main10_target(
 
 #[cfg(test)]
 mod media_cli_tests {
+    #[test]
+    fn rgb444_cli_is_explicit_and_rejects_other_modes_and_invalid_bounds() -> std::io::Result<()> {
+        use clap::Parser;
+        let args = super::Args::try_parse_from(["nestlink-daemon", "--native-vp9-rgb444-target", "641x481@144:8000"]).map_err(std::io::Error::other)?;
+        assert!(args.native_vp9_rgb444_target.is_some());
+        assert!(args.native_media_target.is_none());
+        for other in ["--native-media-target", "--native-gpu-hevc-target", "--native-gpu-hevc-main10-target", "--native-gpu-hevc-hdr10-target", "--native-gpu-hevc-fallback-target"] {
+            assert!(super::Args::try_parse_from(["nestlink-daemon", "--native-vp9-rgb444-target", "640x480@60:8000", other, "640x480@30:4000"]).is_err());
+        }
+        for target in ["640x480@145:8000", "15x480@60:8000", "640x480@60:63", "8192x8192@60:8000"] {
+            assert!(super::parse_native_vp9_rgb444_target(target).is_err());
+        }
+        Ok(())
+    }
     #[test]
     fn hdr_cli_is_a_distinct_explicit_target_and_rejects_other_media_modes() -> std::io::Result<()>
     {

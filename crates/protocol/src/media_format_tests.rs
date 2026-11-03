@@ -4,6 +4,36 @@ fn rate(fps: u32) -> FrameRate {
     FrameRate::new(fps, 1).unwrap_or_else(|error| panic!("valid fixture rejected: {error}"))
 }
 #[test]
+fn rgb444_v6_keeps_old_descriptors_and_rejects_relabeling() -> std::result::Result<(), ContractError> {
+    let h264 = VideoFormat::legacy_h264(31, 640, 480, rate(30), 4000)?;
+    let old = (h264.encode()?, h264.digest()?);
+    let rgb = VideoFormat::vp9_rgb444(641, 481, rate(144), 8000)?;
+    assert_eq!(rgb.canonical_version(), 6);
+    assert_eq!(rgb.chroma, Chroma::Yuv444);
+    assert_eq!(rgb.color, Color::RGB_SRGB_FULL);
+    assert_eq!(rgb.encode()?.len(), 57);
+    assert_eq!(VideoFormat::decode(&rgb.encode()?)?, rgb);
+    assert!(FormatSet::new(vec![rgb, h264]).is_err());
+    assert!(FormatSet::from_versioned(2, vec![rgb]).is_err());
+    assert!(FormatSet::from_versioned(6, vec![h264]).is_err());
+    for version in [2u16, 3, 4, 5] {
+        let mut wire = rgb.encode()?;
+        wire[..2].copy_from_slice(&version.to_be_bytes());
+        assert!(VideoFormat::decode(&wire).is_err());
+    }
+    for wrong in [
+        VideoFormat { chroma: Chroma::Yuv420, ..rgb },
+        VideoFormat { bit_depth: BitDepth::Ten, ..rgb },
+        VideoFormat { profile: Profile::HevcRange444, ..rgb },
+        VideoFormat { color: Color::SDR_BT709_LIMITED, ..rgb },
+        VideoFormat { color: Color { matrix: Matrix::Bt709, ..rgb.color }, ..rgb },
+        VideoFormat { color: Color { range: Range::Limited, ..rgb.color }, ..rgb },
+        VideoFormat { geometry: Geometry { crop: [0, 1, 0, 0], coded_width: 642, coded_height: 481 }, ..rgb },
+    ] { assert!(wrong.validate().is_err()); }
+    assert_eq!((h264.encode()?, h264.digest()?), old);
+    Ok(())
+}
+#[test]
 fn hdr_v5_cannot_be_decoded_as_main10_sdr_or_share_its_signed_catalog()
 -> std::result::Result<(), ContractError> {
     let mut ptl = [0; 12];

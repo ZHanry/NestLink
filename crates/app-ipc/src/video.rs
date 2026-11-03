@@ -15,6 +15,7 @@ use zeroize::Zeroizing;
 const VIDEO_MAGIC: &[u8; 8] = b"NLVID001";
 const VIDEO_HEVC_MAGIC: &[u8; 8] = b"NLVID002";
 const VIDEO_MAIN10_MAGIC: &[u8; 8] = b"NLVID003";
+const VIDEO_RGB444_MAGIC: &[u8; 8] = b"NLVID006";
 const KIND_LAYOUT: u8 = 1;
 const KIND_FRAME: u8 = 2;
 const KIND_CLOSED: u8 = 3;
@@ -624,7 +625,9 @@ fn encode_header(
         return Err(crate::Error::Protocol);
     }
     let mut bytes = [0_u8; VIDEO_HEADER_BYTES];
-    bytes[0..8].copy_from_slice(if fields.codec == 3 {
+    bytes[0..8].copy_from_slice(if fields.codec == 4 {
+        VIDEO_RGB444_MAGIC
+    } else if fields.codec == 3 {
         VIDEO_MAIN10_MAGIC
     } else if fields.codec == 2 {
         VIDEO_HEVC_MAGIC
@@ -650,7 +653,9 @@ fn encode_header(
 }
 
 fn decode_header(bytes: &[u8; VIDEO_HEADER_BYTES]) -> Result<Header, crate::Error> {
-    let valid_codec = if &bytes[0..8] == VIDEO_MAIN10_MAGIC {
+    let valid_codec = if &bytes[0..8] == VIDEO_RGB444_MAGIC {
+        bytes[8] == KIND_FRAME && bytes[10] == 4 && bytes[11] == 0
+    } else if &bytes[0..8] == VIDEO_MAIN10_MAGIC {
         bytes[8] == KIND_FRAME && bytes[10] == 3 && bytes[11] == 1
     } else if &bytes[0..8] == VIDEO_HEVC_MAGIC {
         bytes[8] == KIND_FRAME && bytes[10] == 2 && bytes[11] == 1
@@ -749,6 +754,24 @@ mod tests {
             connection_generation: 9,
             source: 0,
         }
+    }
+    #[test]
+    fn rgb444_bgra_export_requires_its_v6_marker_and_software_identity() -> Result<(), crate::Error> {
+        let original = encode_header(&binding(), HeaderFields { codec: 4, hardware_decode: false, kind: KIND_FRAME, layout_epoch: 2, sequence: 3, pts_90khz: 90, width: 641, height: 481, payload_bytes: 641 * 481 * 4 })?;
+        assert_eq!(&original[..8], VIDEO_RGB444_MAGIC);
+        assert_eq!(decode_header(&original)?.codec, 4);
+        assert!(!decode_header(&original)?.hardware_decode);
+        for marker in [VIDEO_MAGIC, VIDEO_HEVC_MAGIC, VIDEO_MAIN10_MAGIC] {
+            let mut changed = original;
+            changed[..8].copy_from_slice(marker);
+            assert!(decode_header(&changed).is_err());
+        }
+        for (offset, value) in [(10, 1), (10, 2), (10, 3), (11, 1), (8, KIND_LAYOUT)] {
+            let mut changed = original;
+            changed[offset] = value;
+            assert!(decode_header(&changed).is_err());
+        }
+        Ok(())
     }
     #[test]
     fn hevc_readback_pixels_have_an_independent_strict_magic() -> Result<(), crate::Error> {
