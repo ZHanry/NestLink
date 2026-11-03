@@ -1,0 +1,102 @@
+name: Original SDK migration failure diagnostics
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Exact main source; original assertions and ordinary stack
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  original-cases:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      EXPECTED_SOURCE: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - name: Prepare the original pinned native build on the hosted runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config
+          echo "NESTLINK_CODEC_PREFIX=$RUNNER_TEMP/migration-codecs/x86_64-unknown-linux-gnu" >> "$GITHUB_ENV"
+          python scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/migration-sources" --work-dir "$RUNNER_TEMP/migration-codecs"
+      - name: Retain every original case independently, including abort diagnostics
+        if: ${{ !cancelled() }}
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, re, subprocess
+          source = os.environ['EXPECTED_SOURCE']
+          assert re.fullmatch('[0-9a-f]{40}', source)
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          assert 'RUST_MIN_STACK' not in os.environ
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip() == source
+          subprocess.run(['git','merge-base','--is-ancestor',source,'origin/main'],check=True)
+          assert subprocess.check_output(['git','status','--porcelain=v1','--untracked-files=all']) == b''
+          output = pathlib.Path(os.environ['RUNNER_TEMP'])/'migration-original-diagnostics'
+          output.mkdir()
+          receipt = {'source_revision':source,'run_id':os.environ['GITHUB_RUN_ID'],
+            'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'workflow_revision':os.environ['GITHUB_WORKFLOW_SHA'],
+            'runner_environment':os.environ['RUNNER_ENVIRONMENT'],'runner_os':os.environ['RUNNER_OS'],
+            'cargo_lock_sha256':hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
+            'stack_override':False,'commands':[],'passed':False,'whole_acceptance_claimed':False,
+            'scope':'Independent original SDK cases with unchanged assertions, deadlines and ordinary stack. Each log is streamed so a later abort cannot hide an earlier failure. This does not replace the complete network suite.'}
+          cases = [
+            'route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration',
+            'route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery',
+            'route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer',
+            'route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release',
+            'route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup',
+            'route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay']
+          def execute(label, args, timeout):
+              command = ['cargo'] + args
+              record = {'name':label,'argv':command,'return_code':None,'timed_out':False}
+              with (output/(label+'.log')).open('wb') as stream:
+                  try:
+                      result = subprocess.run(command,stdout=stream,stderr=subprocess.STDOUT,timeout=timeout)
+                      record['return_code'] = result.returncode
+                  except subprocess.TimeoutExpired:
+                      record['timed_out'] = True
+              receipt['commands'].append(record)
+              return record
+          try:
+              build = execute('build',['test','--locked','-p','nestlink-sdk','--test','network_relay','--no-run'],900)
+              if build['return_code'] == 0:
+                  for index, name in enumerate(cases):
+                      label = 'case-'+str(index+1)
+                      record = execute(label,['test','--locked','-p','nestlink-sdk','--test','network_relay',name,
+                          '--','--exact','--nocapture','--test-threads=1','--color','never'],180)
+                      log = (output/(label+'.log')).read_text(errors='replace')
+                      record['original_case'] = name
+                      record['exact_one_pass_zero_ignored'] = bool(record['return_code'] == 0
+                          and name in log and re.search(r'test result: ok\. 1 passed; 0 failed; 0 ignored;',log))
+              receipt['passed'] = len(receipt['commands']) == len(cases)+1 and all(
+                  record['return_code'] == 0 and not record['timed_out'] for record in receipt['commands']) and all(
+                  record['exact_one_pass_zero_ignored'] for record in receipt['commands'][1:])
+          finally:
+              receipt['files'] = [{'path':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+                  for p in sorted(output.iterdir()) if p.is_file()]
+              (output/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          assert receipt['passed'], 'Original cases failed; all independent failure logs retained'
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: original-sdk-migration-${{ inputs.source_revision }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/migration-original-diagnostics/
+          if-no-files-found: error
+          retention-days: 30
