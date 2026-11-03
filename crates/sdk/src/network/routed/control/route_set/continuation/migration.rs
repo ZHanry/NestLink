@@ -425,7 +425,8 @@ impl ContinuousRouteSetSession {
             // unique Committed writer finish its real QUIC ACK, then join both
             // successful control drivers in role order within the SAME bound.
             // A denial/cancel/error keeps the existing immediate revoke path.
-            let finished = self.standby
+            let finished = self
+                .standby
                 .as_mut()
                 .filter(|slot| slot.index == candidate_index)
                 .and_then(|slot| slot.transport.as_mut())

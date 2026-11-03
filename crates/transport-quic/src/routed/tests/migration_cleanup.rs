@@ -355,7 +355,15 @@ async fn successful_safe_recovery_joins_both_control_drivers_before_revoking_the
         assert!(transport.endpoint.is_none());
         assert!(transport.released.is_none());
         assert!(transport.packet_hub.is_some());
-        assert!(transport.raw.as_ref().ok_or("live raw carrier")?.authorization().check_live().is_ok());
+        assert!(
+            transport
+                .raw
+                .as_ref()
+                .ok_or("live raw carrier")?
+                .authorization()
+                .check_live()
+                .is_ok()
+        );
         assert!(transport.subscribe_failure().borrow().is_none());
     }
     // Control driver release did not stand in for actual physical raw/outer

@@ -49,17 +49,22 @@ impl RoutedTransport {
         if self.close_deadline.is_some()
             || self.migration_mode != Some(Mode::Control)
             || self.path_epoch != 0
-            || !authority.migration_scope().is_some_and(|scope| scope.matches(binding))
+            || !authority
+                .migration_scope()
+                .is_some_and(|scope| scope.matches(binding))
             || binding.candidate_route != authority.binding_digest()
             || binding.peers != authority.peers()
             || binding.control_connection != connection_binding(self.connection()?)?
         {
             return Err(denied());
         }
-        let remaining = binding.expires_at_unix_ms.checked_sub(now_ms()?)
+        let remaining = binding
+            .expires_at_unix_ms
+            .checked_sub(now_ms()?)
             .filter(|remaining| *remaining > 0)
             .ok_or_else(|| io::Error::from(io::ErrorKind::TimedOut))?;
-        let deadline = deadline.min(authority.deadline())
+        let deadline = deadline
+            .min(authority.deadline())
             .min(Instant::now() + Duration::from_millis(remaining));
         if Instant::now() >= deadline {
             return Err(io::ErrorKind::TimedOut.into());
@@ -69,15 +74,22 @@ impl RoutedTransport {
             // socket while the other endpoint is still awaiting its final ACK.
             match tokio::time::timeout_at(deadline, self.connection()?.closed()).await {
                 Ok(quinn::ConnectionError::ApplicationClosed(close))
-                    if close.error_code == quinn::VarInt::from_u32(CONTROL_COMPLETE_CLOSE_CODE) => {}
+                    if close.error_code == quinn::VarInt::from_u32(CONTROL_COMPLETE_CLOSE_CODE) => {
+                }
                 Ok(error) => return Err(io::Error::new(io::ErrorKind::PermissionDenied, error)),
                 Err(_) => return Err(io::ErrorKind::TimedOut.into()),
             }
         } else {
-            self.connection()?.close(CONTROL_COMPLETE_CLOSE_CODE.into(), b"signed migration control complete");
+            self.connection()?.close(
+                CONTROL_COMPLETE_CLOSE_CODE.into(),
+                b"signed migration control complete",
+            );
         }
         if let Some(endpoint) = &self.endpoint {
-            endpoint.close(CONTROL_COMPLETE_CLOSE_CODE.into(), b"signed migration control complete");
+            endpoint.close(
+                CONTROL_COMPLETE_CLOSE_CODE.into(),
+                b"signed migration control complete",
+            );
         }
         self.connection = None;
         self.endpoint = None;
@@ -86,8 +98,17 @@ impl RoutedTransport {
         // release; cancellation leaves the original receiver in this owner.
         wait_socket_released(&mut self.released, deadline)
             .await
-            .map_err(|error| io::Error::new(error.kind(), format!("completed migration control endpoint release: {error}")))?;
-        self.raw.as_ref().ok_or_else(not_connected)?.authorization().check_live()?;
+            .map_err(|error| {
+                io::Error::new(
+                    error.kind(),
+                    format!("completed migration control endpoint release: {error}"),
+                )
+            })?;
+        self.raw
+            .as_ref()
+            .ok_or_else(not_connected)?
+            .authorization()
+            .check_live()?;
         if now_ms()? >= binding.expires_at_unix_ms || Instant::now() >= deadline {
             return Err(io::ErrorKind::TimedOut.into());
         }
