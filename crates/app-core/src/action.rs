@@ -75,6 +75,7 @@ pub enum Action {
     Space {
         /// A fresh local selection token. It fences same-login space changes.
         context: String,
+        #[serde(rename = "space_action")]
         action: crate::SpaceAction,
     },
     PreviewNativeSpace {

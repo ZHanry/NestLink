@@ -10,7 +10,8 @@ use nestlink_sdk::{
     NodeDiscovery,
     network::routed::{PinnedNetworkSpace, VerifiedRemotePreparation},
 };
-use std::time::{Duration, Instant};
+use std::time::Duration;
+use tokio::time::Instant;
 
 pub(crate) struct PendingNativeSpace {
     pub public: NativeSpacePreview,
