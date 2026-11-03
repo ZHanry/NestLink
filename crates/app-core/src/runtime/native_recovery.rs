@@ -57,14 +57,12 @@ pub(super) fn retain_source(
             mut session,
             lifetime,
         } => {
-            let budget = match session
-                .channels()
-                .lease_control()
-                .reconnection_budget()
-            {
+            let budget = match session.channels().lease_control().reconnection_budget() {
                 Ok(budget) => budget,
                 Err(_) => {
-                    eprintln!("native original recovery source rejected: no remaining recovery budget");
+                    eprintln!(
+                        "native original recovery source rejected: no remaining recovery budget"
+                    );
                     return None;
                 }
             };

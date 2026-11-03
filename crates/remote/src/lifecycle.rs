@@ -569,7 +569,10 @@ impl LeaseControl {
                 self.inner.stop.has_changed().is_err(),
                 *self.inner.stop.borrow(),
                 self.inner.network.as_ref().and_then(NetworkBinding::reason),
-                self.inner.carrier.as_ref().and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released)),
+                self.inner
+                    .carrier
+                    .as_ref()
+                    .and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released)),
                 managed.recovery_forbidden,
                 managed.report.map(|report| report.cleanup),
             );
@@ -1030,9 +1033,17 @@ impl LeaseControl {
         managed.capture_attached = true;
         Ok(())
     }
+    #[track_caller]
     pub fn stop(&self, reason: StopReason) -> Result<StopEffects, RemoteError> {
         let mut managed = self.inner.lock()?;
         if !reconnection_is_allowed(reason) {
+            if !managed.recovery_forbidden {
+                eprintln!(
+                    "reconnection forbidden: requested={reason:?} previous={:?} caller={}",
+                    managed.session.state(),
+                    std::panic::Location::caller(),
+                );
+            }
             managed.recovery_forbidden = true;
         }
         let effects = managed.session.stop(reason);
