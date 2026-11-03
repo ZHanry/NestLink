@@ -2411,7 +2411,11 @@ impl Actor {
                 Step::BrowserHost(None) => self.browser_host_event_lost(),
                 Step::ServiceHostCleanup(result) => self.service_host_cleanup_result(result),
                 Step::Tick => {
-                    if self.native_space_preview.as_ref().is_some_and(|preview| preview.expired()) {
+                    if self
+                        .native_space_preview
+                        .as_ref()
+                        .is_some_and(|preview| preview.expired())
+                    {
                         self.native_space_preview = None;
                         self.view.native_space_preview = crate::Section::default();
                         self.publish();
@@ -2493,35 +2497,70 @@ impl Actor {
             );
         } else {
             let changes_selection = matches!(envelope.action.as_ref(), Some(Action::Space { action, .. }) if action.selects_space())
-                || matches!(envelope.action.as_ref(), Some(Action::PreviewNativeSpace { .. }
-                    | Action::InspectRemote { .. } | Action::RequestRemote { .. } | Action::RevokeRemote { .. }));
+                || matches!(
+                    envelope.action.as_ref(),
+                    Some(
+                        Action::PreviewNativeSpace { .. }
+                            | Action::InspectRemote { .. }
+                            | Action::RequestRemote { .. }
+                            | Action::RevokeRemote { .. }
+                    )
+                );
             if changes_selection {
                 let Some(next) = self.space_selection.checked_add(1) else {
-                    self.deliver(envelope, OperationStatus::Failed, RemoteEffect::None,
-                        Some(Failure::local(FailureKind::Capacity)), PublicOutput::None, None);
+                    self.deliver(
+                        envelope,
+                        OperationStatus::Failed,
+                        RemoteEffect::None,
+                        Some(Failure::local(FailureKind::Capacity)),
+                        PublicOutput::None,
+                        None,
+                    );
                     return;
                 };
                 self.space_selection = next;
                 self.native_space_preview = None;
                 self.view.native_space_preview = crate::Section::default();
             }
-            if matches!(envelope.action.as_ref(), Some(Action::Space { .. } | Action::PreviewNativeSpace { .. } | Action::ConfirmNativeSpace { .. })) {
+            if matches!(
+                envelope.action.as_ref(),
+                Some(
+                    Action::Space { .. }
+                        | Action::PreviewNativeSpace { .. }
+                        | Action::ConfirmNativeSpace { .. }
+                )
+            ) {
                 envelope.space_selection = Some(self.space_selection);
             }
             if let Some(Action::Space { context, action }) = envelope.action.as_ref() {
                 if action.selects_space() {
                     for slot in self.secret_slots.iter().filter_map(|slot| slot.upgrade()) {
-                        if let Ok(mut value) = slot.lock() { value.take(); }
+                        if let Ok(mut value) = slot.lock() {
+                            value.take();
+                        }
                     }
                     self.view.space_context = context.clone();
                     self.view.selected_space = crate::Section::default();
                     self.view.space_audit = crate::Section::default();
                     self.view.space_services = crate::Section::default();
                 } else if self.view.space_context != *context
-                    || self.view.selected_space.data.as_ref()
-                        .is_none_or(|details| action.space_id() != Some(details.space.space_id.as_str())) {
-                    self.deliver(envelope, OperationStatus::Superseded, RemoteEffect::None,
-                        None, PublicOutput::None, None);
+                    || self
+                        .view
+                        .selected_space
+                        .data
+                        .as_ref()
+                        .is_none_or(|details| {
+                            action.space_id() != Some(details.space.space_id.as_str())
+                        })
+                {
+                    self.deliver(
+                        envelope,
+                        OperationStatus::Superseded,
+                        RemoteEffect::None,
+                        None,
+                        PublicOutput::None,
+                        None,
+                    );
                     return;
                 }
             }
@@ -3658,28 +3697,63 @@ impl Actor {
         let Some(action) = envelope.action.take() else {
             return;
         };
-        if envelope.space_selection.is_some_and(|selection| selection != self.space_selection)
-            || matches!(&action, Action::Space { context, .. } if *context != self.view.space_context) {
-            self.deliver(envelope, OperationStatus::Superseded, RemoteEffect::None,
-                None, PublicOutput::None, None);
+        if envelope
+            .space_selection
+            .is_some_and(|selection| selection != self.space_selection)
+            || matches!(&action, Action::Space { context, .. } if *context != self.view.space_context)
+        {
+            self.deliver(
+                envelope,
+                OperationStatus::Superseded,
+                RemoteEffect::None,
+                None,
+                PublicOutput::None,
+                None,
+            );
             return;
         }
         let pending_space = if let Action::ConfirmNativeSpace { .. } = &action {
             self.view.native_space_preview = crate::Section::default();
             self.native_space_preview.take()
-        } else { None };
+        } else {
+            None
+        };
         let space_request = match &action {
-            Action::PreviewNativeSpace { request } => Some((request.context.as_str(), request.space_id.as_str(), request.expected_network_revision)),
-            Action::ConfirmNativeSpace { confirmation } => pending_space.as_ref().map(|pending|
-                (confirmation.context.as_str(), pending.public.space_id.as_str(), pending.public.expected_network_revision)),
+            Action::PreviewNativeSpace { request } => Some((
+                request.context.as_str(),
+                request.space_id.as_str(),
+                request.expected_network_revision,
+            )),
+            Action::ConfirmNativeSpace { confirmation } => pending_space.as_ref().map(|pending| {
+                (
+                    confirmation.context.as_str(),
+                    pending.public.space_id.as_str(),
+                    pending.public.expected_network_revision,
+                )
+            }),
             _ => None,
         };
         if let Some((context, space_id, revision)) = space_request {
-            let selected = self.view.selected_space.data.as_ref().is_some_and(|details| details.space.space_id == space_id);
-            if context != self.view.space_context || !selected
-                || self.native_network_update_ready(envelope.generation, revision).is_err() {
-                self.deliver(envelope, OperationStatus::Superseded, RemoteEffect::None,
-                    Some(Failure::local(FailureKind::StaleGeneration)), PublicOutput::None, None);
+            let selected = self
+                .view
+                .selected_space
+                .data
+                .as_ref()
+                .is_some_and(|details| details.space.space_id == space_id);
+            if context != self.view.space_context
+                || !selected
+                || self
+                    .native_network_update_ready(envelope.generation, revision)
+                    .is_err()
+            {
+                self.deliver(
+                    envelope,
+                    OperationStatus::Superseded,
+                    RemoteEffect::None,
+                    Some(Failure::local(FailureKind::StaleGeneration)),
+                    PublicOutput::None,
+                    None,
+                );
                 return;
             }
         }
@@ -4987,24 +5061,56 @@ impl Actor {
                         );
                     }
                 }
-                let context_current = response.space_context.as_ref()
+                let context_current = response
+                    .space_context
+                    .as_ref()
                     .is_none_or(|context| *context == self.view.space_context)
-                    && envelope.space_selection.is_none_or(|selection| selection == self.space_selection);
+                    && envelope
+                        .space_selection
+                        .is_none_or(|selection| selection == self.space_selection);
                 let visible = current && context_current && active.cancelled.is_none();
                 if visible {
                     if let Some(pending) = response.native_space_preview.take() {
-                        let selected = self.view.selected_request.data.as_ref().is_some_and(|remote|
-                            remote.id == pending.public.request_id && remote.status == "approved"
-                                && remote.connection_generation == pending.public.connection_generation);
-                        if selected && self.native_network_update_ready(envelope.generation,
-                            pending.public.expected_network_revision).is_ok() {
-                            self.view.native_space_preview.replace(pending.public.clone());
+                        let selected =
+                            self.view
+                                .selected_request
+                                .data
+                                .as_ref()
+                                .is_some_and(|remote| {
+                                    remote.id == pending.public.request_id
+                                        && remote.status == "approved"
+                                        && remote.connection_generation
+                                            == pending.public.connection_generation
+                                });
+                        if selected
+                            && self
+                                .native_network_update_ready(
+                                    envelope.generation,
+                                    pending.public.expected_network_revision,
+                                )
+                                .is_ok()
+                        {
+                            self.view
+                                .native_space_preview
+                                .replace(pending.public.clone());
                             self.native_space_preview = Some(pending);
-                        } else { response.failure = Some(Failure::local(FailureKind::StaleGeneration)); }
+                        } else {
+                            response.failure = Some(Failure::local(FailureKind::StaleGeneration));
+                        }
                     }
-                    if response.failure.is_none() && let Some(approved) = response.approved_native_space.take() {
-                        match self.configure_native_network(envelope.generation, approved.expected_revision, approved.settings) {
-                            Ok(_) => response.output = PublicOutput::Revision { revision: self.view.native_network_revision },
+                    if response.failure.is_none()
+                        && let Some(approved) = response.approved_native_space.take()
+                    {
+                        match self.configure_native_network(
+                            envelope.generation,
+                            approved.expected_revision,
+                            approved.settings,
+                        ) {
+                            Ok(_) => {
+                                response.output = PublicOutput::Revision {
+                                    revision: self.view.native_network_revision,
+                                }
+                            }
                             Err(error) => response.failure = Some(Failure::from(error)),
                         }
                     }
@@ -5028,7 +5134,10 @@ impl Actor {
                         };
                         self.view.authentication_error = response.failure.clone();
                     }
-                } else if current && context_current && let Some(section) = active.section {
+                } else if current
+                    && context_current
+                    && let Some(section) = active.section
+                {
                     section.status(&mut self.view, None, None);
                 }
                 let mut sensitive = None;
@@ -5065,7 +5174,11 @@ impl Actor {
                     envelope,
                     status,
                     response.effect,
-                    if current && context_current { response.failure } else { None },
+                    if current && context_current {
+                        response.failure
+                    } else {
+                        None
+                    },
                     if visible {
                         response.output
                     } else {

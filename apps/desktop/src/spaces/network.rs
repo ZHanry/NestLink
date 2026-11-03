@@ -11,12 +11,26 @@ pub(super) struct NetworkDraft {
     approved: bool,
 }
 impl Default for NetworkDraft {
-    fn default() -> Self { Self { trusted_key: String::new(), verified_key: false,
-        mode: NativeSpaceMode::Direct, nodes: Default::default(), nonce: String::new(), approved: false } }
+    fn default() -> Self {
+        Self {
+            trusted_key: String::new(),
+            verified_key: false,
+            mode: NativeSpaceMode::Direct,
+            nodes: Default::default(),
+            nonce: String::new(),
+            approved: false,
+        }
+    }
 }
 impl NetworkDraft {
-    pub(super) fn show(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot,
-        details: &nestlink_app_core::SpaceDetailsPage, english: bool, runtime: Option<&str>) -> Option<Command> {
+    pub(super) fn show(
+        &mut self,
+        ui: &mut egui::Ui,
+        snapshot: &Snapshot,
+        details: &nestlink_app_core::SpaceDetailsPage,
+        english: bool,
+        runtime: Option<&str>,
+    ) -> Option<Command> {
         let mut command = None;
         egui::CollapsingHeader::new(t(english, "本机空间路径批准", "Approve this device's space path")).show(ui, |ui| {
             ui.label(t(english, "先在远程桌面选定并获得双方批准的请求，然后停止当前连接。此处仅准备该请求的精确双方成员，不开放其他成员目录。", "Select a mutually approved request in Remote desktop, then stop the current connection. This prepares only that request's exact pair of members."));

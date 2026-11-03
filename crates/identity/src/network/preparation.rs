@@ -1,9 +1,7 @@
 //! Deterministic request identity, independent of either authorization layer.
 use crate::digest;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
-use nestlink_protocol::{
-    ContractError, ErrorCode, api::NetworkRemotePreparationRequest, valid_id,
-};
+use nestlink_protocol::{ContractError, ErrorCode, api::NetworkRemotePreparationRequest, valid_id};
 
 pub fn remote_preparation_grant_ids(
     space: &str,
@@ -11,13 +9,20 @@ pub fn remote_preparation_grant_ids(
     binding: &NetworkRemotePreparationRequest,
 ) -> Result<[String; 2], ContractError> {
     let invalid = || ContractError::new(ErrorCode::InvalidMessage, "invalid preparation binding");
-    let permit = URL_SAFE_NO_PAD.decode(&binding.permit_sha256).map_err(|_| invalid())?;
+    let permit = URL_SAFE_NO_PAD
+        .decode(&binding.permit_sha256)
+        .map_err(|_| invalid())?;
     if !valid_id(space)
         || !valid_id(request)
         || permit.len() != 32
         || URL_SAFE_NO_PAD.encode(&permit) != binding.permit_sha256
-        || [binding.expected_space_revision, binding.expected_policy_epoch, binding.connection_generation]
-            .into_iter().any(|value| value == 0 || value > i64::MAX as u64)
+        || [
+            binding.expected_space_revision,
+            binding.expected_policy_epoch,
+            binding.connection_generation,
+        ]
+        .into_iter()
+        .any(|value| value == 0 || value > i64::MAX as u64)
     {
         return Err(invalid());
     }

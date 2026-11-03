@@ -9,11 +9,26 @@ pub(super) struct ServiceDraft {
     minutes: u32,
 }
 impl Default for ServiceDraft {
-    fn default() -> Self { Self { owned: String::new(), after_service: None, after_rule: None, by_device: false, minutes: 60 } }
+    fn default() -> Self {
+        Self {
+            owned: String::new(),
+            after_service: None,
+            after_rule: None,
+            by_device: false,
+            minutes: 60,
+        }
+    }
 }
 impl ServiceDraft {
-    pub(super) fn show(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot, details: &nestlink_app_core::SpaceDetailsPage, english: bool,
-        action: &mut Option<SpaceAction>, confirmation: &mut Option<(String, SpaceAction)>) {
+    pub(super) fn show(
+        &mut self,
+        ui: &mut egui::Ui,
+        snapshot: &Snapshot,
+        details: &nestlink_app_core::SpaceDetailsPage,
+        english: bool,
+        action: &mut Option<SpaceAction>,
+        confirmation: &mut Option<(String, SpaceAction)>,
+    ) {
         let space = &details.space;
         let manager = matches!(space.role, SpaceRole::Owner | SpaceRole::Admin);
         egui::CollapsingHeader::new(t(english, "服务发布授权", "Service publication rights")).show(ui, |ui| {

@@ -19,16 +19,29 @@ impl NativeNetworkPanel {
     pub(crate) fn complete(&mut self, result: Result<NativeNetworkSettings, NativeNetworkError>) {
         self.pending = false;
         self.message = result.err();
-        if self.message.is_none() { self.base = None; }
+        if self.message.is_none() {
+            self.base = None;
+        }
     }
-    pub(crate) fn show(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot, english: bool) -> Option<Command> {
+    pub(crate) fn show(
+        &mut self,
+        ui: &mut egui::Ui,
+        snapshot: &Snapshot,
+        english: bool,
+    ) -> Option<Command> {
         if self.base != Some((snapshot.generation, snapshot.native_network_revision)) {
             self.base = Some((snapshot.generation, snapshot.native_network_revision));
             self.prefixes = snapshot.native_network.private_network_prefixes.join("\n");
             self.use_deployment_stun = snapshot.native_network.use_deployment_stun;
             self.enable_pcp = snapshot.native_network.pcp_gateway.is_some();
-            self.pcp_gateway = snapshot.native_network.pcp_gateway.map(|gateway| gateway.to_string()).unwrap_or_default();
-            self.disable_space = false; self.approved = false; self.pending = false;
+            self.pcp_gateway = snapshot
+                .native_network
+                .pcp_gateway
+                .map(|gateway| gateway.to_string())
+                .unwrap_or_default();
+            self.disable_space = false;
+            self.approved = false;
+            self.pending = false;
         }
         let t = |zh, en| if english { en } else { zh };
         let mut command = None;

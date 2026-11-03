@@ -5,24 +5,48 @@ use nestlink_sdk::network::routed::PinnedNetworkSpace;
 
 /// Newly reviewed settings recover only the original fixed pair. No POST or
 /// administrative directory read can replace expired or revoked authority.
-pub(super) async fn prepared_scope(client: &Client, identity: &DeviceIdentity,
-    config: &NativeSessionConfig, permit: &VerifiedPermit, pin: &PinnedNetworkSpace,
-    members: [&str; 2], fence: &sdk_call::DispatchFence) -> Result<Option<(u64, u64)>, Failure> {
-    let Some(binding) = &config.preparation else { return Ok(None); };
+pub(super) async fn prepared_scope(
+    client: &Client,
+    identity: &DeviceIdentity,
+    config: &NativeSessionConfig,
+    permit: &VerifiedPermit,
+    pin: &PinnedNetworkSpace,
+    members: [&str; 2],
+    fence: &sdk_call::DispatchFence,
+) -> Result<Option<(u64, u64)>, Failure> {
+    let Some(binding) = &config.preparation else {
+        return Ok(None);
+    };
     let now = unix_millis().ok_or_else(|| Failure::local(FailureKind::Trust))?;
     if binding.request_id != permit.claims().session_id
         || binding.connection_generation != permit.claims().connection_generation
-        || binding.permit_sha256 != permit.digest() || binding.expires_at_unix_ms <= now {
+        || binding.permit_sha256 != permit.digest()
+        || binding.expires_at_unix_ms <= now
+    {
         return Err(Failure::local(FailureKind::Trust));
     }
     fence.check()?;
-    let owner = client.sdk.network_remote_preparation(pin, identity, permit,
-        binding.space_revision, binding.policy_epoch).await.map_err(Failure::from)?;
+    let owner = client
+        .sdk
+        .network_remote_preparation(
+            pin,
+            identity,
+            permit,
+            binding.space_revision,
+            binding.policy_epoch,
+        )
+        .await
+        .map_err(Failure::from)?;
     fence.check()?;
-    if owner.membership_grant_ids() != members || owner.expires_at_unix_ms() != binding.expires_at_unix_ms {
+    if owner.membership_grant_ids() != members
+        || owner.expires_at_unix_ms() != binding.expires_at_unix_ms
+    {
         return Err(Failure::local(FailureKind::Trust));
     }
-    Ok(Some((owner.policy().policy_epoch, owner.expires_at_unix_ms())))
+    Ok(Some((
+        owner.policy().policy_epoch,
+        owner.expires_at_unix_ms(),
+    )))
 }
 
 fn path_id(permit: &VerifiedPermit, member_ids: [&str; 2], kind: u8) -> String {
@@ -95,42 +119,47 @@ pub(super) async fn establish(
     let deadline = tokio::time::Instant::now() + Duration::from_secs(8);
     let prepare = async {
         fence.check()?;
-        let prepared = prepared_scope(client, identity, config, &permit, &pin, members, &fence).await?;
+        let prepared =
+            prepared_scope(client, identity, config, &permit, &pin, members, &fence).await?;
         if !key.is_host {
-            let (policy_epoch, member_expiry) = if let Some(prepared) = prepared { prepared } else {
-            let policy = client
-                .sdk
-                .network_policy(&scope.space_id)
-                .await
-                .map_err(Failure::from)?;
-            if policy.deployment_id != scope.deployment_id
-                || policy.space_id != scope.space_id
-                || URL_SAFE_NO_PAD
-                    .decode(&policy.authority_public_key)
-                    .map_err(|_| Failure::local(FailureKind::Trust))?
-                    .as_slice()
-                    != scope.authority_key
-            {
-                return Err(Failure::local(FailureKind::Trust));
-            }
-            let mut expires = permit.claims().expires_at_unix_ms;
-            for id in members {
-                let view = client
+            let (policy_epoch, member_expiry) = if let Some(prepared) = prepared {
+                prepared
+            } else {
+                let policy = client
                     .sdk
-                    .network_membership_grant(&scope.space_id, id)
+                    .network_policy(&scope.space_id)
                     .await
                     .map_err(Failure::from)?;
-                let grant = nestlink_sdk::network_management::decode_network_grant(&view)
-                    .map_err(Failure::from)?;
-                let claims =
-                    nestlink_protocol::network::GrantClaims::decode_canonical(&grant.claims)
-                        .map_err(|_| Failure::local(FailureKind::Trust))?;
-                expires = expires.min(claims.scope().expires_at_ms);
-            }
-            (policy.policy_epoch, expires)
+                if policy.deployment_id != scope.deployment_id
+                    || policy.space_id != scope.space_id
+                    || URL_SAFE_NO_PAD
+                        .decode(&policy.authority_public_key)
+                        .map_err(|_| Failure::local(FailureKind::Trust))?
+                        .as_slice()
+                        != scope.authority_key
+                {
+                    return Err(Failure::local(FailureKind::Trust));
+                }
+                let mut expires = permit.claims().expires_at_unix_ms;
+                for id in members {
+                    let view = client
+                        .sdk
+                        .network_membership_grant(&scope.space_id, id)
+                        .await
+                        .map_err(Failure::from)?;
+                    let grant = nestlink_sdk::network_management::decode_network_grant(&view)
+                        .map_err(Failure::from)?;
+                    let claims =
+                        nestlink_protocol::network::GrantClaims::decode_canonical(&grant.claims)
+                            .map_err(|_| Failure::local(FailureKind::Trust))?;
+                    expires = expires.min(claims.scope().expires_at_ms);
+                }
+                (policy.policy_epoch, expires)
             };
             let now = unix_millis().ok_or_else(|| Failure::local(FailureKind::Trust))?;
-            let expires = member_expiry.min(permit.claims().expires_at_unix_ms).min(now.saturating_add(30_000));
+            let expires = member_expiry
+                .min(permit.claims().expires_at_unix_ms)
+                .min(now.saturating_add(30_000));
             let request = NetworkRemotePathRequest {
                 connectivity_grant_id: path_id(&permit, members, 2),
                 path_grant_id: path.clone(),

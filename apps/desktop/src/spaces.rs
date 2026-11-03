@@ -1,13 +1,15 @@
 //! A view over the daemon's sole account actor; this panel owns no SDK.
 use crate::{DesktopApp, widgets};
 use eframe::egui;
-use nestlink_app_core::{Action, OperationResult, OperationStatus, RemoteEffect, Snapshot, SpaceAction, SpacePageCursor};
+use nestlink_app_core::{
+    Action, OperationResult, OperationStatus, RemoteEffect, Snapshot, SpaceAction, SpacePageCursor,
+};
 use nestlink_app_ipc::wire::{Command, SensitiveReply};
 use nestlink_auth::Secret;
 use nestlink_protocol::{network::SpaceRole, spaces::*};
 use zeroize::{Zeroize, Zeroizing};
-mod services;
 mod network;
+mod services;
 
 struct Pending {
     submission: u64,
@@ -37,18 +39,37 @@ pub(crate) struct SpacePanel {
 }
 impl Default for SpacePanel {
     fn default() -> Self {
-        Self { context: String::new(), selected: None, cursor: Default::default(), name: String::new(),
-            account: String::new(), installation: String::new(), role: SpaceRole::Member,
-            invitation_target: String::new(), invitation_minutes: 60, incoming: Zeroizing::new(String::new()),
-            issued: Zeroizing::new(String::new()), pending: None, confirmation: None, message: None,
-            service: Default::default(), network: Default::default() }
+        Self {
+            context: String::new(),
+            selected: None,
+            cursor: Default::default(),
+            name: String::new(),
+            account: String::new(),
+            installation: String::new(),
+            role: SpaceRole::Member,
+            invitation_target: String::new(),
+            invitation_minutes: 60,
+            incoming: Zeroizing::new(String::new()),
+            issued: Zeroizing::new(String::new()),
+            pending: None,
+            confirmation: None,
+            message: None,
+            service: Default::default(),
+            network: Default::default(),
+        }
     }
 }
 
-fn t(english: bool, zh: &'static str, en: &'static str) -> &'static str { if english { en } else { zh } }
+fn t(english: bool, zh: &'static str, en: &'static str) -> &'static str {
+    if english { en } else { zh }
+}
 fn role_name(role: SpaceRole, english: bool) -> &'static str {
-    match role { SpaceRole::Owner => t(english, "所有者", "Owner"), SpaceRole::Admin => t(english, "管理员", "Admin"),
-        SpaceRole::Member => t(english, "成员", "Member"), SpaceRole::Guest => t(english, "访客", "Guest") }
+    match role {
+        SpaceRole::Owner => t(english, "所有者", "Owner"),
+        SpaceRole::Admin => t(english, "管理员", "Admin"),
+        SpaceRole::Member => t(english, "成员", "Member"),
+        SpaceRole::Guest => t(english, "访客", "Guest"),
+    }
 }
 fn invitation_parts(value: &str) -> Option<(String, String, Secret)> {
     let (_, fragment) = value.trim().split_once("#space-invite=")?;
@@ -56,13 +77,27 @@ fn invitation_parts(value: &str) -> Option<(String, String, Secret)> {
     let space = parts.next()?;
     let invitation = parts.next()?;
     let token = parts.next()?;
-    if parts.next().is_some() || !nestlink_protocol::valid_id(space) || !nestlink_protocol::valid_id(invitation)
-        || token.len() != 43 || !token.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_')) { return None; }
-    Some((space.into(), invitation.into(), Secret::from_text(token.into())))
+    if parts.next().is_some()
+        || !nestlink_protocol::valid_id(space)
+        || !nestlink_protocol::valid_id(invitation)
+        || token.len() != 43
+        || !token
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'))
+    {
+        return None;
+    }
+    Some((
+        space.into(),
+        invitation.into(),
+        Secret::from_text(token.into()),
+    ))
 }
 
 impl SpacePanel {
-    pub(crate) fn context_matches(&self, snapshot: &Snapshot) -> bool { self.context == snapshot.space_context }
+    pub(crate) fn context_matches(&self, snapshot: &Snapshot) -> bool {
+        self.context == snapshot.space_context
+    }
     pub(crate) fn close(&mut self) {
         self.incoming.zeroize();
         self.issued.zeroize();
@@ -73,27 +108,64 @@ impl SpacePanel {
 
     pub(crate) fn disconnected(&mut self) {
         self.close();
-        self.message = Some("连接已中断，请重新读取空间。 / Connection interrupted; read the space again.".into());
+        self.message = Some(
+            "连接已中断，请重新读取空间。 / Connection interrupted; read the space again.".into(),
+        );
     }
 
     pub(crate) fn rejected(&mut self, submission: Option<u64>) {
-        if self.pending.as_ref().is_some_and(|pending| Some(pending.submission) == submission) { self.disconnected(); }
+        if self
+            .pending
+            .as_ref()
+            .is_some_and(|pending| Some(pending.submission) == submission)
+        {
+            self.disconnected();
+        }
     }
 
-    pub(crate) fn completed(&mut self, submission: Option<u64>, runtime: Option<&str>, result: &OperationResult, sensitive: Option<SensitiveReply>, origin: Option<&str>) {
-        let Some(pending) = self.pending.as_ref() else { return; };
-        if submission != Some(pending.submission) || result.generation != pending.generation
-            || runtime != Some(pending.runtime.as_str()) || pending.context != self.context { return; }
-        if pending.invitation && result.remote_effect == RemoteEffect::Committed
+    pub(crate) fn completed(
+        &mut self,
+        submission: Option<u64>,
+        runtime: Option<&str>,
+        result: &OperationResult,
+        sensitive: Option<SensitiveReply>,
+        origin: Option<&str>,
+    ) {
+        let Some(pending) = self.pending.as_ref() else {
+            return;
+        };
+        if submission != Some(pending.submission)
+            || result.generation != pending.generation
+            || runtime != Some(pending.runtime.as_str())
+            || pending.context != self.context
+        {
+            return;
+        }
+        if pending.invitation
+            && result.remote_effect == RemoteEffect::Committed
             && let Some(origin) = origin
-            && let Some(SensitiveReply::SpaceInvitation { space_id, invitation_id, token }) = sensitive
-            && self.selected.as_deref() == Some(space_id.as_str()) {
-            self.issued = Zeroizing::new(format!("{}/#space-invite={space_id}.{invitation_id}.{}", origin.trim_end_matches('/'), token.expose()));
+            && let Some(SensitiveReply::SpaceInvitation {
+                space_id,
+                invitation_id,
+                token,
+            }) = sensitive
+            && self.selected.as_deref() == Some(space_id.as_str())
+        {
+            self.issued = Zeroizing::new(format!(
+                "{}/#space-invite={space_id}.{invitation_id}.{}",
+                origin.trim_end_matches('/'),
+                token.expose()
+            ));
         }
         self.pending = None;
         if result.status == OperationStatus::Succeeded {
-            if let nestlink_app_core::PublicOutput::Created { id } = &result.output { self.selected = Some(id.clone()); self.name.clear(); }
-            self.message = Some("操作完成，已读取确认状态。 / Operation complete; confirmed state loaded.".into());
+            if let nestlink_app_core::PublicOutput::Created { id } = &result.output {
+                self.selected = Some(id.clone());
+                self.name.clear();
+            }
+            self.message = Some(
+                "操作完成，已读取确认状态。 / Operation complete; confirmed state loaded.".into(),
+            );
         } else {
             self.message = Some(widgets::operation_message(result, false));
         }
@@ -107,18 +179,33 @@ impl SpacePanel {
             self.service = Default::default();
             self.network = Default::default();
         }
-        if matches!(&action, SpaceAction::Accept { .. }) { self.incoming.zeroize(); }
-        Command::Submit { action: Action::Space { context: self.context.clone(), action } }
+        if matches!(&action, SpaceAction::Accept { .. }) {
+            self.incoming.zeroize();
+        }
+        Command::Submit {
+            action: Action::Space {
+                context: self.context.clone(),
+                action,
+            },
+        }
     }
 
-    fn show(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot, english: bool, runtime: Option<&str>) -> Option<Command> {
+    fn show(
+        &mut self,
+        ui: &mut egui::Ui,
+        snapshot: &Snapshot,
+        english: bool,
+        runtime: Option<&str>,
+    ) -> Option<Command> {
         let mut action = None;
         let mut network_command = None;
         let mut confirmation = None;
         let busy = self.pending.is_some();
         ui.heading(t(english, "网络空间", "Network spaces"));
         ui.label(t(english, "空间管理成员和设备。远控、文件、服务与本机目标仍需分别授权。", "Spaces manage people and devices. Remote control, files, services and local targets each require separate authorization."));
-        if let Some(message) = &self.message { ui.label(message); }
+        if let Some(message) = &self.message {
+            ui.label(message);
+        }
         widgets::section(ui, &snapshot.spaces, english);
         ui.add_enabled_ui(!busy && self.confirmation.is_none(), |ui| {
             ui.horizontal(|ui| {
@@ -255,20 +342,37 @@ impl SpacePanel {
             ui.separator();
             ui.label(t(english, "邀请已准备好。请复制并妥善交付；离开页面后无法再次读取令牌。", "Your invitation is ready. Copy and deliver it securely; its token cannot be read again after leaving this page."));
             ui.horizontal(|ui| {
-                if ui.button(t(english, "复制邀请链接", "Copy invitation link")).clicked() { ui.ctx().copy_text(self.issued.as_str().to_owned()); }
-                if ui.button(t(english, "清除此链接", "Clear link")).clicked() { self.issued.zeroize(); }
+                if ui
+                    .button(t(english, "复制邀请链接", "Copy invitation link"))
+                    .clicked()
+                {
+                    ui.ctx().copy_text(self.issued.as_str().to_owned());
+                }
+                if ui.button(t(english, "清除此链接", "Clear link")).clicked() {
+                    self.issued.zeroize();
+                }
             });
         }
-        if let Some(value) = confirmation { self.confirmation = Some(value); }
+        if let Some(value) = confirmation {
+            self.confirmation = Some(value);
+        }
         if let Some((message, _)) = &self.confirmation {
             let mut yes = false;
             let mut no = false;
             egui::Modal::new(egui::Id::new("space-confirmation")).show(ui.ctx(), |ui| {
-                ui.heading(t(english, "确认空间操作", "Confirm space operation")); ui.label(message);
-                ui.horizontal(|ui| { yes = ui.button(t(english, "确认", "Confirm")).clicked(); no = ui.button(t(english, "取消", "Cancel")).clicked(); });
+                ui.heading(t(english, "确认空间操作", "Confirm space operation"));
+                ui.label(message);
+                ui.horizontal(|ui| {
+                    yes = ui.button(t(english, "确认", "Confirm")).clicked();
+                    no = ui.button(t(english, "取消", "Cancel")).clicked();
+                });
             });
-            if yes { action = self.confirmation.take().map(|(_, action)| action); }
-            if no || ui.ctx().input(|input| input.key_pressed(egui::Key::Escape)) { self.confirmation = None; }
+            if yes {
+                action = self.confirmation.take().map(|(_, action)| action);
+            }
+            if no || ui.ctx().input(|input| input.key_pressed(egui::Key::Escape)) {
+                self.confirmation = None;
+            }
         }
         network_command.or_else(|| action.map(|action| self.command(action)))
     }
@@ -277,11 +381,33 @@ impl SpacePanel {
 impl DesktopApp {
     pub(crate) fn spaces_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         let runtime = self.bridge.runtime_id();
-        if let Some(command) = self.space_panel.show(ui, snapshot, self.english, runtime.as_deref()) {
-            let invitation = matches!(&command, Command::Submit { action: Action::Space { action: SpaceAction::Invite { .. }, .. } });
-            if let (Some(submission), Some(runtime)) = (self.bridge.submit_tracked(snapshot.generation, command), self.bridge.runtime_id()) {
-                self.space_panel.pending = Some(Pending { submission, runtime, generation: snapshot.generation, context: self.space_panel.context.clone(), invitation });
-            } else { self.space_panel.disconnected(); }
+        if let Some(command) = self
+            .space_panel
+            .show(ui, snapshot, self.english, runtime.as_deref())
+        {
+            let invitation = matches!(
+                &command,
+                Command::Submit {
+                    action: Action::Space {
+                        action: SpaceAction::Invite { .. },
+                        ..
+                    }
+                }
+            );
+            if let (Some(submission), Some(runtime)) = (
+                self.bridge.submit_tracked(snapshot.generation, command),
+                self.bridge.runtime_id(),
+            ) {
+                self.space_panel.pending = Some(Pending {
+                    submission,
+                    runtime,
+                    generation: snapshot.generation,
+                    context: self.space_panel.context.clone(),
+                    invitation,
+                });
+            } else {
+                self.space_panel.disconnected();
+            }
         }
     }
 }

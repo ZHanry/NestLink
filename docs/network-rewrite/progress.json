@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "489c841b83d0118dd28716e0dcb71080737f547e",
-  "checkpoint_kind": "network_and_focused_resident_scopes_passed_full_rust_failed_repairs_and_signed_direct_recovery_pending",
+  "source_revision": "d5d1435993bf6995c7fbc074e49db6b087cde096",
+  "checkpoint_kind": "delegated_space_actor_and_one_use_native_preparation_implemented_hosted_format_applied_full_validation_pending",
   "active_tasks": [
     "W00",
     "W02",
@@ -53,13 +53,14 @@
     "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
   ],
   "unverified_assumptions": [
-    "Exact c589 network workflow all9 jobs passed and focused original resident4/4 both OS; scoped results do not qualify complete work packages or the rewrite.",
-    "Full Rust c589 failed all6 core/workspace/boundary matrix jobs. Original Windows peer_udp_bind Os10013 is now localized; carrier-specific fixture selection is committed unverified. Workspace HTTPS freeze and locked notice fetch repairs await new exact-source execution. Linux original DNS Os98 and Windows native_session DirectUnavailable remain unexplained failures; DNS now retains bind protocol and original IO source.",
-    "Exact 8f1 media owner/tools dispatched after precise documented AMF TL0.QL0 alias identity and typed roundtrip repair. Actual original8 Windows finite commands need verified new artifacts; earlier failures remain failed. Main10 hardware support not established.",
-    "Signed-space Direct->Direct recovery/schema51 is committed in 59acbdb and 26fda38. Hosted lock derivation41567629082 passed; only existing futures-util app-core test edge imported489c841. New source schema50 refusal, real HTTP races, native recovery, complete Rust and formatting still require hosted Actions.",
-    "Mandatory remaining implementation includescomplete productUI/CLI lifecycle, productionunifiedpath migration, advanced GPUformat/fallback, whole-systemE2E andindependentsecurityreview. Existing finiteprobesandlabtestscannotclose these.",
-    "Mandatory targetevidence still includespairedWindows desktop/input/audio/concurrentfiles,Android+iOS standardWireGuard,independentNAT/overlappingsites/public fixedentryDNS,fullmixedversions/signing andcrossday24hoursoaks. Internalimplementation gaps are not externalblockers.",
-    "W28Luanti original25second disconnectdisplay check remains failed byexplicituserdecision; retainofficial30second behaviorrecord andoriginalNestLink5secondcleanupgate withoutdeadlinechange."
+    "Sourcea6 full Rust41568697422 finished failure:8/13 jobs passed. Linux complete workspace2074passed/14failed/49originalignored; Windows workspace stopped at missing test futures-util, wasm download failed before compilation. Original failures retained in exact evidence.",
+    "Sourcea6 focused resident41568724100 failed:Linux original3/4 due original5secondXvfb startup deadline; Windows4/4. Same-source early/full Rust resident successes are independent results and do not replace this failure. Both boundary-tools scopes succeeded.",
+    "Sourceaa1 media owner41570308930 failed both Windows owner jobs at missing SDK preparation URL_SAFE_NO_PAD import; separate tools41570304734 built and passed strict clippy. All8original targetMF/AMFcommands still failed; new AMFMain8failure=sps.poc_timing and originalMain10unavailable.",
+    "Commits51d3632/e275161/2106ecf/01b1a5f/f2987b3 contain migration fixture, exact existing stream dependency, strict preparation readback, explicit base64 import, original signed successor fixture, actual SQLite reader closure and explicit user-authorized exact Unauthorized assertion repairs. These require new hosted qualification.",
+    "Commits987d0e9/d5d1435 implement desktop/account-actor delegated spaces and one-use pinned native Preview/Confirm with8realHTTPspaces cases, fixed saved preparation readback, original authority deadlines and stale context/runtime/nonce/CAS refusal. Source implementation is unverified.",
+    "Mandatory remaining implementation includes full unified production path migration, advanced GPUformat/fallback and complete productlifecycle/security/systemacceptance; finite probes or scopedlabpassescannotclose them.",
+    "Mandatory targetevidence still includes pairedWindows desktop/input/audio/concurrentfiles,Android+iOSstandardWireGuard,independentNAT/overlappingsites/publicfixedentryDNS,fullmixedversions/signingandcrossday24hoursoaks. Internalimplementationgapsare notexternalblockers.",
+    "W28Luanti original25second disconnectdisplay check remains failed byexplicituserdecision; official30secondbehaviorrecordandoriginalNestLink5secondcleanupgateare retained withoutdeadlinechange."
   ],
   "external_prerequisites": [
     {
@@ -89,12 +90,19 @@
     }
   ],
   "next_steps": [
-    "Push reviewed signed direct implementation, schema compatibility producer and verified hosted lock; apply hosted formatting patch and run exact-source Rust/network/resident/upgrade checks.",
-    "Run exact-source complete Rust, original resident, network contract and schema upgrade workflows, preserve original failures and fix observed causes.",
-    "Verify newly built Windows tools and execute the original8 finite MF/AMF directions on the ordinary target with all original gates.",
-    "Continue remaining production user flows, unified path migration, advanced media and independent security/system acceptance; release remains not_ready and original Luanti25-second failure unchanged."
+    "Hosted formatter41573058651 exact d5 output and all official archive/payload hashes verified; applied32firstpartyRustpaths with one documentation-comment context adaptation for49cacf7. Full compilation and acceptance remain pending.",
+    "Push reviewedformatanddispatch exact-sourcefullRust/network/offlineresident/schema-upgradeworkflows. Inspectactualfailuresandcontinuefixingwithoutassertionordeadlinerelaxation.",
+    "Continue productionunifiedpathmigration,advancedmedia,completeproductentryandindependentsecurity/systemacceptance. Preparesame-sourcecandidatepackagesonlywithhonestgapmatrix;release remainsnot_ready."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/format-d5d1435.json",
+    "docs/network-rewrite/NATIVE-SPACE-CONSENT.md",
+    "docs/network-rewrite/evidence/windows-media-owner-aa1f5f0.json",
+    "docs/network-rewrite/evidence/windows-hevc-target-aa1f5f0.json",
+    "docs/network-rewrite/evidence/ipc-fixture-lock-2106ecf.json",
+    "docs/network-rewrite/evidence/boundary-tools-a6c4ddb.json",
+    "docs/network-rewrite/evidence/native-offline-resident-a6c4ddb.json",
+    "docs/network-rewrite/evidence/full-rust-core-a6c4ddb.json",
     "docs/network-rewrite/evidence/direct-recovery-lock-bf364e0.json",
     "docs/network-rewrite/evidence/full-rust-core-c589362.json",
     "docs/network-rewrite/evidence/native-offline-resident-c589362.json",
@@ -899,11 +907,11 @@
   ],
   "latest_completed_runs": {
     "resident": {
-      "run_id": 41488486927,
-      "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
-      "conclusion": "success",
+      "run_id": 41568724100,
+      "source_revision": "a6c4ddbf6976db2954a2337a4111c094355930c2",
+      "conclusion": "failure",
       "whole_task_passed": false,
-      "evidence_ref": "docs/network-rewrite/evidence/native-offline-resident-4a4496b.json"
+      "evidence_ref": "docs/network-rewrite/evidence/native-offline-resident-a6c4ddb.json"
     },
     "capacity": {
       "run_id": 41486568717,
@@ -942,10 +950,11 @@
       "evidence_ref": "docs/network-rewrite/evidence/network-run-4a4496b.json"
     },
     "rust": {
-      "run_id": 41479911345,
-      "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
-      "conclusion": "failure_linux_workspace_windows_jobtimeout",
-      "whole_task_passed": false
+      "run_id": 41568697422,
+      "source_revision": "a6c4ddbf6976db2954a2337a4111c094355930c2",
+      "conclusion": "failure",
+      "whole_task_passed": false,
+      "evidence_ref": "docs/network-rewrite/evidence/full-rust-core-a6c4ddb.json"
     },
     "windows_tools_f0": {
       "run_id": 41561899380,

@@ -402,7 +402,13 @@ impl Store {
         )?;
         let snapshot = read_snapshot(&tx, &request.space_id, now_ms)?;
         let signed = self.issue_network_membership_in_transaction(
-            &tx, actor, signer, request, &snapshot, product_space, now_ms,
+            &tx,
+            actor,
+            signer,
+            request,
+            &snapshot,
+            product_space,
+            now_ms,
         )?;
         tx.commit()?;
         Ok(signed)

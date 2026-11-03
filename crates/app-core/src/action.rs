@@ -77,8 +77,12 @@ pub enum Action {
         context: String,
         action: crate::SpaceAction,
     },
-    PreviewNativeSpace { request: crate::NativeSpacePreviewRequest },
-    ConfirmNativeSpace { confirmation: crate::NativeSpaceConfirmation },
+    PreviewNativeSpace {
+        request: crate::NativeSpacePreviewRequest,
+    },
+    ConfirmNativeSpace {
+        confirmation: crate::NativeSpaceConfirmation,
+    },
     LoadServicesPage {
         after_id: Option<String>,
         limit: u16,
@@ -247,8 +251,16 @@ impl Action {
         match self {
             Self::SignIn { .. } => OperationKind::SignIn,
             Self::RefreshSession => OperationKind::Refresh,
-            Self::PreviewNativeSpace { .. } | Self::ConfirmNativeSpace { .. } => OperationKind::ManageSpace,
-            Self::Space { action, .. } => if action.reads() { OperationKind::Load } else { OperationKind::ManageSpace },
+            Self::PreviewNativeSpace { .. } | Self::ConfirmNativeSpace { .. } => {
+                OperationKind::ManageSpace
+            }
+            Self::Space { action, .. } => {
+                if action.reads() {
+                    OperationKind::Load
+                } else {
+                    OperationKind::ManageSpace
+                }
+            }
             Self::Load { .. }
             | Self::LoadServicesPage { .. }
             | Self::InspectService { .. }
@@ -293,7 +305,13 @@ impl Action {
     }
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn sensitive(&self) -> bool {
-        matches!(self, Self::Space { action: crate::SpaceAction::Invite { .. }, .. })
+        matches!(
+            self,
+            Self::Space {
+                action: crate::SpaceAction::Invite { .. },
+                ..
+            }
+        )
     }
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn reauthentication(&self) -> bool {
@@ -304,7 +322,8 @@ impl Action {
         matches!(
             self,
             Self::EnrollLocalDevice { .. }
-                | Self::PreviewNativeSpace { .. } | Self::ConfirmNativeSpace { .. }
+                | Self::PreviewNativeSpace { .. }
+                | Self::ConfirmNativeSpace { .. }
                 | Self::RequestRemote { .. }
                 | Self::ApproveRemote { .. }
                 | Self::ApproveMediaRemote { .. }
@@ -325,13 +344,25 @@ impl Action {
         let password = |s: &Secret| s.expose().len() <= 1024;
         let factor = |s: &Option<Secret>| s.as_ref().is_none_or(|s| s.expose().len() <= 128);
         match self {
-            Self::PreviewNativeSpace { request } => valid_id(&request.runtime_id)
-                && valid_id(&request.context) && valid_id(&request.space_id) && valid_id(&request.request_id)
-                && request.expected_connection_generation > 0 && request.expected_space_revision > 0
-                && request.expected_policy_epoch > 0 && request.trusted_authority_key != [0; 32],
-            Self::ConfirmNativeSpace { confirmation } => valid_id(&confirmation.runtime_id)
-                && valid_id(&confirmation.context) && valid_id(&confirmation.nonce)
-                && confirmation.node_ids.as_ref().is_none_or(|ids| ids[0] != ids[1] && ids.iter().all(|id| valid_id(id))),
+            Self::PreviewNativeSpace { request } => {
+                valid_id(&request.runtime_id)
+                    && valid_id(&request.context)
+                    && valid_id(&request.space_id)
+                    && valid_id(&request.request_id)
+                    && request.expected_connection_generation > 0
+                    && request.expected_space_revision > 0
+                    && request.expected_policy_epoch > 0
+                    && request.trusted_authority_key != [0; 32]
+            }
+            Self::ConfirmNativeSpace { confirmation } => {
+                valid_id(&confirmation.runtime_id)
+                    && valid_id(&confirmation.context)
+                    && valid_id(&confirmation.nonce)
+                    && confirmation
+                        .node_ids
+                        .as_ref()
+                        .is_none_or(|ids| ids[0] != ids[1] && ids.iter().all(|id| valid_id(id)))
+            }
             Self::Space { context, action } => valid_id(context) && action.valid_input(),
             Self::SignIn {
                 username,
@@ -491,7 +522,9 @@ impl Action {
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn section(&self) -> SectionKey {
         match self {
-            Self::PreviewNativeSpace { .. } | Self::ConfirmNativeSpace { .. } => SectionKey::NativeSpacePreview,
+            Self::PreviewNativeSpace { .. } | Self::ConfirmNativeSpace { .. } => {
+                SectionKey::NativeSpacePreview
+            }
             Self::Load { page } => (*page).into(),
             Self::Space { action, .. } => match action {
                 crate::SpaceAction::List => SectionKey::Spaces,
@@ -614,7 +647,9 @@ impl SectionKey {
             Self::Services => set!(services),
             Self::Spaces => set!(spaces),
             Self::NativeSpacePreview => {
-                if error.is_some() { view.native_space_preview.data = None; }
+                if error.is_some() {
+                    view.native_space_preview.data = None;
+                }
                 set!(native_space_preview);
             }
             Self::SelectedSpace => {
@@ -627,7 +662,9 @@ impl SectionKey {
             }
             Self::SpaceAudit => set!(space_audit),
             Self::SpaceServices => {
-                if error.is_some() { view.space_services.data = None; }
+                if error.is_some() {
+                    view.space_services.data = None;
+                }
                 set!(space_services);
             }
             Self::SelectedService => set!(selected_service),

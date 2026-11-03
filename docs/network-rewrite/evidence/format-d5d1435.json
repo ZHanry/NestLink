@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "scope": "Hosted Rust formatting only; no source compilation or acceptance claim",
+  "run_id": 41573058651,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41573058651",
+  "artifact_metadata": {
+    "id": 13201793613,
+    "node_id": "MDg6QXJ0aWZhY3QxMzIwMTc5MzYxMw==",
+    "name": "network-source-format-d5d1435993bf6995c7fbc074e49db6b087cde096-1",
+    "size_in_bytes": 42239,
+    "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13201793613",
+    "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13201793613/zip",
+    "expired": false,
+    "digest": "sha256:2a84a50db01c5084f1e6f2547290ab2c1eed07d686cbd634ba2694e05afa2cab",
+    "created_at": "2026-11-03T03:35:22Z",
+    "updated_at": "2026-11-03T03:35:22Z",
+    "expires_at": "2026-12-03T03:35:21Z",
+    "workflow_run": {
+      "id": 41573058651,
+      "repository_id": 1423035582,
+      "head_repository_id": 1423035582,
+      "head_branch": "main",
+      "head_sha": "d5d1435993bf6995c7fbc074e49db6b087cde096"
+    }
+  },
+  "official_archive_digest_matched": true,
+  "all_producer_file_bytes_and_hashes_matched": true,
+  "receipt": {
+    "source_revision": "d5d1435993bf6995c7fbc074e49db6b087cde096",
+    "workflow": "ZHanry/NestLink/.github/workflows/network-source-format.yml@refs/heads/main",
+    "workflow_dispatch_revision": "d5d1435993bf6995c7fbc074e49db6b087cde096",
+    "workflow_revision": "d5d1435993bf6995c7fbc074e49db6b087cde096",
+    "run_id": "41573058651",
+    "run_attempt": "1",
+    "runner_environment": "github-hosted",
+    "runner_os": "Linux",
+    "command": [
+      "python",
+      "-B",
+      "scripts/format-first-party.py",
+      "--receipt",
+      "/home/runner/work/_temp/network-source-format/formatter-commands.json"
+    ],
+    "return_code": 0,
+    "formatter_commands": {
+      "commands": [
+        {
+          "command": [
+            "cargo",
+            "metadata",
+            "--no-deps",
+            "--format-version",
+            "1",
+            "--locked"
+          ],
+          "return_code": 0
+        },
+        {
+          "command": [
+            "cargo",
+            "fmt",
+            "--package",
+            "nestlink-app-core",
+            "--package",
+            "nestlink-app-ipc",
+            "--package",
+            "nestlink-auth",
+            "--package",
+            "nestlink-connectivity",
+            "--package",
+            "nestlink-daemon",
+            "--package",
+            "nestlink-desktop",
+            "--package",
+            "nestlink-identity",
+            "--package",
+            "nestlink-local-ipc",
+            "--package",
+            "nestlink-media-codec",
+            "--package",
+            "nestlink-media-session",
+            "--package",
+            "nestlink-node",
+            "--package",
+            "nestlink-operations",
+            "--package",
+            "nestlink-platform-audio",
+            "--package",
+            "nestlink-platform-capture",
+            "--package",
+            "nestlink-platform-clipboard",
+            "--package",
+            "nestlink-platform-files",
+            "--package",
+            "nestlink-platform-input",
+            "--package",
+            "nestlink-platform-network",
+            "--package",
+            "nestlink-platform-security",
+            "--package",
+            "nestlink-platform-session",
+            "--package",
+            "nestlink-platform-tray",
+            "--package",
+            "nestlink-policy",
+            "--package",
+            "nestlink-privileged",
+            "--package",
+            "nestlink-protocol",
+            "--package",
+            "nestlink-remote",
+            "--package",
+            "nestlink-sdk",
+            "--package",
+            "nestlink-server",
+            "--package",
+            "nestlink-session",
+            "--package",
+            "nestlink-storage",
+            "--package",
+            "nestlink-transport-quic",
+            "--package",
+            "nestlink-transport-stream",
+            "--package",
+            "nestlink-transport-wss",
+            "--package",
+            "nestlink-traversal",
+            "--package",
+            "nestlink-turn-service",
+            "--package",
+            "nestlink-web",
+            "--package",
+            "xtask"
+          ],
+          "return_code": 0
+        }
+      ],
+      "packages": [
+        {
+          "name": "nestlink-protocol",
+          "manifest": "crates/protocol/Cargo.toml"
+        },
+        {
+          "name": "nestlink-identity",
+          "manifest": "crates/identity/Cargo.toml"
+        },
+        {
+          "name": "nestlink-auth",
+          "manifest": "crates/auth/Cargo.toml"
+        },
+        {
+          "name": "nestlink-policy",
+          "manifest": "crates/policy/Cargo.toml"
+        },
+        {
+          "name": "nestlink-session",
+          "manifest": "crates/session/Cargo.toml"
+        },
+        {
+          "name": "nestlink-storage",
+          "manifest": "crates/storage/Cargo.toml"
+        },
+        {
+          "name": "nestlink-operations",
+          "manifest": "crates/operations/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-security",
+          "manifest": "crates/platform-security/Cargo.toml"
+        },
+        {
+          "name": "nestlink-node",
+          "manifest": "crates/node/Cargo.toml"
+        },
+        {
+          "name": "nestlink-transport-stream",
+          "manifest": "crates/transport-stream/Cargo.toml"
+        },
+        {
+          "name": "nestlink-traversal",
+          "manifest": "crates/traversal/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-files",
+          "manifest": "crates/platform-files/Cargo.toml"
+        },
+        {
+          "name": "nestlink-remote",
+          "manifest": "crates/remote/Cargo.toml"
+        },
+        {
+          "name": "nestlink-connectivity",
+          "manifest": "crates/connectivity/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-network",
+          "manifest": "crates/platform-network/Cargo.toml"
+        },
+        {
+          "name": "nestlink-transport-quic",
+          "manifest": "crates/transport-quic/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-clipboard",
+          "manifest": "crates/platform-clipboard/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-session",
+          "manifest": "crates/platform-session/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-tray",
+          "manifest": "crates/platform-tray/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-input",
+          "manifest": "crates/platform-input/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-capture",
+          "manifest": "crates/platform-capture/Cargo.toml"
+        },
+        {
+          "name": "nestlink-media-codec",
+          "manifest": "crates/media-codec/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-audio",
+          "manifest": "crates/platform-audio/Cargo.toml"
+        },
+        {
+          "name": "nestlink-media-session",
+          "manifest": "crates/media-session/Cargo.toml"
+        },
+        {
+          "name": "nestlink-transport-wss",
+          "manifest": "crates/transport-wss/Cargo.toml"
+        },
+        {
+          "name": "nestlink-turn-service",
+          "manifest": "crates/turn-service/Cargo.toml"
+        },
+        {
+          "name": "nestlink-sdk",
+          "manifest": "crates/sdk/Cargo.toml"
+        },
+        {
+          "name": "nestlink-server",
+          "manifest": "apps/server/Cargo.toml"
+        },
+        {
+          "name": "nestlink-local-ipc",
+          "manifest": "crates/local-ipc/Cargo.toml"
+        },
+        {
+          "name": "nestlink-privileged",
+          "manifest": "apps/privileged/Cargo.toml"
+        },
+        {
+          "name": "nestlink-app-core",
+          "manifest": "crates/app-core/Cargo.toml"
+        },
+        {
+          "name": "nestlink-app-ipc",
+          "manifest": "crates/app-ipc/Cargo.toml"
+        },
+        {
+          "name": "nestlink-web",
+          "manifest": "apps/web/Cargo.toml"
+        },
+        {
+          "name": "nestlink-daemon",
+          "manifest": "apps/daemon/Cargo.toml"
+        },
+        {
+          "name": "nestlink-desktop",
+          "manifest": "apps/desktop/Cargo.toml"
+        },
+        {
+          "name": "xtask",
+          "manifest": "xtask/Cargo.toml"
+        }
+      ],
+      "return_code": 0,
+      "error": null
+    },
+    "changed_paths": [
+      "apps/desktop/src/lib.rs",
+      "apps/desktop/src/native_network.rs",
+      "apps/desktop/src/navigation.rs",
+      "apps/desktop/src/spaces.rs",
+      "apps/desktop/src/spaces/network.rs",
+      "apps/desktop/src/spaces/services.rs",
+      "apps/server/src/network_policy/preparation.rs",
+      "crates/app-core/src/action.rs",
+      "crates/app-core/src/lib.rs",
+      "crates/app-core/src/native_network.rs",
+      "crates/app-core/src/native_network/preparation.rs",
+      "crates/app-core/src/runtime.rs",
+      "crates/app-core/src/runtime/native_direct.rs",
+      "crates/app-core/src/runtime/native_routed.rs",
+      "crates/app-core/src/sdk_call.rs",
+      "crates/app-core/src/sdk_call/native_space.rs",
+      "crates/app-core/src/sdk_call/spaces.rs",
+      "crates/app-core/src/spaces.rs",
+      "crates/app-core/tests/spaces.rs",
+      "crates/app-core/tests/spaces/native_path.rs",
+      "crates/app-ipc/src/lib.rs",
+      "crates/identity/src/network.rs",
+      "crates/identity/src/network/preparation.rs",
+      "crates/sdk/src/network/routed.rs",
+      "crates/sdk/src/network/routed/control/preparation.rs",
+      "crates/sdk/src/network_management.rs",
+      "crates/sdk/src/network_management/preparation.rs",
+      "crates/sdk/tests/spaces/preparation.rs",
+      "crates/storage/src/network_policy.rs",
+      "crates/storage/src/network_policy/preparation.rs",
+      "crates/storage/tests/control/network_paths.rs",
+      "crates/storage/tests/control/network_paths/preparation.rs"
+    ],
+    "quality_or_acceptance_claimed": false,
+    "files": [
+      {
+        "path": "formatter-commands.json",
+        "sha256": "7e5380bdaba55b3263e59d5ca7ecd68200d41f0f842a4d59e6d251b39890d665",
+        "bytes": 5764
+      },
+      {
+        "path": "rustfmt.log",
+        "sha256": "211335551512383ba106e554ea94a4209f5c9711839588d21d52b97eb7a805ca",
+        "bytes": 5873
+      },
+      {
+        "path": "rustfmt.patch",
+        "sha256": "ff20997a87d6a57c2ba23e0d85f7b070a8b25767dca8bd42a4c085583021947b",
+        "bytes": 226768
+      }
+    ]
+  },
+  "review": "Applied the verified hosted patch after adapting exactly one unchanged context comment to the later documentation-only commit 49cacf7. The original artifact patch remains unchanged; all Rust formatting edits are from the hosted formatter. No local formatter executed."
+}

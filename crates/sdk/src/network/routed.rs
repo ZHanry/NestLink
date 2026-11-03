@@ -17,8 +17,8 @@ use tokio::{sync::watch, time::Instant};
 mod control;
 pub use control::{
     ContinuousRouteSetSession, PinnedNetworkSpace, RouteSetContinuationStatus,
-    RouteSetRecoveryProposal, VerifiedRemoteChain, VerifiedRemoteDirect, VerifiedRemoteRelay,
-    VerifiedRemotePreparation, VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet,
+    RouteSetRecoveryProposal, VerifiedRemoteChain, VerifiedRemoteDirect, VerifiedRemotePreparation,
+    VerifiedRemoteRelay, VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet,
 };
 pub use control::{RecoveredNetworkSession, RouteSetRecoveryConfig, RouteSetRecoverySource};
 use nestlink_transport_stream::owner::TaskOwner;

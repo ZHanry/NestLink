@@ -13,9 +13,9 @@ use std::{
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
 };
-mod spaces;
 mod native_space;
-pub(crate) use native_space::{PendingNativeSpace, ApprovedNativeSpace};
+mod spaces;
+pub(crate) use native_space::{ApprovedNativeSpace, PendingNativeSpace};
 
 #[derive(Clone)]
 pub(crate) struct DispatchFence {
@@ -49,9 +49,18 @@ pub(crate) enum Patch {
     Devices(Vec<DeviceView>),
     Services(ServicePage),
     Spaces(Vec<nestlink_protocol::spaces::SpaceView>),
-    SpaceDetails { context: String, value: crate::SpaceDetailsPage },
-    SpaceAudit { context: String, value: Vec<nestlink_protocol::spaces::SpaceAuditEntry> },
-    SpaceServices { context: String, value: crate::SpaceServicePage },
+    SpaceDetails {
+        context: String,
+        value: crate::SpaceDetailsPage,
+    },
+    SpaceAudit {
+        context: String,
+        value: Vec<nestlink_protocol::spaces::SpaceAuditEntry>,
+    },
+    SpaceServices {
+        context: String,
+        value: crate::SpaceServicePage,
+    },
     SelectedService(ServiceView),
     ServiceEdgeNamespace(ServiceEdgeNamespaceView),
     Requests(Vec<RemoteView>),
@@ -85,8 +94,12 @@ impl Patch {
                 view.space_audit = crate::Section::default();
                 view.space_services = crate::Section::default();
             }
-            Self::SpaceAudit { context, value } if view.space_context == context => view.space_audit.replace(value),
-            Self::SpaceServices { context, value } if view.space_context == context => view.space_services.replace(value),
+            Self::SpaceAudit { context, value } if view.space_context == context => {
+                view.space_audit.replace(value)
+            }
+            Self::SpaceServices { context, value } if view.space_context == context => {
+                view.space_services.replace(value)
+            }
             Self::SpaceDetails { .. } | Self::SpaceAudit { .. } | Self::SpaceServices { .. } => {}
             Self::SelectedService(value) => view.selected_service.replace(value),
             Self::ServiceEdgeNamespace(value) => view.service_edge_namespace.replace(value),
@@ -150,7 +163,9 @@ impl From<crate::NativeNetworkError> for Failure {
             NativeNetworkError::Busy => FailureKind::Capacity,
             NativeNetworkError::StaleGeneration => FailureKind::StaleGeneration,
             NativeNetworkError::Stopped => FailureKind::CoreStopped,
-            NativeNetworkError::Unavailable | NativeNetworkError::Persistence => FailureKind::NativeSessionUnavailable,
+            NativeNetworkError::Unavailable | NativeNetworkError::Persistence => {
+                FailureKind::NativeSessionUnavailable
+            }
         })
     }
 }
@@ -272,11 +287,29 @@ async fn execute(
     let patches = &mut response.patches;
     let local = || identity.ok_or_else(|| Failure::local(FailureKind::LocalIdentityRequired));
     match action {
-        Action::PreviewNativeSpace { request } => return native_space::preview(response, local()?, request,
-            native.ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?, fence).await,
-        Action::ConfirmNativeSpace { confirmation } => return native_space::confirm(response, local()?, confirmation,
-            pending_space.ok_or_else(|| Failure::local(FailureKind::Superseded))?, fence).await,
-        Action::Space { context, action } => return spaces::execute(response, context, action, fence).await,
+        Action::PreviewNativeSpace { request } => {
+            return native_space::preview(
+                response,
+                local()?,
+                request,
+                native.ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?,
+                fence,
+            )
+            .await;
+        }
+        Action::ConfirmNativeSpace { confirmation } => {
+            return native_space::confirm(
+                response,
+                local()?,
+                confirmation,
+                pending_space.ok_or_else(|| Failure::local(FailureKind::Superseded))?,
+                fence,
+            )
+            .await;
+        }
+        Action::Space { context, action } => {
+            return spaces::execute(response, context, action, fence).await;
+        }
         Action::SignIn {
             username,
             password,

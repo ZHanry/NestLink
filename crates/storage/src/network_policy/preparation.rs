@@ -29,7 +29,14 @@ impl Store {
         binding: NetworkRemotePreparationRequest,
         now_ms: u64,
     ) -> Result<NetworkRemotePreparationBundle, StorageError> {
-        self.network_remote_preparation_transaction(actor, Some(signer), space, request, binding, now_ms)
+        self.network_remote_preparation_transaction(
+            actor,
+            Some(signer),
+            space,
+            request,
+            binding,
+            now_ms,
+        )
     }
 
     /// Read the same committed pair after response loss. This never signs or
@@ -66,7 +73,10 @@ impl Store {
         let business = remote_paths::current_business(self, request, now_ms)?;
         if business.connection_generation != binding.connection_generation
             || URL_SAFE_NO_PAD.encode(digest(&business.encode_to_vec())) != binding.permit_sha256
-            || !business.paths.iter().any(|path| [Path::Direct as i32, Path::Relay as i32].contains(path))
+            || !business
+                .paths
+                .iter()
+                .any(|path| [Path::Direct as i32, Path::Relay as i32].contains(path))
         {
             return Err(StorageError::Forbidden);
         }
@@ -81,11 +91,20 @@ impl Store {
             return Err(StorageError::Forbidden);
         }
         let mut epochs = [0; 2];
-        let mut expires = business.expires_at_unix_ms.min(now_ms.saturating_add(PREPARATION_MS));
+        let mut expires = business
+            .expires_at_unix_ms
+            .min(now_ms.saturating_add(PREPARATION_MS));
         for (index, installation) in installations.iter().enumerate() {
-            let member = snapshot.members.get(*installation).filter(|m| m.active)
+            let member = snapshot
+                .members
+                .get(*installation)
+                .filter(|m| m.active)
                 .ok_or(StorageError::Forbidden)?;
-            let expected_key = if index == 0 { &business.controller_key_sha256 } else { &business.host_key_sha256 };
+            let expected_key = if index == 0 {
+                &business.controller_key_sha256
+            } else {
+                &business.host_key_sha256
+            };
             if digest(&member.public_key).as_slice() != expected_key.as_slice() {
                 return Err(StorageError::Forbidden);
             }
@@ -95,8 +114,16 @@ impl Store {
             }
         }
         let exists: [bool; 2] = [
-            tx.query_row("SELECT EXISTS(SELECT 1 FROM network_grants WHERE space_id=?1 AND grant_id=?2)", params![space, ids[0]], |r| r.get(0))?,
-            tx.query_row("SELECT EXISTS(SELECT 1 FROM network_grants WHERE space_id=?1 AND grant_id=?2)", params![space, ids[1]], |r| r.get(0))?,
+            tx.query_row(
+                "SELECT EXISTS(SELECT 1 FROM network_grants WHERE space_id=?1 AND grant_id=?2)",
+                params![space, ids[0]],
+                |r| r.get(0),
+            )?,
+            tx.query_row(
+                "SELECT EXISTS(SELECT 1 FROM network_grants WHERE space_id=?1 AND grant_id=?2)",
+                params![space, ids[1]],
+                |r| r.get(0),
+            )?,
         ];
         if exists == [false, false] {
             let signer = signer.ok_or(StorageError::Forbidden)?;
@@ -105,7 +132,9 @@ impl Store {
             }
             for index in 0..2 {
                 self.issue_network_membership_in_transaction(
-                    &tx, actor, signer,
+                    &tx,
+                    actor,
+                    signer,
                     NetworkMembershipRequest {
                         space_id: space.into(),
                         installation_id: installations[index].clone(),
@@ -114,14 +143,17 @@ impl Store {
                         expected_membership_epoch: epochs[index],
                         expires_at_ms: expires,
                     },
-                    &snapshot, true, now_ms,
+                    &snapshot,
+                    true,
+                    now_ms,
                 )?;
             }
         } else if exists != [true, true] {
             // A partial pair or an unrelated collision cannot mint its sibling.
             return Err(StorageError::Forbidden);
         }
-        let (controller, c) = remote_paths::member_credential(&tx, &snapshot, &ids[0], installations[0])?;
+        let (controller, c) =
+            remote_paths::member_credential(&tx, &snapshot, &ids[0], installations[0])?;
         let (host, h) = remote_paths::member_credential(&tx, &snapshot, &ids[1], installations[1])?;
         let scope = &c.claims().scope;
         if scope.not_before_ms != h.claims().scope.not_before_ms
@@ -136,8 +168,11 @@ impl Store {
         observe(&tx, space, now_ms)?;
         tx.commit()?;
         Ok(NetworkRemotePreparationBundle {
-            request_id: request.into(), binding, snapshot,
-            memberships: [controller, host], issued_at_ms,
+            request_id: request.into(),
+            binding,
+            snapshot,
+            memberships: [controller, host],
+            issued_at_ms,
         })
     }
 }

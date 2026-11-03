@@ -7,10 +7,10 @@ mod authority;
 mod network_access;
 mod offline;
 pub use offline::ConsumedOfflineBundle;
+mod preparation;
 mod route_sets;
 mod subnet;
 mod wireguard;
-mod preparation;
 
 fn base(space: &str) -> Result<String, SdkError> {
     if !valid_id(space) {

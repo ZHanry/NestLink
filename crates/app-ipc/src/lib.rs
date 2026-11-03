@@ -742,8 +742,12 @@ async fn serve_requests(
                     // The authenticated local connection supplies runtime identity;
                     // a command body cannot select a different daemon runtime.
                     match &mut action {
-                        nestlink_app_core::Action::PreviewNativeSpace { request } => request.runtime_id = connection.runtime_id().to_owned(),
-                        nestlink_app_core::Action::ConfirmNativeSpace { confirmation } => confirmation.runtime_id = connection.runtime_id().to_owned(),
+                        nestlink_app_core::Action::PreviewNativeSpace { request } => {
+                            request.runtime_id = connection.runtime_id().to_owned()
+                        }
+                        nestlink_app_core::Action::ConfirmNativeSpace { confirmation } => {
+                            confirmation.runtime_id = connection.runtime_id().to_owned()
+                        }
                         _ => {}
                     }
                     if tickets.len() >= 16 {
@@ -941,34 +945,38 @@ async fn serve_requests(
                         }
                     }
                 }
-                Command::Completion { operation } => match tickets.get_mut(&operation.get()) {
-                    None => Reply::Rejected {
-                        reason: Rejection::UnknownOperation,
-                    },
-                    Some(ticket) => match ticket.try_complete() {
-                        Ok(None) => Reply::Pending { operation },
-                        Err(_) => {
-                            tickets.remove(&operation.get());
-                            Reply::Rejected {
-                                reason: Rejection::Stopped,
-                            }
-                        }
-                        Ok(Some(mut completion)) => {
-                            tickets.remove(&operation.get());
-                            let sensitive = completion
+                Command::Completion { operation } => {
+                    match tickets.get_mut(&operation.get()) {
+                        None => Reply::Rejected {
+                            reason: Rejection::UnknownOperation,
+                        },
+                        Some(ticket) => {
+                            match ticket.try_complete() {
+                                Ok(None) => Reply::Pending { operation },
+                                Err(_) => {
+                                    tickets.remove(&operation.get());
+                                    Reply::Rejected {
+                                        reason: Rejection::Stopped,
+                                    }
+                                }
+                                Ok(Some(mut completion)) => {
+                                    tickets.remove(&operation.get());
+                                    let sensitive = completion
                                 .take_sensitive()
                                 .map(|material| match material {
                                     nestlink_app_core::SensitiveMaterial::SpaceInvitation { space_id, invitation_id, token } => {
                                         SensitiveReply::SpaceInvitation { space_id, invitation_id, token }
                                     }
                                 });
-                            Reply::Completed {
-                                operation: completion.result,
-                                sensitive,
+                                    Reply::Completed {
+                                        operation: completion.result,
+                                        sensitive,
+                                    }
+                                }
                             }
                         }
-                    },
-                },
+                    }
+                }
                 Command::Exit => {
                     let (reply, waiting) = oneshot::channel();
                     let (delivered, delivery) = oneshot::channel();

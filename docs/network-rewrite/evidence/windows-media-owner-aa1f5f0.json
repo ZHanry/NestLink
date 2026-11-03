@@ -1,0 +1,686 @@
+{
+  "schema_version": 1,
+  "source_revision": "aa1f5f0d865f656c79114d232bafcd58093ae403",
+  "run_id": 41570308930,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41570308930",
+  "conclusion": "failure",
+  "scope": "Completed actual Windows media owner hosted workflow; no target output qualification",
+  "jobs": [
+    {
+      "id": 125701392523,
+      "run_id": 41570308930,
+      "workflow_name": "Windows actual media owner diagnostics and strict boundaries",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/ZHanry/NestLink/actions/runs/41570308930",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVNHMvs8AAAAdRGMIiw",
+      "head_sha": "aa1f5f0d865f656c79114d232bafcd58093ae403",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125701392523",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41570308930/job/125701392523",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-03T03:07:44Z",
+      "started_at": "2026-11-03T03:07:46Z",
+      "completed_at": "2026-11-03T03:10:33Z",
+      "name": "native-peer-process (windows-2025)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T03:07:46Z",
+          "completed_at": "2026-11-03T03:07:47Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T03:07:47Z",
+          "completed_at": "2026-11-03T03:07:58Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T03:07:58Z",
+          "completed_at": "2026-11-03T03:08:10Z"
+        },
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T03:08:10Z",
+          "completed_at": "2026-11-03T03:10:29Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T03:10:29Z",
+          "completed_at": "2026-11-03T03:10:30Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T03:10:30Z",
+          "completed_at": "2026-11-03T03:10:32Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T03:10:32Z",
+          "completed_at": "2026-11-03T03:10:33Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/ZHanry/NestLink/check-runs/125701392523",
+      "labels": [
+        "windows-2025"
+      ],
+      "runner_id": 1000012084,
+      "runner_name": "GitHub Actions 1000012084",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 125701392755,
+      "run_id": 41570308930,
+      "workflow_name": "Windows actual media owner diagnostics and strict boundaries",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/ZHanry/NestLink/actions/runs/41570308930",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVNHMvs8AAAAdRGMJcw",
+      "head_sha": "aa1f5f0d865f656c79114d232bafcd58093ae403",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125701392755",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41570308930/job/125701392755",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-03T03:07:44Z",
+      "started_at": "2026-11-03T03:07:46Z",
+      "completed_at": "2026-11-03T03:23:19Z",
+      "name": "owner-boundaries (windows-2022)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T03:07:48Z",
+          "completed_at": "2026-11-03T03:07:51Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T03:07:51Z",
+          "completed_at": "2026-11-03T03:08:01Z"
+        },
+        {
+          "name": "Verify exact hosted source and preserve input provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T03:08:01Z",
+          "completed_at": "2026-11-03T03:08:02Z"
+        },
+        {
+          "name": "Verify diagnostic analyzer negatives on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T03:08:02Z",
+          "completed_at": "2026-11-03T03:08:03Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T03:08:03Z",
+          "completed_at": "2026-11-03T03:08:14Z"
+        },
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T03:08:14Z",
+          "completed_at": "2026-11-03T03:09:17Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T03:09:17Z",
+          "completed_at": "2026-11-03T03:09:39Z"
+        },
+        {
+          "name": "Select native codec prefix",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T03:09:39Z",
+          "completed_at": "2026-11-03T03:09:39Z"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T03:09:39Z",
+          "completed_at": "2026-11-03T03:11:40Z"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T03:11:40Z",
+          "completed_at": "2026-11-03T03:11:40Z"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 11,
+          "started_at": "2026-11-03T03:11:40Z",
+          "completed_at": "2026-11-03T03:15:05Z"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T03:15:05Z",
+          "completed_at": "2026-11-03T03:15:05Z"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 13,
+          "started_at": "2026-11-03T03:15:05Z",
+          "completed_at": "2026-11-03T03:17:06Z"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T03:17:06Z",
+          "completed_at": "2026-11-03T03:19:16Z"
+        },
+        {
+          "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-03T03:19:16Z",
+          "completed_at": "2026-11-03T03:19:58Z"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 16,
+          "started_at": "2026-11-03T03:19:58Z",
+          "completed_at": "2026-11-03T03:21:28Z"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 17,
+          "started_at": "2026-11-03T03:21:28Z",
+          "completed_at": "2026-11-03T03:21:41Z"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 18,
+          "started_at": "2026-11-03T03:21:41Z",
+          "completed_at": "2026-11-03T03:23:13Z"
+        },
+        {
+          "name": "Retain exact-source evidence including failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-03T03:23:13Z",
+          "completed_at": "2026-11-03T03:23:15Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 38,
+          "started_at": "2026-11-03T03:23:15Z",
+          "completed_at": "2026-11-03T03:23:16Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 39,
+          "started_at": "2026-11-03T03:23:16Z",
+          "completed_at": "2026-11-03T03:23:17Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/ZHanry/NestLink/check-runs/125701392755",
+      "labels": [
+        "windows-2022"
+      ],
+      "runner_id": 1000012083,
+      "runner_name": "GitHub Actions 1000012083",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 125701392812,
+      "run_id": 41570308930,
+      "workflow_name": "Windows actual media owner diagnostics and strict boundaries",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/ZHanry/NestLink/actions/runs/41570308930",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVNHMvs8AAAAdRGMJrA",
+      "head_sha": "aa1f5f0d865f656c79114d232bafcd58093ae403",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125701392812",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41570308930/job/125701392812",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-03T03:07:44Z",
+      "started_at": "2026-11-03T03:07:46Z",
+      "completed_at": "2026-11-03T03:09:26Z",
+      "name": "native-peer-process (ubuntu-24.04)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T03:07:47Z",
+          "completed_at": "2026-11-03T03:07:47Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T03:07:48Z",
+          "completed_at": "2026-11-03T03:07:50Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T03:07:50Z",
+          "completed_at": "2026-11-03T03:07:58Z"
+        },
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T03:07:58Z",
+          "completed_at": "2026-11-03T03:09:23Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T03:09:23Z",
+          "completed_at": "2026-11-03T03:09:24Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T03:09:24Z",
+          "completed_at": "2026-11-03T03:09:24Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T03:09:24Z",
+          "completed_at": "2026-11-03T03:09:25Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/ZHanry/NestLink/check-runs/125701392812",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000012086,
+      "runner_name": "GitHub Actions 1000012086",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 125701392879,
+      "run_id": 41570308930,
+      "workflow_name": "Windows actual media owner diagnostics and strict boundaries",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/ZHanry/NestLink/actions/runs/41570308930",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVNHMvs8AAAAdRGMJ7w",
+      "head_sha": "aa1f5f0d865f656c79114d232bafcd58093ae403",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125701392879",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41570308930/job/125701392879",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-03T03:07:44Z",
+      "started_at": "2026-11-03T03:07:46Z",
+      "completed_at": "2026-11-03T03:24:09Z",
+      "name": "owner-boundaries (windows-2025)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T03:07:47Z",
+          "completed_at": "2026-11-03T03:07:47Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T03:07:47Z",
+          "completed_at": "2026-11-03T03:07:57Z"
+        },
+        {
+          "name": "Verify exact hosted source and preserve input provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T03:07:57Z",
+          "completed_at": "2026-11-03T03:07:58Z"
+        },
+        {
+          "name": "Verify diagnostic analyzer negatives on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T03:07:58Z",
+          "completed_at": "2026-11-03T03:07:59Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T03:07:59Z",
+          "completed_at": "2026-11-03T03:08:11Z"
+        },
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T03:08:11Z",
+          "completed_at": "2026-11-03T03:09:19Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T03:09:19Z",
+          "completed_at": "2026-11-03T03:09:40Z"
+        },
+        {
+          "name": "Select native codec prefix",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T03:09:40Z",
+          "completed_at": "2026-11-03T03:09:41Z"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T03:09:41Z",
+          "completed_at": "2026-11-03T03:11:55Z"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T03:11:55Z",
+          "completed_at": "2026-11-03T03:11:56Z"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 11,
+          "started_at": "2026-11-03T03:11:56Z",
+          "completed_at": "2026-11-03T03:15:27Z"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T03:15:27Z",
+          "completed_at": "2026-11-03T03:15:27Z"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 13,
+          "started_at": "2026-11-03T03:15:27Z",
+          "completed_at": "2026-11-03T03:17:53Z"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T03:17:53Z",
+          "completed_at": "2026-11-03T03:20:02Z"
+        },
+        {
+          "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-03T03:20:02Z",
+          "completed_at": "2026-11-03T03:20:45Z"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 16,
+          "started_at": "2026-11-03T03:20:45Z",
+          "completed_at": "2026-11-03T03:22:16Z"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 17,
+          "started_at": "2026-11-03T03:22:16Z",
+          "completed_at": "2026-11-03T03:22:29Z"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 18,
+          "started_at": "2026-11-03T03:22:29Z",
+          "completed_at": "2026-11-03T03:24:03Z"
+        },
+        {
+          "name": "Retain exact-source evidence including failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-03T03:24:03Z",
+          "completed_at": "2026-11-03T03:24:04Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 38,
+          "started_at": "2026-11-03T03:24:04Z",
+          "completed_at": "2026-11-03T03:24:07Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 39,
+          "started_at": "2026-11-03T03:24:07Z",
+          "completed_at": "2026-11-03T03:24:07Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/ZHanry/NestLink/check-runs/125701392879",
+      "labels": [
+        "windows-2025"
+      ],
+      "runner_id": 1000012085,
+      "runner_name": "GitHub Actions 1000012085",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ],
+  "audited_logs": [
+    {
+      "file": "media-owner-windows-2022.log",
+      "bytes": 472663,
+      "sha256": "aebba9606ff9d46edd76d0c0f53a38f057fa7f868fd3cc120520fabbc9d39933",
+      "actual_test_summaries": [
+        "2026-11-03T03:08:03.4025513Z Ran 3 tests in 0.001s",
+        "2026-11-03T03:09:17.1362093Z test result: ok. 28 passed; 0 failed; 0 ignored; 0 measured; 61 filtered out; finished in 0.01s",
+        "2026-11-03T03:17:32.6632140Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.01s",
+        "2026-11-03T03:17:33.2544193Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.00s",
+        "2026-11-03T03:17:33.8433668Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 70 filtered out; finished in 0.01s",
+        "2026-11-03T03:17:34.5443599Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.00s",
+        "2026-11-03T03:17:35.0994153Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.00s",
+        "2026-11-03T03:18:26.2475870Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s",
+        "2026-11-03T03:19:03.0528235Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 64 filtered out; finished in 0.00s",
+        "2026-11-03T03:19:03.5813241Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.00s",
+        "2026-11-03T03:19:58.0867169Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 9.77s"
+      ],
+      "compiler_failures": [
+        "2026-11-03T03:14:33.8454070Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:14:33.8466210Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:124:28\u001b[0m",
+        "2026-11-03T03:14:33.8663581Z \u001b[31;1m\u001b[1m\u001b[96m124\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             permit_sha256: URL_SAFE_NO_PAD.encode(permit.digest()),\u001b[0m",
+        "2026-11-03T03:14:33.8695085Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:14:33.9393467Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:144:52\u001b[0m",
+        "2026-11-03T03:14:33.9847651Z \u001b[31;1m\u001b[1m\u001b[96m144\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             || view.policy.authority_public_key != URL_SAFE_NO_PAD.encode(pin.authority_key())\u001b[0m",
+        "2026-11-03T03:14:49.4327953Z \u001b[31;1m\u001b[1m\u001b[91merror\u001b[0m: could not compile `nestlink-sdk` (lib) due to 2 previous errors\u001b[0m",
+        "2026-11-03T03:16:54.1595487Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:16:54.1605802Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:124:28\u001b[0m",
+        "2026-11-03T03:16:54.1607817Z \u001b[31;1m\u001b[1m\u001b[96m124\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             permit_sha256: URL_SAFE_NO_PAD.encode(permit.digest()),\u001b[0m",
+        "2026-11-03T03:16:54.1793834Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:16:54.1803531Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:144:52\u001b[0m",
+        "2026-11-03T03:16:54.1805539Z \u001b[31;1m\u001b[1m\u001b[96m144\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             || view.policy.authority_public_key != URL_SAFE_NO_PAD.encode(pin.authority_key())\u001b[0m",
+        "2026-11-03T03:17:06.3798897Z \u001b[31;1m\u001b[1m\u001b[91merror\u001b[0m: could not compile `nestlink-sdk` (lib) due to 2 previous errors\u001b[0m",
+        "2026-11-03T03:21:08.0613356Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:21:08.1064834Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:124:28\u001b[0m",
+        "2026-11-03T03:21:08.2295998Z \u001b[31;1m\u001b[1m\u001b[96m124\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             permit_sha256: URL_SAFE_NO_PAD.encode(permit.digest()),\u001b[0m",
+        "2026-11-03T03:21:08.2307461Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:21:08.2376740Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:144:52\u001b[0m",
+        "2026-11-03T03:21:08.2386386Z \u001b[31;1m\u001b[1m\u001b[96m144\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             || view.policy.authority_public_key != URL_SAFE_NO_PAD.encode(pin.authority_key())\u001b[0m",
+        "2026-11-03T03:21:22.7180859Z \u001b[31;1m\u001b[1m\u001b[91merror\u001b[0m: could not compile `nestlink-sdk` (lib) due to 2 previous errors\u001b[0m",
+        "2026-11-03T03:21:30.9094074Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:21:30.9100785Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:124:28\u001b[0m",
+        "2026-11-03T03:21:30.9113822Z \u001b[31;1m\u001b[1m\u001b[96m124\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             permit_sha256: URL_SAFE_NO_PAD.encode(permit.digest()),\u001b[0m",
+        "2026-11-03T03:21:30.9219786Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:21:30.9226385Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:144:52\u001b[0m",
+        "2026-11-03T03:21:30.9241266Z \u001b[31;1m\u001b[1m\u001b[96m144\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             || view.policy.authority_public_key != URL_SAFE_NO_PAD.encode(pin.authority_key())\u001b[0m",
+        "2026-11-03T03:21:41.4440288Z \u001b[31;1m\u001b[1m\u001b[91merror\u001b[0m: could not compile `nestlink-sdk` (lib) due to 2 previous errors\u001b[0m",
+        "2026-11-03T03:22:51.3069743Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:22:51.3081923Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:124:28\u001b[0m",
+        "2026-11-03T03:22:51.3091620Z \u001b[31;1m\u001b[1m\u001b[96m124\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             permit_sha256: URL_SAFE_NO_PAD.encode(permit.digest()),\u001b[0m",
+        "2026-11-03T03:22:51.3540001Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:22:51.4364282Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:144:52\u001b[0m",
+        "2026-11-03T03:22:51.6260726Z \u001b[31;1m\u001b[1m\u001b[96m144\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             || view.policy.authority_public_key != URL_SAFE_NO_PAD.encode(pin.authority_key())\u001b[0m",
+        "2026-11-03T03:23:04.7007277Z \u001b[31;1m\u001b[1m\u001b[91merror\u001b[0m: could not compile `nestlink-sdk` (lib) due to 2 previous errors\u001b[0m"
+      ]
+    },
+    {
+      "file": "media-owner-windows-2025.log",
+      "bytes": 475411,
+      "sha256": "c2bf75abd41b4d03148edefe1da067d1f869f5aaa29e1434bb6a08115cc061a5",
+      "actual_test_summaries": [
+        "2026-11-03T03:07:59.1658692Z Ran 3 tests in 0.001s",
+        "2026-11-03T03:09:19.6870424Z test result: ok. 28 passed; 0 failed; 0 ignored; 0 measured; 61 filtered out; finished in 0.01s",
+        "2026-11-03T03:18:17.7165075Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.00s",
+        "2026-11-03T03:18:18.3105019Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.00s",
+        "2026-11-03T03:18:18.8759173Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 70 filtered out; finished in 0.00s",
+        "2026-11-03T03:18:19.5915037Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.00s",
+        "2026-11-03T03:18:20.0885854Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.00s",
+        "2026-11-03T03:19:10.4298414Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s",
+        "2026-11-03T03:19:47.7985972Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 64 filtered out; finished in 0.00s",
+        "2026-11-03T03:19:48.3602947Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.00s",
+        "2026-11-03T03:20:45.7540153Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 9.92s"
+      ],
+      "compiler_failures": [
+        "2026-11-03T03:14:53.1269569Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:14:53.1407718Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:124:28\u001b[0m",
+        "2026-11-03T03:14:53.1470765Z \u001b[31;1m\u001b[1m\u001b[96m124\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             permit_sha256: URL_SAFE_NO_PAD.encode(permit.digest()),\u001b[0m",
+        "2026-11-03T03:14:53.1581905Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:14:53.1739252Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:144:52\u001b[0m",
+        "2026-11-03T03:14:53.1819024Z \u001b[31;1m\u001b[1m\u001b[96m144\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             || view.policy.authority_public_key != URL_SAFE_NO_PAD.encode(pin.authority_key())\u001b[0m",
+        "2026-11-03T03:15:08.3125026Z \u001b[31;1m\u001b[1m\u001b[91merror\u001b[0m: could not compile `nestlink-sdk` (lib) due to 2 previous errors\u001b[0m",
+        "2026-11-03T03:17:42.4177407Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:17:42.4178612Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:124:28\u001b[0m",
+        "2026-11-03T03:17:42.4184597Z \u001b[31;1m\u001b[1m\u001b[96m124\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             permit_sha256: URL_SAFE_NO_PAD.encode(permit.digest()),\u001b[0m",
+        "2026-11-03T03:17:42.4346857Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:17:42.4349237Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:144:52\u001b[0m",
+        "2026-11-03T03:17:42.4355778Z \u001b[31;1m\u001b[1m\u001b[96m144\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             || view.policy.authority_public_key != URL_SAFE_NO_PAD.encode(pin.authority_key())\u001b[0m",
+        "2026-11-03T03:17:53.4889668Z \u001b[31;1m\u001b[1m\u001b[91merror\u001b[0m: could not compile `nestlink-sdk` (lib) due to 2 previous errors\u001b[0m",
+        "2026-11-03T03:21:53.7682247Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:21:53.7928301Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:124:28\u001b[0m",
+        "2026-11-03T03:21:53.8731144Z \u001b[31;1m\u001b[1m\u001b[96m124\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             permit_sha256: URL_SAFE_NO_PAD.encode(permit.digest()),\u001b[0m",
+        "2026-11-03T03:21:53.9561992Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:21:53.9732284Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:144:52\u001b[0m",
+        "2026-11-03T03:21:54.0155103Z \u001b[31;1m\u001b[1m\u001b[96m144\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             || view.policy.authority_public_key != URL_SAFE_NO_PAD.encode(pin.authority_key())\u001b[0m",
+        "2026-11-03T03:22:08.3887458Z \u001b[31;1m\u001b[1m\u001b[91merror\u001b[0m: could not compile `nestlink-sdk` (lib) due to 2 previous errors\u001b[0m",
+        "2026-11-03T03:22:18.9140772Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:22:18.9148395Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:124:28\u001b[0m",
+        "2026-11-03T03:22:18.9162271Z \u001b[31;1m\u001b[1m\u001b[96m124\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             permit_sha256: URL_SAFE_NO_PAD.encode(permit.digest()),\u001b[0m",
+        "2026-11-03T03:22:18.9259291Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:22:18.9266400Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:144:52\u001b[0m",
+        "2026-11-03T03:22:18.9279553Z \u001b[31;1m\u001b[1m\u001b[96m144\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             || view.policy.authority_public_key != URL_SAFE_NO_PAD.encode(pin.authority_key())\u001b[0m",
+        "2026-11-03T03:22:29.5509853Z \u001b[31;1m\u001b[1m\u001b[91merror\u001b[0m: could not compile `nestlink-sdk` (lib) due to 2 previous errors\u001b[0m",
+        "2026-11-03T03:23:38.7636117Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:23:38.7894468Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:124:28\u001b[0m",
+        "2026-11-03T03:23:38.8259653Z \u001b[31;1m\u001b[1m\u001b[96m124\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             permit_sha256: URL_SAFE_NO_PAD.encode(permit.digest()),\u001b[0m",
+        "2026-11-03T03:23:38.8618510Z \u001b[31;1m\u001b[1m\u001b[91merror[E0425]\u001b[0m\u001b[1m\u001b[97m: cannot find value `URL_SAFE_NO_PAD` in this scope\u001b[0m\u001b[0m",
+        "2026-11-03T03:23:38.8925549Z \u001b[31;1m   \u001b[1m\u001b[96m--> \u001b[0mcrates\\sdk\\src\\network\\routed\\control\\preparation.rs:144:52\u001b[0m",
+        "2026-11-03T03:23:38.9280289Z \u001b[31;1m\u001b[1m\u001b[96m144\u001b[0m \u001b[1m\u001b[96m|\u001b[0m             || view.policy.authority_public_key != URL_SAFE_NO_PAD.encode(pin.authority_key())\u001b[0m",
+        "2026-11-03T03:23:52.4705967Z \u001b[31;1m\u001b[1m\u001b[91merror\u001b[0m: could not compile `nestlink-sdk` (lib) due to 2 previous errors\u001b[0m"
+      ]
+    }
+  ],
+  "finding": "Both owner jobs reach SDK compilation and fail missing URL_SAFE_NO_PAD at preparation.rs:124 and :144. The diagnostic tools themselves build and pass strict clippy separately, but this owner workflow remains failed. Explicit import is committed in01b1a5f and awaits new exact-source qualification.",
+  "other_jobs": "Both native-peer-process jobs succeed according to completed API metadata; their complete logs are not independently audited here.",
+  "whole_task_passed": false,
+  "release_ready": false
+}

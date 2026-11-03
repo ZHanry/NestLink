@@ -5,7 +5,9 @@ use nestlink_app_core::{Action, Page, Snapshot};
 impl DesktopApp {
     pub(crate) fn navigate(&mut self, screen: Screen, snapshot: &Snapshot) {
         self.message = None;
-        if self.screen == Screen::Spaces && screen != Screen::Spaces { self.space_panel.close(); }
+        if self.screen == Screen::Spaces && screen != Screen::Spaces {
+            self.space_panel.close();
+        }
         if snapshot.native_offline.is_some() {
             self.screen = Screen::Remote;
             return;
@@ -264,7 +266,12 @@ impl DesktopApp {
                             "内网穿透",
                             "Tunnels",
                         ),
-                        (Screen::Spaces, widgets::NavIcon::Devices, "网络空间", "Spaces"),
+                        (
+                            Screen::Spaces,
+                            widgets::NavIcon::Devices,
+                            "网络空间",
+                            "Spaces",
+                        ),
                     ] {
                         if widgets::nav_button(ui, icon, self.t(zh, en), self.screen == screen)
                             .clicked()

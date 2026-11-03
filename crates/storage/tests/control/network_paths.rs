@@ -360,7 +360,8 @@ fn renewal_and_reconnection_require_a_new_chain_for_the_exact_business_generatio
         let mut f = Setup::new(true)?;
         let issuance = f.issuance();
         let id = issuance.request.path_grant_id.clone();
-        let parent = f.store
+        let parent = f
+            .store
             .issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)?;
         let previous = f
             .store

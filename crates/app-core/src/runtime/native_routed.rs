@@ -304,8 +304,19 @@ pub(super) async fn establish(
     let baseline = *network.borrow();
     let prepare = async {
         fence.check()?;
-        let prepared = native_direct::prepared_scope(client, identity, config, &permit, &pin,
-            [&local.controller_membership_grant_id, &local.host_membership_grant_id], &fence).await?;
+        let prepared = native_direct::prepared_scope(
+            client,
+            identity,
+            config,
+            &permit,
+            &pin,
+            [
+                &local.controller_membership_grant_id,
+                &local.host_membership_grant_id,
+            ],
+            &fence,
+        )
+        .await?;
         let route = if key.is_host {
             loop {
                 fence.check()?;
@@ -328,42 +339,46 @@ pub(super) async fn establish(
                 }
             }
         } else {
-            let (policy_epoch, member_expiry) = if let Some(prepared) = prepared { prepared } else {
-            let policy = client
-                .sdk
-                .network_policy(&local.space_id)
-                .await
-                .map_err(Failure::from)?;
-            let authority = URL_SAFE_NO_PAD
-                .decode(&policy.authority_public_key)
-                .map_err(|_| Failure::local(FailureKind::Trust))?;
-            if authority.as_slice() != local.authority_key
-                || policy.deployment_id != local.deployment_id
-                || policy.space_id != local.space_id
-            {
-                return Err(Failure::local(FailureKind::Trust));
-            }
-            let mut expires = permit.claims().expires_at_unix_ms;
-            for id in [
-                &local.controller_membership_grant_id,
-                &local.host_membership_grant_id,
-            ] {
-                let view = client
+            let (policy_epoch, member_expiry) = if let Some(prepared) = prepared {
+                prepared
+            } else {
+                let policy = client
                     .sdk
-                    .network_membership_grant(&local.space_id, id)
+                    .network_policy(&local.space_id)
                     .await
                     .map_err(Failure::from)?;
-                let signed = nestlink_sdk::network_management::decode_network_grant(&view)
-                    .map_err(Failure::from)?;
-                let claims =
-                    nestlink_protocol::network::GrantClaims::decode_canonical(&signed.claims)
-                        .map_err(|_| Failure::local(FailureKind::Trust))?;
-                expires = expires.min(claims.scope().expires_at_ms);
-            }
-            (policy.policy_epoch, expires)
+                let authority = URL_SAFE_NO_PAD
+                    .decode(&policy.authority_public_key)
+                    .map_err(|_| Failure::local(FailureKind::Trust))?;
+                if authority.as_slice() != local.authority_key
+                    || policy.deployment_id != local.deployment_id
+                    || policy.space_id != local.space_id
+                {
+                    return Err(Failure::local(FailureKind::Trust));
+                }
+                let mut expires = permit.claims().expires_at_unix_ms;
+                for id in [
+                    &local.controller_membership_grant_id,
+                    &local.host_membership_grant_id,
+                ] {
+                    let view = client
+                        .sdk
+                        .network_membership_grant(&local.space_id, id)
+                        .await
+                        .map_err(Failure::from)?;
+                    let signed = nestlink_sdk::network_management::decode_network_grant(&view)
+                        .map_err(Failure::from)?;
+                    let claims =
+                        nestlink_protocol::network::GrantClaims::decode_canonical(&signed.claims)
+                            .map_err(|_| Failure::local(FailureKind::Trust))?;
+                    expires = expires.min(claims.scope().expires_at_ms);
+                }
+                (policy.policy_epoch, expires)
             };
             let now = unix_millis().ok_or_else(|| Failure::local(FailureKind::Trust))?;
-            let mut expires = member_expiry.min(permit.claims().expires_at_unix_ms).min(now.saturating_add(30_000));
+            let mut expires = member_expiry
+                .min(permit.claims().expires_at_unix_ms)
+                .min(now.saturating_add(30_000));
             let discovery = client
                 .sdk
                 .discover_relay_nodes(identity, &permit)

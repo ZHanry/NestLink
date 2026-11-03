@@ -2088,10 +2088,18 @@ impl DesktopApp {
                     let flow_notice = self.remote_flow_completed(submission_id, &result);
                     let space_visible = self.screen == Screen::Spaces
                         && self.space_panel.context_matches(&snapshot);
-                    let space_origin = snapshot.server.as_ref().filter(|_| space_visible)
+                    let space_origin = snapshot
+                        .server
+                        .as_ref()
+                        .filter(|_| space_visible)
                         .map(|server| server.origin.as_str());
-                    self.space_panel.completed(submission_id, self.bridge.runtime_id().as_deref(),
-                        &result, sensitive, space_origin);
+                    self.space_panel.completed(
+                        submission_id,
+                        self.bridge.runtime_id().as_deref(),
+                        &result,
+                        sensitive,
+                        space_origin,
+                    );
                     let tone = match result.status {
                         OperationStatus::Succeeded => MessageTone::Success,
                         OperationStatus::Queued
