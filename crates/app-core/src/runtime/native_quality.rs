@@ -207,6 +207,7 @@ mod tests {
             request_id: "original-request".into(),
             connection_generation: 7,
             lease_sequence: 2,
+            recovery_chain_origin_generation: None,
             status: NativeSessionStatus::Connected,
             host_view_authorized: false,
             path: Some(Path::Direct as i32),

@@ -841,6 +841,7 @@ mod tests {
                     host_view_authorized: false,
                     path: None,
                     quality: None,
+                    recovery_chain_origin_generation: None,
                     stop_reason: None,
                     stop_effects: None,
                     cleanup: None,

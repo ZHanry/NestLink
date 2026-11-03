@@ -930,6 +930,11 @@ async fn product_route_set_recovers_after_total_old_node_loss_releases_pressed_i
         })
         .await
         .map_err(|error| phase("successor generation connected", error))?;
+        assert_eq!(
+            handle.snapshot().native_session.data.as_ref()
+                .ok_or("proved relay successor snapshot missing")?.recovery_chain_origin_generation,
+            Some(old_binding.connection_generation)
+        );
     }
     assert!(
         controller

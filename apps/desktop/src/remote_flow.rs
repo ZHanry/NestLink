@@ -302,17 +302,22 @@ impl DesktopApp {
         let stage = flow.stage;
         let active = flow.active();
         let error = flow.error.clone();
+        let recovering = stage == Stage::Connected && snapshot.native_session.data.as_ref()
+            .is_some_and(|session| Some(session.request_id.as_str()) == flow.request.as_deref()
+                && session.is_recovering());
         ui.add_space(12.);
         egui::Frame::group(ui.style()).inner_margin(18).show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {
-                if active { ui.spinner(); }
-                ui.strong(self.t(match stage {
+                if active || recovering { ui.spinner(); }
+                ui.strong(if recovering {
+                    self.t("会话正在恢复", "Recovering session")
+                } else { self.t(match stage {
                     Stage::Requesting => "正在申请访问", Stage::Approval => "等待被控端批准", Stage::Permit => "正在获取会话许可",
                     Stage::Connecting => "正在连接设备", Stage::Connected => "会话已建立", Stage::Ended => "会话已结束", Stage::Failed => "连接未完成",
                 }, match stage {
                     Stage::Requesting => "Requesting access", Stage::Approval => "Waiting for host approval", Stage::Permit => "Authorizing session",
                     Stage::Connecting => "Connecting to device", Stage::Connected => "Session established", Stage::Ended => "Session ended", Stage::Failed => "Connection incomplete",
-                }));
+                }) });
             });
             ui.horizontal_wrapped(|ui| {
                 for (index, (zh, en)) in [("申请访问", "Request"), ("授权", "Approval"), ("建立连接", "Connect"), ("远程画面", "Screen")].into_iter().enumerate() {

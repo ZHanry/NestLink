@@ -432,7 +432,11 @@ impl DesktopApp {
                                 }
                             }
                             Some(NativeSessionStatus::Establishing) => {
-                                self.t("正在建立连接", "Establishing connection")
+                                if session.is_some_and(|session| session.is_recovering()) {
+                                    self.t("正在恢复连接", "Recovering connection")
+                                } else {
+                                    self.t("正在建立连接", "Establishing connection")
+                                }
                             }
                             Some(NativeSessionStatus::Stopping) => {
                                 self.t("正在断开连接", "Disconnecting")
@@ -1001,6 +1005,9 @@ impl DesktopApp {
             ui.horizontal_wrapped(|ui| {
                 ui.label(egui::RichText::new(self.t("当前会话", "Current session")).strong());
                 ui.label(match session.status {
+                    NativeSessionStatus::Establishing if session.is_recovering() => {
+                        self.t("正在恢复连接", "Recovering connection")
+                    }
                     NativeSessionStatus::Establishing => self.t("正在建立", "Establishing"),
                     NativeSessionStatus::Connected => self.t("已连接", "Connected"),
                     NativeSessionStatus::Stopping => self.t("正在停止", "Stopping"),
@@ -1111,7 +1118,18 @@ impl DesktopApp {
             }
             match session.status {
                 NativeSessionStatus::Establishing => {
-                    if let Some(operation) = snapshot.native_session.loading
+                    if session.is_recovering() {
+                        ui.small(self.t(
+                            "旧会话已清理，正在原授权期限内重新证明。恢复后请重新确认显示器和控制。",
+                            "The old session is cleaned up. Reproving within the original authorization; confirm the display and control again after recovery.",
+                        ));
+                        if ui.button(self.t("停止恢复", "Stop recovery")).clicked() {
+                            self.action(snapshot, Action::StopNativeSession {
+                                request_id: session.request_id.clone(),
+                                connection_generation: session.connection_generation,
+                            });
+                        }
+                    } else if let Some(operation) = snapshot.native_session.loading
                         && ui.button(self.t("取消连接", "Cancel connection")).clicked()
                     {
                         self.send(snapshot, Command::Cancel { operation });

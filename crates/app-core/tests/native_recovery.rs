@@ -264,6 +264,14 @@ async fn pair_with_gate(gate: Option<Arc<Gate>>) -> Result<Pair> {
         ),
         stage("host initial native connection", success(host_start)),
     )?;
+    for handle in [&controller_handle, &host_handle] {
+        assert_eq!(
+            handle.snapshot().native_session.data.as_ref()
+                .ok_or("initial session snapshot missing")?.recovery_chain_origin_generation,
+            None,
+            "explicit starts must not inherit a recovery lineage"
+        );
+    }
     let binding = host_handle
         .native_host_session_binding()
         .ok_or("proved host binding missing")?;
@@ -620,6 +628,13 @@ async fn recovery_waits_for_held_input_and_media_cleanup_then_proves_a_fresh_gen
         .ok_or("replacement proof missing")?;
     assert_eq!(replacement.request_id, pair.request_id);
     assert_eq!(replacement.connection_generation, old + 1);
+    for handle in [&pair.controller_handle, &pair.host_handle] {
+        assert_eq!(
+            handle.snapshot().native_session.data.as_ref()
+                .ok_or("proved successor snapshot missing")?.recovery_chain_origin_generation,
+            Some(old)
+        );
+    }
     assert!(!pair.host_handle.native_host_input_authorized(&pair.binding));
     assert!(pair.controller_handle.native_input_layout()?.is_none());
     assert!(
@@ -643,6 +658,13 @@ async fn recovery_waits_for_held_input_and_media_cleanup_then_proves_a_fresh_gen
         old + 2,
     )
     .await?;
+    for handle in [&pair.controller_handle, &pair.host_handle] {
+        assert_eq!(
+            handle.snapshot().native_session.data.as_ref()
+                .ok_or("second proved successor snapshot missing")?.recovery_chain_origin_generation,
+            Some(old)
+        );
+    }
     pair.shutdown().await;
     Ok(())
 }
@@ -743,6 +765,7 @@ async fn revoked_recovery_retains_completed_cleanup_without_attaching_successor_
         .unwrap()
         .clone();
     assert_eq!(previous.status, NativeSessionStatus::Establishing);
+    assert!(previous.is_recovering());
     assert_eq!(previous.cleanup, Some(NativeSessionCleanup::Succeeded));
 
     // The controller cannot commit a successor until this real HTTP response

@@ -29,6 +29,7 @@ pub mod picker;
 mod privileged_input;
 mod remote;
 mod remote_flow;
+mod remote_recovery;
 mod request_task_dialog;
 mod services;
 mod spaces;
@@ -195,6 +196,7 @@ pub struct DesktopApp {
     remote_viewport_open: bool,
     remote_tools_open: bool,
     remote_viewport_target: Option<RemoteViewportTarget>,
+    remote_viewport_owner: Option<remote_recovery::ViewportOwner>,
     remote_window_cleanup: Option<RemoteWindowCleanup>,
     remote_inspection_submission: Option<u64>,
     remote_inspection_completed: bool,
@@ -303,6 +305,7 @@ impl DesktopApp {
             remote_viewport_open: false,
             remote_tools_open: false,
             remote_viewport_target: None,
+            remote_viewport_owner: None,
             remote_window_cleanup: None,
             remote_inspection_submission: None,
             remote_inspection_completed: false,
@@ -342,6 +345,7 @@ impl DesktopApp {
     }
     fn clear_private_view(&mut self, context: &egui::Context) {
         self.release_native_control();
+        self.remote_viewport_owner = None;
         self.credentials.clear();
         self.sensitive.take();
         self.pending_confirmation.take();
@@ -1106,6 +1110,11 @@ impl DesktopApp {
             return;
         }
         self.remote_viewport_target = Some(target.clone());
+        self.remote_viewport_owner = remote_recovery::ViewportOwner::new(
+            snapshot,
+            &target,
+            self.bridge.runtime_id(),
+        );
         self.remote_window_cleanup = None;
         self.remote_viewport_open = true;
         self.clear_video();
@@ -1142,6 +1151,7 @@ impl DesktopApp {
     }
 
     fn show_remote_viewport(&mut self, context: &egui::Context, snapshot: &Snapshot) {
+        self.follow_recovered_viewport(snapshot);
         if !self.remote_viewport_open {
             self.bridge.set_video_interest(false);
             self.bridge.set_input_interest(false);
@@ -1345,7 +1355,11 @@ impl DesktopApp {
                             } else {
                                 ui.strong(match session.map(|session| session.status) {
                                     Some(NativeSessionStatus::Establishing) => {
-                                        self.t("正在建立连接", "Establishing connection")
+                                        if session.is_some_and(|session| session.is_recovering()) {
+                                            self.t("正在恢复连接", "Recovering connection")
+                                        } else {
+                                            self.t("正在建立连接", "Establishing connection")
+                                        }
                                     }
                                     Some(NativeSessionStatus::Connected) => {
                                         self.t("已连接", "Connected")
@@ -1491,6 +1505,7 @@ impl DesktopApp {
         if self.remote_window_cleanup.is_some() {
             return;
         }
+        self.follow_recovered_viewport(snapshot);
         self.release_native_control();
         let Some(target) = self.remote_viewport_target.clone() else {
             self.remote_viewport_open = false;
@@ -1662,6 +1677,7 @@ impl DesktopApp {
     }
 
     fn update_remote_viewport_cleanup(&mut self, snapshot: &Snapshot, context: &egui::Context) {
+        self.follow_recovered_cleanup(snapshot);
         let english = self.english;
         let inspection_completed = self.remote_inspection_completed;
         let inspection_succeeded = self.remote_inspection_succeeded;
@@ -1779,6 +1795,7 @@ impl DesktopApp {
         if should_close {
             self.remote_window_cleanup = None;
             self.remote_viewport_target = None;
+            self.remote_viewport_owner = None;
             self.remote_viewport_open = false;
             self.clear_video();
             self.bridge.set_video_interest(false);
@@ -2146,6 +2163,7 @@ impl DesktopApp {
         if self.connected && !self.exiting {
             self.remote_window_cleanup = None;
             self.remote_viewport_target = None;
+            self.remote_viewport_owner = None;
             self.remote_viewport_open = false;
             context.send_viewport_cmd_to(
                 egui::ViewportId::from_hash_of("nestlink-remote-session"),
@@ -2700,6 +2718,7 @@ mod video_tests {
                 host_view_authorized: false,
                 path: Some(1),
                 quality: None,
+                recovery_chain_origin_generation: None,
                 stop_reason: None,
                 stop_effects: None,
                 cleanup: None,
@@ -2999,6 +3018,7 @@ mod video_tests {
                 host_view_authorized: false,
                 path: None,
                 quality: None,
+                recovery_chain_origin_generation: None,
                 stop_reason: None,
                 stop_effects: None,
                 cleanup: None,

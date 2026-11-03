@@ -257,6 +257,10 @@ impl Bridge {
             .unwrap_or_else(std::sync::PoisonError::into_inner) = Arc::new(snapshot);
     }
     #[cfg(test)]
+    pub(crate) fn layout_runtime_id(&mut self, runtime_id: Option<String>) {
+        *self.runtime_id.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = runtime_id;
+    }
+    #[cfg(test)]
     pub(crate) fn layout_enable_commands(&mut self) {
         let (commands, receiver) = mpsc::sync_channel(16);
         self.commands = commands;
@@ -1856,6 +1860,7 @@ mod video_bridge_tests {
                     host_view_authorized: false,
                     path: None,
                     quality: None,
+                    recovery_chain_origin_generation: None,
                     stop_reason: Some(nestlink_app_core::NativeSessionStopReason::Revoked),
                     stop_effects: None,
                     cleanup: None,
@@ -1882,6 +1887,7 @@ mod video_bridge_tests {
                 host_view_authorized: false,
                 path: None,
                 quality: None,
+                recovery_chain_origin_generation: None,
                 stop_reason: None,
                 stop_effects: None,
                 cleanup: None,

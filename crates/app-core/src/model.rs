@@ -242,6 +242,12 @@ pub struct NativeSessionView {
     pub request_id: String,
     pub connection_generation: u64,
     pub lease_sequence: u64,
+    /// First generation of this uninterrupted, internally proved recovery
+    /// lineage. Every successor is authenticated as exactly previous + 1;
+    /// explicit starts clear the receipt. Retained through cleanup so a UI
+    /// that missed intermediate snapshots can close its own successor.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recovery_chain_origin_generation: Option<u64>,
     pub status: NativeSessionStatus,
     /// True only for a connected, locally hosted session whose validated
     /// permit grants View. UI capture sources use this as their authorization gate.
@@ -255,6 +261,23 @@ pub struct NativeSessionView {
     pub stop_effects: Option<NativeSessionEffects>,
     pub cleanup: Option<NativeSessionCleanup>,
     pub failure: Option<Failure>,
+}
+
+impl NativeSessionView {
+    /// The original business owner has completed cleanup and the core retains
+    /// its bounded recovery source. This state grants no screen or input I/O.
+    pub fn is_recovering(&self) -> bool {
+        self.status == NativeSessionStatus::Establishing
+            && matches!(
+                self.stop_reason,
+                Some(NativeSessionStopReason::TransportLost | NativeSessionStopReason::NetworkChanged)
+            )
+            && matches!(
+                self.cleanup,
+                Some(NativeSessionCleanup::Succeeded | NativeSessionCleanup::NotAttached)
+            )
+            && self.failure.is_none()
+    }
 }
 
 /// Sanitized selected-carrier facts and local measurements. No peer address,

@@ -4014,6 +4014,7 @@ impl Actor {
                 request_id: request_id.clone(),
                 connection_generation: initial_generation,
                 lease_sequence: initial_sequence,
+                recovery_chain_origin_generation: None,
                 status: NativeSessionStatus::Establishing,
                 host_view_authorized: false,
                 path: None,
@@ -4854,11 +4855,16 @@ impl Actor {
         } else {
             NativeSessionStatus::Stopped
         };
+        let recovery_chain_origin_generation = self.view.native_session.data.as_ref()
+            .filter(|previous| previous.request_id == request_id
+                && previous.connection_generation == generation)
+            .and_then(|previous| previous.recovery_chain_origin_generation);
         self.view.native_session = crate::Section {
             data: Some(Arc::new(NativeSessionView {
                 request_id,
                 connection_generation: generation,
                 lease_sequence: sequence,
+                recovery_chain_origin_generation,
                 status,
                 host_view_authorized: false,
                 path,
@@ -5377,6 +5383,17 @@ impl Actor {
                     && cancelled.is_none()
                     && !deadline_expired
                     && self.native_recovery_context_current(&established.recovery);
+                let recovery_chain_origin_generation = expected_connection_generation.and_then(|previous| {
+                    let stopped = self.view.native_session.data.as_ref()?;
+                    (envelope.is_none()
+                        && accepted
+                        && previous.checked_add(1) == Some(key.connection_generation)
+                        && stopped.request_id == key.request_id
+                        && stopped.connection_generation == previous
+                        && stopped.is_recovering())
+                        .then_some(stopped.recovery_chain_origin_generation.unwrap_or(previous))
+                        .filter(|origin| *origin > 0 && *origin <= previous)
+                });
                 if deadline_expired {
                     self.local_stop_reason = Some(NativeSessionStopReason::Expired);
                 }
@@ -5658,6 +5675,7 @@ impl Actor {
                         request_id: key.request_id.clone(),
                         connection_generation: key.connection_generation,
                         lease_sequence: key.lease_sequence,
+                        recovery_chain_origin_generation,
                         status: if accepted {
                             NativeSessionStatus::Connected
                         } else {
@@ -5748,6 +5766,7 @@ impl Actor {
                         request_id: request_id.clone(),
                         connection_generation: generation,
                         lease_sequence: previous.map_or(0, |session| session.lease_sequence),
+                        recovery_chain_origin_generation: previous.and_then(|session| session.recovery_chain_origin_generation),
                         status: if cancelled.is_some() {
                             NativeSessionStatus::Stopped
                         } else {
@@ -6466,6 +6485,7 @@ mod browser_host_data_contract_tests {
             host_view_authorized: true,
             path: Some(1),
             quality: None,
+            recovery_chain_origin_generation: None,
             stop_reason: None,
             stop_effects: None,
             cleanup: None,

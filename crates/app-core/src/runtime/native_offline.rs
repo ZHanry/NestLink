@@ -437,6 +437,7 @@ impl NativeOfflineSession {
             host_view_authorized: key.host_view_authorized,
             path: Some(key.path),
             quality: None,
+            recovery_chain_origin_generation: None,
             stop_reason: None,
             stop_effects: None,
             cleanup: None,

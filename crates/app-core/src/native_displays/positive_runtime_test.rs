@@ -78,6 +78,7 @@ fn core_handle(core: &AppCore, host: bool) -> (CoreHandle, watch::Sender<Arc<Sna
         host_view_authorized: host,
         path: Some(nestlink_protocol::Path::Direct as i32),
         quality: None,
+        recovery_chain_origin_generation: None,
         stop_reason: None,
         stop_effects: None,
         cleanup: None,
