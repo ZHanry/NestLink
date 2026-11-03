@@ -4,9 +4,9 @@
 use super::{Result, Sdk};
 use axum::{http::Method, response::IntoResponse};
 use std::{
-    io,
+    io::{self, Read, Seek, SeekFrom},
     net::SocketAddr,
-    path::Path,
+    path::{Path, PathBuf},
     process::Stdio,
     sync::{
         Arc, OnceLock,
@@ -14,6 +14,55 @@ use std::{
     },
     time::{Duration, Instant},
 };
+
+// Keep a bounded copy in the original harness stderr before TempDir cleanup.
+// This observes setup failure only: the original resolver, trust and deadlines
+// below still decide whether the fixture can be used.
+struct StartupDiagnostic {
+    log: PathBuf,
+    started: Instant,
+    stage: &'static str,
+    origin: Option<String>,
+    complete: bool,
+}
+impl Drop for StartupDiagnostic {
+    fn drop(&mut self) {
+        if self.complete {
+            return;
+        }
+        eprintln!(
+            "original_https_fixture_failed stage={} elapsed_ms={} origin={:?}",
+            self.stage,
+            self.started.elapsed().as_millis(),
+            self.origin
+        );
+        let tail = (|| -> io::Result<Vec<u8>> {
+            let mut file = std::fs::File::open(&self.log)?;
+            let start = file.metadata()?.len().saturating_sub(16_384);
+            file.seek(SeekFrom::Start(start))?;
+            let mut bytes = Vec::new();
+            file.take(16_384).read_to_end(&mut bytes)?;
+            Ok(bytes)
+        })();
+        match tail {
+            Ok(bytes) => eprintln!(
+                "original_https_fixture_tunnel_log_tail={}",
+                String::from_utf8_lossy(&bytes)
+            ),
+            Err(error) => eprintln!("original_https_fixture_tunnel_log_error={error}"),
+        }
+        #[cfg(target_os = "linux")]
+        if let Ok(file) = std::fs::File::open("/etc/resolv.conf") {
+            let mut bytes = Vec::new();
+            if file.take(4096).read_to_end(&mut bytes).is_ok() {
+                eprintln!(
+                    "original_https_fixture_system_resolver={}",
+                    String::from_utf8_lossy(&bytes)
+                );
+            }
+        }
+    }
+}
 
 #[derive(Clone)]
 pub(super) struct Scope {
@@ -168,6 +217,13 @@ pub(super) async fn start(
         .stderr(Stdio::from(output))
         .kill_on_drop(true)
         .spawn()?;
+    let mut diagnostic = StartupDiagnostic {
+        log: log.clone(),
+        started: Instant::now(),
+        stage: "tunnel_registration",
+        origin: None,
+        complete: false,
+    };
     #[cfg(windows)]
     {
         let identity = nestlink_privileged::windows::local_port_gate::ProcessIdentity::read(
@@ -209,6 +265,8 @@ pub(super) async fn start(
         }
     })
     .await??;
+    diagnostic.stage = "system_dns";
+    diagnostic.origin = Some(origin.clone());
     // Tunnel registration precedes public DNS publication. Wait on the real
     // system resolver before the normal SDK's public-PKI health/proof checks;
     // this disposable fixture has no alternate address or trust bypass.
@@ -245,6 +303,7 @@ pub(super) async fn start(
         }
         tokio::time::sleep(Duration::from_millis(250)).await;
     }
+    diagnostic.complete = true;
     Ok((child, origin))
 }
 

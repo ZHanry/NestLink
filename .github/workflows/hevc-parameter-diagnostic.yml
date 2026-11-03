@@ -7,6 +7,14 @@ on:
         description: Exact main source revision containing the retained parameter fixture
         required: true
         type: string
+      fixture:
+        description: Original failed target parameter set to inspect independently
+        required: true
+        type: choice
+        default: hevc-main8-b6b5520-parameters.json
+        options:
+          - hevc-main8-b6b5520-parameters.json
+          - hevc-amf-main8-4de4b9b-parameters.json
 
 permissions:
   contents: read
@@ -18,6 +26,7 @@ jobs:
     env:
       PYTHONDONTWRITEBYTECODE: "1"
       EXPECTED_SOURCE: ${{ inputs.source_revision }}
+      PARAMETER_FIXTURE: ${{ inputs.fixture }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -57,7 +66,9 @@ jobs:
               assert receipt['runner_environment'] == 'github-hosted'
               subprocess.run(['git','merge-base','--is-ancestor',source,'origin/main'],check=True)
               assert subprocess.check_output(['git','status','--porcelain=v1']) == b''
-              fixture_path = pathlib.Path('docs/network-rewrite/fixtures/hevc-main8-b6b5520-parameters.json')
+              fixture_name = os.environ['PARAMETER_FIXTURE']
+              assert fixture_name in ['hevc-main8-b6b5520-parameters.json','hevc-amf-main8-4de4b9b-parameters.json']
+              fixture_path = pathlib.Path('docs/network-rewrite/fixtures')/fixture_name
               fixture = json.loads(fixture_path.read_text())
               receipt['fixture_sha256'] = digest(fixture_path)
               receipt['original_build_provenance'] = fixture['build_provenance']
@@ -70,16 +81,22 @@ jobs:
               assert [entry['kind'] for entry in fixture['nals']] == [32,33,34]
               expected = [(entry['kind'],entry['bytes'],bytes.fromhex(entry['hex'])) for entry in fixture['nals']]
               assert all(length == len(data) and length <= 256 for _,length,data in expected)
-              commands = original['execution_provenance']['commands']
+              probe_name = fixture.get('probe_name','windows-hevc-direction-probe')
+              prefix = fixture.get('parameter_log_prefix','hevc_mf_rejected_parameter_set')
+              assert (probe_name,prefix) in [
+                ('windows-hevc-direction-probe','hevc_mf_rejected_parameter_set'),
+                ('windows-amf-hevc-direction-probe','hevc_amf_rejected_parameter_set')]
+              commands = [command for command in original['execution_provenance']['commands']
+                if command['name'] == probe_name and command['args'][1:] == ['main8','1920','1080','60','8000']]
               assert len(commands) == 2
               assert {command['args'][0] for command in commands} == {'encode','decode'}
               for command in commands:
-                  assert command['name'] == 'windows-hevc-direction-probe'
+                  assert command['name'] == probe_name
                   assert command['executable_sha256'] == fixture['build_provenance']['executable_sha256']
                   assert command['args'][0] in ['encode','decode'] and command['args'][1:] == ['main8','1920','1080','60','8000']
                   # Extract only the original textual hex records; FFmpeg below
                   # performs all SPS syntax/bit parsing independently.
-                  records = re.findall(r'hevc_mf_rejected_parameter_set kind=(\d+) bytes=(\d+) recorded=(\d+) hex=\[([^\]]+)\]',command['stderr'])
+                  records = re.findall(re.escape(prefix)+r' kind=(\d+) bytes=(\d+) recorded=(\d+) hex=\[([^\]]+)\]',command['stderr'])
                   actual = []
                   for kind,length,recorded,hex_text in records:
                       assert length == recorded
@@ -117,14 +134,20 @@ jobs:
               (output/'independent-fields.json').write_text(json.dumps(fields,indent=2)+'\n')
               required = ['pic_width_in_luma_samples','pic_height_in_luma_samples','video_full_range_flag',
                 'colour_primaries','transfer_characteristics','matrix_coefficients']
+              if probe_name == 'windows-amf-hevc-direction-probe':
+                  required += ['vui_num_units_in_tick','vui_time_scale','vui_poc_proportional_to_timing_flag',
+                    'vui_num_ticks_poc_diff_one_minus1','vui_hrd_parameters_present_flag']
               summary = {key:[field for field in fields if field['section']=='Sequence Parameter Set' and field['field']==key] for key in required}
               receipt['independent_sps_fields'] = summary
               receipt['ffprobe_return_code'] = probe.returncode
               receipt['trace_return_code'] = trace.returncode
               receipt['parameter_only_exit_codes_are_not_acceptance'] = True
               assert all(summary.values()), 'independent SPS field extraction incomplete; retain raw tool diagnostics'
-              receipt['original_colour_rejection_agrees_with_independent_trace'] = all(
-                field['value']==fixture['original_rejection']['actual'] for field in summary['colour_primaries'])
+              rejected_field = 'colour_primaries' if probe_name == 'windows-hevc-direction-probe' else 'vui_poc_proportional_to_timing_flag'
+              receipt['original_rejection_agrees_with_independent_trace'] = all(
+                field['value']==fixture['original_rejection']['actual'] for field in summary[rejected_field])
+              if probe_name == 'windows-hevc-direction-probe':
+                  receipt['original_colour_rejection_agrees_with_independent_trace'] = receipt['original_rejection_agrees_with_independent_trace']
               receipt['diagnostic_completed'] = True
           except BaseException as error:
               receipt['failure'] = repr(error)

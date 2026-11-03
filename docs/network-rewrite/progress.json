@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
-  "checkpoint_kind": "b491_separate_stream_regressions_passed_both_os_format_empty_original_resident_network_and_target_tools_running_f24_full_workspace_actual_dns_failure_retained",
+  "source_revision": "dba4d4fbd5564f349da334979ccdba2660365bb0",
+  "checkpoint_kind": "full_rust_f24_final_preserved_amf4de_original8_failed_independent_parameters_and_dns_failure_diagnostics_pending",
   "active_tasks": [
     "W00",
     "W02",
@@ -53,13 +53,12 @@
     "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
   ],
   "unverified_assumptions": [
-    "Exactf24 product owner41577547546 passed spaces8/8 and private_services32/32 with5originalroleignores, strictlint and exactOpenAPI; officialZIP, payloads and2172sourceinputsverified.",
-    "Exactf24 focusedresident41577568244 Linux job failed; actual originalresident4/4, platformowner1/1 andSecretCLI1/1 plus all other scopes/lints passed. Merged childstderr split exactcase lines, producer records empty lists and passed=false; original false-negative retained. Windows still pending.",
-    "Separate originalstdout/stderr collector fix and five real process/strict-parser regressions require hosted validation. Exact-count/name/summary/exit rules and all product assertions/deadlines remain.",
-    "Hostedf24 rustfmt patch applied unmodified to threeRustpaths; current additional Main8parameterdiagnostic requires exactsourcebuildandtargetexecution.",
-    "Exact409 fullRust and focusedresident compilefailures retained separately; dd51b86/f24 fixes are newer source and cannot rewrite those results.",
-    "Fullunifiedproductionmigration,advancedGPUformat/fallback,fullproductlifecycle/security/systemacceptance and physical/mobile/publicNAT/soak/signing gates remain mandatory.",
-    "OriginalLuanti25secondcheck and failedhistory remain byexplicituserdecision. ExactUnauthorized repair in the shared two-counterexample branch was authorized and committedinf2987b3; other assertions remain."
+    "Exact f24 full Rust workflow41577474757 ended10success/3failure. Original Windows completeworkspace2111pass/0fail/17originalignored; Linux2106pass/1realpublicHTTPSDNSfailure/49originalignored. Both full strictClippy succeeded. Originalformatfailure retained separately from newer hostedformat evidence.",
+    "Exact b491 focused Linux originalresident2passed/2failed due unchanged60secondpublicHTTPSDNSdeadline. Collector preserves both streams and original names correctly; no false-negative claim for this run.",
+    "Exact4de tools41581302927 independently verified167payloads and officialZIP before/after original8targetcommands. All8failed; explicitAMFHRD/fillerfalse removes41060Bfiller but original Main8sps.poc_timing remains. Independent FFmpeg timing trace pending; no parser/assertion/deadline change.",
+    "W14 production bilateral path migration with dynamic path epochs, authenticated commit and finite drain is still missing. Existing signed safe business-generation recovery and Quinn experiment do not close that source gap.",
+    "Full lifecycle/UI/security/advancedmedia and mandatory pairedWindows/mobile/publicNAT/signing/24hour target evidence remain. No full-work-package or release qualification.",
+    "Explicit user decisions retained: Luanti25second check remains failed; only two new incorrect recoveryNone expectations corrected to exact Unauthorized in f2987b3."
   ],
   "external_prerequisites": [
     {
@@ -89,9 +88,9 @@
     }
   ],
   "next_steps": [
-    "Commit hosted formatting, exact evidence and separate stdout/stderr fix, then run focusedresident and network contract regressions on exactnewsource without cancelling active f24 fullworkspace.",
-    "Read final f24 fullworkspace/core and Windowsfocusedresident outcomes, retain exact metadata/logs/artifacts and fix remaining actual failures.",
-    "Continue mandatory productionmigration, advancedmedia and lifecycle/security acceptance. Release remains not_ready; no new tag or public release until original required gates are met."
+    "Commit/push retained original GPU failures and bounded HTTPS failure diagnostics. Execute independent mature FFmpeg parameter parsing and original resident checks on exact new source through GitHub-hosted Actions.",
+    "Read original Windows/Linux b491 final evidence and4de owner results with officialsource/digest/size and allproducer payload checks. Keep actual failures distinct from later fixes.",
+    "Use independent timing and DNS evidence to fix actual implementation/environment issues without relaxing original assertions or deadlines; continue mandatory productionmigration and lifecycle acceptance. Release remains not_ready."
   ],
   "evidence_index": [
     "docs/network-rewrite/evidence/format-b491.json",
@@ -292,7 +291,11 @@
     "docs/network-rewrite/evidence/schema-upgrade-4d837d9.json",
     "docs/network-rewrite/evidence/product-space-owner-4d837d9.json",
     "docs/network-rewrite/evidence/format-4d837d9.json",
-    "docs/network-rewrite/evidence/network-run-409d315.json"
+    "docs/network-rewrite/evidence/network-run-409d315.json",
+    "docs/network-rewrite/evidence/full-rust-core-f24b79f.json",
+    "docs/network-rewrite/evidence/windows-hevc-target-b491f83.json",
+    "docs/network-rewrite/evidence/windows-hevc-target-4de4b9b.json",
+    "docs/network-rewrite/fixtures/hevc-amf-main8-4de4b9b-parameters.json"
   ],
   "observed_actions": [
     {
@@ -772,7 +775,7 @@
     }
   },
   "branch_inventory": {
-    "observed_at": "2026-11-03T04:56:39.6933761+00:00",
+    "observed_at": "2026-11-03T12:56:39.6933761+08:00",
     "local": [
       "main"
     ],
@@ -818,56 +821,24 @@
     }
   },
   "continuation_checkpoint": {
-    "at": "2026-11-03T04:56:39.6875209+00:00",
-    "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+    "at": "2026-11-03T13:21:26.1996899+08:00",
+    "source_revision": "dba4d4fbd5564f349da334979ccdba2660365bb0",
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
+    "branch_inventory": "Local and official remote API both show only main; no branch deletion needed.",
     "user_decisions": [
-      "Keep original Luanti25second check and failed status.",
-      "Only two new terminal recovery counterexamples may correct their mistaken None expectation to exact Unauthorized; applied f2987b3."
+      "Retain Luanti original25second check and failed status.",
+      "Two new wrongNone terminalcounterexamples corrected to exactUnauthorized inf2987b3."
     ],
     "verified_scopes": [
-      "Exactf24 product owner41577547546 spaces8/8, private_services32/32 plus5originalroleignores, strictlint andOpenAPI; separately verified2172sourceinputs.",
-      "Exactf24 focusedresident41577568244 Windows original4/4 and all scoped tests/lints pass. Linux workflow failed because mergedxkbcompstderr split resultlines, despite actual original4/4 and all scoped commands exit0; original failedreceiptretained.",
-      "Exactb491 format41580263958 empty patch; originalstdout/stderr process/strictparser5regressionspassedonbothOS, remainingresidentworkflowrunning."
+      "f24 full Windowsworkspace and both fullstrictclippy passed; originalLinuxHTTPSDNS and oldformat failures retained.",
+      "4de tools officialZIP and167payloads verified, original8targetcommands allfailed; boundedoriginal logs andenvironment inventory retained."
     ],
     "pending_source": [
-      "ExplicitAMFHRD/fillerfalse candidate being researched/applied; strictSPSparser, deadlines and capability gates unchanged.",
-      "Mandatoryproductionmigration/advancedmedia/lifecycle/security/E2E/targetacceptance remain implementation and evidence work."
-    ],
-    "runs": {
-      "resident": {
-        "run_id": 41580245060,
-        "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
-        "whole_task_passed": false,
-        "state": "running_five_log_collection_regressions_passed_both_os"
-      },
-      "network": {
-        "run_id": 41580250844,
-        "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
-        "whole_task_passed": false,
-        "state": "running"
-      },
-      "windows_tools": {
-        "run_id": 41580255667,
-        "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
-        "whole_task_passed": false,
-        "state": "running"
-      },
-      "format": {
-        "run_id": 41580263958,
-        "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
-        "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/format-b491.json",
-        "state": "completed_success_empty_patch"
-      },
-      "rust_f24": {
-        "run_id": 41577474757,
-        "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
-        "whole_task_passed": false,
-        "state": "running_linux_workspace_complete_2106passed_1failed_49originalignores"
-      }
-    }
+      "Independent AMF SPS timing trace reuses original FFmpeg fixture workflow; parameter-only diagnosis, no qualification.",
+      "HTTPS startup diagnostic retains boundedoriginaltunnelstderr andresolverconfig before originalTempDir cleanup; originalDNS/trust/deadlines unchanged.",
+      "W14 productionmigration, completeproductUI/lifecycle/advancedmedia/security and mandatorytargetevidence remain."
+    ]
   },
   "dispatch_corrections": [
     {
@@ -964,11 +935,11 @@
       "evidence_ref": "docs/network-rewrite/evidence/network-run-4a4496b.json"
     },
     "rust": {
-      "run_id": 41568697422,
-      "source_revision": "a6c4ddbf6976db2954a2337a4111c094355930c2",
+      "run_id": 41577474757,
+      "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
       "conclusion": "failure",
       "whole_task_passed": false,
-      "evidence_ref": "docs/network-rewrite/evidence/full-rust-core-a6c4ddb.json"
+      "evidence_ref": "docs/network-rewrite/evidence/full-rust-core-f24b79f.json"
     },
     "windows_tools_f0": {
       "run_id": 41561899380,

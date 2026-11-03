@@ -1950,7 +1950,8 @@
         "A private Linux libtest prototype reuses Quinn rebind_abstract and the existing signed routed carriers in four independent network namespaces. Dedicated Actions explicitly execute switch/cancel roles, retain original connection/stream/TLS exporter and measure inner/outer RTT/cwnd/PMTU after old physical paths close. This source has not yet executed and does not implement production migration.",
         "Production proposal/ACK, path epoch, simultaneous proposals, lost ACK, bounded drain, business proof and safe application recovery remain required. W14/AC22 completion stays false; feasibility does not authorize reuse of consumed production node allocations.",
         "The first exact cdcd667 feasibility run compiled and executed both cases but failed the second endpoint's large-packet assertion because only its peer sent file payloads. New source transfers phase/round/direction-bound file data in both directions while preserving every original PMTU, deadline, quota, identity and cleanup assertion; re-execution remains required.",
-        "New signed-space Direct->Direct safe application recovery is being finalized: exact dual-signed business receipt, durable schema51 ancestor checks with original expiry and16-transition bound, fixed request identities, onePOST/GET-only readback after lost response, fresh endpoint/proof/video/input bindings. Source/lock/schema50 refusal and real HTTP counterexamples require hosted qualification; no wholeW14/AC21-23 or arbitrary TCP replay claim."
+        "New signed-space Direct->Direct safe application recovery is being finalized: exact dual-signed business receipt, durable schema51 ancestor checks with original expiry and16-transition bound, fixed request identities, onePOST/GET-only readback after lost response, fresh endpoint/proof/video/input bindings. Source/lock/schema50 refusal and real HTTP counterexamples require hosted qualification; no wholeW14/AC21-23 or arbitrary TCP replay claim.",
+        "Read-only productionaudit onb491 confirms missing authenticated bilateral path-epoch migration/Commit/finite-drain; existing recovery incrementsbusinessgeneration and cannot closeAC21-23. This is sourcework, separately from externalWindows/NAT evidence."
       ],
       "additional_scoped_validation": {
         "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
@@ -2879,7 +2880,7 @@
       ],
       "status": "in_progress",
       "implementation_status": "in_progress",
-      "verification_status": "running",
+      "verification_status": "failed",
       "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
       "owned_paths_to_review": [
         "crates/identity",
@@ -2949,7 +2950,10 @@
           "docs/network-rewrite/evidence/offline-resident-091686c.json"
         ]
       },
-      "implementation_notes": "有限离线 AppCore、实际守护进程 CLI/IPC、捕获、文件及重建路径已接线。78a7cb4/41451102046 的 Windows TLS 原始全数据、两次262144字节下载、重建和 IPC退出通过；该轮 Windows2/4、Linux0/4，仍保留整体失败。f570243 修复真实 Xauthority 与成功载体退役竞态，41455823431 按原断言验证中；保护登录固定阶段诊断继续定位独立失败，完整 W27 及目标验收未完成。 f570243/41455823431实际Windows3/4、Linux0/4；保留两边QUIC提前终止及Linux原即时预算断言失败。c0bb7ac直接读取同一累计meter，新增原真实文件后即时读回断言及停止原因诊断，1dd4efd/41461596961按原范围复验中。",
+      "implementation_notes": [
+        "有限离线 AppCore、实际守护进程 CLI/IPC、捕获、文件及重建路径已接线。78a7cb4/41451102046 的 Windows TLS 原始全数据、两次262144字节下载、重建和 IPC退出通过；该轮 Windows2/4、Linux0/4，仍保留整体失败。f570243 修复真实 Xauthority 与成功载体退役竞态，41455823431 按原断言验证中；保护登录固定阶段诊断继续定位独立失败，完整 W27 及目标验收未完成。 f570243/41455823431实际Windows3/4、Linux0/4；保留两边QUIC提前终止及Linux原即时预算断言失败。c0bb7ac直接读取同一累计meter，新增原真实文件后即时读回断言及停止原因诊断，1dd4efd/41461596961按原范围复验中。",
+        "Latest b491 Linux focused originalresident failed2/4 due unchanged publicHTTPSDNS60second gate. New bounded startup logs pending; previous f24 collector false-negative retained separately."
+      ],
       "latest_scoped_verification": {
         "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
         "run_id": 41562179075,
@@ -3276,7 +3280,7 @@
       ],
       "status": "in_progress",
       "implementation_status": "in_progress",
-      "verification_status": "running",
+      "verification_status": "failed",
       "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
       "owned_paths_to_review": [
         "crates/platform-capture",
@@ -3328,7 +3332,10 @@
         "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
       ],
       "blockers": [],
-      "implementation_notes": "Existing production Windows capture H264 and same-device GPU presenter are retained. Source50df7ec adds bounded actual DXGI-submit QPC cadence and exact original-owner target analyzer; hosted source50 workflow41369064258 and source1518218 workflow41369702948 running. Submit cadence is not scanout or complete GPU/58fps/p95 qualification; full target chain remains open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33. 2ffc870/41452426792的工具已由Actions构建并严格检查，官方归档及160个文件全部核验后在真实Windows11普通交互令牌执行7个原始有限合成工作负载：H264 CPU编码/解码通过；GPU controller coded/display几何失败，HEVC Main8两个方向严格VUI色彩拒绝，Main10两个方向MF创建失败。原始失败保留；不能抵扣实际桌面58fps/HDR/444或整个W32/W33验收。 670c662/41457044725原实机GPU有限命令通过，24输入/17解码色彩校验提交、checked flush及owner关闭；仍非60fps/scanout或完整W32/W33。0f8d9a3/41455441207在Windows 2025原2TLS/12帧IPC测试及整个owner工作流通过；保留先前Windows 2022失败。HEVC Main8/Main10原失败不变。",
+      "implementation_notes": [
+        "Existing production Windows capture H264 and same-device GPU presenter are retained. Source50df7ec adds bounded actual DXGI-submit QPC cadence and exact original-owner target analyzer; hosted source50 workflow41369064258 and source1518218 workflow41369702948 running. Submit cadence is not scanout or complete GPU/58fps/p95 qualification; full target chain remains open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33. 2ffc870/41452426792的工具已由Actions构建并严格检查，官方归档及160个文件全部核验后在真实Windows11普通交互令牌执行7个原始有限合成工作负载：H264 CPU编码/解码通过；GPU controller coded/display几何失败，HEVC Main8两个方向严格VUI色彩拒绝，Main10两个方向MF创建失败。原始失败保留；不能抵扣实际桌面58fps/HDR/444或整个W32/W33验收。 670c662/41457044725原实机GPU有限命令通过，24输入/17解码色彩校验提交、checked flush及owner关闭；仍非60fps/scanout或完整W32/W33。0f8d9a3/41455441207在Windows 2025原2TLS/12帧IPC测试及整个owner工作流通过；保留先前Windows 2022失败。HEVC Main8/Main10原失败不变。",
+        "Exact4de verifiedActions tools executed original8directions on ordinaryWindows; all8failed. AMFHRD/fillerfalse removed41060Bfiller; Main8sps.poc_timing stillfailed. IndependentFFmpeg timingdiagnostic pending. No assertion/parser/deadlinechange."
+      ],
       "latest_scoped_verification": {
         "recorded_at": "2026-11-03T01:41:30.7Z",
         "scope": "4a4496b /41488394638 all4original Windows2022/2025 owner+Windows/Linux peerjobs success; /41488400735 tools strictbuild success;5officialZIP and234fileentries verified,171producer entries match. OriginalAMFnotice bytes restored without altering originaldigest.",

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "scope": "Original AMF Main8 parameter NALs from both finite original encode/decode commands; no picture or acceptance claim.",
+  "source_evidence": "docs/network-rewrite/evidence/windows-hevc-target-4de4b9b.json",
+  "probe_name": "windows-amf-hevc-direction-probe",
+  "parameter_log_prefix": "hevc_amf_rejected_parameter_set",
+  "build_provenance": {
+    "source_revision": "4de4b9bef86113217f5e4572a436b426fbd427f9",
+    "run_id": 41581302927,
+    "artifact_id": 13206262633,
+    "official_artifact_digest": "sha256:c176f5217b4ca6fae543d129c55f830b9eabdcbbe864dac8b722618d28a99d59",
+    "executable_sha256": "82f32cf6d6244eaff0f61d4fb6216e7436329bfebcd330096bbcb96c224309fa"
+  },
+  "original_rejection": {
+    "code": "sps.poc_timing",
+    "field": "vui_poc_proportional_to_timing_flag",
+    "actual": 1,
+    "required": 0
+  },
+  "nals": [
+    {
+      "kind": 32,
+      "bytes": 23,
+      "hex": "40 01 0c 01 ff ff 01 60 00 00 03 00 b0 00 00 03 00 00 03 00 7b 2c 09"
+    },
+    {
+      "kind": 33,
+      "bytes": 52,
+      "hex": "42 01 01 01 60 00 00 03 00 b0 00 00 03 00 00 03 00 7b a0 03 c0 80 11 07 cb cb 92 42 95 92 e3 ff 00 01 00 01 6a 02 02 02 08 00 00 03 00 08 00 00 03 01 e6 20"
+    },
+    {
+      "kind": 34,
+      "bytes": 7,
+      "hex": "44 01 e0 f3 c0 4c 90"
+    }
+  ]
+}
