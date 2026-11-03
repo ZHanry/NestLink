@@ -622,7 +622,22 @@ pub(super) async fn recover(
         }
     };
     drop(old_lifetime);
-    let mut session = result.map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
+    let mut session = result.map_err(|error| {
+        let failure = match error {
+            nestlink_sdk::native_recovery::RecoveryError::Sdk(error) => Failure::from(error),
+            nestlink_sdk::native_recovery::RecoveryError::Stopped(StopReason::Expired) => {
+                Failure::local(FailureKind::PermitExpired)
+            }
+            nestlink_sdk::native_recovery::RecoveryError::Stopped(_) => {
+                Failure::local(FailureKind::NativeSessionCancelled)
+            }
+            nestlink_sdk::native_recovery::RecoveryError::Cleanup(_) => {
+                Failure::local(FailureKind::NativeSessionUnavailable)
+            }
+        };
+        eprintln!("native original recovery failed: {failure:?}");
+        failure
+    })?;
     let remote = match tokio::time::timeout_at(
         deadline.into(),
         client.sdk.remote(&previous.claims().session_id),

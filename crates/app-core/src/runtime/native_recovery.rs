@@ -57,11 +57,17 @@ pub(super) fn retain_source(
             mut session,
             lifetime,
         } => {
-            let budget = session
+            let budget = match session
                 .channels()
                 .lease_control()
                 .reconnection_budget()
-                .ok()?;
+            {
+                Ok(budget) => budget,
+                Err(_) => {
+                    eprintln!("native original recovery source rejected: no remaining recovery budget");
+                    return None;
+                }
+            };
             (
                 NativeRecoveryTransport::Original { session, lifetime },
                 budget,
