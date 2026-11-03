@@ -919,6 +919,8 @@ jobs:
           import subprocess, sys
           for script in ('test_tools_offline.py', 'test_receipts_offline.py'):
               subprocess.run([sys.executable, '-B', 'scripts/acceptance/tunnel-public/' + script], check=True)
+      - name: Fetch all locked dependency sources used by the original notice regressions
+        run: cargo fetch --locked
       - run: python -m unittest discover -s tests/refactor -p "test_*.py"
       - run: python scripts/refactor-ui-tokens.py --check
       - run: cargo xtask check

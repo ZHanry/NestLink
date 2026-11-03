@@ -6,7 +6,7 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "0a1b78996b0020fb1c15eb4d1b5a0b770f34ffef",
+  "source_revision": "f95fb92ed8c06df1ef246630391a38a3b8e964af",
   "checkpoint_kind": "verified_original_resident_and_unsampled_capacity_scopes_media_target_failed_full_rust_failed_fixes_pending",
   "active_tasks": [
     "W00",
@@ -53,16 +53,12 @@
     "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
   ],
   "unverified_assumptions": [
-    "W23 sourcec70360a run41204252074 passed real overlapping-LAN TCP/UDP/NAT/QUIC, ACL and normal/helper-SIGKILL/ordinary-SIGSTOP cleanup plus strict daemon lint. Source6301c55 run41208039887 also passed the additional6s delayed proof, original5s physical cleanup and packet proof regressions, but full workflow failed one newly introduced nested-if lint; fixede8e45e7 awaits clean same-source rerun. Production HTTP one-use starts, same-prefix primary/standby and physical two-site acceptance remain separate.",
-    "W24 source794d3d1 run41207005912 passed all3 distribution wg/config/QR/protected-export cases plus actual Linux kernel standard-client handshake, TCP/UDP/key/source ACL/original authority accounting and normal/helper-SIGKILL cleanup. Android/iOS target acceptance and complete production online lifecycle remain outstanding.",
-    "W30/W24 source467e7bd run41204581203 passed full real Chrome/Edge production Web/native integration and WireGuard client UI role/approval/403/draft/late-response fencing. Browser evidence does not cover positive client issuance, OS forwarding, phone clients or installed full onboarding.",
-    "W28,W32-W40 and remainingW30/W31 are mandatory unfinished implementation/verification work, not external prerequisites. Release stays not_ready.",
-    "W22 Source1e7b236 run41236273780 fully passed hosted ordinary IPC, 1016-byte main future and original8 process cases, original9 native cases including non-test product HTTPS protected-login restore, actual CLI/Clap, one-use HTTP/SQLite QUIC IPv4/IPv6 traffic, authenticated DELETE/403 revoke and814ms physical TUN/UDP cleanup. Independent live Wintun snapshots preserved throughout; its separate owner cleanup1500ms. Strict Clippy passed. Independent target TCP/full third-party VPN and complete system acceptance remain open.",
-    "W26 Source4fc9c30 hosted run41223203804 passed all five exact regressions and actual fixed IPVS HTTP/HTTPS/TCP/UDP across two edge processes, cooperative stop and independent SIGKILL, revoke, old-runtime revival isolation, four-domain accounting and physical cleanup. Both failure modes recovered new connections within original5s. Independent public target ingress/DNS and complete W26 acceptance remain open.",
-    "W27 Sourceb166d8b fully passed offline authority/storage/HTTP-SDK and physical socket/poller cleanup, including original independent remote QUIC after online expiry. Source55de3cd run41235596155 all jobs success adds explicitly approved mutual TLS1.3 remote business concurrently with QUIC, original shared attempts/bytes, Input refusal, process-stop and UDP/TCP listener release. Complete native AppCore capture/input/file OS adapters, finite offline UI and multiple-resident lifecycle remain implementation work; no wholeW27 claim.",
-    "W31 source09fee95 run41373125182 whole hosted impairment workflow succeeded: actual7.186Mbps video, real20-to5Mbps downshift1134.746621ms, original input/file/frame/sample/2s/p95 assertions retained. This qualifies the originalVP8/InputController observer lab only, not OSinput/display or Windows exactCore/GPU/fullAC53. Original failedsourceabf2.010157s remains in failure index.",
-    "Sourcee2e3657 networkrun41373710195: sevenjobs success, actual nativeICE+twoLinuxNAT/routedSNAT/carrier-rebind/socketFileRead scenarios pass. BothOS contracttests/clippy passed; onlyformatmodulepath failed. No fullworkflow or productionmigration claim; 1609receipt inventoryfiles SHA/size verified. Newsource0c04459 networkrun41403709403 pending.",
-    "W28 Luanti user explicitly requires keeping original25s disconnect-display deadline and failed status despite official locked30s timeout. Actualjoin/gameplay remains scoped evidence; no deadline relaxation or wholeW28pass."
+    "AMFf0c65 Main8 now fails originalnewdescriptor guard at HevcFrameRate query (result0/nonnull); no actualdescriptorname was logged, so no alias/rootcause attribution. Diagnostic-onlyf95 preserves failure and records bounded actualdescriptorname/type/index fornexttargetrun. Main10P010 remains unsupported onthe actualAMDscope; all16priorcommandfailures retained.",
+    "Full Rust745c run41479911345 failed: Linux defaultparallel workspace originalresident1/4; Windowshit original60minutejoblimit afterworkspacebegan47m50s. Originalserial earlyresident4/4bothOS remains scoped. RealPlatformfixture lifecycle isolation andindependent requiredjobs are being implemented; no assertion/deadline relaxation.",
+    "VP8boundary/PipeWiresanitizers,Python supply/notice regressions andxtask were skipped afteroriginalworkspace failure; independently require actualnewsource execution. OriginalRustprefixvalidation tests did execute, keep separate fromskippedPython regressions.",
+    "Mandatory remaining implementation includescomplete productUI/CLI lifecycle, productionunifiedpath migration, advanced GPUformat/fallback, whole-systemE2E andindependentsecurityreview. Existing finiteprobesandlabtestscannotclose these.",
+    "Mandatory targetevidence still includespairedWindows desktop/input/audio/concurrentfiles,Android+iOS standardWireGuard,independentNAT/overlappingsites/public fixedentryDNS,fullmixedversions/signing andcrossday24hoursoaks. Internalimplementation gaps are not externalblockers.",
+    "W28Luanti original25second disconnectdisplay check remains failed byexplicituserdecision; retainofficial30second behaviorrecord andoriginalNestLink5secondcleanupgate withoutdeadlinechange."
   ],
   "external_prerequisites": [
     {
@@ -98,6 +94,9 @@
     "Continue complete product paths andthe remainingmandatory implementation; prepare same-sourcecandidate onlyafter requiredgates, do notpubliclyrelease0.8.0RC while not_ready."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/boundary-tools-c589362.json",
+    "docs/network-rewrite/evidence/windows-hevc-target-f0c65e1.json",
+    "docs/network-rewrite/evidence/full-rust-core-745c05a.json",
     "docs/network-rewrite/evidence/network-run-4a4496b.json",
     "docs/network-rewrite/evidence/native-offline-resident-4a4496b.json",
     "docs/network-rewrite/evidence/capacity-none-4ec2c3c.json",
@@ -539,7 +538,7 @@
   ],
   "current_validation_checkpoint": {
     "recorded_at": "2026-11-03T01:41:30.697Z",
-    "source_revision": "0a1b78996b0020fb1c15eb4d1b5a0b770f34ffef",
+    "source_revision": "f95fb92ed8c06df1ef246630391a38a3b8e964af",
     "tested_source_revisions": [
       "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
       "4ec2c3c0addea9d708629d58b2932ec035bd5569",
@@ -556,7 +555,9 @@
     "retained_failures": [
       "4a Windows originalMFfour+explicitAMFfourfinitecommands all exit1, fullrawlogs/source/toolhashes inwindows-hevc-target-4a4496b.json.",
       "745c fullRustLinuxworkspace failure andWindows60mintimeout retained.",
-      "All originalcapacity,networkUDP,resident,media andLuanti failures remain inhistoricalevidence."
+      "All originalcapacity,networkUDP,resident,media andLuanti failures remain inhistoricalevidence.",
+      "f0c65 actualnew8directions allfailed; exactHevcFrameRate descriptorguard now rejected Main8 beforeSet/readback. Sourcef95 only addsactualname/type diagnostics; no acceptingconditions changed.",
+      "c589 boundaryPython292cases/35errorsbothOS missinglockedforksourceprefetch; explicitcargo-fetch fixpendingnextsource. Linux originalVP8+PipeWiresanitizers pass, laterUI/xtask skipped."
     ],
     "implementation_remaining": [
       "AMFMain8 older-runtime optional property compatibility requires new exact-source hostedowner/tools validation and repeat original finiteWindowsdirections. Main10 nativeformat unsupported onthisAMDtarget; nohardwarequalification.",
@@ -564,9 +565,16 @@
       "VP8boundary/PipeWiresanitizers,Python supply/notice regressions andxtask were skipped afteroriginalworkspace failure; independently require actualnewsource execution. OriginalRustprefixvalidation tests did execute, keep separate fromskippedPython regressions.",
       "Mandatory remaining implementation includescomplete productUI/CLI lifecycle, productionunifiedpath migration, advanced GPUformat/fallback, whole-systemE2E andindependentsecurityreview. Existing finiteprobesandlabtestscannotclose these.",
       "Mandatory targetevidence still includespairedWindows desktop/input/audio/concurrentfiles,Android+iOS standardWireGuard,independentNAT/overlappingsites/public fixedentryDNS,fullmixedversions/signing andcrossday24hoursoaks. Internalimplementation gaps are not externalblockers.",
-      "W28Luanti original25second disconnectdisplay check remains failed byexplicituserdecision; retainofficial30second behaviorrecord andoriginalNestLink5secondcleanupgate withoutdeadlinechange."
+      "W28Luanti original25second disconnectdisplay check remains failed byexplicituserdecision; retainofficial30second behaviorrecord andoriginalNestLink5secondcleanupgate withoutdeadlinechange.",
+      "Newly audited signed-space Direct connection cannot enter safe recovery; implementing current-scope direct-to-direct generation recovery with server-enforced persistent parent authorization lineage. Do not use legacy reconnection to detach from original revocation or absolute expiry. Source/protocol/rollback/negative evidence is pending."
     ],
-    "pending_runs": [],
+    "pending_runs": [
+      41562145692,
+      41562170514,
+      41562179075,
+      41561895385,
+      41561899380
+    ],
     "qualification": "scoped_only_no_complete_task_or_release_claim"
   },
   "release_state": "not_ready",
@@ -706,7 +714,38 @@
       "scope": "Remote cumulative budget plus original finite offline authorization/carrier/resident regressions; no pass claimed"
     }
   ],
-  "current_hosted_runs": {},
+  "current_hosted_runs": {
+    "rust": {
+      "run_id": 41562145692,
+      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+      "state": "in_progress_original_boundary_python_failures_under_diagnosis",
+      "whole_task_passed": false
+    },
+    "network": {
+      "run_id": 41562170514,
+      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+      "state": "in_progress",
+      "whole_task_passed": false
+    },
+    "resident": {
+      "run_id": 41562179075,
+      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+      "state": "in_progress",
+      "whole_task_passed": false
+    },
+    "windows_owner": {
+      "run_id": 41561895385,
+      "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+      "state": "in_progress",
+      "whole_task_passed": false
+    },
+    "windows_tools": {
+      "run_id": 41561899380,
+      "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+      "state": "completed_hosted_build_verified_target8failed_diagnostic_source_f95_pending_newtools",
+      "whole_task_passed": false
+    }
+  },
   "branch_inventory": {
     "verified_at": "2026-11-03T01:39:40Z",
     "local": [
@@ -716,10 +755,41 @@
       "main"
     ]
   },
-  "pending_runs": {},
+  "pending_runs": {
+    "rust": {
+      "run_id": 41562145692,
+      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+      "state": "in_progress_original_boundary_python_failures_under_diagnosis",
+      "whole_task_passed": false
+    },
+    "network": {
+      "run_id": 41562170514,
+      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+      "state": "in_progress",
+      "whole_task_passed": false
+    },
+    "resident": {
+      "run_id": 41562179075,
+      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+      "state": "in_progress",
+      "whole_task_passed": false
+    },
+    "windows_owner": {
+      "run_id": 41561895385,
+      "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+      "state": "in_progress",
+      "whole_task_passed": false
+    },
+    "windows_tools": {
+      "run_id": 41561899380,
+      "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+      "state": "completed_hosted_build_verified_target8failed_diagnostic_source_f95_pending_newtools",
+      "whole_task_passed": false
+    }
+  },
   "continuation_checkpoint": {
-    "at": "2026-11-03T01:41:30.699Z",
-    "source_revision": "0a1b78996b0020fb1c15eb4d1b5a0b770f34ffef",
+    "at": "2026-11-03T02:00:15.077Z",
+    "source_revision": "f95fb92ed8c06df1ef246630391a38a3b8e964af",
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
     "user_decision": "Keep original Luanti25-second disconnect-display check and failed status.",
@@ -846,6 +916,16 @@
       "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
       "conclusion": "failure_linux_workspace_windows_jobtimeout",
       "whole_task_passed": false
+    },
+    "windows_tools_f0": {
+      "run_id": 41561899380,
+      "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+      "conclusion": "success",
+      "official_archive_digest": "sha256:1dae62d85ec2611b452bb5de5eaea60efc1adbf002747093a286d641b00a0256",
+      "verified_producer_payloads": 167,
+      "target_result": "all8commands_failed",
+      "whole_task_passed": false,
+      "target_evidence_ref": "docs/network-rewrite/evidence/windows-hevc-target-f0c65e1.json"
     }
   }
 }
