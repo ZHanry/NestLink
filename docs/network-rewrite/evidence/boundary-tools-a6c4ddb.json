@@ -1,0 +1,468 @@
+{
+  "schema_version": 1,
+  "scope": "Completed original boundary-tools jobs only. Full Rust workflow and focused resident results remain separate; no physical-target, public-NAT, sustained-media or release acceptance.",
+  "source_revision": "a6c4ddbf6976db2954a2337a4111c094355930c2",
+  "workflow": ".github/workflows/rust-core.yml",
+  "run_id": 41568697422,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41568697422",
+  "run_attempt": 1,
+  "full_workflow_conclusion_claimed": false,
+  "build_provenance": {
+    "environment": "Original GitHub-hosted Ubuntu24.04 and Windows2022",
+    "native_suppliers": "Original pinned codec build and installed-prefix verification complete successfully in both boundary jobs",
+    "source_checked_against_individual_job_metadata": true
+  },
+  "execution_provenance": {
+    "environment": "Original hosted boundary command execution",
+    "actual_device_or_public_nat_execution_claimed": false
+  },
+  "targets": [
+    {
+      "platform": "linux",
+      "job_id": 125696317525,
+      "job_url": "https://github.com/ZHanry/NestLink/actions/runs/41568697422/job/125696317525",
+      "conclusion": "success",
+      "source_revision": "a6c4ddbf6976db2954a2337a4111c094355930c2",
+      "started_at": "2026-11-03T02:51:51Z",
+      "completed_at": "2026-11-03T02:54:12Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T02:51:52Z",
+          "completed_at": "2026-11-03T02:51:54Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T02:51:54Z",
+          "completed_at": "2026-11-03T02:51:56Z"
+        },
+        {
+          "name": "Verify normal Windows test identity",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 3,
+          "started_at": "2026-11-03T02:51:56Z",
+          "completed_at": "2026-11-03T02:51:56Z"
+        },
+        {
+          "name": "Set native codec location",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T02:51:56Z",
+          "completed_at": "2026-11-03T02:52:03Z"
+        },
+        {
+          "name": "Run sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin xvfb xauth x11-xserver-utils gnome-keyring libsecret-tools libpam-systemd",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T02:52:03Z",
+          "completed_at": "2026-11-03T02:52:42Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-11-03T02:52:42Z",
+          "completed_at": "2026-11-03T02:52:42Z"
+        },
+        {
+          "name": "Run python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir \"/home/runner/work/_temp/nestlink-codec-sources\" --work-dir \"/home/runner/work/_temp/nestlink-codecs\"",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T02:52:42Z",
+          "completed_at": "2026-11-03T02:53:13Z"
+        },
+        {
+          "name": "Run python scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir \"/home/runner/work/_temp/nestlink-codec-sources\" --work-dir \"/home/runner/work/_temp/nestlink-codecs\" --msys-bin \"/usr/bin\" --nasm \"/usr/bin/nasm.exe\"",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8,
+          "started_at": "2026-11-03T02:53:13Z",
+          "completed_at": "2026-11-03T02:53:13Z"
+        },
+        {
+          "name": "Run python scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix \"/home/runner/work/_temp/nestlink-codecs/x86_64-unknown-linux-gnu\"",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T02:53:13Z",
+          "completed_at": "2026-11-03T02:53:13Z"
+        },
+        {
+          "name": "Run rustup show",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T02:53:13Z",
+          "completed_at": "2026-11-03T02:53:21Z"
+        },
+        {
+          "name": "Allow the normal Windows token to use CI build inputs",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-11-03T02:53:21Z",
+          "completed_at": "2026-11-03T02:53:21Z"
+        },
+        {
+          "name": "Run bash scripts/test-vp8-boundary-sanitizer.sh",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-03T02:53:21Z",
+          "completed_at": "2026-11-03T02:53:22Z"
+        },
+        {
+          "name": "Run bash scripts/test-pipewire-audio-sanitizer.sh",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-03T02:53:22Z",
+          "completed_at": "2026-11-03T02:53:23Z"
+        },
+        {
+          "name": "Browser tool regressions (Node)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T02:53:23Z",
+          "completed_at": "2026-11-03T02:53:34Z"
+        },
+        {
+          "name": "Install pinned receipt test crypto on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-03T02:53:34Z",
+          "completed_at": "2026-11-03T02:53:37Z"
+        },
+        {
+          "name": "Owned public tunnel tool and receipt regressions without network",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-11-03T02:53:37Z",
+          "completed_at": "2026-11-03T02:53:38Z"
+        },
+        {
+          "name": "Fetch all locked dependency sources used by the original notice regressions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-03T02:53:38Z",
+          "completed_at": "2026-11-03T02:53:42Z"
+        },
+        {
+          "name": "Run python -m unittest discover -s tests/refactor -p \"test_*.py\"",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-03T02:53:42Z",
+          "completed_at": "2026-11-03T02:53:47Z"
+        },
+        {
+          "name": "Run python scripts/refactor-ui-tokens.py --check",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-03T02:53:47Z",
+          "completed_at": "2026-11-03T02:53:47Z"
+        },
+        {
+          "name": "Run cargo xtask check",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-11-03T02:53:47Z",
+          "completed_at": "2026-11-03T02:54:10Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 40,
+          "started_at": "2026-11-03T02:54:10Z",
+          "completed_at": "2026-11-03T02:54:10Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 41,
+          "started_at": "2026-11-03T02:54:10Z",
+          "completed_at": "2026-11-03T02:54:10Z"
+        }
+      ],
+      "complete_job_log": "linux-boundary-job-125696317525.log",
+      "actual_output_facts": [
+        {
+          "line": 757,
+          "text": "VP8 bridge sanitizer: 96 real frames, 3072 mutated packets, every encoded-prefix truncation passed"
+        },
+        {
+          "line": 767,
+          "text": "PipeWire audio production validators: 100000 PCM cases, permissions, channel/offset/stride bounds, silence, links and uint64 serial passed"
+        },
+        {
+          "line": 2139,
+          "text": "Ran 292 tests in 4.411s"
+        },
+        {
+          "line": 2141,
+          "text": "OK (skipped=4)"
+        },
+        {
+          "line": 2264,
+          "text": "contract, versions and isolated workspace: passed"
+        }
+      ]
+    },
+    {
+      "platform": "windows",
+      "job_id": 125696317673,
+      "job_url": "https://github.com/ZHanry/NestLink/actions/runs/41568697422/job/125696317673",
+      "conclusion": "success",
+      "source_revision": "a6c4ddbf6976db2954a2337a4111c094355930c2",
+      "started_at": "2026-11-03T02:51:52Z",
+      "completed_at": "2026-11-03T02:57:27Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T02:51:52Z",
+          "completed_at": "2026-11-03T02:51:53Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T02:51:53Z",
+          "completed_at": "2026-11-03T02:52:01Z"
+        },
+        {
+          "name": "Verify normal Windows test identity",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T02:52:01Z",
+          "completed_at": "2026-11-03T02:52:03Z"
+        },
+        {
+          "name": "Set native codec location",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T02:52:03Z",
+          "completed_at": "2026-11-03T02:52:03Z"
+        },
+        {
+          "name": "Run sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin xvfb xauth x11-xserver-utils gnome-keyring libsecret-tools libpam-systemd",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5,
+          "started_at": "2026-11-03T02:52:03Z",
+          "completed_at": "2026-11-03T02:52:03Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T02:52:03Z",
+          "completed_at": "2026-11-03T02:52:23Z"
+        },
+        {
+          "name": "Run python3 scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir \"D:\\a\\_temp/nestlink-codec-sources\" --work-dir \"D:\\a\\_temp/nestlink-codecs\"",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7,
+          "started_at": "2026-11-03T02:52:23Z",
+          "completed_at": "2026-11-03T02:52:23Z"
+        },
+        {
+          "name": "Run python scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir \"D:\\a\\_temp/nestlink-codec-sources\" --work-dir \"D:\\a\\_temp/nestlink-codecs\" --msys-bin \"D:\\a\\_temp\\msys64/usr/bin\" --nasm \"D:\\a\\_temp\\msys64/usr/bin/nasm.exe\"",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T02:52:23Z",
+          "completed_at": "2026-11-03T02:54:32Z"
+        },
+        {
+          "name": "Run python scripts/refactor-native-codecs.py verify --target x86_64-pc-windows-msvc --prefix \"D:\\a\\_temp\\nestlink-codecs\\x86_64-pc-windows-msvc\"",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T02:54:32Z",
+          "completed_at": "2026-11-03T02:54:32Z"
+        },
+        {
+          "name": "Run rustup show",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T02:54:32Z",
+          "completed_at": "2026-11-03T02:54:42Z"
+        },
+        {
+          "name": "Allow the normal Windows token to use CI build inputs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T02:54:42Z",
+          "completed_at": "2026-11-03T02:54:44Z"
+        },
+        {
+          "name": "Run bash scripts/test-vp8-boundary-sanitizer.sh",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T02:54:44Z",
+          "completed_at": "2026-11-03T02:54:44Z"
+        },
+        {
+          "name": "Run bash scripts/test-pipewire-audio-sanitizer.sh",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13,
+          "started_at": "2026-11-03T02:54:44Z",
+          "completed_at": "2026-11-03T02:54:44Z"
+        },
+        {
+          "name": "Browser tool regressions (Node)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T02:54:44Z",
+          "completed_at": "2026-11-03T02:54:58Z"
+        },
+        {
+          "name": "Install pinned receipt test crypto on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-03T02:54:58Z",
+          "completed_at": "2026-11-03T02:55:04Z"
+        },
+        {
+          "name": "Owned public tunnel tool and receipt regressions without network",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-11-03T02:55:04Z",
+          "completed_at": "2026-11-03T02:55:05Z"
+        },
+        {
+          "name": "Fetch all locked dependency sources used by the original notice regressions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-03T02:55:05Z",
+          "completed_at": "2026-11-03T02:56:03Z"
+        },
+        {
+          "name": "Run python -m unittest discover -s tests/refactor -p \"test_*.py\"",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-03T02:56:03Z",
+          "completed_at": "2026-11-03T02:56:34Z"
+        },
+        {
+          "name": "Run python scripts/refactor-ui-tokens.py --check",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-03T02:56:34Z",
+          "completed_at": "2026-11-03T02:56:35Z"
+        },
+        {
+          "name": "Run cargo xtask check",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-11-03T02:56:35Z",
+          "completed_at": "2026-11-03T02:57:23Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 40,
+          "started_at": "2026-11-03T02:57:23Z",
+          "completed_at": "2026-11-03T02:57:25Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 41,
+          "started_at": "2026-11-03T02:57:25Z",
+          "completed_at": "2026-11-03T02:57:25Z"
+        }
+      ],
+      "complete_job_log": "windows-boundary-job-125696317673.log",
+      "actual_output_facts": [
+        {
+          "line": 1797,
+          "text": "Ran 292 tests in 29.962s"
+        },
+        {
+          "line": 1799,
+          "text": "OK (skipped=18)"
+        },
+        {
+          "line": 1927,
+          "text": "contract, versions and isolated workspace: passed"
+        }
+      ]
+    }
+  ],
+  "observations": [
+    "Both original boundary jobs succeed. Original cargo fetch --locked notice prerequisite actually executes and succeeds; no original notice assertion is removed or relaxed.",
+    "Both original Python discovery commands run292 tests and succeed:Linux4.411s/skipped4,Windows29.962s/skipped18. These are original platform-specific skips, not newly skipped failures.",
+    "Linux original first-party VP8 ASan/UBSan corpus passes96 real frames,3072 mutated packets and every encoded-prefix truncation. Original first-party bridge/corpus are instrumented; original pinned upstream libvpx/libyuv static libraries are not sanitizer-instrumented.",
+    "Linux original PipeWire production validator sanitizer passes100000 PCM cases with original permissions,channel/offset/stride,silence,links and uint64 serial checks. Windows keeps the original Linux-only sanitizer skips.",
+    "Original browser and owned public tunnel regressions, UI token check and cargo xtask check actually pass on both OS. Xtask prints contract,versions and isolated workspace:passed.",
+    "Sourcec589 original35 notice setup errors and skipped UI/xtask remain separately preserved in boundary-tools-c589362.json. This exact-source success does not replace any older failure or qualify full Rust,resident or release.",
+    "Original resident four names/counts/assertions,60ms immutable ingress,40ms late threshold,PTS/capture clocks,cumulative authority and original25-secondLuanti failure/deadline remain unchanged. No local project execution or push/dispatch occurred."
+  ],
+  "independent_verification": {
+    "downloaded_files_hashed": 4,
+    "complete_job_logs": 2,
+    "files": [
+      {
+        "path": "linux-boundary-job.json",
+        "bytes": 5653,
+        "sha256": "f39ef0b5c072382c8b4a28aae4acf72fbb1213ff63d503ebd4004de32f4ab314"
+      },
+      {
+        "path": "linux-boundary-job-125696317525.log",
+        "bytes": 174027,
+        "sha256": "d6be342b6cb422f878328cbd8c40ddf3fbdd285c5fbd949349f437bc15a4d68a"
+      },
+      {
+        "path": "windows-boundary-job.json",
+        "bytes": 5630,
+        "sha256": "4cf4481b279a5a04a24cd2701e9529ec48f3c806e4c18f67095c5aa49658766e"
+      },
+      {
+        "path": "windows-boundary-job-125696317673.log",
+        "bytes": 139601,
+        "sha256": "f9bc04721db82e77b0e3545dc08347be63c0c913854a6a84afe0676db57f644c"
+      }
+    ]
+  }
+}
