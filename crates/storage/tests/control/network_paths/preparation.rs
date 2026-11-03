@@ -217,3 +217,34 @@ fn original_pair_expiry_is_terminal_for_post_and_readback() -> Result {
     assert!(f.store.network_remote_preparation(&f.host, &f.space, &f.request, f.binding.clone(), end).is_err());
     Ok(())
 }
+
+#[test]
+fn revoked_other_purpose_id_blocks_preparation_and_rolls_back_the_first_sibling() -> Result {
+    let mut f = PreparedFixture::new(true)?;
+    let ids = remote_preparation_grant_ids(&f.space, &f.request, &f.binding)?;
+    let business = f.store.current_permit(&f.controller, &f.request, NOW / 1000)?;
+    let members = [random_id(), random_id()];
+    let end = business.expires_at_unix_ms.min(NOW + 2_000);
+    for (index, installation) in [&business.controller_device_id, &business.host_device_id].into_iter().enumerate() {
+        f.store.issue_network_membership(&f.owner, &f.signer, NetworkMembershipRequest {
+            space_id: f.space.clone(), installation_id: installation.clone(),
+            grant_id: members[index].clone(), expected_policy_epoch: f.binding.expected_policy_epoch,
+            expected_membership_epoch: 1, expires_at_ms: end,
+        }, NOW)?;
+    }
+    f.store.issue_network_remote_path(&f.controller, &f.signer, NetworkRemotePathIssuance {
+        space_id: f.space.clone(), request_id: f.request.clone(), request: NetworkRemotePathRequest {
+            connectivity_grant_id: random_id(), path_grant_id: ids[1].clone(),
+            controller_membership_grant_id: members[0].clone(), host_membership_grant_id: members[1].clone(),
+            expected_policy_epoch: f.binding.expected_policy_epoch, expires_at_unix_ms: end,
+        },
+    }, NOW)?;
+    f.store.revoke_network_remote_path(&f.host, &f.space, &ids[1], NOW)?;
+    let audit = f.store.space_audit(&f.owner, &f.space, NOW)?.len();
+    assert!(matches!(f.store.prepare_network_remote(&f.controller, &f.signer, &f.space, &f.request, f.binding.clone(), NOW), Err(StorageError::Conflict)));
+    for id in ids {
+        assert!(matches!(f.store.network_membership_grant(&f.owner, &f.space, &id, NOW), Err(StorageError::Forbidden)));
+    }
+    assert_eq!(f.store.space_audit(&f.owner, &f.space, NOW)?.len(), audit);
+    Ok(())
+}

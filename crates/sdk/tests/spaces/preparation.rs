@@ -3,26 +3,58 @@
 use super::*;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_identity::VerifiedPermit;
-use nestlink_protocol::{Path, Permission, api::{ApprovalChoice, RemoteRequest}};
+use nestlink_protocol::{ErrorCode, Path, Permission, api::{ApprovalChoice, RemoteRequest}};
 use nestlink_sdk::network::routed::PinnedNetworkSpace;
-use std::sync::{Arc, atomic::{AtomicBool, AtomicUsize, Ordering}};
+use std::sync::{Arc, atomic::{AtomicBool, AtomicU8, AtomicUsize, Ordering}};
 
 #[derive(Default)]
 struct ResponseFault {
     lose: AtomicBool,
+    post_fault: AtomicU8,
     posts: AtomicUsize,
     gets: AtomicUsize,
 }
 async fn lose_committed_response(
     axum::extract::State(fault): axum::extract::State<Arc<ResponseFault>>,
-    request: axum::http::Request<axum::body::Body>,
+    mut request: axum::http::Request<axum::body::Body>,
     next: axum::middleware::Next,
 ) -> axum::response::Response {
     let preparation = request.uri().path().ends_with("/preparation");
     let post = preparation && request.method() == axum::http::Method::POST;
     if post { fault.posts.fetch_add(1, Ordering::SeqCst); }
     if preparation && request.method() == axum::http::Method::GET { fault.gets.fetch_add(1, Ordering::SeqCst); }
+    let post_fault = if post { fault.post_fault.swap(0, Ordering::SeqCst) } else { 0 };
+    if [1, 4, 5].contains(&post_fault) {
+        use axum::response::IntoResponse;
+        let (status, code) = match post_fault {
+            1 => (axum::http::StatusCode::FORBIDDEN, ErrorCode::PermissionRequired),
+            4 => (axum::http::StatusCode::CONFLICT, ErrorCode::ReplayRejected),
+            _ => (axum::http::StatusCode::CONFLICT, ErrorCode::InvalidMessage),
+        };
+        return (status, axum::Json(serde_json::json!({"code":code}))).into_response();
+    }
+    if post_fault == 2 {
+        // Exercise the actual Store rejection of another business digest.
+        // A fallback GET using the original query would succeed for the pair
+        // already committed by the test, incorrectly hiding this denial.
+        let body = std::mem::take(request.body_mut());
+        let bytes = axum::body::to_bytes(body, 16_384).await.expect("bounded test request");
+        let mut value: serde_json::Value = serde_json::from_slice(&bytes).expect("valid test request");
+        value["permit_sha256"] = serde_json::json!(URL_SAFE_NO_PAD.encode([77; 32]));
+        *request.body_mut() = axum::body::Body::from(serde_json::to_vec(&value).expect("test request encoding"));
+        request.headers_mut().remove(axum::http::header::CONTENT_LENGTH);
+    }
     let mut response = next.run(request).await;
+    if post_fault == 3 && response.status().is_success() {
+        // Keep the real handler and valid signatures, but return a mismatched
+        // response binding. SDK validation must fail without any replacement GET.
+        let body = std::mem::take(response.body_mut());
+        let bytes = axum::body::to_bytes(body, 16_384).await.expect("bounded test response");
+        let mut value: serde_json::Value = serde_json::from_slice(&bytes).expect("valid test response");
+        value["request_id"] = serde_json::json!(random_id());
+        *response.body_mut() = axum::body::Body::from(serde_json::to_vec(&value).expect("test response encoding"));
+        response.headers_mut().remove(axum::http::header::CONTENT_LENGTH);
+    }
     if post && response.status().is_success() && fault.lose.swap(false, Ordering::SeqCst) {
         *response.body_mut() = axum::body::Body::from_stream(futures_util::stream::once(async {
             Err::<axum::body::Bytes, _>(std::io::Error::other("test-only committed response lost"))
@@ -144,5 +176,37 @@ async fn preparation_does_not_trust_directory_key_or_revive_a_revoked_fixed_pair
     let before = f.owner.space_audit(&f.space.space_id).await?.len();
     forbidden(f.controller_sdk.prepare_network_remote(&f.pin, &f.controller, &f.permit, current.revision, current.policy_epoch).await);
     assert_eq!(f.owner.space_audit(&f.space.space_id).await?.len(), before);
+    Ok(())
+}
+
+#[tokio::test]
+async fn terminal_post_denial_or_wrong_binding_is_never_masked_by_successful_fixed_get() -> Result {
+    let f = Fixture::new().await?;
+    let prepared = f.controller_sdk.prepare_network_remote(&f.pin, &f.controller, &f.permit, f.space.revision, f.space.policy_epoch).await?;
+    // Establish that GET really would return an admissible pair for the exact
+    // original tuple. The following failures must remain visible nevertheless.
+    prepared.check_current(&f.controller_sdk, &f.controller, &f.permit).await?;
+    let gets = f.fault.gets.load(Ordering::SeqCst);
+    let audit = f.owner.space_audit(&f.space.space_id).await?.len();
+    for post_fault in [1, 2, 3, 5] {
+        let posts = f.fault.posts.load(Ordering::SeqCst);
+        f.fault.post_fault.store(post_fault, Ordering::SeqCst);
+        let result = f.controller_sdk.prepare_network_remote(&f.pin, &f.controller, &f.permit, f.space.revision, f.space.policy_epoch).await;
+        match post_fault {
+            1 | 2 => assert!(matches!(result, Err(SdkError::Api(reqwest::StatusCode::FORBIDDEN, ErrorCode::PermissionRequired)))),
+            3 => assert!(matches!(result, Err(SdkError::Trust))),
+            _ => assert!(matches!(result, Err(SdkError::Api(reqwest::StatusCode::CONFLICT, ErrorCode::InvalidMessage)))),
+        }
+        assert_eq!(f.fault.posts.load(Ordering::SeqCst), posts + 1);
+        assert_eq!(f.fault.gets.load(Ordering::SeqCst), gets);
+        assert_eq!(f.owner.space_audit(&f.space.space_id).await?.len(), audit);
+    }
+    // Only the exact Store conflict classification permits the same GET.
+    f.fault.post_fault.store(4, Ordering::SeqCst);
+    let recovered = f.controller_sdk.prepare_network_remote(&f.pin, &f.controller, &f.permit, f.space.revision, f.space.policy_epoch).await?;
+    assert_eq!(f.fault.gets.load(Ordering::SeqCst), gets + 1);
+    assert_eq!(recovered.membership_grant_ids(), prepared.membership_grant_ids());
+    assert_eq!(recovered.expires_at_unix_ms(), prepared.expires_at_unix_ms());
+    assert_eq!(f.owner.space_audit(&f.space.space_id).await?.len(), audit);
     Ok(())
 }

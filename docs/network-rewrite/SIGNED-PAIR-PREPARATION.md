@@ -35,8 +35,11 @@ No schema migration or new dependency is needed.
 
 The native SDK accepts a previously approved `PinnedNetworkSpace`, local
 `DeviceIdentity`, `VerifiedPermit` and exact selected space revision/epoch.
-It performs one fixed POST, then only the same GET if that response is lost or
-ambiguous. The original five-second setup deadline bounds both. Independent
+It performs one fixed POST, then only the same GET after a transport failure,
+timeout, lost body or exact `409/ReplayRejected` Store conflict. Authentication,
+authorization, invalid data, other HTTP errors and mismatched response bindings
+remain terminal and keep their original typed error. The original five-second
+setup deadline bounds both. Independent
 signature verification checks the local pin and compares both membership key
 digests with the business Permit; the local endpoint key must also match the
 original installation identity. The resulting `VerifiedRemotePreparation`
@@ -59,4 +62,10 @@ account removal, device revocation and archived spaces. A real HTTP handler
 commits the pair before a response body I/O error; the SDK must recover through
 one fixed GET with exactly one issuance POST and no lifetime extension. The
 same hosted test also rejects an unapproved authority pin and a nonparticipant
-local installation. Compilation, testing and formatting are Actions-only.
+local installation. Additional real HTTP cases retain a visible POST 403 even
+when GET could read a previously valid pair, exercise the actual Store rejection
+of a changed posted business digest, reject a mismatched successful response,
+and distinguish the exact Store conflict from `409/InvalidMessage`. A revoked
+PathGrant occupying the second derived ID must reject preparation and roll back
+the first sibling and its audit. Compilation, testing and formatting are
+Actions-only.

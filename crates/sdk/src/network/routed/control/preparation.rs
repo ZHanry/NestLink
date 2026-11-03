@@ -127,8 +127,13 @@ impl Sdk {
         let setup_deadline = started + Duration::from_millis((claims.expires_at_unix_ms - now).min(5_000));
         let view = tokio::time::timeout_at(setup_deadline, async {
             if issue {
-                if let Ok(view) = self.issue_network_remote_preparation(pin.space_id(), &claims.session_id, binding.clone()).await {
-                    return Ok::<_, SdkError>(view);
+                match self.issue_network_remote_preparation(pin.space_id(), &claims.session_id, binding.clone()).await {
+                    Ok(view) => return Ok(view),
+                    Err(SdkError::Transport(_) | SdkError::Timeout | SdkError::BrowserTransport)
+                    | Err(SdkError::Api(reqwest::StatusCode::CONFLICT, nestlink_protocol::ErrorCode::ReplayRejected)) => {}
+                    // Authentication, authorization, invalid data and other
+                    // terminal failures retain their original typed outcome.
+                    Err(error) => return Err(error),
                 }
             }
             self.read_network_remote_preparation(pin.space_id(), &claims.session_id, binding.clone()).await
