@@ -1,0 +1,3564 @@
+{
+  "schema_version": 1,
+  "kind": "windows-media-owner-exact-source-independent-verification",
+  "recorded_at_utc": "2026-11-03T06:54:31.7838717Z",
+  "repository": "ZHanry/NestLink",
+  "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+  "run_id": 41588898806,
+  "run_attempt": 1,
+  "workflow": "Windows actual media owner diagnostics and strict boundaries",
+  "workflow_path": ".github/workflows/windows-media-owner.yml",
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41588898806",
+  "status": "completed",
+  "conclusion": "failure",
+  "metadata_files": [
+    {
+      "path": "run.json",
+      "bytes": 11787,
+      "sha256": "767c58b93283aab893a6015b7e9c6b876e9c8b44bccc9252393f25768e4a85e7"
+    },
+    {
+      "path": "jobs.json",
+      "bytes": 14826,
+      "sha256": "2bb44f2b671a1797d669771ae7c6fb52db0976d7253b46ea38a2990addd55bb7"
+    },
+    {
+      "path": "artifacts.json",
+      "bytes": 2961,
+      "sha256": "216bd504c57556c94ff4faa1a5d6c47edc0989792a0d1fc9107bc00664cf4807"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 125760766525,
+      "name": "native-peer-process (windows-2025)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:18:50Z",
+      "completed_at": "2026-11-03T06:21:44Z",
+      "runner_name": "GitHub Actions 1000012227",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "windows-2025"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T06:18:52Z",
+          "completed_at": "2026-11-03T06:18:53Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T06:18:53Z",
+          "completed_at": "2026-11-03T06:19:03Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T06:19:03Z",
+          "completed_at": "2026-11-03T06:19:15Z"
+        },
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T06:19:15Z",
+          "completed_at": "2026-11-03T06:21:39Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T06:21:39Z",
+          "completed_at": "2026-11-03T06:21:40Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T06:21:40Z",
+          "completed_at": "2026-11-03T06:21:42Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T06:21:42Z",
+          "completed_at": "2026-11-03T06:21:42Z"
+        }
+      ]
+    },
+    {
+      "id": 125760766691,
+      "name": "native-peer-process (ubuntu-24.04)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:18:27Z",
+      "completed_at": "2026-11-03T06:20:03Z",
+      "runner_name": "GitHub Actions 1000012226",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T06:18:29Z",
+          "completed_at": "2026-11-03T06:18:30Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T06:18:30Z",
+          "completed_at": "2026-11-03T06:18:31Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T06:18:31Z",
+          "completed_at": "2026-11-03T06:18:39Z"
+        },
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T06:18:39Z",
+          "completed_at": "2026-11-03T06:20:00Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T06:20:00Z",
+          "completed_at": "2026-11-03T06:20:01Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T06:20:01Z",
+          "completed_at": "2026-11-03T06:20:01Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T06:20:01Z",
+          "completed_at": "2026-11-03T06:20:01Z"
+        }
+      ]
+    },
+    {
+      "id": 125760766796,
+      "name": "owner-boundaries (windows-2022)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T06:18:14Z",
+      "completed_at": "2026-11-03T06:40:08Z",
+      "runner_name": "GitHub Actions 1000012224",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "windows-2022"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T06:18:15Z",
+          "completed_at": "2026-11-03T06:18:17Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T06:18:17Z",
+          "completed_at": "2026-11-03T06:18:27Z"
+        },
+        {
+          "name": "Verify exact hosted source and preserve input provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T06:18:27Z",
+          "completed_at": "2026-11-03T06:18:29Z"
+        },
+        {
+          "name": "Verify diagnostic analyzer negatives on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T06:18:29Z",
+          "completed_at": "2026-11-03T06:18:30Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T06:18:30Z",
+          "completed_at": "2026-11-03T06:18:42Z"
+        },
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T06:18:42Z",
+          "completed_at": "2026-11-03T06:19:48Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T06:19:48Z",
+          "completed_at": "2026-11-03T06:20:05Z"
+        },
+        {
+          "name": "Select native codec prefix",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T06:20:05Z",
+          "completed_at": "2026-11-03T06:20:05Z"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T06:20:05Z",
+          "completed_at": "2026-11-03T06:22:20Z"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T06:22:20Z",
+          "completed_at": "2026-11-03T06:22:20Z"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T06:22:20Z",
+          "completed_at": "2026-11-03T06:26:07Z"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 12,
+          "started_at": "2026-11-03T06:26:07Z",
+          "completed_at": "2026-11-03T06:28:32Z"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 13,
+          "started_at": "2026-11-03T06:28:32Z",
+          "completed_at": "2026-11-03T06:30:34Z"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T06:30:34Z",
+          "completed_at": "2026-11-03T06:32:35Z"
+        },
+        {
+          "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-03T06:32:35Z",
+          "completed_at": "2026-11-03T06:33:17Z"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-11-03T06:33:17Z",
+          "completed_at": "2026-11-03T06:36:05Z"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-03T06:36:05Z",
+          "completed_at": "2026-11-03T06:38:39Z"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 18,
+          "started_at": "2026-11-03T06:38:39Z",
+          "completed_at": "2026-11-03T06:40:01Z"
+        },
+        {
+          "name": "Retain exact-source evidence including failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-03T06:40:01Z",
+          "completed_at": "2026-11-03T06:40:03Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 38,
+          "started_at": "2026-11-03T06:40:03Z",
+          "completed_at": "2026-11-03T06:40:05Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 39,
+          "started_at": "2026-11-03T06:40:05Z",
+          "completed_at": "2026-11-03T06:40:05Z"
+        }
+      ]
+    },
+    {
+      "id": 125760767134,
+      "name": "owner-boundaries (windows-2025)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T06:18:53Z",
+      "completed_at": "2026-11-03T06:42:28Z",
+      "runner_name": "GitHub Actions 1000012228",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "windows-2025"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T06:18:55Z",
+          "completed_at": "2026-11-03T06:18:56Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T06:18:56Z",
+          "completed_at": "2026-11-03T06:19:07Z"
+        },
+        {
+          "name": "Verify exact hosted source and preserve input provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T06:19:07Z",
+          "completed_at": "2026-11-03T06:19:08Z"
+        },
+        {
+          "name": "Verify diagnostic analyzer negatives on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T06:19:08Z",
+          "completed_at": "2026-11-03T06:19:09Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T06:19:09Z",
+          "completed_at": "2026-11-03T06:19:23Z"
+        },
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T06:19:23Z",
+          "completed_at": "2026-11-03T06:20:33Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T06:20:33Z",
+          "completed_at": "2026-11-03T06:20:52Z"
+        },
+        {
+          "name": "Select native codec prefix",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T06:20:52Z",
+          "completed_at": "2026-11-03T06:20:52Z"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T06:20:52Z",
+          "completed_at": "2026-11-03T06:23:12Z"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T06:23:12Z",
+          "completed_at": "2026-11-03T06:23:13Z"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T06:23:13Z",
+          "completed_at": "2026-11-03T06:27:07Z"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 12,
+          "started_at": "2026-11-03T06:27:07Z",
+          "completed_at": "2026-11-03T06:30:05Z"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 13,
+          "started_at": "2026-11-03T06:30:05Z",
+          "completed_at": "2026-11-03T06:32:15Z"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T06:32:15Z",
+          "completed_at": "2026-11-03T06:34:27Z"
+        },
+        {
+          "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-03T06:34:27Z",
+          "completed_at": "2026-11-03T06:35:11Z"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-11-03T06:35:11Z",
+          "completed_at": "2026-11-03T06:38:09Z"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-03T06:38:09Z",
+          "completed_at": "2026-11-03T06:40:53Z"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 18,
+          "started_at": "2026-11-03T06:40:53Z",
+          "completed_at": "2026-11-03T06:42:21Z"
+        },
+        {
+          "name": "Retain exact-source evidence including failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-03T06:42:21Z",
+          "completed_at": "2026-11-03T06:42:23Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 38,
+          "started_at": "2026-11-03T06:42:23Z",
+          "completed_at": "2026-11-03T06:42:25Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 39,
+          "started_at": "2026-11-03T06:42:25Z",
+          "completed_at": "2026-11-03T06:42:25Z"
+        }
+      ]
+    }
+  ],
+  "artifact_count": 4,
+  "official_zip_verification_count": 4,
+  "independent_downloaded_file_count": 64.0,
+  "producer_payload_verification_count": 4.0,
+  "producer_command_log_verification_count": 0.0,
+  "artifacts": [
+    {
+      "id": 13210511147,
+      "name": "windows-media-owner-windows-2025-59abafc3dc48a101de8320efebb1db511e83a11f-1",
+      "official_digest": "sha256:85cacc4a8983e78c9e663feed70919a5b77652385d53fca46dd5f29adb218873",
+      "zip_sha256": "85cacc4a8983e78c9e663feed70919a5b77652385d53fca46dd5f29adb218873",
+      "zip_bytes": 63133,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 29,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "amf-boundary-tests.log",
+          "bytes": 49627,
+          "sha256": "83c62012d11c44b67d412a6fc3cd29a8d4b18ef8edb44601e6c0235c1ccbef30"
+        },
+        {
+          "path": "capture-precision-clippy.log",
+          "bytes": 3111,
+          "sha256": "c5092d3f39a541c9864b8d2254fdcddbbc30c15cde1521bedca16bd9e06a64b8"
+        },
+        {
+          "path": "compressed-context-tests.log",
+          "bytes": 14997,
+          "sha256": "dc1a391ab5b90f0abe3fda21cd3935dfd5e6c899fb567f8327c4adb248ec6aef"
+        },
+        {
+          "path": "compressed-native-tests.log",
+          "bytes": 49766,
+          "sha256": "144fe43a494e71c85e8e181d93135ac6f6fc62427a3e562d853d6088331ba054"
+        },
+        {
+          "path": "daemon-hevc-selection-tests.log",
+          "bytes": 14603,
+          "sha256": "8f5ccca2c6d373d9d44720776879a457013ebb21540b7e08e18afd90caff0f91"
+        },
+        {
+          "path": "daemon-media-clippy.log",
+          "bytes": 21284,
+          "sha256": "4bd6f5089c92f8dbcec0892a0c19f29cbb90ea115c4c254bdaf749eae3934137"
+        },
+        {
+          "path": "decoded-export-owner-tests.log",
+          "bytes": 965,
+          "sha256": "15ee4cced988bf0152f536a07c6d22fce81fec139c2de32a435c7fe02e367124"
+        },
+        {
+          "path": "desktop-clippy.log",
+          "bytes": 30095,
+          "sha256": "37b606ecea0f5899f9e6bfee523613ca0899a1160602de3aec9a33d2a32987c7"
+        },
+        {
+          "path": "h264-output-geometry-tests.log",
+          "bytes": 1265,
+          "sha256": "a45f39196fd85040bf45317831785f7e8d6e93b88fc7c94560d3ee1d660db40b"
+        },
+        {
+          "path": "hevc-backend-selection-tests.log",
+          "bytes": 588,
+          "sha256": "e26dc770a2abb963ca7aabbba4779948a74bc836ab3e0ccdebe58db01c6e9585"
+        },
+        {
+          "path": "hevc-clippy.log",
+          "bytes": 877,
+          "sha256": "feca1776ba806ab3c286e052a6879e0d23eebdb61fbbf2880e93c305316630de"
+        },
+        {
+          "path": "hevc-contract-tests.log",
+          "bytes": 1867,
+          "sha256": "9d529e495fdbd7a41970cf232715cbda31bea4d4a0a5602fc5a35630f23fc56d"
+        },
+        {
+          "path": "hevc-execution-tests.log",
+          "bytes": 1319,
+          "sha256": "d3db7cc0c214c63b9e6143317255a1c4ddb6679e0c49fe2e367139bc8f3d23df"
+        },
+        {
+          "path": "hevc-mf-color-tests.log",
+          "bytes": 606,
+          "sha256": "2a1a21d051810b0dd874156cf15c10f99d6e23dfc517d6e023cdf399cc4f50ad"
+        },
+        {
+          "path": "hevc-target-tests.log",
+          "bytes": 2976,
+          "sha256": "3bdd6431ff0ef6bbeb1e926edc72ca812da06232c1538981beead190dec881a0"
+        },
+        {
+          "path": "media-opt-in-approval-tests.log",
+          "bytes": 14586,
+          "sha256": "052893853b3ebd7f03f4fac3d93390b341f83ff3cb132a70c13824f1d2cbebaa"
+        },
+        {
+          "path": "media-opt-in-cli-tests.log",
+          "bytes": 21306,
+          "sha256": "d3a2e546f69781d56fa5d0c128471b2aa5e3f1badbd3243f9e80205e43223205"
+        },
+        {
+          "path": "media-opt-in-config-tests.log",
+          "bytes": 15661,
+          "sha256": "aa0d0a682809182bdc7ec7731d93c09364f54dbb51f9c9c743eb9d566b43b612"
+        },
+        {
+          "path": "media-opt-in-http-tests.log",
+          "bytes": 15004,
+          "sha256": "f82f01716eddd75d3e1cc60f5b9278f87a849e33539d265c948b0f51b163525e"
+        },
+        {
+          "path": "media-provider-tests.log",
+          "bytes": 22065,
+          "sha256": "7fd4b2c6af567e53ea51af3a692a38fb6b522ce061870246a28aa978a6d36887"
+        },
+        {
+          "path": "mf-adapter-binding-tests.log",
+          "bytes": 841,
+          "sha256": "bd93f475a48c2ed99ab67e1d1d5d364f7301030f5bae041491a4263bba10fc9b"
+        },
+        {
+          "path": "native-media-wire-tests.log",
+          "bytes": 1593,
+          "sha256": "86e208ad020afd3309df9c96b575668eca709714a6bf3dee859fec62e74658d8"
+        },
+        {
+          "path": "readback-ipc-tests.log",
+          "bytes": 17314,
+          "sha256": "8078353e432d29f5c6c5bb9511bdcbc35d0d0ed07a0d26b7cb56f507047223f1"
+        },
+        {
+          "path": "receiver-tests.log",
+          "bytes": 25315,
+          "sha256": "31ec2e5df72a5685a9e1eebef1b660d09c78146e22dce3cba586e17658c798cc"
+        },
+        {
+          "path": "shared-surface-descriptor-tests.log",
+          "bytes": 14955,
+          "sha256": "79bcd07ad3eb04fce081a25a0d6e63908d44a994029af410402fe922044bed2d"
+        },
+        {
+          "path": "shared-surface-transfer-claim-tests.log",
+          "bytes": 648,
+          "sha256": "882066f542583313259fa4ca6cb9b669eabaf7b1de0d650f75913a74890bd09a"
+        },
+        {
+          "path": "signed-store-media-tests.log",
+          "bytes": 3862,
+          "sha256": "0754e4aa26a2b7d80fcdad1991b8bf82c3c282cf6c4ed0f95fd15c000c97a6b4"
+        },
+        {
+          "path": "source-receipt.json",
+          "bytes": 689,
+          "sha256": "e4a0736fab3b3cb52bc067e653c64d6a7467f5c39de38531122e40fc2b2ad16b"
+        },
+        {
+          "path": "wgc-float16-source-tests.log",
+          "bytes": 3364,
+          "sha256": "dc421ab98ade85188bb0bc9d300f07e6138650a2e1e01dec69603e4f7dbbcd51"
+        }
+      ],
+      "producer_payload_inventory_count": 0,
+      "producer_payload_verifications": [],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": false,
+      "producer_inventory_limitation": "Official ZIP verified and all extracted files independently hashed; this artifact has no producer payload inventory.",
+      "reports": [
+        {
+          "file": "source-receipt.json",
+          "source_claims": [
+            {
+              "field": "source_revision",
+              "value": "59abafc3dc48a101de8320efebb1db511e83a11f",
+              "matches": true
+            },
+            {
+              "field": "workflow_revision",
+              "value": "59abafc3dc48a101de8320efebb1db511e83a11f",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": null,
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "source_receipt": {
+            "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+            "workflow_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+            "run_id": "41588898806",
+            "attempt": "1",
+            "runner_environment": "github-hosted",
+            "runner_os": "Windows",
+            "runner_label": "windows-2025",
+            "dependency_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+            "hardware_or_target_acceptance_claimed": false,
+            "tool_sources": {
+              "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+              "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+            }
+          }
+        }
+      ],
+      "test_logs": [
+        {
+          "file": "amf-boundary-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 68,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_amf::boundary_tests::original_native_range_types_release_flags_and_null_device_are_strict ... ok",
+            "test windows_amf::boundary_tests::requested_level_covers_exact_picture_rate_bitrate_and_dimension_boundaries ... ok",
+            "test windows_amf::boundary_tests::optional_legacy_properties_require_complete_consistent_absence ... ok",
+            "test windows_amf::boundary_tests::exact_base_layer_alias_requires_same_typed_descriptor_and_value ... ok"
+          ]
+        },
+        {
+          "file": "compressed-context-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 16,
+              "elapsed_seconds": 0.09
+            }
+          ],
+          "case_lines": [
+            "test compressed_video::tests::stale_decode_requires_every_other_context_field_to_match ... ok",
+            "test compressed_video::tests::exact_hevc_canonical_container_does_not_enable_the_old_h264_ipc_context ... ok",
+            "test compressed_video::tests::compressed_v2_requires_exact_format_identity_and_canonical_bytes ... ok",
+            "test compressed_video::tests::tls_data_ticket_rejects_other_runtime_ui_replay_and_expiry ... ok"
+          ]
+        },
+        {
+          "file": "compressed-native-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 0,
+              "elapsed_seconds": 3.78
+            }
+          ],
+          "case_lines": [
+            "test two_tls_connections_reuse_decoded_credit_and_release_only_after_owner_join ... ok"
+          ]
+        },
+        {
+          "file": "daemon-hevc-selection-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 66,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test native_video::hevc::tests::original_capture_cancel_latch_denies_submit_and_cannot_revive_after_checked_reset ... ok",
+            "test native_video::hevc::tests::signed_hevc_selection_never_scales_an_unapproved_monitor_or_uses_a_legacy_codec ... ok"
+          ]
+        },
+        {
+          "file": "decoded-export-owner-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 3,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 74,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test decoded_export::tests::hevc_metadata_without_original_sealed_output_cannot_open_export ... ok",
+            "test decoded_export::tests::incomplete_overflow_expiry_and_context_change_retire_export ... ok",
+            "test decoded_export::tests::bounded_transfer_is_not_a_decode_or_presentation_acknowledgement ... ok"
+          ]
+        },
+        {
+          "file": "h264-output-geometry-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 71,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_gpu_presenter::geometry_tests::native_output_matches_real_sps_padding_and_rejects_unbound_or_conflicting_apertures ... ok"
+          ]
+        },
+        {
+          "file": "hevc-backend-selection-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 71,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test hevc_backend::tests::implementation_runtime_pairs_are_explicit_and_never_interchangeable ... ok"
+          ]
+        },
+        {
+          "file": "hevc-contract-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 8,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 64,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test hevc_probe::tests::diagnostic_codes_preserve_main8_sdr_and_restricted_sps_rejections ... ok",
+            "test hevc_probe::tests::au_diagnostics_classify_nal_type_slice_count_and_do_not_commit_bad_state ... ok",
+            "test hevc_probe::tests::exact_main8_high_frame_levels_keep_full_ptl_and_admission_history ... ok",
+            "test hevc_probe::tests::h264_and_truncated_hevc_are_rejected ... ok",
+            "test hevc_probe::tests::main10_contract_matches_v4_surface_budget_without_widening_legacy ... ok",
+            "test hevc_probe::tests::actual_main8_contract_keeps_exact_ptl_and_rejected_change_cannot_poison_history ... ok",
+            "test hevc_probe::tests::restricted_main8_sps_and_explicit_color_conflicts ... ok",
+            "test hevc_probe::tests::main10_exact_sps_requires_ten_bit_luma_chroma_main10_profile_and_sdr_color ... ok"
+          ]
+        },
+        {
+          "file": "hevc-execution-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 5,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 67,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test hevc_execution::tests::encoder_runtime_is_part_of_frozen_target_and_cannot_open_a_decoder ... ok",
+            "test hevc_execution::tests::registration_is_not_output_and_exact_bytes_pts_direction_are_sealed ... ok",
+            "test hevc_execution::tests::abandoned_and_late_command_fence_the_original_generation ... ok",
+            "test hevc_execution::tests::revoked_start_never_constructs_a_native_source ... ok",
+            "test hevc_execution::tests::checked_native_close_failure_poisoned_slot_never_becomes_joined ... ok"
+          ]
+        },
+        {
+          "file": "hevc-mf-color-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 71,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_mf::hevc_color_tests::supported_color_properties_must_roundtrip_and_mf_enums_remain_exact ... ok"
+          ]
+        },
+        {
+          "file": "hevc-target-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 73,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test hevc_negotiated_format::tests::legacy_and_nonexecutable_main8_timing_or_surface_are_not_remapped ... ok",
+            "test hevc_negotiated_format::tests::exact_4k_144_target_preserves_hardware_format_and_level_rate_limits ... ok",
+            "test hevc_negotiated_format::tests::main10_execution_requires_v4_and_keeps_exact_depth_digest_and_hardware ... ok",
+            "test hevc_negotiated_format::tests::exact_target_keeps_every_ptl_bit_and_independent_wire_digest ... ok"
+          ]
+        },
+        {
+          "file": "media-opt-in-approval-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 84,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test sdk_call::media_approval_tests::review_rejects_changed_nonce_revision_scope_host_state_or_deadline_before_probe ... ok",
+            "test sdk_call::media_approval_tests::approved_media_requires_view_and_exact_permission_path_subsets ... ok"
+          ]
+        },
+        {
+          "file": "media-opt-in-cli-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 7,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 61,
+              "elapsed_seconds": 0.04
+            }
+          ],
+          "case_lines": [
+            "test media_cli_tests::explicit_gpu_target_cannot_mix_with_software_or_infer_other_formats ... ok",
+            "test media_cli_tests::gpu_4k_144_target_keeps_exact_values_without_entering_cpu_rate_limits ... ok",
+            "test media_cli_tests::hevc_fallback_cli_requires_an_explicit_hevc_mode_and_rejects_foreign_budgets ... ok",
+            "test media_cli_tests::main10_cli_has_explicit_sdr_target_and_cannot_mix_with_main8_or_software ... ok",
+            "test media_cli_tests::encoder_cli_rejects_unknown_alone_duplicate_and_software_combinations ... ok",
+            "test media_cli_tests::actual_media_config_rejects_invalid_combinations_before_any_probe_or_policy_read ... ok",
+            "test media_cli_tests::explicit_encoder_cli_reaches_the_actual_configured_provider_and_keeps_mf_default ... ok"
+          ]
+        },
+        {
+          "file": "media-opt-in-config-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 7,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 79,
+              "elapsed_seconds": 1.79
+            }
+          ],
+          "case_lines": [
+            "test native_session::tests::gpu_approval_requires_local_host_and_one_exact_main8_target ... ok",
+            "test native_session::tests::explicit_software_scope_mismatch_fails_without_legacy_downgrade ... ok",
+            "test native_session::tests::gpu_publication_data_checks_bind_exact_direction_target_and_reject_withdrawal ... ok",
+            "test native_session::tests::main10_opt_in_routes_v4_and_cannot_approve_or_publish_a_main8_scope ... ok",
+            "test native_session::tests::hevc_fallback_approval_accepts_only_the_two_explicit_signed_budgets ... ok",
+            "test native_session::tests::gpu_opt_in_routes_v3_only_and_rejects_provider_replacement_and_cpu_policy ... ok",
+            "test native_session::tests::explicit_pcp_requires_deployment_permission_even_without_deployment_stun ... ok"
+          ]
+        },
+        {
+          "file": "media-opt-in-http-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 0,
+              "elapsed_seconds": 3.3
+            }
+          ],
+          "case_lines": [
+            "test explicit_gpu_request_rejects_trusted_access_and_missing_view_before_publication ... ok",
+            "test explicit_main10_request_rejects_trusted_access_and_missing_view_before_publication ... ok",
+            "test legacy_pending_request_cannot_be_reinterpreted_as_reviewed_gpu_media ... ok",
+            "test legacy_pending_request_cannot_be_reinterpreted_as_reviewed_main10_media ... ok"
+          ]
+        },
+        {
+          "file": "media-provider-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 16,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 70,
+              "elapsed_seconds": 0.1
+            }
+          ],
+          "case_lines": [
+            "test native_media_provider::tests::adaptive_cpu_targets_are_bounded_exact_budgets_below_the_product_ceiling ... ok",
+            "test native_media_provider::tests::candidate_provider_keeps_old_single_target_and_uses_only_explicit_lower_targets ... ok",
+            "test native_media_provider::tests::cache_boundary_expiry_device_and_direction_never_extend_original_receipt ... ok",
+            "test native_media_provider::tests::dropping_probe_waiter_marks_owner_for_quarantine_and_actual_join ... ok",
+            "test native_media_provider::tests::explicit_cpu_target_rejects_unsupported_geometry_rate_and_bitrate ... ok",
+            "test native_media_provider::tests::explicit_hevc_target_is_single_exact_and_cannot_enter_the_cpu_candidate ... ok",
+            "test native_media_provider::tests::generation_exhaustion_never_saturates_or_reuses_identifier ... ok",
+            "test native_media_provider::tests::gpu_high_frame_and_4k_targets_are_configurations_until_each_direction_actually_probes ... ok",
+            "test native_media_provider::tests::hevc_second_budget_is_explicit_bounded_and_keeps_the_original_backend ... ok",
+            "test native_media_provider::tests::local_encoder_selection_binds_whole_probe_and_original_expiry ... ok",
+            "test native_media_provider::tests::main10_allocation_is_rejected_before_probing_and_keeps_main8_budget ... ok",
+            "test native_media_provider::tests::local_selection_history_has_a_hard_bound_and_never_evicts_valid_old_probes ... ok",
+            "test native_media_provider::tests::merged_hevc_probe_evidence_rejects_a_changed_driver_or_encoder_runtime ... ok",
+            "test native_media_provider::tests::successful_abandoned_probe_releases_only_after_actual_join ... ok",
+            "test native_media_provider::tests::prewarm_completion_requires_current_dispatch_and_retains_single_pending_worker ... ok",
+            "test native_media_provider::tests::cancelled_error_and_panicked_probe_join_never_authorize_slot_reuse ... ok"
+          ]
+        },
+        {
+          "file": "mf-adapter-binding-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 70,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_mf::adapter_binding_tests::exact_scoped_enumeration_allows_only_absent_optional_activation_identity ... ok",
+            "test windows_mf::adapter_binding_tests::real_attributes_require_exact_luid_blob_and_both_adapter_parts ... ok"
+          ]
+        },
+        {
+          "file": "native-media-wire-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 8,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 0,
+              "elapsed_seconds": 0.03
+            }
+          ],
+          "case_lines": [
+            "test metadata_domains_reject_invalid_epochs_sequences_and_timestamps ... ok",
+            "test format_epoch_digest_shape_is_strict_for_video_and_recovery ... ok",
+            "test independent_native_wire_vectors_fix_field_numbers_and_clocks ... ok",
+            "test hevc_wire_marker_requires_exact_identity_and_keeps_legacy_markers_strict ... ok",
+            "test opus_packet_bytes_and_channel_identity_are_bounded ... ok",
+            "test video_feedback_wire_budget_and_required_domains_are_bounded ... ok",
+            "test vp8_flags_geometry_and_partition_bounds_must_match_envelope ... ok",
+            "test received_and_serialized_envelopes_include_metadata_in_their_budgets ... ok"
+          ]
+        },
+        {
+          "file": "readback-ipc-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 17,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 3,
+              "elapsed_seconds": 0.15
+            }
+          ],
+          "case_lines": [
+            "test compressed_video::tests::stale_decode_requires_every_other_context_field_to_match ... ok",
+            "test compressed_video::tests::exact_hevc_canonical_container_does_not_enable_the_old_h264_ipc_context ... ok",
+            "test compressed_video::tests::compressed_v2_requires_exact_format_identity_and_canonical_bytes ... ok",
+            "test shared_video::tests::main10_shared_context_requires_v4_exact_depth_and_doubled_p010_ring_bytes ... ok",
+            "test shared_video::tests::shared_descriptor_syntax_requires_exact_format_owner_ring_and_budget ... ok",
+            "test shared_video::tests::shared_frame_cannot_change_keys_slot_sequence_or_resource_deadline ... ok",
+            "test video::tests::hevc_readback_pixels_have_an_independent_strict_magic ... ok",
+            "test video::tests::layout_headers_must_advance_and_closed_headers_must_match_the_bound_layout ... ok",
+            "test video::tests::old_layout_frames_and_nonmonotonic_frames_are_rejected ... ok",
+            "test video::tests::stream_header_binds_runtime_generation_request_connection_and_source ... ok",
+            "test video::tests::stream_header_rejects_bad_geometry_and_payload_budgets_before_allocation ... ok",
+            "test video::tests::video_header_rejects_noncanonical_identity_and_geometry ... ok",
+            "test video::tests::video_header_round_trips_the_full_local_binding_and_limits ... ok",
+            "test video::tests::video_stream_authorization_fails_closed_without_a_connected_view_session ... ok",
+            "test video::tests::video_client_opens_and_receives_a_binary_frame_over_mutual_local_tls ... ok",
+            "test shared_video::tests::native_tls_shared_open_requires_live_view_and_exact_ui_before_any_handle_export ... ok",
+            "test compressed_video::tests::tls_data_ticket_rejects_other_runtime_ui_replay_and_expiry ... ok"
+          ]
+        },
+        {
+          "file": "shared-surface-descriptor-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 16,
+              "elapsed_seconds": 0.05
+            }
+          ],
+          "case_lines": [
+            "test shared_video::tests::main10_shared_context_requires_v4_exact_depth_and_doubled_p010_ring_bytes ... ok",
+            "test shared_video::tests::shared_descriptor_syntax_requires_exact_format_owner_ring_and_budget ... ok",
+            "test shared_video::tests::shared_frame_cannot_change_keys_slot_sequence_or_resource_deadline ... ok",
+            "test shared_video::tests::native_tls_shared_open_requires_live_view_and_exact_ui_before_any_handle_export ... ok"
+          ]
+        },
+        {
+          "file": "shared-surface-transfer-claim-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 71,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_shared_output::transfer_claim_tests::destination_claim_retains_one_owner_and_tombstones_closed_numeric_handles ... ok"
+          ]
+        },
+        {
+          "file": "signed-store-media-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 10,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 71,
+              "elapsed_seconds": 10.18
+            }
+          ],
+          "case_lines": [
+            "test control::media_authority_tests::frozen_scope_requires_explicit_signed_approval_and_never_widens_from_latest_catalog ... ok",
+            "test control::media_authority_tests::internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets ... ok",
+            "test control::media_authority_tests::internal_software_candidate_rejects_account_peer_target_and_expiry ... ok",
+            "test control::media_authority_tests::internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_block_prepared_renewal_and_reconnection ... ok",
+            "test control::media_authority_tests::v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain ... ok",
+            "test control::media_authority_tests::management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publication_recovers ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_allow_reviewed_decision_but_block_initial_issuance ... ok",
+            "test control::media_authority_tests::signed_media_public_lifecycle_issues_renews_and_reconnects_without_scope_widening ... ok",
+            "test control::media_authority_tests::v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain ... ok"
+          ]
+        },
+        {
+          "file": "wgc-float16-source-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 5,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows::host::precision_source_tests::exact_float16_conversion_and_sticky_source_metadata_boundaries ... ok"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 13210226282,
+      "name": "windows-media-owner-windows-2022-59abafc3dc48a101de8320efebb1db511e83a11f-1",
+      "official_digest": "sha256:b50d66c52b96a432287f89c32d84c19ec03d46c4f184124e996569c485418d27",
+      "zip_sha256": "b50d66c52b96a432287f89c32d84c19ec03d46c4f184124e996569c485418d27",
+      "zip_bytes": 63158,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 29,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "amf-boundary-tests.log",
+          "bytes": 49627,
+          "sha256": "6a0601974cba2c9f5d6e7e89e400600031558b2e1b6e5a4cf6f177045d1a8af5"
+        },
+        {
+          "path": "capture-precision-clippy.log",
+          "bytes": 3111,
+          "sha256": "5ccbebf2f3b3e8d376f0762cc88c39b77fdd351c1cf74c5463f00e72384b6266"
+        },
+        {
+          "path": "compressed-context-tests.log",
+          "bytes": 14997,
+          "sha256": "a79ab15f5f69585466d0f69b7311bb072d6740fc5e390e19011975325365e086"
+        },
+        {
+          "path": "compressed-native-tests.log",
+          "bytes": 49765,
+          "sha256": "85534a28d2524ac8995b74d2b23e0bbf07a70b9f1c1a34c5a37281151a7a23aa"
+        },
+        {
+          "path": "daemon-hevc-selection-tests.log",
+          "bytes": 14603,
+          "sha256": "79baef00241d5d62c37de631c2d8c6b964e59a2ebd148bfa19c46c7b4062a99e"
+        },
+        {
+          "path": "daemon-media-clippy.log",
+          "bytes": 21284,
+          "sha256": "da1c7c010a048008bc8def3d7e28fe0044d0c1ac7dde0e1cab6d6ae7b2419639"
+        },
+        {
+          "path": "decoded-export-owner-tests.log",
+          "bytes": 965,
+          "sha256": "61d2f2fe3b74cc18a23bca7e8bab8aafb555f6453f1598a5f772cb8931ef578b"
+        },
+        {
+          "path": "desktop-clippy.log",
+          "bytes": 30095,
+          "sha256": "f7ec73659454045207076a6f29a168b340217b242265fed914d70a422798f6a7"
+        },
+        {
+          "path": "h264-output-geometry-tests.log",
+          "bytes": 1265,
+          "sha256": "3a72b78fed277b21b28a5bf3210f6c1a92e7dada204df5716e2a774043e3c38b"
+        },
+        {
+          "path": "hevc-backend-selection-tests.log",
+          "bytes": 588,
+          "sha256": "3d2881527b0881a55bd9abd8a1f873bc4a3593e7a3b7e623b47797f34095ae5c"
+        },
+        {
+          "path": "hevc-clippy.log",
+          "bytes": 877,
+          "sha256": "cb3b8fb42cb235c0b4b17e2c4ca229c8604c1ca7905e0d79ca63e7712da613d5"
+        },
+        {
+          "path": "hevc-contract-tests.log",
+          "bytes": 1867,
+          "sha256": "aabc6a44357d2f52bbe2fec4b00db38afdf482604d27f5245a31ba6aa12113bc"
+        },
+        {
+          "path": "hevc-execution-tests.log",
+          "bytes": 1319,
+          "sha256": "f178e0a0505d1d25a9c33816121c81c9e103d8a6cd298181188872e1477d8fb0"
+        },
+        {
+          "path": "hevc-mf-color-tests.log",
+          "bytes": 606,
+          "sha256": "b7baf4626eb5fc643b7cbd4ad326d7d163276d490a8cc79061852a98a0d128a9"
+        },
+        {
+          "path": "hevc-target-tests.log",
+          "bytes": 2976,
+          "sha256": "cc98ac901740adf1b3610809a8810fba4a78302a4cc865c0381b0df2d722a6b0"
+        },
+        {
+          "path": "media-opt-in-approval-tests.log",
+          "bytes": 14586,
+          "sha256": "d47c94384ac6979466e33392adca2feac7e4c154397391563e26c2947556f2d2"
+        },
+        {
+          "path": "media-opt-in-cli-tests.log",
+          "bytes": 21306,
+          "sha256": "672044017987106e6633bb9cfc85bbc4a9513e0ad78cc849a5045cfbe7e865ed"
+        },
+        {
+          "path": "media-opt-in-config-tests.log",
+          "bytes": 15661,
+          "sha256": "eecf6f28560d87589542e873daa0616f4c0e16c7af9a417eb7bac92978c6f3f8"
+        },
+        {
+          "path": "media-opt-in-http-tests.log",
+          "bytes": 15004,
+          "sha256": "d1a44e20c121463e88b6171122d1c51a42f7720ef8f44ef2f9a10903b482d96e"
+        },
+        {
+          "path": "media-provider-tests.log",
+          "bytes": 22064,
+          "sha256": "ec7a446d9365dc24720b40709d4b423ad9b6e03c1b97f639063616473a0afa02"
+        },
+        {
+          "path": "mf-adapter-binding-tests.log",
+          "bytes": 841,
+          "sha256": "bd93f475a48c2ed99ab67e1d1d5d364f7301030f5bae041491a4263bba10fc9b"
+        },
+        {
+          "path": "native-media-wire-tests.log",
+          "bytes": 1593,
+          "sha256": "35933ea54057fe5375c33adb2db7a3a55e941b6244ca4ceb7630854ec89cb47e"
+        },
+        {
+          "path": "readback-ipc-tests.log",
+          "bytes": 17314,
+          "sha256": "856eeed272a34f0d0f4604e6e031e7bbdc0c6bb4028c1a7dc88d6a39966026fc"
+        },
+        {
+          "path": "receiver-tests.log",
+          "bytes": 25315,
+          "sha256": "82dcccb25c5494f966fd234564103f7ac4006da0a4feae4f7511ec1641113f8d"
+        },
+        {
+          "path": "shared-surface-descriptor-tests.log",
+          "bytes": 14955,
+          "sha256": "461c8b38377ab65d74941e759a346eb9be4e61a7a8789d48738f34ac11f02c3c"
+        },
+        {
+          "path": "shared-surface-transfer-claim-tests.log",
+          "bytes": 648,
+          "sha256": "0a04827a99d40edc439633ad5402eace0bc64803bf177a8c6585ede199ab46d7"
+        },
+        {
+          "path": "signed-store-media-tests.log",
+          "bytes": 3861,
+          "sha256": "0eea37870e32f53995623333c6c1296dbffac31b2326616165b96a013333a662"
+        },
+        {
+          "path": "source-receipt.json",
+          "bytes": 689,
+          "sha256": "ada8aa466854f32a42e75322a4b43cf01b7809601febfd78aaf050920510d9e7"
+        },
+        {
+          "path": "wgc-float16-source-tests.log",
+          "bytes": 3364,
+          "sha256": "00990fbac744055e8b95a5b1bf3d6243332624ca182b98be79f010f8fddcd342"
+        }
+      ],
+      "producer_payload_inventory_count": 0,
+      "producer_payload_verifications": [],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": false,
+      "producer_inventory_limitation": "Official ZIP verified and all extracted files independently hashed; this artifact has no producer payload inventory.",
+      "reports": [
+        {
+          "file": "source-receipt.json",
+          "source_claims": [
+            {
+              "field": "source_revision",
+              "value": "59abafc3dc48a101de8320efebb1db511e83a11f",
+              "matches": true
+            },
+            {
+              "field": "workflow_revision",
+              "value": "59abafc3dc48a101de8320efebb1db511e83a11f",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": null,
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "source_receipt": {
+            "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+            "workflow_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+            "run_id": "41588898806",
+            "attempt": "1",
+            "runner_environment": "github-hosted",
+            "runner_os": "Windows",
+            "runner_label": "windows-2022",
+            "dependency_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+            "hardware_or_target_acceptance_claimed": false,
+            "tool_sources": {
+              "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+              "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+            }
+          }
+        }
+      ],
+      "test_logs": [
+        {
+          "file": "amf-boundary-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 68,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_amf::boundary_tests::original_native_range_types_release_flags_and_null_device_are_strict ... ok",
+            "test windows_amf::boundary_tests::requested_level_covers_exact_picture_rate_bitrate_and_dimension_boundaries ... ok",
+            "test windows_amf::boundary_tests::optional_legacy_properties_require_complete_consistent_absence ... ok",
+            "test windows_amf::boundary_tests::exact_base_layer_alias_requires_same_typed_descriptor_and_value ... ok"
+          ]
+        },
+        {
+          "file": "compressed-context-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 16,
+              "elapsed_seconds": 0.09
+            }
+          ],
+          "case_lines": [
+            "test compressed_video::tests::stale_decode_requires_every_other_context_field_to_match ... ok",
+            "test compressed_video::tests::exact_hevc_canonical_container_does_not_enable_the_old_h264_ipc_context ... ok",
+            "test compressed_video::tests::compressed_v2_requires_exact_format_identity_and_canonical_bytes ... ok",
+            "test compressed_video::tests::tls_data_ticket_rejects_other_runtime_ui_replay_and_expiry ... ok"
+          ]
+        },
+        {
+          "file": "compressed-native-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 0,
+              "elapsed_seconds": 3.84
+            }
+          ],
+          "case_lines": [
+            "test two_tls_connections_reuse_decoded_credit_and_release_only_after_owner_join ... ok"
+          ]
+        },
+        {
+          "file": "daemon-hevc-selection-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 66,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test native_video::hevc::tests::original_capture_cancel_latch_denies_submit_and_cannot_revive_after_checked_reset ... ok",
+            "test native_video::hevc::tests::signed_hevc_selection_never_scales_an_unapproved_monitor_or_uses_a_legacy_codec ... ok"
+          ]
+        },
+        {
+          "file": "decoded-export-owner-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 3,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 74,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test decoded_export::tests::hevc_metadata_without_original_sealed_output_cannot_open_export ... ok",
+            "test decoded_export::tests::bounded_transfer_is_not_a_decode_or_presentation_acknowledgement ... ok",
+            "test decoded_export::tests::incomplete_overflow_expiry_and_context_change_retire_export ... ok"
+          ]
+        },
+        {
+          "file": "h264-output-geometry-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 71,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_gpu_presenter::geometry_tests::native_output_matches_real_sps_padding_and_rejects_unbound_or_conflicting_apertures ... ok"
+          ]
+        },
+        {
+          "file": "hevc-backend-selection-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 71,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test hevc_backend::tests::implementation_runtime_pairs_are_explicit_and_never_interchangeable ... ok"
+          ]
+        },
+        {
+          "file": "hevc-contract-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 8,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 64,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test hevc_probe::tests::diagnostic_codes_preserve_main8_sdr_and_restricted_sps_rejections ... ok",
+            "test hevc_probe::tests::au_diagnostics_classify_nal_type_slice_count_and_do_not_commit_bad_state ... ok",
+            "test hevc_probe::tests::exact_main8_high_frame_levels_keep_full_ptl_and_admission_history ... ok",
+            "test hevc_probe::tests::h264_and_truncated_hevc_are_rejected ... ok",
+            "test hevc_probe::tests::actual_main8_contract_keeps_exact_ptl_and_rejected_change_cannot_poison_history ... ok",
+            "test hevc_probe::tests::main10_contract_matches_v4_surface_budget_without_widening_legacy ... ok",
+            "test hevc_probe::tests::restricted_main8_sps_and_explicit_color_conflicts ... ok",
+            "test hevc_probe::tests::main10_exact_sps_requires_ten_bit_luma_chroma_main10_profile_and_sdr_color ... ok"
+          ]
+        },
+        {
+          "file": "hevc-execution-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 5,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 67,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test hevc_execution::tests::encoder_runtime_is_part_of_frozen_target_and_cannot_open_a_decoder ... ok",
+            "test hevc_execution::tests::registration_is_not_output_and_exact_bytes_pts_direction_are_sealed ... ok",
+            "test hevc_execution::tests::abandoned_and_late_command_fence_the_original_generation ... ok",
+            "test hevc_execution::tests::revoked_start_never_constructs_a_native_source ... ok",
+            "test hevc_execution::tests::checked_native_close_failure_poisoned_slot_never_becomes_joined ... ok"
+          ]
+        },
+        {
+          "file": "hevc-mf-color-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 71,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_mf::hevc_color_tests::supported_color_properties_must_roundtrip_and_mf_enums_remain_exact ... ok"
+          ]
+        },
+        {
+          "file": "hevc-target-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 73,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test hevc_negotiated_format::tests::legacy_and_nonexecutable_main8_timing_or_surface_are_not_remapped ... ok",
+            "test hevc_negotiated_format::tests::exact_4k_144_target_preserves_hardware_format_and_level_rate_limits ... ok",
+            "test hevc_negotiated_format::tests::main10_execution_requires_v4_and_keeps_exact_depth_digest_and_hardware ... ok",
+            "test hevc_negotiated_format::tests::exact_target_keeps_every_ptl_bit_and_independent_wire_digest ... ok"
+          ]
+        },
+        {
+          "file": "media-opt-in-approval-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 84,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test sdk_call::media_approval_tests::review_rejects_changed_nonce_revision_scope_host_state_or_deadline_before_probe ... ok",
+            "test sdk_call::media_approval_tests::approved_media_requires_view_and_exact_permission_path_subsets ... ok"
+          ]
+        },
+        {
+          "file": "media-opt-in-cli-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 7,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 61,
+              "elapsed_seconds": 0.13
+            }
+          ],
+          "case_lines": [
+            "test media_cli_tests::explicit_gpu_target_cannot_mix_with_software_or_infer_other_formats ... ok",
+            "test media_cli_tests::gpu_4k_144_target_keeps_exact_values_without_entering_cpu_rate_limits ... ok",
+            "test media_cli_tests::hevc_fallback_cli_requires_an_explicit_hevc_mode_and_rejects_foreign_budgets ... ok",
+            "test media_cli_tests::main10_cli_has_explicit_sdr_target_and_cannot_mix_with_main8_or_software ... ok",
+            "test media_cli_tests::encoder_cli_rejects_unknown_alone_duplicate_and_software_combinations ... ok",
+            "test media_cli_tests::actual_media_config_rejects_invalid_combinations_before_any_probe_or_policy_read ... ok",
+            "test media_cli_tests::explicit_encoder_cli_reaches_the_actual_configured_provider_and_keeps_mf_default ... ok"
+          ]
+        },
+        {
+          "file": "media-opt-in-config-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 7,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 79,
+              "elapsed_seconds": 1.89
+            }
+          ],
+          "case_lines": [
+            "test native_session::tests::explicit_software_scope_mismatch_fails_without_legacy_downgrade ... ok",
+            "test native_session::tests::gpu_approval_requires_local_host_and_one_exact_main8_target ... ok",
+            "test native_session::tests::gpu_publication_data_checks_bind_exact_direction_target_and_reject_withdrawal ... ok",
+            "test native_session::tests::gpu_opt_in_routes_v3_only_and_rejects_provider_replacement_and_cpu_policy ... ok",
+            "test native_session::tests::hevc_fallback_approval_accepts_only_the_two_explicit_signed_budgets ... ok",
+            "test native_session::tests::main10_opt_in_routes_v4_and_cannot_approve_or_publish_a_main8_scope ... ok",
+            "test native_session::tests::explicit_pcp_requires_deployment_permission_even_without_deployment_stun ... ok"
+          ]
+        },
+        {
+          "file": "media-opt-in-http-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 0,
+              "elapsed_seconds": 3.59
+            }
+          ],
+          "case_lines": [
+            "test explicit_main10_request_rejects_trusted_access_and_missing_view_before_publication ... ok",
+            "test explicit_gpu_request_rejects_trusted_access_and_missing_view_before_publication ... ok",
+            "test legacy_pending_request_cannot_be_reinterpreted_as_reviewed_main10_media ... ok",
+            "test legacy_pending_request_cannot_be_reinterpreted_as_reviewed_gpu_media ... ok"
+          ]
+        },
+        {
+          "file": "media-provider-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 16,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 70,
+              "elapsed_seconds": 0.17
+            }
+          ],
+          "case_lines": [
+            "test native_media_provider::tests::adaptive_cpu_targets_are_bounded_exact_budgets_below_the_product_ceiling ... ok",
+            "test native_media_provider::tests::candidate_provider_keeps_old_single_target_and_uses_only_explicit_lower_targets ... ok",
+            "test native_media_provider::tests::explicit_cpu_target_rejects_unsupported_geometry_rate_and_bitrate ... ok",
+            "test native_media_provider::tests::cache_boundary_expiry_device_and_direction_never_extend_original_receipt ... ok",
+            "test native_media_provider::tests::dropping_probe_waiter_marks_owner_for_quarantine_and_actual_join ... ok",
+            "test native_media_provider::tests::explicit_hevc_target_is_single_exact_and_cannot_enter_the_cpu_candidate ... ok",
+            "test native_media_provider::tests::generation_exhaustion_never_saturates_or_reuses_identifier ... ok",
+            "test native_media_provider::tests::gpu_high_frame_and_4k_targets_are_configurations_until_each_direction_actually_probes ... ok",
+            "test native_media_provider::tests::hevc_second_budget_is_explicit_bounded_and_keeps_the_original_backend ... ok",
+            "test native_media_provider::tests::local_encoder_selection_binds_whole_probe_and_original_expiry ... ok",
+            "test native_media_provider::tests::main10_allocation_is_rejected_before_probing_and_keeps_main8_budget ... ok",
+            "test native_media_provider::tests::merged_hevc_probe_evidence_rejects_a_changed_driver_or_encoder_runtime ... ok",
+            "test native_media_provider::tests::local_selection_history_has_a_hard_bound_and_never_evicts_valid_old_probes ... ok",
+            "test native_media_provider::tests::successful_abandoned_probe_releases_only_after_actual_join ... ok",
+            "test native_media_provider::tests::prewarm_completion_requires_current_dispatch_and_retains_single_pending_worker ... ok",
+            "test native_media_provider::tests::cancelled_error_and_panicked_probe_join_never_authorize_slot_reuse ... ok"
+          ]
+        },
+        {
+          "file": "mf-adapter-binding-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 70,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_mf::adapter_binding_tests::exact_scoped_enumeration_allows_only_absent_optional_activation_identity ... ok",
+            "test windows_mf::adapter_binding_tests::real_attributes_require_exact_luid_blob_and_both_adapter_parts ... ok"
+          ]
+        },
+        {
+          "file": "native-media-wire-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 8,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 0,
+              "elapsed_seconds": 0.03
+            }
+          ],
+          "case_lines": [
+            "test metadata_domains_reject_invalid_epochs_sequences_and_timestamps ... ok",
+            "test format_epoch_digest_shape_is_strict_for_video_and_recovery ... ok",
+            "test independent_native_wire_vectors_fix_field_numbers_and_clocks ... ok",
+            "test hevc_wire_marker_requires_exact_identity_and_keeps_legacy_markers_strict ... ok",
+            "test opus_packet_bytes_and_channel_identity_are_bounded ... ok",
+            "test video_feedback_wire_budget_and_required_domains_are_bounded ... ok",
+            "test vp8_flags_geometry_and_partition_bounds_must_match_envelope ... ok",
+            "test received_and_serialized_envelopes_include_metadata_in_their_budgets ... ok"
+          ]
+        },
+        {
+          "file": "readback-ipc-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 17,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 3,
+              "elapsed_seconds": 0.17
+            }
+          ],
+          "case_lines": [
+            "test compressed_video::tests::stale_decode_requires_every_other_context_field_to_match ... ok",
+            "test compressed_video::tests::exact_hevc_canonical_container_does_not_enable_the_old_h264_ipc_context ... ok",
+            "test compressed_video::tests::compressed_v2_requires_exact_format_identity_and_canonical_bytes ... ok",
+            "test shared_video::tests::main10_shared_context_requires_v4_exact_depth_and_doubled_p010_ring_bytes ... ok",
+            "test shared_video::tests::shared_descriptor_syntax_requires_exact_format_owner_ring_and_budget ... ok",
+            "test video::tests::hevc_readback_pixels_have_an_independent_strict_magic ... ok",
+            "test shared_video::tests::shared_frame_cannot_change_keys_slot_sequence_or_resource_deadline ... ok",
+            "test video::tests::layout_headers_must_advance_and_closed_headers_must_match_the_bound_layout ... ok",
+            "test video::tests::old_layout_frames_and_nonmonotonic_frames_are_rejected ... ok",
+            "test video::tests::stream_header_binds_runtime_generation_request_connection_and_source ... ok",
+            "test video::tests::stream_header_rejects_bad_geometry_and_payload_budgets_before_allocation ... ok",
+            "test video::tests::video_header_rejects_noncanonical_identity_and_geometry ... ok",
+            "test video::tests::video_header_round_trips_the_full_local_binding_and_limits ... ok",
+            "test video::tests::video_stream_authorization_fails_closed_without_a_connected_view_session ... ok",
+            "test video::tests::video_client_opens_and_receives_a_binary_frame_over_mutual_local_tls ... ok",
+            "test shared_video::tests::native_tls_shared_open_requires_live_view_and_exact_ui_before_any_handle_export ... ok",
+            "test compressed_video::tests::tls_data_ticket_rejects_other_runtime_ui_replay_and_expiry ... ok"
+          ]
+        },
+        {
+          "file": "shared-surface-descriptor-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 16,
+              "elapsed_seconds": 0.04
+            }
+          ],
+          "case_lines": [
+            "test shared_video::tests::main10_shared_context_requires_v4_exact_depth_and_doubled_p010_ring_bytes ... ok",
+            "test shared_video::tests::shared_descriptor_syntax_requires_exact_format_owner_ring_and_budget ... ok",
+            "test shared_video::tests::shared_frame_cannot_change_keys_slot_sequence_or_resource_deadline ... ok",
+            "test shared_video::tests::native_tls_shared_open_requires_live_view_and_exact_ui_before_any_handle_export ... ok"
+          ]
+        },
+        {
+          "file": "shared-surface-transfer-claim-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 71,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_shared_output::transfer_claim_tests::destination_claim_retains_one_owner_and_tombstones_closed_numeric_handles ... ok"
+          ]
+        },
+        {
+          "file": "signed-store-media-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 10,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 71,
+              "elapsed_seconds": 9.84
+            }
+          ],
+          "case_lines": [
+            "test control::media_authority_tests::frozen_scope_requires_explicit_signed_approval_and_never_widens_from_latest_catalog ... ok",
+            "test control::media_authority_tests::internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets ... ok",
+            "test control::media_authority_tests::internal_software_candidate_rejects_account_peer_target_and_expiry ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_block_prepared_renewal_and_reconnection ... ok",
+            "test control::media_authority_tests::internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery ... ok",
+            "test control::media_authority_tests::management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publication_recovers ... ok",
+            "test control::media_authority_tests::signed_media_public_lifecycle_issues_renews_and_reconnects_without_scope_widening ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_allow_reviewed_decision_but_block_initial_issuance ... ok",
+            "test control::media_authority_tests::v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain ... ok",
+            "test control::media_authority_tests::v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain ... ok"
+          ]
+        },
+        {
+          "file": "wgc-float16-source-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 5,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows::host::precision_source_tests::exact_float16_conversion_and_sticky_source_metadata_boundaries ... ok"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 13209705530,
+      "name": "native-peer-process-windows-2025-59abafc3dc48a101de8320efebb1db511e83a11f-1",
+      "official_digest": "sha256:c0c1668f311ca7784b5928fc018d55717e4887d8de071e680945c9c5e59a323d",
+      "zip_sha256": "c0c1668f311ca7784b5928fc018d55717e4887d8de071e680945c9c5e59a323d",
+      "zip_bytes": 6502,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 3,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "ipc-tests.log",
+          "bytes": 21570,
+          "sha256": "dc20c9998a69992ac8ee504cc1edf501b32634fb85a584b41fe116c92feeaef7"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 1622,
+          "sha256": "6c654b8d1db19e9878b7a12e80eba581d7835f5a79343d424eee0eb615b9b301"
+        },
+        {
+          "path": "strict-peer-owner.log",
+          "bytes": 5758,
+          "sha256": "71f975721489465276461dcf6e6e61e03f93c4bd0fcaeec49f07894d78954edb"
+        }
+      ],
+      "producer_payload_inventory_count": 2,
+      "producer_payload_verifications": [
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "ipc-tests.log",
+          "bytes": 21570,
+          "sha256": "dc20c9998a69992ac8ee504cc1edf501b32634fb85a584b41fe116c92feeaef7",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "strict-peer-owner.log",
+          "bytes": 5758,
+          "sha256": "71f975721489465276461dcf6e6e61e03f93c4bd0fcaeec49f07894d78954edb",
+          "producer_matches": true
+        }
+      ],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": true,
+      "producer_inventory_limitation": null,
+      "reports": [
+        {
+          "file": "receipt.json",
+          "source_claims": [
+            {
+              "field": "source_revision",
+              "value": "59abafc3dc48a101de8320efebb1db511e83a11f",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": true,
+          "status": null,
+          "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [
+            {
+              "name": "ipc-tests",
+              "return_code": 0,
+              "timed_out": null,
+              "timeout_seconds": null,
+              "elapsed_seconds": null
+            },
+            {
+              "name": "strict-peer-owner",
+              "return_code": 0,
+              "timed_out": null,
+              "timeout_seconds": null,
+              "elapsed_seconds": null
+            }
+          ],
+          "cases": [],
+          "acceptance_flags": {},
+          "runner_os": "Windows",
+          "runner_environment": "github-hosted",
+          "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        }
+      ],
+      "test_logs": [
+        {
+          "file": "ipc-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 27,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 0,
+              "elapsed_seconds": 0.76
+            }
+          ],
+          "case_lines": [
+            "test instance::tests::development_directories_keep_explicit_paths ... ok",
+            "test instance::tests::missing_invalid_and_duplicate_instance_markers_fail_closed ... ok",
+            "test instance::tests::explicit_review_reads_public_descriptor_and_never_opens_key_bytes ... ok",
+            "test instance::tests::reinstall_selects_a_fresh_namespace_and_preserves_old_private_bytes ... ok",
+            "test maintenance::tests::installation_recovery_is_observed_only_under_exclusive_ownership ... ok",
+            "test process_tests::child_native_tls_process ... ok",
+            "test maintenance::tests::startup_handoff_is_atomic_and_stable_lock_bytes_are_never_reset ... ok",
+            "test maintenance::tests::repeated_desktop_start_activates_exact_state_directory ... ok",
+            "test maintenance::tests::maintenance_fences_startup_and_waits_for_original_runtime_and_desktops ... ok",
+            "test process_tests::native_tls_drop_cancel_and_original_daemon_stop_fence_every_peer_clone ... ok",
+            "test process_tests::new_client_reuses_original_tcp_tls_when_old_daemon_has_no_native_pipe ... ok",
+            "test process_tests::original_native_tls_peer_is_the_actual_child_and_exit_retires_its_handle ... ok",
+            "test process_tests::original_tcp_tls_compatibility_has_no_native_process_proof ... ok",
+            "test tests::accepted_handshake_slots_are_bounded_and_stop_cancels_incomplete_tls ... ok",
+            "test tests::binary_video_round_trip_uses_the_authenticated_tls_stream_and_never_returns_to_json ... ok",
+            "test tests::duplex_owner_drop_wakes_idle_reader_and_retires_writer ... ok",
+            "test tests::cancelling_mid_video_payload_read_drops_the_zeroizing_buffer_and_retires_tls ... ok",
+            "test tests::cancelling_a_partial_frame_receive_permanently_retires_that_stream ... ok",
+            "test tests::headless_session_owner_and_daemon_share_one_singleton_without_fake_endpoint ... ok",
+            "test tests::frame_lengths_fail_before_body_allocation_and_poison_the_stream ... ok",
+            "test tests::non_loopback_or_unknown_endpoints_do_not_become_dial_targets ... ok",
+            "test tests::duplex_partial_prefix_cancel_poison_is_shared_with_writer ... ok",
+            "test tests::cancelling_a_backpressured_video_chunk_permanently_retires_the_tls_stream ... ok",
+            "test tests::stale_runtime_manifest_is_rejected_by_the_authenticated_daemon_hello ... ok",
+            "test tests::substituting_the_local_key_cannot_authenticate_to_a_live_daemon ... ok",
+            "test tests::real_tls_ipc_owns_singleton_and_shutdown_interrupts_idle_clients ... ok",
+            "test tests::video_payload_budget_and_wire_length_are_checked_before_payload_allocation ... ok"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 13208644459,
+      "name": "native-peer-process-ubuntu-24.04-59abafc3dc48a101de8320efebb1db511e83a11f-1",
+      "official_digest": "sha256:de4b9aa11d13ac94db01ac9a16521ef5152708d6b143de2e4cf07ad895d76c74",
+      "zip_sha256": "de4b9aa11d13ac94db01ac9a16521ef5152708d6b143de2e4cf07ad895d76c74",
+      "zip_bytes": 6130,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 3,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "ipc-tests.log",
+          "bytes": 20853,
+          "sha256": "1cdd7b1d723714b2580c4540828775b2834c47d2d714aa2e86c359aa8a18b2cf"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 1311,
+          "sha256": "ffe079082d767da7c54a593f101b455e3ca664910d1982bfda84181ec136bba8"
+        },
+        {
+          "path": "strict-peer-owner.log",
+          "bytes": 5633,
+          "sha256": "c9e4b29c6cd1ff3e59263b129dd5facbbb44b10f3ec2f3d8d711c8b805a3b177"
+        }
+      ],
+      "producer_payload_inventory_count": 2,
+      "producer_payload_verifications": [
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "ipc-tests.log",
+          "bytes": 20853,
+          "sha256": "1cdd7b1d723714b2580c4540828775b2834c47d2d714aa2e86c359aa8a18b2cf",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "strict-peer-owner.log",
+          "bytes": 5633,
+          "sha256": "c9e4b29c6cd1ff3e59263b129dd5facbbb44b10f3ec2f3d8d711c8b805a3b177",
+          "producer_matches": true
+        }
+      ],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": true,
+      "producer_inventory_limitation": null,
+      "reports": [
+        {
+          "file": "receipt.json",
+          "source_claims": [
+            {
+              "field": "source_revision",
+              "value": "59abafc3dc48a101de8320efebb1db511e83a11f",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": true,
+          "status": null,
+          "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [
+            {
+              "name": "ipc-tests",
+              "return_code": 0,
+              "timed_out": null,
+              "timeout_seconds": null,
+              "elapsed_seconds": null
+            },
+            {
+              "name": "strict-peer-owner",
+              "return_code": 0,
+              "timed_out": null,
+              "timeout_seconds": null,
+              "elapsed_seconds": null
+            }
+          ],
+          "cases": [],
+          "acceptance_flags": {},
+          "runner_os": "Linux",
+          "runner_environment": "github-hosted",
+          "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        }
+      ],
+      "test_logs": [
+        {
+          "file": "ipc-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 24,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 0,
+              "elapsed_seconds": 0.27
+            }
+          ],
+          "case_lines": [
+            "test instance::tests::development_directories_keep_explicit_paths ... ok",
+            "test instance::tests::linked_or_group_writable_marker_is_rejected_without_changing_target ... ok",
+            "test instance::tests::missing_invalid_and_duplicate_instance_markers_fail_closed ... ok",
+            "test instance::tests::explicit_review_reads_public_descriptor_and_never_opens_key_bytes ... ok",
+            "test instance::tests::reinstall_selects_a_fresh_namespace_and_preserves_old_private_bytes ... ok",
+            "test maintenance::tests::maintenance_rejects_a_link_without_touching_its_target ... ok",
+            "test maintenance::tests::installation_recovery_is_observed_only_under_exclusive_ownership ... ok",
+            "test maintenance::tests::repeated_desktop_start_activates_exact_state_directory ... ok",
+            "test maintenance::tests::startup_handoff_is_atomic_and_stable_lock_bytes_are_never_reset ... ok",
+            "test maintenance::tests::maintenance_fences_startup_and_waits_for_original_runtime_and_desktops ... ok",
+            "test tests::accepted_handshake_slots_are_bounded_and_stop_cancels_incomplete_tls ... ok",
+            "test tests::binary_video_round_trip_uses_the_authenticated_tls_stream_and_never_returns_to_json ... ok",
+            "test tests::duplex_owner_drop_wakes_idle_reader_and_retires_writer ... ok",
+            "test tests::cancelling_a_partial_frame_receive_permanently_retires_that_stream ... ok",
+            "test tests::cancelling_mid_video_payload_read_drops_the_zeroizing_buffer_and_retires_tls ... ok",
+            "test tests::frame_lengths_fail_before_body_allocation_and_poison_the_stream ... ok",
+            "test tests::non_loopback_or_unknown_endpoints_do_not_become_dial_targets ... ok",
+            "test tests::headless_session_owner_and_daemon_share_one_singleton_without_fake_endpoint ... ok",
+            "test tests::duplex_partial_prefix_cancel_poison_is_shared_with_writer ... ok",
+            "test tests::stale_runtime_manifest_is_rejected_by_the_authenticated_daemon_hello ... ok",
+            "test tests::substituting_the_local_key_cannot_authenticate_to_a_live_daemon ... ok",
+            "test tests::real_tls_ipc_owns_singleton_and_shutdown_interrupts_idle_clients ... ok",
+            "test tests::video_payload_budget_and_wire_length_are_checked_before_payload_allocation ... ok",
+            "test tests::cancelling_a_backpressured_video_chunk_permanently_retires_the_tls_stream ... ok"
+          ]
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Actions results apply only to this exact source SHA. Historical failures remain unchanged.",
+    "Producer executable/native-library inventories whose bytes are absent from the ZIP are supplier receipts, not independent verification of those binaries.",
+    "Hosted browser/media/network success does not establish physical GPU, real device, public NAT/HA, cross-day or release eligibility."
+  ],
+  "verification_summary": {
+    "job_count": 4,
+    "successful_jobs": 2,
+    "failed_jobs": 2,
+    "official_zips_verified": 4,
+    "downloaded_files_independently_hashed": 64.0,
+    "producer_payload_entries_independently_verified": 4.0,
+    "producer_command_log_entries_independently_verified": 0.0,
+    "producer_private_raw_digests_not_verified": 0,
+    "peer_processes": [
+      {
+        "artifact_id": 13209705530,
+        "name": "native-peer-process-windows-2025-59abafc3dc48a101de8320efebb1db511e83a11f-1",
+        "passed": true,
+        "runner_os": "Windows",
+        "commands": [
+          {
+            "name": "ipc-tests",
+            "return_code": 0,
+            "timed_out": null,
+            "timeout_seconds": null,
+            "elapsed_seconds": null
+          },
+          {
+            "name": "strict-peer-owner",
+            "return_code": 0,
+            "timed_out": null,
+            "timeout_seconds": null,
+            "elapsed_seconds": null
+          }
+        ],
+        "producer_payloads_verified": 2,
+        "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim."
+      },
+      {
+        "artifact_id": 13208644459,
+        "name": "native-peer-process-ubuntu-24.04-59abafc3dc48a101de8320efebb1db511e83a11f-1",
+        "passed": true,
+        "runner_os": "Linux",
+        "commands": [
+          {
+            "name": "ipc-tests",
+            "return_code": 0,
+            "timed_out": null,
+            "timeout_seconds": null,
+            "elapsed_seconds": null
+          },
+          {
+            "name": "strict-peer-owner",
+            "return_code": 0,
+            "timed_out": null,
+            "timeout_seconds": null,
+            "elapsed_seconds": null
+          }
+        ],
+        "producer_payloads_verified": 2,
+        "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim."
+      }
+    ],
+    "owner_boundaries": [
+      {
+        "job_id": 125760766796,
+        "name": "owner-boundaries (windows-2022)",
+        "conclusion": "failure",
+        "harness_count": 24,
+        "failed_steps": [
+          {
+            "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+            "number": 12,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Check the complete desktop owner code strictly",
+            "number": 13,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+            "number": 18,
+            "conclusion": "failure"
+          }
+        ],
+        "diagnostic_count": 9,
+        "raw_log_sha256": "94d1ee22abc1e00c79e6f37b061f3440582d58ef9ebde7a1140b840fb99b4151"
+      },
+      {
+        "job_id": 125760767134,
+        "name": "owner-boundaries (windows-2025)",
+        "conclusion": "failure",
+        "harness_count": 24,
+        "failed_steps": [
+          {
+            "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+            "number": 12,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Check the complete desktop owner code strictly",
+            "number": 13,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+            "number": 18,
+            "conclusion": "failure"
+          }
+        ],
+        "diagnostic_count": 9,
+        "raw_log_sha256": "171cb5c3c2b92212a1d776aa38352a66d3adc55ba0bcbded004e0e8e55aa9249"
+      }
+    ]
+  },
+  "interpretation": [
+    "Final result is failure: original native-peer-process jobs passed on Linux and Windows 2025; original owner-boundaries jobs failed on Windows 2022 and Windows 2025.",
+    "Both owner jobs retain desktop layout_tests.rs:77 E0603 RemoteTab privacy and E0616 RemoteForm.tab privacy errors in test and clippy compilation. Receiver/presenter test groups were not completed after that compilation failure.",
+    "Both owner jobs also retain strict clippy expect_used failures at private_service_proxy/host/tests.rs:617 and :710. These are test-code lint failures; no assertion, lint, selector or timeout is weakened.",
+    "Other executed owner/media test results and all original job steps are retained; their successes do not make either failed job pass. The owner artifact source receipt has no producer payload inventory, so all 29 files per owner ZIP are independently hashed without inventing producer verification counts.",
+    "Scope is hosted protocol, framing, authorization, cleanup and owner boundaries; no physical shared GPU surface, actual hardware cadence, full media acceptance or release eligibility is claimed. Historical media evidence remains unchanged."
+  ],
+  "acceptance_claims": [],
+  "original_job_logs": [
+    {
+      "job_id": 125760766796,
+      "job_name": "owner-boundaries (windows-2022)",
+      "job_conclusion": "failure",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125760766796/logs",
+      "path": "job-125760766796.log",
+      "bytes": 838201,
+      "sha256": "94d1ee22abc1e00c79e6f37b061f3440582d58ef9ebde7a1140b840fb99b4151",
+      "compiler_or_lint_diagnostics": [
+        {
+          "line_in_original_log": 2665,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-desktop --lib gpu_diagnostics:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/receiver-tests.log\"",
+          "diagnostic": [
+            "error[E0603]: enum `RemoteTab` is private",
+            "  --> apps\\desktop\\src\\layout_tests.rs:77:40",
+            "   |",
+            "77 |     workspace.app.remote.tab = remote::RemoteTab::Sessions;",
+            "   |                                        ^^^^^^^^^  -------- unit variant `Sessions` is not publicly re-exported",
+            "   |                                        |",
+            "   |                                        private enum",
+            "   |",
+            "note: the enum `RemoteTab` is defined here",
+            "  --> apps\\desktop\\src\\remote.rs:18:1",
+            "   |",
+            "18 | enum RemoteTab {",
+            "   | ^^^^^^^^^^^^^^"
+          ]
+        },
+        {
+          "line_in_original_log": 2679,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-desktop --lib gpu_diagnostics:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/receiver-tests.log\"",
+          "diagnostic": [
+            "error[E0616]: field `tab` of struct `remote::RemoteForm` is private",
+            "  --> apps\\desktop\\src\\layout_tests.rs:77:26",
+            "   |",
+            "77 |     workspace.app.remote.tab = remote::RemoteTab::Sessions;",
+            "   |                          ^^^ private field",
+            "",
+            "Some errors have detailed explanations: E0603, E0616.",
+            "For more information about an error, try `rustc --explain E0603`.",
+            "error: could not compile `nestlink-desktop` (lib test) due to 2 previous errors",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "exit $LASTEXITCODE"
+          ]
+        },
+        {
+          "line_in_original_log": 2687,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-desktop --lib gpu_diagnostics:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/receiver-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-desktop` (lib test) due to 2 previous errors",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "exit $LASTEXITCODE",
+            "shell: C:\\Program Files\\PowerShell\\7\\pwsh.EXE -command \". '{0}'\"",
+            "env:",
+            "  CARGO_INCREMENTAL: 0",
+            "  CARGO_PROFILE_DEV_DEBUG: 0",
+            "  CARGO_PROFILE_TEST_DEBUG: 0",
+            "  PYTHONDONTWRITEBYTECODE: 1",
+            "  RUST_BACKTRACE: 1",
+            "  CARGO_HOME: C:\\Users\\runneradmin\\.cargo"
+          ]
+        },
+        {
+          "line_in_original_log": 3446,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+          "diagnostic": [
+            "error[E0603]: enum `RemoteTab` is private",
+            "  --> apps\\desktop\\src\\layout_tests.rs:77:40",
+            "   |",
+            "77 |     workspace.app.remote.tab = remote::RemoteTab::Sessions;",
+            "   |                                        ^^^^^^^^^  -------- unit variant `Sessions` is not publicly re-exported",
+            "   |                                        |",
+            "   |                                        private enum",
+            "   |",
+            "note: the enum `RemoteTab` is defined here",
+            "  --> apps\\desktop\\src\\remote.rs:18:1",
+            "   |",
+            "18 | enum RemoteTab {",
+            "   | ^^^^^^^^^^^^^^"
+          ]
+        },
+        {
+          "line_in_original_log": 3460,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+          "diagnostic": [
+            "error[E0616]: field `tab` of struct `remote::RemoteForm` is private",
+            "  --> apps\\desktop\\src\\layout_tests.rs:77:26",
+            "   |",
+            "77 |     workspace.app.remote.tab = remote::RemoteTab::Sessions;",
+            "   |                          ^^^ private field",
+            "",
+            "Some errors have detailed explanations: E0603, E0616.",
+            "For more information about an error, try `rustc --explain E0603`.",
+            "error: could not compile `nestlink-desktop` (lib test) due to 2 previous errors",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\""
+          ]
+        },
+        {
+          "line_in_original_log": 3468,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-desktop` (lib test) due to 2 previous errors",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_mf::hevc_color_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/hevc-mf-color-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_mf::adapter_binding_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/mf-adapter-binding-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_amf::boundary_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/amf-boundary-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib hevc_backend:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/hevc-backend-selection-tests.log\""
+          ]
+        },
+        {
+          "line_in_original_log": 8180,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+          "diagnostic": [
+            "error: used `expect_err()` on a `Result` value",
+            "   --> apps\\daemon\\src\\private_service_proxy\\host\\tests.rs:617:17",
+            "    |",
+            "617 |       let error = tokio::time::timeout(Duration::from_secs(10), command.join())",
+            "    |  _________________^",
+            "618 | |         .await??",
+            "619 | |         .expect_err(\"changed installation must stop after original physical cleanup\");",
+            "    | |_____________________________________________________________________________________^",
+            "    |",
+            "    = note: if this value is an `Ok`, it will panic",
+            "    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#expect_used",
+            "    = note: requested on the command line with `-D clippy::expect-used`",
+            ""
+          ]
+        },
+        {
+          "line_in_original_log": 8193,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+          "diagnostic": [
+            "error: used `expect_err()` on a `Result` value",
+            "   --> apps\\daemon\\src\\private_service_proxy\\host\\tests.rs:710:9",
+            "    |",
+            "710 | /         guard",
+            "711 | |             .running()",
+            "712 | |             .expect_err(\"valid replacement key must be checked against the original signer\")",
+            "    | |____________________________________________________________________________________________^",
+            "    |",
+            "    = note: if this value is an `Ok`, it will panic",
+            "    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#expect_used",
+            "",
+            "error: could not compile `nestlink-daemon` (bin \"nestlink-daemon\" test) due to 2 previous errors",
+            "##[error]Process completed with exit code 1."
+          ]
+        },
+        {
+          "line_in_original_log": 8204,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-daemon` (bin \"nestlink-daemon\" test) due to 2 previous errors",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:",
+            "  name: windows-media-owner-windows-2022-59abafc3dc48a101de8320efebb1db511e83a11f-1",
+            "  path: D:\\a\\_temp/media-owner-evidence/",
+            "  if-no-files-found: error",
+            "  retention-days: 30",
+            "  compression-level: 6",
+            "  overwrite: false",
+            "  include-hidden-files: false",
+            "  archive: true",
+            "env:"
+          ]
+        }
+      ],
+      "harness_count": 24,
+      "harnesses": [
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-protocol --lib media_ -- --show-output",
+          "result": "ok",
+          "passed": 28,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 61,
+          "elapsed_seconds": 0.01,
+          "case_lines": [
+            "test media_authority::tests::canonical_format_roundtrip_rejects_trailing_unknown_flags_and_nonreduced_rate ... ok",
+            "test media_authority::tests::announcement_withdrawal_is_explicit_and_backend_identity_is_not_defaulted ... ok",
+            "test media_authority::tests::exact_hevc_scope_has_its_own_marker_digest_and_original_direction ... ok",
+            "test media_authority::tests::main10_v4_needs_its_own_marker_scope_and_approval_domain ... ok",
+            "test internal_software_media_candidate::tests::explicit_finite_candidate_requires_the_entire_exact_set_within_original_ceiling ... ok",
+            "test internal_software_media_candidate::tests::internal_candidate_policy_requires_every_exact_field_and_rejects_non_h264 ... ok",
+            "test media_authority::tests::signed_scope_cannot_omit_marker_duplicate_or_change_crop_and_digest ... ok",
+            "test media_format::tests::canonical_set_digest_ignores_wire_order_but_binds_every_format_field ... ok",
+            "test media_format::tests::empty_no_common_duplicates_and_excess_entries_are_distinct_outcomes ... ok",
+            "test media_format::tests::digest_has_stable_field_order_big_endian_encoding_and_domain ... ok",
+            "test media_format::tests::exact_intersection_does_not_invent_four_k_at_120_from_two_probed_modes ... ok",
+            "test media_format::tests::geometry_and_high_bit_depth_have_conservative_raw_budget ... ok",
+            "test media_format::tests::hdr_requires_independent_depth_primaries_and_transfer ... ok",
+            "test media_format::tests::hevc_display_area_cannot_hide_padded_coded_picture_limit ... ok",
+            "test media_format::tests::hevc_display_rate_cannot_hide_padded_coded_sample_rate_limit ... ok",
+            "test media_format::tests::legacy_defaults_preserve_actual_distinct_color_conversions ... ok",
+            "test media_format::tests::level_picture_sample_rate_tier_and_bitrate_are_enforced ... ok",
+            "test media_format::tests::independently_versioned_hevc_ptl_is_exact_and_cannot_change_v2_h264_bytes ... ok",
+            "test media_format::tests::main10_and_444_are_independent_and_require_exact_intersection ... ok",
+            "test media_format::tests::main10_v4_preserves_v3_bytes_and_requires_exact_profile_depth_and_version ... ok",
+            "test media_format::tests::observed_h264_digest_binds_constraint_flags_and_crop_origin ... ok",
+            "test media_format::tests::rational_framerate_is_canonical_and_bounded ... ok",
+            "test media_format::tests::rgba16_budget_is_checked_independently_of_eight_bit_budget ... ok",
+            "test media_format::tests::syntax_support_is_not_a_backend_capability_announcement ... ok",
+            "test native_media_format::tests::exact_canonical_roundtrip_rejects_tail_kind_version_hash_and_truncation ... ok",
+            "test native_media_format::tests::proposal_ack_requires_exact_signed_format_and_binding_and_never_overwrites ... ok",
+            "test native_media_format::tests::exact_hevc_nlmf_preserves_all_ptl_bytes_and_rejects_changed_ack_and_legacy_set ... ok",
+            "test webrtc::tests::audio_media_cannot_be_requested_with_only_view_permission ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --test native_compressed -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/compressed-native-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 0,
+          "elapsed_seconds": 3.84,
+          "case_lines": [
+            "test two_tls_connections_reuse_decoded_credit_and_release_only_after_owner_join ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 71,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_gpu_presenter::geometry_tests::native_output_matches_real_sps_padding_and_rejects_unbound_or_conflicting_apertures ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 71,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_mf::hevc_color_tests::supported_color_properties_must_roundtrip_and_mf_enums_remain_exact ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 70,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_mf::adapter_binding_tests::exact_scoped_enumeration_allows_only_absent_optional_activation_identity ... ok",
+            "test windows_mf::adapter_binding_tests::real_attributes_require_exact_luid_blob_and_both_adapter_parts ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 68,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_amf::boundary_tests::original_native_range_types_release_flags_and_null_device_are_strict ... ok",
+            "test windows_amf::boundary_tests::requested_level_covers_exact_picture_rate_bitrate_and_dimension_boundaries ... ok",
+            "test windows_amf::boundary_tests::optional_legacy_properties_require_complete_consistent_absence ... ok",
+            "test windows_amf::boundary_tests::exact_base_layer_alias_requires_same_typed_descriptor_and_value ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 71,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test hevc_backend::tests::implementation_runtime_pairs_are_explicit_and_never_interchangeable ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 5,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows::host::precision_source_tests::exact_float16_conversion_and_sticky_source_metadata_boundaries ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 64,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test hevc_probe::tests::diagnostic_codes_preserve_main8_sdr_and_restricted_sps_rejections ... ok",
+            "test hevc_probe::tests::au_diagnostics_classify_nal_type_slice_count_and_do_not_commit_bad_state ... ok",
+            "test hevc_probe::tests::exact_main8_high_frame_levels_keep_full_ptl_and_admission_history ... ok",
+            "test hevc_probe::tests::h264_and_truncated_hevc_are_rejected ... ok",
+            "test hevc_probe::tests::actual_main8_contract_keeps_exact_ptl_and_rejected_change_cannot_poison_history ... ok",
+            "test hevc_probe::tests::main10_contract_matches_v4_surface_budget_without_widening_legacy ... ok",
+            "test hevc_probe::tests::restricted_main8_sps_and_explicit_color_conflicts ... ok",
+            "test hevc_probe::tests::main10_exact_sps_requires_ten_bit_luma_chroma_main10_profile_and_sdr_color ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 5,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 67,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test hevc_execution::tests::encoder_runtime_is_part_of_frozen_target_and_cannot_open_a_decoder ... ok",
+            "test hevc_execution::tests::registration_is_not_output_and_exact_bytes_pts_direction_are_sealed ... ok",
+            "test hevc_execution::tests::abandoned_and_late_command_fence_the_original_generation ... ok",
+            "test hevc_execution::tests::revoked_start_never_constructs_a_native_source ... ok",
+            "test hevc_execution::tests::checked_native_close_failure_poisoned_slot_never_becomes_joined ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+          "result": "ok",
+          "passed": 10,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 71,
+          "elapsed_seconds": 9.84,
+          "case_lines": [
+            "test control::media_authority_tests::frozen_scope_requires_explicit_signed_approval_and_never_widens_from_latest_catalog ... ok",
+            "test control::media_authority_tests::internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets ... ok",
+            "test control::media_authority_tests::internal_software_candidate_rejects_account_peer_target_and_expiry ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_block_prepared_renewal_and_reconnection ... ok",
+            "test control::media_authority_tests::internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery ... ok",
+            "test control::media_authority_tests::management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publication_recovers ... ok",
+            "test control::media_authority_tests::signed_media_public_lifecycle_issues_renews_and_reconnects_without_scope_widening ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_allow_reviewed_decision_but_block_initial_issuance ... ok",
+            "test control::media_authority_tests::v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain ... ok",
+            "test control::media_authority_tests::v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 16,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 70,
+          "elapsed_seconds": 0.17,
+          "case_lines": [
+            "test native_media_provider::tests::adaptive_cpu_targets_are_bounded_exact_budgets_below_the_product_ceiling ... ok",
+            "test native_media_provider::tests::candidate_provider_keeps_old_single_target_and_uses_only_explicit_lower_targets ... ok",
+            "test native_media_provider::tests::explicit_cpu_target_rejects_unsupported_geometry_rate_and_bitrate ... ok",
+            "test native_media_provider::tests::cache_boundary_expiry_device_and_direction_never_extend_original_receipt ... ok",
+            "test native_media_provider::tests::dropping_probe_waiter_marks_owner_for_quarantine_and_actual_join ... ok",
+            "test native_media_provider::tests::explicit_hevc_target_is_single_exact_and_cannot_enter_the_cpu_candidate ... ok",
+            "test native_media_provider::tests::generation_exhaustion_never_saturates_or_reuses_identifier ... ok",
+            "test native_media_provider::tests::gpu_high_frame_and_4k_targets_are_configurations_until_each_direction_actually_probes ... ok",
+            "test native_media_provider::tests::hevc_second_budget_is_explicit_bounded_and_keeps_the_original_backend ... ok",
+            "test native_media_provider::tests::local_encoder_selection_binds_whole_probe_and_original_expiry ... ok",
+            "test native_media_provider::tests::main10_allocation_is_rejected_before_probing_and_keeps_main8_budget ... ok",
+            "test native_media_provider::tests::merged_hevc_probe_evidence_rejects_a_changed_driver_or_encoder_runtime ... ok",
+            "test native_media_provider::tests::local_selection_history_has_a_hard_bound_and_never_evicts_valid_old_probes ... ok",
+            "test native_media_provider::tests::successful_abandoned_probe_releases_only_after_actual_join ... ok",
+            "test native_media_provider::tests::prewarm_completion_requires_current_dispatch_and_retains_single_pending_worker ... ok",
+            "test native_media_provider::tests::cancelled_error_and_panicked_probe_join_never_authorize_slot_reuse ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 73,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test hevc_negotiated_format::tests::legacy_and_nonexecutable_main8_timing_or_surface_are_not_remapped ... ok",
+            "test hevc_negotiated_format::tests::exact_4k_144_target_preserves_hardware_format_and_level_rate_limits ... ok",
+            "test hevc_negotiated_format::tests::main10_execution_requires_v4_and_keeps_exact_depth_digest_and_hardware ... ok",
+            "test hevc_negotiated_format::tests::exact_target_keeps_every_ptl_bit_and_independent_wire_digest ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 3,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 74,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test decoded_export::tests::hevc_metadata_without_original_sealed_output_cannot_open_export ... ok",
+            "test decoded_export::tests::bounded_transfer_is_not_a_decode_or_presentation_acknowledgement ... ok",
+            "test decoded_export::tests::incomplete_overflow_expiry_and_context_change_retire_export ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 16,
+          "elapsed_seconds": 0.09,
+          "case_lines": [
+            "test compressed_video::tests::stale_decode_requires_every_other_context_field_to_match ... ok",
+            "test compressed_video::tests::exact_hevc_canonical_container_does_not_enable_the_old_h264_ipc_context ... ok",
+            "test compressed_video::tests::compressed_v2_requires_exact_format_identity_and_canonical_bytes ... ok",
+            "test compressed_video::tests::tls_data_ticket_rejects_other_runtime_ui_replay_and_expiry ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 16,
+          "elapsed_seconds": 0.04,
+          "case_lines": [
+            "test shared_video::tests::main10_shared_context_requires_v4_exact_depth_and_doubled_p010_ring_bytes ... ok",
+            "test shared_video::tests::shared_descriptor_syntax_requires_exact_format_owner_ring_and_budget ... ok",
+            "test shared_video::tests::shared_frame_cannot_change_keys_slot_sequence_or_resource_deadline ... ok",
+            "test shared_video::tests::native_tls_shared_open_requires_live_view_and_exact_ui_before_any_handle_export ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 71,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_shared_output::transfer_claim_tests::destination_claim_retains_one_owner_and_tombstones_closed_numeric_handles ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 0,
+          "elapsed_seconds": 0.03,
+          "case_lines": [
+            "test metadata_domains_reject_invalid_epochs_sequences_and_timestamps ... ok",
+            "test format_epoch_digest_shape_is_strict_for_video_and_recovery ... ok",
+            "test independent_native_wire_vectors_fix_field_numbers_and_clocks ... ok",
+            "test hevc_wire_marker_requires_exact_identity_and_keeps_legacy_markers_strict ... ok",
+            "test opus_packet_bytes_and_channel_identity_are_bounded ... ok",
+            "test video_feedback_wire_budget_and_required_domains_are_bounded ... ok",
+            "test vp8_flags_geometry_and_partition_bounds_must_match_envelope ... ok",
+            "test received_and_serialized_envelopes_include_metadata_in_their_budgets ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 17,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 3,
+          "elapsed_seconds": 0.17,
+          "case_lines": [
+            "test compressed_video::tests::stale_decode_requires_every_other_context_field_to_match ... ok",
+            "test compressed_video::tests::exact_hevc_canonical_container_does_not_enable_the_old_h264_ipc_context ... ok",
+            "test compressed_video::tests::compressed_v2_requires_exact_format_identity_and_canonical_bytes ... ok",
+            "test shared_video::tests::main10_shared_context_requires_v4_exact_depth_and_doubled_p010_ring_bytes ... ok",
+            "test shared_video::tests::shared_descriptor_syntax_requires_exact_format_owner_ring_and_budget ... ok",
+            "test video::tests::hevc_readback_pixels_have_an_independent_strict_magic ... ok",
+            "test shared_video::tests::shared_frame_cannot_change_keys_slot_sequence_or_resource_deadline ... ok",
+            "test video::tests::layout_headers_must_advance_and_closed_headers_must_match_the_bound_layout ... ok",
+            "test video::tests::old_layout_frames_and_nonmonotonic_frames_are_rejected ... ok",
+            "test video::tests::stream_header_binds_runtime_generation_request_connection_and_source ... ok",
+            "test video::tests::stream_header_rejects_bad_geometry_and_payload_budgets_before_allocation ... ok",
+            "test video::tests::video_header_rejects_noncanonical_identity_and_geometry ... ok",
+            "test video::tests::video_header_round_trips_the_full_local_binding_and_limits ... ok",
+            "test video::tests::video_stream_authorization_fails_closed_without_a_connected_view_session ... ok",
+            "test video::tests::video_client_opens_and_receives_a_binary_frame_over_mutual_local_tls ... ok",
+            "test shared_video::tests::native_tls_shared_open_requires_live_view_and_exact_ui_before_any_handle_export ... ok",
+            "test compressed_video::tests::tls_data_ticket_rejects_other_runtime_ui_replay_and_expiry ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+          "result": "ok",
+          "passed": 7,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 79,
+          "elapsed_seconds": 1.89,
+          "case_lines": [
+            "test native_session::tests::explicit_software_scope_mismatch_fails_without_legacy_downgrade ... ok",
+            "test native_session::tests::gpu_approval_requires_local_host_and_one_exact_main8_target ... ok",
+            "test native_session::tests::gpu_publication_data_checks_bind_exact_direction_target_and_reject_withdrawal ... ok",
+            "test native_session::tests::gpu_opt_in_routes_v3_only_and_rejects_provider_replacement_and_cpu_policy ... ok",
+            "test native_session::tests::hevc_fallback_approval_accepts_only_the_two_explicit_signed_budgets ... ok",
+            "test native_session::tests::main10_opt_in_routes_v4_and_cannot_approve_or_publish_a_main8_scope ... ok",
+            "test native_session::tests::explicit_pcp_requires_deployment_permission_even_without_deployment_stun ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+          "result": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 84,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test sdk_call::media_approval_tests::review_rejects_changed_nonce_revision_scope_host_state_or_deadline_before_probe ... ok",
+            "test sdk_call::media_approval_tests::approved_media_requires_view_and_exact_permission_path_subsets ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+          "result": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 0,
+          "elapsed_seconds": 3.59,
+          "case_lines": [
+            "test explicit_main10_request_rejects_trusted_access_and_missing_view_before_publication ... ok",
+            "test explicit_gpu_request_rejects_trusted_access_and_missing_view_before_publication ... ok",
+            "test legacy_pending_request_cannot_be_reinterpreted_as_reviewed_main10_media ... ok",
+            "test legacy_pending_request_cannot_be_reinterpreted_as_reviewed_gpu_media ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+          "result": "ok",
+          "passed": 7,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 61,
+          "elapsed_seconds": 0.13,
+          "case_lines": [
+            "test media_cli_tests::explicit_gpu_target_cannot_mix_with_software_or_infer_other_formats ... ok",
+            "test media_cli_tests::gpu_4k_144_target_keeps_exact_values_without_entering_cpu_rate_limits ... ok",
+            "test media_cli_tests::hevc_fallback_cli_requires_an_explicit_hevc_mode_and_rejects_foreign_budgets ... ok",
+            "test media_cli_tests::main10_cli_has_explicit_sdr_target_and_cannot_mix_with_main8_or_software ... ok",
+            "test media_cli_tests::encoder_cli_rejects_unknown_alone_duplicate_and_software_combinations ... ok",
+            "test media_cli_tests::actual_media_config_rejects_invalid_combinations_before_any_probe_or_policy_read ... ok",
+            "test media_cli_tests::explicit_encoder_cli_reaches_the_actual_configured_provider_and_keeps_mf_default ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+          "result": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 66,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test native_video::hevc::tests::original_capture_cancel_latch_denies_submit_and_cannot_revive_after_checked_reset ... ok",
+            "test native_video::hevc::tests::signed_hevc_selection_never_scales_an_unapproved_monitor_or_uses_a_legacy_codec ... ok"
+          ]
+        }
+      ],
+      "orphan_case_lines_without_result": [],
+      "failed_steps": [
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "number": 12,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "number": 13,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "number": 18,
+          "conclusion": "failure"
+        }
+      ],
+      "test_counts_are_per_invocation_and_may_repeat_cases": true
+    },
+    {
+      "job_id": 125760767134,
+      "job_name": "owner-boundaries (windows-2025)",
+      "job_conclusion": "failure",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125760767134/logs",
+      "path": "job-125760767134.log",
+      "bytes": 840991,
+      "sha256": "171cb5c3c2b92212a1d776aa38352a66d3adc55ba0bcbded004e0e8e55aa9249",
+      "compiler_or_lint_diagnostics": [
+        {
+          "line_in_original_log": 2697,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-desktop --lib gpu_diagnostics:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/receiver-tests.log\"",
+          "diagnostic": [
+            "error[E0603]: enum `RemoteTab` is private",
+            "  --> apps\\desktop\\src\\layout_tests.rs:77:40",
+            "   |",
+            "77 |     workspace.app.remote.tab = remote::RemoteTab::Sessions;",
+            "   |                                        ^^^^^^^^^  -------- unit variant `Sessions` is not publicly re-exported",
+            "   |                                        |",
+            "   |                                        private enum",
+            "   |",
+            "note: the enum `RemoteTab` is defined here",
+            "  --> apps\\desktop\\src\\remote.rs:18:1",
+            "   |",
+            "18 | enum RemoteTab {",
+            "   | ^^^^^^^^^^^^^^"
+          ]
+        },
+        {
+          "line_in_original_log": 2711,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-desktop --lib gpu_diagnostics:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/receiver-tests.log\"",
+          "diagnostic": [
+            "error[E0616]: field `tab` of struct `remote::RemoteForm` is private",
+            "  --> apps\\desktop\\src\\layout_tests.rs:77:26",
+            "   |",
+            "77 |     workspace.app.remote.tab = remote::RemoteTab::Sessions;",
+            "   |                          ^^^ private field",
+            "",
+            "Some errors have detailed explanations: E0603, E0616.",
+            "For more information about an error, try `rustc --explain E0603`.",
+            "error: could not compile `nestlink-desktop` (lib test) due to 2 previous errors",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "exit $LASTEXITCODE"
+          ]
+        },
+        {
+          "line_in_original_log": 2719,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-desktop --lib gpu_diagnostics:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/receiver-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-desktop` (lib test) due to 2 previous errors",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "exit $LASTEXITCODE",
+            "shell: C:\\Program Files\\PowerShell\\7\\pwsh.EXE -command \". '{0}'\"",
+            "env:",
+            "  CARGO_INCREMENTAL: 0",
+            "  CARGO_PROFILE_DEV_DEBUG: 0",
+            "  CARGO_PROFILE_TEST_DEBUG: 0",
+            "  PYTHONDONTWRITEBYTECODE: 1",
+            "  RUST_BACKTRACE: 1",
+            "  CARGO_HOME: C:\\Users\\runneradmin\\.cargo"
+          ]
+        },
+        {
+          "line_in_original_log": 3478,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+          "diagnostic": [
+            "error[E0603]: enum `RemoteTab` is private",
+            "  --> apps\\desktop\\src\\layout_tests.rs:77:40",
+            "   |",
+            "77 |     workspace.app.remote.tab = remote::RemoteTab::Sessions;",
+            "   |                                        ^^^^^^^^^  -------- unit variant `Sessions` is not publicly re-exported",
+            "   |                                        |",
+            "   |                                        private enum",
+            "   |",
+            "note: the enum `RemoteTab` is defined here",
+            "  --> apps\\desktop\\src\\remote.rs:18:1",
+            "   |",
+            "18 | enum RemoteTab {",
+            "   | ^^^^^^^^^^^^^^"
+          ]
+        },
+        {
+          "line_in_original_log": 3492,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+          "diagnostic": [
+            "error[E0616]: field `tab` of struct `remote::RemoteForm` is private",
+            "  --> apps\\desktop\\src\\layout_tests.rs:77:26",
+            "   |",
+            "77 |     workspace.app.remote.tab = remote::RemoteTab::Sessions;",
+            "   |                          ^^^ private field",
+            "",
+            "Some errors have detailed explanations: E0603, E0616.",
+            "For more information about an error, try `rustc --explain E0603`.",
+            "error: could not compile `nestlink-desktop` (lib test) due to 2 previous errors",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\""
+          ]
+        },
+        {
+          "line_in_original_log": 3500,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-desktop` (lib test) due to 2 previous errors",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_mf::hevc_color_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/hevc-mf-color-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_mf::adapter_binding_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/mf-adapter-binding-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_amf::boundary_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/amf-boundary-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib hevc_backend:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/hevc-backend-selection-tests.log\""
+          ]
+        },
+        {
+          "line_in_original_log": 8212,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+          "diagnostic": [
+            "error: used `expect_err()` on a `Result` value",
+            "   --> apps\\daemon\\src\\private_service_proxy\\host\\tests.rs:617:17",
+            "    |",
+            "617 |       let error = tokio::time::timeout(Duration::from_secs(10), command.join())",
+            "    |  _________________^",
+            "618 | |         .await??",
+            "619 | |         .expect_err(\"changed installation must stop after original physical cleanup\");",
+            "    | |_____________________________________________________________________________________^",
+            "    |",
+            "    = note: if this value is an `Ok`, it will panic",
+            "    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#expect_used",
+            "    = note: requested on the command line with `-D clippy::expect-used`",
+            ""
+          ]
+        },
+        {
+          "line_in_original_log": 8225,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+          "diagnostic": [
+            "error: used `expect_err()` on a `Result` value",
+            "   --> apps\\daemon\\src\\private_service_proxy\\host\\tests.rs:710:9",
+            "    |",
+            "710 | /         guard",
+            "711 | |             .running()",
+            "712 | |             .expect_err(\"valid replacement key must be checked against the original signer\")",
+            "    | |____________________________________________________________________________________________^",
+            "    |",
+            "    = note: if this value is an `Ok`, it will panic",
+            "    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#expect_used",
+            "",
+            "error: could not compile `nestlink-daemon` (bin \"nestlink-daemon\" test) due to 2 previous errors",
+            "##[error]Process completed with exit code 1."
+          ]
+        },
+        {
+          "line_in_original_log": 8236,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-daemon` (bin \"nestlink-daemon\" test) due to 2 previous errors",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:",
+            "  name: windows-media-owner-windows-2025-59abafc3dc48a101de8320efebb1db511e83a11f-1",
+            "  path: D:\\a\\_temp/media-owner-evidence/",
+            "  if-no-files-found: error",
+            "  retention-days: 30",
+            "  compression-level: 6",
+            "  overwrite: false",
+            "  include-hidden-files: false",
+            "  archive: true",
+            "env:"
+          ]
+        }
+      ],
+      "harness_count": 24,
+      "harnesses": [
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-protocol --lib media_ -- --show-output",
+          "result": "ok",
+          "passed": 28,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 61,
+          "elapsed_seconds": 0.01,
+          "case_lines": [
+            "test media_authority::tests::canonical_format_roundtrip_rejects_trailing_unknown_flags_and_nonreduced_rate ... ok",
+            "test media_authority::tests::announcement_withdrawal_is_explicit_and_backend_identity_is_not_defaulted ... ok",
+            "test media_authority::tests::exact_hevc_scope_has_its_own_marker_digest_and_original_direction ... ok",
+            "test internal_software_media_candidate::tests::explicit_finite_candidate_requires_the_entire_exact_set_within_original_ceiling ... ok",
+            "test media_authority::tests::main10_v4_needs_its_own_marker_scope_and_approval_domain ... ok",
+            "test internal_software_media_candidate::tests::internal_candidate_policy_requires_every_exact_field_and_rejects_non_h264 ... ok",
+            "test media_authority::tests::signed_scope_cannot_omit_marker_duplicate_or_change_crop_and_digest ... ok",
+            "test media_format::tests::canonical_set_digest_ignores_wire_order_but_binds_every_format_field ... ok",
+            "test media_format::tests::digest_has_stable_field_order_big_endian_encoding_and_domain ... ok",
+            "test media_format::tests::empty_no_common_duplicates_and_excess_entries_are_distinct_outcomes ... ok",
+            "test media_format::tests::exact_intersection_does_not_invent_four_k_at_120_from_two_probed_modes ... ok",
+            "test media_format::tests::geometry_and_high_bit_depth_have_conservative_raw_budget ... ok",
+            "test media_format::tests::hdr_requires_independent_depth_primaries_and_transfer ... ok",
+            "test media_format::tests::hevc_display_area_cannot_hide_padded_coded_picture_limit ... ok",
+            "test media_format::tests::hevc_display_rate_cannot_hide_padded_coded_sample_rate_limit ... ok",
+            "test media_format::tests::legacy_defaults_preserve_actual_distinct_color_conversions ... ok",
+            "test media_format::tests::level_picture_sample_rate_tier_and_bitrate_are_enforced ... ok",
+            "test media_format::tests::main10_and_444_are_independent_and_require_exact_intersection ... ok",
+            "test media_format::tests::independently_versioned_hevc_ptl_is_exact_and_cannot_change_v2_h264_bytes ... ok",
+            "test media_format::tests::rational_framerate_is_canonical_and_bounded ... ok",
+            "test media_format::tests::main10_v4_preserves_v3_bytes_and_requires_exact_profile_depth_and_version ... ok",
+            "test media_format::tests::observed_h264_digest_binds_constraint_flags_and_crop_origin ... ok",
+            "test media_format::tests::rgba16_budget_is_checked_independently_of_eight_bit_budget ... ok",
+            "test media_format::tests::syntax_support_is_not_a_backend_capability_announcement ... ok",
+            "test native_media_format::tests::exact_canonical_roundtrip_rejects_tail_kind_version_hash_and_truncation ... ok",
+            "test native_media_format::tests::proposal_ack_requires_exact_signed_format_and_binding_and_never_overwrites ... ok",
+            "test webrtc::tests::audio_media_cannot_be_requested_with_only_view_permission ... ok",
+            "test native_media_format::tests::exact_hevc_nlmf_preserves_all_ptl_bytes_and_rejects_changed_ack_and_legacy_set ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --test native_compressed -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/compressed-native-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 0,
+          "elapsed_seconds": 3.78,
+          "case_lines": [
+            "test two_tls_connections_reuse_decoded_credit_and_release_only_after_owner_join ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 71,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_gpu_presenter::geometry_tests::native_output_matches_real_sps_padding_and_rejects_unbound_or_conflicting_apertures ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 71,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_mf::hevc_color_tests::supported_color_properties_must_roundtrip_and_mf_enums_remain_exact ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 70,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_mf::adapter_binding_tests::exact_scoped_enumeration_allows_only_absent_optional_activation_identity ... ok",
+            "test windows_mf::adapter_binding_tests::real_attributes_require_exact_luid_blob_and_both_adapter_parts ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 68,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_amf::boundary_tests::original_native_range_types_release_flags_and_null_device_are_strict ... ok",
+            "test windows_amf::boundary_tests::requested_level_covers_exact_picture_rate_bitrate_and_dimension_boundaries ... ok",
+            "test windows_amf::boundary_tests::optional_legacy_properties_require_complete_consistent_absence ... ok",
+            "test windows_amf::boundary_tests::exact_base_layer_alias_requires_same_typed_descriptor_and_value ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 71,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test hevc_backend::tests::implementation_runtime_pairs_are_explicit_and_never_interchangeable ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 5,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows::host::precision_source_tests::exact_float16_conversion_and_sticky_source_metadata_boundaries ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 64,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test hevc_probe::tests::diagnostic_codes_preserve_main8_sdr_and_restricted_sps_rejections ... ok",
+            "test hevc_probe::tests::au_diagnostics_classify_nal_type_slice_count_and_do_not_commit_bad_state ... ok",
+            "test hevc_probe::tests::exact_main8_high_frame_levels_keep_full_ptl_and_admission_history ... ok",
+            "test hevc_probe::tests::h264_and_truncated_hevc_are_rejected ... ok",
+            "test hevc_probe::tests::main10_contract_matches_v4_surface_budget_without_widening_legacy ... ok",
+            "test hevc_probe::tests::actual_main8_contract_keeps_exact_ptl_and_rejected_change_cannot_poison_history ... ok",
+            "test hevc_probe::tests::restricted_main8_sps_and_explicit_color_conflicts ... ok",
+            "test hevc_probe::tests::main10_exact_sps_requires_ten_bit_luma_chroma_main10_profile_and_sdr_color ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 5,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 67,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test hevc_execution::tests::encoder_runtime_is_part_of_frozen_target_and_cannot_open_a_decoder ... ok",
+            "test hevc_execution::tests::registration_is_not_output_and_exact_bytes_pts_direction_are_sealed ... ok",
+            "test hevc_execution::tests::abandoned_and_late_command_fence_the_original_generation ... ok",
+            "test hevc_execution::tests::revoked_start_never_constructs_a_native_source ... ok",
+            "test hevc_execution::tests::checked_native_close_failure_poisoned_slot_never_becomes_joined ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+          "result": "ok",
+          "passed": 10,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 71,
+          "elapsed_seconds": 10.18,
+          "case_lines": [
+            "test control::media_authority_tests::frozen_scope_requires_explicit_signed_approval_and_never_widens_from_latest_catalog ... ok",
+            "test control::media_authority_tests::internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets ... ok",
+            "test control::media_authority_tests::internal_software_candidate_rejects_account_peer_target_and_expiry ... ok",
+            "test control::media_authority_tests::internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_block_prepared_renewal_and_reconnection ... ok",
+            "test control::media_authority_tests::v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain ... ok",
+            "test control::media_authority_tests::management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publication_recovers ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_allow_reviewed_decision_but_block_initial_issuance ... ok",
+            "test control::media_authority_tests::signed_media_public_lifecycle_issues_renews_and_reconnects_without_scope_widening ... ok",
+            "test control::media_authority_tests::v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 16,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 70,
+          "elapsed_seconds": 0.1,
+          "case_lines": [
+            "test native_media_provider::tests::adaptive_cpu_targets_are_bounded_exact_budgets_below_the_product_ceiling ... ok",
+            "test native_media_provider::tests::candidate_provider_keeps_old_single_target_and_uses_only_explicit_lower_targets ... ok",
+            "test native_media_provider::tests::cache_boundary_expiry_device_and_direction_never_extend_original_receipt ... ok",
+            "test native_media_provider::tests::dropping_probe_waiter_marks_owner_for_quarantine_and_actual_join ... ok",
+            "test native_media_provider::tests::explicit_cpu_target_rejects_unsupported_geometry_rate_and_bitrate ... ok",
+            "test native_media_provider::tests::explicit_hevc_target_is_single_exact_and_cannot_enter_the_cpu_candidate ... ok",
+            "test native_media_provider::tests::generation_exhaustion_never_saturates_or_reuses_identifier ... ok",
+            "test native_media_provider::tests::gpu_high_frame_and_4k_targets_are_configurations_until_each_direction_actually_probes ... ok",
+            "test native_media_provider::tests::hevc_second_budget_is_explicit_bounded_and_keeps_the_original_backend ... ok",
+            "test native_media_provider::tests::local_encoder_selection_binds_whole_probe_and_original_expiry ... ok",
+            "test native_media_provider::tests::main10_allocation_is_rejected_before_probing_and_keeps_main8_budget ... ok",
+            "test native_media_provider::tests::local_selection_history_has_a_hard_bound_and_never_evicts_valid_old_probes ... ok",
+            "test native_media_provider::tests::merged_hevc_probe_evidence_rejects_a_changed_driver_or_encoder_runtime ... ok",
+            "test native_media_provider::tests::successful_abandoned_probe_releases_only_after_actual_join ... ok",
+            "test native_media_provider::tests::prewarm_completion_requires_current_dispatch_and_retains_single_pending_worker ... ok",
+            "test native_media_provider::tests::cancelled_error_and_panicked_probe_join_never_authorize_slot_reuse ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 73,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test hevc_negotiated_format::tests::legacy_and_nonexecutable_main8_timing_or_surface_are_not_remapped ... ok",
+            "test hevc_negotiated_format::tests::exact_4k_144_target_preserves_hardware_format_and_level_rate_limits ... ok",
+            "test hevc_negotiated_format::tests::main10_execution_requires_v4_and_keeps_exact_depth_digest_and_hardware ... ok",
+            "test hevc_negotiated_format::tests::exact_target_keeps_every_ptl_bit_and_independent_wire_digest ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 3,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 74,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test decoded_export::tests::hevc_metadata_without_original_sealed_output_cannot_open_export ... ok",
+            "test decoded_export::tests::incomplete_overflow_expiry_and_context_change_retire_export ... ok",
+            "test decoded_export::tests::bounded_transfer_is_not_a_decode_or_presentation_acknowledgement ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 16,
+          "elapsed_seconds": 0.09,
+          "case_lines": [
+            "test compressed_video::tests::stale_decode_requires_every_other_context_field_to_match ... ok",
+            "test compressed_video::tests::exact_hevc_canonical_container_does_not_enable_the_old_h264_ipc_context ... ok",
+            "test compressed_video::tests::compressed_v2_requires_exact_format_identity_and_canonical_bytes ... ok",
+            "test compressed_video::tests::tls_data_ticket_rejects_other_runtime_ui_replay_and_expiry ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 16,
+          "elapsed_seconds": 0.05,
+          "case_lines": [
+            "test shared_video::tests::main10_shared_context_requires_v4_exact_depth_and_doubled_p010_ring_bytes ... ok",
+            "test shared_video::tests::shared_descriptor_syntax_requires_exact_format_owner_ring_and_budget ... ok",
+            "test shared_video::tests::shared_frame_cannot_change_keys_slot_sequence_or_resource_deadline ... ok",
+            "test shared_video::tests::native_tls_shared_open_requires_live_view_and_exact_ui_before_any_handle_export ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 71,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_shared_output::transfer_claim_tests::destination_claim_retains_one_owner_and_tombstones_closed_numeric_handles ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 0,
+          "elapsed_seconds": 0.03,
+          "case_lines": [
+            "test metadata_domains_reject_invalid_epochs_sequences_and_timestamps ... ok",
+            "test format_epoch_digest_shape_is_strict_for_video_and_recovery ... ok",
+            "test independent_native_wire_vectors_fix_field_numbers_and_clocks ... ok",
+            "test hevc_wire_marker_requires_exact_identity_and_keeps_legacy_markers_strict ... ok",
+            "test opus_packet_bytes_and_channel_identity_are_bounded ... ok",
+            "test video_feedback_wire_budget_and_required_domains_are_bounded ... ok",
+            "test vp8_flags_geometry_and_partition_bounds_must_match_envelope ... ok",
+            "test received_and_serialized_envelopes_include_metadata_in_their_budgets ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "result": "ok",
+          "passed": 17,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 3,
+          "elapsed_seconds": 0.15,
+          "case_lines": [
+            "test compressed_video::tests::stale_decode_requires_every_other_context_field_to_match ... ok",
+            "test compressed_video::tests::exact_hevc_canonical_container_does_not_enable_the_old_h264_ipc_context ... ok",
+            "test compressed_video::tests::compressed_v2_requires_exact_format_identity_and_canonical_bytes ... ok",
+            "test shared_video::tests::main10_shared_context_requires_v4_exact_depth_and_doubled_p010_ring_bytes ... ok",
+            "test shared_video::tests::shared_descriptor_syntax_requires_exact_format_owner_ring_and_budget ... ok",
+            "test shared_video::tests::shared_frame_cannot_change_keys_slot_sequence_or_resource_deadline ... ok",
+            "test video::tests::hevc_readback_pixels_have_an_independent_strict_magic ... ok",
+            "test video::tests::layout_headers_must_advance_and_closed_headers_must_match_the_bound_layout ... ok",
+            "test video::tests::old_layout_frames_and_nonmonotonic_frames_are_rejected ... ok",
+            "test video::tests::stream_header_binds_runtime_generation_request_connection_and_source ... ok",
+            "test video::tests::stream_header_rejects_bad_geometry_and_payload_budgets_before_allocation ... ok",
+            "test video::tests::video_header_rejects_noncanonical_identity_and_geometry ... ok",
+            "test video::tests::video_header_round_trips_the_full_local_binding_and_limits ... ok",
+            "test video::tests::video_stream_authorization_fails_closed_without_a_connected_view_session ... ok",
+            "test video::tests::video_client_opens_and_receives_a_binary_frame_over_mutual_local_tls ... ok",
+            "test shared_video::tests::native_tls_shared_open_requires_live_view_and_exact_ui_before_any_handle_export ... ok",
+            "test compressed_video::tests::tls_data_ticket_rejects_other_runtime_ui_replay_and_expiry ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+          "result": "ok",
+          "passed": 7,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 79,
+          "elapsed_seconds": 1.79,
+          "case_lines": [
+            "test native_session::tests::gpu_approval_requires_local_host_and_one_exact_main8_target ... ok",
+            "test native_session::tests::explicit_software_scope_mismatch_fails_without_legacy_downgrade ... ok",
+            "test native_session::tests::gpu_publication_data_checks_bind_exact_direction_target_and_reject_withdrawal ... ok",
+            "test native_session::tests::main10_opt_in_routes_v4_and_cannot_approve_or_publish_a_main8_scope ... ok",
+            "test native_session::tests::hevc_fallback_approval_accepts_only_the_two_explicit_signed_budgets ... ok",
+            "test native_session::tests::gpu_opt_in_routes_v3_only_and_rejects_provider_replacement_and_cpu_policy ... ok",
+            "test native_session::tests::explicit_pcp_requires_deployment_permission_even_without_deployment_stun ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+          "result": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 84,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test sdk_call::media_approval_tests::review_rejects_changed_nonce_revision_scope_host_state_or_deadline_before_probe ... ok",
+            "test sdk_call::media_approval_tests::approved_media_requires_view_and_exact_permission_path_subsets ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+          "result": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 0,
+          "elapsed_seconds": 3.3,
+          "case_lines": [
+            "test explicit_gpu_request_rejects_trusted_access_and_missing_view_before_publication ... ok",
+            "test explicit_main10_request_rejects_trusted_access_and_missing_view_before_publication ... ok",
+            "test legacy_pending_request_cannot_be_reinterpreted_as_reviewed_gpu_media ... ok",
+            "test legacy_pending_request_cannot_be_reinterpreted_as_reviewed_main10_media ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+          "result": "ok",
+          "passed": 7,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 61,
+          "elapsed_seconds": 0.04,
+          "case_lines": [
+            "test media_cli_tests::explicit_gpu_target_cannot_mix_with_software_or_infer_other_formats ... ok",
+            "test media_cli_tests::gpu_4k_144_target_keeps_exact_values_without_entering_cpu_rate_limits ... ok",
+            "test media_cli_tests::hevc_fallback_cli_requires_an_explicit_hevc_mode_and_rejects_foreign_budgets ... ok",
+            "test media_cli_tests::main10_cli_has_explicit_sdr_target_and_cannot_mix_with_main8_or_software ... ok",
+            "test media_cli_tests::encoder_cli_rejects_unknown_alone_duplicate_and_software_combinations ... ok",
+            "test media_cli_tests::actual_media_config_rejects_invalid_combinations_before_any_probe_or_policy_read ... ok",
+            "test media_cli_tests::explicit_encoder_cli_reaches_the_actual_configured_provider_and_keeps_mf_default ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+          "result": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 66,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test native_video::hevc::tests::original_capture_cancel_latch_denies_submit_and_cannot_revive_after_checked_reset ... ok",
+            "test native_video::hevc::tests::signed_hevc_selection_never_scales_an_unapproved_monitor_or_uses_a_legacy_codec ... ok"
+          ]
+        }
+      ],
+      "orphan_case_lines_without_result": [],
+      "failed_steps": [
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "number": 12,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "number": 13,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "number": 18,
+          "conclusion": "failure"
+        }
+      ],
+      "test_counts_are_per_invocation_and_may_repeat_cases": true
+    }
+  ],
+  "release_eligibility_claimed": false,
+  "independent_audit_execution": {
+    "kind": "local_artifact_bytes_only",
+    "source_builds_or_project_tests_run_locally": false,
+    "operations": [
+      "GitHub API metadata and ZIP downloads",
+      "official ZIP SHA256/size/run/source comparison",
+      "artifact extraction",
+      "PowerShell byte/SHA256 comparison of declared payloads and command logs",
+      "read-only parsing of existing Actions receipts and test logs"
+    ]
+  }
+}

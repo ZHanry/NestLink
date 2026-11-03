@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
-  "checkpoint_kind": "reviewed_product_lifecycle_and_explicit_media_budgets_in_hosted_validation_production_migration_and_hdr_in_progress",
+  "source_revision": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
+  "checkpoint_kind": "signed_candidate_control_and_explicit_hdr_p010_sources_in_hosted_validation_original_inner_migration_and_444_in_progress",
   "active_tasks": [
     "W00",
     "W02",
@@ -53,13 +53,14 @@
     "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
   ],
   "unverified_assumptions": [
-    "Exact 9a52c41 resident run 41583603127 passed the original four cases on each OS: Linux 219.26 seconds and Windows 275.57 seconds. Both official ZIPs and 74 producer entries are independently verified. Prior f24/b491 public HTTPS DNS failures remain retained; a later pass does not establish a root-cause fix.",
-    "The 760f232 Web run 41585962968 stopped all three browser flows at native fixture compilation (E0433: log was a dev dependency only). The 37ca0ac network run 41586142163 retained the same compile failure plus original contract-format failures. No new Firefox runtime result exists in these runs. b28a879 moves the same locked logger to native production dependencies; original f24 Firefox 403 remains retained.",
-    "Reviewed commits 92c046a, 944880f and a1afd8b bind private hosts to their real installation identity, continue/close only a proved desktop recovery lineage, and expose real media direction inspection plus explicit signed HEVC budget switching. Original deadlines, safe cleanup and new exact format ACK remain required; these sources are awaiting the current hosted checks.",
-    "W14 production migration remains internal implementation work: authenticated bilateral proposal/commit, dynamic path epochs, simultaneous proposal convergence, lost-ACK idempotence, control through complete old-path loss and bounded drain. The reviewed desktop repair continues safe application recovery and does not complete in-place migration.",
-    "Full 4:4:4/HDR owners and their end-to-end signed format paths remain internal implementation work. Main10/P010 is explicitly SDR. Current AMF target failures, uncropped-geometry requirements and unsupported syntax remain unchanged.",
-    "Mandatory paired Windows, mobile WireGuard, independent NAT/overlap, public fixed ingress, signing, complete mixed-version and cross-day 24-hour evidence is still pending. These external needs do not conceal the remaining source work.",
-    "Explicit user decisions remain: Luanti 25-second display check and its failure stay unchanged; only two newly incorrect terminal expectations were corrected to exact Unauthorized in f2987b3."
+    "895614e implements the bounded mutually signed original route-set standby control transcript; f8b8a2b applies its independently verified hosted formatting. Production in-place inner-connection migration, socket-driver transfer, dynamic path epochs and bounded drain remain implementation work. This control slice does not close W14 or AC22.",
+    "58e3948 adds independent opt-in v5 signed HDR PQ/BT2020/P010 capture, codec, original-process export, IPC and FP16/scRGB presenter paths plus an independent target diagnostic. Hosted compilation, format and boundary tests are pending. No actual HDR display or sustained performance acceptance is claimed.",
+    "4:4:4 remains an internal implementation gap. A separate explicit software VP9 profile1/I444 path reusing the pinned libvpx/libyuv components is being implemented; this will not establish HEVC 4:4:4 or GPU acceptance.",
+    "All nine original network jobs passed at 59abafc and all five original Web jobs passed at a1afd8b within their recorded laboratory scopes. Their exact official ZIPs and available producer payload inventories were independently verified; historical failures remain.",
+    "Complete Rust run 41588867968 at 59abafc finished 9 success/4 failure. Exact failed logs retain the desktop layout private-access compile errors and daemon strict-lint errors. Later 5505192/265193a source fixes require fresh full validation; the failed original run is not changed to passed.",
+    "Linux original resident case failed at public HTTPS system_dns after 63488ms in full59; Windows original four cases passed. Prior 9a52c41 dual-OS resident success stays separately retained and does not establish a root-cause fix.",
+    "Mandatory paired Windows, Android/iOS WireGuard, independent NAT/overlap, public fixed ingress, signing, mixed-version and cross-day 24-hour target evidence is still pending. These external needs do not conceal source gaps.",
+    "Explicit user decisions remain: preserve the Luanti 25-second display assertion and failed result; only the two newly incorrect terminal polling expectations were corrected to exact NativeVideoError::Unauthorized in f2987b3."
   ],
   "external_prerequisites": [
     {
@@ -89,11 +90,20 @@
     }
   ],
   "next_steps": [
-    "Read the exact 59abafc complete Rust/network/media-owner results and a1afd8b original full Web results; preserve each failure and repair source without relaxing original assertions.",
-    "Complete production W14 transport-owner migration and the independent HDR/advanced-format chain while current hosted jobs execute. Integrate only reviewed stable paths, then qualify each exact source again.",
-    "Finish all mandatory implementation and target evidence, then freeze same-source candidates through the original required checks. Publish 0.8.0RC only after the original release gates pass. Both local and remote branches are currently main only."
+    "Import the exact-source 58e3948 hosted formatter patch after official ZIP/receipt verification; read its Windows media owner and diagnostic build results and repair actual failures without weakening original assertions.",
+    "Complete the original transport-owner in-place path migration and independent explicit 4:4:4 production path while hosted checks run; preserve current signed permission, deadline, cleanup and format ACK rules.",
+    "Dispatch complete original Rust and network workflows on the next reviewed formatted source, retain every failure and qualify exact-source fixes. Continue all independent implementation before requesting concrete target resources.",
+    "After all mandatory implementation and real-target evidence passes, freeze one clean-source candidate through the original publish gates and publish 0.8.0RC. Local and remote branches are main only."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/format-82678e9.json",
+    "docs/network-rewrite/evidence/format-895614e.json",
+    "docs/network-rewrite/evidence/network-59abafc.json",
+    "docs/network-rewrite/evidence/web-production-a1afd8b.json",
+    "docs/network-rewrite/evidence/windows-media-owner-59abafc.json",
+    "docs/network-rewrite/evidence/full-rust-core-59abafc.json",
+    "docs/adr/network/0082-authenticated-path-migration-control.md",
+    "docs/network-rewrite/HDR10-P010-OPT-IN.md",
     "docs/network-rewrite/evidence/format-b491.json",
     "docs/network-rewrite/evidence/resident-f24b79f-windows.json",
     "docs/network-rewrite/evidence/native-offline-resident-f24b79f-linux.json",
@@ -935,11 +945,11 @@
       "evidence_ref": "docs/network-rewrite/evidence/capacity-none-4ec2c3c.json"
     },
     "media_owner": {
-      "run_id": 41488394638,
-      "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
-      "conclusion": "success",
+      "run_id": 41588898806,
+      "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+      "conclusion": "failure",
       "whole_task_passed": false,
-      "evidence_ref": "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json"
+      "evidence_ref": "docs/network-rewrite/evidence/windows-media-owner-59abafc.json"
     },
     "media_tools": {
       "run_id": 41488400735,
@@ -957,18 +967,18 @@
       "evidence_ref": "docs/network-rewrite/evidence/linux-package-4a4496b.json"
     },
     "network": {
-      "run_id": 41586142163,
-      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
-      "conclusion": "failure",
+      "run_id": 41588874179,
+      "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+      "conclusion": "success",
       "whole_task_passed": false,
-      "evidence_ref": "docs/network-rewrite/evidence/network-failure-37ca0ac.json"
+      "evidence_ref": "docs/network-rewrite/evidence/network-59abafc.json"
     },
     "rust": {
-      "run_id": 41577474757,
-      "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
+      "run_id": 41588867968,
+      "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
       "conclusion": "failure",
       "whole_task_passed": false,
-      "evidence_ref": "docs/network-rewrite/evidence/full-rust-core-f24b79f.json"
+      "evidence_ref": "docs/network-rewrite/evidence/full-rust-core-59abafc.json"
     },
     "windows_tools_f0": {
       "run_id": 41561899380,
@@ -981,11 +991,11 @@
       "target_evidence_ref": "docs/network-rewrite/evidence/windows-hevc-target-f0c65e1.json"
     },
     "web": {
-      "run_id": 41585962968,
-      "source_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
-      "conclusion": "failure",
+      "run_id": 41588464893,
+      "source_revision": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+      "conclusion": "success",
       "whole_task_passed": false,
-      "evidence_ref": "docs/network-rewrite/evidence/web-native-build-failure-760f232.json"
+      "evidence_ref": "docs/network-rewrite/evidence/web-production-a1afd8b.json"
     }
   }
 }

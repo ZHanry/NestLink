@@ -1,0 +1,3176 @@
+{
+  "schema_version": 1,
+  "kind": "production-web-native-exact-source-independent-verification",
+  "recorded_at_utc": "2026-11-03T06:47:55.8695533Z",
+  "repository": "ZHanry/NestLink",
+  "source_revision": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+  "run_id": 41588464893,
+  "run_attempt": 1,
+  "workflow": "Web production build",
+  "workflow_path": ".github/workflows/web-build.yml",
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41588464893",
+  "status": "completed",
+  "conclusion": "success",
+  "metadata_files": [
+    {
+      "path": "run.json",
+      "bytes": 11722,
+      "sha256": "a3f59fc9411c0d00136fcea1867e5890a0cb300d1f8cd96c486ed2de991b58b9"
+    },
+    {
+      "path": "jobs.json",
+      "bytes": 16996,
+      "sha256": "279a9f9aec99070b076256cee78a2c30994d57addff4e7fc82464153214ee22e"
+    },
+    {
+      "path": "artifacts.json",
+      "bytes": 4220,
+      "sha256": "c7b76cd25c2c6c3ce7ed24033502ff2c513caa26ae1c883e93b1317bfb2cd04c"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 125759369561,
+      "name": "Browser runner and observer contracts",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:12:51Z",
+      "completed_at": "2026-11-03T06:13:00Z",
+      "runner_name": "GitHub Actions 1000012202",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T06:12:51Z",
+          "completed_at": "2026-11-03T06:12:52Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T06:12:52Z",
+          "completed_at": "2026-11-03T06:12:55Z"
+        },
+        {
+          "name": "Check integration runner boundaries independently of the release build",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T06:12:55Z",
+          "completed_at": "2026-11-03T06:12:56Z"
+        },
+        {
+          "name": "Retain browser contract output",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T06:12:56Z",
+          "completed_at": "2026-11-03T06:12:57Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T06:12:57Z",
+          "completed_at": "2026-11-03T06:12:57Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T06:12:57Z",
+          "completed_at": "2026-11-03T06:12:57Z"
+        }
+      ]
+    },
+    {
+      "id": 125759369713,
+      "name": "release-site",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:12:51Z",
+      "completed_at": "2026-11-03T06:21:39Z",
+      "runner_name": "GitHub Actions 1000012201",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T06:12:52Z",
+          "completed_at": "2026-11-03T06:12:53Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T06:12:53Z",
+          "completed_at": "2026-11-03T06:12:55Z"
+        },
+        {
+          "name": "Verify source readback helper and initial checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T06:12:55Z",
+          "completed_at": "2026-11-03T06:12:57Z"
+        },
+        {
+          "name": "Check generated cross-platform UI tokens",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T06:12:57Z",
+          "completed_at": "2026-11-03T06:12:57Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T06:12:57Z",
+          "completed_at": "2026-11-03T06:13:04Z"
+        },
+        {
+          "name": "Install pinned WebAssembly build tools",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T06:13:04Z",
+          "completed_at": "2026-11-03T06:18:27Z"
+        },
+        {
+          "name": "Install verified Binaryen optimizer",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T06:18:27Z",
+          "completed_at": "2026-11-03T06:18:29Z"
+        },
+        {
+          "name": "Build the release site",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T06:18:29Z",
+          "completed_at": "2026-11-03T06:21:35Z"
+        },
+        {
+          "name": "Retain fixed Cargo.lock evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T06:21:35Z",
+          "completed_at": "2026-11-03T06:21:36Z"
+        },
+        {
+          "name": "Verify static output for Caddy",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T06:21:36Z",
+          "completed_at": "2026-11-03T06:21:36Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T06:21:36Z",
+          "completed_at": "2026-11-03T06:21:38Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-03T06:21:38Z",
+          "completed_at": "2026-11-03T06:21:38Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-03T06:21:38Z",
+          "completed_at": "2026-11-03T06:21:38Z"
+        }
+      ]
+    },
+    {
+      "id": 125762326866,
+      "name": "Production Web to native host (chrome)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:21:41Z",
+      "completed_at": "2026-11-03T06:33:33Z",
+      "runner_name": "GitHub Actions 1000012229",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T06:21:42Z",
+          "completed_at": "2026-11-03T06:21:43Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T06:21:43Z",
+          "completed_at": "2026-11-03T06:21:45Z"
+        },
+        {
+          "name": "Run actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T06:21:45Z",
+          "completed_at": "2026-11-03T06:21:46Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T06:21:46Z",
+          "completed_at": "2026-11-03T06:21:55Z"
+        },
+        {
+          "name": "Set ephemeral build locations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T06:21:55Z",
+          "completed_at": "2026-11-03T06:21:55Z"
+        },
+        {
+          "name": "Install native codec build tools",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T06:21:55Z",
+          "completed_at": "2026-11-03T06:22:10Z"
+        },
+        {
+          "name": "Build and verify reviewed native codecs on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T06:22:10Z",
+          "completed_at": "2026-11-03T06:22:43Z"
+        },
+        {
+          "name": "Build the optimized native host fixture on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T06:22:43Z",
+          "completed_at": "2026-11-03T06:30:42Z"
+        },
+        {
+          "name": "Install pinned browser driver and TLS proxy",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T06:30:42Z",
+          "completed_at": "2026-11-03T06:30:46Z"
+        },
+        {
+          "name": "Select the runner's stable Chrome",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T06:30:46Z",
+          "completed_at": "2026-11-03T06:30:46Z"
+        },
+        {
+          "name": "Extract the reviewed stable Edge package without package install hooks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-11-03T06:30:46Z",
+          "completed_at": "2026-11-03T06:30:46Z"
+        },
+        {
+          "name": "Extract the SHA512-pinned official stable Firefox archive",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T06:30:46Z",
+          "completed_at": "2026-11-03T06:30:46Z"
+        },
+        {
+          "name": "Exercise real video, audio, input, files and cleanup",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-03T06:30:46Z",
+          "completed_at": "2026-11-03T06:33:30Z"
+        },
+        {
+          "name": "Upload sanitized integration evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T06:33:30Z",
+          "completed_at": "2026-11-03T06:33:31Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-11-03T06:33:31Z",
+          "completed_at": "2026-11-03T06:33:31Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-11-03T06:33:31Z",
+          "completed_at": "2026-11-03T06:33:31Z"
+        }
+      ]
+    },
+    {
+      "id": 125762326874,
+      "name": "Production Web to native host (firefox)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:21:42Z",
+      "completed_at": "2026-11-03T06:35:11Z",
+      "runner_name": "GitHub Actions 1000012231",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T06:21:43Z",
+          "completed_at": "2026-11-03T06:21:45Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T06:21:45Z",
+          "completed_at": "2026-11-03T06:21:49Z"
+        },
+        {
+          "name": "Run actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T06:21:49Z",
+          "completed_at": "2026-11-03T06:21:52Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T06:21:52Z",
+          "completed_at": "2026-11-03T06:22:04Z"
+        },
+        {
+          "name": "Set ephemeral build locations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T06:22:04Z",
+          "completed_at": "2026-11-03T06:22:04Z"
+        },
+        {
+          "name": "Install native codec build tools",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T06:22:04Z",
+          "completed_at": "2026-11-03T06:22:43Z"
+        },
+        {
+          "name": "Build and verify reviewed native codecs on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T06:22:43Z",
+          "completed_at": "2026-11-03T06:23:16Z"
+        },
+        {
+          "name": "Build the optimized native host fixture on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T06:23:16Z",
+          "completed_at": "2026-11-03T06:32:11Z"
+        },
+        {
+          "name": "Install pinned browser driver and TLS proxy",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T06:32:11Z",
+          "completed_at": "2026-11-03T06:32:16Z"
+        },
+        {
+          "name": "Select the runner's stable Chrome",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2026-11-03T06:32:16Z",
+          "completed_at": "2026-11-03T06:32:16Z"
+        },
+        {
+          "name": "Extract the reviewed stable Edge package without package install hooks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-11-03T06:32:16Z",
+          "completed_at": "2026-11-03T06:32:16Z"
+        },
+        {
+          "name": "Extract the SHA512-pinned official stable Firefox archive",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-03T06:32:16Z",
+          "completed_at": "2026-11-03T06:32:23Z"
+        },
+        {
+          "name": "Exercise real video, audio, input, files and cleanup",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-03T06:32:23Z",
+          "completed_at": "2026-11-03T06:35:05Z"
+        },
+        {
+          "name": "Upload sanitized integration evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T06:35:05Z",
+          "completed_at": "2026-11-03T06:35:08Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-11-03T06:35:08Z",
+          "completed_at": "2026-11-03T06:35:08Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-11-03T06:35:08Z",
+          "completed_at": "2026-11-03T06:35:08Z"
+        }
+      ]
+    },
+    {
+      "id": 125762326880,
+      "name": "Production Web to native host (edge)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:21:41Z",
+      "completed_at": "2026-11-03T06:32:19Z",
+      "runner_name": "GitHub Actions 1000012230",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T06:21:42Z",
+          "completed_at": "2026-11-03T06:21:43Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T06:21:43Z",
+          "completed_at": "2026-11-03T06:21:46Z"
+        },
+        {
+          "name": "Run actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T06:21:46Z",
+          "completed_at": "2026-11-03T06:21:47Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T06:21:47Z",
+          "completed_at": "2026-11-03T06:21:54Z"
+        },
+        {
+          "name": "Set ephemeral build locations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T06:21:54Z",
+          "completed_at": "2026-11-03T06:21:54Z"
+        },
+        {
+          "name": "Install native codec build tools",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T06:21:54Z",
+          "completed_at": "2026-11-03T06:22:07Z"
+        },
+        {
+          "name": "Build and verify reviewed native codecs on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T06:22:07Z",
+          "completed_at": "2026-11-03T06:22:30Z"
+        },
+        {
+          "name": "Build the optimized native host fixture on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T06:22:30Z",
+          "completed_at": "2026-11-03T06:29:12Z"
+        },
+        {
+          "name": "Install pinned browser driver and TLS proxy",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T06:29:12Z",
+          "completed_at": "2026-11-03T06:29:16Z"
+        },
+        {
+          "name": "Select the runner's stable Chrome",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2026-11-03T06:29:16Z",
+          "completed_at": "2026-11-03T06:29:16Z"
+        },
+        {
+          "name": "Extract the reviewed stable Edge package without package install hooks",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T06:29:16Z",
+          "completed_at": "2026-11-03T06:29:28Z"
+        },
+        {
+          "name": "Extract the SHA512-pinned official stable Firefox archive",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T06:29:28Z",
+          "completed_at": "2026-11-03T06:29:28Z"
+        },
+        {
+          "name": "Exercise real video, audio, input, files and cleanup",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-03T06:29:28Z",
+          "completed_at": "2026-11-03T06:32:12Z"
+        },
+        {
+          "name": "Upload sanitized integration evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T06:32:12Z",
+          "completed_at": "2026-11-03T06:32:13Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-11-03T06:32:13Z",
+          "completed_at": "2026-11-03T06:32:13Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-11-03T06:32:13Z",
+          "completed_at": "2026-11-03T06:32:13Z"
+        }
+      ]
+    }
+  ],
+  "artifact_count": 6,
+  "official_zip_verification_count": 6,
+  "independent_downloaded_file_count": 58.0,
+  "producer_payload_verification_count": 4.0,
+  "producer_command_log_verification_count": 0.0,
+  "artifacts": [
+    {
+      "id": 13209730509,
+      "name": "release-web-source-lock-evidence-1",
+      "official_digest": "sha256:eb4b4962c0452bdeb73ac6029fe55443e666d540505599cc52052484fa0d297a",
+      "zip_sha256": "eb4b4962c0452bdeb73ac6029fe55443e666d540505599cc52052484fa0d297a",
+      "zip_bytes": 145831,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 5,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "after-metadata.lock",
+          "bytes": 209806,
+          "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        {
+          "path": "after.lock",
+          "bytes": 209806,
+          "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        {
+          "path": "before.lock",
+          "bytes": 209806,
+          "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        {
+          "path": "Cargo.lock.diff",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "lock-evidence.json",
+          "bytes": 608,
+          "sha256": "ee249fe29ba61a37e54b4fdb433b4ca35164bf9629ddac0afc320a71f6e63d39"
+        }
+      ],
+      "producer_payload_inventory_count": 4,
+      "producer_payload_verifications": [
+        {
+          "producer_receipt": "lock-evidence.json",
+          "inventory_kind": "before",
+          "path": "before.lock",
+          "bytes": 209806,
+          "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "lock-evidence.json",
+          "inventory_kind": "after_metadata",
+          "path": "after-metadata.lock",
+          "bytes": 209806,
+          "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "lock-evidence.json",
+          "inventory_kind": "after",
+          "path": "after.lock",
+          "bytes": 209806,
+          "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "lock-evidence.json",
+          "inventory_kind": "diff",
+          "path": "Cargo.lock.diff",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "producer_matches": true
+        }
+      ],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": true,
+      "producer_inventory_limitation": null,
+      "reports": [
+        {
+          "file": "lock-evidence.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": null,
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "lock_evidence": {
+            "schema_version": 1,
+            "phase": "release-web-build",
+            "before": {
+              "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+              "bytes": 209806
+            },
+            "locked_metadata_no_deps_exit_code": 0,
+            "after_metadata": {
+              "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+              "bytes": 209806
+            },
+            "after": {
+              "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+              "bytes": 209806
+            },
+            "diff": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0,
+              "git_exit_code": 0
+            }
+          }
+        }
+      ],
+      "test_logs": []
+    },
+    {
+      "id": 13209627988,
+      "name": "nestlink-browser-native-evidence-firefox",
+      "official_digest": "sha256:8b127bbdccc2fd9cd980725c394d4eb4a6ebd06a0a0805a1bef1e689732f721b",
+      "zip_sha256": "8b127bbdccc2fd9cd980725c394d4eb4a6ebd06a0a0805a1bef1e689732f721b",
+      "zip_bytes": 261846,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 15,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "browser-report-progress.jsonl",
+          "bytes": 3139,
+          "sha256": "74df908def1616ad26ce753790277bd5f1b8935fbc8b4c1ad48c828c87ca245b"
+        },
+        {
+          "path": "browser-report-remote-narrow.png",
+          "bytes": 31530,
+          "sha256": "b10186d8d4d4e7bcfe2fee80a79e561bd2e9f5e89c50871d115dfddb51ba38a3"
+        },
+        {
+          "path": "browser-report-tunnel-editor.png",
+          "bytes": 89019,
+          "sha256": "db666482272d806109a2186b8f2f055ecf40fbb75b7d05005f9791297438321a"
+        },
+        {
+          "path": "browser-report-video.png",
+          "bytes": 13498,
+          "sha256": "1c730d1d4d3da6be8428edf9f76b2e7b8005dfbc980c9c38bd610d4d595819d9"
+        },
+        {
+          "path": "browser-report-workspace.png",
+          "bytes": 130132,
+          "sha256": "23086e7d9a79b21cf44156d334d3d970b9898652d80f21a9ac381f3ad78e02c6"
+        },
+        {
+          "path": "browser-report.json",
+          "bytes": 750009,
+          "sha256": "8d4c7f032b4e219483f30c92039506881784455bab08bd6879e8ad5ba3fbc39f"
+        },
+        {
+          "path": "connected.json",
+          "bytes": 24,
+          "sha256": "eb6aca21988bbfb247e8090439a12f31fa3d6d73aa8e601a292f6557d506c06e"
+        },
+        {
+          "path": "data-result.json",
+          "bytes": 2731,
+          "sha256": "5cbe7617d337d2ebe11ed4f907a663b01e1f3c96dfb8c46fec444d5f00ea49db"
+        },
+        {
+          "path": "database-cleanup.json",
+          "bytes": 297,
+          "sha256": "bc7665d7004a905fd6a0b7d73ff9b61fea7fe4c21a01df9df10974b61411ace5"
+        },
+        {
+          "path": "host-result.json",
+          "bytes": 617,
+          "sha256": "baad52e9c11940b684d0b22d075a8f0dfeefaf9caaec4797f6e55709d57b6ea2"
+        },
+        {
+          "path": "host-start-gate.json",
+          "bytes": 144,
+          "sha256": "2f061180ea57e5ab1ba4beb8dc9662f76ad8af5c7ce1cc46140cae0e47b9d3f4"
+        },
+        {
+          "path": "input-records.jsonl",
+          "bytes": 1053,
+          "sha256": "9fd9ead293bf675a786b792e6c8762b236147f3ee815e1fbc29d6e15ae8b852d"
+        },
+        {
+          "path": "management-stages.jsonl",
+          "bytes": 79064,
+          "sha256": "c5c43dfd3e94d178c64cc726602040e5c4e444dde8a6864d6b6d4fbe0b63935b"
+        },
+        {
+          "path": "negotiation-events.jsonl",
+          "bytes": 2077,
+          "sha256": "0c4b82957da7512e19df9998f38cac72647bf2cb01c57b0375096e7bf46e93cd"
+        },
+        {
+          "path": "runner-result.json",
+          "bytes": 2102,
+          "sha256": "c780defb8c908c2618a9b1a15d85a8488a2f696059297443087d46869f67e9f6"
+        }
+      ],
+      "producer_payload_inventory_count": 0,
+      "producer_payload_verifications": [],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 1,
+      "producer_command_log_verifications": [
+        {
+          "producer_receipt": "browser-report.json",
+          "inventory_kind": "progress_sha256",
+          "path": "browser-report-progress.jsonl",
+          "bytes": 3139,
+          "sha256": "74df908def1616ad26ce753790277bd5f1b8935fbc8b4c1ad48c828c87ca245b",
+          "producer_declared_sha256": "79f3d2136a831fc4eb77cf02d9cf7467a24b0deb43caacf1908ba0c155499699",
+          "producer_matches": false,
+          "limitation": "The CJS digest covers private raw JSONL before Python publish_receipts sanitizes and reserializes the public JSONL. Public artifact bytes are independently hashed, but the private raw bytes are absent and their digest is not independently verified."
+        }
+      ],
+      "producer_inventory_available": false,
+      "producer_inventory_limitation": "Official ZIP verified and all extracted files independently hashed; this artifact has no producer payload inventory.",
+      "reports": [
+        {
+          "file": "browser-report.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": true,
+          "status": null,
+          "scope": "Production Web UI to native Core, real local WebRTC/VP8 and management renewal; owned synthetic capture, not installed-platform acceptance",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "browser": {
+            "engine": "firefox",
+            "browser_product": "firefox",
+            "browser_product_verified": true,
+            "browser_version": "firefox/159.0",
+            "scope": "Production Web UI to native Core, real local WebRTC/VP8 and management renewal; owned synthetic capture, not installed-platform acceptance",
+            "passed": true,
+            "error": null,
+            "pending_response_observations_after_close": 0,
+            "renewal_sequence_valid": true,
+            "average_decoded_fps": 9.999166736105325,
+            "decoded_elapsed_seconds": 36.003,
+            "audio_output_muted": true,
+            "persistent_controller_preserved": true,
+            "ui_cleanup_complete": true,
+            "browser_peers_closed": true,
+            "browser_closed": true,
+            "tls": {
+              "origin": "https://127.0.0.1:38147",
+              "leaf_sha256": "fb074eeb6b5ff8a6c7fc45b6d61092960ac352861532cee60d9376e6d2367c33",
+              "global_trust_modified": false,
+              "ca_sha256": "5d0beaf022e38653fc522bd36024e83e924fb194739ccc620d190af6c3be0519",
+              "browser_trust": "Fresh owned profile CA constrained to 127.0.0.1, with independently verified exact leaf"
+            },
+            "capture_profile": {
+              "duration_seconds": 36,
+              "fps": 10,
+              "height": 180,
+              "lifetime_seconds": 181,
+              "management_rate_window_seconds": 61,
+              "name": "smoke",
+              "width": 320,
+              "with_audio": true,
+              "minimum_decoded_fps": 9
+            },
+            "native_lifetime_budget": {
+              "lifetime_seconds": 181,
+              "management_rate_window_seconds": 61,
+              "gate_elapsed_ms": 120666,
+              "conservative_remaining_ms": 57186.19418399999,
+              "requested_steady_ms": 36000,
+              "cleanup_reserve_ms": 15000
+            },
+            "page_errors_count": 0,
+            "api_failures_count": 0,
+            "response_inspection_errors_count": 0,
+            "steady_renewals_count": 7,
+            "connection_diagnostics_count": 1,
+            "control_diagnostics_count": 44,
+            "samples_count": 4,
+            "initial_permits_count": 1,
+            "successful_revocations_count": 1,
+            "cleanup_revocations_count": 1,
+            "ui_checks": {
+              "owned_data": {
+                "requested": true,
+                "host_devices": "Owned recorder and temporary private sandbox only",
+                "passed": true,
+                "input_ui_binding_ready": true,
+                "input_started_after_renewal_sequence": 2,
+                "text_entry_action": "Trusted ordinary click after the completed Shift focus-loss action",
+                "focus_loss_release_observed": true,
+                "stage": "downloading-owned-file",
+                "operation_center_opened_through_ui": true,
+                "owned_saved_file_pending_browser_exit": true,
+                "private_stage_removed": true,
+                "upload_acknowledged_by_actual_ui": true,
+                "panel_close_revoked_approvals": true,
+                "operation_center_closed_through_ui": true,
+                "terminal_held_key_observed": true,
+                "pre_disconnect_input_events": 24,
+                "terminal_key_held_before_disconnect": true,
+                "disconnect_activation": "Existing UI button click without focus change; key input itself was trusted",
+                "native_result_sha256": "f63aa65f4a7527482fbd6f45e9cfb0781f0531b09b10f2e1e04ec4310c3cb417",
+                "terminal_key_released": true,
+                "browser_storage_lock_released": true,
+                "download_observers_closed": true,
+                "owned_saved_file_removed": true
+              },
+              "workspace_ui": {
+                "passed": true,
+                "scope": "Compiled production workspace interaction and geometry; separate from real native media/input assertions",
+                "language": "English selected through the production UI",
+                "navigation_elapsed_ms": 2193,
+                "request_hid_options_without_moving_actions": true,
+                "active_layout_elapsed_ms": 1586,
+                "close_clicked_after_cleanup": true
+              },
+              "edge_namespace_ui": {
+                "passed": true,
+                "failed_initialization_preserves_draft": true,
+                "forbidden_is_error": true,
+                "explicit_revision_zero": true,
+                "create_saved": true,
+                "same_node_draft_preserved": true,
+                "read_saved_configuration": true,
+                "stage": "complete",
+                "cas_conflict_preserves_draft": true,
+                "conflict_recovered": true,
+                "slow_old_response_ignored": true,
+                "node_switch_clears_draft": true,
+                "failures": [
+                  {
+                    "method": "GET",
+                    "status": 403
+                  },
+                  {
+                    "method": "PUT",
+                    "status": 403
+                  },
+                  {
+                    "method": "GET",
+                    "status": 403
+                  },
+                  {
+                    "method": "PUT",
+                    "status": 409
+                  },
+                  {
+                    "method": "GET",
+                    "status": 403
+                  }
+                ]
+              },
+              "network_membership_ui": {
+                "passed": true,
+                "scope": "Production membership controls through actual SDK, server and SQLite; delayed real GET replies for lifecycle races",
+                "stage": "complete",
+                "forbidden_is_error": true,
+                "explicit_initialization": true,
+                "explicit_epoch_zero": true,
+                "failed_read_preserves_draft": true,
+                "cas_conflict_preserves_draft": true,
+                "reread_preserves_draft": true,
+                "revision_epoch_bound": true,
+                "revoke_and_reenroll": true,
+                "unmounted_response_ignored": true,
+                "logout_response_ignored": true,
+                "new_session_clean": true,
+                "response_observers_closed": true,
+                "failures": [
+                  {
+                    "method": "GET",
+                    "status": 403
+                  },
+                  {
+                    "method": "PUT",
+                    "status": 409
+                  },
+                  {
+                    "method": "GET",
+                    "status": 403
+                  },
+                  {
+                    "method": "PUT",
+                    "status": 409
+                  }
+                ]
+              },
+              "network_authority_ui": {
+                "passed": true,
+                "scope": "Production authority controls, typed SDK and actual server/SQLite; two independently stale browser snapshots",
+                "stage": "complete",
+                "rotation_advances_and_changes_key": true,
+                "stale_conflict_requires_reread": true,
+                "policy_epoch_advances_without_key_change": true,
+                "permanent_revocation_readback": true,
+                "terminal_controls_disabled": true,
+                "revision_epoch_bound": true,
+                "failures": [
+                  {
+                    "method": "POST",
+                    "status": 409
+                  }
+                ]
+              },
+              "relay_attributes_ui": {
+                "passed": true,
+                "scope": "Production relay metadata controls through actual SDK/server/SQLite; advisory values confer no forwarding rights",
+                "stage": "complete",
+                "default_unknown_revision_zero": true,
+                "explicit_zero_saved": true,
+                "stale_conflict_requires_reread": true,
+                "unknown_clear_persisted": true,
+                "revision_bound": true,
+                "unmounted_response_ignored": true,
+                "logout_response_ignored": true,
+                "new_session_clean": true,
+                "response_observers_closed": true,
+                "failures": [
+                  {
+                    "method": "PUT",
+                    "status": 409
+                  }
+                ]
+              },
+              "spaces_ui": {
+                "passed": true,
+                "scope": "Production account/space controls, isolated recipient browser context, real HTTP and SQLite",
+                "stage": "complete",
+                "created_and_device_joined": true,
+                "invitation_link_opens_acceptance": true,
+                "guest_isolated_context": true,
+                "invitation_single_use": true,
+                "owner_admin_member_guest": true,
+                "stale_revision_rejected": true,
+                "revocation_and_audit": true,
+                "archive_blocks_changes": true,
+                "unmount_clears_secret_and_snapshot": "[redacted]",
+                "response_observers_closed": true,
+                "failures": [
+                  {
+                    "method": "POST",
+                    "status": 409
+                  }
+                ]
+              },
+              "subnet_ui": {
+                "passed": true,
+                "scope": "Real production mapping management state and lifecycle; no mapping issuance or OS forwarding claim",
+                "stage": "complete",
+                "real_policy_and_role_loaded": true,
+                "draft_edits_clear_approval": true,
+                "failed_read_clears_writable_snapshot": true,
+                "failed_read_preserves_unapproved_draft": true,
+                "late_space_reply_ignored": true,
+                "no_unapproved_mapping_write": true,
+                "failures": [
+                  {
+                    "method": "GET",
+                    "status": 403
+                  }
+                ]
+              },
+              "wireguard_ui": {
+                "passed": true,
+                "scope": "Production client management authorization, approval and late-response fencing; issuance, kernel and mobile acceptance are separate",
+                "stage": "complete",
+                "real_client_space_loaded": true,
+                "draft_edits_clear_approval": true,
+                "failed_read_clears_writable_snapshot": true,
+                "failed_read_preserves_unapproved_draft": true,
+                "late_space_reply_ignored": true,
+                "no_unapproved_client_write": true,
+                "failures": [
+                  {
+                    "method": "GET",
+                    "status": 403
+                  }
+                ]
+              },
+              "setup_guide_ui": {
+                "passed": true,
+                "read_only": true,
+                "existing_space_and_remote_navigation": true,
+                "logout_during_read_no_followup": true,
+                "collapsed_after_checks": true,
+                "dedicated_page_closed": true
+              }
+            }
+          }
+        },
+        {
+          "file": "data-result.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": true,
+          "status": null,
+          "scope": "Real Web UI input and SCTP files using only owned recording/tempfile devices",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "receipt": {
+            "files_exact": true,
+            "held_buttons": 0,
+            "input_device_dropped": true,
+            "input_events": [
+              {
+                "button": 1,
+                "down": true,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "button": 1,
+                "down": false,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "code": 4,
+                "down": true,
+                "kind": "key"
+              },
+              {
+                "code": 4,
+                "down": false,
+                "kind": "key"
+              },
+              {
+                "code": 225,
+                "down": true,
+                "kind": "key"
+              },
+              {
+                "button": null,
+                "down": false,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "button_type": "key",
+                "code": 225,
+                "kind": "release"
+              },
+              {
+                "kind": "text",
+                "text": "N"
+              },
+              {
+                "kind": "text",
+                "text": "e"
+              },
+              {
+                "kind": "text",
+                "text": "s"
+              },
+              {
+                "kind": "text",
+                "text": "t"
+              },
+              {
+                "kind": "text",
+                "text": "L"
+              },
+              {
+                "kind": "text",
+                "text": "i"
+              },
+              {
+                "kind": "text",
+                "text": "n"
+              },
+              {
+                "kind": "text",
+                "text": "k"
+              },
+              {
+                "kind": "text",
+                "text": "-"
+              },
+              {
+                "kind": "text",
+                "text": "G"
+              },
+              {
+                "kind": "text",
+                "text": "1"
+              },
+              {
+                "kind": "text",
+                "text": "-"
+              },
+              {
+                "kind": "text",
+                "text": "中"
+              },
+              {
+                "kind": "text",
+                "text": "文"
+              },
+              {
+                "button": 1,
+                "down": true,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "button": 1,
+                "down": false,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "code": 5,
+                "down": true,
+                "kind": "key"
+              },
+              {
+                "button_type": "key",
+                "code": 5,
+                "kind": "release"
+              },
+              {
+                "kind": "reset"
+              }
+            ],
+            "input_exercised": true,
+            "input_resets": 1,
+            "owned_sandbox_removed": true,
+            "passed": true,
+            "receiving_entries": 1,
+            "scope": "Real Web UI input and SCTP files using only owned recording/tempfile devices",
+            "source": {
+              "bytes": 192239,
+              "sha256": "65852033c8afc17efbbc283829ccea5c106871107bf17202420ba51da269d2f9"
+            },
+            "uploaded": {
+              "bytes": 130799,
+              "sha256": "fbf5eba16a7887d01f15575d59a731a7be1f43ee89b1f0b975b1755b94f40b86"
+            },
+            "user_desktop_or_files_accessed": false,
+            "workers": {
+              "owner_dropped": true,
+              "read_cleanup_timed_out": false,
+              "read_error": null,
+              "read_finished": true,
+              "shutdown_calls": 1,
+              "transfers_physically_clean": true,
+              "write_cleanup_error": null,
+              "write_cleanup_timed_out": false,
+              "write_error": null,
+              "write_finished": true,
+              "write_transfer_count": 1
+            }
+          }
+        },
+        {
+          "file": "database-cleanup.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": "Fixture-owned temporary deployment physical cleanup",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "receipt": {
+            "cleanup_attempts": 1,
+            "cleanup_error": null,
+            "cleanup_error_code": null,
+            "elapsed_ms": 0,
+            "owned_temporary_database_removed": true,
+            "scope": "Fixture-owned temporary deployment physical cleanup",
+            "servers_joined": true,
+            "sharing_retries": [],
+            "verified_owned_tempdir": true
+          }
+        },
+        {
+          "file": "host-result.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": "Local synthetic-capture Core/WebRTC integration, not installed-platform acceptance",
+          "kind": null,
+          "failure": "Some(Transport)",
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "receipt": {
+            "audio_chunks": 1913,
+            "audio_cleanup_succeeded": true,
+            "audio_enabled": true,
+            "audio_reset": true,
+            "capture_frames": 383,
+            "capture_prepared": true,
+            "capture_reset": true,
+            "capture_starts": 1,
+            "cleanup_failed": false,
+            "connected": true,
+            "diagnostic": {
+              "elapsed_ms": 39315,
+              "peer": {
+                "elapsed_ms": 38717,
+                "io_error_kind": null,
+                "reason": "PeerGuardCancelRequested"
+              },
+              "source": "WebRtcClosed",
+              "stage": "AnswerNextOffer"
+            },
+            "failure": "Some(Transport)",
+            "scope": "Local synthetic-capture Core/WebRTC integration, not installed-platform acceptance"
+          }
+        },
+        {
+          "file": "host-start-gate.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": null,
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "receipt": {
+            "approved": true,
+            "connection_generation": 1,
+            "controller_issued_initial_lease": false,
+            "elapsed_ms": 120666,
+            "lease_sequence": 0
+          }
+        },
+        {
+          "file": "runner-result.json",
+          "source_claims": [
+            {
+              "field": "github_sha",
+              "value": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": true,
+          "status": null,
+          "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "runner": {
+            "schema_version": 1,
+            "passed": true,
+            "github_sha": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+            "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+            "started_unix_ms": 1793687543910,
+            "global_trust_modified": false,
+            "browser_product": "firefox",
+            "exit_codes": {
+              "browser": 0,
+              "native": 0
+            },
+            "validation_failures": [],
+            "cleanup": {
+              "browser_forced": false,
+              "native_forced": false,
+              "process_errors": [],
+              "owned_processes_stopped": true,
+              "download_directory_empty_after_probe": true,
+              "private_directory_removed": true
+            },
+            "error": null,
+            "inputs": {
+              "native_sha256": "4b421a5c21ad5b5028bd133c8ba4aa89564099c677554e1fca3c814ad53e41dd",
+              "caddy_sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+              "site_index_sha256": "98341c30f49ceaa3d753270105b1c642382cb1d030158094e72698369c04c76d",
+              "runner_sha256": "3a92e4786e20fe6384e71778a5fb59e38c78a45118d6c01a61a7bde5771cb53e"
+            },
+            "browser_source": {
+              "browser_product": "firefox",
+              "version": "159.0",
+              "source_url": "https://archive.mozilla.org/pub/firefox/releases/159.0/linux-x86_64/en-US/firefox-159.0.tar.xz",
+              "checksums_url": "https://archive.mozilla.org/pub/firefox/releases/159.0/SHA512SUMS",
+              "archive_sha512": "d81bb0b4334cd3e1add28102c8cad149d80a5441f96389a469f48d6268d53a8b2cf8582f1de946a44c9c088c526adbd006e1a8be1ac188ca43dfd15ae2d684c0",
+              "archive_verified": true,
+              "executable_version": "Mozilla Firefox 159.0",
+              "executable_sha256": "de3f1f70c111692fce304c7af83a7bf2e6f4bc8033191ea8b8ccc25f1aa122ed",
+              "lock_sha256": "8784f4168f63610fc8a7f5b6756c086755cd6100059abe337fb97f3d3aa000d3",
+              "github_run_id": "41588464893",
+              "github_run_attempt": "1",
+              "github_sha": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+              "runner": "Linux"
+            },
+            "automation": {
+              "puppeteer_core_version": "25.14.0",
+              "protocol": "webDriverBiDi"
+            },
+            "tls_verified_exact_leaf_and_ip_san": true,
+            "finished_unix_ms": 1793687705487
+          }
+        }
+      ],
+      "test_logs": []
+    },
+    {
+      "id": 13209612748,
+      "name": "nestlink-browser-native-evidence-chrome",
+      "official_digest": "sha256:94461dd29739bce5999f6c525d56b19785a31e49320bd7d9262cc702dd439400",
+      "zip_sha256": "94461dd29739bce5999f6c525d56b19785a31e49320bd7d9262cc702dd439400",
+      "zip_bytes": 250068,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 15,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "browser-report-progress.jsonl",
+          "bytes": 3119,
+          "sha256": "a31a5fe13660a6f3c81c3b057401ae603412a8d92cdbff3868d1317a36611848"
+        },
+        {
+          "path": "browser-report-remote-narrow.png",
+          "bytes": 28749,
+          "sha256": "d1eeceb098771de501833040d5ddc9eec5bab79a4d1ac9bec501cbbe9617d9ab"
+        },
+        {
+          "path": "browser-report-tunnel-editor.png",
+          "bytes": 78001,
+          "sha256": "47b55beb2ae123e9355bb75acbaa138a8867f136a53ffbdb649f58936ce80a5c"
+        },
+        {
+          "path": "browser-report-video.png",
+          "bytes": 8303,
+          "sha256": "6a09162bf494693dceb62ee8878836777341d54a71851a6ea235040a0604a075"
+        },
+        {
+          "path": "browser-report-workspace.png",
+          "bytes": 113681,
+          "sha256": "594c54c89815e7ca330ffeafddda8c11d60d970e5880b45d126cc8f4aa300df7"
+        },
+        {
+          "path": "browser-report.json",
+          "bytes": 872836,
+          "sha256": "7d1905e4b61aa7b442af52e84033db45a4a863e6e6a9a4cd0f21dbf163bae9fe"
+        },
+        {
+          "path": "connected.json",
+          "bytes": 24,
+          "sha256": "eb6aca21988bbfb247e8090439a12f31fa3d6d73aa8e601a292f6557d506c06e"
+        },
+        {
+          "path": "data-result.json",
+          "bytes": 2731,
+          "sha256": "5cbe7617d337d2ebe11ed4f907a663b01e1f3c96dfb8c46fec444d5f00ea49db"
+        },
+        {
+          "path": "database-cleanup.json",
+          "bytes": 297,
+          "sha256": "bc7665d7004a905fd6a0b7d73ff9b61fea7fe4c21a01df9df10974b61411ace5"
+        },
+        {
+          "path": "host-result.json",
+          "bytes": 617,
+          "sha256": "965afa45cd0be8a27f9eeb10b0c7ce223134679eb00c3404490ae9d9d5a0700e"
+        },
+        {
+          "path": "host-start-gate.json",
+          "bytes": 144,
+          "sha256": "7ed79a22c09167d60443d6c1854dce62696c2d51a5823b0eaa48c7d6d2aca551"
+        },
+        {
+          "path": "input-records.jsonl",
+          "bytes": 1053,
+          "sha256": "9fd9ead293bf675a786b792e6c8762b236147f3ee815e1fbc29d6e15ae8b852d"
+        },
+        {
+          "path": "management-stages.jsonl",
+          "bytes": 77362,
+          "sha256": "fc6e0fc9ab172098ffe7fe222657f5bdd48a49464c75524265ceb0a0f39e272f"
+        },
+        {
+          "path": "negotiation-events.jsonl",
+          "bytes": 2077,
+          "sha256": "080afe441af7c7c57079ba6c2de35af36ffda0b128bd51e667fb2391d54ac1d9"
+        },
+        {
+          "path": "runner-result.json",
+          "bytes": 1431,
+          "sha256": "08c6a6b79993e34425b0994474696b9445d9766ba6ef63d17c5ed6a760b69d88"
+        }
+      ],
+      "producer_payload_inventory_count": 0,
+      "producer_payload_verifications": [],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 1,
+      "producer_command_log_verifications": [
+        {
+          "producer_receipt": "browser-report.json",
+          "inventory_kind": "progress_sha256",
+          "path": "browser-report-progress.jsonl",
+          "bytes": 3119,
+          "sha256": "a31a5fe13660a6f3c81c3b057401ae603412a8d92cdbff3868d1317a36611848",
+          "producer_declared_sha256": "c382ec47bb513ff64909a12b7309f35c473fc32e93b558d7bbf5391ef2054338",
+          "producer_matches": false,
+          "limitation": "The CJS digest covers private raw JSONL before Python publish_receipts sanitizes and reserializes the public JSONL. Public artifact bytes are independently hashed, but the private raw bytes are absent and their digest is not independently verified."
+        }
+      ],
+      "producer_inventory_available": false,
+      "producer_inventory_limitation": "Official ZIP verified and all extracted files independently hashed; this artifact has no producer payload inventory.",
+      "reports": [
+        {
+          "file": "browser-report.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": true,
+          "status": null,
+          "scope": "Production Web UI to native Core, real local WebRTC/VP8 and management renewal; owned synthetic capture, not installed-platform acceptance",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "browser": {
+            "engine": "chrome",
+            "browser_product": "chrome",
+            "browser_product_verified": true,
+            "browser_version": "Chrome/156.0.8078.47",
+            "scope": "Production Web UI to native Core, real local WebRTC/VP8 and management renewal; owned synthetic capture, not installed-platform acceptance",
+            "passed": true,
+            "error": null,
+            "pending_response_observations_after_close": 0,
+            "renewal_sequence_valid": true,
+            "average_decoded_fps": 9.999166736105325,
+            "decoded_elapsed_seconds": 36.003,
+            "audio_output_muted": true,
+            "persistent_controller_preserved": true,
+            "ui_cleanup_complete": true,
+            "browser_peers_closed": true,
+            "browser_closed": true,
+            "tls": {
+              "origin": "https://127.0.0.1:59627",
+              "leaf_sha256": "ca19fc7d74bd966eb3eef466b2c23a776b420704702c5e090f08bc3ce45fea18",
+              "global_trust_modified": false,
+              "browser_trust": "Exact temporary leaf SPKI in this fresh process only"
+            },
+            "capture_profile": {
+              "duration_seconds": 36,
+              "fps": 10,
+              "height": 180,
+              "lifetime_seconds": 181,
+              "management_rate_window_seconds": 61,
+              "name": "smoke",
+              "width": 320,
+              "with_audio": true,
+              "minimum_decoded_fps": 9
+            },
+            "native_lifetime_budget": {
+              "lifetime_seconds": 181,
+              "management_rate_window_seconds": 61,
+              "gate_elapsed_ms": 121060,
+              "conservative_remaining_ms": 56875.62673999999,
+              "requested_steady_ms": 36000,
+              "cleanup_reserve_ms": 15000
+            },
+            "page_errors_count": 0,
+            "api_failures_count": 0,
+            "response_inspection_errors_count": 0,
+            "steady_renewals_count": 7,
+            "connection_diagnostics_count": 1,
+            "control_diagnostics_count": 44,
+            "samples_count": 4,
+            "initial_permits_count": 1,
+            "successful_revocations_count": 1,
+            "cleanup_revocations_count": 1,
+            "ui_checks": {
+              "owned_data": {
+                "requested": true,
+                "host_devices": "Owned recorder and temporary private sandbox only",
+                "passed": true,
+                "input_ui_binding_ready": true,
+                "input_started_after_renewal_sequence": 2,
+                "text_entry_action": "Trusted ordinary click after the completed Shift focus-loss action",
+                "focus_loss_release_observed": true,
+                "stage": "downloading-owned-file",
+                "operation_center_opened_through_ui": true,
+                "owned_saved_file_pending_browser_exit": true,
+                "private_stage_removed": true,
+                "upload_acknowledged_by_actual_ui": true,
+                "panel_close_revoked_approvals": true,
+                "operation_center_closed_through_ui": true,
+                "terminal_held_key_observed": true,
+                "pre_disconnect_input_events": 24,
+                "terminal_key_held_before_disconnect": true,
+                "disconnect_activation": "Existing UI button click without focus change; key input itself was trusted",
+                "native_result_sha256": "f63aa65f4a7527482fbd6f45e9cfb0781f0531b09b10f2e1e04ec4310c3cb417",
+                "terminal_key_released": true,
+                "browser_storage_lock_released": true,
+                "download_observers_closed": true,
+                "owned_saved_file_removed": true
+              },
+              "workspace_ui": {
+                "passed": true,
+                "scope": "Compiled production workspace interaction and geometry; separate from real native media/input assertions",
+                "language": "English selected through the production UI",
+                "navigation_elapsed_ms": 2247,
+                "request_hid_options_without_moving_actions": true,
+                "active_layout_elapsed_ms": 1533,
+                "close_clicked_after_cleanup": true
+              },
+              "edge_namespace_ui": {
+                "passed": true,
+                "failed_initialization_preserves_draft": true,
+                "forbidden_is_error": true,
+                "explicit_revision_zero": true,
+                "create_saved": true,
+                "same_node_draft_preserved": true,
+                "read_saved_configuration": true,
+                "stage": "complete",
+                "cas_conflict_preserves_draft": true,
+                "conflict_recovered": true,
+                "slow_old_response_ignored": true,
+                "node_switch_clears_draft": true,
+                "failures": [
+                  {
+                    "method": "GET",
+                    "status": 403
+                  },
+                  {
+                    "method": "PUT",
+                    "status": 403
+                  },
+                  {
+                    "method": "GET",
+                    "status": 403
+                  },
+                  {
+                    "method": "PUT",
+                    "status": 409
+                  },
+                  {
+                    "method": "GET",
+                    "status": 403
+                  }
+                ]
+              },
+              "network_membership_ui": {
+                "passed": true,
+                "scope": "Production membership controls through actual SDK, server and SQLite; delayed real GET replies for lifecycle races",
+                "stage": "complete",
+                "forbidden_is_error": true,
+                "explicit_initialization": true,
+                "explicit_epoch_zero": true,
+                "failed_read_preserves_draft": true,
+                "cas_conflict_preserves_draft": true,
+                "reread_preserves_draft": true,
+                "revision_epoch_bound": true,
+                "revoke_and_reenroll": true,
+                "unmounted_response_ignored": true,
+                "logout_response_ignored": true,
+                "new_session_clean": true,
+                "response_observers_closed": true,
+                "failures": [
+                  {
+                    "method": "GET",
+                    "status": 403
+                  },
+                  {
+                    "method": "PUT",
+                    "status": 409
+                  },
+                  {
+                    "method": "GET",
+                    "status": 403
+                  },
+                  {
+                    "method": "PUT",
+                    "status": 409
+                  }
+                ]
+              },
+              "network_authority_ui": {
+                "passed": true,
+                "scope": "Production authority controls, typed SDK and actual server/SQLite; two independently stale browser snapshots",
+                "stage": "complete",
+                "rotation_advances_and_changes_key": true,
+                "stale_conflict_requires_reread": true,
+                "policy_epoch_advances_without_key_change": true,
+                "permanent_revocation_readback": true,
+                "terminal_controls_disabled": true,
+                "revision_epoch_bound": true,
+                "failures": [
+                  {
+                    "method": "POST",
+                    "status": 409
+                  }
+                ]
+              },
+              "relay_attributes_ui": {
+                "passed": true,
+                "scope": "Production relay metadata controls through actual SDK/server/SQLite; advisory values confer no forwarding rights",
+                "stage": "complete",
+                "default_unknown_revision_zero": true,
+                "explicit_zero_saved": true,
+                "stale_conflict_requires_reread": true,
+                "unknown_clear_persisted": true,
+                "revision_bound": true,
+                "unmounted_response_ignored": true,
+                "logout_response_ignored": true,
+                "new_session_clean": true,
+                "response_observers_closed": true,
+                "failures": [
+                  {
+                    "method": "PUT",
+                    "status": 409
+                  }
+                ]
+              },
+              "spaces_ui": {
+                "passed": true,
+                "scope": "Production account/space controls, isolated recipient browser context, real HTTP and SQLite",
+                "stage": "complete",
+                "created_and_device_joined": true,
+                "invitation_link_opens_acceptance": true,
+                "guest_isolated_context": true,
+                "invitation_single_use": true,
+                "owner_admin_member_guest": true,
+                "stale_revision_rejected": true,
+                "revocation_and_audit": true,
+                "archive_blocks_changes": true,
+                "unmount_clears_secret_and_snapshot": "[redacted]",
+                "response_observers_closed": true,
+                "failures": [
+                  {
+                    "method": "POST",
+                    "status": 409
+                  }
+                ]
+              },
+              "subnet_ui": {
+                "passed": true,
+                "scope": "Real production mapping management state and lifecycle; no mapping issuance or OS forwarding claim",
+                "stage": "complete",
+                "real_policy_and_role_loaded": true,
+                "draft_edits_clear_approval": true,
+                "failed_read_clears_writable_snapshot": true,
+                "failed_read_preserves_unapproved_draft": true,
+                "late_space_reply_ignored": true,
+                "no_unapproved_mapping_write": true,
+                "failures": [
+                  {
+                    "method": "GET",
+                    "status": 403
+                  }
+                ]
+              },
+              "wireguard_ui": {
+                "passed": true,
+                "scope": "Production client management authorization, approval and late-response fencing; issuance, kernel and mobile acceptance are separate",
+                "stage": "complete",
+                "real_client_space_loaded": true,
+                "draft_edits_clear_approval": true,
+                "failed_read_clears_writable_snapshot": true,
+                "failed_read_preserves_unapproved_draft": true,
+                "late_space_reply_ignored": true,
+                "no_unapproved_client_write": true,
+                "failures": [
+                  {
+                    "method": "GET",
+                    "status": 403
+                  }
+                ]
+              },
+              "setup_guide_ui": {
+                "passed": true,
+                "read_only": true,
+                "existing_space_and_remote_navigation": true,
+                "logout_during_read_no_followup": true,
+                "collapsed_after_checks": true,
+                "dedicated_page_closed": true
+              }
+            }
+          }
+        },
+        {
+          "file": "data-result.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": true,
+          "status": null,
+          "scope": "Real Web UI input and SCTP files using only owned recording/tempfile devices",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "receipt": {
+            "files_exact": true,
+            "held_buttons": 0,
+            "input_device_dropped": true,
+            "input_events": [
+              {
+                "button": 1,
+                "down": true,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "button": 1,
+                "down": false,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "code": 4,
+                "down": true,
+                "kind": "key"
+              },
+              {
+                "code": 4,
+                "down": false,
+                "kind": "key"
+              },
+              {
+                "code": 225,
+                "down": true,
+                "kind": "key"
+              },
+              {
+                "button": null,
+                "down": false,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "button_type": "key",
+                "code": 225,
+                "kind": "release"
+              },
+              {
+                "kind": "text",
+                "text": "N"
+              },
+              {
+                "kind": "text",
+                "text": "e"
+              },
+              {
+                "kind": "text",
+                "text": "s"
+              },
+              {
+                "kind": "text",
+                "text": "t"
+              },
+              {
+                "kind": "text",
+                "text": "L"
+              },
+              {
+                "kind": "text",
+                "text": "i"
+              },
+              {
+                "kind": "text",
+                "text": "n"
+              },
+              {
+                "kind": "text",
+                "text": "k"
+              },
+              {
+                "kind": "text",
+                "text": "-"
+              },
+              {
+                "kind": "text",
+                "text": "G"
+              },
+              {
+                "kind": "text",
+                "text": "1"
+              },
+              {
+                "kind": "text",
+                "text": "-"
+              },
+              {
+                "kind": "text",
+                "text": "中"
+              },
+              {
+                "kind": "text",
+                "text": "文"
+              },
+              {
+                "button": 1,
+                "down": true,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "button": 1,
+                "down": false,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "code": 5,
+                "down": true,
+                "kind": "key"
+              },
+              {
+                "button_type": "key",
+                "code": 5,
+                "kind": "release"
+              },
+              {
+                "kind": "reset"
+              }
+            ],
+            "input_exercised": true,
+            "input_resets": 1,
+            "owned_sandbox_removed": true,
+            "passed": true,
+            "receiving_entries": 1,
+            "scope": "Real Web UI input and SCTP files using only owned recording/tempfile devices",
+            "source": {
+              "bytes": 192239,
+              "sha256": "65852033c8afc17efbbc283829ccea5c106871107bf17202420ba51da269d2f9"
+            },
+            "uploaded": {
+              "bytes": 130799,
+              "sha256": "fbf5eba16a7887d01f15575d59a731a7be1f43ee89b1f0b975b1755b94f40b86"
+            },
+            "user_desktop_or_files_accessed": false,
+            "workers": {
+              "owner_dropped": true,
+              "read_cleanup_timed_out": false,
+              "read_error": null,
+              "read_finished": true,
+              "shutdown_calls": 1,
+              "transfers_physically_clean": true,
+              "write_cleanup_error": null,
+              "write_cleanup_timed_out": false,
+              "write_error": null,
+              "write_finished": true,
+              "write_transfer_count": 1
+            }
+          }
+        },
+        {
+          "file": "database-cleanup.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": "Fixture-owned temporary deployment physical cleanup",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "receipt": {
+            "cleanup_attempts": 1,
+            "cleanup_error": null,
+            "cleanup_error_code": null,
+            "elapsed_ms": 0,
+            "owned_temporary_database_removed": true,
+            "scope": "Fixture-owned temporary deployment physical cleanup",
+            "servers_joined": true,
+            "sharing_retries": [],
+            "verified_owned_tempdir": true
+          }
+        },
+        {
+          "file": "host-result.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": "Local synthetic-capture Core/WebRTC integration, not installed-platform acceptance",
+          "kind": null,
+          "failure": "Some(Transport)",
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "receipt": {
+            "audio_chunks": 1919,
+            "audio_cleanup_succeeded": true,
+            "audio_enabled": true,
+            "audio_reset": true,
+            "capture_frames": 384,
+            "capture_prepared": true,
+            "capture_reset": true,
+            "capture_starts": 1,
+            "cleanup_failed": false,
+            "connected": true,
+            "diagnostic": {
+              "elapsed_ms": 39161,
+              "peer": {
+                "elapsed_ms": 38624,
+                "io_error_kind": null,
+                "reason": "PeerGuardCancelRequested"
+              },
+              "source": "WebRtcClosed",
+              "stage": "AnswerNextOffer"
+            },
+            "failure": "Some(Transport)",
+            "scope": "Local synthetic-capture Core/WebRTC integration, not installed-platform acceptance"
+          }
+        },
+        {
+          "file": "host-start-gate.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": null,
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "receipt": {
+            "approved": true,
+            "connection_generation": 1,
+            "controller_issued_initial_lease": false,
+            "elapsed_ms": 121060,
+            "lease_sequence": 0
+          }
+        },
+        {
+          "file": "runner-result.json",
+          "source_claims": [
+            {
+              "field": "github_sha",
+              "value": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": true,
+          "status": null,
+          "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "runner": {
+            "schema_version": 1,
+            "passed": true,
+            "github_sha": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+            "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+            "started_unix_ms": 1793687447004,
+            "global_trust_modified": false,
+            "browser_product": "chrome",
+            "exit_codes": {
+              "browser": 0,
+              "native": 0
+            },
+            "validation_failures": [],
+            "cleanup": {
+              "browser_forced": false,
+              "native_forced": false,
+              "process_errors": [],
+              "owned_processes_stopped": true,
+              "download_directory_empty_after_probe": true,
+              "private_directory_removed": true
+            },
+            "error": null,
+            "inputs": {
+              "native_sha256": "0f0612bf6905d90f3d4c746e9e4943c5a0056b6a1d7f9dcc0b2f9f925e6fc94c",
+              "caddy_sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+              "site_index_sha256": "98341c30f49ceaa3d753270105b1c642382cb1d030158094e72698369c04c76d",
+              "runner_sha256": "3a92e4786e20fe6384e71778a5fb59e38c78a45118d6c01a61a7bde5771cb53e"
+            },
+            "browser_source": {
+              "browser_product": "chrome",
+              "source": "GitHub runner stable Chrome",
+              "executable_sha256": "95dc9473b4f904cb3ab0800fc7206081fcae12abc094a088bd741a13f1747b72"
+            },
+            "automation": {
+              "puppeteer_core_version": "25.14.0",
+              "protocol": "cdp"
+            },
+            "tls_verified_exact_leaf_and_ip_san": true,
+            "finished_unix_ms": 1793687610136
+          }
+        }
+      ],
+      "test_logs": []
+    },
+    {
+      "id": 13209572637,
+      "name": "nestlink-browser-native-evidence-edge",
+      "official_digest": "sha256:f1dd555781cb47f4def2d19bb60b7323fbb88a0f1aed21156f4366344659bb1a",
+      "zip_sha256": "f1dd555781cb47f4def2d19bb60b7323fbb88a0f1aed21156f4366344659bb1a",
+      "zip_bytes": 249718,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 15,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "browser-report-progress.jsonl",
+          "bytes": 3133,
+          "sha256": "710714f9709a75e8c2824e4710d4ace390d23c48c4da20f99a87a9980485f1fa"
+        },
+        {
+          "path": "browser-report-remote-narrow.png",
+          "bytes": 27402,
+          "sha256": "528aab9e299a46608713ac414cef79ff148eac40dfb75a853d7833d516d202b4"
+        },
+        {
+          "path": "browser-report-tunnel-editor.png",
+          "bytes": 78019,
+          "sha256": "bf96427db6904ec45ea74ad5fbc6161244c0918b4b240a30210e05d3c2b245a6"
+        },
+        {
+          "path": "browser-report-video.png",
+          "bytes": 8303,
+          "sha256": "6a09162bf494693dceb62ee8878836777341d54a71851a6ea235040a0604a075"
+        },
+        {
+          "path": "browser-report-workspace.png",
+          "bytes": 113527,
+          "sha256": "6f93664d46f4d50d4a678067197540fced65df9ba448b73ec487f99ca85a47d8"
+        },
+        {
+          "path": "browser-report.json",
+          "bytes": 936782,
+          "sha256": "5963c8ba839c4553ca65a8b013ce5ce21a59f1225befc390032fbdbb27351677"
+        },
+        {
+          "path": "connected.json",
+          "bytes": 24,
+          "sha256": "eb6aca21988bbfb247e8090439a12f31fa3d6d73aa8e601a292f6557d506c06e"
+        },
+        {
+          "path": "data-result.json",
+          "bytes": 2731,
+          "sha256": "5cbe7617d337d2ebe11ed4f907a663b01e1f3c96dfb8c46fec444d5f00ea49db"
+        },
+        {
+          "path": "database-cleanup.json",
+          "bytes": 297,
+          "sha256": "bc7665d7004a905fd6a0b7d73ff9b61fea7fe4c21a01df9df10974b61411ace5"
+        },
+        {
+          "path": "host-result.json",
+          "bytes": 617,
+          "sha256": "a080e1cdb88b3c1fe6ffd65c0fb779ded197e59cccd8dcc05809fd582ca1cc8a"
+        },
+        {
+          "path": "host-start-gate.json",
+          "bytes": 144,
+          "sha256": "1988e4208fc9a9eeebece4ccea3275b31c5b7c5ac6f3b9bc67f10c0cbf7c2d7b"
+        },
+        {
+          "path": "input-records.jsonl",
+          "bytes": 1053,
+          "sha256": "9fd9ead293bf675a786b792e6c8762b236147f3ee815e1fbc29d6e15ae8b852d"
+        },
+        {
+          "path": "management-stages.jsonl",
+          "bytes": 77567,
+          "sha256": "f6ab8fcd20bd512e02f2393705dc87f1650e6d7b38ba3139ad92b48d6dcee05f"
+        },
+        {
+          "path": "negotiation-events.jsonl",
+          "bytes": 2191,
+          "sha256": "c54090a352be8cfddeab15f04307c8ace98c0c4fc2905bfe8ebe48d385e468c0"
+        },
+        {
+          "path": "runner-result.json",
+          "bytes": 1455,
+          "sha256": "557f886fdc39849ab624c253bcde26198e8fa75a3d2ab4a0d4767ad61522f8a0"
+        }
+      ],
+      "producer_payload_inventory_count": 0,
+      "producer_payload_verifications": [],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 1,
+      "producer_command_log_verifications": [
+        {
+          "producer_receipt": "browser-report.json",
+          "inventory_kind": "progress_sha256",
+          "path": "browser-report-progress.jsonl",
+          "bytes": 3133,
+          "sha256": "710714f9709a75e8c2824e4710d4ace390d23c48c4da20f99a87a9980485f1fa",
+          "producer_declared_sha256": "177b89175b0bf7bcf50c5842b883a738019ae3bd9cadc971bf3d32c3ed9cbc99",
+          "producer_matches": false,
+          "limitation": "The CJS digest covers private raw JSONL before Python publish_receipts sanitizes and reserializes the public JSONL. Public artifact bytes are independently hashed, but the private raw bytes are absent and their digest is not independently verified."
+        }
+      ],
+      "producer_inventory_available": false,
+      "producer_inventory_limitation": "Official ZIP verified and all extracted files independently hashed; this artifact has no producer payload inventory.",
+      "reports": [
+        {
+          "file": "browser-report.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": true,
+          "status": null,
+          "scope": "Production Web UI to native Core, real local WebRTC/VP8 and management renewal; owned synthetic capture, not installed-platform acceptance",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "browser": {
+            "engine": "chrome",
+            "browser_product": "edge",
+            "browser_product_verified": true,
+            "browser_version": "Edg/156.0.4314.56",
+            "scope": "Production Web UI to native Core, real local WebRTC/VP8 and management renewal; owned synthetic capture, not installed-platform acceptance",
+            "passed": true,
+            "error": null,
+            "pending_response_observations_after_close": 0,
+            "renewal_sequence_valid": true,
+            "average_decoded_fps": 9.971169709863979,
+            "decoded_elapsed_seconds": 36.00379999999993,
+            "audio_output_muted": true,
+            "persistent_controller_preserved": true,
+            "ui_cleanup_complete": true,
+            "browser_peers_closed": true,
+            "browser_closed": true,
+            "tls": {
+              "origin": "https://127.0.0.1:41523",
+              "leaf_sha256": "2113a4f85150eba88f936240aa5b86b471ce5aad7c302a84163b50a3a6b64056",
+              "global_trust_modified": false,
+              "browser_trust": "Exact temporary leaf SPKI in this fresh process only"
+            },
+            "capture_profile": {
+              "duration_seconds": 36,
+              "fps": 10,
+              "height": 180,
+              "lifetime_seconds": 181,
+              "management_rate_window_seconds": 61,
+              "name": "smoke",
+              "width": 320,
+              "with_audio": true,
+              "minimum_decoded_fps": 9
+            },
+            "native_lifetime_budget": {
+              "lifetime_seconds": 181,
+              "management_rate_window_seconds": 61,
+              "gate_elapsed_ms": 122777,
+              "conservative_remaining_ms": 55090.431316999995,
+              "requested_steady_ms": 36000,
+              "cleanup_reserve_ms": 15000
+            },
+            "page_errors_count": 0,
+            "api_failures_count": 0,
+            "response_inspection_errors_count": 0,
+            "steady_renewals_count": 7,
+            "connection_diagnostics_count": 1,
+            "control_diagnostics_count": 44,
+            "samples_count": 4,
+            "initial_permits_count": 1,
+            "successful_revocations_count": 1,
+            "cleanup_revocations_count": 1,
+            "ui_checks": {
+              "owned_data": {
+                "requested": true,
+                "host_devices": "Owned recorder and temporary private sandbox only",
+                "passed": true,
+                "input_ui_binding_ready": true,
+                "input_started_after_renewal_sequence": 2,
+                "text_entry_action": "Trusted ordinary click after the completed Shift focus-loss action",
+                "focus_loss_release_observed": true,
+                "stage": "downloading-owned-file",
+                "operation_center_opened_through_ui": true,
+                "owned_saved_file_pending_browser_exit": true,
+                "private_stage_removed": true,
+                "upload_acknowledged_by_actual_ui": true,
+                "panel_close_revoked_approvals": true,
+                "operation_center_closed_through_ui": true,
+                "terminal_held_key_observed": true,
+                "pre_disconnect_input_events": 24,
+                "terminal_key_held_before_disconnect": true,
+                "disconnect_activation": "Existing UI button click without focus change; key input itself was trusted",
+                "native_result_sha256": "f63aa65f4a7527482fbd6f45e9cfb0781f0531b09b10f2e1e04ec4310c3cb417",
+                "terminal_key_released": true,
+                "browser_storage_lock_released": true,
+                "download_observers_closed": true,
+                "owned_saved_file_removed": true
+              },
+              "workspace_ui": {
+                "passed": true,
+                "scope": "Compiled production workspace interaction and geometry; separate from real native media/input assertions",
+                "language": "English selected through the production UI",
+                "navigation_elapsed_ms": 2263,
+                "request_hid_options_without_moving_actions": true,
+                "active_layout_elapsed_ms": 1549,
+                "close_clicked_after_cleanup": true
+              },
+              "edge_namespace_ui": {
+                "passed": true,
+                "failed_initialization_preserves_draft": true,
+                "forbidden_is_error": true,
+                "explicit_revision_zero": true,
+                "create_saved": true,
+                "same_node_draft_preserved": true,
+                "read_saved_configuration": true,
+                "stage": "complete",
+                "cas_conflict_preserves_draft": true,
+                "conflict_recovered": true,
+                "slow_old_response_ignored": true,
+                "node_switch_clears_draft": true,
+                "failures": [
+                  {
+                    "method": "GET",
+                    "status": 403
+                  },
+                  {
+                    "method": "PUT",
+                    "status": 403
+                  },
+                  {
+                    "method": "GET",
+                    "status": 403
+                  },
+                  {
+                    "method": "PUT",
+                    "status": 409
+                  },
+                  {
+                    "method": "GET",
+                    "status": 403
+                  }
+                ]
+              },
+              "network_membership_ui": {
+                "passed": true,
+                "scope": "Production membership controls through actual SDK, server and SQLite; delayed real GET replies for lifecycle races",
+                "stage": "complete",
+                "forbidden_is_error": true,
+                "explicit_initialization": true,
+                "explicit_epoch_zero": true,
+                "failed_read_preserves_draft": true,
+                "cas_conflict_preserves_draft": true,
+                "reread_preserves_draft": true,
+                "revision_epoch_bound": true,
+                "revoke_and_reenroll": true,
+                "unmounted_response_ignored": true,
+                "logout_response_ignored": true,
+                "new_session_clean": true,
+                "response_observers_closed": true,
+                "failures": [
+                  {
+                    "method": "GET",
+                    "status": 403
+                  },
+                  {
+                    "method": "PUT",
+                    "status": 409
+                  },
+                  {
+                    "method": "GET",
+                    "status": 403
+                  },
+                  {
+                    "method": "PUT",
+                    "status": 409
+                  }
+                ]
+              },
+              "network_authority_ui": {
+                "passed": true,
+                "scope": "Production authority controls, typed SDK and actual server/SQLite; two independently stale browser snapshots",
+                "stage": "complete",
+                "rotation_advances_and_changes_key": true,
+                "stale_conflict_requires_reread": true,
+                "policy_epoch_advances_without_key_change": true,
+                "permanent_revocation_readback": true,
+                "terminal_controls_disabled": true,
+                "revision_epoch_bound": true,
+                "failures": [
+                  {
+                    "method": "POST",
+                    "status": 409
+                  }
+                ]
+              },
+              "relay_attributes_ui": {
+                "passed": true,
+                "scope": "Production relay metadata controls through actual SDK/server/SQLite; advisory values confer no forwarding rights",
+                "stage": "complete",
+                "default_unknown_revision_zero": true,
+                "explicit_zero_saved": true,
+                "stale_conflict_requires_reread": true,
+                "unknown_clear_persisted": true,
+                "revision_bound": true,
+                "unmounted_response_ignored": true,
+                "logout_response_ignored": true,
+                "new_session_clean": true,
+                "response_observers_closed": true,
+                "failures": [
+                  {
+                    "method": "PUT",
+                    "status": 409
+                  }
+                ]
+              },
+              "spaces_ui": {
+                "passed": true,
+                "scope": "Production account/space controls, isolated recipient browser context, real HTTP and SQLite",
+                "stage": "complete",
+                "created_and_device_joined": true,
+                "invitation_link_opens_acceptance": true,
+                "guest_isolated_context": true,
+                "invitation_single_use": true,
+                "owner_admin_member_guest": true,
+                "stale_revision_rejected": true,
+                "revocation_and_audit": true,
+                "archive_blocks_changes": true,
+                "unmount_clears_secret_and_snapshot": "[redacted]",
+                "response_observers_closed": true,
+                "failures": [
+                  {
+                    "method": "POST",
+                    "status": 409
+                  }
+                ]
+              },
+              "subnet_ui": {
+                "passed": true,
+                "scope": "Real production mapping management state and lifecycle; no mapping issuance or OS forwarding claim",
+                "stage": "complete",
+                "real_policy_and_role_loaded": true,
+                "draft_edits_clear_approval": true,
+                "failed_read_clears_writable_snapshot": true,
+                "failed_read_preserves_unapproved_draft": true,
+                "late_space_reply_ignored": true,
+                "no_unapproved_mapping_write": true,
+                "failures": [
+                  {
+                    "method": "GET",
+                    "status": 403
+                  }
+                ]
+              },
+              "wireguard_ui": {
+                "passed": true,
+                "scope": "Production client management authorization, approval and late-response fencing; issuance, kernel and mobile acceptance are separate",
+                "stage": "complete",
+                "real_client_space_loaded": true,
+                "draft_edits_clear_approval": true,
+                "failed_read_clears_writable_snapshot": true,
+                "failed_read_preserves_unapproved_draft": true,
+                "late_space_reply_ignored": true,
+                "no_unapproved_client_write": true,
+                "failures": [
+                  {
+                    "method": "GET",
+                    "status": 403
+                  }
+                ]
+              },
+              "setup_guide_ui": {
+                "passed": true,
+                "read_only": true,
+                "existing_space_and_remote_navigation": true,
+                "logout_during_read_no_followup": true,
+                "collapsed_after_checks": true,
+                "dedicated_page_closed": true
+              }
+            }
+          }
+        },
+        {
+          "file": "data-result.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": true,
+          "status": null,
+          "scope": "Real Web UI input and SCTP files using only owned recording/tempfile devices",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "receipt": {
+            "files_exact": true,
+            "held_buttons": 0,
+            "input_device_dropped": true,
+            "input_events": [
+              {
+                "button": 1,
+                "down": true,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "button": 1,
+                "down": false,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "code": 4,
+                "down": true,
+                "kind": "key"
+              },
+              {
+                "code": 4,
+                "down": false,
+                "kind": "key"
+              },
+              {
+                "code": 225,
+                "down": true,
+                "kind": "key"
+              },
+              {
+                "button": null,
+                "down": false,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "button_type": "key",
+                "code": 225,
+                "kind": "release"
+              },
+              {
+                "kind": "text",
+                "text": "N"
+              },
+              {
+                "kind": "text",
+                "text": "e"
+              },
+              {
+                "kind": "text",
+                "text": "s"
+              },
+              {
+                "kind": "text",
+                "text": "t"
+              },
+              {
+                "kind": "text",
+                "text": "L"
+              },
+              {
+                "kind": "text",
+                "text": "i"
+              },
+              {
+                "kind": "text",
+                "text": "n"
+              },
+              {
+                "kind": "text",
+                "text": "k"
+              },
+              {
+                "kind": "text",
+                "text": "-"
+              },
+              {
+                "kind": "text",
+                "text": "G"
+              },
+              {
+                "kind": "text",
+                "text": "1"
+              },
+              {
+                "kind": "text",
+                "text": "-"
+              },
+              {
+                "kind": "text",
+                "text": "中"
+              },
+              {
+                "kind": "text",
+                "text": "文"
+              },
+              {
+                "button": 1,
+                "down": true,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "button": 1,
+                "down": false,
+                "kind": "pointer",
+                "x": 160,
+                "y": 90
+              },
+              {
+                "code": 5,
+                "down": true,
+                "kind": "key"
+              },
+              {
+                "button_type": "key",
+                "code": 5,
+                "kind": "release"
+              },
+              {
+                "kind": "reset"
+              }
+            ],
+            "input_exercised": true,
+            "input_resets": 1,
+            "owned_sandbox_removed": true,
+            "passed": true,
+            "receiving_entries": 1,
+            "scope": "Real Web UI input and SCTP files using only owned recording/tempfile devices",
+            "source": {
+              "bytes": 192239,
+              "sha256": "65852033c8afc17efbbc283829ccea5c106871107bf17202420ba51da269d2f9"
+            },
+            "uploaded": {
+              "bytes": 130799,
+              "sha256": "fbf5eba16a7887d01f15575d59a731a7be1f43ee89b1f0b975b1755b94f40b86"
+            },
+            "user_desktop_or_files_accessed": false,
+            "workers": {
+              "owner_dropped": true,
+              "read_cleanup_timed_out": false,
+              "read_error": null,
+              "read_finished": true,
+              "shutdown_calls": 1,
+              "transfers_physically_clean": true,
+              "write_cleanup_error": null,
+              "write_cleanup_timed_out": false,
+              "write_error": null,
+              "write_finished": true,
+              "write_transfer_count": 1
+            }
+          }
+        },
+        {
+          "file": "database-cleanup.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": "Fixture-owned temporary deployment physical cleanup",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "receipt": {
+            "cleanup_attempts": 1,
+            "cleanup_error": null,
+            "cleanup_error_code": null,
+            "elapsed_ms": 0,
+            "owned_temporary_database_removed": true,
+            "scope": "Fixture-owned temporary deployment physical cleanup",
+            "servers_joined": true,
+            "sharing_retries": [],
+            "verified_owned_tempdir": true
+          }
+        },
+        {
+          "file": "host-result.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": "Local synthetic-capture Core/WebRTC integration, not installed-platform acceptance",
+          "kind": null,
+          "failure": "Some(Transport)",
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "receipt": {
+            "audio_chunks": 1924,
+            "audio_cleanup_succeeded": true,
+            "audio_enabled": true,
+            "audio_reset": true,
+            "capture_frames": 385,
+            "capture_prepared": true,
+            "capture_reset": true,
+            "capture_starts": 1,
+            "cleanup_failed": false,
+            "connected": true,
+            "diagnostic": {
+              "elapsed_ms": 39139,
+              "peer": {
+                "elapsed_ms": 38708,
+                "io_error_kind": null,
+                "reason": "PeerGuardCancelRequested"
+              },
+              "source": "WebRtcClosed",
+              "stage": "AnswerNextOffer"
+            },
+            "failure": "Some(Transport)",
+            "scope": "Local synthetic-capture Core/WebRTC integration, not installed-platform acceptance"
+          }
+        },
+        {
+          "file": "host-start-gate.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": null,
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "receipt": {
+            "approved": true,
+            "connection_generation": 1,
+            "controller_issued_initial_lease": false,
+            "elapsed_ms": 122777,
+            "lease_sequence": 0
+          }
+        },
+        {
+          "file": "runner-result.json",
+          "source_claims": [
+            {
+              "field": "github_sha",
+              "value": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": true,
+          "status": null,
+          "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "runner": {
+            "schema_version": 1,
+            "passed": true,
+            "github_sha": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+            "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+            "started_unix_ms": 1793687368794,
+            "global_trust_modified": false,
+            "browser_product": "edge",
+            "exit_codes": {
+              "browser": 0,
+              "native": 0
+            },
+            "validation_failures": [],
+            "cleanup": {
+              "browser_forced": false,
+              "native_forced": false,
+              "process_errors": [],
+              "owned_processes_stopped": true,
+              "download_directory_empty_after_probe": true,
+              "private_directory_removed": true
+            },
+            "error": null,
+            "inputs": {
+              "native_sha256": "801a86e98dd392ad2a36dc2e6f052c5bfb120670abc6c0b78f84cebc0cdfa35a",
+              "caddy_sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+              "site_index_sha256": "98341c30f49ceaa3d753270105b1c642382cb1d030158094e72698369c04c76d",
+              "runner_sha256": "3a92e4786e20fe6384e71778a5fb59e38c78a45118d6c01a61a7bde5771cb53e"
+            },
+            "browser_source": {
+              "browser_product": "edge",
+              "source": "SHA256-pinned Microsoft stable Edge package in workflow",
+              "executable_sha256": "35b3cedeb572a9ddb2a5c5314db578943d9c6a6b4b64e279062cba372d302669"
+            },
+            "automation": {
+              "puppeteer_core_version": "25.14.0",
+              "protocol": "cdp"
+            },
+            "tls_verified_exact_leaf_and_ip_san": true,
+            "finished_unix_ms": 1793687532243
+          }
+        }
+      ],
+      "test_logs": []
+    },
+    {
+      "id": 13209365918,
+      "name": "nestlink-browser-contracts-a1afd8b286826bf8d1e8d59709e49ac6faba6c90-1",
+      "official_digest": "sha256:fb9e93f0c24441cbf4ca50ec8dca4ded8a140966115cc34a72bd6304eb5e09a4",
+      "zip_sha256": "fb9e93f0c24441cbf4ca50ec8dca4ded8a140966115cc34a72bd6304eb5e09a4",
+      "zip_bytes": 4198,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 2,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "nestlink-browser-contracts-node.log",
+          "bytes": 17436,
+          "sha256": "6e43979ef6a50406d3d419c6a49697522622770a286bbee96efb001f3d91ba92"
+        },
+        {
+          "path": "nestlink-browser-contracts-python.log",
+          "bytes": 123,
+          "sha256": "3e2e594f2eb7fae7b9d3ee3d72aaa5ef7f8f8cc22affd8a874de1a29526d242c"
+        }
+      ],
+      "producer_payload_inventory_count": 0,
+      "producer_payload_verifications": [],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": false,
+      "producer_inventory_limitation": "Official ZIP verified and all extracted files independently hashed; this artifact has no producer payload inventory.",
+      "reports": [],
+      "test_logs": []
+    },
+    {
+      "id": 13208814485,
+      "name": "nestlink-web-dist",
+      "official_digest": "sha256:415c3e5a5b9cec667e292ef5fa95826815c11124fe9cfc88929183ba056012d2",
+      "zip_sha256": "415c3e5a5b9cec667e292ef5fa95826815c11124fe9cfc88929183ba056012d2",
+      "zip_bytes": 2097133,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 6,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "icon-b3ee4ec4985dec9b.svg",
+          "bytes": 613,
+          "sha256": "3486f7a518d48da84a788abbb46ca9229214ddf40f8828dadf2ae2003712cfe8"
+        },
+        {
+          "path": "index.html",
+          "bytes": 1516,
+          "sha256": "98341c30f49ceaa3d753270105b1c642382cb1d030158094e72698369c04c76d"
+        },
+        {
+          "path": "nestlink-f43f6f6d346c1dcc.css",
+          "bytes": 35184,
+          "sha256": "6067f8ef83f0649e6cb2295b1c9fb2e60fc05d118af3394a8a22cb5396ef500d"
+        },
+        {
+          "path": "nestlink-tokens-a1d0281e245e43f9.css",
+          "bytes": 2046,
+          "sha256": "17c866f5f06cddca4c27be506a04e17118c32024906224772321d8191b5e1d22"
+        },
+        {
+          "path": "nestlink-web-9dfdd895a243d350_bg.wasm",
+          "bytes": 6955818,
+          "sha256": "1bec56f93c1e20c426d3fe7254af38a4826e10d006fa1272c22d551ecb038464"
+        },
+        {
+          "path": "nestlink-web-9dfdd895a243d350.js",
+          "bytes": 88505,
+          "sha256": "92a0d599431bfc4f2ae324f1d08efefce9ec60e359466740421479cb1c31e58d"
+        }
+      ],
+      "producer_payload_inventory_count": 0,
+      "producer_payload_verifications": [],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": false,
+      "producer_inventory_limitation": "Official ZIP verified and all extracted files independently hashed; this artifact has no producer payload inventory.",
+      "reports": [],
+      "test_logs": []
+    }
+  ],
+  "limitations": [
+    "Actions results apply only to this exact source SHA. Historical failures remain unchanged.",
+    "Producer executable/native-library inventories whose bytes are absent from the ZIP are supplier receipts, not independent verification of those binaries.",
+    "Hosted browser/media/network success does not establish physical GPU, real device, public NAT/HA, cross-day or release eligibility."
+  ],
+  "verification_summary": {
+    "job_count": 5,
+    "successful_jobs": 5,
+    "failed_jobs": 0,
+    "official_zips_verified": 6,
+    "downloaded_files_independently_hashed": 58.0,
+    "producer_payload_entries_independently_verified": 4.0,
+    "producer_command_log_entries_independently_verified": 0.0,
+    "producer_private_raw_digests_not_verified": 3.0,
+    "browsers": [
+      {
+        "artifact_id": 13209627988,
+        "artifact": "nestlink-browser-native-evidence-firefox",
+        "browser_product": "firefox",
+        "engine": "firefox",
+        "browser_passed": true,
+        "runner_passed": true,
+        "native_exit_code": 0,
+        "browser_exit_code": 0,
+        "validation_failures": [],
+        "average_decoded_fps": 9.999166736105325,
+        "decoded_elapsed_seconds": 36.003,
+        "steady_renewal_count": 7,
+        "renewal_sequence_valid": true,
+        "pending_response_observations_after_close": 0,
+        "input_and_files_passed": true,
+        "files_exact": true,
+        "owned_sandbox_removed": true,
+        "owned_processes_stopped": true,
+        "private_directory_removed": true,
+        "temporary_database_removed": true,
+        "server_threads_joined": true,
+        "audio_cleanup_succeeded": true,
+        "capture_reset": true,
+        "host_terminal_diagnostic": {
+          "elapsed_ms": 39315,
+          "peer": {
+            "elapsed_ms": 38717,
+            "io_error_kind": null,
+            "reason": "PeerGuardCancelRequested"
+          },
+          "source": "WebRtcClosed",
+          "stage": "AnswerNextOffer"
+        },
+        "host_terminal_failure_field": "Some(Transport)",
+        "raw_private_progress_digests_not_verified": 1
+      },
+      {
+        "artifact_id": 13209612748,
+        "artifact": "nestlink-browser-native-evidence-chrome",
+        "browser_product": "chrome",
+        "engine": "chrome",
+        "browser_passed": true,
+        "runner_passed": true,
+        "native_exit_code": 0,
+        "browser_exit_code": 0,
+        "validation_failures": [],
+        "average_decoded_fps": 9.999166736105325,
+        "decoded_elapsed_seconds": 36.003,
+        "steady_renewal_count": 7,
+        "renewal_sequence_valid": true,
+        "pending_response_observations_after_close": 0,
+        "input_and_files_passed": true,
+        "files_exact": true,
+        "owned_sandbox_removed": true,
+        "owned_processes_stopped": true,
+        "private_directory_removed": true,
+        "temporary_database_removed": true,
+        "server_threads_joined": true,
+        "audio_cleanup_succeeded": true,
+        "capture_reset": true,
+        "host_terminal_diagnostic": {
+          "elapsed_ms": 39161,
+          "peer": {
+            "elapsed_ms": 38624,
+            "io_error_kind": null,
+            "reason": "PeerGuardCancelRequested"
+          },
+          "source": "WebRtcClosed",
+          "stage": "AnswerNextOffer"
+        },
+        "host_terminal_failure_field": "Some(Transport)",
+        "raw_private_progress_digests_not_verified": 1
+      },
+      {
+        "artifact_id": 13209572637,
+        "artifact": "nestlink-browser-native-evidence-edge",
+        "browser_product": "edge",
+        "engine": "chrome",
+        "browser_passed": true,
+        "runner_passed": true,
+        "native_exit_code": 0,
+        "browser_exit_code": 0,
+        "validation_failures": [],
+        "average_decoded_fps": 9.971169709863979,
+        "decoded_elapsed_seconds": 36.00379999999993,
+        "steady_renewal_count": 7,
+        "renewal_sequence_valid": true,
+        "pending_response_observations_after_close": 0,
+        "input_and_files_passed": true,
+        "files_exact": true,
+        "owned_sandbox_removed": true,
+        "owned_processes_stopped": true,
+        "private_directory_removed": true,
+        "temporary_database_removed": true,
+        "server_threads_joined": true,
+        "audio_cleanup_succeeded": true,
+        "capture_reset": true,
+        "host_terminal_diagnostic": {
+          "elapsed_ms": 39139,
+          "peer": {
+            "elapsed_ms": 38708,
+            "io_error_kind": null,
+            "reason": "PeerGuardCancelRequested"
+          },
+          "source": "WebRtcClosed",
+          "stage": "AnswerNextOffer"
+        },
+        "host_terminal_failure_field": "Some(Transport)",
+        "raw_private_progress_digests_not_verified": 1
+      }
+    ]
+  },
+  "interpretation": [
+    "All five original jobs completed successfully at source a1afd8b, including actual Chrome, Firefox and Microsoft Edge production Web-to-native hosted flows. Edge uses a Chromium engine and retains browser_product=edge.",
+    "Original Web UI, real local WebRTC/VP8/Opus, owned input recording and SCTP tempfile transfers, renewal and cleanup receipts passed. Capture is synthetic; no installed-platform or physical GPU acceptance is claimed.",
+    "The host terminal transport/cancellation diagnostic is preserved verbatim; final producer browser/native exit codes are zero and cleanup receipts are retained.",
+    "The browser progress_sha256 fields cover private raw JSONL. Python publish_receipts sanitizes and reserializes the public JSONL, so three private-raw digests cannot be independently verified from public bytes. All 58 public artifact files have independent actual-byte hashes and all six official ZIP digests match.",
+    "Release-site lock evidence includes before, after locked metadata and after build lock bytes plus a zero-byte diff; all four producer entries independently match.",
+    "The historical f24b79f Firefox 403/timeout evidence and 760f232 native-build failures remain unchanged. This later success does not change their conclusions."
+  ],
+  "acceptance_claims": [],
+  "release_eligibility_claimed": false,
+  "independent_audit_execution": {
+    "kind": "local_artifact_bytes_only",
+    "source_builds_or_project_tests_run_locally": false,
+    "operations": [
+      "GitHub API metadata and ZIP downloads",
+      "official ZIP SHA256/size/run/source comparison",
+      "artifact extraction",
+      "PowerShell byte/SHA256 comparison of declared payloads and command logs",
+      "read-only parsing of existing Actions receipts and test logs"
+    ]
+  }
+}
