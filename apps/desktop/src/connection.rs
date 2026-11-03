@@ -326,13 +326,17 @@ impl DesktopApp {
                 }
             }
             _ => {
-                ui.label(self.t("在控制中心的网络管理中配置空间成员、地址与名称、子网和 WireGuard。系统虚拟网卡和转发需要另行批准并在运行设备上启用；浏览器只管理配置，不安装网卡或提供通用网络出口。", "Use control-center network management for space members, addresses, names, subnets and WireGuard. Approve system adapters and forwarding separately on the runtime device. The browser manages configuration; it does not install adapters or provide general network egress."));
-                if signed_in
-                    && snapshot
-                        .principal
-                        .as_ref()
-                        .is_some_and(|principal| principal.is_admin)
+                ui.label(self.t("打开网络空间，创建或加入空间、登记设备，并为已批准的远控选择空间路径。地址与名称、子网和 WireGuard 在控制中心管理。系统虚拟网卡和转发需要在运行设备上另行批准并启用。", "Open Network spaces to create or join a space, enroll a device, and select a space path for an approved remote session. Manage addresses, names, subnets and WireGuard in the control center. Approve and enable system adapters and forwarding separately on the runtime device."));
+                if ui
+                    .add_enabled(
+                        signed_in,
+                        egui::Button::new(self.t("打开网络空间", "Open network spaces")),
+                    )
+                    .clicked()
                 {
+                    self.navigate(Screen::Spaces, snapshot);
+                }
+                if signed_in {
                     if let Some(server) = &snapshot.server {
                         ui.hyperlink_to(
                             self.t("打开控制中心", "Open control center"),
@@ -340,7 +344,7 @@ impl DesktopApp {
                         );
                     }
                 } else {
-                    ui.small(self.t("请由空间或控制中心管理员配置成员和网络授权。", "Ask a space or control-center administrator to configure membership and network authorization."));
+                    ui.small(self.t("登录后可创建空间或接受邀请。成员角色和网络访问权限分别检查。", "Sign in to create a space or accept an invitation. Membership roles and network access permissions are checked separately."));
                 }
             }
         }
