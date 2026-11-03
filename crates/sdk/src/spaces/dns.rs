@@ -32,6 +32,12 @@ pub enum SpaceDnsError {
     QueryAuthorization(Arc<SpaceDnsError>),
     #[error("space DNS socket failed: {0}")]
     Io(#[from] std::io::Error),
+    #[error("space DNS {transport} listener bind failed: {source}")]
+    ListenerBind {
+        transport: &'static str,
+        #[source]
+        source: std::io::Error,
+    },
     #[error("space DNS runtime stopped unexpectedly")]
     Runtime,
 }
@@ -69,10 +75,20 @@ impl SpaceDns {
                 .map_err(|_| SpaceDnsError::Timeout)??,
         );
         let suffix = authority.suffix.clone();
-        let udp = UdpSocket::bind(bind).await?;
+        let udp = UdpSocket::bind(bind)
+            .await
+            .map_err(|source| SpaceDnsError::ListenerBind {
+                transport: "UDP",
+                source,
+            })?;
         let address = udp.local_addr()?;
         // Either both protocols bind the same port, or neither remains owned.
-        let tcp = TcpListener::bind(address).await?;
+        let tcp = TcpListener::bind(address)
+            .await
+            .map_err(|source| SpaceDnsError::ListenerBind {
+                transport: "TCP",
+                source,
+            })?;
         let (stop, mut stopping) = watch::channel(StopState::Running);
         let mut server = Server::new(handler::Handler::new(authority.clone(), stop.clone()));
         server.register_socket(udp);

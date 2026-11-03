@@ -127,3 +127,14 @@ recorded passes and not host split-DNS/real-device evidence.
 Follow-up ADR 0032 adds a separate administrative split-DNS owner and public-plan
 CLI workflow using Windows NRPT and Linux systemd-resolved. Its real OS and
 recovery tests remain awaiting hosted execution and target qualification.
+
+The complete Linux workspace in run41562145692 /sourcec589362 returned10/11
+for this original DNS target. The member-removal/logout case returned
+Io/AddrInUse/Os98 without identifying which socket operation failed. This
+does not establish failed cleanup or the cause of a particular port collision.
+Startup now preserves an explicit UDP/TCP listener-bind error category and
+the original OS error as its source, so the next exact-source run can locate
+that operation. Binding order, same-port ownership, error propagation,
+shutdown/rebind assertions and all deadlines remain unchanged. No port retry,
+reuse option or acceptance relaxation is introduced. This diagnostic change
+still requires hosted execution; the original failed result remains failed.
