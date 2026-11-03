@@ -61,7 +61,7 @@ impl MfHevcHardwareDecoder {
         }
         // SAFETY: explicit original worker-thread device, hardware-only transform.
         let mut inner = unsafe {
-            Transform::new_hevc_depth(target.config(), device, false, true, target.bit_depth())
+            Transform::new_hevc_color(target.config(), device, false, true, target.bit_depth(), target.is_hdr10())
         }?;
         let identity = match observation(&inner) {
             Ok(identity)
@@ -124,6 +124,7 @@ impl MfHevcHardwareDecoder {
             peer,
             self.authority.clone(),
             self.target.bit_depth(),
+            self.target.is_hdr10(),
         )?;
         let descriptor = shared.descriptor();
         if Some(descriptor.adapter_luid) != self.identity.adapter_luid {
@@ -305,11 +306,12 @@ impl MfHevcTextureEncoder {
         }
         // SAFETY: caller supplies the original owner-thread device; selected owner retains COM refs.
         let mut inner = unsafe {
-            crate::hevc_encoder::Encoder::open(
+            crate::hevc_encoder::Encoder::open_color(
                 target.config(),
                 device,
                 target.bit_depth(),
                 encoder.backend(),
+                target.is_hdr10(),
             )
         }?;
         let identity = match inner.owner_observation() {

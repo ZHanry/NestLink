@@ -13,6 +13,7 @@ use std::{
     },
 };
 unsafe extern "C" {
+    fn nl_hevc_hdr10_synthetic_open(width: u32, height: u32, result: *mut *mut c_void) -> i32;
     fn nl_hevc_synthetic_open(
         width: u32,
         height: u32,
@@ -50,6 +51,7 @@ fn authorized(authority: &AtomicBool) -> io::Result<()> {
 pub struct HevcSyntheticSource {
     handle: NonNull<c_void>,
     bit_depth: u8,
+    hdr10: bool,
     _thread: PhantomData<Rc<()>>,
 }
 impl HevcSyntheticSource {
@@ -57,15 +59,23 @@ impl HevcSyntheticSource {
         Self::with_depth(width, height, 8)
     }
     pub fn with_depth(width: u32, height: u32, bit_depth: u8) -> io::Result<Self> {
+        Self::with_color(width, height, bit_depth, false)
+    }
+    pub fn hdr10(width: u32, height: u32) -> io::Result<Self> {
+        Self::with_color(width, height, 10, true)
+    }
+    fn with_color(width: u32, height: u32, bit_depth: u8, hdr10: bool) -> io::Result<Self> {
         let mut handle = std::ptr::null_mut();
         // SAFETY: bounded constructor, initialized output; no borrowed pixels.
         checked(unsafe {
-            nl_hevc_synthetic_open(width, height, u32::from(bit_depth), &mut handle)
+            if hdr10 { nl_hevc_hdr10_synthetic_open(width, height, &mut handle) }
+            else { nl_hevc_synthetic_open(width, height, u32::from(bit_depth), &mut handle) }
         })?;
         Ok(Self {
             handle: NonNull::new(handle)
                 .ok_or_else(|| io::Error::other("null synthetic source"))?,
             bit_depth,
+            hdr10,
             _thread: PhantomData,
         })
     }
@@ -153,12 +163,13 @@ impl HevcProbeEncoder {
         let (device, _) = source.borrow()?;
         // SAFETY: same owner/device; native retains its device and four input textures.
         let inner = unsafe {
-            crate::hevc_encoder::Encoder::open(config, device, source.bit_depth, backend)
+            if source.hdr10 { crate::hevc_encoder::Encoder::open_color(config, device, 10, backend, true) }
+            else { crate::hevc_encoder::Encoder::open(config, device, source.bit_depth, backend) }
         }?;
         Ok(Self {
             inner,
             config,
-            validator: if source.bit_depth == 10 {
+            validator: if source.hdr10 { Validator::exact_hdr10() } else if source.bit_depth == 10 {
                 Validator::exact_main10()
             } else {
                 // Apply the same exact contract used by the direction workload
@@ -303,8 +314,14 @@ impl HevcProbeDecoder {
         authority: Arc<AtomicBool>,
         bit_depth: u8,
     ) -> io::Result<Self> {
+        Self::with_color(source, config, authority, bit_depth, false)
+    }
+    pub fn with_color(
+        source: Option<&HevcSyntheticSource>, config: VideoConfig, authority: Arc<AtomicBool>,
+        bit_depth: u8, hdr10: bool,
+    ) -> io::Result<Self> {
         authorized(&authority)?;
-        if source.is_some_and(|source| source.bit_depth != bit_depth) {
+        if source.is_some_and(|source| source.bit_depth != bit_depth || source.hdr10 != hdr10) {
             return Err(io::Error::other("HEVC synthetic source depth differs"));
         }
         let device = source
@@ -313,13 +330,13 @@ impl HevcProbeDecoder {
             .map_or(std::ptr::null_mut(), |v| v.0);
         // SAFETY: owner-local device or null software decode; native retains COM references.
         let inner = unsafe {
-            Transform::new_hevc_depth(config, device, false, source.is_some(), bit_depth)
+            Transform::new_hevc_color(config, device, false, source.is_some(), bit_depth, hdr10)
         }?;
         let size = inner.raw_bytes;
         Ok(Self {
             inner,
             config,
-            validator: if bit_depth == 10 {
+            validator: if hdr10 { Validator::exact_hdr10() } else if bit_depth == 10 {
                 Validator::exact_main10()
             } else {
                 Validator::default()

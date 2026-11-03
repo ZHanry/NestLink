@@ -43,6 +43,8 @@ pub struct DecodedVideo {
     pub(crate) shared: Option<nestlink_media_codec::SharedDecodedFrame>,
     /// Encoded YUV source conversion; does not label the returned BGRA as
     /// limited-range RGB, establish capture transfer, or prove display HDR.
+    /// Independent HDR stores diagnostic packed Y/Cb/Cr in `pixels`; the
+    /// product requires original shared P010 and never exports it as BGRA.
     pub source_color: nestlink_protocol::media_format::Color,
     pub codec: u8,
     pub hardware_decode: bool,
@@ -1174,6 +1176,9 @@ impl VideoPresentation {
                 .and_then(|source| state.videos.remove(&source))
         };
         if let Some(frame) = &frame {
+            if frame.source_color == nestlink_protocol::media_format::Color::HDR10_BT2020_LIMITED && !shared_consumer {
+                return Err(io::Error::other("HDR requires the original P010 shared presenter"));
+            }
             if let Some(receipt) = &frame.execution {
                 receipt.check_decoded(frame.pts_90khz, &frame.pixels)?;
                 if state

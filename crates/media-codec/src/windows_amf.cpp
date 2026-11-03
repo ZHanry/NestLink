@@ -62,6 +62,7 @@ struct Encoder {
     bool actual_output = false, id_initialized = false, init_attempted = false, initialized = false;
     GUID id{};
     uint32_t width = 0, height = 0, fps = 0, depth = 0;
+    bool hdr10 = false;
     HMODULE module = nullptr;
     uint64_t runtime = 0;
     amf::AMFFactory* factory = nullptr; // Factory has no Release interface.
@@ -506,19 +507,22 @@ HRESULT configure(Encoder& state, uint32_t kbps) noexcept {
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_SKIP_FRAME_ENABLE, amf::AMFVariant(false));
     if (FAILED(hr)) return hr;
     for (const wchar_t* name : {AMF_VIDEO_ENCODER_HEVC_INPUT_COLOR_PROFILE, AMF_VIDEO_ENCODER_HEVC_OUTPUT_COLOR_PROFILE}) {
-        hr = property(state, name, amf::AMFVariant(amf_int64(AMF_VIDEO_CONVERTER_COLOR_PROFILE_709)));
+        hr = property(state, name, amf::AMFVariant(amf_int64(state.hdr10 ? AMF_VIDEO_CONVERTER_COLOR_PROFILE_2020 : AMF_VIDEO_CONVERTER_COLOR_PROFILE_709)));
         if (FAILED(hr)) return hr;
     }
-    for (const wchar_t* name : {AMF_VIDEO_ENCODER_HEVC_INPUT_TRANSFER_CHARACTERISTIC, AMF_VIDEO_ENCODER_HEVC_OUTPUT_TRANSFER_CHARACTERISTIC,
-        AMF_VIDEO_ENCODER_HEVC_INPUT_COLOR_PRIMARIES, AMF_VIDEO_ENCODER_HEVC_OUTPUT_COLOR_PRIMARIES}) {
-        hr = property(state, name, amf::AMFVariant(amf_int64(1)));
+    for (const wchar_t* name : {AMF_VIDEO_ENCODER_HEVC_INPUT_TRANSFER_CHARACTERISTIC, AMF_VIDEO_ENCODER_HEVC_OUTPUT_TRANSFER_CHARACTERISTIC}) {
+        hr = property(state, name, amf::AMFVariant(amf_int64(state.hdr10 ? AMF_COLOR_TRANSFER_CHARACTERISTIC_SMPTE2084 : 1)));
+        if (FAILED(hr)) return hr;
+    }
+    for (const wchar_t* name : {AMF_VIDEO_ENCODER_HEVC_INPUT_COLOR_PRIMARIES, AMF_VIDEO_ENCODER_HEVC_OUTPUT_COLOR_PRIMARIES}) {
+        hr = property(state, name, amf::AMFVariant(amf_int64(state.hdr10 ? 9 : 1)));
         if (FAILED(hr)) return hr;
     }
     for (const wchar_t* name : {AMF_VIDEO_ENCODER_HEVC_INPUT_MATRIX_COEFF, AMF_VIDEO_ENCODER_HEVC_OUTPUT_MATRIX_COEFF}) {
-        hr = property(state, name, amf::AMFVariant(amf_int64(1)), true);
+        hr = property(state, name, amf::AMFVariant(amf_int64(state.hdr10 ? 9 : 1)), !state.hdr10);
         if (FAILED(hr)) return hr;
     }
-    hr = property(state, AMF_VIDEO_ENCODER_HEVC_INPUT_FULL_RANGE_COLOR, amf::AMFVariant(false), true);
+    hr = property(state, AMF_VIDEO_ENCODER_HEVC_INPUT_FULL_RANGE_COLOR, amf::AMFVariant(false), !state.hdr10);
     if (SUCCEEDED(hr)) hr = limited_range(state);
     // Unknown old-runtime properties are not invented. Absence means the
     // feature did not exist; if it is exposed it must be disabled/read back.
@@ -692,8 +696,8 @@ HRESULT input(Encoder& state, ID3D11Texture2D* source, uint64_t pts, bool keyfra
 }
 } // namespace
 
-extern "C" int32_t nl_amf_open(void* device, uint32_t width, uint32_t height,
-    uint32_t fps, uint32_t kbps, uint32_t depth, void** result) noexcept {
+static int32_t amf_open(void* device, uint32_t width, uint32_t height,
+    uint32_t fps, uint32_t kbps, uint32_t depth, bool hdr10, void** result) noexcept {
     if (!result) return E_POINTER;
     *result = nullptr;
     if (!device || !width || !height || ((width | height) & 1) || width > 8192 || height > 8192
@@ -704,6 +708,7 @@ extern "C" int32_t nl_amf_open(void* device, uint32_t width, uint32_t height,
     std::unique_ptr<Encoder> state(new (std::nothrow) Encoder());
     if (!state) return E_OUTOFMEMORY;
     state->width = width; state->height = height; state->fps = fps; state->depth = depth;
+    state->hdr10 = hdr10;
     try {
         const HRESULT hr = open_native(*state, static_cast<ID3D11Device*>(device), kbps);
         if (FAILED(hr)) return abandon(state, hr);
@@ -711,6 +716,14 @@ extern "C" int32_t nl_amf_open(void* device, uint32_t width, uint32_t height,
         return S_OK;
     } catch (const std::bad_alloc&) { return abandon(state, E_OUTOFMEMORY); }
     catch (...) { return abandon(state, E_FAIL); }
+}
+extern "C" int32_t nl_amf_open(void* device, uint32_t width, uint32_t height,
+    uint32_t fps, uint32_t kbps, uint32_t depth, void** result) noexcept {
+    return amf_open(device,width,height,fps,kbps,depth,false,result);
+}
+extern "C" int32_t nl_amf_hdr10_open(void* device, uint32_t width, uint32_t height,
+    uint32_t fps, uint32_t kbps, void** result) noexcept {
+    return amf_open(device,width,height,fps,kbps,10,true,result);
 }
 
 extern "C" int32_t nl_amf_process(void* handle, void* texture, uint64_t pts, uint32_t keyframe,

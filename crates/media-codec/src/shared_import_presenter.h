@@ -12,7 +12,8 @@ struct SharedPresenter {
     bool failed=false;
     HRESULT initialize(Surface* surface,const NlSharedRingDescriptor& descriptor,UINT fps,uint64_t driver) {
         auto& p=output;p.surface=surface;++surface->references;
-        if((descriptor.bit_depth!=8 && descriptor.bit_depth!=10) || descriptor.reserved)return E_INVALIDARG;
+        p.hdr10=descriptor.reserved==NL_SHARED_HDR10_VERSION;
+        if((descriptor.bit_depth!=8 && descriptor.bit_depth!=10) || (descriptor.reserved && !p.hdr10) || (p.hdr10 && descriptor.bit_depth!=10))return E_INVALIDARG;
         p.input_format=descriptor.bit_depth==10?DXGI_FORMAT_P010:DXGI_FORMAT_NV12;
         p.width=descriptor.width;p.height=descriptor.height;ring=descriptor;
         HRESULT hr=CoInitializeEx(nullptr,COINIT_MULTITHREADED);if(FAILED(hr))return hr;p.com=true;
@@ -58,6 +59,7 @@ struct SharedPresenter {
             (last_token && frame.pts<=last_pts) || !frame.acquire_key || !(frame.acquire_key&1) || frame.release_key!=frame.acquire_key+1 ||
             frame.acquire_key<=keys[frame.slot] || !deadline || deadline>frame.expires_qpc)return E_INVALIDARG;
         HRESULT hr=p.device->GetDeviceRemovedReason();if(FAILED(hr)){failed=true;return hr;}
+        if(!hdr_display_current(p)){failed=true;black(p);return DXGI_ERROR_ACCESS_LOST;}
         auto& mutex=mutexes[frame.slot];
         hr=mutex->AcquireSync(frame.acquire_key,50);
         if(hr!=S_OK){failed=true;return FAILED(hr)?hr:HRESULT_FROM_WIN32(WAIT_TIMEOUT);}
@@ -74,10 +76,12 @@ struct SharedPresenter {
             p.video_context->VideoProcessorSetStreamDestRect(p.processor.Get(),0,TRUE,&rect);
             p.video_context->VideoProcessorSetOutputTargetRect(p.processor.Get(),TRUE,&rect);
             p.video_context->VideoProcessorSetStreamFrameFormat(p.processor.Get(),0,D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE);
-            D3D11_VIDEO_PROCESSOR_COLOR_SPACE color{};color.YCbCr_Matrix=1;color.Nominal_Range=D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_16_235;
-            p.video_context->VideoProcessorSetStreamColorSpace(p.processor.Get(),0,&color);
-            D3D11_VIDEO_PROCESSOR_COLOR_SPACE rgb{};rgb.Nominal_Range=D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255;
-            p.video_context->VideoProcessorSetOutputColorSpace(p.processor.Get(),&rgb);
+            if(!p.hdr10) {
+                D3D11_VIDEO_PROCESSOR_COLOR_SPACE color{};color.YCbCr_Matrix=1;color.Nominal_Range=D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_16_235;
+                p.video_context->VideoProcessorSetStreamColorSpace(p.processor.Get(),0,&color);
+                D3D11_VIDEO_PROCESSOR_COLOR_SPACE rgb{};rgb.Nominal_Range=D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255;
+                p.video_context->VideoProcessorSetOutputColorSpace(p.processor.Get(),&rgb);
+            }
             D3D11_VIDEO_PROCESSOR_STREAM stream{};stream.Enable=TRUE;stream.pInputSurface=inputs[frame.slot].Get();
             hr=p.video_context->VideoProcessorBlt(p.processor.Get(),view.Get(),0,1,&stream);if(FAILED(hr)){failed=true;return hr;}
             *converted=1;p.context->End(p.completion.Get());p.context->Flush();
@@ -90,6 +94,7 @@ struct SharedPresenter {
         // completed (or was deliberately skipped) before returning its mutex.
         hr=mutex->ReleaseSync(frame.release_key);if(hr!=S_OK){failed=true;return FAILED(hr)?hr:E_UNEXPECTED;}
         *consumed=1;
+        if(!hdr_display_current(p)){failed=true;black(p);return DXGI_ERROR_ACCESS_LOST;}
         if(!QueryPerformanceCounter(&now) || now.QuadPart<0){failed=true;return E_UNEXPECTED;}
         if(*converted && static_cast<uint64_t>(now.QuadPart)<deadline && p.surface->authorized && authorized(p)) {
             hr=p.swap->Present(0,DXGI_PRESENT_DO_NOT_WAIT);

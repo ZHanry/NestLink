@@ -15,6 +15,7 @@ enum Mode {
     CpuH264,
     HevcMain8,
     HevcMain10,
+    HevcHdr10,
 }
 impl Mode {
     fn name(self) -> &'static str {
@@ -22,6 +23,7 @@ impl Mode {
             Self::CpuH264 => "cpu-h264",
             Self::HevcMain8 => "hevc-main8",
             Self::HevcMain10 => "hevc-main10",
+            Self::HevcHdr10 => "hevc-hdr10",
         }
     }
 }
@@ -67,7 +69,7 @@ pub(crate) struct InspectArgs {
     /// Current owners support 420 only; an explicit 444 request reports unavailable.
     #[arg(long, value_enum, default_value = "420")]
     chroma: Chroma,
-    /// Current owners are SDR. Main10/P010 alone does not establish HDR support.
+    /// Independent hevc-hdr10 mode requires hdr10. Main10 remains SDR.
     #[arg(long, value_enum, default_value = "sdr")]
     dynamic_range: DynamicRange,
 }
@@ -88,10 +90,11 @@ impl InspectArgs {
                 "no exact 4:4:4 product capture/codec/presenter owner; select 420 explicitly to request a different mode",
             ));
         }
-        if self.dynamic_range != DynamicRange::Sdr {
+        if (self.mode == Mode::HevcHdr10 && self.dynamic_range != DynamicRange::Hdr10)
+            || (self.mode != Mode::HevcHdr10 && self.dynamic_range != DynamicRange::Sdr) {
             return Err(io::Error::new(
                 io::ErrorKind::Unsupported,
-                "no exact HDR product capture/color/codec/presenter owner; Main10/P010 is SDR, and no SDR replacement was attempted",
+                "independent hevc-hdr10 requires explicit hdr10 dynamic range; other modes remain SDR and no replacement was attempted",
             ));
         }
         let encoder = self.encoder.unwrap_or(NativeHevcEncoder::SystemMf).into();
@@ -107,6 +110,7 @@ impl InspectArgs {
             Mode::HevcMain10 => {
                 NativeMediaProvider::gpu_hevc_main10_with_encoder(self.target, encoder)
             }
+            Mode::HevcHdr10 => NativeMediaProvider::gpu_hevc_hdr10_with_encoder(self.target, encoder),
         }
     }
     fn report(&self) -> Value {
@@ -246,6 +250,17 @@ mod tests {
         assert_eq!(report["requested"]["decoder"], "system-mf-hardware");
         assert_eq!(report["available"], false);
         assert!(report["observation"].is_null());
+        Ok(())
+    }
+    #[test]
+    fn hdr_requires_its_independent_mode_and_explicit_hdr_dynamic_range() -> io::Result<()> {
+        let args=Cli::try_parse_from(["media-capabilities","--mode","hevc-hdr10","--dynamic-range","hdr10",
+            "--direction","encode","--target","1920x1080@60:8000","--encoder","amd-amf"])
+            .map_err(io::Error::other)?.args;
+        args.provider()?;
+        assert_eq!(args.report()["requested"]["mode"],"hevc-hdr10");
+        assert_eq!(args.report()["requested"]["dynamic_range"],"hdr10");
+        assert_eq!(args.report()["available"],false);
         Ok(())
     }
     #[test]

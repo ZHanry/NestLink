@@ -74,7 +74,8 @@ unsafe impl HevcTextureSource for DecoderDeviceSource {
 ///
 /// # Safety
 /// Implementors retain a live original ID3D11Device and same-device, exact-size
-/// NV12 textures on their creating worker until checked owner shutdown. Borrowed
+/// NV12/P010 textures with the selected SDR or independent HDR interpretation
+/// on their creating worker until checked owner shutdown. Borrowed
 /// pointers remain valid through the next synchronous codec call. `check_current`
 /// must reject changed platform/session/source state, including after capture.
 pub unsafe trait HevcTextureSource {
@@ -305,6 +306,8 @@ impl HevcExecutionReceipt {
         if self.identity()?.direction != ExecutionDirection::Decode
             || ring.adapter_luid != self.target().adapter_luid()
             || (ring.width, ring.height) != (config.width, config.height)
+            || ring.bit_depth != u32::from(self.target().contract().bit_depth())
+            || ring.is_hdr10() != self.target().contract().is_hdr10()
             || !matches!(self.kind, Kind::Decoded {pts, surface: Some(expected), ..} if pts == frame.descriptor().pts_90khz && expected == frame.fingerprint())
         {
             return Err(io::Error::other(

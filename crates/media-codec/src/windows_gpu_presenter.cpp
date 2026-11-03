@@ -11,6 +11,7 @@
 #include <d3d11_1.h>
 #include <d3d10.h>
 #include <dxgi1_2.h>
+#include <dxgi1_6.h>
 #include <wrl/client.h>
 #include <atomic>
 #include <memory>
@@ -127,6 +128,9 @@ HRESULT output_geometry(IMFMediaType* type,UINT width,UINT height,
 std::atomic<bool> nl_gpu_probe_owner_reserved{false};
 struct Presenter {
     bool hevc=false;
+    bool hdr10=false, hdr_retired=false, hdr_display_bound=false;
+    DXGI_OUTPUT_DESC1 hdr_display{};
+    ComPtr<IDXGIFactory1> hdr_factory;
     bool probe_owner_reserved=false; bool checked_shutdown=false;
     GUID observation_id{}; bool observation_initialized=false;
     bool probe_color_enabled=false; std::array<uint8_t,4> probe_expected{}; uint32_t probe_tolerance=0;
@@ -186,10 +190,33 @@ HRESULT black(Presenter& p) {
     const FLOAT color[4]={0,0,0,1}; p.context->ClearRenderTargetView(view.Get(),color); p.context->Flush();
     return p.swap->Present(0,DXGI_PRESENT_DO_NOT_WAIT);
 }
+bool hdr_display_current(Presenter& p) {
+    if(!p.hdr10)return true;
+    if(p.hdr_retired || !p.hdr_factory || !p.hdr_factory->IsCurrent()){p.hdr_retired=true;return false;}
+    ComPtr<IDXGIOutput> output;ComPtr<IDXGIOutput6> advanced;DXGI_OUTPUT_DESC1 current{};
+    HRESULT hr=p.swap->GetContainingOutput(&output);
+    if(hr==S_OK)hr=output.As(&advanced);
+    if(hr==S_OK)hr=advanced->GetDesc1(&current);
+    bool valid=hr==S_OK && current.AttachedToDesktop && current.BitsPerColor>=10 &&
+        current.ColorSpace==DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
+    if(valid && p.hdr_display_bound) {
+        const auto& old=p.hdr_display;
+        valid=old.Monitor==current.Monitor && old.BitsPerColor==current.BitsPerColor && old.ColorSpace==current.ColorSpace &&
+            old.Rotation==current.Rotation && old.MinLuminance==current.MinLuminance && old.MaxLuminance==current.MaxLuminance &&
+            old.MaxFullFrameLuminance==current.MaxFullFrameLuminance &&
+            old.DesktopCoordinates.left==current.DesktopCoordinates.left && old.DesktopCoordinates.top==current.DesktopCoordinates.top &&
+            old.DesktopCoordinates.right==current.DesktopCoordinates.right && old.DesktopCoordinates.bottom==current.DesktopCoordinates.bottom;
+        for(unsigned i=0;i<2;++i)valid=valid && old.RedPrimary[i]==current.RedPrimary[i] &&
+            old.GreenPrimary[i]==current.GreenPrimary[i] && old.BluePrimary[i]==current.BluePrimary[i] && old.WhitePoint[i]==current.WhitePoint[i];
+    }
+    if(!valid){p.hdr_retired=true;return false;}
+    if(!p.hdr_display_bound){p.hdr_display=current;p.hdr_display_bound=true;}
+    return true;
+}
 bool authorized(Presenter& p) {
     LARGE_INTEGER now{}; QueryPerformanceCounter(&now);
     const auto expires=p.surface->expires.load();
-    if (p.surface->live && expires && static_cast<uint64_t>(now.QuadPart)<expires) return true;
+    if (p.surface->live && expires && static_cast<uint64_t>(now.QuadPart)<expires && hdr_display_current(p)) return true;
     p.surface->authorized=false;
     black(p);
     HWND child=p.surface->child.load();
@@ -319,12 +346,23 @@ HRESULT configure_output(Presenter& p,UINT fps) {
     hr=dxgi->GetAdapter(&adapter); if (FAILED(hr)) return hr;
     hr=adapter->GetParent(IID_PPV_ARGS(&factory)); if (FAILED(hr)) return hr;
     DXGI_SWAP_CHAIN_DESC1 desc{};
-    desc.Width=p.width; desc.Height=p.height; desc.Format=DXGI_FORMAT_B8G8R8A8_UNORM;
+    desc.Width=p.width; desc.Height=p.height; desc.Format=p.hdr10?DXGI_FORMAT_R16G16B16A16_FLOAT:DXGI_FORMAT_B8G8R8A8_UNORM;
     desc.SampleDesc.Count=1; desc.BufferUsage=DXGI_USAGE_RENDER_TARGET_OUTPUT;
     desc.BufferCount=2; desc.SwapEffect=DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
     trace(p.surface,"swapchain_create_begin");
     hr=factory->CreateSwapChainForHwnd(p.device.Get(),p.surface->child.load(),&desc,nullptr,nullptr,&p.swap);
     if (FAILED(hr)) return hr;
+    if(p.hdr10) {
+        ComPtr<IDXGISwapChain3> color_swap;hr=p.swap.As(&color_swap);if(hr!=S_OK)return FAILED(hr)?hr:E_UNEXPECTED;
+        UINT support=0;hr=color_swap->CheckColorSpaceSupport(DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709,&support);
+        if(hr!=S_OK || !(support&DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT))return FAILED(hr)?hr:DXGI_ERROR_UNSUPPORTED;
+        hr=color_swap->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709);if(hr!=S_OK)return FAILED(hr)?hr:E_UNEXPECTED;
+        hr=factory.As(&p.hdr_factory);if(hr!=S_OK)return FAILED(hr)?hr:E_UNEXPECTED;
+        if(!hdr_display_current(p))return DXGI_ERROR_UNSUPPORTED;
+        std::fprintf(stderr,"hevc_hdr10_presenter swap_format=%u swap_color_space=%u display_color_space=%u display_bits_per_color=%u physical_scanout_qualified=false\n",
+            static_cast<unsigned>(desc.Format),static_cast<unsigned>(DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709),
+            static_cast<unsigned>(p.hdr_display.ColorSpace),p.hdr_display.BitsPerColor);std::fflush(stderr);
+    }
     black(p);
     factory->MakeWindowAssociation(p.surface->child.load(),DXGI_MWA_NO_ALT_ENTER);
     p.fps=fps;
@@ -347,10 +385,24 @@ HRESULT configure_processor(Presenter& p,UINT fps) {
     UINT flags=0;
     hr=enumerator->CheckVideoProcessorFormat(p.input_format,&flags);
     if (FAILED(hr) || !(flags&D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_INPUT)) return E_NOTIMPL;
-    hr=enumerator->CheckVideoProcessorFormat(DXGI_FORMAT_B8G8R8A8_UNORM,&flags);
+    hr=enumerator->CheckVideoProcessorFormat(p.hdr10?DXGI_FORMAT_R16G16B16A16_FLOAT:DXGI_FORMAT_B8G8R8A8_UNORM,&flags);
     if (FAILED(hr) || !(flags&D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT)) return E_NOTIMPL;
     hr=p.video->CreateVideoProcessor(enumerator.Get(),0,&processor); if (FAILED(hr)) return hr;
     p.processor=processor;p.enumerator=enumerator;
+    if(p.hdr10) {
+        ComPtr<ID3D11VideoProcessorEnumerator1> enumerator1;ComPtr<ID3D11VideoContext1> context1;
+        hr=enumerator.As(&enumerator1);if(hr==S_OK)hr=p.video_context.As(&context1);
+        if(hr!=S_OK)return FAILED(hr)?hr:E_UNEXPECTED;
+        BOOL supported=FALSE;
+        hr=enumerator1->CheckVideoProcessorFormatConversion(DXGI_FORMAT_P010,DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020,
+            DXGI_FORMAT_R16G16B16A16_FLOAT,DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709,&supported);
+        if(hr!=S_OK || !supported)return FAILED(hr)?hr:DXGI_ERROR_UNSUPPORTED;
+        context1->VideoProcessorSetStreamColorSpace1(processor.Get(),0,DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020);
+        context1->VideoProcessorSetOutputColorSpace1(processor.Get(),DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709);
+        DXGI_COLOR_SPACE_TYPE input=DXGI_COLOR_SPACE_RESERVED,output=DXGI_COLOR_SPACE_RESERVED;
+        context1->VideoProcessorGetStreamColorSpace1(processor.Get(),0,&input);context1->VideoProcessorGetOutputColorSpace1(processor.Get(),&output);
+        if(input!=DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020 || output!=DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709)return DXGI_ERROR_UNSUPPORTED;
+    }
     return S_OK;
 }
 // No CPU readback. Keep the decoder sample until the GPU event confirms consumption.
@@ -761,4 +813,10 @@ extern "C" int32_t nl_gpu_shared_consume(void* handle,const NlSharedFrame* frame
 extern "C" int32_t nl_gpu_shared_close(void* handle) noexcept {
     auto* owner=static_cast<SharedPresenter*>(handle);if(!owner || owner->output.thread!=GetCurrentThreadId())return E_INVALIDARG;
     delete owner;return S_OK;
+}
+extern "C" int32_t nl_gpu_shared_check(void* handle) noexcept {
+    auto* owner=static_cast<SharedPresenter*>(handle);
+    if(!owner || owner->failed || owner->output.thread!=GetCurrentThreadId())return E_INVALIDARG;
+    if(!hdr_display_current(owner->output)){owner->failed=true;black(owner->output);return DXGI_ERROR_ACCESS_LOST;}
+    return owner->output.device->GetDeviceRemovedReason();
 }

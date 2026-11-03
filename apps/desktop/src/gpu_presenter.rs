@@ -777,6 +777,7 @@ fn run_shared(
     if expected.fps != config.fps
         || expected.bitrate_kbps != config.bitrate_kbps
         || ring.descriptor().adapter_luid != hardware.adapter_luid
+        || ring.descriptor().is_hdr10() != (context.ipc_version == 5)
     {
         return Err(io::Error::other("original shared importer target differs"));
     }

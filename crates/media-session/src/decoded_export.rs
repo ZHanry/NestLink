@@ -48,6 +48,9 @@ impl DecodedExportLedger {
                 "decoded export consumer retired or occupied",
             ));
         }
+        if frame.source_color == nestlink_protocol::media_format::Color::HDR10_BT2020_LIMITED {
+            return Err(io::Error::other("HDR requires the original P010 shared presenter; no BGRA fallback"));
+        }
         let expected_bytes = (frame.width as usize)
             .checked_mul(frame.height as usize)
             .and_then(|pixels| pixels.checked_mul(4));

@@ -58,6 +58,7 @@ pub(crate) async fn open(
         qpc_frequency: qpc()?.1,
     };
     context.validate()?;
+    if context.native_ring()? != ring { return Err(Error::Protocol); }
     if !video_binding_is_live(core, &binding) {
         return Err(Error::Protocol);
     }

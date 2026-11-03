@@ -24,17 +24,25 @@ impl Encoder {
         depth: u8,
         backend: HevcEncoderBackend,
     ) -> io::Result<Self> {
+        unsafe { Self::open_color(config, device, depth, backend, false) }
+    }
+    pub(crate) unsafe fn open_color(
+        config: VideoConfig, device: *mut c_void, depth: u8, backend: HevcEncoderBackend, hdr10: bool,
+    ) -> io::Result<Self> {
         // SAFETY: delegated original owner-thread device and exact depth contract.
         unsafe {
             match backend {
-                HevcEncoderBackend::SystemMf => (if depth == 8 {
+                HevcEncoderBackend::SystemMf => (if hdr10 {
+                    windows_mf::Transform::new_hevc_color(config, device, true, true, depth, true)
+                } else if depth == 8 {
                     windows_mf::Transform::new_hevc(config, device, true, true)
                 } else {
                     windows_mf::Transform::new_hevc_depth(config, device, true, true, depth)
                 })
                 .map(Self::Mf),
                 HevcEncoderBackend::AmdAmf => {
-                    windows_amf::Transform::new(config, device, depth).map(Self::Amf)
+                    (if hdr10 { windows_amf::Transform::new_color(config, device, depth, true) }
+                    else { windows_amf::Transform::new(config, device, depth) }).map(Self::Amf)
                 }
             }
         }

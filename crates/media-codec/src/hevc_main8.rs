@@ -1,4 +1,4 @@
-//! Exact local HEVC Main8/Main10 SDR contract, reusing the bounded Annex-B parser.
+//! Exact Main8/Main10 SDR and independent Main10 PQ/BT2020 local contracts.
 //! This is not the v2 wire format, a signed announcement or permission to send.
 use crate::{
     VideoConfig,
@@ -7,7 +7,7 @@ use crate::{
 use sha2::{Digest, Sha256};
 use std::io;
 
-/// Actual general PTL, coded/crop/display geometry and explicit SDR color.
+/// Actual general PTL, coded/crop/display geometry and exact mode/color.
 /// An observed contract requires a complete accepted IDR AU with VPS/SPS/PPS
 /// references. A frozen expected target alone is configuration, never evidence.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -19,6 +19,7 @@ pub struct HevcContract {
     fps: u32,
     kbps: u32,
     bit_depth: u8,
+    hdr10: bool,
 }
 /// Compatibility type name; the original observe/from_exact_target methods
 /// remain strictly Main8. Main10 always needs its explicit constructor.
@@ -60,6 +61,10 @@ impl HevcContract {
     pub fn from_main10_target(ptl: [u8; 12], config: VideoConfig) -> io::Result<Self> {
         Self::from_profile_target(ptl, config, 10)
     }
+    /// Independent PQ/BT2020 ten-bit contract. Existing Main10 remains SDR.
+    pub fn from_hdr10_target(ptl: [u8; 12], config: VideoConfig) -> io::Result<Self> {
+        Ok(Self { hdr10: true, ..Self::from_profile_target(ptl, config, 10)? })
+    }
     fn from_profile_target(ptl: [u8; 12], config: VideoConfig, bit_depth: u8) -> io::Result<Self> {
         if bit_depth == 10 {
             Self::validate_main10_config(config)?;
@@ -85,11 +90,15 @@ impl HevcContract {
             fps: config.fps,
             kbps: config.bitrate_kbps,
             bit_depth,
+            hdr10: false,
         })
     }
     fn from_sps(info: Sps, config: VideoConfig) -> io::Result<Self> {
+        Self::from_sps_mode(info, config, false)
+    }
+    fn from_sps_mode(info: Sps, config: VideoConfig, hdr10: bool) -> io::Result<Self> {
         let profile = if info.bit_depth == 10 { 2 } else { 1 };
-        if !info.explicit_bt709_limited
+        if (if hdr10 { !info.explicit_hdr10_limited || info.bit_depth != 10 } else { !info.explicit_bt709_limited })
             || info.high_tier
             || info.profile != profile
             || config.width != info.width
@@ -107,7 +116,8 @@ impl HevcContract {
             })
         {
             return Err(io::Error::other(
-                "HEVC requires exact uncropped profile/depth target, Main tier and explicitly signalled BT709 limited color",
+                if hdr10 { "HDR HEVC requires exact uncropped Main10 target, Main tier and explicitly signalled PQ/BT2020 limited color" }
+                else { "HEVC requires exact uncropped profile/depth target, Main tier and explicitly signalled BT709 limited color" },
             ));
         }
         let mut ptl = [0; 12];
@@ -115,13 +125,22 @@ impl HevcContract {
         ptl[1..5].copy_from_slice(&info.compatibility.to_be_bytes());
         ptl[5..11].copy_from_slice(&info.constraints.to_be_bytes()[2..]);
         ptl[11] = info.level as u8;
-        Self::from_profile_target(ptl, config, info.bit_depth)
+        if hdr10 {
+            Self::from_hdr10_target(ptl, config)
+        } else {
+            Self::from_profile_target(ptl, config, info.bit_depth)
+        }
     }
     pub fn observe(access_unit: &[u8], config: VideoConfig) -> io::Result<Self> {
         Self::observe_depth(access_unit, config, 8)
     }
     pub fn observe_main10(access_unit: &[u8], config: VideoConfig) -> io::Result<Self> {
         Self::observe_depth(access_unit, config, 10)
+    }
+    pub fn observe_hdr10(access_unit: &[u8], config: VideoConfig) -> io::Result<Self> {
+        let mut validator = Validator::exact_hdr10();
+        validator.validate(access_unit, config.width, config.height)?;
+        Self::from_sps_mode(validator.info().ok_or_else(|| io::Error::other("missing actual HDR SPS"))?, config, true)
     }
     fn observe_depth(access_unit: &[u8], config: VideoConfig, bit_depth: u8) -> io::Result<Self> {
         let mut validator = if bit_depth == 10 {
@@ -151,9 +170,12 @@ impl HevcContract {
     pub fn bit_depth(self) -> u8 {
         self.bit_depth
     }
+    pub fn is_hdr10(self) -> bool { self.hdr10 }
     pub fn digest(self) -> [u8; 32] {
         let mut hash = Sha256::new();
-        hash.update(if self.bit_depth == 10 {
+        hash.update(if self.hdr10 {
+            b"nestlink/local-hevc-hdr10-output/v1\0".as_slice()
+        } else if self.bit_depth == 10 {
             b"nestlink/local-hevc-main10-output/v1\0".as_slice()
         } else {
             b"nestlink/local-hevc-main8-output/v1\0".as_slice()
@@ -168,7 +190,7 @@ impl HevcContract {
         {
             hash.update(value.to_be_bytes());
         }
-        hash.update([1, 1, 1, 0, 1, self.bit_depth]); // actual BT709 limited 420, exact depth.
+        hash.update(if self.hdr10 { [9, 16, 9, 0, 1, 10] } else { [1, 1, 1, 0, 1, self.bit_depth] });
         hash.finalize().into()
     }
 }
@@ -188,7 +210,9 @@ impl HevcMain8Admission {
     pub fn new(expected: HevcMain8Contract) -> Self {
         Self {
             expected,
-            validator: if expected.bit_depth() == 10 {
+            validator: if expected.is_hdr10() {
+                Validator::exact_hdr10()
+            } else if expected.bit_depth() == 10 {
                 Validator::exact_main10()
             } else {
                 Validator::exact_main8()
@@ -199,10 +223,11 @@ impl HevcMain8Admission {
         let config = self.expected.config();
         let mut next = self.validator.clone();
         next.validate(bytes, config.width, config.height)?;
-        let actual = HevcMain8Contract::from_sps(
+        let actual = HevcMain8Contract::from_sps_mode(
             next.info()
                 .ok_or_else(|| io::Error::other("missing actual HEVC SPS"))?,
             config,
+            self.expected.is_hdr10(),
         )?;
         if actual != self.expected {
             return Err(io::Error::other(

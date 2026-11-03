@@ -4,6 +4,30 @@ fn rate(fps: u32) -> FrameRate {
     FrameRate::new(fps, 1).unwrap_or_else(|error| panic!("valid fixture rejected: {error}"))
 }
 #[test]
+fn hdr_v5_cannot_be_decoded_as_main10_sdr_or_share_its_signed_catalog() -> std::result::Result<(), ContractError> {
+    let mut ptl=[0;12];ptl[0]=2;ptl[11]=120;
+    let sdr=VideoFormat::hevc_main10_observed(ptl,640,480,rate(30),4000)?;
+    let before=(sdr.encode()?,sdr.digest()?);
+    let hdr=VideoFormat::hevc_hdr10_observed(ptl,640,480,rate(30),4000)?;
+    assert_eq!(hdr.color,Color::HDR10_BT2020_LIMITED);
+    assert_eq!(hdr.canonical_version(),5);
+    assert_eq!(VideoFormat::decode(&hdr.encode()?)?,hdr);
+    assert_ne!(hdr.digest()?,sdr.digest()?);
+    assert!(FormatSet::new(vec![hdr,sdr]).is_err());
+    assert!(FormatSet::from_versioned(4,vec![hdr]).is_err());
+    assert!(FormatSet::from_versioned(5,vec![sdr]).is_err());
+    for (format,version) in [(hdr,4u16),(hdr,3),(sdr,5)] {
+        let mut wire=format.encode()?;wire[..2].copy_from_slice(&version.to_be_bytes());
+        assert!(VideoFormat::decode(&wire).is_err());
+    }
+    for color in [Color{transfer:Transfer::Hlg,..hdr.color},Color{range:Range::Full,..hdr.color},
+        Color{matrix:Matrix::Bt709,..hdr.color},Color{primaries:Primaries::Bt709,..hdr.color}] {
+        assert!(VideoFormat{color,..hdr}.validate().is_err());
+    }
+    assert_eq!((sdr.encode()?,sdr.digest()?),before);
+    Ok(())
+}
+#[test]
 fn main10_v4_preserves_v3_bytes_and_requires_exact_profile_depth_and_version()
 -> std::result::Result<(), ContractError> {
     let mut ptl = [0; 12];

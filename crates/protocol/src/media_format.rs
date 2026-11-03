@@ -6,6 +6,7 @@ use sha2::{Digest, Sha256};
 const VERSION: u16 = 2;
 pub const HEVC_FORMAT_VERSION: u16 = 3;
 pub const HEVC_MAIN10_FORMAT_VERSION: u16 = 4;
+pub const HEVC_HDR10_FORMAT_VERSION: u16 = 5;
 const MAX_FORMATS: usize = 64;
 const MAX_FPS: u32 = 144;
 const FORMAT_DOMAIN: &[u8] = b"nestlink/media-format/v2\0";
@@ -14,6 +15,8 @@ const HEVC_FORMAT_DOMAIN: &[u8] = b"nestlink/media-format/v3\0";
 const HEVC_SET_DOMAIN: &[u8] = b"nestlink/media-format-set/v3\0";
 const MAIN10_FORMAT_DOMAIN: &[u8] = b"nestlink/media-format/v4\0";
 const MAIN10_SET_DOMAIN: &[u8] = b"nestlink/media-format-set/v4\0";
+const HDR10_FORMAT_DOMAIN: &[u8] = b"nestlink/media-format/v5\0";
+const HDR10_SET_DOMAIN: &[u8] = b"nestlink/media-format-set/v5\0";
 type Result<T> = std::result::Result<T, ContractError>;
 fn invalid(reason: &'static str) -> ContractError {
     ContractError::new(ErrorCode::InvalidMessage, reason)
@@ -66,6 +69,10 @@ impl Color {
         transfer: Transfer::Bt709,
         matrix: Matrix::Bt709,
         range: Range::Limited,
+    };
+    pub const HDR10_BT2020_LIMITED: Self = Self {
+        primaries: Primaries::Bt2020, transfer: Transfer::Pq,
+        matrix: Matrix::Bt2020NonConstant, range: Range::Limited,
     };
     fn validate(self, depth: BitDepth) -> Result<()> {
         // Matrix and primaries are independent fields; never infer one from the
@@ -240,7 +247,9 @@ impl VideoFormat {
             && (self.codec != Codec::Hevc
                 || self.tier != Tier::Main
                 || self.chroma != Chroma::Yuv420
-                || self.color != Color::SDR_BT709_LIMITED
+                || (self.color != Color::SDR_BT709_LIMITED &&
+                    !(self.profile == Profile::HevcMain10 && self.bit_depth == BitDepth::Ten &&
+                        self.color == Color::HDR10_BT2020_LIMITED))
                 || !matches!(
                     (self.profile, self.bit_depth, ptl.0[0]),
                     (Profile::HevcMain, BitDepth::Eight, 1)
@@ -457,6 +466,16 @@ impl VideoFormat {
         format.validate()?;
         Ok(format)
     }
+    /// Independent v5 PQ/BT2020 descriptor; the provider must separately prove
+    /// actual accepted HDR SPS and original hardware owners before publication.
+    pub fn hevc_hdr10_observed(
+        ptl: [u8; 12], width: u32, height: u32, frame_rate: FrameRate, max_kbps: u32,
+    ) -> Result<Self> {
+        let format = Self { color: Color::HDR10_BT2020_LIMITED,
+            ..Self::hevc_main10_observed(ptl, width, height, frame_rate, max_kbps)? };
+        format.validate()?;
+        Ok(format)
+    }
     fn legacy(
         codec: Codec,
         profile: Profile,
@@ -514,7 +533,8 @@ impl VideoFormat {
         Ok(self.canonical())
     }
     pub fn decode(bytes: &[u8]) -> Result<Self> {
-        let main10 = bytes.len() == 69 && bytes[..2] == HEVC_MAIN10_FORMAT_VERSION.to_be_bytes();
+        let main10 = bytes.len() == 69 && (bytes[..2] == HEVC_MAIN10_FORMAT_VERSION.to_be_bytes()
+            || bytes[..2] == HEVC_HDR10_FORMAT_VERSION.to_be_bytes());
         let exact_hevc =
             bytes.len() == 69 && (bytes[..2] == HEVC_FORMAT_VERSION.to_be_bytes() || main10);
         if !exact_hevc && (bytes.len() != 57 || bytes[..2] != VERSION.to_be_bytes()) {
@@ -612,7 +632,9 @@ impl VideoFormat {
     pub fn digest(self) -> Result<[u8; 32]> {
         self.validate()?;
         let mut hash = Sha256::new();
-        hash.update(if self.canonical_version() == HEVC_MAIN10_FORMAT_VERSION {
+        hash.update(if self.canonical_version() == HEVC_HDR10_FORMAT_VERSION {
+            HDR10_FORMAT_DOMAIN
+        } else if self.canonical_version() == HEVC_MAIN10_FORMAT_VERSION {
             MAIN10_FORMAT_DOMAIN
         } else if self.hevc_ptl.is_some() {
             HEVC_FORMAT_DOMAIN
@@ -623,7 +645,9 @@ impl VideoFormat {
         Ok(hash.finalize().into())
     }
     pub fn canonical_version(self) -> u16 {
-        if self.hevc_ptl.is_some() && self.profile == Profile::HevcMain10 {
+        if self.hevc_ptl.is_some() && self.profile == Profile::HevcMain10 && self.color == Color::HDR10_BT2020_LIMITED {
+            HEVC_HDR10_FORMAT_VERSION
+        } else if self.hevc_ptl.is_some() && self.profile == Profile::HevcMain10 {
             HEVC_MAIN10_FORMAT_VERSION
         } else if self.hevc_ptl.is_some() {
             HEVC_FORMAT_VERSION
@@ -642,6 +666,7 @@ impl FormatSet {
         if version != VERSION
             && version != HEVC_FORMAT_VERSION
             && version != HEVC_MAIN10_FORMAT_VERSION
+            && version != HEVC_HDR10_FORMAT_VERSION
         {
             return Err(invalid("unsupported media format version"));
         }
@@ -694,7 +719,9 @@ impl FormatSet {
     pub fn digest(&self) -> [u8; 32] {
         let mut hash = Sha256::new();
         let version = self.canonical_version();
-        hash.update(if version == HEVC_MAIN10_FORMAT_VERSION {
+        hash.update(if version == HEVC_HDR10_FORMAT_VERSION {
+            HDR10_SET_DOMAIN
+        } else if version == HEVC_MAIN10_FORMAT_VERSION {
             MAIN10_SET_DOMAIN
         } else if version == HEVC_FORMAT_VERSION {
             HEVC_SET_DOMAIN

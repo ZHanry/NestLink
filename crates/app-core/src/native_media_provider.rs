@@ -31,6 +31,7 @@ enum ProviderBackend {
     CpuH264,
     GpuHevcMain8,
     GpuHevcMain10,
+    GpuHevcHdr10,
 }
 #[derive(Default)]
 struct ProviderState {
@@ -294,6 +295,11 @@ impl NativeMediaProvider {
     pub fn hevc_encoder_backend(&self) -> HevcEncoderBackend {
         self.hevc_encoder
     }
+    pub fn gpu_hevc_hdr10_with_encoder(target: VideoConfig, encoder: HevcEncoderBackend) -> io::Result<Self> {
+        let mut provider = Self::gpu_hevc_main10_with_encoder(target, encoder)?;
+        provider.backend = ProviderBackend::GpuHevcHdr10;
+        Ok(provider)
+    }
     /// One user-selected lower budget, independently probed on the same backend.
     /// It does not authorize retrying a failed probe or changing codec/depth.
     pub(crate) fn with_hevc_fallback(mut self, fallback: VideoConfig) -> io::Result<Self> {
@@ -302,7 +308,7 @@ impl NativeMediaProvider {
                 "HEVC fallback requires one original GPU target",
             ));
         }
-        if self.backend == ProviderBackend::GpuHevcMain10 {
+        if matches!(self.backend, ProviderBackend::GpuHevcMain10 | ProviderBackend::GpuHevcHdr10) {
             nestlink_media_codec::HevcMain8Contract::validate_main10_config(fallback)?;
         } else {
             nestlink_media_codec::HevcMain8Contract::validate_config(fallback)?;
@@ -357,6 +363,7 @@ impl NativeMediaProvider {
         let expected = match version {
             3 => ProviderBackend::GpuHevcMain8,
             4 => ProviderBackend::GpuHevcMain10,
+            5 => ProviderBackend::GpuHevcHdr10,
             _ => return false,
         };
         self.backend == expected
@@ -775,11 +782,12 @@ fn run_probes(
         receipts.push(match backend {
             ProviderBackend::CpuH264 => run_probe(*target, direction, cancel)?,
             ProviderBackend::GpuHevcMain8 => {
-                run_hevc_probe(*target, direction, cancel, 8, hevc_encoder)?
+                run_hevc_probe(*target, direction, cancel, 8, hevc_encoder, false)?
             }
             ProviderBackend::GpuHevcMain10 => {
-                run_hevc_probe(*target, direction, cancel, 10, hevc_encoder)?
+                run_hevc_probe(*target, direction, cancel, 10, hevc_encoder, false)?
             }
+            ProviderBackend::GpuHevcHdr10 => run_hevc_probe(*target, direction, cancel, 10, hevc_encoder, true)?,
         });
     }
     merge_probe_results(receipts, backend)
@@ -886,18 +894,20 @@ fn run_hevc_probe(
     cancel: &AtomicBool,
     bit_depth: u8,
     encoder: HevcEncoderBackend,
+    hdr10: bool,
 ) -> io::Result<ProbeResult> {
     let actual_direction = match direction {
         MediaDirection::Encode => nestlink_media_codec::ExecutionDirection::Encode,
         MediaDirection::Decode => nestlink_media_codec::ExecutionDirection::Decode,
     };
-    let receipt = nestlink_media_codec::probe_hevc_direction_with_encoder(
+    let receipt = if hdr10 { nestlink_media_codec::probe_hevc_hdr10_direction(target, actual_direction, cancel, encoder)
+    } else { nestlink_media_codec::probe_hevc_direction_with_encoder(
         target,
         actual_direction,
         cancel,
         bit_depth,
         encoder,
-    )?;
+    ) }?;
     let contract = receipt.contract();
     let config = contract.config();
     let owner = receipt.owner();
@@ -914,12 +924,13 @@ fn run_hevc_probe(
             "HEVC direction receipt differs from exact product target/backend",
         ));
     }
-    let format_constructor = if bit_depth == 10 {
+    let format_constructor = if hdr10 { VideoFormat::hevc_hdr10_observed
+    } else if bit_depth == 10 {
         VideoFormat::hevc_main10_observed
     } else {
         VideoFormat::hevc_main8_observed
     };
-    if contract.bit_depth() != bit_depth {
+    if contract.bit_depth() != bit_depth || contract.is_hdr10() != hdr10 {
         return Err(io::Error::other(
             "HEVC observed depth differs from exact requested workload",
         ));
@@ -963,6 +974,7 @@ fn run_hevc_probe(
     _cancel: &AtomicBool,
     _bit_depth: u8,
     _encoder: HevcEncoderBackend,
+    _hdr10: bool,
 ) -> io::Result<ProbeResult> {
     Err(io::Error::new(
         io::ErrorKind::Unsupported,

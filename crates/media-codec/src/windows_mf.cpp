@@ -174,7 +174,7 @@ struct Codec {
     ComPtr<ID3D11DeviceContext> context;
     ComPtr<IMFDXGIDeviceManager> manager;
     uint32_t width = 0, height = 0, fps = 0, level = 0;
-    bool gpu_input = false, hevc = false, main10 = false, drain_started = false, drain_complete = false;
+    bool gpu_input = false, hevc = false, main10 = false, hdr10 = false, drain_started = false, drain_complete = false;
     uint32_t gpu_calls=0, gpu_accepted=0, gpu_pool_blocked=0, gpu_outputs=0, gpu_need_input=0, gpu_copy_pending=0;
     std::array<ComPtr<ID3D11Texture2D>, 4> gpu_slots;
     std::shared_ptr<GpuRelease> gpu_release;
@@ -220,9 +220,9 @@ HRESULT media_type(Codec& state, bool compressed, uint32_t kbps, IMFMediaType** 
     if (SUCCEEDED(hr)) hr = MFSetAttributeSize(type.Get(), MF_MT_FRAME_SIZE, state.width, state.height);
     if (SUCCEEDED(hr)) hr = MFSetAttributeRatio(type.Get(), MF_MT_FRAME_RATE, state.fps, 1);
     if (SUCCEEDED(hr)) hr = MFSetAttributeRatio(type.Get(), MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
-    if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_YUV_MATRIX, MFVideoTransferMatrix_BT709);
-    if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_VIDEO_PRIMARIES, MFVideoPrimaries_BT709);
-    if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_TRANSFER_FUNCTION, MFVideoTransFunc_709);
+    if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_YUV_MATRIX, state.hdr10 ? MFVideoTransferMatrix_BT2020_10 : MFVideoTransferMatrix_BT709);
+    if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_VIDEO_PRIMARIES, state.hdr10 ? MFVideoPrimaries_BT2020 : MFVideoPrimaries_BT709);
+    if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_TRANSFER_FUNCTION, state.hdr10 ? MFVideoTransFunc_2084 : MFVideoTransFunc_709);
     if (SUCCEEDED(hr)) hr = type->SetUINT32(MF_MT_VIDEO_NOMINAL_RANGE, MFNominalRange_16_235);
     if (SUCCEEDED(hr) && compressed && state.hevc) hr = type->SetUINT32(MF_MT_MPEG2_PROFILE, state.main10 ? 2u : 1u);
     if (compressed && state.encoder) {
@@ -242,6 +242,18 @@ HRESULT hevc_sdr(IMFMediaType* type, bool negotiate) {
         if (hr==MF_E_ATTRIBUTENOTFOUND && negotiate) hr=type->SetUINT32(*keys[i],expected[i]);
         else if (SUCCEEDED(hr) && value!=expected[i]) return MF_E_INVALIDMEDIATYPE;
         if (FAILED(hr)) return hr;
+    }
+    return S_OK;
+}
+HRESULT hevc_color(IMFMediaType* type, bool negotiate, bool hdr10) {
+    if (!hdr10) return hevc_sdr(type, negotiate);
+    const GUID* keys[] = {&MF_MT_YUV_MATRIX, &MF_MT_VIDEO_PRIMARIES, &MF_MT_TRANSFER_FUNCTION, &MF_MT_VIDEO_NOMINAL_RANGE};
+    const UINT32 expected[] = {MFVideoTransferMatrix_BT2020_10, MFVideoPrimaries_BT2020, MFVideoTransFunc_2084, MFNominalRange_16_235};
+    for (size_t i=0;i<4;++i) {
+        UINT32 value=0; HRESULT hr=type->GetUINT32(*keys[i],&value);
+        if (hr==MF_E_ATTRIBUTENOTFOUND && negotiate) hr=type->SetUINT32(*keys[i],expected[i]);
+        else if (hr==S_OK && value!=expected[i]) return MF_E_INVALIDMEDIATYPE;
+        if (hr!=S_OK) return FAILED(hr)?hr:E_UNEXPECTED;
     }
     return S_OK;
 }
@@ -318,7 +330,7 @@ HRESULT hevc_current_types(Codec& state) {
                 state.encoder?1u:0u,output,names[i],static_cast<unsigned long>(hr),value);
         }
         std::fflush(stderr);
-        hr=hevc_sdr(actual.Get(),false);if(FAILED(hr))return hr;
+        hr=hevc_color(actual.Get(),false,state.hdr10);if(FAILED(hr))return hr;
     }
     return S_OK;
 }
@@ -390,14 +402,17 @@ HRESULT configure(Codec& state, IMFTransform* transform, uint32_t kbps) {
     }
     if (FAILED(hr)) return hr;
     if (state.hevc) {
-        if(state.encoder) {hr=hevc_encoder_color(transform);if(FAILED(hr))return hr;}
+        // codecapi.h's legacy color enums do not define PQ/BT2020. Independent
+        // HDR uses MF's explicit color types plus mandatory actual SPS proof;
+        // never invent CodecAPI enum values or apply the SDR property list.
+        if(state.encoder && !state.hdr10) {hr=hevc_encoder_color(transform);if(FAILED(hr))return hr;}
         hr=hevc_current_types(state);if(FAILED(hr))return hr;
         ComPtr<IMFMediaType> actual_raw;
         hr = state.encoder ? transform->GetInputCurrentType(0,&actual_raw) : transform->GetOutputCurrentType(0,&actual_raw);
         GUID subtype{};
         if (SUCCEEDED(hr)) hr=actual_raw->GetGUID(MF_MT_SUBTYPE,&subtype);
         if (SUCCEEDED(hr) && subtype!=(state.main10 ? MFVideoFormat_P010 : MFVideoFormat_NV12)) hr=MF_E_INVALIDMEDIATYPE;
-        if (SUCCEEDED(hr)) hr=hevc_sdr(actual_raw.Get(),false);
+        if (SUCCEEDED(hr)) hr=hevc_color(actual_raw.Get(),false,state.hdr10);
         if (FAILED(hr)) return hr;
     }
     hr = transform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
@@ -485,6 +500,17 @@ void from_420(const uint8_t* bytes,size_t pitch,uint32_t plane_height,uint8_t* b
         p[2]=clamp((298*l+459*v+512)>>10);p[3]=255;
     }
 }
+// Diagnostic packing only: three actual ten-bit Y/Cb/Cr samples per u32.
+// HDR product presentation consumes the original shared P010 texture instead.
+void hdr10_samples(const uint8_t* bytes,size_t pitch,uint32_t plane_height,uint8_t* packed,uint32_t width,uint32_t height) {
+    const auto sample=[](const uint8_t* p)->uint32_t {uint16_t v=0;std::memcpy(&v,p,2);return v>>6;};
+    const auto* uv=bytes+pitch*plane_height;
+    for(uint32_t y=0;y<height;++y)for(uint32_t x=0;x<width;++x) {
+        const uint32_t value=sample(bytes+y*pitch+x*2) | (sample(uv+(y/2)*pitch+(x&~1U)*2)<<10) |
+            (sample(uv+(y/2)*pitch+(x&~1U)*2+2)<<20);
+        std::memcpy(packed+(static_cast<size_t>(y)*width+x)*4,&value,4);
+    }
+}
 HRESULT choose_decoder_output(Codec& state) {
     for (DWORD index = 0; index < 64; ++index) {
         ComPtr<IMFMediaType> type;
@@ -508,7 +534,7 @@ HRESULT choose_decoder_output(Codec& state) {
         if (FAILED(type->GetUINT32(MF_MT_DEFAULT_STRIDE, &pitch))) pitch = row_bytes;
         if (pitch < row_bytes || pitch > row_bytes+1024 || static_cast<uint64_t>(pitch)*height*3/2 > raw_limit)
             return MF_E_INVALIDMEDIATYPE;
-        if (state.hevc) { hr=hevc_sdr(type.Get(),true); if (FAILED(hr)) return hr; }
+        if (state.hevc) { hr=hevc_color(type.Get(),true,state.hdr10); if (FAILED(hr)) return hr; }
         hr = state.transform->SetOutputType(0, type.Get(), 0);
         if (FAILED(hr)) continue;
         state.output_height = height; state.output_pitch = pitch;
@@ -568,7 +594,7 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
         if (state.hevc) {
             ComPtr<IMFMediaType> actual;
             hr=state.transform->GetOutputCurrentType(0,&actual);
-            if (SUCCEEDED(hr)) hr=hevc_sdr(actual.Get(),false);
+            if (SUCCEEDED(hr)) hr=hevc_color(actual.Get(),false,state.hdr10);
             if (FAILED(hr)) return hr;
         }
         LONGLONG time = 0;
@@ -624,7 +650,8 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
                     std::memcpy(compact.get()+plane+static_cast<size_t>(row)*row_bytes,
                         source+static_cast<size_t>(desc.Height+row)*mapped.RowPitch, row_bytes);
                 state.context->Unmap(staging.Get(), 0);
-                from_420(compact.get(), row_bytes, state.height, destination, state.width, state.height,state.main10);
+                if(state.hdr10) hdr10_samples(compact.get(),row_bytes,state.height,destination,state.width,state.height);
+                else from_420(compact.get(), row_bytes, state.height, destination, state.width, state.height,state.main10);
                 SecureZeroMemory(compact.get(), plane*3/2);
                 state.hardware_used = true;
                 *length = capacity; return S_OK;
@@ -637,7 +664,11 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
             buffer->Unlock(); return E_UNEXPECTED;
         }
         if (state.encoder) { std::memcpy(destination, bytes, used); *length = used; state.hardware_used = state.hardware; if (state.gpu_input) ++state.gpu_outputs; }
-        else { from_420(bytes, state.output_pitch, state.output_height, destination, state.width, state.height,state.main10); *length = capacity; }
+        else {
+            if(state.hdr10) hdr10_samples(bytes,state.output_pitch,state.output_height,destination,state.width,state.height);
+            else from_420(bytes, state.output_pitch, state.output_height, destination, state.width, state.height,state.main10);
+            *length = capacity;
+        }
         buffer->Unlock(); return S_OK;
     }
     return E_UNEXPECTED;
@@ -646,7 +677,7 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
 
 extern thread_local bool gpu_teardown_failed;
 static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint32_t hardware_only, uint32_t width,
-    uint32_t height, uint32_t fps, uint32_t kbps, uint32_t level, void** result, bool hevc=false,bool main10=false) {
+    uint32_t height, uint32_t fps, uint32_t kbps, uint32_t level, void** result, bool hevc=false,bool main10=false,bool hdr10=false) {
     if (!result) return E_POINTER;
     *result = nullptr;
     if (supplied_device && gpu_teardown_failed) return MF_E_SHUTDOWN;
@@ -660,7 +691,7 @@ static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint3
     state->com = true;
     hr = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
     if (FAILED(hr)) return hr;
-    state->mf = true; state->encoder = encoder != 0; state->hardware = hardware_only != 0; state->hevc=hevc;state->main10=main10;
+    state->mf = true; state->encoder = encoder != 0; state->hardware = hardware_only != 0; state->hevc=hevc;state->main10=main10;state->hdr10=hdr10;
     state->width = width; state->height = height; state->fps = fps; state->level = level;
     state->output_height = height; state->output_pitch = width*(main10?2u:1u);
     LUID source_adapter{};
@@ -996,7 +1027,7 @@ extern "C" int32_t nl_mf_enable_shared_output(void* opaque,void* process,NlShare
         !state->device || !state->context || state->shared_output || !result)return E_INVALIDARG;
     std::unique_ptr<SharedDecodeRing> ring(new(std::nothrow)SharedDecodeRing());if(!ring)return E_OUTOFMEMORY;
     const HRESULT hr=ring->initialize(state->device.Get(),state->context.Get(),static_cast<HANDLE>(process),
-        state->width,state->height,state->main10?10u:8u,result);
+        state->width,state->height,state->main10?10u:8u,result,state->hdr10);
     if(FAILED(hr))return hr;
     state->shared_output=std::move(ring);return S_OK;
 }
@@ -1307,6 +1338,12 @@ extern "C" int32_t nl_hevc_open(void* device, uint32_t encoder, uint32_t hardwar
     try { return open_codec(static_cast<ID3D11Device*>(device),encoder,hardware,width,height,fps,kbps,0,result,true,bit_depth==10); }
     catch (...) { return E_OUTOFMEMORY; }
 }
+extern "C" int32_t nl_hevc_hdr10_open(void* device, uint32_t encoder, uint32_t hardware,
+    uint32_t width,uint32_t height,uint32_t fps,uint32_t kbps,void** result) noexcept {
+    if (encoder && (!device || !hardware)) return E_INVALIDARG;
+    try { return open_codec(static_cast<ID3D11Device*>(device),encoder,hardware,width,height,fps,kbps,0,result,true,true,true); }
+    catch (...) { return E_FAIL; }
+}
 // Scalar receipt from the live transform, never a vendor-name inference.
 extern "C" int32_t nl_hevc_observation(void* opaque,uint64_t* luid,uint32_t* flags) noexcept {
     auto* s=static_cast<Codec*>(opaque);
@@ -1395,6 +1432,25 @@ extern "C" int32_t nl_hevc_synthetic_open(uint32_t width,uint32_t height,uint32_
         SecureZeroMemory(bgra.get(),plane*4);SecureZeroMemory(nv12.get(),plane*3/2);
         *result=s.release();return S_OK;
     }catch(...){return E_OUTOFMEMORY;}
+}
+extern "C" int32_t nl_hevc_hdr10_synthetic_open(uint32_t width,uint32_t height,void** result) noexcept {
+    const HRESULT opened=nl_hevc_synthetic_open(width,height,10,result);
+    if(opened!=S_OK)return opened;
+    auto* s=static_cast<HevcSyntheticSource*>(*result);
+    const size_t plane=static_cast<size_t>(width)*height;
+    std::unique_ptr<uint16_t[]> pixels(new(std::nothrow)uint16_t[plane*3/2]);
+    if(!pixels){delete s;*result=nullptr;return E_OUTOFMEMORY;}
+    const uint16_t samples[4][3]={{401,341,683},{723,653,301},{67,513,511},{923,511,515}};
+    for(uint32_t y=0;y<height;++y)for(uint32_t x=0;x<width;++x) {
+        const auto& color=samples[(x>=width/2?1:0)+(y>=height/2?2:0)];
+        pixels[static_cast<size_t>(y)*width+x]=static_cast<uint16_t>(color[0]<<6);
+        if(!(y&1) && !(x&1)) {
+            const size_t uv=plane+static_cast<size_t>(y/2)*width+x;
+            pixels[uv]=static_cast<uint16_t>(color[1]<<6);pixels[uv+1]=static_cast<uint16_t>(color[2]<<6);
+        }
+    }
+    s->context->UpdateSubresource(s->texture.Get(),0,nullptr,pixels.get(),width*2,0);s->context->Flush();
+    SecureZeroMemory(pixels.get(),plane*3);return S_OK;
 }
 extern "C" int32_t nl_hevc_synthetic_borrow(void* opaque,void** device,void** texture) noexcept {
     auto* s=static_cast<HevcSyntheticSource*>(opaque);

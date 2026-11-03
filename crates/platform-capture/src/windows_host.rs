@@ -23,6 +23,13 @@ unsafe extern "C" {
         bit_depth: u32,
         result: *mut *mut c_void,
     ) -> i32;
+    fn nl_capture_gpu_hdr10_open(
+        monitor: usize,
+        width: u32,
+        height: u32,
+        fps: u32,
+        result: *mut *mut c_void,
+    ) -> i32;
     fn nl_capture_gpu_synthetic_open(
         width: u32,
         height: u32,
@@ -92,6 +99,7 @@ const _: () = assert!(std::mem::size_of::<CaptureSourceObservation>() == 32);
 struct GpuCapture {
     handle: NonNull<c_void>,
     high_precision_sdr: bool,
+    hdr10: bool,
     precision_observed: bool,
     _owner: PhantomData<Rc<()>>,
 }
@@ -136,12 +144,33 @@ impl GpuCapture {
         let capture = Self {
             handle: NonNull::new(handle).ok_or_else(|| bridge("null capture", hr))?,
             high_precision_sdr: bit_depth == 10,
+            hdr10: false,
             precision_observed: false,
             _owner: PhantomData,
         };
         if capture.high_precision_sdr {
             Self::log_source_state("configured", &capture.source_state()?);
         }
+        Ok(capture)
+    }
+    fn open_hdr10(monitor: &Monitor, config: VideoConfig) -> io::Result<Self> {
+        let mut handle = null_mut();
+        // SAFETY: approved original monitor; independent native HDR entry checks
+        // actual HDR output and exact FP16/scRGB -> P010/PQ/BT2020 conversion.
+        let hr = unsafe {
+            nl_capture_gpu_hdr10_open(monitor.handle, config.width, config.height, config.fps, &mut handle)
+        };
+        if hr != 0 {
+            return Err(bridge("HDR10 open", hr));
+        }
+        let capture = Self {
+            handle: NonNull::new(handle).ok_or_else(|| bridge("null HDR capture", hr))?,
+            high_precision_sdr: false,
+            hdr10: true,
+            precision_observed: false,
+            _owner: PhantomData,
+        };
+        Self::log_hdr_source("configured", &capture.source_state()?);
         Ok(capture)
     }
     fn synthetic(config: VideoConfig) -> io::Result<Self> {
@@ -156,6 +185,7 @@ impl GpuCapture {
         Ok(Self {
             handle: NonNull::new(handle).ok_or_else(|| bridge("null synthetic device", hr))?,
             high_precision_sdr: false,
+            hdr10: false,
             precision_observed: false,
             _owner: PhantomData,
         })
@@ -169,12 +199,24 @@ impl GpuCapture {
             return Err(bridge("source state", hr));
         }
         if observation.reserved != 0
-            || observation.flags & !15 != 0
+            || (!self.hdr10 && observation.flags & !15 != 0)
             || self.high_precision_sdr && observation.flags & 13 != 13
+            || self.hdr10 && (observation.flags & !27 != 0 || observation.flags & 25 != 25
+                || observation.configured_format != 10 // R16G16B16A16_FLOAT
+                || observation.input_color_space != 1 // RGB_FULL_G10_NONE_P709
+                || observation.output_color_space != 13 // YCBCR_STUDIO_G2084_LEFT_P2020
+                || observation.display_color_space != 12 // RGB_FULL_G2084_NONE_P2020
+                || observation.display_bits_per_color < 10)
         {
             return Err(io::Error::other("invalid capture source metadata"));
         }
         Ok(observation)
+    }
+    fn log_hdr_source(phase: &str, observation: &CaptureSourceObservation) {
+        eprintln!("hevc_hdr10_capture_source phase={phase} configured_dxgi_format={} observed_dxgi_format={} actual_frame_observed={} input_color_space={} output_color_space={} display_color_space={} display_bits_per_color={} exact_conversion_checked={} physical_scanout_qualified=false",
+            observation.configured_format, observation.observed_format, observation.flags & 2 != 0,
+            observation.input_color_space, observation.output_color_space, observation.display_color_space,
+            observation.display_bits_per_color, observation.flags & 8 != 0);
     }
     fn log_source_state(phase: &str, observation: &CaptureSourceObservation) {
         eprintln!(
@@ -191,7 +233,7 @@ impl GpuCapture {
         );
     }
     fn check_current(&self) -> io::Result<()> {
-        if self.high_precision_sdr {
+        if self.high_precision_sdr || self.hdr10 {
             self.source_state()?;
         }
         Ok(())
@@ -204,7 +246,7 @@ impl GpuCapture {
         if hr < 0 || device.is_null() {
             return Err(bridge("device", hr));
         }
-        let cursor = if self.high_precision_sdr {
+        let cursor = if self.high_precision_sdr || self.hdr10 {
             "system_wgc"
         } else {
             "gdi_surface_or_system_wgc"
@@ -225,14 +267,18 @@ impl GpuCapture {
         if hr == 1 {
             return Ok(None);
         }
-        if self.high_precision_sdr && !self.precision_observed {
+        if (self.high_precision_sdr || self.hdr10) && !self.precision_observed {
             let observation = self.source_state()?;
             if observation.flags & 2 == 0
                 || observation.observed_format != observation.configured_format
             {
                 return Err(io::Error::other("actual Float16 capture format is absent"));
             }
-            Self::log_source_state("actual_frame", &observation);
+            if self.hdr10 {
+                Self::log_hdr_source("actual_frame", &observation);
+            } else {
+                Self::log_source_state("actual_frame", &observation);
+            }
             self.precision_observed = true;
         }
         Ok(Some(
@@ -251,6 +297,7 @@ mod precision_source_tests {
 
     unsafe extern "C" {
         fn nl_capture_gpu_precision_contract() -> u32;
+        fn nl_capture_gpu_hdr10_contract() -> u32;
     }
 
     #[test]
@@ -260,6 +307,12 @@ mod precision_source_tests {
         // metadata structures; it opens no device, window or capture source.
         let passed = unsafe { nl_capture_gpu_precision_contract() };
         assert_eq!(passed, 255, "Float16 source boundary bitmask: {passed:#x}");
+    }
+    #[test]
+    fn independent_hdr_capture_requires_actual_hdr_output_and_exact_pq_conversion() {
+        // SAFETY: production metadata decisions only; no device or source opens.
+        let passed=unsafe { nl_capture_gpu_hdr10_contract() };
+        assert_eq!(passed,15,"HDR capture boundary bitmask: {passed:#x}");
     }
 }
 

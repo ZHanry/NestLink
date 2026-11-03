@@ -92,7 +92,7 @@ impl SharedVideoContext {
             height: self.height,
             bytes: self.bytes,
             bit_depth: self.bit_depth,
-            reserved: 0,
+            reserved: if self.media.ipc_version == 5 { 5 } else { 0 },
         })
     }
     #[cfg(windows)]
@@ -279,6 +279,27 @@ mod tests {
                 2 => wrong.bytes /= 2,
                 _ => wrong.bit_depth = 12,
             };
+            assert!(wrong.validate().is_err());
+        }
+        Ok(())
+    }
+    #[test]
+    fn hdr_shared_context_derives_its_own_v5_ring_from_the_exact_signed_color() -> TestResult {
+        use nestlink_protocol::media_format::{FrameRate,VideoFormat};
+        let mut context=syntax_context()?;
+        let mut ptl=[0;12];ptl[0]=2;ptl[11]=120;
+        let format=VideoFormat::hevc_hdr10_observed(ptl,640,480,FrameRate::new(30,1)?,4000)?;
+        context.media.ipc_version=5;context.media.format_sha256=format.digest()?;
+        context.media.format=Some(crate::compressed_video::WireVideoFormat::new(format)?);
+        context.bit_depth=10;context.bytes*=2;context.validate()?;
+        #[cfg(windows)]
+        assert!(context.native_ring()?.is_hdr10());
+        let bytes=serde_json::to_vec(&context)?;
+        let roundtrip:SharedVideoContext=serde_json::from_slice(&bytes)?;assert_eq!(roundtrip,context);
+        for mutation in 0..4 {
+            let mut wrong=context.clone();
+            match mutation {0=>wrong.media.ipc_version=4,1=>wrong.bit_depth=8,2=>wrong.bytes/=2,
+                _=>wrong.media.format_sha256[0]^=1};
             assert!(wrong.validate().is_err());
         }
         Ok(())

@@ -112,6 +112,7 @@ pub(crate) struct Sps {
     pub coded_height: u32,
     pub crop: [u32; 4],
     pub explicit_bt709_limited: bool,
+    pub explicit_hdr10_limited: bool,
     pub stream_timing: Option<[u32; 2]>,
     pub bit_depth: u8,
 }
@@ -124,6 +125,11 @@ fn sps_inner(
     height: u32,
     complete: bool,
     bit_depth: u8,
+) -> io::Result<Sps> {
+    sps_color_mode(nal, width, height, complete, bit_depth, false)
+}
+fn sps_color_mode(
+    nal: &[u8], width: u32, height: u32, complete: bool, bit_depth: u8, hdr10: bool,
 ) -> io::Result<Sps> {
     let mut b = Bits::new(nal)?;
     b.field = "sps.vps_id";
@@ -342,6 +348,7 @@ fn sps_inner(
     b.read(1)?;
     b.field = "sps.vui_parameters_present_flag";
     let mut explicit_bt709_limited = false;
+    let mut explicit_hdr10_limited = false;
     let mut stream_timing = None;
     if b.read(1)? != 0 {
         b.field = "vui.aspect_ratio_info_present_flag";
@@ -372,24 +379,26 @@ fn sps_inner(
             }
             b.field = "vui.colour_description_present_flag";
             if b.read(1)? != 0 {
-                for field in [
+                for (index, field) in [
                     "vui.colour_primaries",
                     "vui.transfer_characteristics",
                     "vui.matrix_coeffs",
-                ] {
+                ].into_iter().enumerate() {
                     b.field = field;
                     let actual = b.read(8)?;
-                    if actual != 1 {
+                    let required = if hdr10 { [9, 16, 9][index] } else { 1 };
+                    if actual != required {
                         return Err(rejection(
                             "sps.color",
                             format!(
-                                "field={field} actual={actual} required=1 rbsp_bit={}",
+                                "field={field} actual={actual} required={required} rbsp_bit={}",
                                 b.pos
                             ),
                         ));
                     }
                 }
-                explicit_bt709_limited = true;
+                explicit_bt709_limited = !hdr10;
+                explicit_hdr10_limited = hdr10;
             }
         }
         if complete {
@@ -488,6 +497,7 @@ fn sps_inner(
         coded_height,
         crop: [left * 2, right * 2, top * 2, bottom * 2],
         explicit_bt709_limited,
+        explicit_hdr10_limited,
         stream_timing,
         bit_depth,
     })
@@ -499,6 +509,7 @@ pub(crate) struct Validator {
     pps: Option<u32>,
     complete_sps: bool,
     bit_depth: u8,
+    hdr10: bool,
 }
 impl Validator {
     pub(crate) fn exact_main8() -> Self {
@@ -514,6 +525,9 @@ impl Validator {
             bit_depth: 10,
             ..Self::default()
         }
+    }
+    pub(crate) fn exact_hdr10() -> Self {
+        Self { complete_sps: true, bit_depth: 10, hdr10: true, ..Self::default() }
     }
     pub fn info(&self) -> Option<Sps> {
         self.sps
@@ -554,7 +568,11 @@ impl Validator {
                 }
                 33 => {
                     let info = if next.complete_sps {
-                        sps_inner(nal, width, height, true, next.bit_depth)?
+                        if next.hdr10 {
+                            sps_color_mode(nal, width, height, true, 10, true)?
+                        } else {
+                            sps_inner(nal, width, height, true, next.bit_depth)?
+                        }
                     } else {
                         sps(nal, width, height)?
                     };
@@ -699,6 +717,27 @@ pub(crate) mod tests {
         }
         Ok(())
     }
+    #[test]
+    fn hdr_has_independent_explicit_pq_bt2020_parser_and_transactional_history() -> io::Result<()> {
+        let config=VideoConfig{width:640,height:480,fps:60,bitrate_kbps:4000};
+        let hdr=access_unit(fixture_color(false,2,[9,16,9],2,123,0),&[0x28,1,0xb0]);
+        let observed=HevcMain8Contract::observe_hdr10(&hdr,config)?;
+        assert!(observed.is_hdr10());assert_eq!(observed.bit_depth(),10);
+        let sdr=access_unit(fixture_ptl(false,2,1,2,123,0),&[0x28,1,0xb0]);
+        let original=HevcMain8Contract::observe_main10(&sdr,config)?;
+        assert!(!original.is_hdr10());assert_ne!(original.digest(),observed.digest());
+        assert!(HevcMain8Contract::observe_main10(&hdr,config).is_err());
+        assert!(HevcMain8Contract::observe_hdr10(&sdr,config).is_err());
+        let mut admission=HevcMain8Admission::new(observed);admission.validate(&hdr)?;
+        for invalid in [sdr,access_unit(fixture_color(true,2,[9,16,9],2,123,0),&[0x28,1,0xb0]),
+            access_unit(fixture_color(false,2,[9,18,9],2,123,0),&[0x28,1,0xb0]),
+            access_unit(fixture_color(false,2,[1,16,9],2,123,0),&[0x28,1,0xb0]),
+            access_unit(fixture_color(false,2,[9,16,1],2,123,0),&[0x28,1,0xb0]),
+            access_unit(fixture_color(false,0,[9,16,9],1,123,0),&[0x28,1,0xb0])] {
+            assert!(admission.validate(&invalid).is_err());admission.validate(&hdr)?;
+        }
+        Ok(())
+    }
 
     #[test]
     fn exact_main8_high_frame_levels_keep_full_ptl_and_admission_history() -> io::Result<()> {
@@ -814,6 +853,9 @@ pub(crate) mod tests {
         level: u32,
         layers: u32,
     ) -> Vec<u8> {
+        fixture_color(full_range,depth,[1,1,matrix],profile,level,layers)
+    }
+    fn fixture_color(full_range: bool,depth: u32,color: [u32;3],profile: u32,level: u32,layers: u32) -> Vec<u8> {
         fn bits(out: &mut Vec<u8>, n: usize, v: u32) {
             for shift in (0..n).rev() {
                 out.push(((v >> shift) & 1) as u8);
@@ -865,9 +907,7 @@ pub(crate) mod tests {
         bits(&mut b, 3, 5);
         bits(&mut b, 1, u32::from(full_range));
         bits(&mut b, 1, 1);
-        bits(&mut b, 8, 1);
-        bits(&mut b, 8, 1);
-        bits(&mut b, 8, matrix);
+        for value in color { bits(&mut b,8,value); }
         bits(&mut b, 7, 0); // remaining VUI flags absent, including timing/restriction.
         bits(&mut b, 1, 0); // no SPS extension.
         bits(&mut b, 1, 1);

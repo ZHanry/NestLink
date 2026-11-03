@@ -40,7 +40,8 @@ struct GpuCapture {
     ComPtr<IDXGIOutput6> source_output;
     DXGI_OUTPUT_DESC1 original_output{};
     DXGI_FORMAT capture_format = DXGI_FORMAT_B8G8R8A8_UNORM, observed_format = DXGI_FORMAT_UNKNOWN;
-    bool high_precision_sdr = false, display_known = false, conversion_checked = false, retired = false;
+    bool high_precision_sdr = false, hdr10 = false, display_known = false, conversion_checked = false, retired = false;
+    bool precise() const noexcept { return high_precision_sdr || hdr10; }
     ComPtr<ID3D11VideoDevice> video;
     ComPtr<ID3D11VideoContext> processor_context;
     ComPtr<ID3D11VideoProcessorEnumerator> enumerator;
@@ -70,11 +71,16 @@ struct GpuCapture {
 namespace {
 constexpr DXGI_COLOR_SPACE_TYPE fp16_input_color = DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709;
 constexpr DXGI_COLOR_SPACE_TYPE p010_output_color = DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709;
+constexpr DXGI_COLOR_SPACE_TYPE hdr10_output_color = DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020;
 DXGI_FORMAT capture_format_for_depth(uint32_t bit_depth) noexcept {
     return bit_depth == 10 ? DXGI_FORMAT_R16G16B16A16_FLOAT : DXGI_FORMAT_B8G8R8A8_UNORM;
 }
 bool sdr_output(const DXGI_OUTPUT_DESC1& description) noexcept {
     return description.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+}
+bool hdr10_output(const DXGI_OUTPUT_DESC1& description) noexcept {
+    return description.AttachedToDesktop && description.BitsPerColor >= 10 &&
+        description.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
 }
 bool same_output_color(const DXGI_OUTPUT_DESC1& original, const DXGI_OUTPUT_DESC1& current) noexcept {
     if (original.Monitor != current.Monitor || original.AttachedToDesktop != current.AttachedToDesktop ||
@@ -102,14 +108,27 @@ HRESULT retain_source_color(bool& retired, bool factory_current, HRESULT query,
     }
     return S_OK;
 }
+HRESULT retain_hdr_source_color(bool& retired, bool factory_current, HRESULT query,
+    const DXGI_OUTPUT_DESC1& original, const DXGI_OUTPUT_DESC1& current) noexcept {
+    if(retired)return DXGI_ERROR_ACCESS_LOST;
+    if(!factory_current || query!=S_OK || !hdr10_output(current) || !same_output_color(original,current)) {
+        retired=true;return FAILED(query)?query:DXGI_ERROR_ACCESS_LOST;
+    }
+    return S_OK;
+}
 HRESULT check_source_current(GpuCapture& s) noexcept {
-    if (!s.high_precision_sdr) return S_OK; // Preserve the original eight-bit path.
+    if (!s.precise()) return S_OK; // Preserve the original eight-bit path.
     if (s.retired) return DXGI_ERROR_ACCESS_LOST;
     const bool current = s.source_factory && s.source_factory->IsCurrent() && s.source_output &&
         (!s.closed || !s.closed->load());
     DXGI_OUTPUT_DESC1 description{};
     const HRESULT query = current ? s.source_output->GetDesc1(&description) : S_OK;
-    const HRESULT hr = retain_source_color(s.retired, current, query, s.original_output, description);
+    HRESULT hr = S_OK;
+    if (s.hdr10) {
+        hr=retain_hdr_source_color(s.retired,current,query,s.original_output,description);
+    } else {
+        hr = retain_source_color(s.retired, current, query, s.original_output, description);
+    }
     if (FAILED(hr)) {
         s.retained = false;
         std::fprintf(stderr, "capture source retired: owner_thread=%lu hr=0x%08lx factory_current=%u color_query_hr=0x%08lx\n",
@@ -120,10 +139,10 @@ HRESULT check_source_current(GpuCapture& s) noexcept {
     return hr;
 }
 template<class Check>
-HRESULT check_fp16_conversion(Check check) {
+HRESULT check_fp16_conversion(Check check, DXGI_COLOR_SPACE_TYPE output_color = p010_output_color) {
     BOOL supported = FALSE;
     const HRESULT hr = check(DXGI_FORMAT_R16G16B16A16_FLOAT, fp16_input_color,
-        DXGI_FORMAT_P010, p010_output_color, &supported);
+        DXGI_FORMAT_P010, output_color, &supported);
     if (hr != S_OK) return FAILED(hr) ? hr : E_UNEXPECTED;
     return supported ? S_OK : DXGI_ERROR_UNSUPPORTED;
 }
@@ -143,7 +162,7 @@ HRESULT create_surfaces(GpuCapture* s,uint32_t width,uint32_t height,uint32_t fp
     texture.Format = s->capture_format; texture.SampleDesc.Count = 1;
     texture.Usage = D3D11_USAGE_DEFAULT;
     texture.BindFlags = D3D11_BIND_RENDER_TARGET|D3D11_BIND_SHADER_RESOURCE;
-    texture.MiscFlags = s->high_precision_sdr ? 0u : D3D11_RESOURCE_MISC_GDI_COMPATIBLE;
+    texture.MiscFlags = s->precise() ? 0u : D3D11_RESOURCE_MISC_GDI_COMPATIBLE;
     hr = s->device->CreateTexture2D(&texture,nullptr,&s->capture_rgb);
     if (FAILED(hr)) return hr;
     texture.Format = bit_depth==10?DXGI_FORMAT_P010:DXGI_FORMAT_NV12; texture.MiscFlags = 0;
@@ -167,7 +186,8 @@ HRESULT create_surfaces(GpuCapture* s,uint32_t width,uint32_t height,uint32_t fp
     if (SUCCEEDED(hr) && !(support & D3D11_VIDEO_PROCESSOR_FORMAT_SUPPORT_OUTPUT)) hr = DXGI_ERROR_UNSUPPORTED;
     if (SUCCEEDED(hr)) hr = s->video->CreateVideoProcessor(s->enumerator.Get(),0,&s->processor);
     if (FAILED(hr)) return hr;
-    if (s->high_precision_sdr) {
+    if (s->precise()) {
+        const auto expected_output_color = s->hdr10 ? hdr10_output_color : p010_output_color;
         ComPtr<ID3D11VideoProcessorEnumerator1> enumerator1;
         ComPtr<ID3D11VideoContext1> context1;
         hr = s->enumerator.As(&enumerator1);
@@ -186,17 +206,18 @@ HRESULT create_surfaces(GpuCapture* s,uint32_t width,uint32_t height,uint32_t fp
                 static_cast<unsigned long>(conversion_hr), *supported ? 1u : 0u);
             std::fflush(stderr);
             return conversion_hr;
-        });
+        }, expected_output_color);
         if (hr != S_OK) return FAILED(hr) ? hr : E_UNEXPECTED;
         context1->VideoProcessorSetStreamColorSpace1(s->processor.Get(), 0, fp16_input_color);
-        context1->VideoProcessorSetOutputColorSpace1(s->processor.Get(), p010_output_color);
+        context1->VideoProcessorSetOutputColorSpace1(s->processor.Get(), expected_output_color);
         DXGI_COLOR_SPACE_TYPE actual_input = DXGI_COLOR_SPACE_RESERVED, actual_output = DXGI_COLOR_SPACE_RESERVED;
         context1->VideoProcessorGetStreamColorSpace1(s->processor.Get(), 0, &actual_input);
         context1->VideoProcessorGetOutputColorSpace1(s->processor.Get(), &actual_output);
         std::fprintf(stderr, "capture Float16 color readback: owner_thread=%lu input_color_space=%u output_color_space=%u\n",
             static_cast<unsigned long>(s->thread), static_cast<unsigned>(actual_input), static_cast<unsigned>(actual_output));
         std::fflush(stderr);
-        if (!exact_precision_colors(actual_input, actual_output)) return DXGI_ERROR_UNSUPPORTED;
+        if (s->hdr10 ? actual_input != fp16_input_color || actual_output != hdr10_output_color
+            : !exact_precision_colors(actual_input, actual_output)) return DXGI_ERROR_UNSUPPORTED;
         s->conversion_checked = true;
     }
     D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC iv{};
@@ -211,7 +232,7 @@ HRESULT create_surfaces(GpuCapture* s,uint32_t width,uint32_t height,uint32_t fp
     s->processor_context->VideoProcessorSetStreamDestRect(s->processor.Get(),0,TRUE,&rect);
     s->processor_context->VideoProcessorSetOutputTargetRect(s->processor.Get(),TRUE,&rect);
     s->processor_context->VideoProcessorSetStreamAutoProcessingMode(s->processor.Get(),0,FALSE);
-    if (!s->high_precision_sdr) {
+    if (!s->precise()) {
         D3D11_VIDEO_PROCESSOR_COLOR_SPACE rgb{}; rgb.RGB_Range = 0; rgb.YCbCr_Matrix = 1; rgb.Nominal_Range = 2;
         D3D11_VIDEO_PROCESSOR_COLOR_SPACE yuv{}; yuv.YCbCr_Matrix = 1; yuv.Nominal_Range = 1;
         s->processor_context->VideoProcessorSetStreamColorSpace(s->processor.Get(),0,&rgb);
@@ -294,12 +315,11 @@ HRESULT cursor(GpuCapture& s) {
     return hr;
 }
 }
-extern "C" int32_t nl_capture_gpu_open(uintptr_t monitor, uint32_t width, uint32_t height,
-    uint32_t fps,uint32_t bit_depth, void** result) noexcept {
+static int32_t capture_gpu_open(uintptr_t monitor, uint32_t width, uint32_t height,
+    uint32_t fps,uint32_t bit_depth, bool hdr10, void** result) noexcept {
     if (!result) return E_POINTER;
     *result = nullptr;
-    if(bit_depth!=8 && bit_depth!=10)return E_INVALIDARG;
-    // This exact entry remains SDR. HDR needs a separately verified contract.
+    if((bit_depth!=8 && bit_depth!=10) || (hdr10 && bit_depth!=10))return E_INVALIDARG;
     if (!monitor || !width || !height || ((width|height)&1) || width > 8192 || height > 8192 ||
         static_cast<uint64_t>(width)*height*(bit_depth==10?8u:4u) > 64*1024*1024 || !fps || fps > 144) return E_INVALIDARG;
     ComPtr<IDXGIFactory1> factory;
@@ -329,15 +349,16 @@ extern "C" int32_t nl_capture_gpu_open(uintptr_t monitor, uint32_t width, uint32
                 hr = output6->GetDesc1(&display_color);
                 if (FAILED(hr)) return hr;
                 display_known = hr == S_OK;
-                if (!sdr_output(display_color)) return DXGI_ERROR_UNSUPPORTED;
+                if (hdr10 ? !hdr10_output(display_color) : !sdr_output(display_color)) return DXGI_ERROR_UNSUPPORTED;
             }
             if (bit_depth == 10 && !display_known) return DXGI_ERROR_UNSUPPORTED;
             std::unique_ptr<GpuCapture> s(new (std::nothrow) GpuCapture());
             if (!s) return E_OUTOFMEMORY;
-            s->high_precision_sdr = bit_depth == 10;
+            s->high_precision_sdr = bit_depth == 10 && !hdr10;
+            s->hdr10 = hdr10;
             s->capture_format = capture_format_for_depth(bit_depth);
             s->display_known = display_known; s->original_output = display_color;
-            if (s->high_precision_sdr) { s->source_factory = factory; s->source_output = output6; }
+            if (s->precise()) { s->source_factory = factory; s->source_output = output6; }
             hr=CoInitializeEx(nullptr,COINIT_MULTITHREADED);
             if (FAILED(hr)) return hr;
             s->com=true;
@@ -349,7 +370,7 @@ extern "C" int32_t nl_capture_gpu_open(uintptr_t monitor, uint32_t width, uint32
             DXGI_ADAPTER_DESC1 adapter_desc{};
             hr = adapter->GetDesc1(&adapter_desc); if (FAILED(hr)) return hr;
             s->luid = adapter_desc.AdapterLuid;
-            if (s->high_precision_sdr) {
+            if (s->precise()) {
                 // WGC provides the system cursor in the Float16 capture. The
                 // legacy duplication/GDI path would quantize it through BGRA8.
                 hr = open_wgc(*s,reinterpret_cast<HMONITOR>(monitor),width,height);
@@ -374,6 +395,17 @@ extern "C" int32_t nl_capture_gpu_open(uintptr_t monitor, uint32_t width, uint32
         }
     }
     return DXGI_ERROR_NOT_FOUND;
+}
+// Original entry remains strictly SDR, including the independent Main10 mode.
+extern "C" int32_t nl_capture_gpu_open(uintptr_t monitor, uint32_t width, uint32_t height,
+    uint32_t fps,uint32_t bit_depth, void** result) noexcept {
+    return capture_gpu_open(monitor,width,height,fps,bit_depth,false,result);
+}
+// Independent HDR entry: actual HDR output, FP16/scRGB WGC and exact PQ/P2020
+// P010 conversion are mandatory. Opening starts no desktop capture.
+extern "C" int32_t nl_capture_gpu_hdr10_open(uintptr_t monitor, uint32_t width, uint32_t height,
+    uint32_t fps, void** result) noexcept {
+    return capture_gpu_open(monitor,width,height,fps,10,true,result);
 }
 extern "C" int32_t nl_capture_gpu_device(void* opaque, void** device, uint64_t* luid) noexcept {
     auto* s = static_cast<GpuCapture*>(opaque);
@@ -401,8 +433,8 @@ extern "C" int32_t nl_capture_gpu_source_state(void* opaque, CaptureSourceObserv
     if (FAILED(hr)) return hr;
     result->configured_format = s->capture_format;
     result->observed_format = s->observed_format;
-    result->input_color_space = s->high_precision_sdr ? fp16_input_color : DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
-    result->output_color_space = p010_output_color;
+    result->input_color_space = s->precise() ? fp16_input_color : DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+    result->output_color_space = s->hdr10 ? hdr10_output_color : p010_output_color;
     if (s->display_known) {
         result->display_color_space = s->original_output.ColorSpace;
         result->display_bits_per_color = s->original_output.BitsPerColor;
@@ -411,7 +443,8 @@ extern "C" int32_t nl_capture_gpu_source_state(void* opaque, CaptureSourceObserv
     if (s->observed_format != DXGI_FORMAT_UNKNOWN) result->flags |= 2u;
     if (s->high_precision_sdr) result->flags |= 4u;
     if (s->conversion_checked) result->flags |= 8u;
-    // No content-bit-depth, HDR, performance or physical scanout flag exists.
+    if (s->hdr10) result->flags |= 16u;
+    // HDR mode records the checked source/conversion, not physical scanout proof.
     return S_OK;
 }
 extern "C" int32_t nl_capture_gpu_frame(void* opaque, uint32_t repeated, void** texture) noexcept {
@@ -429,7 +462,7 @@ extern "C" int32_t nl_capture_gpu_frame(void* opaque, uint32_t repeated, void** 
             if (!frame) return S_FALSE;
             const auto size = frame.ContentSize();
             if (size.Width != static_cast<int32_t>(s->width) || size.Height != static_cast<int32_t>(s->height)) {
-                if (s->high_precision_sdr) { s->retired = true; s->retained = false; }
+                if (s->precise()) { s->retired = true; s->retained = false; }
                 frame.Close(); return DXGI_ERROR_ACCESS_LOST;
             }
             auto access = frame.Surface().as<::Windows::Graphics::DirectX::Direct3D11::IDirect3DDxgiInterfaceAccess>();
@@ -438,10 +471,10 @@ extern "C" int32_t nl_capture_gpu_frame(void* opaque, uint32_t repeated, void** 
             if (SUCCEEDED(hr)) {
                 D3D11_TEXTURE2D_DESC desc{}; acquired->GetDesc(&desc);
                 ComPtr<ID3D11Device> device; acquired->GetDevice(&device);
-                const bool valid = s->high_precision_sdr
+                const bool valid = s->precise()
                     ? exact_precision_surface(desc, s->width, s->height, device.Get() == s->device.Get())
                     : device.Get() == s->device.Get() && desc.Width == s->width && desc.Height == s->height && desc.Format == DXGI_FORMAT_B8G8R8A8_UNORM;
-                if (s->high_precision_sdr && s->observed_format == DXGI_FORMAT_UNKNOWN) {
+                if (s->precise() && s->observed_format == DXGI_FORMAT_UNKNOWN) {
                     std::fprintf(stderr,
                         "capture Float16 acquired: owner_thread=%lu actual_format=%u actual_width=%u actual_height=%u display_bits_per_color=%u native_content_precision_qualified=false\n",
                         static_cast<unsigned long>(s->thread), static_cast<unsigned>(desc.Format), desc.Width, desc.Height,
@@ -450,7 +483,7 @@ extern "C" int32_t nl_capture_gpu_frame(void* opaque, uint32_t repeated, void** 
                 }
                 s->observed_format = desc.Format;
                 if (!valid) {
-                    if (s->high_precision_sdr) {
+                    if (s->precise()) {
                         s->retired = true; s->retained = false;
                         std::fprintf(stderr, "capture Float16 source rejected: owner_thread=%lu actual_format=%u actual_width=%u actual_height=%u same_device=%u\n",
                             static_cast<unsigned long>(s->thread), static_cast<unsigned>(desc.Format), desc.Width, desc.Height,
@@ -493,7 +526,7 @@ extern "C" int32_t nl_capture_gpu_frame(void* opaque, uint32_t repeated, void** 
 // Synthetic upload probes the real device/conversion/encoder without desktop pixels.
 extern "C" int32_t nl_capture_gpu_probe(void* opaque, const uint8_t* pixels, size_t length, void** texture) noexcept {
     auto* s = static_cast<GpuCapture*>(opaque);
-    if (!s || !pixels || !texture || s->high_precision_sdr || s->thread != GetCurrentThreadId() || length != static_cast<size_t>(s->width)*s->height*4) return E_INVALIDARG;
+    if (!s || !pixels || !texture || s->precise() || s->thread != GetCurrentThreadId() || length != static_cast<size_t>(s->width)*s->height*4) return E_INVALIDARG;
     s->context->UpdateSubresource(s->capture_rgb.Get(),0,nullptr,pixels,s->width*4,0);
     const HRESULT hr = convert(*s);
     if (FAILED(hr)) return hr;
@@ -607,5 +640,33 @@ extern "C" uint32_t nl_capture_gpu_precision_contract() noexcept {
     if (colors && rejected(true, S_OK, changed_output)) passed |= 64;
     if (retain_source_color(retired, false, S_OK, original, original) == DXGI_ERROR_ACCESS_LOST && retired &&
         retain_source_color(retired, true, S_OK, original, original) == DXGI_ERROR_ACCESS_LOST && retired) passed |= 128;
+    return passed;
+}
+extern "C" uint32_t nl_capture_gpu_hdr10_contract() noexcept {
+    uint32_t passed=0;
+    DXGI_OUTPUT_DESC1 original{};original.AttachedToDesktop=TRUE;original.BitsPerColor=10;
+    original.ColorSpace=DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
+    original.DesktopCoordinates=RECT{0,0,1920,1080};original.MaxLuminance=1000;
+    bool retired=false;
+    if(hdr10_output(original) && !sdr_output(original) &&
+        retain_hdr_source_color(retired,true,S_OK,original,original)==S_OK && !retired)passed|=1;
+    bool exact=false;
+    const HRESULT conversion=check_fp16_conversion([&](DXGI_FORMAT in,DXGI_COLOR_SPACE_TYPE input,
+        DXGI_FORMAT out,DXGI_COLOR_SPACE_TYPE output,BOOL* supported) {
+        exact=in==DXGI_FORMAT_R16G16B16A16_FLOAT && input==fp16_input_color && out==DXGI_FORMAT_P010 && output==hdr10_output_color;
+        *supported=TRUE;return S_OK;
+    },hdr10_output_color);
+    if(conversion==S_OK && exact && !exact_precision_colors(fp16_input_color,hdr10_output_color))passed|=2;
+    const auto rejected=[&](bool factory,HRESULT query,const DXGI_OUTPUT_DESC1& current) {
+        bool stale=false;return FAILED(retain_hdr_source_color(stale,factory,query,original,current)) && stale &&
+            retain_hdr_source_color(stale,true,S_OK,original,original)==DXGI_ERROR_ACCESS_LOST;
+    };
+    auto changed=original;changed.BitsPerColor=8;
+    bool modes=rejected(true,S_OK,changed);changed=original;changed.ColorSpace=DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+    if(modes && rejected(true,S_OK,changed) && rejected(false,S_OK,original) && rejected(true,S_FALSE,original))passed|=4;
+    changed=original;changed.MaxLuminance+=1;
+    bool metadata=rejected(true,S_OK,changed);changed=original;changed.WhitePoint[0]+=0.01f;
+    metadata=metadata && rejected(true,S_OK,changed);changed=original;changed.DesktopCoordinates.right+=8;
+    if(metadata && rejected(true,S_OK,changed))passed|=8;
     return passed;
 }

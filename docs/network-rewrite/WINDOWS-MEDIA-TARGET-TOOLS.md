@@ -124,3 +124,27 @@ These tools do not establish 58fps sustained desktop presentation, input delay,
 weak-network recovery, concurrent files, capture/transport/presenter continuity,
 4:4:4, HDR or full fallback behavior. They are diagnostic tools, separate from
 the original candidate build, required workflows and release evidence gates.
+
+The new independent `windows-hdr10-direction-probe.exe` must come from a new
+successful hosted artifact that includes it. Earlier four-executable artifacts
+above do not contain or qualify this source. This separate tool reuses the
+production HDR direction workload and the same ten-second deadline, 32 accepted
+outputs, minimum sixteen live outputs before EOS, exact original owners and
+checked close. It requires the actual complete Main10 SPS to carry PQ/BT2020
+limited VUI and both the original hardware decoder and independent software
+decoder to preserve explicit ten-bit P010 Y/Cb/Cr quadrants. It never changes
+the original SDR tools or turns their failures into HDR evidence.
+
+```powershell
+.\windows-hdr10-direction-probe.exe encode system-mf 1920 1080 60 8000
+.\windows-hdr10-direction-probe.exe decode system-mf 1920 1080 60 8000
+.\windows-hdr10-direction-probe.exe encode amd-amf 1920 1080 60 8000
+.\windows-hdr10-direction-probe.exe decode amd-amf 1920 1080 60 8000
+```
+
+Each command selects exactly one encoder and retains failures without another
+backend or format attempt. The input is synthetic P010; this tool captures no
+desktop and proves no HDR monitor, capture conversion, physical scanout or
+sustained performance. Actual source and desktop presentation use the separate
+approved [HDR product owners](HDR10-P010-OPT-IN.md) and require their own target
+evidence.

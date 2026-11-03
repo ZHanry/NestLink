@@ -1,5 +1,7 @@
 #pragma once
 #include <cstdint>
+// Independent HDR ring semantic version. Legacy SDR remains reserved=0.
+constexpr uint32_t NL_SHARED_HDR10_VERSION=5;
 struct NlSharedRingDescriptor {
     uint8_t ring_id[16]{};
     uint64_t adapter_luid=0;

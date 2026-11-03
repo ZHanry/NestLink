@@ -13,6 +13,7 @@ pub fn negotiated_video_codec(claims: &crate::PermitClaims) -> crate::NativeVide
         claims.media_format_version,
         crate::media_authority::HEVC_FORMAT_VERSION
             | crate::media_authority::HEVC_MAIN10_FORMAT_VERSION
+            | crate::media_authority::HEVC_HDR10_FORMAT_VERSION
     ) && crate::media_authority::permit_formats(claims)
         .ok()
         .flatten()
@@ -23,7 +24,7 @@ pub fn negotiated_video_codec(claims: &crate::PermitClaims) -> crate::NativeVide
                 .all(|f| f.codec == crate::media_format::Codec::Hevc)
         })
     {
-        return if claims.media_format_version == crate::media_authority::HEVC_MAIN10_FORMAT_VERSION
+        return if matches!(claims.media_format_version, crate::media_authority::HEVC_MAIN10_FORMAT_VERSION | crate::media_authority::HEVC_HDR10_FORMAT_VERSION)
         {
             crate::NativeVideoCodec::HevcMain10
         } else {
