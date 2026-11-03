@@ -58,17 +58,35 @@ pub struct Platform {
     // Keep the permit until explicit shutdown or Drop has reaped every child.
     desktop_owner: Option<SemaphorePermit<'static>>,
 }
+#[cfg(target_os = "linux")]
+pub struct ConstructionProbe {
+    pub stage: &'static str,
+    pub spawned: oneshot::Sender<Vec<u32>>,
+    pub resume: oneshot::Receiver<io::Result<()>>,
+}
 impl Platform {
     pub async fn new(area: &Path) -> Result<Self> {
+        #[cfg(target_os = "linux")]
+        {
+            Self::new_observed(area, None).await
+        }
+        #[cfg(windows)]
+        {
+            let _ = area;
+            Self::acquire().await
+        }
+    }
+    async fn acquire() -> Result<Self> {
         let desktop_owner = PLATFORM_OWNER.acquire().await.map_err(io::Error::other)?;
-        let value = Self {
+        Ok(Self {
             env: Vec::new(),
             children: Vec::new(),
             desktop_owner: Some(desktop_owner),
-        };
-        #[cfg(target_os = "linux")]
-        let mut value = value;
-        #[cfg(target_os = "linux")]
+        })
+    }
+    #[cfg(target_os = "linux")]
+    pub async fn new_observed(area: &Path, mut probe: Option<ConstructionProbe>) -> Result<Self> {
+        let mut value = Self::acquire().await?;
         {
             for (name, directory) in [
                 ("XDG_DATA_HOME", "keyring-data"),
@@ -78,24 +96,27 @@ impl Platform {
                 nestlink_platform_security::new_private_directory(&path)?;
                 value.env.push((name, path.to_string_lossy().into_owned()));
             }
-            let mut dbus = value
+            let dbus = value
                 .command("dbus-daemon")
                 .args(["--session", "--nofork", "--print-address=1"])
                 .stdout(Stdio::piped())
                 .stderr(Stdio::null())
                 .kill_on_drop(true)
                 .spawn()?;
+            let dbus = value.retain_constructor_child(dbus);
+            value.construction_checkpoint("dbus", &mut probe).await?;
             let mut address = String::new();
             tokio::time::timeout(
                 Duration::from_secs(5),
-                BufReader::new(dbus.stdout.take().ok_or("dbus stdout")?).read_line(&mut address),
+                BufReader::new(value.children[dbus].stdout.take().ok_or("dbus stdout")?)
+                    .read_line(&mut address),
             )
-            .await??;
+            .await
+            .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "original D-Bus address deadline"))??;
             assert!(address.starts_with("unix:"));
             value
                 .env
                 .push(("DBUS_SESSION_BUS_ADDRESS", address.trim().into()));
-            value.children.push(dbus);
             // Reuse the installed Xauthority tool for this independently owned
             // Xvfb. The production transport deliberately requires an actual
             // authority file; an unauthenticated test server cannot supply it.
@@ -106,12 +127,12 @@ impl Platform {
                 .map(|byte| format!("{byte:02x}"))
                 .collect::<String>();
             let seed_display = ":0";
-            let status = value
-                .command("xauth")
-                .arg("-f")
+            let mut xauth = value.command("xauth");
+            xauth.arg("-f")
                 .arg(&authority)
-                .args(["add", seed_display, "MIT-MAGIC-COOKIE-1", &cookie])
-                .status()
+                .args(["add", seed_display, "MIT-MAGIC-COOKIE-1", &cookie]);
+            let status = value
+                .constructor_status(&mut xauth, "seed-xauth", &mut probe)
                 .await?;
             if !status.success() {
                 return Err(io::Error::other("original Xvfb authority setup failed").into());
@@ -119,7 +140,7 @@ impl Platform {
             value
                 .env
                 .push(("XAUTHORITY", authority.to_string_lossy().into_owned()));
-            let mut x = Command::new("Xvfb")
+            let x = Command::new("Xvfb")
                 .args([
                     "-displayfd",
                     "1",
@@ -136,34 +157,37 @@ impl Platform {
                 .stderr(Stdio::null())
                 .kill_on_drop(true)
                 .spawn()?;
+            let x = value.retain_constructor_child(x);
+            value.construction_checkpoint("xvfb", &mut probe).await?;
             let mut display = String::new();
             tokio::time::timeout(
                 Duration::from_secs(5),
-                BufReader::new(x.stdout.take().ok_or("Xvfb stdout")?).read_line(&mut display),
+                BufReader::new(value.children[x].stdout.take().ok_or("Xvfb stdout")?)
+                    .read_line(&mut display),
             )
-            .await??;
+            .await
+            .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "original Xvfb display deadline"))??;
             let _: u16 = display.trim().parse()?;
-            value.children.push(x);
             let display = format!(":{}", display.trim());
             if display != seed_display {
                 // Xvfb loads the seeded cookie before choosing its display.
                 // The client record must then identify that actual display.
-                let status = value
-                    .command("xauth")
-                    .arg("-f")
+                let mut xauth = value.command("xauth");
+                xauth.arg("-f")
                     .arg(&authority)
-                    .args(["add", &display, "MIT-MAGIC-COOKIE-1", &cookie])
-                    .status()
+                    .args(["add", &display, "MIT-MAGIC-COOKIE-1", &cookie]);
+                let status = value
+                    .constructor_status(&mut xauth, "display-xauth", &mut probe)
                     .await?;
                 if !status.success() {
                     return Err(io::Error::other("original Xvfb display authority failed").into());
                 }
-                let status = value
-                    .command("xauth")
-                    .arg("-f")
+                let mut xauth = value.command("xauth");
+                xauth.arg("-f")
                     .arg(&authority)
-                    .args(["remove", seed_display])
-                    .status()
+                    .args(["remove", seed_display]);
+                let status = value
+                    .constructor_status(&mut xauth, "seed-cleanup-xauth", &mut probe)
                     .await?;
                 if !status.success() {
                     return Err(
@@ -173,32 +197,33 @@ impl Platform {
             }
             value.env.push(("DISPLAY", display));
             let mut keyring = value.command("gnome-keyring-daemon");
-            let mut keyring = keyring
+            let keyring = keyring
                 .args(["--foreground", "--unlock", "--components=secrets"])
                 .stdin(Stdio::piped())
                 .stdout(Stdio::null())
                 .stderr(Stdio::inherit())
                 .spawn()?;
-            keyring
+            let keyring = value.retain_constructor_child(keyring);
+            value.construction_checkpoint("keyring", &mut probe).await?;
+            value.children[keyring]
                 .stdin
                 .take()
                 .ok_or("keyring input")?
                 .write_all(b"resident-keyring-test-password\n")
                 .await?;
-            value.children.push(keyring);
             tokio::time::timeout(Duration::from_secs(10), async {
                 loop {
+                    let mut command = value.command("dbus-send");
+                    command.args([
+                        "--session",
+                        "--print-reply",
+                        "--dest=org.freedesktop.DBus",
+                        "/org/freedesktop/DBus",
+                        "org.freedesktop.DBus.NameHasOwner",
+                        "string:org.freedesktop.secrets",
+                    ]);
                     let observed = value
-                        .command("dbus-send")
-                        .args([
-                            "--session",
-                            "--print-reply",
-                            "--dest=org.freedesktop.DBus",
-                            "/org/freedesktop/DBus",
-                            "org.freedesktop.DBus.NameHasOwner",
-                            "string:org.freedesktop.secrets",
-                        ])
-                        .output()
+                        .constructor_output(&mut command, "dbus-owner", &mut probe)
                         .await?;
                     if observed.status.success()
                         && String::from_utf8_lossy(&observed.stdout).contains("boolean true")
@@ -215,16 +240,88 @@ impl Platform {
                     "original OS Secret Service did not register",
                 )
             })??;
+            let mut command = value.command("xsetroot");
+            command.args(["-solid", "#00ff00"]);
             let status = value
-                .command("xsetroot")
-                .args(["-solid", "#00ff00"])
-                .status()
+                .constructor_status(&mut command, "xsetroot", &mut probe)
                 .await?;
             assert!(status.success());
         }
-        #[cfg(windows)]
-        let _ = area;
         Ok(value)
+    }
+    #[cfg(target_os = "linux")]
+    fn retain_constructor_child(&mut self, child: Child) -> usize {
+        // Adoption is synchronous and precedes every pipe/read/write/wait await.
+        self.children.push(child);
+        self.children.len() - 1
+    }
+    #[cfg(target_os = "linux")]
+    async fn construction_checkpoint(
+        &self,
+        stage: &'static str,
+        probe: &mut Option<ConstructionProbe>,
+    ) -> io::Result<()> {
+        if probe.as_ref().is_some_and(|probe| probe.stage == stage) {
+            let probe = probe
+                .take()
+                .ok_or_else(|| io::Error::other("constructor probe"))?;
+            let children = self.children.iter().filter_map(Child::id).collect();
+            probe
+                .spawned
+                .send(children)
+                .map_err(|_| io::Error::other("constructor observer closed"))?;
+            probe.resume.await.map_err(io::Error::other)??;
+        }
+        Ok(())
+    }
+    #[cfg(target_os = "linux")]
+    async fn constructor_status(
+        &mut self,
+        command: &mut Command,
+        stage: &'static str,
+        probe: &mut Option<ConstructionProbe>,
+    ) -> io::Result<std::process::ExitStatus> {
+        let child = self.retain_constructor_child(command.spawn()?);
+        self.construction_checkpoint(stage, probe).await?;
+        let status = self.children[child].wait().await?;
+        // wait has physically reaped this one-shot original process.
+        drop(self.children.remove(child));
+        Ok(status)
+    }
+    #[cfg(target_os = "linux")]
+    async fn constructor_output(
+        &mut self,
+        command: &mut Command,
+        stage: &'static str,
+        probe: &mut Option<ConstructionProbe>,
+    ) -> io::Result<std::process::Output> {
+        command.stdout(Stdio::piped()).stderr(Stdio::piped());
+        let child = self.retain_constructor_child(command.spawn()?);
+        self.construction_checkpoint(stage, probe).await?;
+        let mut stdout = self.children[child]
+            .stdout
+            .take()
+            .ok_or_else(|| io::Error::other("constructor stdout"))?;
+        let mut stderr = self.children[child]
+            .stderr
+            .take()
+            .ok_or_else(|| io::Error::other("constructor stderr"))?;
+        let mut out = Vec::new();
+        let mut err = Vec::new();
+        let (status, out_result, err_result) = tokio::join!(
+            self.children[child].wait(),
+            stdout.read_to_end(&mut out),
+            stderr.read_to_end(&mut err),
+        );
+        let status = status?;
+        drop(self.children.remove(child));
+        out_result?;
+        err_result?;
+        Ok(std::process::Output {
+            status,
+            stdout: out,
+            stderr: err,
+        })
     }
     pub fn command(&self, program: impl AsRef<std::ffi::OsStr>) -> Command {
         let mut command = Command::new(program);

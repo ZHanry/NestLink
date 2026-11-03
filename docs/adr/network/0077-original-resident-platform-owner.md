@@ -57,3 +57,28 @@ hosted original resident execution under workspace parallel scheduling,
 the independent owner lifecycle regression and strict lint before qualifying
 this scheduling change. Original DNS and platform failures remain failures
 in [source745 evidence](../../network-rewrite/evidence/full-rust-core-745c05a.json).
+
+Construction review found a further ownership gap before the completed
+Platform value existed: D-Bus/Xvfb were held in local Child variables across
+their first stdout await, and gnome-keyring across its first stdin write.
+Cancellation could therefore send kill_on_drop without having the retained
+Platform reap those original PIDs before releasing its permit. Construction
+now immediately adopts every spawned child before any await. This includes
+the original one-shot xauth, dbus-send and xsetroot commands; successful waits
+physically reap them before removing them from the retained set. Captured
+output uses concurrent pipe draining and a borrowed wait, so cancelling that
+future leaves the original child with Platform's existing synchronous Drop.
+The two unchanged five-second startup reads gain fixed D-Bus/Xvfb deadline
+labels without exposing pipe content or altering either deadline.
+
+The separate existing one-case lifecycle regression also observes actual
+original construction after each of six mandatory real spawn boundaries:
+D-Bus, seed xauth, Xvfb, gnome-keyring, D-Bus owner query and xsetroot. At each,
+it checks a second platform stays queued, then cancels construction or injects
+an error. Every observed original PID must be absent from /proc, and a new
+real platform must acquire, initialize and shut down. The observer only pauses
+this independent regression; original cases pass no observer. This static
+construction defect is not attributed as the cause of any historical resident
+failure. These newer changes still require exact-source hosted lifecycle,
+strict lint and original parallel-workspace execution. No original four-case
+assertion/count, real OS service or timeout is replaced.
