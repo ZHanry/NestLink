@@ -6,8 +6,36 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "354de25cedf1e04a2318d7f13c4474f43e3b0fd2",
-  "checkpoint_kind": "rc_preview_serial_contract_aggregate_budget_awaiting_exact_source_checks",
+  "source_revision": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+  "checkpoint_kind": "rc_preview_published_user_acceptance_pending",
+  "source_revision_semantics": "Published tag and artifact source; this checkpoint is a documentation-only follow-up and does not move the release tag.",
+  "release_publication": {
+    "status": "published-prerelease",
+    "release_url": "https://github.com/ZHanry/NestLink/releases/tag/v0.8.0-rc.1",
+    "release_id": 432813145,
+    "published_at": "2026-11-03T14:36:23Z",
+    "tag": "v0.8.0-rc.1",
+    "source_revision": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+    "candidate_run_id": 41652302634,
+    "publisher_run_id": 41655138643,
+    "required_workflows": "All seven succeeded at the exact release source; Rust13/13, network9/9, Web5/5 including Chrome/Edge/Firefox, secret scan, CodeQL, Linux native x64/ARM64 installation and upgrade/rollback.",
+    "product_artifact_roles": 16,
+    "public_assets": 18,
+    "manifest_sha256": "75fe7e71e08130f68a641c5ed418d25b0a5484854372a277b23350e379e624d8",
+    "acceptance_disclosure_sha256": "d4a620a31c6dedc9eaeff2d333ba6cf3cdb0f67940bdf821da7c1e9945cb65f8",
+    "asset_readback_verified": true,
+    "branches_at_public_readback": {"local": ["main"], "remote": ["main"]},
+    "production_update_eligible": false,
+    "formal_qualification_claimed": false,
+    "acceptance_status_unchanged": "41 work packages:38 in_progress,1 verified_lab,2 not_started;70 case groups:63 not_run,3 failed,2 running,1 in_progress,1 passed. AC17/AC47/AC68, Luanti25s and all target/signing/performance/24h gaps preserved.",
+    "evidence_refs": [
+      "docs/network-rewrite/evidence/rc-publication-06ea4d1.json",
+      "docs/network-rewrite/evidence/rc-required-checks-06ea4d1.json",
+      "docs/network-rewrite/evidence/rc-public-readback-06ea4d1.json",
+      "docs/network-rewrite/evidence/rc-producer-provenance-06ea4d1.json"
+    ],
+    "handoff": "docs/network-rewrite/DELIVERY-0.8.0-RC.md"
+  },
   "contract_suite_budget_followup": {
     "source_is_pre_commit_parent": true,
     "prior_run_id": 41637342044,
@@ -52,7 +80,7 @@
     "prior_successes": "All other eleven jobs in the required Rust workflow succeeded, including Windows complete workspace and Linux/Windows strict lint; six other required workflows, release policy and actual SDK DROP workflow succeeded at 6af910f.",
     "next": "Run all seven required workflows at the new exact source, then build and publish the complete sixteen-role same-source prerelease with original failures and pending target acceptance disclosed."
   },
-  "current_followup": {
+  "prepublication_recovery_followup": {
     "source_parent": "13ce2383a7b1fa8d54e21163ef185d6c60c839b9",
     "new_source_verified": false,
     "scope": "Preserve original stopped carrier reason when physical loss occurs between scheduler poll and migration driver. Explicit cancel and stale authority remain Revoked. Original six product cases and six SDK cases rerunning without assertion or deadline changes.",
@@ -143,10 +171,9 @@
     }
   ],
   "next_steps": [
-    "Finish original product and SDK recovery and resident checks; fix remaining product failures without weakening assertions.",
-    "Freeze a clean final source and execute all seven required hosted workflows on that exact SHA.",
-    "Build all sixteen same-source artifact roles, disclose actual pending/failed acceptance, publish 0.8.0RC as a prerelease.",
-    "Read back all assets, verify their digests, confirm only main locally and remotely."
+    "User performs deferred Windows/GPU, mobile WireGuard, independent NAT/fixed ingress, paired performance and cross-day24h acceptance using verified release artifacts and linked guides.",
+    "Keep original failed and unrun cases open; bind any later execution receipt to the exact release source and downloaded artifact digest before updating status.",
+    "Formal signing, production update eligibility and full functional qualification remain pending; public prerelease publication alone does not close these work packages."
   ],
   "evidence_index": [
     "docs/network-rewrite/evidence/product-recovery-12e0a50-failure.json",
@@ -1003,7 +1030,7 @@
       }
     }
   ],
-  "latest_completed_runs": {
+  "prepublication_completed_run_snapshots": {
     "resident": {
       "run_id": 41583603127,
       "source_revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
@@ -1076,7 +1103,7 @@
     "authorization": "这些发布后我再自己验收",
     "prerelease_only": true,
     "production_update_eligible": false,
-    "status": "prepare_same_source_candidate_after_required_hosted_checks",
+    "status": "public_prerelease_published_and_all18_assets_verified",
     "disclosure": "rc-acceptance-status.json",
     "preserved_failure": "Luanti 25-second failure and hardware/HDR/public-HTTPS failure evidence unchanged",
     "diagnostic_run_id": 41619008330

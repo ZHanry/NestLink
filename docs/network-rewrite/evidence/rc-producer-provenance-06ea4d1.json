@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+  "candidate": {
+    "run_attempt": 1,
+    "archive_hash_and_size_verified_by_publisher": true,
+    "artifact_name": "rc-development-candidate-1",
+    "archive_sha256": "900bd9e04edd284f0b1866b3ee8cd690191dc078fb0f90765a793eef956444bd",
+    "workflow": ".github/workflows/v15-candidate-build.yml",
+    "run_id": 41652302634,
+    "archive_bytes": 275049735,
+    "artifact_id": 13238238424,
+    "conclusion": "success"
+  },
+  "publisher": {
+    "run_attempt": 1,
+    "receipt": "rc-publication-06ea4d1.json",
+    "official_archive_hash_and_size_independently_verified": true,
+    "required_checks": "rc-required-checks-06ea4d1.json",
+    "archive_sha256": "88ac767592f8a5739ec16ccf0281e1ec9d2d4b18036278ba5f1778ce18afe057",
+    "workflow": ".github/workflows/rc-publish.yml",
+    "run_id": 41655138643,
+    "archive_bytes": 4674,
+    "artifact_id": 13238289477,
+    "conclusion": "success"
+  },
+  "public_verification": {
+    "receipt": "rc-public-readback-06ea4d1.json",
+    "method": "Downloaded public manifest and acceptance disclosure hashed; all18 GitHub asset IDs, sizes and API SHA256 values matched to the16-role manifest and original publisher receipt; exact tag/source and public prerelease state verified."
+  },
+  "production_update_eligible": false,
+  "formal_qualification_claimed": false
+}

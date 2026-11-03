@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "6af910f529a01fd4266f7fd535ef5270f82f1bb3",
+  "run_id": 41620251754,
+  "run_attempt": 1,
+  "conclusion": "failure",
+  "qualification_claimed": false,
+  "log_hashes": {
+    "windows_core": "3fcbea24be6c8f3b1febc9d92650e4efc36780348b15bed42282c1006ba2bbd2",
+    "linux_workspace": "7097f15912987e2f33d82e5025bb771879424b610ccddfc205215f7e6dc208aa"
+  },
+  "failures": [
+    "native_session file-access initial direct QUIC timeout",
+    "offline resident temporary public-PKI HTTPS system DNS setup timeout",
+    "parallel positive media fixtures contend on process-wide CPU probe owner"
+  ],
+  "followup_source": "ca71ad7087d272fceb6133781f2fec759f3edf56",
+  "followup": "Only serialize scoped positive media fixture execution. Original singleton refusal, assertions and deadlines retained."
+}

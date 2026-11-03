@@ -1,0 +1,181 @@
+{
+  "branch_deletion_performed": false,
+  "cohort_sha256": "510131e3d14e31427cce98bb1965f8b6572612b806aa7280715e117525b2d412",
+  "deferred_acceptance_sha256": "d4a620a31c6dedc9eaeff2d333ba6cf3cdb0f67940bdf821da7c1e9945cb65f8",
+  "deferred_target_acceptance": true,
+  "kind": "nestlink-rc-publication",
+  "manifest_sha256": "75fe7e71e08130f68a641c5ed418d25b0a5484854372a277b23350e379e624d8",
+  "network_acceptance_cases": 70,
+  "network_evidence_sha256": null,
+  "network_rewrite_acceptance": "not-qualified",
+  "network_work_packages": 41,
+  "pending_acceptance_cases": 21,
+  "product_artifacts": 16,
+  "production_update_eligible": false,
+  "release_id": 432813145,
+  "remote_asset_readback_verified": true,
+  "remote_mutation_performed": true,
+  "report_acceptance_cases": 25,
+  "report_evidence_sha256": null,
+  "report_remediation_acceptance": "not-qualified",
+  "repository": "ZHanry/NestLink",
+  "repository_deletion_performed": false,
+  "repository_node_id": "R_kgDOVNHMvg",
+  "schema_version": 1,
+  "signing": {
+    "linux_update": "not-configured",
+    "oci": "not-configured",
+    "windows": "not-configured"
+  },
+  "source_revision": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+  "status": "published-prerelease",
+  "tag": "v0.8.0-rc.1",
+  "uploads": [
+    {
+      "asset_id": 705921104,
+      "asset_name": "NestLink-candidate-development-evidence.zip",
+      "bytes": 339959,
+      "readback": "github-asset-id-sha256",
+      "role": "acceptance",
+      "sha256": "18277ecdc783c3b7c1361d20cfcba200c94dd75dc693d58f4b769d458b22d005"
+    },
+    {
+      "asset_id": 705921145,
+      "asset_name": "NestLink-candidate-licenses.tar.gz",
+      "bytes": 3532671,
+      "readback": "github-asset-id-sha256",
+      "role": "licenses",
+      "sha256": "cd5e0bcfb709cf7d94c8b57230392ab707ab170b0185faea63f7999ca9cc7072"
+    },
+    {
+      "asset_id": 705921212,
+      "asset_name": "NestLink-candidate-linux-arm64-network.deb",
+      "bytes": 14532378,
+      "readback": "github-asset-id-sha256",
+      "role": "linux-arm64-network",
+      "sha256": "e569b1a5d19d4ffcff9ae543999f2062d0ea27cc9e496ced1100ef489bb7ecb3"
+    },
+    {
+      "asset_id": 705921307,
+      "asset_name": "NestLink-candidate-linux-arm64-server.deb",
+      "bytes": 7698952,
+      "readback": "github-asset-id-sha256",
+      "role": "linux-arm64-server",
+      "sha256": "ad08c2059c7d99bd9184c7826bd2073077b65681857df361dfd5b3cc04cfccd8"
+    },
+    {
+      "asset_id": 705921363,
+      "asset_name": "NestLink-candidate-linux-x64-network.deb",
+      "bytes": 15265932,
+      "readback": "github-asset-id-sha256",
+      "role": "linux-x64-network",
+      "sha256": "de6440bcb72a924713df2ce421926ae9071ee0149292c67b6fd8042472f5b078"
+    },
+    {
+      "asset_id": 705921441,
+      "asset_name": "NestLink-candidate-linux-x64-server.deb",
+      "bytes": 8116702,
+      "readback": "github-asset-id-sha256",
+      "role": "linux-x64-server",
+      "sha256": "6e8c98efb9d85ae5f4e604244559271934168a7763b2e7580c5a911cd25920f8"
+    },
+    {
+      "asset_id": 705921517,
+      "asset_name": "NestLink-candidate-materials.zip",
+      "bytes": 87116166,
+      "readback": "github-asset-id-sha256",
+      "role": "materials",
+      "sha256": "7a31962be6790f78e001adecad68fc4e65a87e27d5aa7e76607cad136d91ca07"
+    },
+    {
+      "asset_id": 705921830,
+      "asset_name": "NestLink-candidate-native-packages.json",
+      "bytes": 2333,
+      "readback": "github-asset-id-sha256",
+      "role": "native-packages-manifest",
+      "sha256": "7a48801b80e5c584993b0884d86e7a2a319c92be495b0463e593dce009f2db51"
+    },
+    {
+      "asset_id": 705921891,
+      "asset_name": "NestLink-candidate-native-payload.json",
+      "bytes": 2730,
+      "readback": "github-asset-id-sha256",
+      "role": "native-payload-manifest",
+      "sha256": "f604a83f121c00f3815a9debc1cfd489b547027fe464bb43530502e999717502"
+    },
+    {
+      "asset_id": 705921934,
+      "asset_name": "NestLink-candidate-oci-arm64.tar",
+      "bytes": 43682816,
+      "readback": "github-asset-id-sha256",
+      "role": "oci-arm64",
+      "sha256": "971d9ea2a450e05c1cc11207b6f11af505f16602bbe1f06526ee4c23b5986d52"
+    },
+    {
+      "asset_id": 705922067,
+      "asset_name": "NestLink-candidate-oci-x64.tar",
+      "bytes": 45216256,
+      "readback": "github-asset-id-sha256",
+      "role": "oci-x64",
+      "sha256": "12abf47755d6d8df3a01524840fd4d9d1e599dd29c5bcb67765b3783792e5df3"
+    },
+    {
+      "asset_id": 705922246,
+      "asset_name": "NestLink-candidate-sbom.spdx.json",
+      "bytes": 433924,
+      "readback": "github-asset-id-sha256",
+      "role": "sbom",
+      "sha256": "807eae4d4435ee32d4e696940eb81865d8d6278ee13b7ec454ef4fdd44db87b3"
+    },
+    {
+      "asset_id": 705922291,
+      "asset_name": "NestLink-candidate-source.tar",
+      "bytes": 61470720,
+      "readback": "github-asset-id-sha256",
+      "role": "source",
+      "sha256": "f17bebcdbeecaaccfca209214f56a1c928d7a74d0db9d0106f2d7de3d16daf79"
+    },
+    {
+      "asset_id": 705922550,
+      "asset_name": "NestLink-candidate-web.tar.gz",
+      "bytes": 2076691,
+      "readback": "github-asset-id-sha256",
+      "role": "web-static",
+      "sha256": "f70d18a7e43de2cdd3fe2d9c18c616575981eaa7d04b6f8c4569b57c62938664"
+    },
+    {
+      "asset_id": 705922601,
+      "asset_name": "NestLink-candidate-windows-x64-privileged.exe",
+      "bytes": 19595553,
+      "readback": "github-asset-id-sha256",
+      "role": "windows-x64-privileged-setup",
+      "sha256": "4127c39e967754b1733f8a91703569ad14ec4bf625199eee09b384121b7a34be"
+    },
+    {
+      "asset_id": 705922688,
+      "asset_name": "NestLink-candidate-windows-x64.exe",
+      "bytes": 19083850,
+      "readback": "github-asset-id-sha256",
+      "role": "windows-x64-setup",
+      "sha256": "c128f0cc88783b2aa49fd3bc504e269a002b84b08971207cc9a5321a3563315e"
+    },
+    {
+      "asset_id": 705922759,
+      "asset_name": "candidate-build-manifest.json",
+      "bytes": 8141,
+      "readback": "github-asset-id-sha256",
+      "role": "candidate-build-manifest",
+      "sha256": "75fe7e71e08130f68a641c5ed418d25b0a5484854372a277b23350e379e624d8"
+    },
+    {
+      "asset_id": 705922796,
+      "asset_name": "rc-acceptance-status.json",
+      "bytes": 230157,
+      "readback": "github-asset-id-sha256",
+      "role": "deferred-acceptance-status",
+      "sha256": "d4a620a31c6dedc9eaeff2d333ba6cf3cdb0f67940bdf821da7c1e9945cb65f8"
+    }
+  ],
+  "user_full_functional_acceptance": "pending",
+  "version": "0.8.0-rc.1"
+}

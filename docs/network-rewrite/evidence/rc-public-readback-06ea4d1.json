@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "kind": "nestlink-public-rc-readback",
+  "repository": "ZHanry/NestLink",
+  "checked_at": "2026-11-03T14:37:33.1975167Z",
+  "release_url": "https://github.com/ZHanry/NestLink/releases/tag/v0.8.0-rc.1",
+  "release_id": 432813145,
+  "published_at": "2026-11-03T14:36:23Z",
+  "tag": "v0.8.0-rc.1",
+  "source_revision": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+  "draft": false,
+  "prerelease": true,
+  "manifest_sha256": "75fe7e71e08130f68a641c5ed418d25b0a5484854372a277b23350e379e624d8",
+  "deferred_acceptance_sha256": "d4a620a31c6dedc9eaeff2d333ba6cf3cdb0f67940bdf821da7c1e9945cb65f8",
+  "product_artifacts": 16,
+  "assets": [
+    {
+      "name": "candidate-build-manifest.json",
+      "id": 705922759,
+      "role": "candidate-build-manifest",
+      "bytes": 8141,
+      "sha256": "75fe7e71e08130f68a641c5ed418d25b0a5484854372a277b23350e379e624d8",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/candidate-build-manifest.json"
+    },
+    {
+      "name": "NestLink-candidate-development-evidence.zip",
+      "id": 705921104,
+      "role": "acceptance",
+      "bytes": 339959,
+      "sha256": "18277ecdc783c3b7c1361d20cfcba200c94dd75dc693d58f4b769d458b22d005",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-development-evidence.zip"
+    },
+    {
+      "name": "NestLink-candidate-licenses.tar.gz",
+      "id": 705921145,
+      "role": "licenses",
+      "bytes": 3532671,
+      "sha256": "cd5e0bcfb709cf7d94c8b57230392ab707ab170b0185faea63f7999ca9cc7072",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-licenses.tar.gz"
+    },
+    {
+      "name": "NestLink-candidate-linux-arm64-network.deb",
+      "id": 705921212,
+      "role": "linux-arm64-network",
+      "bytes": 14532378,
+      "sha256": "e569b1a5d19d4ffcff9ae543999f2062d0ea27cc9e496ced1100ef489bb7ecb3",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-linux-arm64-network.deb"
+    },
+    {
+      "name": "NestLink-candidate-linux-arm64-server.deb",
+      "id": 705921307,
+      "role": "linux-arm64-server",
+      "bytes": 7698952,
+      "sha256": "ad08c2059c7d99bd9184c7826bd2073077b65681857df361dfd5b3cc04cfccd8",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-linux-arm64-server.deb"
+    },
+    {
+      "name": "NestLink-candidate-linux-x64-network.deb",
+      "id": 705921363,
+      "role": "linux-x64-network",
+      "bytes": 15265932,
+      "sha256": "de6440bcb72a924713df2ce421926ae9071ee0149292c67b6fd8042472f5b078",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-linux-x64-network.deb"
+    },
+    {
+      "name": "NestLink-candidate-linux-x64-server.deb",
+      "id": 705921441,
+      "role": "linux-x64-server",
+      "bytes": 8116702,
+      "sha256": "6e8c98efb9d85ae5f4e604244559271934168a7763b2e7580c5a911cd25920f8",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-linux-x64-server.deb"
+    },
+    {
+      "name": "NestLink-candidate-materials.zip",
+      "id": 705921517,
+      "role": "materials",
+      "bytes": 87116166,
+      "sha256": "7a31962be6790f78e001adecad68fc4e65a87e27d5aa7e76607cad136d91ca07",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-materials.zip"
+    },
+    {
+      "name": "NestLink-candidate-native-packages.json",
+      "id": 705921830,
+      "role": "native-packages-manifest",
+      "bytes": 2333,
+      "sha256": "7a48801b80e5c584993b0884d86e7a2a319c92be495b0463e593dce009f2db51",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-native-packages.json"
+    },
+    {
+      "name": "NestLink-candidate-native-payload.json",
+      "id": 705921891,
+      "role": "native-payload-manifest",
+      "bytes": 2730,
+      "sha256": "f604a83f121c00f3815a9debc1cfd489b547027fe464bb43530502e999717502",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-native-payload.json"
+    },
+    {
+      "name": "NestLink-candidate-oci-arm64.tar",
+      "id": 705921934,
+      "role": "oci-arm64",
+      "bytes": 43682816,
+      "sha256": "971d9ea2a450e05c1cc11207b6f11af505f16602bbe1f06526ee4c23b5986d52",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-oci-arm64.tar"
+    },
+    {
+      "name": "NestLink-candidate-oci-x64.tar",
+      "id": 705922067,
+      "role": "oci-x64",
+      "bytes": 45216256,
+      "sha256": "12abf47755d6d8df3a01524840fd4d9d1e599dd29c5bcb67765b3783792e5df3",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-oci-x64.tar"
+    },
+    {
+      "name": "NestLink-candidate-sbom.spdx.json",
+      "id": 705922246,
+      "role": "sbom",
+      "bytes": 433924,
+      "sha256": "807eae4d4435ee32d4e696940eb81865d8d6278ee13b7ec454ef4fdd44db87b3",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-sbom.spdx.json"
+    },
+    {
+      "name": "NestLink-candidate-source.tar",
+      "id": 705922291,
+      "role": "source",
+      "bytes": 61470720,
+      "sha256": "f17bebcdbeecaaccfca209214f56a1c928d7a74d0db9d0106f2d7de3d16daf79",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-source.tar"
+    },
+    {
+      "name": "NestLink-candidate-web.tar.gz",
+      "id": 705922550,
+      "role": "web-static",
+      "bytes": 2076691,
+      "sha256": "f70d18a7e43de2cdd3fe2d9c18c616575981eaa7d04b6f8c4569b57c62938664",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-web.tar.gz"
+    },
+    {
+      "name": "NestLink-candidate-windows-x64-privileged.exe",
+      "id": 705922601,
+      "role": "windows-x64-privileged-setup",
+      "bytes": 19595553,
+      "sha256": "4127c39e967754b1733f8a91703569ad14ec4bf625199eee09b384121b7a34be",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-windows-x64-privileged.exe"
+    },
+    {
+      "name": "NestLink-candidate-windows-x64.exe",
+      "id": 705922688,
+      "role": "windows-x64-setup",
+      "bytes": 19083850,
+      "sha256": "c128f0cc88783b2aa49fd3bc504e269a002b84b08971207cc9a5321a3563315e",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/NestLink-candidate-windows-x64.exe"
+    },
+    {
+      "name": "rc-acceptance-status.json",
+      "id": 705922796,
+      "role": "deferred-acceptance-status",
+      "bytes": 230157,
+      "sha256": "d4a620a31c6dedc9eaeff2d333ba6cf3cdb0f67940bdf821da7c1e9945cb65f8",
+      "url": "https://github.com/ZHanry/NestLink/releases/download/v0.8.0-rc.1/rc-acceptance-status.json"
+    }
+  ],
+  "remote_branches": [
+    "main"
+  ],
+  "production_update_eligible": false,
+  "formal_qualification_claimed": false,
+  "work_package_statuses": [
+    {
+      "count": 38,
+      "status": "in_progress"
+    },
+    {
+      "count": 2,
+      "status": "not_started"
+    },
+    {
+      "count": 1,
+      "status": "verified_lab"
+    }
+  ],
+  "acceptance_statuses": [
+    {
+      "count": 3,
+      "status": "failed"
+    },
+    {
+      "count": 1,
+      "status": "in_progress"
+    },
+    {
+      "count": 63,
+      "status": "not_run"
+    },
+    {
+      "count": 1,
+      "status": "passed"
+    },
+    {
+      "count": 2,
+      "status": "running"
+    }
+  ],
+  "preserved_failed_cases": [
+    {
+      "id": "AC17",
+      "title": "多 relay 身份与配额",
+      "status": "failed"
+    },
+    {
+      "id": "AC47",
+      "title": "异地应用与游戏发现",
+      "status": "failed"
+    },
+    {
+      "id": "AC68",
+      "title": "容量和多节点资源",
+      "status": "failed"
+    }
+  ]
+}

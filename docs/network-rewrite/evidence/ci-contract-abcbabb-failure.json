@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "abcbabb049317e61a74a05414596868b6b633de0",
+  "run_id": 41634575939,
+  "run_attempt": 1,
+  "conclusion": "failure",
+  "failed_job_id": 125912406931,
+  "failed_case": "network_paths::relays::simultaneous_sqlite_admission_cannot_overbook_the_shared_global_limit",
+  "result": {
+    "passed": 109,
+    "failed": 1,
+    "ignored": 1
+  },
+  "observed_error": "Conflict",
+  "contract_log_sha256": "414f106762ed975bb556f5bfffa15aace071f24afa287f64e9f43c52f9c2a5c4",
+  "official_artifact_id": 13231170648,
+  "official_archive_digest": "sha256:33f1ace40c40365df966bfa61560d862cb1344f0a5ecdba7f26e9239fa206ef2",
+  "official_archive_bytes": 37129,
+  "producer_contract_log_hash_verified": true,
+  "scope": "Original case and assertion failure preserved. Fixed fixture time is checked against a real 1000ms monotonic clock margin; CPU pressure is a scheduling hypothesis, not a measured trace of the exact Conflict origin.",
+  "followup_source": "354de25cedf1e04a2318d7f13c4474f43e3b0fd2",
+  "followup": "Isolate whole contract cases, retain the internal two-worker barrier and all original assertions, time margins and command deadlines.",
+  "qualification_claimed": false,
+  "official_archive_hash_and_size_independently_verified": true
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+  "checked_at": "2026-11-03T14:35:36.610884+00:00",
+  "required_runs": [
+    {
+      "id": 41640973128,
+      "run_attempt": 1,
+      "head_sha": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+      "path": ".github/workflows/rust-core.yml",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41640973128",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41640984370,
+      "run_attempt": 1,
+      "head_sha": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+      "path": ".github/workflows/web-build.yml",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41640984370",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41640991268,
+      "run_attempt": 1,
+      "head_sha": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+      "path": ".github/workflows/secret-scan.yml",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41640991268",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41640997325,
+      "run_attempt": 1,
+      "head_sha": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+      "path": ".github/workflows/codeql.yml",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41640997325",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41640978902,
+      "run_attempt": 1,
+      "head_sha": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+      "path": ".github/workflows/network-rewrite.yml",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41640978902",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41641002470,
+      "run_attempt": 1,
+      "head_sha": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+      "path": ".github/workflows/linux-network-package.yml",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41641002470",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 41641007793,
+      "run_attempt": 1,
+      "head_sha": "06ea4d1096bb30baf3acfa32290519a1cb3bcee8",
+      "path": ".github/workflows/network-upgrade.yml",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41641007793",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "quality_state": "required-checks-passed"
+}

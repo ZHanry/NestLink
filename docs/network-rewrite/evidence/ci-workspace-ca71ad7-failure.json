@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "ca71ad7087d272fceb6133781f2fec759f3edf56",
+  "run_id": 41628147819,
+  "run_attempt": 1,
+  "workflow_conclusion": "cancelled",
+  "cancellation_reason": "Superseded by exact-source abcbabb sequential-workspace validation; Windows workspace failure remains recorded.",
+  "failed_job_id": 125890638982,
+  "failed_target": "nestlink-app-core --test native_session",
+  "failed_case": "route_set::signed_direct_recovery_failed_allocation_does_not_retry_a_new_id_or_attach_business",
+  "result": {
+    "passed": 9,
+    "failed": 1,
+    "ignored": 0
+  },
+  "observed_log": [
+    "video decoded: pts=6748 ingress_to_output_us=282",
+    "video playout queued: pts=6748 ahead_us=59715 late_us=0",
+    "video playout late: stage=presentation-poll pts=6748 late_us=49488",
+    "Error: Elapsed(())"
+  ],
+  "diagnostic_scope": "The only prepared frame was discarded before the withdrawal branch; dedicated exact-source sequential product recovery passed separately. No whole-platform or acceptance pass claimed.",
+  "local_log_sha256": "23333451ef244de7a07a533f41a998f3c1bd151fdde51737c6f7e175a17ee0ce",
+  "followup_source": "abcbabb049317e61a74a05414596868b6b633de0",
+  "change": "All full-workspace cases run sequentially on both OSes. Product code, test-internal concurrency, assertions and per-case thresholds unchanged; aggregate runner allocation 90 minutes.",
+  "acceptance_claimed": false
+}
