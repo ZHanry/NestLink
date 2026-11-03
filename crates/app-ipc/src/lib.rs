@@ -740,7 +740,7 @@ async fn serve_requests(
                 }
                 Command::Submit { mut action } => {
                     // The authenticated local connection supplies runtime identity;
-                    // a command body cannot impersonate another desktop preview.
+                    // a command body cannot select a different daemon runtime.
                     match &mut action {
                         nestlink_app_core::Action::PreviewNativeSpace { request } => request.runtime_id = connection.runtime_id().to_owned(),
                         nestlink_app_core::Action::ConfirmNativeSpace { confirmation } => confirmation.runtime_id = connection.runtime_id().to_owned(),
