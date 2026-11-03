@@ -1573,7 +1573,8 @@
       ],
       "evidence_refs": [
         "docs/network-rewrite/evidence/development-run-bd1f298.json",
-        "docs/network-rewrite/evidence/production-carriers-745c05a.json"
+        "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+        "docs/network-rewrite/evidence/network-run-4a4496b.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
@@ -1583,6 +1584,16 @@
         "whole_task_passed": false,
         "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
         "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+      },
+      "latest_scoped_verification": {
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "run_id": 41488417514,
+        "scope": "Original private_services32passed/0failed/5dedicated-roleignored includes originaltwo-hopUDP; fullnetworkworkflow7/9becausebothcontractformatfailed. All11officialZIP/1652filepayload/1607manifestsverified. OldUDPfailure retainedandcauseunproven.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/network-run-4a4496b.json"
+        ]
       }
     },
     {
@@ -2190,7 +2201,8 @@
         "docs/adr/network/0034-private-service-business-authority.md",
         "docs/adr/network/0037-private-service-relay-authority.md",
         "docs/network-rewrite/evidence/private-business-145e26b.json",
-        "docs/network-rewrite/evidence/production-carriers-745c05a.json"
+        "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+        "docs/network-rewrite/evidence/network-run-4a4496b.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
@@ -2200,6 +2212,16 @@
         "whole_task_passed": false,
         "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
         "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+      },
+      "latest_scoped_verification": {
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "run_id": 41488417514,
+        "scope": "Original private_services32passed/0failed/5dedicated-roleignored includes originaltwo-hopUDP; fullnetworkworkflow7/9becausebothcontractformatfailed. All11officialZIP/1652filepayload/1607manifestsverified. OldUDPfailure retainedandcauseunproven.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/network-run-4a4496b.json"
+        ]
       }
     },
     {
@@ -2710,7 +2732,8 @@
         "docs/network-rewrite/offline-resident-checkpoint.md",
         "docs/network-rewrite/evidence/native-offline-resident-f570243.json",
         "docs/network-rewrite/evidence/media-libyuv-fa52387.json",
-        "docs/adr/network/0073-reuse-bundled-libyuv-vp8-conversion.md"
+        "docs/adr/network/0073-reuse-bundled-libyuv-vp8-conversion.md",
+        "docs/network-rewrite/evidence/native-offline-resident-4a4496b.json"
       ],
       "blockers": [],
       "partial_verification": {
@@ -2722,7 +2745,16 @@
           "docs/network-rewrite/evidence/offline-resident-091686c.json"
         ]
       },
-      "implementation_notes": "有限离线 AppCore、实际守护进程 CLI/IPC、捕获、文件及重建路径已接线。78a7cb4/41451102046 的 Windows TLS 原始全数据、两次262144字节下载、重建和 IPC退出通过；该轮 Windows2/4、Linux0/4，仍保留整体失败。f570243 修复真实 Xauthority 与成功载体退役竞态，41455823431 按原断言验证中；保护登录固定阶段诊断继续定位独立失败，完整 W27 及目标验收未完成。 f570243/41455823431实际Windows3/4、Linux0/4；保留两边QUIC提前终止及Linux原即时预算断言失败。c0bb7ac直接读取同一累计meter，新增原真实文件后即时读回断言及停止原因诊断，1dd4efd/41461596961按原范围复验中。"
+      "implementation_notes": "有限离线 AppCore、实际守护进程 CLI/IPC、捕获、文件及重建路径已接线。78a7cb4/41451102046 的 Windows TLS 原始全数据、两次262144字节下载、重建和 IPC退出通过；该轮 Windows2/4、Linux0/4，仍保留整体失败。f570243 修复真实 Xauthority 与成功载体退役竞态，41455823431 按原断言验证中；保护登录固定阶段诊断继续定位独立失败，完整 W27 及目标验收未完成。 f570243/41455823431实际Windows3/4、Linux0/4；保留两边QUIC提前终止及Linux原即时预算断言失败。c0bb7ac直接读取同一累计meter，新增原真实文件后即时读回断言及停止原因诊断，1dd4efd/41461596961按原范围复验中。",
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488486927 original focused resident workflow success: bothOS original4/4 including actual capture/VP8 pixels, two262144B file reads, original rebuild/Exit/management-terminal fences; all46 files and38 producer entries verified. This is the exact focused matrix scope, not wholeW27/target acceptance.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/native-offline-resident-4a4496b.json"
+        ]
+      }
     },
     {
       "id": "W28",
@@ -3077,10 +3109,24 @@
         "docs/network-rewrite/evidence/compressed-native-0f8d9a3.json",
         "docs/network-rewrite/evidence/windows-media-owner-3e292c4.json",
         "docs/network-rewrite/evidence/windows-media-owner-3cac12f.json",
-        "docs/network-rewrite/evidence/windows-hevc-target-3e292c4.json"
+        "docs/network-rewrite/evidence/windows-hevc-target-3e292c4.json",
+        "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
+        "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
       ],
       "blockers": [],
-      "implementation_notes": "Existing production Windows capture H264 and same-device GPU presenter are retained. Source50df7ec adds bounded actual DXGI-submit QPC cadence and exact original-owner target analyzer; hosted source50 workflow41369064258 and source1518218 workflow41369702948 running. Submit cadence is not scanout or complete GPU/58fps/p95 qualification; full target chain remains open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33. 2ffc870/41452426792的工具已由Actions构建并严格检查，官方归档及160个文件全部核验后在真实Windows11普通交互令牌执行7个原始有限合成工作负载：H264 CPU编码/解码通过；GPU controller coded/display几何失败，HEVC Main8两个方向严格VUI色彩拒绝，Main10两个方向MF创建失败。原始失败保留；不能抵扣实际桌面58fps/HDR/444或整个W32/W33验收。 670c662/41457044725原实机GPU有限命令通过，24输入/17解码色彩校验提交、checked flush及owner关闭；仍非60fps/scanout或完整W32/W33。0f8d9a3/41455441207在Windows 2025原2TLS/12帧IPC测试及整个owner工作流通过；保留先前Windows 2022失败。HEVC Main8/Main10原失败不变。"
+      "implementation_notes": "Existing production Windows capture H264 and same-device GPU presenter are retained. Source50df7ec adds bounded actual DXGI-submit QPC cadence and exact original-owner target analyzer; hosted source50 workflow41369064258 and source1518218 workflow41369702948 running. Submit cadence is not scanout or complete GPU/58fps/p95 qualification; full target chain remains open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33. 2ffc870/41452426792的工具已由Actions构建并严格检查，官方归档及160个文件全部核验后在真实Windows11普通交互令牌执行7个原始有限合成工作负载：H264 CPU编码/解码通过；GPU controller coded/display几何失败，HEVC Main8两个方向严格VUI色彩拒绝，Main10两个方向MF创建失败。原始失败保留；不能抵扣实际桌面58fps/HDR/444或整个W32/W33验收。 670c662/41457044725原实机GPU有限命令通过，24输入/17解码色彩校验提交、checked flush及owner关闭；仍非60fps/scanout或完整W32/W33。0f8d9a3/41455441207在Windows 2025原2TLS/12帧IPC测试及整个owner工作流通过；保留先前Windows 2022失败。HEVC Main8/Main10原失败不变。",
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488394638 all4original Windows2022/2025 owner+Windows/Linux peerjobs success; /41488400735 tools strictbuild success;5officialZIP and234fileentries verified,171producer entries match. OriginalAMFnotice bytes restored without altering originaldigest.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
+          "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
+        ],
+        "target_passed": false,
+        "target_result": "all8originalMFandexplicitAMFcommands_failed"
+      }
     },
     {
       "id": "W33",
@@ -3143,10 +3189,24 @@
         "docs/network-rewrite/evidence/windows-hevc-target-b6b5520.json",
         "docs/network-rewrite/evidence/windows-media-owner-3e292c4.json",
         "docs/network-rewrite/evidence/windows-media-owner-3cac12f.json",
-        "docs/network-rewrite/evidence/windows-hevc-target-3e292c4.json"
+        "docs/network-rewrite/evidence/windows-hevc-target-3e292c4.json",
+        "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
+        "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
       ],
       "blockers": [],
-      "implementation_notes": "Sourcebc52249/1518218 adds strict actual Main8 complete96bit PTL/geometry/VUI output validation and original-GPU-NV12 MF encoder owner boundary. Source7a53a28 adds independentv3 canonical69-byte format while preservingv2 H26457-byte contract; signed authority/NLMF/IPC/provider/capture/presenter production integration remains in progress. Synthetic HEVC probes do not complete this task; advanced444/10bit/HDR/high-frame fallback remains mandatory work. Source59882e4 additionally wires Main10/P010/v4 explicit SDR authority, compressed/readback/shared-surface ownership and separate8byte64MiB admission;4K144 is a target configuration rather than actual probe evidence. Originalhardware/HDR/444/target gaps remain open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33. 2ffc870/41452426792的工具已由Actions构建并严格检查，官方归档及160个文件全部核验后在真实Windows11普通交互令牌执行7个原始有限合成工作负载：H264 CPU编码/解码通过；GPU controller coded/display几何失败，HEVC Main8两个方向严格VUI色彩拒绝，Main10两个方向MF创建失败。原始失败保留；不能抵扣实际桌面58fps/HDR/444或整个W32/W33验收。 670c662/41457044725原实机GPU有限命令通过，24输入/17解码色彩校验提交、checked flush及owner关闭；仍非60fps/scanout或完整W32/W33。0f8d9a3/41455441207在Windows 2025原2TLS/12帧IPC测试及整个owner工作流通过；保留先前Windows 2022失败。HEVC Main8/Main10原失败不变。 b6b5520原Main8两个方向实机仍同SPS primaries=0拒绝；8项CodecAPI IsSupported均E_NOTIMPL，MF两侧属性正确，独立成熟解析待执行。"
+      "implementation_notes": "Sourcebc52249/1518218 adds strict actual Main8 complete96bit PTL/geometry/VUI output validation and original-GPU-NV12 MF encoder owner boundary. Source7a53a28 adds independentv3 canonical69-byte format while preservingv2 H26457-byte contract; signed authority/NLMF/IPC/provider/capture/presenter production integration remains in progress. Synthetic HEVC probes do not complete this task; advanced444/10bit/HDR/high-frame fallback remains mandatory work. Source59882e4 additionally wires Main10/P010/v4 explicit SDR authority, compressed/readback/shared-surface ownership and separate8byte64MiB admission;4K144 is a target configuration rather than actual probe evidence. Originalhardware/HDR/444/target gaps remain open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33. 2ffc870/41452426792的工具已由Actions构建并严格检查，官方归档及160个文件全部核验后在真实Windows11普通交互令牌执行7个原始有限合成工作负载：H264 CPU编码/解码通过；GPU controller coded/display几何失败，HEVC Main8两个方向严格VUI色彩拒绝，Main10两个方向MF创建失败。原始失败保留；不能抵扣实际桌面58fps/HDR/444或整个W32/W33验收。 670c662/41457044725原实机GPU有限命令通过，24输入/17解码色彩校验提交、checked flush及owner关闭；仍非60fps/scanout或完整W32/W33。0f8d9a3/41455441207在Windows 2025原2TLS/12帧IPC测试及整个owner工作流通过；保留先前Windows 2022失败。HEVC Main8/Main10原失败不变。 b6b5520原Main8两个方向实机仍同SPS primaries=0拒绝；8项CodecAPI IsSupported均E_NOTIMPL，MF两侧属性正确，独立成熟解析待执行。",
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488394638 all4original Windows2022/2025 owner+Windows/Linux peerjobs success; /41488400735 tools strictbuild success;5officialZIP and234fileentries verified,171producer entries match. OriginalAMFnotice bytes restored without altering originaldigest.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
+          "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
+        ],
+        "target_passed": false,
+        "target_result": "all8originalMFandexplicitAMFcommands_failed"
+      }
     },
     {
       "id": "W34",
@@ -3211,10 +3271,20 @@
       ],
       "evidence_refs": [
         "docs/network-rewrite/evidence/linux-package-upgrade-index.json",
-        "docs/network-rewrite/evidence/linux-package-attempt-2f79d4b.json"
+        "docs/network-rewrite/evidence/linux-package-attempt-2f79d4b.json",
+        "docs/network-rewrite/evidence/linux-package-4a4496b.json"
       ],
       "blockers": [],
-      "implementation_notes": "Exactsource2f79d4b run41412721054 Linux x64+ARM64 fully passed real dpkg SIGKILL interrupted-upgrade, pinned old-package recovery, originalpayload/modes/sentinel, current-candidate restore/uninstall and owned-port-conflict recovery. All4 ZIPs/86receiptfiles/74commandlog digests checked. Actual Windows Inno install/reinstall/payload/uninstall required path implemented, awaits new same-source candidate. Originalproductversion0.7.0-rc.1; no0.8/GPU/target/signing qualification."
+      "implementation_notes": "Exactsource2f79d4b run41412721054 Linux x64+ARM64 fully passed real dpkg SIGKILL interrupted-upgrade, pinned old-package recovery, originalpayload/modes/sentinel, current-candidate restore/uninstall and owned-port-conflict recovery. All4 ZIPs/86receiptfiles/74commandlog digests checked. Actual Windows Inno install/reinstall/payload/uninstall required path implemented, awaits new same-source candidate. Originalproductversion0.7.0-rc.1; no0.8/GPU/target/signing qualification.",
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488408420 Linux x86_64+ARM64 packagejobs success: actual unsigned installeddaemon/server, ordinary/root refusal, installedTCPconflict, interrupteddpkg upgrade andoriginalpackage rollback;4officialZIP,92downloadfiles,86producer payloads verified. No signedproduction update orfullsystem claim.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/linux-package-4a4496b.json"
+        ]
+      }
     },
     {
       "id": "W35",
@@ -3277,7 +3347,8 @@
       "evidence_refs": [
         "docs/network-rewrite/evidence/linux-package-upgrade-index.json",
         "docs/adr/network/0061-bound-production-capability-exchange.md",
-        "docs/network-rewrite/evidence/production-carriers-745c05a.json"
+        "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+        "docs/network-rewrite/evidence/linux-package-4a4496b.json"
       ],
       "blockers": [],
       "implementation_notes": "Exact2871a02 run41236371694 x64+ARM64 actual retainedv0.7.0-rc.1 old/native server and new server schema admission/encrypted migration/rollback/fence experiment success. Old source82f1c8d actual schema25 frozen (historical release-body24 was inaccurate). Production bounded authenticated capability exchange now wired into explicit packet/2 and network-remote/1 routed remote, original permit/group/peer binding, legacy explicit protocol, no silent downgrade; sourceefec full network41369688849 pending. Complete mixed client/server/node and target rollback matrix remains mandatory.",
@@ -3288,6 +3359,15 @@
         "whole_task_passed": false,
         "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
         "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+      },
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488408420 Linux x86_64+ARM64 packagejobs success: actual unsigned installeddaemon/server, ordinary/root refusal, installedTCPconflict, interrupteddpkg upgrade andoriginalpackage rollback;4officialZIP,92downloadfiles,86producer payloads verified. No signedproduction update orfullsystem claim.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/linux-package-4a4496b.json"
+        ]
       }
     },
     {
@@ -3536,10 +3616,20 @@
       ],
       "evidence_refs": [
         "docs/network-rewrite/evidence/capacity-attempts-20261102.json",
-        "docs/network-rewrite/evidence/perf-e226eec.json"
+        "docs/network-rewrite/evidence/perf-e226eec.json",
+        "docs/network-rewrite/evidence/capacity-none-4ec2c3c.json"
       ],
       "blockers": [],
-      "implementation_notes": "Original100enrolled-installation/20pair/1000realTCPflow/3wave capacity implemented. All failed attempts retained, including private-parent, originalPOSTrate, originaldatabase429 and debug8c6 immutableleaseexpiry. Run41431119457 passed7nativeHTTP+6multiplex+negotiation, established20control owners, butzero flow_ready. Explicitproductionrelease-profile41434724934runs unchangedassertions/deadlines/rates/quotas/currentness checks; no success inferred. Real24hourtargetsoak remainsunrun. Sourceb971 run41437445247 now executed release load: original7HTTP/1negotiation/6multiplex pass,20controlready,61flowready, original3s management timeout before1000live. Failure and11receipt hashes plus officialZIP verified. Separate named eight-open shared-origin ramp observation added without altering original pair-window execution or full-load/lease/assertion requirements; neither passed nor fullW39 qualification claimed. Explicit8a35c4e origin-window release41441918578 reached598flowready thenoriginalauthorityexpiry; stillfailed before1000live. ADR0066 removesrepeatedsame-requestverificationwithoutcache,originaldeadlinesunchanged;newexact-sourcevalidationpending. d7e735d原release pair-window在751flow_ready后原权限期限拒绝；f3的1000readiness随后原2秒保持检查存活数为0，仍失败。ADR0069复用单次调用内同一sealed lease，9df4140/41454242981原100/20/1000/3wave pair-window在跑，所有原期限、实时管理校验、配额和断言保持。 9df4140/41454242981已失败：798 flow_ready后原403权限拒绝，未完成1000同时存活流。ADR0070同事务路径复用ddadc328/41459674511与ADR0071原usage verifier typed projection复用a233500/41460136078按原负载验证中；不改期限、预算、配额或实时授权。"
+      "implementation_notes": "Original100enrolled-installation/20pair/1000realTCPflow/3wave capacity implemented. All failed attempts retained, including private-parent, originalPOSTrate, originaldatabase429 and debug8c6 immutableleaseexpiry. Run41431119457 passed7nativeHTTP+6multiplex+negotiation, established20control owners, butzero flow_ready. Explicitproductionrelease-profile41434724934runs unchangedassertions/deadlines/rates/quotas/currentness checks; no success inferred. Real24hourtargetsoak remainsunrun. Sourceb971 run41437445247 now executed release load: original7HTTP/1negotiation/6multiplex pass,20controlready,61flowready, original3s management timeout before1000live. Failure and11receipt hashes plus officialZIP verified. Separate named eight-open shared-origin ramp observation added without altering original pair-window execution or full-load/lease/assertion requirements; neither passed nor fullW39 qualification claimed. Explicit8a35c4e origin-window release41441918578 reached598flowready thenoriginalauthorityexpiry; stillfailed before1000live. ADR0066 removesrepeatedsame-requestverificationwithoutcache,originaldeadlinesunchanged;newexact-sourcevalidationpending. d7e735d原release pair-window在751flow_ready后原权限期限拒绝；f3的1000readiness随后原2秒保持检查存活数为0，仍失败。ADR0069复用单次调用内同一sealed lease，9df4140/41454242981原100/20/1000/3wave pair-window在跑，所有原期限、实时管理校验、配额和断言保持。 9df4140/41454242981已失败：798 flow_ready后原403权限拒绝，未完成1000同时存活流。ADR0070同事务路径复用ddadc328/41459674511与ADR0071原usage verifier typed projection复用a233500/41460136078按原负载验证中；不改期限、预算、配额或实时授权。",
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4ec2c3c /41486568717 formal unsampled release capacity success:100registered nodes,20active pairs,1000liveflows perwave,3waves, original2secondhold anddrain/rebind; all31producer payloads andofficialZIP verified. Previous failedattempts and diagnostic passed=false remain; no wholeAC68 or24hoursoak claim.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/capacity-none-4ec2c3c.json"
+        ]
+      }
     },
     {
       "id": "W40",
@@ -4866,7 +4956,9 @@
       "status": "not_run",
       "source_revision": null,
       "artifact_sha256": null,
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/native-offline-resident-4a4496b.json"
+      ],
       "environment": {},
       "limitations": [],
       "global_policy_ids": [
@@ -4877,6 +4969,15 @@
       "execution_provenance": {
         "kind": null,
         "evidence_refs": []
+      },
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488486927 original focused resident workflow success: bothOS original4/4 including actual capture/VP8 pixels, two262144B file reads, original rebuild/Exit/management-terminal fences; all46 files and38 producer entries verified. This is the exact focused matrix scope, not wholeW27/target acceptance.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/native-offline-resident-4a4496b.json"
+        ]
       }
     },
     {
@@ -4894,7 +4995,9 @@
       "status": "not_run",
       "source_revision": null,
       "artifact_sha256": null,
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/native-offline-resident-4a4496b.json"
+      ],
       "environment": {},
       "limitations": [],
       "global_policy_ids": [
@@ -4905,6 +5008,15 @@
       "execution_provenance": {
         "kind": null,
         "evidence_refs": []
+      },
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488486927 original focused resident workflow success: bothOS original4/4 including actual capture/VP8 pixels, two262144B file reads, original rebuild/Exit/management-terminal fences; all46 files and38 producer entries verified. This is the exact focused matrix scope, not wholeW27/target acceptance.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/native-offline-resident-4a4496b.json"
+        ]
       }
     },
     {
@@ -5120,7 +5232,9 @@
       "artifact_sha256": null,
       "evidence_refs": [
         "docs/network-rewrite/evidence/windows-direction-target-2ffc870.json",
-        "docs/network-rewrite/evidence/windows-direction-target-670c662.json"
+        "docs/network-rewrite/evidence/windows-direction-target-670c662.json",
+        "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
+        "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
       ],
       "environment": {},
       "limitations": [
@@ -5134,6 +5248,18 @@
       "execution_provenance": {
         "kind": null,
         "evidence_refs": []
+      },
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488394638 all4original Windows2022/2025 owner+Windows/Linux peerjobs success; /41488400735 tools strictbuild success;5officialZIP and234fileentries verified,171producer entries match. OriginalAMFnotice bytes restored without altering originaldigest.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
+          "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
+        ],
+        "target_passed": false,
+        "target_result": "all8originalMFandexplicitAMFcommands_failed"
       }
     },
     {
@@ -5150,7 +5276,10 @@
       "status": "not_run",
       "source_revision": null,
       "artifact_sha256": null,
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
+        "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
+      ],
       "environment": {},
       "limitations": [],
       "global_policy_ids": [
@@ -5161,6 +5290,18 @@
       "execution_provenance": {
         "kind": null,
         "evidence_refs": []
+      },
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488394638 all4original Windows2022/2025 owner+Windows/Linux peerjobs success; /41488400735 tools strictbuild success;5officialZIP and234fileentries verified,171producer entries match. OriginalAMFnotice bytes restored without altering originaldigest.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
+          "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
+        ],
+        "target_passed": false,
+        "target_result": "all8originalMFandexplicitAMFcommands_failed"
       }
     },
     {
@@ -5179,7 +5320,9 @@
       "artifact_sha256": null,
       "evidence_refs": [
         "docs/network-rewrite/evidence/windows-direction-target-2ffc870.json",
-        "docs/network-rewrite/evidence/windows-direction-target-670c662.json"
+        "docs/network-rewrite/evidence/windows-direction-target-670c662.json",
+        "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
+        "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
       ],
       "environment": {},
       "limitations": [
@@ -5193,6 +5336,18 @@
       "execution_provenance": {
         "kind": null,
         "evidence_refs": []
+      },
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488394638 all4original Windows2022/2025 owner+Windows/Linux peerjobs success; /41488400735 tools strictbuild success;5officialZIP and234fileentries verified,171producer entries match. OriginalAMFnotice bytes restored without altering originaldigest.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
+          "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
+        ],
+        "target_passed": false,
+        "target_result": "all8originalMFandexplicitAMFcommands_failed"
       }
     },
     {
@@ -5210,7 +5365,10 @@
       "status": "not_run",
       "source_revision": null,
       "artifact_sha256": null,
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
+        "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
+      ],
       "environment": {},
       "limitations": [],
       "global_policy_ids": [
@@ -5221,6 +5379,18 @@
       "execution_provenance": {
         "kind": null,
         "evidence_refs": []
+      },
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488394638 all4original Windows2022/2025 owner+Windows/Linux peerjobs success; /41488400735 tools strictbuild success;5officialZIP and234fileentries verified,171producer entries match. OriginalAMFnotice bytes restored without altering originaldigest.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
+          "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
+        ],
+        "target_passed": false,
+        "target_result": "all8originalMFandexplicitAMFcommands_failed"
       }
     },
     {
@@ -5237,7 +5407,9 @@
       "status": "not_run",
       "source_revision": null,
       "artifact_sha256": null,
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/linux-package-4a4496b.json"
+      ],
       "environment": {},
       "limitations": [],
       "global_policy_ids": [
@@ -5248,6 +5420,15 @@
       "execution_provenance": {
         "kind": null,
         "evidence_refs": []
+      },
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488408420 Linux x86_64+ARM64 packagejobs success: actual unsigned installeddaemon/server, ordinary/root refusal, installedTCPconflict, interrupteddpkg upgrade andoriginalpackage rollback;4officialZIP,92downloadfiles,86producer payloads verified. No signedproduction update orfullsystem claim.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/linux-package-4a4496b.json"
+        ]
       }
     },
     {
@@ -5263,7 +5444,9 @@
       "status": "not_run",
       "source_revision": null,
       "artifact_sha256": null,
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/linux-package-4a4496b.json"
+      ],
       "environment": {},
       "limitations": [],
       "global_policy_ids": [
@@ -5274,6 +5457,15 @@
       "execution_provenance": {
         "kind": null,
         "evidence_refs": []
+      },
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488408420 Linux x86_64+ARM64 packagejobs success: actual unsigned installeddaemon/server, ordinary/root refusal, installedTCPconflict, interrupteddpkg upgrade andoriginalpackage rollback;4officialZIP,92downloadfiles,86producer payloads verified. No signedproduction update orfullsystem claim.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/linux-package-4a4496b.json"
+        ]
       }
     },
     {
@@ -5290,7 +5482,9 @@
       "status": "not_run",
       "source_revision": null,
       "artifact_sha256": null,
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/linux-package-4a4496b.json"
+      ],
       "environment": {},
       "limitations": [],
       "global_policy_ids": [
@@ -5301,6 +5495,15 @@
       "execution_provenance": {
         "kind": null,
         "evidence_refs": []
+      },
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488408420 Linux x86_64+ARM64 packagejobs success: actual unsigned installeddaemon/server, ordinary/root refusal, installedTCPconflict, interrupteddpkg upgrade andoriginalpackage rollback;4officialZIP,92downloadfiles,86producer payloads verified. No signedproduction update orfullsystem claim.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/linux-package-4a4496b.json"
+        ]
       }
     },
     {
@@ -5318,7 +5521,9 @@
       "status": "not_run",
       "source_revision": null,
       "artifact_sha256": null,
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/linux-package-4a4496b.json"
+      ],
       "environment": {},
       "limitations": [],
       "global_policy_ids": [
@@ -5329,6 +5534,15 @@
       "execution_provenance": {
         "kind": null,
         "evidence_refs": []
+      },
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4a4496b /41488408420 Linux x86_64+ARM64 packagejobs success: actual unsigned installeddaemon/server, ordinary/root refusal, installedTCPconflict, interrupteddpkg upgrade andoriginalpackage rollback;4officialZIP,92downloadfiles,86producer payloads verified. No signedproduction update orfullsystem claim.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/linux-package-4a4496b.json"
+        ]
       }
     },
     {
@@ -5504,11 +5718,13 @@
       "source_revision": null,
       "artifact_sha256": null,
       "evidence_refs": [
-        "docs/network-rewrite/evidence/capacity-attempts-20261102.json"
+        "docs/network-rewrite/evidence/capacity-attempts-20261102.json",
+        "docs/network-rewrite/evidence/capacity-none-4ec2c3c.json"
       ],
       "environment": {},
       "limitations": [
-        "Original failures are retained across all 15 attempts. Sources 1dd4efd (798 flow_ready) and 10d6224 (800 flow_ready) do not prove 1000 simultaneously live flows or any complete three-wave run. All 10d pre-load currentness, canonical-view, live snapshot, HTTP and multiplex regressions plus strict-currentness passed. No whole AC68 or 24-hour soak qualification."
+        "Original failures are retained across all 15 attempts. Sources 1dd4efd (798 flow_ready) and 10d6224 (800 flow_ready) do not prove 1000 simultaneously live flows or any complete three-wave run. All 10d pre-load currentness, canonical-view, live snapshot, HTTP and multiplex regressions plus strict-currentness passed. No whole AC68 or 24-hour soak qualification.",
+        "Latest formal unsampled4ec2c3c/41486568717 completes original100/20/1000 threewave pair-windows workload; prior failed attempts retained. This covers that workload only; fullgroup resource-growth/otherapplicable schedules and24hsoak need separate complete evidence."
       ],
       "global_policy_ids": [
         "R01",
@@ -5518,6 +5734,15 @@
       "execution_provenance": {
         "kind": null,
         "evidence_refs": []
+      },
+      "latest_scoped_verification": {
+        "recorded_at": "2026-11-03T01:41:30.700Z",
+        "scope": "4ec2c3c /41486568717 formal unsampled release capacity success:100registered nodes,20active pairs,1000liveflows perwave,3waves, original2secondhold anddrain/rebind; all31producer payloads andofficialZIP verified. Previous failedattempts and diagnostic passed=false remain; no wholeAC68 or24hoursoak claim.",
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/capacity-none-4ec2c3c.json"
+        ]
       }
     },
     {

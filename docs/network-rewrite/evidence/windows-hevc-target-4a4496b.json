@@ -1,0 +1,343 @@
+{
+  "schema_version": 1,
+  "scope": "finite exact original Windows HEVC MF and explicit AMF direction diagnostics; independent failures retained",
+  "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+  "build_provenance": {
+    "workflow": ".github/workflows/windows-media-target-tools.yml",
+    "run_id": 41488400735,
+    "run_attempt": 1,
+    "runner_environment": "github-hosted",
+    "artifact_id": 13164255472,
+    "official_archive_sha256": "397557734a6830cc2f8eb0719fc054b4742b2b16aadeab5929f706bb9e17eb60",
+    "verified_payload_count": 167,
+    "evidence_ref": "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json"
+  },
+  "execution_provenance": {
+    "kind": "actual-authorized-ordinary-interactive-Windows-target",
+    "inventory": {
+      "captured_at": "2026-11-03T01:28:19.8954859Z",
+      "os": {
+        "Caption": "Microsoft Windows 11 专业版",
+        "Version": "10.0.26300",
+        "BuildNumber": "26300",
+        "OSArchitecture": "64 位"
+      },
+      "gpu": [
+        {
+          "Name": "GameViewer Virtual Display Adapter",
+          "DriverVersion": "15.6.5.199",
+          "DriverDate": "2026-02-28T08:00:00+08:00",
+          "AdapterCompatibility": "GameViewer",
+          "PNPDeviceID": "ROOT\\DISPLAY\\0000"
+        },
+        {
+          "Name": "AMD Radeon(TM) Graphics",
+          "DriverVersion": "30.0.13040.13",
+          "DriverDate": "2021-11-30T08:00:00+08:00",
+          "AdapterCompatibility": "Advanced Micro Devices, Inc.",
+          "PNPDeviceID": "PCI\\VEN_1002&DEV_1638&SUBSYS_20241EE7&REV_C5\\4&20C24D55&0&0041"
+        },
+        {
+          "Name": "NVIDIA GeForce GTX 1650",
+          "DriverVersion": "32.0.16.2101",
+          "DriverDate": "2026-10-19T08:00:00+08:00",
+          "AdapterCompatibility": "NVIDIA",
+          "PNPDeviceID": "PCI\\VEN_10DE&DEV_1F9D&SUBSYS_20241EE7&REV_A1\\4&C337064&0&0009"
+        }
+      ],
+      "administrator_token": false
+    },
+    "locally_built": false,
+    "wrapper_source": "$ErrorActionPreference='Stop'\n$toolDir='C:\\Users\\Zhang\\.codex\\tmp\\nestlink-media-4a4496b-41488400735\\tools-13164255472-verified'\n$outDir='C:\\Users\\Zhang\\.codex\\tmp\\nestlink-target-4a4496b'\n$identity=[Security.Principal.WindowsIdentity]::GetCurrent()\n$principal=New-Object Security.Principal.WindowsPrincipal($identity)\n$inventory=[ordered]@{captured_at=[DateTime]::UtcNow.ToString('o');os=Get-CimInstance Win32_OperatingSystem | Select-Object Caption,Version,BuildNumber,OSArchitecture;gpu=@(Get-CimInstance Win32_VideoController | Select-Object Name,DriverVersion,DriverDate,AdapterCompatibility,PNPDeviceID);administrator_token=$principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)}\n$inventory | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $outDir 'target-inventory.json') -Encoding utf8\n$results=@()\nforeach($backend in @('mf','amf')) {\n  $name=if($backend -eq 'mf'){'windows-hevc-direction-probe.exe'}else{'windows-amf-hevc-direction-probe.exe'}\n  $exe=Join-Path $toolDir $name\n  $hash=(Get-FileHash -Algorithm SHA256 -LiteralPath $exe).Hash.ToLowerInvariant()\n  foreach($profile in @('main8','main10')) { foreach($direction in @('encode','decode')) {\n    $label=$backend+'-'+$profile+'-'+$direction\n    $args=@($direction,$profile,'1920','1080','60','8000')\n    $info=New-Object Diagnostics.ProcessStartInfo\n    $info.FileName=$exe\n    $info.Arguments=$args -join ' '\n    $info.WorkingDirectory=$toolDir\n    $info.UseShellExecute=$false\n    $info.CreateNoWindow=$true\n    $info.RedirectStandardOutput=$true\n    $info.RedirectStandardError=$true\n    $start=[DateTime]::UtcNow.ToString('o')\n    $sw=[Diagnostics.Stopwatch]::StartNew()\n    $proc=[Diagnostics.Process]::Start($info)\n    $stdout=$proc.StandardOutput.ReadToEndAsync()\n    $stderr=$proc.StandardError.ReadToEndAsync()\n    $proc.WaitForExit()\n    $sw.Stop()\n    [IO.File]::WriteAllText((Join-Path $outDir ($label+'.stdout.log')),$stdout.Result,(New-Object Text.UTF8Encoding($false)))\n    [IO.File]::WriteAllText((Join-Path $outDir ($label+'.stderr.log')),$stderr.Result,(New-Object Text.UTF8Encoding($false)))\n    $row=[ordered]@{backend=$backend;profile=$profile;direction=$direction;executable=$exe;executable_sha256=$hash;arguments=$args;started_at=$start;duration_ms=$sw.Elapsed.TotalMilliseconds;exit_code=$proc.ExitCode;stdout=$label+'.stdout.log';stderr=$label+'.stderr.log'}\n    $results+= $row\n    $results | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $outDir 'target-results.json') -Encoding utf8\n    Write-Output ($label+' exit='+$proc.ExitCode+' duration_ms='+$sw.Elapsed.TotalMilliseconds)\n  }}\n}\n",
+    "results": [
+      {
+        "backend": "mf",
+        "profile": "main8",
+        "direction": "encode",
+        "executable": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-media-4a4496b-41488400735\\tools-13164255472-verified\\windows-hevc-direction-probe.exe",
+        "executable_sha256": "7443bf22dcbdef4ed37e06c54495da9bd7b6abb75465cbe43c838a2ba39b4964",
+        "arguments": [
+          "encode",
+          "main8",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "started_at": "2026-11-03T01:28:20.2943773Z",
+        "duration_ms": 5387.3727,
+        "exit_code": 1,
+        "stdout": "mf-main8-encode.stdout.log",
+        "stderr": "mf-main8-encode.stderr.log",
+        "logs": [
+          {
+            "path": "mf-main8-encode.stdout.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "text": ""
+          },
+          {
+            "path": "mf-main8-encode.stderr.log",
+            "bytes": 9627,
+            "sha256": "da55710eee3ccb4b62ddf5809ffe1933acbf44083096c44a26ba42f87b832472",
+            "text": "mf source device: codec=hevc direction=encode owner_thread=38760 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=encode owner_thread=38760 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=1\r\nmf adapter request: codec=hevc owner_thread=38760 requested_adapter=0x000000000000bcf6 type=LUID_blob bytes=8 hr=0x00000000 enum=MFTEnum2\r\nmf enumeration: codec=hevc direction=encode owner_thread=38760 hr=0x00000000 count=2 exact_adapter_scope=1\r\nmf activation: codec=hevc direction=encode owner_thread=38760 index=0 phase=candidate hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=mft_enum2_exact_adapter_scope name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=38760 index=0 phase=activate hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=mft_enum2_exact_adapter_scope name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nhevc_mf_configure encoder=1 stage=set_compressed_output hr=0x00000000\r\nhevc_mf_configure encoder=1 stage=set_raw_input hr=0x00000000\r\nhevc_mf_color_codecapi hr=0x00000000\r\nhevc_mf_color_property name=input.primaries expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.primaries expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=input.transfer expected=5 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.transfer expected=5 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=input.matrix expected=1 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.matrix expected=1 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=input.range expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.range expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_current_type encoder=1 output=0 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=1 output=0 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=1 output=0 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=1 output=0 attribute=range hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=1 output=1 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=1 output=1 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=1 output=1 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=1 output=1 attribute=range hr=0x00000000 value=2\r\nhevc_mf_configure encoder=1 stage=begin_streaming hr=0x00000000\r\nhevc_mf_configure encoder=1 stage=start_of_stream hr=0x00000000\r\nmf activation: codec=hevc direction=encode owner_thread=38760 index=0 phase=selected hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=mft_enum2_exact_adapter_scope name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf source device: codec=hevc direction=decode owner_thread=38760 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=decode owner_thread=38760 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=0\r\nmf enumeration: codec=hevc direction=decode owner_thread=38760 hr=0x00000000 count=0 exact_adapter_scope=0\r\nmf activation: codec=hevc direction=decode owner_thread=38760 index=0 phase=candidate hr=0x00000000 binding_required=0 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=not_required name_hr=0x00000000 name=\"HEVCVideoExtension\" clsid_hr=0xc00d36e6 clsid=\"unknown\"\r\nmf activation: codec=hevc direction=decode owner_thread=38760 index=0 phase=activate hr=0x00000000 binding_required=0 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=not_required name_hr=0x00000000 name=\"HEVCVideoExtension\" clsid_hr=0xc00d36e6 clsid=\"unknown\"\r\nhevc_mf_configure encoder=0 stage=set_compressed_input hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=set_raw_output hr=0x00000000\r\nhevc_mf_current_type encoder=0 output=0 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=0 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=0 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=0 attribute=range hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=1 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=1 attribute=range hr=0x00000000 value=2\r\nhevc_mf_configure encoder=0 stage=begin_streaming hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=start_of_stream hr=0x00000000\r\nmf activation: codec=hevc direction=decode owner_thread=38760 index=0 phase=selected hr=0x00000000 binding_required=0 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=not_required name_hr=0x00000000 name=\"HEVCVideoExtension\" clsid_hr=0xc00d36e6 clsid=\"unknown\"\r\nmf enumeration: codec=hevc direction=decode owner_thread=38760 hr=0x00000000 count=1 exact_adapter_scope=0\r\nmf activation: codec=hevc direction=decode owner_thread=38760 index=0 phase=candidate hr=0x00000000 binding_required=0 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=not_required name_hr=0x00000000 name=\"HEVCVideoExtension\" clsid_hr=0xc00d36e6 clsid=\"unknown\"\r\nmf activation: codec=hevc direction=decode owner_thread=38760 index=0 phase=activate hr=0x00000000 binding_required=0 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=not_required name_hr=0x00000000 name=\"HEVCVideoExtension\" clsid_hr=0xc00d36e6 clsid=\"unknown\"\r\nhevc_mf_configure encoder=0 stage=set_compressed_input hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=set_raw_output hr=0x00000000\r\nhevc_mf_current_type encoder=0 output=0 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=0 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=0 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=0 attribute=range hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=1 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=1 attribute=range hr=0x00000000 value=2\r\nhevc_mf_configure encoder=0 stage=begin_streaming hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=start_of_stream hr=0x00000000\r\nmf activation: codec=hevc direction=decode owner_thread=38760 index=0 phase=selected hr=0x00000000 binding_required=0 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=not_required name_hr=0x00000000 name=\"HEVCVideoExtension\" clsid_hr=0xc00d36e6 clsid=\"unknown\"\r\nhevc_mf_rejected_parameter_set kind=32 bytes=23 recorded=23 hex=[40, 01, 0c, 01, ff, ff, 01, 60, 00, 00, 03, 00, b0, 00, 00, 03, 00, 00, 03, 00, 78, 2c, 09]\nhevc_mf_rejected_parameter_set kind=33 bytes=52 recorded=52 hex=[42, 01, 01, 01, 60, 00, 00, 03, 00, b0, 00, 00, 03, 00, 00, 03, 00, 78, a0, 03, c0, 80, 11, 07, cb, cb, 92, 42, 95, 92, e3, ff, 00, 01, 00, 01, 6a, 00, 02, 04, 08, 00, 00, 03, 00, 08, 00, 00, 03, 01, e6, 20]\nhevc_mf_rejected_parameter_set kind=34 bytes=7 recorded=7 hex=[44, 01, e0, f3, c0, 4c, 90]\nhost_gpu_mf_stage=close calls=1 accepted=1 pool_blocked=0 output_samples=1 output_need_input=0 copy_pending=0 busy_slots=0 asynchronous=1 input_credits=0 output_credits=0\r\nError: Custom { kind: InvalidData, error: \"hevc_probe_au_rejected target=1920x1080 au_bytes=754 nal_count=5 first16=[(Some(35), 3), (Some(32), 23), (Some(33), 52), (Some(34), 7), (Some(20), 649)] cause=(hevc_probe_rejection code=sps.color field=vui.colour_primaries actual=0 required=1 rbsp_bit=263)\" }\n"
+          }
+        ]
+      },
+      {
+        "backend": "mf",
+        "profile": "main8",
+        "direction": "decode",
+        "executable": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-media-4a4496b-41488400735\\tools-13164255472-verified\\windows-hevc-direction-probe.exe",
+        "executable_sha256": "7443bf22dcbdef4ed37e06c54495da9bd7b6abb75465cbe43c838a2ba39b4964",
+        "arguments": [
+          "decode",
+          "main8",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "started_at": "2026-11-03T01:28:25.7013412Z",
+        "duration_ms": 965.7012,
+        "exit_code": 1,
+        "stdout": "mf-main8-decode.stdout.log",
+        "stderr": "mf-main8-decode.stderr.log",
+        "logs": [
+          {
+            "path": "mf-main8-decode.stdout.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "text": ""
+          },
+          {
+            "path": "mf-main8-decode.stderr.log",
+            "bytes": 9627,
+            "sha256": "f4d9c941f81283d86b54c69ed6eeeae7b33d9d2407138a111292da10bb30ccf6",
+            "text": "mf source device: codec=hevc direction=encode owner_thread=40564 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=encode owner_thread=40564 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=1\r\nmf adapter request: codec=hevc owner_thread=40564 requested_adapter=0x000000000000bcf6 type=LUID_blob bytes=8 hr=0x00000000 enum=MFTEnum2\r\nmf enumeration: codec=hevc direction=encode owner_thread=40564 hr=0x00000000 count=2 exact_adapter_scope=1\r\nmf activation: codec=hevc direction=encode owner_thread=40564 index=0 phase=candidate hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=mft_enum2_exact_adapter_scope name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf activation: codec=hevc direction=encode owner_thread=40564 index=0 phase=activate hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=mft_enum2_exact_adapter_scope name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nhevc_mf_configure encoder=1 stage=set_compressed_output hr=0x00000000\r\nhevc_mf_configure encoder=1 stage=set_raw_input hr=0x00000000\r\nhevc_mf_color_codecapi hr=0x00000000\r\nhevc_mf_color_property name=input.primaries expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.primaries expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=input.transfer expected=5 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.transfer expected=5 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=input.matrix expected=1 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.matrix expected=1 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=input.range expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_color_property name=output.range expected=2 supported=0x80004001 set=0x8000000a read=0x8000000a actual_vt=0 actual=0 result=0x00000000\r\nhevc_mf_current_type encoder=1 output=0 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=1 output=0 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=1 output=0 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=1 output=0 attribute=range hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=1 output=1 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=1 output=1 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=1 output=1 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=1 output=1 attribute=range hr=0x00000000 value=2\r\nhevc_mf_configure encoder=1 stage=begin_streaming hr=0x00000000\r\nhevc_mf_configure encoder=1 stage=start_of_stream hr=0x00000000\r\nmf activation: codec=hevc direction=encode owner_thread=40564 index=0 phase=selected hr=0x00000000 binding_required=1 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=mft_enum2_exact_adapter_scope name_hr=0x00000000 name=\"AMDh265Encoder\" clsid_hr=0x00000000 clsid=\"{5FD65104-A924-4835-AB71-09A223E3E37B}\"\r\nmf source device: codec=hevc direction=decode owner_thread=40564 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=decode owner_thread=40564 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=0\r\nmf enumeration: codec=hevc direction=decode owner_thread=40564 hr=0x00000000 count=0 exact_adapter_scope=0\r\nmf activation: codec=hevc direction=decode owner_thread=40564 index=0 phase=candidate hr=0x00000000 binding_required=0 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=not_required name_hr=0x00000000 name=\"HEVCVideoExtension\" clsid_hr=0xc00d36e6 clsid=\"unknown\"\r\nmf activation: codec=hevc direction=decode owner_thread=40564 index=0 phase=activate hr=0x00000000 binding_required=0 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=not_required name_hr=0x00000000 name=\"HEVCVideoExtension\" clsid_hr=0xc00d36e6 clsid=\"unknown\"\r\nhevc_mf_configure encoder=0 stage=set_compressed_input hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=set_raw_output hr=0x00000000\r\nhevc_mf_current_type encoder=0 output=0 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=0 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=0 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=0 attribute=range hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=1 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=1 attribute=range hr=0x00000000 value=2\r\nhevc_mf_configure encoder=0 stage=begin_streaming hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=start_of_stream hr=0x00000000\r\nmf activation: codec=hevc direction=decode owner_thread=40564 index=0 phase=selected hr=0x00000000 binding_required=0 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=not_required name_hr=0x00000000 name=\"HEVCVideoExtension\" clsid_hr=0xc00d36e6 clsid=\"unknown\"\r\nmf enumeration: codec=hevc direction=decode owner_thread=40564 hr=0x00000000 count=1 exact_adapter_scope=0\r\nmf activation: codec=hevc direction=decode owner_thread=40564 index=0 phase=candidate hr=0x00000000 binding_required=0 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=not_required name_hr=0x00000000 name=\"HEVCVideoExtension\" clsid_hr=0xc00d36e6 clsid=\"unknown\"\r\nmf activation: codec=hevc direction=decode owner_thread=40564 index=0 phase=activate hr=0x00000000 binding_required=0 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=not_required name_hr=0x00000000 name=\"HEVCVideoExtension\" clsid_hr=0xc00d36e6 clsid=\"unknown\"\r\nhevc_mf_configure encoder=0 stage=set_compressed_input hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=set_raw_output hr=0x00000000\r\nhevc_mf_current_type encoder=0 output=0 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=0 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=0 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=0 attribute=range hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=matrix hr=0x00000000 value=1\r\nhevc_mf_current_type encoder=0 output=1 attribute=primaries hr=0x00000000 value=2\r\nhevc_mf_current_type encoder=0 output=1 attribute=transfer hr=0x00000000 value=5\r\nhevc_mf_current_type encoder=0 output=1 attribute=range hr=0x00000000 value=2\r\nhevc_mf_configure encoder=0 stage=begin_streaming hr=0x00000000\r\nhevc_mf_configure encoder=0 stage=start_of_stream hr=0x00000000\r\nmf activation: codec=hevc direction=decode owner_thread=40564 index=0 phase=selected hr=0x00000000 binding_required=0 adapter_binding_hr=0xc00d36e6 adapter_blob_bytes=0 activation_adapter_known=0 activation_adapter=0x0000000000000000 selection_binding_hr=0x00000000 selection_binding_basis=not_required name_hr=0x00000000 name=\"HEVCVideoExtension\" clsid_hr=0xc00d36e6 clsid=\"unknown\"\r\nhevc_mf_rejected_parameter_set kind=32 bytes=23 recorded=23 hex=[40, 01, 0c, 01, ff, ff, 01, 60, 00, 00, 03, 00, b0, 00, 00, 03, 00, 00, 03, 00, 78, 2c, 09]\nhevc_mf_rejected_parameter_set kind=33 bytes=52 recorded=52 hex=[42, 01, 01, 01, 60, 00, 00, 03, 00, b0, 00, 00, 03, 00, 00, 03, 00, 78, a0, 03, c0, 80, 11, 07, cb, cb, 92, 42, 95, 92, e3, ff, 00, 01, 00, 01, 6a, 00, 02, 04, 08, 00, 00, 03, 00, 08, 00, 00, 03, 01, e6, 20]\nhevc_mf_rejected_parameter_set kind=34 bytes=7 recorded=7 hex=[44, 01, e0, f3, c0, 4c, 90]\nhost_gpu_mf_stage=close calls=1 accepted=1 pool_blocked=0 output_samples=1 output_need_input=0 copy_pending=0 busy_slots=0 asynchronous=1 input_credits=0 output_credits=0\r\nError: Custom { kind: InvalidData, error: \"hevc_probe_au_rejected target=1920x1080 au_bytes=754 nal_count=5 first16=[(Some(35), 3), (Some(32), 23), (Some(33), 52), (Some(34), 7), (Some(20), 649)] cause=(hevc_probe_rejection code=sps.color field=vui.colour_primaries actual=0 required=1 rbsp_bit=263)\" }\n"
+          }
+        ]
+      },
+      {
+        "backend": "mf",
+        "profile": "main10",
+        "direction": "encode",
+        "executable": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-media-4a4496b-41488400735\\tools-13164255472-verified\\windows-hevc-direction-probe.exe",
+        "executable_sha256": "7443bf22dcbdef4ed37e06c54495da9bd7b6abb75465cbe43c838a2ba39b4964",
+        "arguments": [
+          "encode",
+          "main10",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "started_at": "2026-11-03T01:28:26.6733996Z",
+        "duration_ms": 796.1253,
+        "exit_code": 1,
+        "stdout": "mf-main10-encode.stdout.log",
+        "stderr": "mf-main10-encode.stderr.log",
+        "logs": [
+          {
+            "path": "mf-main10-encode.stdout.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "text": ""
+          },
+          {
+            "path": "mf-main10-encode.stderr.log",
+            "bytes": 659,
+            "sha256": "dcec1202534f8f664faa93c017d2116ba06c00da000906e38e9315dca0402926",
+            "text": "mf source device: codec=hevc direction=encode owner_thread=34876 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=encode owner_thread=34876 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=1\r\nmf adapter request: codec=hevc owner_thread=34876 requested_adapter=0x000000000000bcf6 type=LUID_blob bytes=8 hr=0x00000000 enum=MFTEnum2\r\nmf enumeration: codec=hevc direction=encode owner_thread=34876 hr=0x00000000 count=0 exact_adapter_scope=1\r\nError: Custom { kind: Other, error: \"Media Foundation H.264 HEVC creation failed (0xc00d5212)\" }\n"
+          }
+        ]
+      },
+      {
+        "backend": "mf",
+        "profile": "main10",
+        "direction": "decode",
+        "executable": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-media-4a4496b-41488400735\\tools-13164255472-verified\\windows-hevc-direction-probe.exe",
+        "executable_sha256": "7443bf22dcbdef4ed37e06c54495da9bd7b6abb75465cbe43c838a2ba39b4964",
+        "arguments": [
+          "decode",
+          "main10",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "started_at": "2026-11-03T01:28:27.4740889Z",
+        "duration_ms": 333.921,
+        "exit_code": 1,
+        "stdout": "mf-main10-decode.stdout.log",
+        "stderr": "mf-main10-decode.stderr.log",
+        "logs": [
+          {
+            "path": "mf-main10-decode.stdout.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "text": ""
+          },
+          {
+            "path": "mf-main10-decode.stderr.log",
+            "bytes": 659,
+            "sha256": "737e84c0d01f2f9a3d9da3eb134f9d516ff35914e42385bd88b07c0127a489dc",
+            "text": "mf source device: codec=hevc direction=encode owner_thread=45860 adapter_hr=0x00000000\r\nmf source identity: codec=hevc direction=encode owner_thread=45860 adapter=0x000000000000bcf6 vendor=0x1002 device=0x1638 description=\"AMD Radeon(TM) Graphics\" driver_hr=0x00000000 driver=0x001e000032f0000d binding_required=1\r\nmf adapter request: codec=hevc owner_thread=45860 requested_adapter=0x000000000000bcf6 type=LUID_blob bytes=8 hr=0x00000000 enum=MFTEnum2\r\nmf enumeration: codec=hevc direction=encode owner_thread=45860 hr=0x00000000 count=0 exact_adapter_scope=1\r\nError: Custom { kind: Other, error: \"Media Foundation H.264 HEVC creation failed (0xc00d5212)\" }\n"
+          }
+        ]
+      },
+      {
+        "backend": "amf",
+        "profile": "main8",
+        "direction": "encode",
+        "executable": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-media-4a4496b-41488400735\\tools-13164255472-verified\\windows-amf-hevc-direction-probe.exe",
+        "executable_sha256": "c6ef5908cef0ef5d5639a7bfa08d7d9ca59a0ee69f4412b6d8b989296721e2af",
+        "arguments": [
+          "encode",
+          "main8",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "started_at": "2026-11-03T01:28:27.8152137Z",
+        "duration_ms": 3044.056,
+        "exit_code": 1,
+        "stdout": "amf-main8-encode.stdout.log",
+        "stderr": "amf-main8-encode.stderr.log",
+        "logs": [
+          {
+            "path": "amf-main8-encode.stdout.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "text": ""
+          },
+          {
+            "path": "amf-main8-encode.stderr.log",
+            "bytes": 2453,
+            "sha256": "8dfef58d786e7fa6eb491ff8f2d8d039baca22e608aa7e743087b4a55cc404da",
+            "text": "amf source adapter=0x000000000000bcf6 driver=0x001e000032f0000d vendor=0x1002 device=0x1638 depth=8 geometry=1920x1080\r\namf runtime path=\"C:\\Windows\\system32\\amfrt64.dll\" headers=0x0001000500030000 runtime=0x0001000400160000 hr=0x00000000\r\namf hardware-caps native_format=1 native_dx11=1 width_min=128 width_max=4096 height_min=128 height_max=4096 vertical_memory_alignment=32\r\namf property=\"HevcUsage\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcFrameSize\" declared_type=5 requested_type=5 requested_scalar=-1 read_type=5 read_scalar=-1 result=0\r\namf property=\"HevcFrameRate\" declared_type=7 requested_type=7 requested_scalar=-1 read_type=7 read_scalar=-1 result=0\r\namf property=\"HevcProfile\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcTier\" declared_type=2 requested_type=2 requested_scalar=0 read_type=2 read_scalar=0 result=0\r\namf property=\"HevcColorBitDepth\" declared_type=2 requested_type=2 requested_scalar=8 read_type=2 read_scalar=8 result=0\r\namf property=\"HevcRateControlMethod\" declared_type=2 requested_type=2 requested_scalar=3 read_type=2 read_scalar=3 result=0\r\namf property=\"HevcTargetBitrate\" declared_type=2 requested_type=2 requested_scalar=8000000 read_type=2 read_scalar=8000000 result=0\r\namf property=\"HevcGOPSize\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcRateControlSkipFrameEnable\" declared_type=1 requested_type=1 requested_scalar=0 read_type=1 read_scalar=0 result=0\r\namf property=\"HevcInColorProfile\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcOutColorProfile\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcInColorTransferChar\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcOutColorTransferChar\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcInColorPrimaries\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcOutColorPrimaries\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf stage=property-info result=4\r\nError: Custom { kind: Other, error: \"AMD AMF open failed (0x80070032); no fallback\" }\n"
+          }
+        ]
+      },
+      {
+        "backend": "amf",
+        "profile": "main8",
+        "direction": "decode",
+        "executable": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-media-4a4496b-41488400735\\tools-13164255472-verified\\windows-amf-hevc-direction-probe.exe",
+        "executable_sha256": "c6ef5908cef0ef5d5639a7bfa08d7d9ca59a0ee69f4412b6d8b989296721e2af",
+        "arguments": [
+          "decode",
+          "main8",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "started_at": "2026-11-03T01:28:30.8635919Z",
+        "duration_ms": 194.4358,
+        "exit_code": 1,
+        "stdout": "amf-main8-decode.stdout.log",
+        "stderr": "amf-main8-decode.stderr.log",
+        "logs": [
+          {
+            "path": "amf-main8-decode.stdout.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "text": ""
+          },
+          {
+            "path": "amf-main8-decode.stderr.log",
+            "bytes": 2453,
+            "sha256": "8dfef58d786e7fa6eb491ff8f2d8d039baca22e608aa7e743087b4a55cc404da",
+            "text": "amf source adapter=0x000000000000bcf6 driver=0x001e000032f0000d vendor=0x1002 device=0x1638 depth=8 geometry=1920x1080\r\namf runtime path=\"C:\\Windows\\system32\\amfrt64.dll\" headers=0x0001000500030000 runtime=0x0001000400160000 hr=0x00000000\r\namf hardware-caps native_format=1 native_dx11=1 width_min=128 width_max=4096 height_min=128 height_max=4096 vertical_memory_alignment=32\r\namf property=\"HevcUsage\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcFrameSize\" declared_type=5 requested_type=5 requested_scalar=-1 read_type=5 read_scalar=-1 result=0\r\namf property=\"HevcFrameRate\" declared_type=7 requested_type=7 requested_scalar=-1 read_type=7 read_scalar=-1 result=0\r\namf property=\"HevcProfile\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcTier\" declared_type=2 requested_type=2 requested_scalar=0 read_type=2 read_scalar=0 result=0\r\namf property=\"HevcColorBitDepth\" declared_type=2 requested_type=2 requested_scalar=8 read_type=2 read_scalar=8 result=0\r\namf property=\"HevcRateControlMethod\" declared_type=2 requested_type=2 requested_scalar=3 read_type=2 read_scalar=3 result=0\r\namf property=\"HevcTargetBitrate\" declared_type=2 requested_type=2 requested_scalar=8000000 read_type=2 read_scalar=8000000 result=0\r\namf property=\"HevcGOPSize\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcRateControlSkipFrameEnable\" declared_type=1 requested_type=1 requested_scalar=0 read_type=1 read_scalar=0 result=0\r\namf property=\"HevcInColorProfile\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcOutColorProfile\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcInColorTransferChar\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcOutColorTransferChar\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcInColorPrimaries\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf property=\"HevcOutColorPrimaries\" declared_type=2 requested_type=2 requested_scalar=1 read_type=2 read_scalar=1 result=0\r\namf stage=property-info result=4\r\nError: Custom { kind: Other, error: \"AMD AMF open failed (0x80070032); no fallback\" }\n"
+          }
+        ]
+      },
+      {
+        "backend": "amf",
+        "profile": "main10",
+        "direction": "encode",
+        "executable": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-media-4a4496b-41488400735\\tools-13164255472-verified\\windows-amf-hevc-direction-probe.exe",
+        "executable_sha256": "c6ef5908cef0ef5d5639a7bfa08d7d9ca59a0ee69f4412b6d8b989296721e2af",
+        "arguments": [
+          "encode",
+          "main10",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "started_at": "2026-11-03T01:28:31.0623868Z",
+        "duration_ms": 195.7829,
+        "exit_code": 1,
+        "stdout": "amf-main10-encode.stdout.log",
+        "stderr": "amf-main10-encode.stderr.log",
+        "logs": [
+          {
+            "path": "amf-main10-encode.stdout.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "text": ""
+          },
+          {
+            "path": "amf-main10-encode.stderr.log",
+            "bytes": 465,
+            "sha256": "5600bb8223c5de66d824da799d1c509bc6f87cda93f69ac04fcb53e717140dd5",
+            "text": "amf source adapter=0x000000000000bcf6 driver=0x001e000032f0000d vendor=0x1002 device=0x1638 depth=10 geometry=1920x1080\r\namf runtime path=\"C:\\Windows\\system32\\amfrt64.dll\" headers=0x0001000500030000 runtime=0x0001000400160000 hr=0x00000000\r\namf hardware-caps native_format=0 native_dx11=1 width_min=128 width_max=4096 height_min=128 height_max=4096 vertical_memory_alignment=32\r\nError: Custom { kind: Other, error: \"AMD AMF open failed (0x887a0004); no fallback\" }\n"
+          }
+        ]
+      },
+      {
+        "backend": "amf",
+        "profile": "main10",
+        "direction": "decode",
+        "executable": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-media-4a4496b-41488400735\\tools-13164255472-verified\\windows-amf-hevc-direction-probe.exe",
+        "executable_sha256": "c6ef5908cef0ef5d5639a7bfa08d7d9ca59a0ee69f4412b6d8b989296721e2af",
+        "arguments": [
+          "decode",
+          "main10",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "started_at": "2026-11-03T01:28:31.2629615Z",
+        "duration_ms": 201.4634,
+        "exit_code": 1,
+        "stdout": "amf-main10-decode.stdout.log",
+        "stderr": "amf-main10-decode.stderr.log",
+        "logs": [
+          {
+            "path": "amf-main10-decode.stdout.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "text": ""
+          },
+          {
+            "path": "amf-main10-decode.stderr.log",
+            "bytes": 465,
+            "sha256": "5600bb8223c5de66d824da799d1c509bc6f87cda93f69ac04fcb53e717140dd5",
+            "text": "amf source adapter=0x000000000000bcf6 driver=0x001e000032f0000d vendor=0x1002 device=0x1638 depth=10 geometry=1920x1080\r\namf runtime path=\"C:\\Windows\\system32\\amfrt64.dll\" headers=0x0001000500030000 runtime=0x0001000400160000 hr=0x00000000\r\namf hardware-caps native_format=0 native_dx11=1 width_min=128 width_max=4096 height_min=128 height_max=4096 vertical_memory_alignment=32\r\nError: Custom { kind: Other, error: \"AMD AMF open failed (0x887a0004); no fallback\" }\n"
+          }
+        ]
+      }
+    ]
+  },
+  "summary": {
+    "commands": 8,
+    "passed": 0,
+    "failed": 8,
+    "whole_task_passed": false,
+    "qualification_claimed": false,
+    "release_ready": false
+  },
+  "findings": [
+    "MF Main8 both directions: exact adapter encoder activates, original SPS colour_primaries=0 required1 rejects access unit.",
+    "MF Main10 both directions: zero exact adapter scope hardware encoder, creation 0xc00d5212.",
+    "AMF Main8 both directions: installed runtime1.4.22 vsheaders1.5.3; first16required properties actual type/readback match, next property-info returns numeric result4 (AMF_INVALID_ARG); no missing-property attribution until source review; open fails0x80070032. Missing propertyname not logged; no unproven missing property attribution.",
+    "AMF Main10 bothdirections: exactdevice caps native_format=0 forP010, open rejects0x887a0004.",
+    "Decode workload includes original matching encoder preparation; neither decoder obtained a qualifying prepared stream. Do not infer independent decoder failure or success.",
+    "No backend/depth/device fallback, asserted SPS edits, driver installation, local build or relaxed deadline. Original25secondLuanti failedstatus retained separately."
+  ]
+}
