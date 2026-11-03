@@ -214,7 +214,7 @@ bool legacy_optional_property(const wchar_t* name) noexcept {
 
 const wchar_t* base_layer_alias(const wchar_t* name, amf::AMF_VARIANT_TYPE type) noexcept {
     // Official HEVC SVC table: TL<temporal>.QL<quality>.<parameter>.
-    // Only the exact base-layer aliases of the three controls used here are
+    // Only the exact base-layer aliases of the five controls used here are
     // accepted, with their exact declared types. No prefix stripping occurs.
     if (type == amf::AMF_VARIANT_RATE && std::wcscmp(name, AMF_VIDEO_ENCODER_HEVC_FRAMERATE) == 0)
         return L"TL0.QL0.HevcFrameRate";
@@ -222,6 +222,10 @@ const wchar_t* base_layer_alias(const wchar_t* name, amf::AMF_VARIANT_TYPE type)
         return L"TL0.QL0.HevcTargetBitrate";
     if (type == amf::AMF_VARIANT_BOOL && std::wcscmp(name, AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_SKIP_FRAME_ENABLE) == 0)
         return L"TL0.QL0.HevcRateControlSkipFrameEnable";
+    if (type == amf::AMF_VARIANT_BOOL && std::wcscmp(name, AMF_VIDEO_ENCODER_HEVC_ENFORCE_HRD) == 0)
+        return L"TL0.QL0.HevcEnforceHRD";
+    if (type == amf::AMF_VARIANT_BOOL && std::wcscmp(name, AMF_VIDEO_ENCODER_HEVC_FILLER_DATA_ENABLE) == 0)
+        return L"TL0.QL0.HevcFillerDataEnable";
     return nullptr;
 }
 
@@ -313,6 +317,12 @@ HRESULT describe_property(Storage* storage, const wchar_t* name, bool optional_e
         name, static_cast<int>(described), optional_equivalent ? 1u : 0u, *info ? 1u : 0u);
     log_property_descriptor(name, "property-info-descriptor", -1, described, *info);
     if (described == AMF_OK) {
+        // These required rate-control switches are declared bool in both old
+        // and pinned official HEVC interfaces. A canonical name cannot hide a
+        // differently typed descriptor, even if the runtime could coerce false.
+        if ((std::wcscmp(name, AMF_VIDEO_ENCODER_HEVC_ENFORCE_HRD) == 0
+            || std::wcscmp(name, AMF_VIDEO_ENCODER_HEVC_FILLER_DATA_ENABLE) == 0)
+            && (!*info || (*info)->type != amf::AMF_VARIANT_BOOL)) return E_UNEXPECTED;
         if (*info && valid_property_name((*info)->name) && std::wcscmp((*info)->name, name) == 0) return S_OK;
         if (verify_base_layer_alias(storage, name, *info) == S_OK) return S_OK;
         log_property_inventory(storage, name);
@@ -487,6 +497,11 @@ HRESULT configure(Encoder& state, uint32_t kbps) noexcept {
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_COLOR_BIT_DEPTH, amf::AMFVariant(amf_int64(state.depth)));
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD, amf::AMFVariant(amf_int64(AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD_CBR)));
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_TARGET_BITRATE, amf::AMFVariant(amf_int64(kbps) * 1000));
+    // Remote-control transport uses bounded queues and does not need CBR
+    // padding for an HRD channel. Require both official switches explicitly;
+    // actual SPS timing/HRD syntax remains subject to the original strict validator.
+    if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_ENFORCE_HRD, amf::AMFVariant(false));
+    if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_FILLER_DATA_ENABLE, amf::AMFVariant(false));
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_GOP_SIZE, amf::AMFVariant(amf_int64(1)));
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_SKIP_FRAME_ENABLE, amf::AMFVariant(false));
     if (FAILED(hr)) return hr;
@@ -900,8 +915,12 @@ extern "C" uint32_t nl_amf_base_layer_alias_contract() noexcept {
         bool HasProperty(const wchar_t*) const noexcept { return has_property; }
         AMF_RESULT GetProperty(const wchar_t*, amf::AMFVariant* value) const noexcept {
             if (value_error) return AMF_FAIL;
-            *value = value_wrong_type ? amf::AMFVariant(amf_int64(60))
-                : amf::AMFVariant(AMFConstructRate(value_wrong ? 59u : 60u, 1));
+            if (entries[0].type == amf::AMF_VARIANT_BOOL) {
+                *value = value_wrong_type ? amf::AMFVariant(amf_int64(0)) : amf::AMFVariant(value_wrong);
+            } else {
+                *value = value_wrong_type ? amf::AMFVariant(amf_int64(60))
+                    : amf::AMFVariant(AMFConstructRate(value_wrong ? 59u : 60u, 1));
+            }
             return AMF_OK;
         }
     };
@@ -982,6 +1001,69 @@ extern "C" uint32_t nl_amf_base_layer_alias_contract() noexcept {
         Inventory index_error;
         index_error.index_error = true;
         if (FAILED(inspect(index_error))) passed |= 2097152;
+        // Extend the original contract without changing its result mask or
+        // accepting any wider alias. Every new flag must satisfy all checks.
+        const std::pair<const wchar_t*, const wchar_t*> flags[] = {
+            {AMF_VIDEO_ENCODER_HEVC_ENFORCE_HRD, L"TL0.QL0.HevcEnforceHRD"},
+            {AMF_VIDEO_ENCODER_HEVC_FILLER_DATA_ENABLE, L"TL0.QL0.HevcFillerDataEnable"},
+        };
+        const amf::AMFVariant disabled(false);
+        auto flag_inventory = [](Inventory& inventory, const std::pair<const wchar_t*, const wchar_t*>& flag) noexcept {
+            inventory.requested = flag.first;
+            inventory.entries[0].name = flag.second;
+            inventory.entries[0].type = amf::AMF_VARIANT_BOOL;
+            inventory.different.name = flag.second;
+            inventory.different.type = amf::AMF_VARIANT_BOOL;
+        };
+        for (const auto& flag : flags) {
+            Inventory exact;
+            flag_inventory(exact, flag);
+            if (inspect(exact) != S_OK || verify_alias_value(&exact, flag.second, disabled) != AMF_OK) return 0;
+            Inventory canonical;
+            flag_inventory(canonical, flag);
+            canonical.entries[0].name = flag.first;
+            if (inspect(canonical) != S_OK) return 0;
+            Inventory typed;
+            flag_inventory(typed, flag);
+            typed.entries[0].type = amf::AMF_VARIANT_INT64;
+            if (!FAILED(inspect(typed))) return 0;
+            Inventory canonical_typed;
+            flag_inventory(canonical_typed, flag);
+            canonical_typed.entries[0].name = flag.first;
+            canonical_typed.entries[0].type = amf::AMF_VARIANT_INT64;
+            if (!FAILED(inspect(canonical_typed))) return 0;
+            for (const wchar_t* unrelated : {L"Unknown.HevcEnforceHRD", L"TL1.QL0.HevcEnforceHRD",
+                L"TL0.QL1.HevcEnforceHRD", L"Unknown.HevcFillerDataEnable", L"TL1.QL0.HevcFillerDataEnable",
+                L"TL0.QL1.HevcFillerDataEnable"}) {
+                Inventory wrong_alias;
+                flag_inventory(wrong_alias, flag);
+                wrong_alias.entries[0].name = unrelated;
+                if (!FAILED(inspect(wrong_alias))) return 0;
+            }
+            Inventory other_flag;
+            flag_inventory(other_flag, flag);
+            other_flag.entries[0].name = std::wcscmp(flag.first, AMF_VIDEO_ENCODER_HEVC_ENFORCE_HRD) == 0
+                ? L"TL0.QL0.HevcFillerDataEnable" : L"TL0.QL0.HevcEnforceHRD";
+            if (!FAILED(inspect(other_flag))) return 0;
+            Inventory identity;
+            flag_inventory(identity, flag);
+            identity.canonical_different = true;
+            if (!FAILED(inspect(identity))) return 0;
+            Inventory alias_value;
+            flag_inventory(alias_value, flag);
+            alias_value.value_wrong = true;
+            if (verify_alias_value(&alias_value, flag.second, disabled) == AMF_OK) return 0;
+            Inventory alias_type;
+            flag_inventory(alias_type, flag);
+            alias_type.value_wrong_type = true;
+            if (verify_alias_value(&alias_type, flag.second, disabled) == AMF_OK) return 0;
+            Inventory alias_error;
+            flag_inventory(alias_error, flag);
+            alias_error.value_error = true;
+            if (verify_alias_value(&alias_error, flag.second, disabled) == AMF_OK) return 0;
+            const amf::AMFPropertyInfo* optional_info = nullptr;
+            if (!FAILED(describe_property(&exact, flag.first, true, &optional_info))) return 0;
+        }
         return passed;
     } catch (...) { return 0; }
 }

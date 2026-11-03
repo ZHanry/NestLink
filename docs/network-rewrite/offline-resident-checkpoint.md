@@ -659,3 +659,26 @@ strict rejection of the original merged log, missing/wrong/duplicate/failed or
 ignored cases. They execute only through hosted Actions and require their own
 new-source result. No original assertion, deadline, ingress clock, offline budget
 or Luanti 25-second check is changed.
+
+The same f24 run finished with Windows success: all four original resident cases,
+all original scoped AppCore/daemon/desktop tests and all four strict lint commands
+passed. Its official archive and all 20 producer payloads are independently
+size/hash verified in
+[resident-f24b79f-windows.json](evidence/resident-f24b79f-windows.json).
+The Linux collector failure above and whole workflow failure remain unchanged.
+
+The separate b491 source formatter
+[41580263958](https://github.com/ZHanry/NestLink/actions/runs/41580263958)
+returned an empty patch; the official archive and all three payloads are checked
+in [format-b491.json](evidence/format-b491.json). Five new collector regressions
+passed on both OS in run41580245060 before the original complete resident checks;
+the latter run is still in progress at this checkpoint.
+
+A distinct actual failure exists in the f24 full Rust run41577474757. Linux
+complete workspace finished with 2106 passed, one failed and 49 original ignores.
+The original resident management case failed while waiting for temporary public
+HTTPS DNS during setup. Its command actually returned failure; it is not the
+focused collector's false negative. The independent core early resident failed
+at a different management setup for the same reported DNS deadline. Neither
+failed experiment is replaced by the focused success, and neither deadline was
+changed. Complete exact-source evidence is being independently collected.

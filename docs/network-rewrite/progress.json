@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
-  "checkpoint_kind": "f24_product_spaces_and_private_services_passed_original_linux_resident_passed_but_collector_failed_new_separate_stream_fix_pending",
+  "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+  "checkpoint_kind": "b491_separate_stream_regressions_passed_both_os_format_empty_original_resident_network_and_target_tools_running_f24_full_workspace_actual_dns_failure_retained",
   "active_tasks": [
     "W00",
     "W02",
@@ -94,6 +94,8 @@
     "Continue mandatory productionmigration, advancedmedia and lifecycle/security acceptance. Release remains not_ready; no new tag or public release until original required gates are met."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/format-b491.json",
+    "docs/network-rewrite/evidence/resident-f24b79f-windows.json",
     "docs/network-rewrite/evidence/native-offline-resident-f24b79f-linux.json",
     "docs/network-rewrite/evidence/product-space-owner-f24b79f.json",
     "docs/network-rewrite/evidence/format-f24b79f.json",
@@ -737,45 +739,49 @@
     }
   ],
   "current_hosted_runs": {
-    "rust": {
-      "run_id": 41562145692,
-      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
-      "state": "in_progress_original_boundary_python_failures_under_diagnosis",
-      "whole_task_passed": false
+    "resident": {
+      "run_id": 41580245060,
+      "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+      "whole_task_passed": false,
+      "state": "running_five_log_collection_regressions_passed_both_os"
     },
     "network": {
-      "run_id": 41562170514,
-      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
-      "state": "in_progress",
-      "whole_task_passed": false
-    },
-    "resident": {
-      "run_id": 41562179075,
-      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
-      "state": "in_progress",
-      "whole_task_passed": false
-    },
-    "windows_owner": {
-      "run_id": 41561895385,
-      "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
-      "state": "in_progress",
-      "whole_task_passed": false
+      "run_id": 41580250844,
+      "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+      "whole_task_passed": false,
+      "state": "running"
     },
     "windows_tools": {
-      "run_id": 41561899380,
-      "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
-      "state": "completed_hosted_build_verified_target8failed_diagnostic_source_f95_pending_newtools",
-      "whole_task_passed": false
+      "run_id": 41580255667,
+      "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+      "whole_task_passed": false,
+      "state": "running"
+    },
+    "format": {
+      "run_id": 41580263958,
+      "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+      "whole_task_passed": false,
+      "evidence_ref": "docs/network-rewrite/evidence/format-b491.json",
+      "state": "completed_success_empty_patch"
+    },
+    "rust_f24": {
+      "run_id": 41577474757,
+      "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
+      "whole_task_passed": false,
+      "state": "running_linux_workspace_complete_2106passed_1failed_49originalignores"
     }
   },
   "branch_inventory": {
-    "verified_at": "2026-11-03T01:39:40Z",
+    "observed_at": "2026-11-03T04:56:39.6933761+00:00",
     "local": [
       "main"
     ],
     "remote": [
       "main"
-    ]
+    ],
+    "remote_main_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+    "default_branch": "main",
+    "deletion_required": false
   },
   "pending_runs": {
     "rust": {
@@ -812,55 +818,54 @@
     }
   },
   "continuation_checkpoint": {
-    "at": "2026-11-03T02:35:55.632Z",
-    "source_revision": "8f1ac1d65ed53218087bf17b55f1d279bf772c9e",
+    "at": "2026-11-03T04:56:39.6875209+00:00",
+    "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
-    "user_decision": "Keep original Luanti 25-second check and its failed status; no timeout/assertion relaxation.",
+    "user_decisions": [
+      "Keep original Luanti25second check and failed status.",
+      "Only two new terminal recovery counterexamples may correct their mistaken None expectation to exact Unauthorized; applied f2987b3."
+    ],
     "verified_scopes": [
-      "c589 /41562170514: all9 network jobs success;11 officialZIPs and1642 extracted files independently hashed;1582 producer payloads match; hosted namespace/laboratory only.",
-      "c589 /41562179075: original resident4/4 on eachOS, focused owner/lint/SecretCLI scope; separate complete Rust failure remains."
+      "Exactf24 product owner41577547546 spaces8/8, private_services32/32 plus5originalroleignores, strictlint andOpenAPI; separately verified2172sourceinputs.",
+      "Exactf24 focusedresident41577568244 Windows original4/4 and all scoped tests/lints pass. Linux workflow failed because mergedxkbcompstderr split resultlines, despite actual original4/4 and all scoped commands exit0; original failedreceiptretained.",
+      "Exactb491 format41580263958 empty patch; originalstdout/stderr process/strictparser5regressionspassedonbothOS, remainingresidentworkflowrunning."
     ],
     "pending_source": [
-      "62a0668 constructor child ownership before every await",
-      "dd8c39d complete workspace original HTTPS prerequisite",
-      "00f5e7a original carrier-specific fixture port selection",
-      "e70a30e exact AMF base-layer aliases",
-      "8f1ac1d DNS bind-stage original error",
-      "Signed direct recovery/schema51 source being finalized"
+      "ExplicitAMFHRD/fillerfalse candidate being researched/applied; strictSPSparser, deadlines and capability gates unchanged.",
+      "Mandatoryproductionmigration/advancedmedia/lifecycle/security/E2E/targetacceptance remain implementation and evidence work."
     ],
     "runs": {
-      "rust": {
-        "run_id": 41562145692,
-        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
-        "state": "completed_failure_core_both_os_workspace_both_os_boundary_both_os",
-        "whole_task_passed": false
+      "resident": {
+        "run_id": 41580245060,
+        "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+        "whole_task_passed": false,
+        "state": "running_five_log_collection_regressions_passed_both_os"
       },
       "network": {
-        "run_id": 41562170514,
-        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
-        "state": "completed_all9jobs_success_scope_only",
+        "run_id": 41580250844,
+        "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
         "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json"
-      },
-      "resident": {
-        "run_id": 41562179075,
-        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
-        "state": "completed_original4of4_both_os_success_scope_only",
-        "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/native-offline-resident-c589362.json"
-      },
-      "windows_owner": {
-        "run_id": 41566896922,
-        "source_revision": "8f1ac1d65ed53218087bf17b55f1d279bf772c9e",
-        "state": "dispatched",
-        "whole_task_passed": false
+        "state": "running"
       },
       "windows_tools": {
-        "run_id": 41566900475,
-        "source_revision": "8f1ac1d65ed53218087bf17b55f1d279bf772c9e",
-        "state": "dispatched",
-        "whole_task_passed": false
+        "run_id": 41580255667,
+        "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+        "whole_task_passed": false,
+        "state": "running"
+      },
+      "format": {
+        "run_id": 41580263958,
+        "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+        "whole_task_passed": false,
+        "evidence_ref": "docs/network-rewrite/evidence/format-b491.json",
+        "state": "completed_success_empty_patch"
+      },
+      "rust_f24": {
+        "run_id": 41577474757,
+        "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
+        "whole_task_passed": false,
+        "state": "running_linux_workspace_complete_2106passed_1failed_49originalignores"
       }
     }
   },
