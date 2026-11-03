@@ -13,6 +13,7 @@ use std::{
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
 };
+mod spaces;
 
 #[derive(Clone)]
 pub(crate) struct DispatchFence {
@@ -45,6 +46,10 @@ pub(crate) enum Patch {
     Security(MeResponse),
     Devices(Vec<DeviceView>),
     Services(ServicePage),
+    Spaces(Vec<nestlink_protocol::spaces::SpaceView>),
+    SpaceDetails { context: String, value: crate::SpaceDetailsPage },
+    SpaceAudit { context: String, value: Vec<nestlink_protocol::spaces::SpaceAuditEntry> },
+    SpaceServices { context: String, value: crate::SpaceServicePage },
     SelectedService(ServiceView),
     ServiceEdgeNamespace(ServiceEdgeNamespaceView),
     Requests(Vec<RemoteView>),
@@ -72,6 +77,15 @@ impl Patch {
             }
             Self::Devices(value) => view.devices.replace(value),
             Self::Services(value) => view.services.replace(value),
+            Self::Spaces(value) => view.spaces.replace(value),
+            Self::SpaceDetails { context, value } if view.space_context == context => {
+                view.selected_space.replace(value);
+                view.space_audit = crate::Section::default();
+                view.space_services = crate::Section::default();
+            }
+            Self::SpaceAudit { context, value } if view.space_context == context => view.space_audit.replace(value),
+            Self::SpaceServices { context, value } if view.space_context == context => view.space_services.replace(value),
+            Self::SpaceDetails { .. } | Self::SpaceAudit { .. } | Self::SpaceServices { .. } => {}
             Self::SelectedService(value) => view.selected_service.replace(value),
             Self::ServiceEdgeNamespace(value) => view.service_edge_namespace.replace(value),
             Self::Requests(value) => view.requests.replace(value),
@@ -98,6 +112,7 @@ impl Patch {
 
 pub(crate) struct Response {
     pub sdk: Sdk,
+    pub space_context: Option<String>,
     pub failure: Option<Failure>,
     pub effect: RemoteEffect,
     pub output: PublicOutput,
@@ -177,6 +192,7 @@ pub(crate) async fn run_with_native_config(
     let sign_in = matches!(action, Action::SignIn { .. });
     let mut response = Response {
         sdk,
+        space_context: match &action { Action::Space { context, .. } => Some(context.clone()), _ => None },
         failure: None,
         effect: RemoteEffect::None,
         output: PublicOutput::None,
@@ -230,6 +246,7 @@ async fn execute(
     let patches = &mut response.patches;
     let local = || identity.ok_or_else(|| Failure::local(FailureKind::LocalIdentityRequired));
     match action {
+        Action::Space { context, action } => return spaces::execute(response, context, action, fence).await,
         Action::SignIn {
             username,
             password,
@@ -262,6 +279,7 @@ async fn execute(
                 Patch::Devices(entries)
             }
             Page::Services => Patch::Services(read(sdk.services(None, 50), fence).await?),
+            Page::Spaces => Patch::Spaces(spaces::bounded(read(sdk.spaces(), fence).await?)?),
             Page::Requests => Patch::Requests(read(sdk.pending_remote(), fence).await?),
             Page::Accounts => Patch::Accounts(read(sdk.accounts(), fence).await?),
             Page::Policy => Patch::Policy(read(sdk.policy(), fence).await?),

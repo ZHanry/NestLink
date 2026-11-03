@@ -5,6 +5,7 @@ use nestlink_app_core::{Action, Page, Snapshot};
 impl DesktopApp {
     pub(crate) fn navigate(&mut self, screen: Screen, snapshot: &Snapshot) {
         self.message = None;
+        if self.screen == Screen::Spaces && screen != Screen::Spaces { self.space_panel.close(); }
         if snapshot.native_offline.is_some() {
             self.screen = Screen::Remote;
             return;
@@ -18,6 +19,11 @@ impl DesktopApp {
             Screen::Services => {
                 self.load(snapshot, Page::Services);
                 self.load(snapshot, Page::Devices);
+            }
+            Screen::Spaces => {
+                self.load(snapshot, Page::Spaces);
+                self.load(snapshot, Page::Devices);
+                self.load(snapshot, Page::Services);
             }
             Screen::Devices => self.load(snapshot, Page::Devices),
             Screen::Security => self.load(snapshot, Page::AccountSecurity),
@@ -258,6 +264,7 @@ impl DesktopApp {
                             "内网穿透",
                             "Tunnels",
                         ),
+                        (Screen::Spaces, widgets::NavIcon::Devices, "网络空间", "Spaces"),
                     ] {
                         if widgets::nav_button(ui, icon, self.t(zh, en), self.screen == screen)
                             .clicked()
@@ -285,6 +292,7 @@ impl DesktopApp {
         let (zh, en) = match self.screen {
             Screen::Remote => ("远程桌面", "Remote desktop"),
             Screen::Services => ("内网穿透", "Intranet tunnels"),
+            Screen::Spaces => ("网络空间", "Network spaces"),
             Screen::Devices => ("设备管理", "Devices"),
             Screen::Security => ("账号与安全", "Account and security"),
             Screen::Accounts => ("账号管理", "Accounts"),

@@ -211,7 +211,13 @@ pub struct CoreClosed;
 
 /// No Clone/Serialize. The binding explicitly consumes this once, then clears
 /// its display/cache on generation changes and clears its IPC encoding buffer.
-pub enum SensitiveMaterial {}
+pub enum SensitiveMaterial {
+    SpaceInvitation {
+        space_id: String,
+        invitation_id: String,
+        token: nestlink_auth::Secret,
+    },
+}
 impl std::fmt::Debug for SensitiveMaterial {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str("SensitiveMaterial([redacted])")
@@ -2475,6 +2481,23 @@ impl Actor {
                 None,
             );
         } else {
+            if let Some(Action::Space { context, action }) = envelope.action.as_ref() {
+                if action.selects_space() {
+                    for slot in self.secret_slots.iter().filter_map(|slot| slot.upgrade()) {
+                        if let Ok(mut value) = slot.lock() { value.take(); }
+                    }
+                    self.view.space_context = context.clone();
+                    self.view.selected_space = crate::Section::default();
+                    self.view.space_audit = crate::Section::default();
+                    self.view.space_services = crate::Section::default();
+                } else if self.view.space_context != *context
+                    || self.view.selected_space.data.as_ref()
+                        .is_none_or(|details| action.space_id() != Some(details.space.space_id.as_str())) {
+                    self.deliver(envelope, OperationStatus::Superseded, RemoteEffect::None,
+                        None, PublicOutput::None, None);
+                    return;
+                }
+            }
             if let Some(Action::StopNativeSession {
                 request_id,
                 connection_generation,
@@ -3607,6 +3630,11 @@ impl Actor {
         let Some(action) = envelope.action.take() else {
             return;
         };
+        if matches!(&action, Action::Space { context, .. } if *context != self.view.space_context) {
+            self.deliver(envelope, OperationStatus::Superseded, RemoteEffect::None,
+                None, PublicOutput::None, None);
+            return;
+        }
         let failure = if self.sdk.is_none() {
             Some(Failure::local(FailureKind::SignInRequired))
         } else if action.local_identity() && self.identity.is_none() {
@@ -4910,7 +4938,9 @@ impl Actor {
                         );
                     }
                 }
-                let visible = current && active.cancelled.is_none();
+                let context_current = response.space_context.as_ref()
+                    .is_none_or(|context| *context == self.view.space_context);
+                let visible = current && context_current && active.cancelled.is_none();
                 if visible {
                     for patch in response.patches.drain(..) {
                         patch.apply(&mut self.view);
@@ -4932,7 +4962,7 @@ impl Actor {
                         };
                         self.view.authentication_error = response.failure.clone();
                     }
-                } else if current && let Some(section) = active.section {
+                } else if current && context_current && let Some(section) = active.section {
                     section.status(&mut self.view, None, None);
                 }
                 let mut sensitive = None;
@@ -4945,7 +4975,7 @@ impl Actor {
                     }
                     sensitive = Some(slot);
                 }
-                let status = active.cancelled.unwrap_or(if !current {
+                let status = active.cancelled.unwrap_or(if !current || !context_current {
                     OperationStatus::Superseded
                 } else if response.failure.is_some() {
                     OperationStatus::Failed
@@ -4969,7 +4999,7 @@ impl Actor {
                     envelope,
                     status,
                     response.effect,
-                    if current { response.failure } else { None },
+                    if current && context_current { response.failure } else { None },
                     if visible {
                         response.output
                     } else {

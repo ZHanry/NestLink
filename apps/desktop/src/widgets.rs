@@ -134,6 +134,7 @@ const SECRET_FIELDS: &[&str] = &[
     "remote-password-host",
     "remote-password-host-confirm",
     "remote-password-attempt",
+    "space-invitation",
 ];
 pub fn secret_field(
     ui: &mut egui::Ui,

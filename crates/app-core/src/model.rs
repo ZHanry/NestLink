@@ -465,6 +465,7 @@ pub enum OperationKind {
     CreateService,
     UpdateService,
     RevokeService,
+    ManageSpace,
     EnrollDevice,
     RevokeDevice,
     RequestRemote,
@@ -559,6 +560,16 @@ pub struct Snapshot {
     pub security: Section<MeResponse>,
     pub devices: Section<Vec<DeviceView>>,
     pub services: Section<ServicePage>,
+    #[serde(default)]
+    pub spaces: Section<Vec<nestlink_protocol::spaces::SpaceView>>,
+    #[serde(default)]
+    pub space_context: String,
+    #[serde(default)]
+    pub selected_space: Section<crate::SpaceDetailsPage>,
+    #[serde(default)]
+    pub space_audit: Section<Vec<nestlink_protocol::spaces::SpaceAuditEntry>>,
+    #[serde(default)]
+    pub space_services: Section<crate::SpaceServicePage>,
     pub selected_service: Section<ServiceView>,
     #[serde(default)]
     pub service_edge_namespace: Section<ServiceEdgeNamespaceView>,
@@ -610,6 +621,11 @@ impl Default for Snapshot {
             security: Section::default(),
             devices: Section::default(),
             services: Section::default(),
+            spaces: Section::default(),
+            space_context: String::new(),
+            selected_space: Section::default(),
+            space_audit: Section::default(),
+            space_services: Section::default(),
             selected_service: Section::default(),
             service_edge_namespace: Section::default(),
             requests: Section::default(),
@@ -648,6 +664,11 @@ impl Snapshot {
         self.security = Section::default();
         self.devices = Section::default();
         self.services = Section::default();
+        self.spaces = Section::default();
+        self.space_context.clear();
+        self.selected_space = Section::default();
+        self.space_audit = Section::default();
+        self.space_services = Section::default();
         self.selected_service = Section::default();
         self.service_edge_namespace = Section::default();
         self.requests = Section::default();

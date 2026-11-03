@@ -950,7 +950,11 @@ async fn serve_requests(
                             tickets.remove(&operation.get());
                             let sensitive = completion
                                 .take_sensitive()
-                                .map(|material| match material {});
+                                .map(|material| match material {
+                                    nestlink_app_core::SensitiveMaterial::SpaceInvitation { space_id, invitation_id, token } => {
+                                        SensitiveReply::SpaceInvitation { space_id, invitation_id, token }
+                                    }
+                                });
                             Reply::Completed {
                                 operation: completion.result,
                                 sensitive,

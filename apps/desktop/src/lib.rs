@@ -31,6 +31,7 @@ mod remote;
 mod remote_flow;
 mod request_task_dialog;
 mod services;
+mod spaces;
 pub mod theme;
 mod tray;
 mod widgets;
@@ -51,6 +52,7 @@ use zeroize::{Zeroize, Zeroizing};
 enum Screen {
     Remote,
     Services,
+    Spaces,
     Devices,
     Security,
     Accounts,
@@ -157,6 +159,7 @@ pub struct DesktopApp {
     policy: Option<management::PolicyDraft>,
     edge_namespace: management::EdgeNamespacePanel,
     service_panel: services::ServicePanel,
+    space_panel: spaces::SpacePanel,
     device_name: String,
     registration_generation: Option<u64>,
     remote: remote::RemoteForm,
@@ -264,6 +267,7 @@ impl DesktopApp {
             policy: None,
             edge_namespace: Default::default(),
             service_panel: services::ServicePanel::default(),
+            space_panel: spaces::SpacePanel::default(),
             device_name: String::new(),
             registration_generation: None,
             remote: remote::RemoteForm::default(),
@@ -344,6 +348,7 @@ impl DesktopApp {
         self.remote = remote::RemoteForm::default();
         self.remote_tools_open = false;
         self.service_panel = services::ServicePanel::default();
+        self.space_panel = spaces::SpacePanel::default();
         self.file_panel.reconcile(None);
         self.recovery_panel.reconcile(None);
         self.recovery_submission = None;
@@ -1925,6 +1930,7 @@ impl DesktopApp {
                     }
                 }
                 Notice::Disconnected => {
+                    self.space_panel.disconnected();
                     self.edge_namespace.disconnected();
                     self.privileged_panel.disconnected();
                     self.network_submission = None;
@@ -1969,6 +1975,7 @@ impl DesktopApp {
                     submission_id,
                     reason,
                 } => {
+                    self.space_panel.rejected(submission_id);
                     self.edge_namespace.rejected(submission_id);
                     self.privileged_panel.rejected(submission_id);
                     if submission_id.is_some() && submission_id == self.network_submission {
@@ -2079,10 +2086,12 @@ impl DesktopApp {
                         continue;
                     }
                     let flow_notice = self.remote_flow_completed(submission_id, &result);
-                    if let Some(sensitive) = sensitive {
-                        self.sensitive = Some(sensitive);
-                        self.screen = Screen::Security;
-                    }
+                    let space_visible = self.screen == Screen::Spaces
+                        && self.space_panel.context_matches(&snapshot);
+                    let space_origin = snapshot.server.as_ref().filter(|_| space_visible)
+                        .map(|server| server.origin.as_str());
+                    self.space_panel.completed(submission_id, self.bridge.runtime_id().as_deref(),
+                        &result, sensitive, space_origin);
                     let tone = match result.status {
                         OperationStatus::Succeeded => MessageTone::Success,
                         OperationStatus::Queued
@@ -2185,6 +2194,9 @@ impl eframe::App for DesktopApp {
             return;
         }
         let snapshot = self.notices(context);
+        if self.screen != Screen::Spaces {
+            self.space_panel.close();
+        }
         self.reconcile_remote_password_context(&snapshot);
         self.advance_local_enrollment(&snapshot);
         self.advance_remote_flow(&snapshot);
@@ -2403,6 +2415,7 @@ impl eframe::App for DesktopApp {
                                 match self.screen {
                                     Screen::Remote => self.remote_page(ui, &snapshot),
                                     Screen::Services => self.services_page(ui, &snapshot),
+                                    Screen::Spaces => self.spaces_page(ui, &snapshot),
                                     Screen::Devices => self.devices_page(ui, &snapshot),
                                     Screen::Security => self.security_page(ui, &snapshot),
                                     Screen::Accounts => self.accounts_page(ui, &snapshot),

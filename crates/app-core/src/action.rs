@@ -36,6 +36,7 @@ pub enum Page {
     AccountSecurity,
     Devices,
     Services,
+    Spaces,
     Requests,
     Accounts,
     Policy,
@@ -70,6 +71,11 @@ pub enum Action {
     RefreshSession,
     Load {
         page: Page,
+    },
+    Space {
+        /// A fresh local selection token. It fences same-login space changes.
+        context: String,
+        action: crate::SpaceAction,
     },
     LoadServicesPage {
         after_id: Option<String>,
@@ -239,6 +245,7 @@ impl Action {
         match self {
             Self::SignIn { .. } => OperationKind::SignIn,
             Self::RefreshSession => OperationKind::Refresh,
+            Self::Space { action, .. } => if action.reads() { OperationKind::Load } else { OperationKind::ManageSpace },
             Self::Load { .. }
             | Self::LoadServicesPage { .. }
             | Self::InspectService { .. }
@@ -283,7 +290,7 @@ impl Action {
     }
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn sensitive(&self) -> bool {
-        false
+        matches!(self, Self::Space { action: crate::SpaceAction::Invite { .. }, .. })
     }
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn reauthentication(&self) -> bool {
@@ -314,6 +321,7 @@ impl Action {
         let password = |s: &Secret| s.expose().len() <= 1024;
         let factor = |s: &Option<Secret>| s.as_ref().is_none_or(|s| s.expose().len() <= 128);
         match self {
+            Self::Space { context, action } => valid_id(context) && action.valid_input(),
             Self::SignIn {
                 username,
                 password: value,
@@ -473,6 +481,16 @@ impl Action {
     pub(crate) fn section(&self) -> SectionKey {
         match self {
             Self::Load { page } => (*page).into(),
+            Self::Space { action, .. } => match action {
+                crate::SpaceAction::List => SectionKey::Spaces,
+                crate::SpaceAction::Audit { .. } => SectionKey::SpaceAudit,
+                crate::SpaceAction::Services { .. }
+                | crate::SpaceAction::BindService { .. }
+                | crate::SpaceAction::RevokeService { .. }
+                | crate::SpaceAction::GrantServiceRule { .. }
+                | crate::SpaceAction::RevokeServiceRule { .. } => SectionKey::SpaceServices,
+                _ => SectionKey::SelectedSpace,
+            },
             Self::SignIn { .. } | Self::RefreshSession | Self::ChangePassword { .. } => {
                 SectionKey::Security
             }
@@ -521,6 +539,10 @@ pub(crate) enum SectionKey {
     Security,
     Devices,
     Services,
+    Spaces,
+    SelectedSpace,
+    SpaceAudit,
+    SpaceServices,
     SelectedService,
     ServiceEdgeNamespace,
     Requests,
@@ -547,6 +569,7 @@ impl From<Page> for SectionKey {
             Page::AccountSecurity => Self::Security,
             Page::Devices => Self::Devices,
             Page::Services => Self::Services,
+            Page::Spaces => Self::Spaces,
             Page::Requests => Self::Requests,
             Page::Accounts => Self::Accounts,
             Page::Policy => Self::Policy,
@@ -576,6 +599,20 @@ impl SectionKey {
             Self::Security => set!(security),
             Self::Devices => set!(devices),
             Self::Services => set!(services),
+            Self::Spaces => set!(spaces),
+            Self::SelectedSpace => {
+                if error.is_some() {
+                    view.selected_space.data = None;
+                    view.space_audit = crate::Section::default();
+                    view.space_services = crate::Section::default();
+                }
+                set!(selected_space);
+            }
+            Self::SpaceAudit => set!(space_audit),
+            Self::SpaceServices => {
+                if error.is_some() { view.space_services.data = None; }
+                set!(space_services);
+            }
             Self::SelectedService => set!(selected_service),
             Self::ServiceEdgeNamespace => {
                 // A namespace section is scoped to its node. Never retain a previous
@@ -605,7 +642,7 @@ impl SectionKey {
     }
 }
 
-mod secret {
+pub(crate) mod secret {
     use nestlink_auth::Secret;
     use serde::{Deserialize, Deserializer, Serializer};
     pub fn serialize<S: Serializer>(value: &Secret, serializer: S) -> Result<S::Ok, S::Error> {
