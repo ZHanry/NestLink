@@ -1,2 +1,8 @@
 [alias]
 xtask = "run --package xtask --"
+
+[http]
+# Hosted registry downloads failed with HTTP/2 framing errors and connection
+# resets before compiling the locked dependencies. Keep the same registry,
+# checksums and commands, using Cargo's supported HTTP/1 transfer path.
+multiplexing = false
