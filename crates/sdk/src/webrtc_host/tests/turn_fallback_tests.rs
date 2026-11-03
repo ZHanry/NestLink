@@ -21,7 +21,8 @@ async fn actual_fast_gathering_snapshots_remain_cumulative_through_completion() 
         let peer = make_browser_peer().await?;
         let observed = async {
             let mut gathered = peer.gathering_complete_promise().await;
-            peer.set_local_description(peer.create_offer(None).await?).await?;
+            peer.set_local_description(peer.create_offer(None).await?)
+                .await?;
             let mut cursor = nestlink_protocol::ice::IceSnapshotCursor::default();
             loop {
                 let (description, complete) = local_ice_description(&peer).await?;
@@ -32,7 +33,8 @@ async fn actual_fast_gathering_snapshots_remain_cumulative_through_completion() 
                     let _ = gathered.recv().await;
                     let (final_description, final_complete) = local_ice_description(&peer).await?;
                     assert!(final_complete);
-                    let final_snapshot = nestlink_protocol::ice::snapshot(&final_description.sdp, 1, true)?;
+                    let final_snapshot =
+                        nestlink_protocol::ice::snapshot(&final_description.sdp, 1, true)?;
                     assert!(cursor.apply(&final_snapshot)?.is_empty());
                     break;
                 }

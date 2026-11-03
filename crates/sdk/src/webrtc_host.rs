@@ -153,7 +153,10 @@ async fn local_ice_description(
     // an older, partial candidate set complete and make its next signed
     // cumulative snapshot fail the receiver's immutable-completion check.
     let complete = peer.ice_gathering_state() == RTCIceGatheringState::Complete;
-    let description = peer.local_description().await.ok_or(WebRtcHostError::InvalidOffer)?;
+    let description = peer
+        .local_description()
+        .await
+        .ok_or(WebRtcHostError::InvalidOffer)?;
     Ok((description, complete))
 }
 
@@ -1986,7 +1989,9 @@ impl WebRtcHostPeer {
         self.local_ice_signal = answer_payload.ice.as_ref().map(|_| answer_payload.clone());
         let signal_summary =
             nestlink_protocol::diagnostics::SignalSummary::from_payload(&answer_payload);
-        let published = sdk.publish_signal(installation, permit, answer_payload).await;
+        let published = sdk
+            .publish_signal(installation, permit, answer_payload)
+            .await;
         record_local_ice_publish(signal_summary, &published);
         published?;
         self.diagnostics.signal(true, signal_summary);
@@ -2103,7 +2108,9 @@ impl WebRtcHostPeer {
             self.diagnostics
                 .candidates(true, ice.candidates.len(), ice.end_of_candidates);
         }
-        let published = sdk.publish_signal(installation, &permit, signal.clone()).await;
+        let published = sdk
+            .publish_signal(installation, &permit, signal.clone())
+            .await;
         record_local_ice_publish(
             nestlink_protocol::diagnostics::SignalSummary::from_payload(&signal),
             &published,
