@@ -101,6 +101,5 @@ mod hevc_direction_probe;
 #[cfg(windows)]
 pub use hevc_direction_probe::{
     HevcDirectionProbe, probe_hevc_direction, probe_hevc_direction_depth,
-    probe_hevc_direction_with_encoder,
-    probe_hevc_hdr10_direction,
+    probe_hevc_direction_with_encoder, probe_hevc_hdr10_direction,
 };

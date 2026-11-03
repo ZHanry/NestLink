@@ -30,7 +30,9 @@ pub struct SharedRingDescriptor {
 }
 impl SharedRingDescriptor {
     /// A distinct version, never inferred from ten-bit storage alone.
-    pub fn is_hdr10(&self) -> bool { self.reserved == 5 && self.bit_depth == 10 }
+    pub fn is_hdr10(&self) -> bool {
+        self.reserved == 5 && self.bit_depth == 10
+    }
     pub fn validate(&self, config: VideoConfig) -> io::Result<()> {
         if self.ring_id == [0; 16]
             || self.handles.iter().any(|value| {
@@ -270,7 +272,9 @@ impl SharedDecodedFrame {
     pub(crate) fn fingerprint(&self) -> [u8; 32] {
         let mut hash = Sha256::new();
         hash.update(self.ring.ring_id);
-        if self.ring.is_hdr10() { hash.update(b"nestlink/shared-p010-hdr10/v5\0"); }
+        if self.ring.is_hdr10() {
+            hash.update(b"nestlink/shared-p010-hdr10/v5\0");
+        }
         hash.update(self.ring.adapter_luid.to_be_bytes());
         hash.update(self.ring.bit_depth.to_be_bytes());
         hash.update(self.ring.width.to_be_bytes());
@@ -413,13 +417,36 @@ mod transfer_claim_tests {
     use super::*;
     #[test]
     fn hdr_ring_marker_requires_p010_and_never_infers_hdr_from_depth_alone() -> io::Result<()> {
-        let config=VideoConfig{width:640,height:480,fps:30,bitrate_kbps:4000};
-        let mut descriptor=SharedRingDescriptor{ring_id:[1;16],adapter_luid:7,handles:[100,101,102],
-            resource_ids:[[2;16],[3;16],[4;16]],width:640,height:480,bytes:640*480*3/2*3*2,bit_depth:10,reserved:0};
-        descriptor.validate(config)?;assert!(!descriptor.is_hdr10());
-        descriptor.reserved=5;descriptor.validate(config)?;assert!(descriptor.is_hdr10());
-        for marker in [1,2,3,4,6,u32::MAX] { descriptor.reserved=marker;assert!(descriptor.validate(config).is_err()); }
-        descriptor.reserved=5;descriptor.bit_depth=8;descriptor.bytes/=2;assert!(descriptor.validate(config).is_err());
+        let config = VideoConfig {
+            width: 640,
+            height: 480,
+            fps: 30,
+            bitrate_kbps: 4000,
+        };
+        let mut descriptor = SharedRingDescriptor {
+            ring_id: [1; 16],
+            adapter_luid: 7,
+            handles: [100, 101, 102],
+            resource_ids: [[2; 16], [3; 16], [4; 16]],
+            width: 640,
+            height: 480,
+            bytes: 640 * 480 * 3 / 2 * 3 * 2,
+            bit_depth: 10,
+            reserved: 0,
+        };
+        descriptor.validate(config)?;
+        assert!(!descriptor.is_hdr10());
+        descriptor.reserved = 5;
+        descriptor.validate(config)?;
+        assert!(descriptor.is_hdr10());
+        for marker in [1, 2, 3, 4, 6, u32::MAX] {
+            descriptor.reserved = marker;
+            assert!(descriptor.validate(config).is_err());
+        }
+        descriptor.reserved = 5;
+        descriptor.bit_depth = 8;
+        descriptor.bytes /= 2;
+        assert!(descriptor.validate(config).is_err());
         Ok(())
     }
     #[test]

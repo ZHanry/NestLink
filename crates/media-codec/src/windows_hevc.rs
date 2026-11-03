@@ -68,8 +68,11 @@ impl HevcSyntheticSource {
         let mut handle = std::ptr::null_mut();
         // SAFETY: bounded constructor, initialized output; no borrowed pixels.
         checked(unsafe {
-            if hdr10 { nl_hevc_hdr10_synthetic_open(width, height, &mut handle) }
-            else { nl_hevc_synthetic_open(width, height, u32::from(bit_depth), &mut handle) }
+            if hdr10 {
+                nl_hevc_hdr10_synthetic_open(width, height, &mut handle)
+            } else {
+                nl_hevc_synthetic_open(width, height, u32::from(bit_depth), &mut handle)
+            }
         })?;
         Ok(Self {
             handle: NonNull::new(handle)
@@ -163,13 +166,18 @@ impl HevcProbeEncoder {
         let (device, _) = source.borrow()?;
         // SAFETY: same owner/device; native retains its device and four input textures.
         let inner = unsafe {
-            if source.hdr10 { crate::hevc_encoder::Encoder::open_color(config, device, 10, backend, true) }
-            else { crate::hevc_encoder::Encoder::open(config, device, source.bit_depth, backend) }
+            if source.hdr10 {
+                crate::hevc_encoder::Encoder::open_color(config, device, 10, backend, true)
+            } else {
+                crate::hevc_encoder::Encoder::open(config, device, source.bit_depth, backend)
+            }
         }?;
         Ok(Self {
             inner,
             config,
-            validator: if source.hdr10 { Validator::exact_hdr10() } else if source.bit_depth == 10 {
+            validator: if source.hdr10 {
+                Validator::exact_hdr10()
+            } else if source.bit_depth == 10 {
                 Validator::exact_main10()
             } else {
                 // Apply the same exact contract used by the direction workload
@@ -317,8 +325,11 @@ impl HevcProbeDecoder {
         Self::with_color(source, config, authority, bit_depth, false)
     }
     pub fn with_color(
-        source: Option<&HevcSyntheticSource>, config: VideoConfig, authority: Arc<AtomicBool>,
-        bit_depth: u8, hdr10: bool,
+        source: Option<&HevcSyntheticSource>,
+        config: VideoConfig,
+        authority: Arc<AtomicBool>,
+        bit_depth: u8,
+        hdr10: bool,
     ) -> io::Result<Self> {
         authorized(&authority)?;
         if source.is_some_and(|source| source.bit_depth != bit_depth || source.hdr10 != hdr10) {
@@ -336,7 +347,9 @@ impl HevcProbeDecoder {
         Ok(Self {
             inner,
             config,
-            validator: if hdr10 { Validator::exact_hdr10() } else if bit_depth == 10 {
+            validator: if hdr10 {
+                Validator::exact_hdr10()
+            } else if bit_depth == 10 {
                 Validator::exact_main10()
             } else {
                 Validator::default()

@@ -1176,8 +1176,12 @@ impl VideoPresentation {
                 .and_then(|source| state.videos.remove(&source))
         };
         if let Some(frame) = &frame {
-            if frame.source_color == nestlink_protocol::media_format::Color::HDR10_BT2020_LIMITED && !shared_consumer {
-                return Err(io::Error::other("HDR requires the original P010 shared presenter"));
+            if frame.source_color == nestlink_protocol::media_format::Color::HDR10_BT2020_LIMITED
+                && !shared_consumer
+            {
+                return Err(io::Error::other(
+                    "HDR requires the original P010 shared presenter",
+                ));
             }
             if let Some(receipt) = &frame.execution {
                 receipt.check_decoded(frame.pts_90khz, &frame.pixels)?;

@@ -179,12 +179,24 @@ impl Transform {
         unsafe { Self::new_hevc_color(config, device, encoder, hardware, bit_depth, false) }
     }
     pub(super) unsafe fn new_hevc_color(
-        config: VideoConfig, device: *mut c_void, encoder: bool, hardware: bool,
-        bit_depth: u8, hdr10: bool,
+        config: VideoConfig,
+        device: *mut c_void,
+        encoder: bool,
+        hardware: bool,
+        bit_depth: u8,
+        hdr10: bool,
     ) -> io::Result<Self> {
         unsafe extern "C" {
-            fn nl_hevc_hdr10_open(device: *mut c_void, encoder: u32, hardware: u32,
-                width: u32, height: u32, fps: u32, kbps: u32, result: *mut *mut c_void) -> i32;
+            fn nl_hevc_hdr10_open(
+                device: *mut c_void,
+                encoder: u32,
+                hardware: u32,
+                width: u32,
+                height: u32,
+                fps: u32,
+                kbps: u32,
+                result: *mut *mut c_void,
+            ) -> i32;
             fn nl_hevc_open(
                 device: *mut c_void,
                 encoder: u32,
@@ -202,25 +214,39 @@ impl Transform {
             10 => crate::HevcMain8Contract::validate_main10_config(config)?,
             _ => return Err(io::Error::other("unsupported HEVC transform bit depth")),
         }
-        if hdr10 && bit_depth != 10 { return Err(io::Error::other("HDR requires independent Main10 transform")); }
+        if hdr10 && bit_depth != 10 {
+            return Err(io::Error::other(
+                "HDR requires independent Main10 transform",
+            ));
+        }
         let raw_bytes = geometry_with_rate_limit(config, 144)?;
         let mut handle = std::ptr::null_mut();
         // SAFETY: caller retains an owner-thread D3D device, or null for software decode.
         let hr = unsafe {
             if hdr10 {
-                nl_hevc_hdr10_open(device, encoder.into(), hardware.into(), config.width, config.height,
-                    config.fps, config.bitrate_kbps, &mut handle)
-            } else { nl_hevc_open(
-                device,
-                encoder.into(),
-                hardware.into(),
-                config.width,
-                config.height,
-                config.fps,
-                config.bitrate_kbps,
-                u32::from(bit_depth),
-                &mut handle,
-            ) }
+                nl_hevc_hdr10_open(
+                    device,
+                    encoder.into(),
+                    hardware.into(),
+                    config.width,
+                    config.height,
+                    config.fps,
+                    config.bitrate_kbps,
+                    &mut handle,
+                )
+            } else {
+                nl_hevc_open(
+                    device,
+                    encoder.into(),
+                    hardware.into(),
+                    config.width,
+                    config.height,
+                    config.fps,
+                    config.bitrate_kbps,
+                    u32::from(bit_depth),
+                    &mut handle,
+                )
+            }
         };
         if hr < 0 {
             return Err(failed("HEVC creation", hr));

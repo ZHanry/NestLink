@@ -158,7 +158,13 @@ impl GpuCapture {
         // SAFETY: approved original monitor; independent native HDR entry checks
         // actual HDR output and exact FP16/scRGB -> P010/PQ/BT2020 conversion.
         let hr = unsafe {
-            nl_capture_gpu_hdr10_open(monitor.handle, config.width, config.height, config.fps, &mut handle)
+            nl_capture_gpu_hdr10_open(
+                monitor.handle,
+                config.width,
+                config.height,
+                config.fps,
+                &mut handle,
+            )
         };
         if hr != 0 {
             return Err(bridge("HDR10 open", hr));
@@ -201,7 +207,8 @@ impl GpuCapture {
         if observation.reserved != 0
             || (!self.hdr10 && observation.flags & !15 != 0)
             || self.high_precision_sdr && observation.flags & 13 != 13
-            || self.hdr10 && (observation.flags & !27 != 0 || observation.flags & 25 != 25
+            || self.hdr10
+                && (observation.flags & !27 != 0 || observation.flags & 25 != 25
                 || observation.configured_format != 10 // R16G16B16A16_FLOAT
                 || observation.input_color_space != 1 // RGB_FULL_G10_NONE_P709
                 || observation.output_color_space != 13 // YCBCR_STUDIO_G2084_LEFT_P2020
@@ -213,10 +220,17 @@ impl GpuCapture {
         Ok(observation)
     }
     fn log_hdr_source(phase: &str, observation: &CaptureSourceObservation) {
-        eprintln!("hevc_hdr10_capture_source phase={phase} configured_dxgi_format={} observed_dxgi_format={} actual_frame_observed={} input_color_space={} output_color_space={} display_color_space={} display_bits_per_color={} exact_conversion_checked={} physical_scanout_qualified=false",
-            observation.configured_format, observation.observed_format, observation.flags & 2 != 0,
-            observation.input_color_space, observation.output_color_space, observation.display_color_space,
-            observation.display_bits_per_color, observation.flags & 8 != 0);
+        eprintln!(
+            "hevc_hdr10_capture_source phase={phase} configured_dxgi_format={} observed_dxgi_format={} actual_frame_observed={} input_color_space={} output_color_space={} display_color_space={} display_bits_per_color={} exact_conversion_checked={} physical_scanout_qualified=false",
+            observation.configured_format,
+            observation.observed_format,
+            observation.flags & 2 != 0,
+            observation.input_color_space,
+            observation.output_color_space,
+            observation.display_color_space,
+            observation.display_bits_per_color,
+            observation.flags & 8 != 0
+        );
     }
     fn log_source_state(phase: &str, observation: &CaptureSourceObservation) {
         eprintln!(
@@ -311,8 +325,8 @@ mod precision_source_tests {
     #[test]
     fn independent_hdr_capture_requires_actual_hdr_output_and_exact_pq_conversion() {
         // SAFETY: production metadata decisions only; no device or source opens.
-        let passed=unsafe { nl_capture_gpu_hdr10_contract() };
-        assert_eq!(passed,15,"HDR capture boundary bitmask: {passed:#x}");
+        let passed = unsafe { nl_capture_gpu_hdr10_contract() };
+        assert_eq!(passed, 15, "HDR capture boundary bitmask: {passed:#x}");
     }
 }
 

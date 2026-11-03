@@ -49,7 +49,9 @@ impl DecodedExportLedger {
             ));
         }
         if frame.source_color == nestlink_protocol::media_format::Color::HDR10_BT2020_LIMITED {
-            return Err(io::Error::other("HDR requires the original P010 shared presenter; no BGRA fallback"));
+            return Err(io::Error::other(
+                "HDR requires the original P010 shared presenter; no BGRA fallback",
+            ));
         }
         let expected_bytes = (frame.width as usize)
             .checked_mul(frame.height as usize)

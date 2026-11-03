@@ -649,16 +649,22 @@ async fn serve(args: Args) -> Result<(), Box<dyn std::error::Error + Send + Sync
     let browser_data_registry = Arc::new(browser_data::BrowserHostDataRegistry::default());
     let media_config = nestlink_app_core::NativeSessionConfig::new(network);
     let mut native = if let Some(target) = args.native_gpu_hevc_hdr10_target {
-        media_config.with_gpu_hevc_hdr10_encoder(target,
-            args.native_gpu_hevc_encoder.unwrap_or(NativeHevcEncoder::SystemMf).into())?
-    } else { configure_native_media(
-        media_config,
-        args.native_media_target,
-        args.native_gpu_hevc_target,
-        args.native_gpu_hevc_main10_target,
-        args.native_gpu_hevc_encoder,
-        args.internal_software_media_candidate.is_some(),
-    )? };
+        media_config.with_gpu_hevc_hdr10_encoder(
+            target,
+            args.native_gpu_hevc_encoder
+                .unwrap_or(NativeHevcEncoder::SystemMf)
+                .into(),
+        )?
+    } else {
+        configure_native_media(
+            media_config,
+            args.native_media_target,
+            args.native_gpu_hevc_target,
+            args.native_gpu_hevc_main10_target,
+            args.native_gpu_hevc_encoder,
+            args.internal_software_media_candidate.is_some(),
+        )?
+    };
     if let Some(fallback) = args.native_gpu_hevc_fallback_target {
         native = native.with_gpu_hevc_fallback_target(fallback)?;
     }
@@ -961,15 +967,36 @@ fn parse_native_gpu_hevc_main10_target(
 #[cfg(test)]
 mod media_cli_tests {
     #[test]
-    fn hdr_cli_is_a_distinct_explicit_target_and_rejects_other_media_modes() -> std::io::Result<()> {
+    fn hdr_cli_is_a_distinct_explicit_target_and_rejects_other_media_modes() -> std::io::Result<()>
+    {
         use clap::Parser;
-        let args=super::Args::try_parse_from(["nestlink-daemon","--native-gpu-hevc-hdr10-target","1920x1080@60:8000",
-            "--native-gpu-hevc-encoder","amd-amf","--native-gpu-hevc-fallback-target","1920x1080@30:4000"])
-            .map_err(std::io::Error::other)?;
+        let args = super::Args::try_parse_from([
+            "nestlink-daemon",
+            "--native-gpu-hevc-hdr10-target",
+            "1920x1080@60:8000",
+            "--native-gpu-hevc-encoder",
+            "amd-amf",
+            "--native-gpu-hevc-fallback-target",
+            "1920x1080@30:4000",
+        ])
+        .map_err(std::io::Error::other)?;
         assert!(args.native_gpu_hevc_hdr10_target.is_some());
         assert!(args.native_gpu_hevc_main10_target.is_none());
-        for other in ["--native-gpu-hevc-target","--native-gpu-hevc-main10-target","--native-media-target"] {
-            assert!(super::Args::try_parse_from(["nestlink-daemon","--native-gpu-hevc-hdr10-target","1920x1080@60:8000",other,"1920x1080@30:4000"]).is_err());
+        for other in [
+            "--native-gpu-hevc-target",
+            "--native-gpu-hevc-main10-target",
+            "--native-media-target",
+        ] {
+            assert!(
+                super::Args::try_parse_from([
+                    "nestlink-daemon",
+                    "--native-gpu-hevc-hdr10-target",
+                    "1920x1080@60:8000",
+                    other,
+                    "1920x1080@30:4000"
+                ])
+                .is_err()
+            );
         }
         Ok(())
     }

@@ -295,7 +295,10 @@ impl NativeMediaProvider {
     pub fn hevc_encoder_backend(&self) -> HevcEncoderBackend {
         self.hevc_encoder
     }
-    pub fn gpu_hevc_hdr10_with_encoder(target: VideoConfig, encoder: HevcEncoderBackend) -> io::Result<Self> {
+    pub fn gpu_hevc_hdr10_with_encoder(
+        target: VideoConfig,
+        encoder: HevcEncoderBackend,
+    ) -> io::Result<Self> {
         let mut provider = Self::gpu_hevc_main10_with_encoder(target, encoder)?;
         provider.backend = ProviderBackend::GpuHevcHdr10;
         Ok(provider)
@@ -308,7 +311,10 @@ impl NativeMediaProvider {
                 "HEVC fallback requires one original GPU target",
             ));
         }
-        if matches!(self.backend, ProviderBackend::GpuHevcMain10 | ProviderBackend::GpuHevcHdr10) {
+        if matches!(
+            self.backend,
+            ProviderBackend::GpuHevcMain10 | ProviderBackend::GpuHevcHdr10
+        ) {
             nestlink_media_codec::HevcMain8Contract::validate_main10_config(fallback)?;
         } else {
             nestlink_media_codec::HevcMain8Contract::validate_config(fallback)?;
@@ -787,7 +793,9 @@ fn run_probes(
             ProviderBackend::GpuHevcMain10 => {
                 run_hevc_probe(*target, direction, cancel, 10, hevc_encoder, false)?
             }
-            ProviderBackend::GpuHevcHdr10 => run_hevc_probe(*target, direction, cancel, 10, hevc_encoder, true)?,
+            ProviderBackend::GpuHevcHdr10 => {
+                run_hevc_probe(*target, direction, cancel, 10, hevc_encoder, true)?
+            }
         });
     }
     merge_probe_results(receipts, backend)
@@ -900,14 +908,17 @@ fn run_hevc_probe(
         MediaDirection::Encode => nestlink_media_codec::ExecutionDirection::Encode,
         MediaDirection::Decode => nestlink_media_codec::ExecutionDirection::Decode,
     };
-    let receipt = if hdr10 { nestlink_media_codec::probe_hevc_hdr10_direction(target, actual_direction, cancel, encoder)
-    } else { nestlink_media_codec::probe_hevc_direction_with_encoder(
-        target,
-        actual_direction,
-        cancel,
-        bit_depth,
-        encoder,
-    ) }?;
+    let receipt = if hdr10 {
+        nestlink_media_codec::probe_hevc_hdr10_direction(target, actual_direction, cancel, encoder)
+    } else {
+        nestlink_media_codec::probe_hevc_direction_with_encoder(
+            target,
+            actual_direction,
+            cancel,
+            bit_depth,
+            encoder,
+        )
+    }?;
     let contract = receipt.contract();
     let config = contract.config();
     let owner = receipt.owner();
@@ -924,7 +935,8 @@ fn run_hevc_probe(
             "HEVC direction receipt differs from exact product target/backend",
         ));
     }
-    let format_constructor = if hdr10 { VideoFormat::hevc_hdr10_observed
+    let format_constructor = if hdr10 {
+        VideoFormat::hevc_hdr10_observed
     } else if bit_depth == 10 {
         VideoFormat::hevc_main10_observed
     } else {

@@ -76,7 +76,10 @@ pub fn decode_formats_for_version(
 ) -> Result<FormatSet> {
     if !matches!(
         version,
-        FORMAT_VERSION | HEVC_FORMAT_VERSION | HEVC_MAIN10_FORMAT_VERSION | HEVC_HDR10_FORMAT_VERSION
+        FORMAT_VERSION
+            | HEVC_FORMAT_VERSION
+            | HEVC_MAIN10_FORMAT_VERSION
+            | HEVC_HDR10_FORMAT_VERSION
     ) {
         return Err(invalid("unsupported media catalog version"));
     }
@@ -128,8 +131,11 @@ pub fn permit_formats(claims: &PermitClaims) -> Result<Option<FormatSet>> {
         .iter()
         .filter(|s| s.as_str() == HEVC_MAIN10_FORMAT_CAPABILITY)
         .count();
-    let hdr10_markers = claims.required_capabilities.iter()
-        .filter(|s| s.as_str() == HEVC_HDR10_FORMAT_CAPABILITY).count();
+    let hdr10_markers = claims
+        .required_capabilities
+        .iter()
+        .filter(|s| s.as_str() == HEVC_HDR10_FORMAT_CAPABILITY)
+        .count();
     if markers == 0 && hevc_markers == 0 && main10_markers == 0 && hdr10_markers == 0 {
         if claims.media_format_version != 0
             || !claims.media_formats.is_empty()
@@ -195,7 +201,10 @@ impl MediaAnnouncement {
     pub fn validate(&self, now_ms: u64) -> Result<FormatSet> {
         if !matches!(
             self.version,
-            FORMAT_VERSION | HEVC_FORMAT_VERSION | HEVC_MAIN10_FORMAT_VERSION | HEVC_HDR10_FORMAT_VERSION
+            FORMAT_VERSION
+                | HEVC_FORMAT_VERSION
+                | HEVC_MAIN10_FORMAT_VERSION
+                | HEVC_HDR10_FORMAT_VERSION
         ) || !crate::valid_id(&self.device_id)
             || self.revision == 0
             || self.revision > i64::MAX as u64
@@ -255,7 +264,10 @@ impl FrozenMediaScope {
     pub fn validate(&self) -> Result<FormatSet> {
         if !matches!(
             self.version,
-            FORMAT_VERSION | HEVC_FORMAT_VERSION | HEVC_MAIN10_FORMAT_VERSION | HEVC_HDR10_FORMAT_VERSION
+            FORMAT_VERSION
+                | HEVC_FORMAT_VERSION
+                | HEVC_MAIN10_FORMAT_VERSION
+                | HEVC_HDR10_FORMAT_VERSION
         ) || self.controller_revision == 0
             || self.host_revision == 0
         {
@@ -278,18 +290,37 @@ mod tests {
     }
     #[test]
     fn hdr_requires_v5_marker_and_independent_scope_and_approval_domain() -> Result<()> {
-        let mut ptl=[0;12];ptl[0]=2;ptl[11]=120;
-        let format=VideoFormat::hevc_hdr10_observed(ptl,640,480,FrameRate::new(30,1)?,4000)?;
-        let set=FormatSet::new(vec![format])?;
-        let mut claims=PermitClaims{media_format_version:5,media_formats:vec![format.encode()?],
-            media_format_sha256:set.digest().to_vec(),required_capabilities:vec![HEVC_HDR10_FORMAT_CAPABILITY.into()],..Default::default()};
-        assert_eq!(permit_formats(&claims)?,Some(set));
-        assert_eq!(crate::media::negotiated_video_codec(&claims),crate::NativeVideoCodec::HevcMain10);
-        assert_ne!(approval_domain(4)?,approval_domain(5)?);
-        for version in [2,3,4] { assert!(decode_formats_for_version(&claims.media_formats,false,version).is_err()); }
-        for markers in [vec![],vec![HEVC_MAIN10_FORMAT_CAPABILITY.into()],
-            vec![HEVC_HDR10_FORMAT_CAPABILITY.into(),HEVC_MAIN10_FORMAT_CAPABILITY.into()]] {
-            claims.required_capabilities=markers;assert!(permit_formats(&claims).is_err());
+        let mut ptl = [0; 12];
+        ptl[0] = 2;
+        ptl[11] = 120;
+        let format = VideoFormat::hevc_hdr10_observed(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
+        let set = FormatSet::new(vec![format])?;
+        let mut claims = PermitClaims {
+            media_format_version: 5,
+            media_formats: vec![format.encode()?],
+            media_format_sha256: set.digest().to_vec(),
+            required_capabilities: vec![HEVC_HDR10_FORMAT_CAPABILITY.into()],
+            ..Default::default()
+        };
+        assert_eq!(permit_formats(&claims)?, Some(set));
+        assert_eq!(
+            crate::media::negotiated_video_codec(&claims),
+            crate::NativeVideoCodec::HevcMain10
+        );
+        assert_ne!(approval_domain(4)?, approval_domain(5)?);
+        for version in [2, 3, 4] {
+            assert!(decode_formats_for_version(&claims.media_formats, false, version).is_err());
+        }
+        for markers in [
+            vec![],
+            vec![HEVC_MAIN10_FORMAT_CAPABILITY.into()],
+            vec![
+                HEVC_HDR10_FORMAT_CAPABILITY.into(),
+                HEVC_MAIN10_FORMAT_CAPABILITY.into(),
+            ],
+        ] {
+            claims.required_capabilities = markers;
+            assert!(permit_formats(&claims).is_err());
         }
         Ok(())
     }

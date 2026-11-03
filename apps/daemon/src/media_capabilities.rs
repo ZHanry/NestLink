@@ -91,7 +91,8 @@ impl InspectArgs {
             ));
         }
         if (self.mode == Mode::HevcHdr10 && self.dynamic_range != DynamicRange::Hdr10)
-            || (self.mode != Mode::HevcHdr10 && self.dynamic_range != DynamicRange::Sdr) {
+            || (self.mode != Mode::HevcHdr10 && self.dynamic_range != DynamicRange::Sdr)
+        {
             return Err(io::Error::new(
                 io::ErrorKind::Unsupported,
                 "independent hevc-hdr10 requires explicit hdr10 dynamic range; other modes remain SDR and no replacement was attempted",
@@ -110,7 +111,9 @@ impl InspectArgs {
             Mode::HevcMain10 => {
                 NativeMediaProvider::gpu_hevc_main10_with_encoder(self.target, encoder)
             }
-            Mode::HevcHdr10 => NativeMediaProvider::gpu_hevc_hdr10_with_encoder(self.target, encoder),
+            Mode::HevcHdr10 => {
+                NativeMediaProvider::gpu_hevc_hdr10_with_encoder(self.target, encoder)
+            }
         }
     }
     fn report(&self) -> Value {
@@ -254,13 +257,25 @@ mod tests {
     }
     #[test]
     fn hdr_requires_its_independent_mode_and_explicit_hdr_dynamic_range() -> io::Result<()> {
-        let args=Cli::try_parse_from(["media-capabilities","--mode","hevc-hdr10","--dynamic-range","hdr10",
-            "--direction","encode","--target","1920x1080@60:8000","--encoder","amd-amf"])
-            .map_err(io::Error::other)?.args;
+        let args = Cli::try_parse_from([
+            "media-capabilities",
+            "--mode",
+            "hevc-hdr10",
+            "--dynamic-range",
+            "hdr10",
+            "--direction",
+            "encode",
+            "--target",
+            "1920x1080@60:8000",
+            "--encoder",
+            "amd-amf",
+        ])
+        .map_err(io::Error::other)?
+        .args;
         args.provider()?;
-        assert_eq!(args.report()["requested"]["mode"],"hevc-hdr10");
-        assert_eq!(args.report()["requested"]["dynamic_range"],"hdr10");
-        assert_eq!(args.report()["available"],false);
+        assert_eq!(args.report()["requested"]["mode"], "hevc-hdr10");
+        assert_eq!(args.report()["requested"]["dynamic_range"], "hdr10");
+        assert_eq!(args.report()["available"], false);
         Ok(())
     }
     #[test]

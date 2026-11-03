@@ -140,7 +140,13 @@ impl GpuSharedPresenter {
         }
         // SAFETY: live worker-local importer; checks actual HDR output/device
         // and blacks/retires it on monitor or color-mode changes.
-        checked(unsafe { nl_gpu_shared_check(self.handle.ok_or_else(|| io::Error::other("shared presenter closed"))?.as_ptr()) })?;
+        checked(unsafe {
+            nl_gpu_shared_check(
+                self.handle
+                    .ok_or_else(|| io::Error::other("shared presenter closed"))?
+                    .as_ptr(),
+            )
+        })?;
         Ok(())
     }
     pub fn consume(

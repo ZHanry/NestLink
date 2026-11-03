@@ -99,11 +99,11 @@ impl WindowsCaptureSource {
                     GpuCapture::open_hdr10(monitor, config)
                 } else {
                     GpuCapture::open_target_depth(
-                    monitor,
-                    config.width,
-                    config.height,
-                    config.fps,
-                    target.contract().bit_depth(),
+                        monitor,
+                        config.width,
+                        config.height,
+                        config.fps,
+                        target.contract().bit_depth(),
                     )
                 }
             })();

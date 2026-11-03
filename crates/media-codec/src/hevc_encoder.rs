@@ -27,7 +27,11 @@ impl Encoder {
         unsafe { Self::open_color(config, device, depth, backend, false) }
     }
     pub(crate) unsafe fn open_color(
-        config: VideoConfig, device: *mut c_void, depth: u8, backend: HevcEncoderBackend, hdr10: bool,
+        config: VideoConfig,
+        device: *mut c_void,
+        depth: u8,
+        backend: HevcEncoderBackend,
+        hdr10: bool,
     ) -> io::Result<Self> {
         // SAFETY: delegated original owner-thread device and exact depth contract.
         unsafe {
@@ -40,10 +44,12 @@ impl Encoder {
                     windows_mf::Transform::new_hevc_depth(config, device, true, true, depth)
                 })
                 .map(Self::Mf),
-                HevcEncoderBackend::AmdAmf => {
-                    (if hdr10 { windows_amf::Transform::new_color(config, device, depth, true) }
-                    else { windows_amf::Transform::new(config, device, depth) }).map(Self::Amf)
-                }
+                HevcEncoderBackend::AmdAmf => (if hdr10 {
+                    windows_amf::Transform::new_color(config, device, depth, true)
+                } else {
+                    windows_amf::Transform::new(config, device, depth)
+                })
+                .map(Self::Amf),
             }
         }
     }

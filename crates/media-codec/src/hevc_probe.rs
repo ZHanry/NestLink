@@ -129,7 +129,12 @@ fn sps_inner(
     sps_color_mode(nal, width, height, complete, bit_depth, false)
 }
 fn sps_color_mode(
-    nal: &[u8], width: u32, height: u32, complete: bool, bit_depth: u8, hdr10: bool,
+    nal: &[u8],
+    width: u32,
+    height: u32,
+    complete: bool,
+    bit_depth: u8,
+    hdr10: bool,
 ) -> io::Result<Sps> {
     let mut b = Bits::new(nal)?;
     b.field = "sps.vps_id";
@@ -383,7 +388,10 @@ fn sps_color_mode(
                     "vui.colour_primaries",
                     "vui.transfer_characteristics",
                     "vui.matrix_coeffs",
-                ].into_iter().enumerate() {
+                ]
+                .into_iter()
+                .enumerate()
+                {
                     b.field = field;
                     let actual = b.read(8)?;
                     let required = if hdr10 { [9, 16, 9][index] } else { 1 };
@@ -527,7 +535,12 @@ impl Validator {
         }
     }
     pub(crate) fn exact_hdr10() -> Self {
-        Self { complete_sps: true, bit_depth: 10, hdr10: true, ..Self::default() }
+        Self {
+            complete_sps: true,
+            bit_depth: 10,
+            hdr10: true,
+            ..Self::default()
+        }
     }
     pub fn info(&self) -> Option<Sps> {
         self.sps
@@ -719,22 +732,52 @@ pub(crate) mod tests {
     }
     #[test]
     fn hdr_has_independent_explicit_pq_bt2020_parser_and_transactional_history() -> io::Result<()> {
-        let config=VideoConfig{width:640,height:480,fps:60,bitrate_kbps:4000};
-        let hdr=access_unit(fixture_color(false,2,[9,16,9],2,123,0),&[0x28,1,0xb0]);
-        let observed=HevcMain8Contract::observe_hdr10(&hdr,config)?;
-        assert!(observed.is_hdr10());assert_eq!(observed.bit_depth(),10);
-        let sdr=access_unit(fixture_ptl(false,2,1,2,123,0),&[0x28,1,0xb0]);
-        let original=HevcMain8Contract::observe_main10(&sdr,config)?;
-        assert!(!original.is_hdr10());assert_ne!(original.digest(),observed.digest());
-        assert!(HevcMain8Contract::observe_main10(&hdr,config).is_err());
-        assert!(HevcMain8Contract::observe_hdr10(&sdr,config).is_err());
-        let mut admission=HevcMain8Admission::new(observed);admission.validate(&hdr)?;
-        for invalid in [sdr,access_unit(fixture_color(true,2,[9,16,9],2,123,0),&[0x28,1,0xb0]),
-            access_unit(fixture_color(false,2,[9,18,9],2,123,0),&[0x28,1,0xb0]),
-            access_unit(fixture_color(false,2,[1,16,9],2,123,0),&[0x28,1,0xb0]),
-            access_unit(fixture_color(false,2,[9,16,1],2,123,0),&[0x28,1,0xb0]),
-            access_unit(fixture_color(false,0,[9,16,9],1,123,0),&[0x28,1,0xb0])] {
-            assert!(admission.validate(&invalid).is_err());admission.validate(&hdr)?;
+        let config = VideoConfig {
+            width: 640,
+            height: 480,
+            fps: 60,
+            bitrate_kbps: 4000,
+        };
+        let hdr = access_unit(
+            fixture_color(false, 2, [9, 16, 9], 2, 123, 0),
+            &[0x28, 1, 0xb0],
+        );
+        let observed = HevcMain8Contract::observe_hdr10(&hdr, config)?;
+        assert!(observed.is_hdr10());
+        assert_eq!(observed.bit_depth(), 10);
+        let sdr = access_unit(fixture_ptl(false, 2, 1, 2, 123, 0), &[0x28, 1, 0xb0]);
+        let original = HevcMain8Contract::observe_main10(&sdr, config)?;
+        assert!(!original.is_hdr10());
+        assert_ne!(original.digest(), observed.digest());
+        assert!(HevcMain8Contract::observe_main10(&hdr, config).is_err());
+        assert!(HevcMain8Contract::observe_hdr10(&sdr, config).is_err());
+        let mut admission = HevcMain8Admission::new(observed);
+        admission.validate(&hdr)?;
+        for invalid in [
+            sdr,
+            access_unit(
+                fixture_color(true, 2, [9, 16, 9], 2, 123, 0),
+                &[0x28, 1, 0xb0],
+            ),
+            access_unit(
+                fixture_color(false, 2, [9, 18, 9], 2, 123, 0),
+                &[0x28, 1, 0xb0],
+            ),
+            access_unit(
+                fixture_color(false, 2, [1, 16, 9], 2, 123, 0),
+                &[0x28, 1, 0xb0],
+            ),
+            access_unit(
+                fixture_color(false, 2, [9, 16, 1], 2, 123, 0),
+                &[0x28, 1, 0xb0],
+            ),
+            access_unit(
+                fixture_color(false, 0, [9, 16, 9], 1, 123, 0),
+                &[0x28, 1, 0xb0],
+            ),
+        ] {
+            assert!(admission.validate(&invalid).is_err());
+            admission.validate(&hdr)?;
         }
         Ok(())
     }
@@ -853,9 +896,16 @@ pub(crate) mod tests {
         level: u32,
         layers: u32,
     ) -> Vec<u8> {
-        fixture_color(full_range,depth,[1,1,matrix],profile,level,layers)
+        fixture_color(full_range, depth, [1, 1, matrix], profile, level, layers)
     }
-    fn fixture_color(full_range: bool,depth: u32,color: [u32;3],profile: u32,level: u32,layers: u32) -> Vec<u8> {
+    fn fixture_color(
+        full_range: bool,
+        depth: u32,
+        color: [u32; 3],
+        profile: u32,
+        level: u32,
+        layers: u32,
+    ) -> Vec<u8> {
         fn bits(out: &mut Vec<u8>, n: usize, v: u32) {
             for shift in (0..n).rev() {
                 out.push(((v >> shift) & 1) as u8);
@@ -907,7 +957,9 @@ pub(crate) mod tests {
         bits(&mut b, 3, 5);
         bits(&mut b, 1, u32::from(full_range));
         bits(&mut b, 1, 1);
-        for value in color { bits(&mut b,8,value); }
+        for value in color {
+            bits(&mut b, 8, value);
+        }
         bits(&mut b, 7, 0); // remaining VUI flags absent, including timing/restriction.
         bits(&mut b, 1, 0); // no SPS extension.
         bits(&mut b, 1, 1);

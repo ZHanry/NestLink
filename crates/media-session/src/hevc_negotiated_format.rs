@@ -4,7 +4,8 @@
 use nestlink_media_codec::HevcExecutionTarget;
 use nestlink_media_codec::{HevcMain8Contract, VideoConfig};
 use nestlink_protocol::media_format::{
-    Codec, Geometry, HEVC_FORMAT_VERSION, HEVC_MAIN10_FORMAT_VERSION, HEVC_HDR10_FORMAT_VERSION, VideoFormat,
+    Codec, Geometry, HEVC_FORMAT_VERSION, HEVC_HDR10_FORMAT_VERSION, HEVC_MAIN10_FORMAT_VERSION,
+    VideoFormat,
 };
 use std::io;
 
@@ -113,14 +114,22 @@ mod tests {
     use nestlink_protocol::media_format::{FrameRate, HevcPtl};
     #[test]
     fn hdr_v5_builds_an_independent_pq_contract_and_preserves_main10_sdr() -> io::Result<()> {
-        let mut ptl=[0;12];ptl[0]=2;ptl[11]=120;
-        let rate=FrameRate::new(30,1).map_err(io::Error::other)?;
-        let hdr=VideoFormat::hevc_hdr10_observed(ptl,640,480,rate,4000).map_err(io::Error::other)?;
-        let sdr=VideoFormat::hevc_main10_observed(ptl,640,480,rate,4000).map_err(io::Error::other)?;
-        let actual=hevc_execution_target(hdr,7,9)?;
-        assert!(actual.contract().is_hdr10());assert!(!hevc_contract(sdr)?.is_hdr10());
-        assert_ne!(actual,hevc_execution_target(sdr,7,9)?);
-        assert_eq!(hevc_wire_codec(hdr)?,nestlink_protocol::NativeVideoCodec::HevcMain10);
+        let mut ptl = [0; 12];
+        ptl[0] = 2;
+        ptl[11] = 120;
+        let rate = FrameRate::new(30, 1).map_err(io::Error::other)?;
+        let hdr = VideoFormat::hevc_hdr10_observed(ptl, 640, 480, rate, 4000)
+            .map_err(io::Error::other)?;
+        let sdr = VideoFormat::hevc_main10_observed(ptl, 640, 480, rate, 4000)
+            .map_err(io::Error::other)?;
+        let actual = hevc_execution_target(hdr, 7, 9)?;
+        assert!(actual.contract().is_hdr10());
+        assert!(!hevc_contract(sdr)?.is_hdr10());
+        assert_ne!(actual, hevc_execution_target(sdr, 7, 9)?);
+        assert_eq!(
+            hevc_wire_codec(hdr)?,
+            nestlink_protocol::NativeVideoCodec::HevcMain10
+        );
         assert!(hevc_main8_contract(hdr).is_err());
         Ok(())
     }

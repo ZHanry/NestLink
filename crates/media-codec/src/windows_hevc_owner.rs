@@ -61,7 +61,14 @@ impl MfHevcHardwareDecoder {
         }
         // SAFETY: explicit original worker-thread device, hardware-only transform.
         let mut inner = unsafe {
-            Transform::new_hevc_color(target.config(), device, false, true, target.bit_depth(), target.is_hdr10())
+            Transform::new_hevc_color(
+                target.config(),
+                device,
+                false,
+                true,
+                target.bit_depth(),
+                target.is_hdr10(),
+            )
         }?;
         let identity = match observation(&inner) {
             Ok(identity)

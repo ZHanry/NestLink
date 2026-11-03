@@ -74,7 +74,9 @@ fn picture(
     config: VideoConfig,
     hdr10: bool,
 ) -> io::Result<()> {
-    if hdr10 { return picture_hdr10(pixels, pts, expected, count, config); }
+    if hdr10 {
+        return picture_hdr10(pixels, pts, expected, count, config);
+    }
     let pixels = zeroize::Zeroizing::new(pixels);
     let width = config.width as usize;
     let height = config.height as usize;
@@ -103,23 +105,46 @@ fn picture(
     *count += 1;
     Ok(())
 }
-fn picture_hdr10(pixels: Vec<u8>, pts: u64, expected: &mut VecDeque<u64>, count: &mut u64,
-    config: VideoConfig) -> io::Result<()> {
+fn picture_hdr10(
+    pixels: Vec<u8>,
+    pts: u64,
+    expected: &mut VecDeque<u64>,
+    count: &mut u64,
+    config: VideoConfig,
+) -> io::Result<()> {
     let pixels = zeroize::Zeroizing::new(pixels);
     let (width, height) = (config.width as usize, config.height as usize);
     if expected.pop_front() != Some(pts) || pixels.len() != width * height * 4 {
-        return Err(io::Error::other("HDR probe actual decoder PTS/geometry differs"));
+        return Err(io::Error::other(
+            "HDR probe actual decoder PTS/geometry differs",
+        ));
     }
-    let samples = [[401i32,341,683], [723,653,301], [67,513,511], [923,511,515]];
-    for y in [height/4, height*3/4] { for x in [width/4, width*3/4] {
-        let offset = (y * width + x) * 4;
-        let packed = u32::from_le_bytes(pixels[offset..offset+4].try_into()
-            .map_err(|_| io::Error::other("HDR sample packing differs"))?);
-        let target = samples[usize::from(x >= width/2) + 2 * usize::from(y >= height/2)];
-        if packed >> 30 != 0 || (0..3).any(|index| (((packed >> (index*10)) & 1023) as i32 - target[index]).abs() > 12) {
-            return Err(io::Error::other("HDR independent actual ten-bit Y/Cb/Cr quadrants differ"));
+    let samples = [
+        [401i32, 341, 683],
+        [723, 653, 301],
+        [67, 513, 511],
+        [923, 511, 515],
+    ];
+    for y in [height / 4, height * 3 / 4] {
+        for x in [width / 4, width * 3 / 4] {
+            let offset = (y * width + x) * 4;
+            let packed = u32::from_le_bytes(
+                pixels[offset..offset + 4]
+                    .try_into()
+                    .map_err(|_| io::Error::other("HDR sample packing differs"))?,
+            );
+            let target = samples[usize::from(x >= width / 2) + 2 * usize::from(y >= height / 2)];
+            if packed >> 30 != 0
+                || (0..3).any(|index| {
+                    (((packed >> (index * 10)) & 1023) as i32 - target[index]).abs() > 12
+                })
+            {
+                return Err(io::Error::other(
+                    "HDR independent actual ten-bit Y/Cb/Cr quadrants differ",
+                ));
+            }
         }
-    }}
+    }
     *count += 1;
     Ok(())
 }
@@ -142,7 +167,8 @@ impl Workload {
         deadline: Instant,
     ) -> io::Result<()> {
         if self.contract.is_none() {
-            let contract = if self.hdr10 { HevcMain8Contract::observe_hdr10(&packet.data, self.config)
+            let contract = if self.hdr10 {
+                HevcMain8Contract::observe_hdr10(&packet.data, self.config)
             } else if self.bit_depth == 10 {
                 HevcMain8Contract::observe_main10(&packet.data, self.config)
             } else {
@@ -221,14 +247,20 @@ pub fn probe_hevc_direction_with_encoder(
 /// Independent HDR mode: actual PQ/BT2020 SPS plus hardware and software
 /// decoders preserving real P010 sample quadrants. No desktop is captured.
 pub fn probe_hevc_hdr10_direction(
-    config: VideoConfig, direction: ExecutionDirection, cancel: &AtomicBool,
+    config: VideoConfig,
+    direction: ExecutionDirection,
+    cancel: &AtomicBool,
     backend: crate::HevcEncoderBackend,
 ) -> io::Result<HevcDirectionProbe> {
     probe_hevc_color_direction(config, direction, cancel, 10, backend, true)
 }
 fn probe_hevc_color_direction(
-    config: VideoConfig, direction: ExecutionDirection, cancel: &AtomicBool, bit_depth: u8,
-    backend: crate::HevcEncoderBackend, hdr10: bool,
+    config: VideoConfig,
+    direction: ExecutionDirection,
+    cancel: &AtomicBool,
+    bit_depth: u8,
+    backend: crate::HevcEncoderBackend,
+    hdr10: bool,
 ) -> io::Result<HevcDirectionProbe> {
     if !matches!(bit_depth, 8 | 10) {
         return Err(io::Error::other("unsupported HEVC probe depth"));
@@ -241,13 +273,17 @@ fn probe_hevc_color_direction(
     let deadline = Instant::now() + Duration::from_secs(10);
     check(cancel, deadline)?;
     let authority = Arc::new(AtomicBool::new(true));
-    let source = if hdr10 { HevcSyntheticSource::hdr10(config.width, config.height)? }
-        else { HevcSyntheticSource::with_depth(config.width, config.height, bit_depth)? };
+    let source = if hdr10 {
+        HevcSyntheticSource::hdr10(config.width, config.height)?
+    } else {
+        HevcSyntheticSource::with_depth(config.width, config.height, bit_depth)?
+    };
     let mut encoder =
         HevcProbeEncoder::new_with_backend(&source, config, authority.clone(), backend)?;
     let mut gpu =
         HevcProbeDecoder::with_color(Some(&source), config, authority.clone(), bit_depth, hdr10)?;
-    let mut independent = HevcProbeDecoder::with_color(None, config, authority.clone(), bit_depth, hdr10)?;
+    let mut independent =
+        HevcProbeDecoder::with_color(None, config, authority.clone(), bit_depth, hdr10)?;
     let result = (|| {
         let original_encoder = encoder.owner_observation()?;
         let original_decoder = gpu.owner_observation()?;

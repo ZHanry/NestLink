@@ -5,8 +5,14 @@ use crate::{HevcMain8Contract, OwnerObservation, VideoConfig};
 use std::{collections::VecDeque, ffi::c_void, io, marker::PhantomData, ptr::NonNull, rc::Rc};
 
 unsafe extern "C" {
-    fn nl_amf_hdr10_open(device: *mut c_void, width: u32, height: u32, fps: u32, kbps: u32,
-        result: *mut *mut c_void) -> i32;
+    fn nl_amf_hdr10_open(
+        device: *mut c_void,
+        width: u32,
+        height: u32,
+        fps: u32,
+        kbps: u32,
+        result: *mut *mut c_void,
+    ) -> i32;
     fn nl_amf_open(
         device: *mut c_void,
         width: u32,
@@ -72,28 +78,45 @@ impl Transform {
         unsafe { Self::new_color(config, device, depth, false) }
     }
     pub(crate) unsafe fn new_color(
-        config: VideoConfig, device: *mut c_void, depth: u8, hdr10: bool,
+        config: VideoConfig,
+        device: *mut c_void,
+        depth: u8,
+        hdr10: bool,
     ) -> io::Result<Self> {
         match depth {
             8 => HevcMain8Contract::validate_config(config)?,
             10 => HevcMain8Contract::validate_main10_config(config)?,
             _ => return Err(io::Error::other("AMF exact bit depth unavailable")),
         }
-        if hdr10 && depth != 10 { return Err(io::Error::other("HDR requires independent Main10 AMF owner")); }
+        if hdr10 && depth != 10 {
+            return Err(io::Error::other(
+                "HDR requires independent Main10 AMF owner",
+            ));
+        }
         let mut handle = std::ptr::null_mut();
         // SAFETY: original live owner-thread device, initialized output, bounded config.
         checked(
             unsafe {
-                if hdr10 { nl_amf_hdr10_open(device, config.width, config.height, config.fps,
-                    config.bitrate_kbps, &mut handle) } else { nl_amf_open(
-                    device,
-                    config.width,
-                    config.height,
-                    config.fps,
-                    config.bitrate_kbps,
-                    depth.into(),
-                    &mut handle,
-                ) }
+                if hdr10 {
+                    nl_amf_hdr10_open(
+                        device,
+                        config.width,
+                        config.height,
+                        config.fps,
+                        config.bitrate_kbps,
+                        &mut handle,
+                    )
+                } else {
+                    nl_amf_open(
+                        device,
+                        config.width,
+                        config.height,
+                        config.fps,
+                        config.bitrate_kbps,
+                        depth.into(),
+                        &mut handle,
+                    )
+                }
             },
             "open",
         )?;

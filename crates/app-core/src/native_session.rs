@@ -197,13 +197,15 @@ impl NativeSessionConfig {
                 "GPU media cannot replace a configured CPU target or candidate",
             ));
         }
-        self.media_provider = Some(if version == nestlink_protocol::media_authority::HEVC_HDR10_FORMAT_VERSION {
-            crate::NativeMediaProvider::gpu_hevc_hdr10_with_encoder(target, encoder)?
-        } else if version == HEVC_FORMAT_VERSION {
-            crate::NativeMediaProvider::gpu_hevc_main8_with_encoder(target, encoder)?
-        } else {
-            crate::NativeMediaProvider::gpu_hevc_main10_with_encoder(target, encoder)?
-        });
+        self.media_provider = Some(
+            if version == nestlink_protocol::media_authority::HEVC_HDR10_FORMAT_VERSION {
+                crate::NativeMediaProvider::gpu_hevc_hdr10_with_encoder(target, encoder)?
+            } else if version == HEVC_FORMAT_VERSION {
+                crate::NativeMediaProvider::gpu_hevc_main8_with_encoder(target, encoder)?
+            } else {
+                crate::NativeMediaProvider::gpu_hevc_main10_with_encoder(target, encoder)?
+            },
+        );
         self.gpu_hevc_main8_target = Some(target);
         self.gpu_hevc_version = version;
         self.gpu_hevc_encoder = encoder;
@@ -220,9 +222,16 @@ impl NativeSessionConfig {
     }
     /// Explicit independent HDR mode; capability publication still requires
     /// the complete actual PQ/P010 direction workload on this original worker.
-    pub fn with_gpu_hevc_hdr10_encoder(self, target: nestlink_media_codec::VideoConfig,
-        encoder: nestlink_media_codec::HevcEncoderBackend) -> io::Result<Self> {
-        self.with_gpu_hevc_target(target, nestlink_protocol::media_authority::HEVC_HDR10_FORMAT_VERSION, encoder)
+    pub fn with_gpu_hevc_hdr10_encoder(
+        self,
+        target: nestlink_media_codec::VideoConfig,
+        encoder: nestlink_media_codec::HevcEncoderBackend,
+    ) -> io::Result<Self> {
+        self.with_gpu_hevc_target(
+            target,
+            nestlink_protocol::media_authority::HEVC_HDR10_FORMAT_VERSION,
+            encoder,
+        )
     }
     /// Explicit operator configuration; never exposed by the ordinary remote UI.
     /// A second HEVC budget is independently probed and signed by both peers.
@@ -561,7 +570,8 @@ fn validate_gpu_formats(
 ) -> io::Result<()> {
     if !matches!(
         version,
-        HEVC_FORMAT_VERSION | nestlink_protocol::media_authority::HEVC_MAIN10_FORMAT_VERSION
+        HEVC_FORMAT_VERSION
+            | nestlink_protocol::media_authority::HEVC_MAIN10_FORMAT_VERSION
             | nestlink_protocol::media_authority::HEVC_HDR10_FORMAT_VERSION
     ) || formats.formats().is_empty()
         || formats.formats().len() > 1 + usize::from(fallback.is_some())
@@ -806,19 +816,43 @@ mod tests {
     }
     #[tokio::test]
     async fn hdr_opt_in_routes_only_v5_and_cannot_approve_an_sdr_main10_scope() -> Result {
-        use nestlink_protocol::media_format::{FrameRate,VideoFormat};
-        let ids:Vec<_>=(0..4).map(|_|nestlink_auth::random_id()).collect();
-        let gpu=config()?.with_gpu_hevc_hdr10_encoder(target(),nestlink_media_codec::HevcEncoderBackend::AmdAmf)?;
-        assert!(gpu.validate());assert!(gpu.requires_local_media_approval());
-        let (provider,version)=gpu.media_provider_for_request(&ids[0],&ids[1],&ids[2],&ids[3])?.ok_or("HDR route absent")?;
-        assert_eq!(version,5);assert!(provider.matches_gpu_hevc_target(target(),5));
-        assert!(!provider.matches_gpu_hevc_target(target(),4));
-        assert!(gpu.supported_capabilities.iter().any(|v|v==nestlink_protocol::media_authority::HEVC_HDR10_FORMAT_CAPABILITY));
-        let mut ptl=[0;12];ptl[0]=2;ptl[11]=120;
-        let hdr=VideoFormat::hevc_hdr10_observed(ptl,640,480,FrameRate::new(30,1)?,4000)?;
-        let sdr=VideoFormat::hevc_main10_observed(ptl,640,480,FrameRate::new(30,1)?,4000)?;
-        for (format,allowed) in [(hdr,true),(sdr,false)] {
-            assert_eq!(gpu.media_provider_for_approval(&ids[0],&ids[1],&ids[3],&ids[2],&ids[3],&scope(vec![format])?).is_ok(),allowed);
+        use nestlink_protocol::media_format::{FrameRate, VideoFormat};
+        let ids: Vec<_> = (0..4).map(|_| nestlink_auth::random_id()).collect();
+        let gpu = config()?.with_gpu_hevc_hdr10_encoder(
+            target(),
+            nestlink_media_codec::HevcEncoderBackend::AmdAmf,
+        )?;
+        assert!(gpu.validate());
+        assert!(gpu.requires_local_media_approval());
+        let (provider, version) = gpu
+            .media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3])?
+            .ok_or("HDR route absent")?;
+        assert_eq!(version, 5);
+        assert!(provider.matches_gpu_hevc_target(target(), 5));
+        assert!(!provider.matches_gpu_hevc_target(target(), 4));
+        assert!(
+            gpu.supported_capabilities
+                .iter()
+                .any(|v| v == nestlink_protocol::media_authority::HEVC_HDR10_FORMAT_CAPABILITY)
+        );
+        let mut ptl = [0; 12];
+        ptl[0] = 2;
+        ptl[11] = 120;
+        let hdr = VideoFormat::hevc_hdr10_observed(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
+        let sdr = VideoFormat::hevc_main10_observed(ptl, 640, 480, FrameRate::new(30, 1)?, 4000)?;
+        for (format, allowed) in [(hdr, true), (sdr, false)] {
+            assert_eq!(
+                gpu.media_provider_for_approval(
+                    &ids[0],
+                    &ids[1],
+                    &ids[3],
+                    &ids[2],
+                    &ids[3],
+                    &scope(vec![format])?
+                )
+                .is_ok(),
+                allowed
+            );
         }
         Ok(())
     }
