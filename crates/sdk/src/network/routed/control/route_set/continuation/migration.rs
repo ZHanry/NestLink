@@ -81,7 +81,6 @@ impl ContinuousRouteSetSession {
             return Ok(status);
         }
         if cancel_is_stopped(&self.cancel)
-            || self.channels.lease_control().remaining().is_err()
             || !self
                 .route
                 .is_current_for(sdk, local, &self.permit, peer_key)
@@ -89,6 +88,11 @@ impl ContinuousRouteSetSession {
             let _ = self.channels.lease_control().stop(StopReason::Revoked);
             return Err(SdkError::Trust.into());
         }
+        // The original carrier can fail after poll returned its snapshot.
+        // Observing that stopped lease is not a new authority revocation.
+        // remaining() reconciles its actual stop and cleanup; keep that fact
+        // for the independently authorized fresh-generation recovery path.
+        self.channels.lease_control().remaining()?;
         let Some(slot) = self.standby.as_ref() else {
             return if request_index.is_some() {
                 Err(SdkError::Trust.into())
