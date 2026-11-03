@@ -1,0 +1,772 @@
+{
+  "schema_version": 1,
+  "scope": "Completed boundary-tools jobs only; not a complete Rust workflow, resident, device, public NAT or release acceptance.",
+  "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+  "workflow": ".github/workflows/rust-core.yml",
+  "run_id": 41562145692,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41562145692",
+  "run_attempt": 1,
+  "full_workflow_conclusion_claimed": false,
+  "build_provenance": {
+    "environment": "GitHub-hosted Actions",
+    "native_suppliers": "Original pinned codec build and installation verification succeeded in both completed boundary-tools jobs",
+    "source_exactly_checked_against_job_metadata": true
+  },
+  "execution_provenance": {
+    "linux": "ubuntu-24.04 GitHub-hosted runner",
+    "windows": "windows-2022 GitHub-hosted runner",
+    "device_or_public_nat_execution_claimed": false
+  },
+  "targets": [
+    {
+      "platform": "linux",
+      "job_id": 125675006634,
+      "job_url": "https://github.com/ZHanry/NestLink/actions/runs/41562145692/job/125675006634",
+      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+      "started_at": "2026-11-03T01:48:46Z",
+      "completed_at": "2026-11-03T01:50:01Z",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:48:46Z",
+          "completed_at": "2026-11-03T01:48:47Z"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:48:47Z",
+          "completed_at": "2026-11-03T01:48:49Z"
+        },
+        {
+          "number": 3,
+          "name": "Verify normal Windows test identity",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-03T01:48:49Z",
+          "completed_at": "2026-11-03T01:48:49Z"
+        },
+        {
+          "number": 4,
+          "name": "Set native codec location",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:48:49Z",
+          "completed_at": "2026-11-03T01:48:50Z"
+        },
+        {
+          "number": 5,
+          "name": "Run sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin xvfb xauth x11-xserver-utils gnome-keyring libsecret-tools libpam-systemd",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:48:50Z",
+          "completed_at": "2026-11-03T01:49:08Z"
+        },
+        {
+          "number": 6,
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-03T01:49:08Z",
+          "completed_at": "2026-11-03T01:49:08Z"
+        },
+        {
+          "number": 7,
+          "name": "Run python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir \"/home/runner/work/_temp/nestlink-codec-sources\" --work-dir \"/home/runner/work/_temp/nestlink-codecs\"",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:08Z",
+          "completed_at": "2026-11-03T01:49:33Z"
+        },
+        {
+          "number": 8,
+          "name": "Run python scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir \"/home/runner/work/_temp/nestlink-codec-sources\" --work-dir \"/home/runner/work/_temp/nestlink-codecs\" --msys-bin \"/usr/bin\" --nasm \"/usr/bin/nasm.exe\"",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-03T01:49:33Z",
+          "completed_at": "2026-11-03T01:49:33Z"
+        },
+        {
+          "number": 9,
+          "name": "Run python scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix \"/home/runner/work/_temp/nestlink-codecs/x86_64-unknown-linux-gnu\"",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:33Z",
+          "completed_at": "2026-11-03T01:49:33Z"
+        },
+        {
+          "number": 10,
+          "name": "Run rustup show",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:33Z",
+          "completed_at": "2026-11-03T01:49:41Z"
+        },
+        {
+          "number": 11,
+          "name": "Allow the normal Windows token to use CI build inputs",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-03T01:49:41Z",
+          "completed_at": "2026-11-03T01:49:41Z"
+        },
+        {
+          "number": 12,
+          "name": "Run bash scripts/test-vp8-boundary-sanitizer.sh",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:41Z",
+          "completed_at": "2026-11-03T01:49:42Z"
+        },
+        {
+          "number": 13,
+          "name": "Run bash scripts/test-pipewire-audio-sanitizer.sh",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:42Z",
+          "completed_at": "2026-11-03T01:49:43Z"
+        },
+        {
+          "number": 14,
+          "name": "Browser tool regressions (Node)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:43Z",
+          "completed_at": "2026-11-03T01:49:53Z"
+        },
+        {
+          "number": 15,
+          "name": "Install pinned receipt test crypto on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:53Z",
+          "completed_at": "2026-11-03T01:49:55Z"
+        },
+        {
+          "number": 16,
+          "name": "Owned public tunnel tool and receipt regressions without network",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:55Z",
+          "completed_at": "2026-11-03T01:49:55Z"
+        },
+        {
+          "number": 17,
+          "name": "Run python -m unittest discover -s tests/refactor -p \"test_*.py\"",
+          "status": "completed",
+          "conclusion": "failure",
+          "started_at": "2026-11-03T01:49:55Z",
+          "completed_at": "2026-11-03T01:49:59Z"
+        },
+        {
+          "number": 18,
+          "name": "Run python scripts/refactor-ui-tokens.py --check",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-03T01:49:59Z",
+          "completed_at": "2026-11-03T01:49:59Z"
+        },
+        {
+          "number": 19,
+          "name": "Run cargo xtask check",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-03T01:49:59Z",
+          "completed_at": "2026-11-03T01:49:59Z"
+        },
+        {
+          "number": 38,
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:59Z",
+          "completed_at": "2026-11-03T01:50:00Z"
+        },
+        {
+          "number": 39,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:50:00Z",
+          "completed_at": "2026-11-03T01:50:00Z"
+        }
+      ],
+      "complete_job_log": "linux-boundary-job-125675006634.log",
+      "python_error_count": 35,
+      "python_error_headers": [
+        {
+          "header": "test_reviewed_real_forks_preserve_original_attribution_and_mit_grant (test_cargo_notices.LocalWebForkTests.test_reviewed_real_forks_preserve_original_attribution_and_mit_grant)",
+          "log_line": 1372
+        },
+        {
+          "header": "test_reviewed_web_forks_do_not_clear_an_unrelated_missing_original_notice (test_cargo_notices.LocalWebForkTests.test_reviewed_web_forks_do_not_clear_an_unrelated_missing_original_notice)",
+          "log_line": 1388
+        },
+        {
+          "header": "test_tampered_review_archive_original_source_edit_or_license_are_rejected (test_cargo_notices.LocalWebForkTests.test_tampered_review_archive_original_source_edit_or_license_are_rejected) (filename='UPSTREAM.json')",
+          "log_line": 1404
+        },
+        {
+          "header": "test_tampered_review_archive_original_source_edit_or_license_are_rejected (test_cargo_notices.LocalWebForkTests.test_tampered_review_archive_original_source_edit_or_license_are_rejected) (filename='UPSTREAM.md')",
+          "log_line": 1420
+        },
+        {
+          "header": "test_tampered_review_archive_original_source_edit_or_license_are_rejected (test_cargo_notices.LocalWebForkTests.test_tampered_review_archive_original_source_edit_or_license_are_rejected) (filename='UPSTREAM.crate')",
+          "log_line": 1436
+        },
+        {
+          "header": "test_tampered_review_archive_original_source_edit_or_license_are_rejected (test_cargo_notices.LocalWebForkTests.test_tampered_review_archive_original_source_edit_or_license_are_rejected) (filename='LICENSE')",
+          "log_line": 1452
+        },
+        {
+          "header": "test_tampered_review_archive_original_source_edit_or_license_are_rejected (test_cargo_notices.LocalWebForkTests.test_tampered_review_archive_original_source_edit_or_license_are_rejected) (filename='Cargo.toml.orig')",
+          "log_line": 1468
+        },
+        {
+          "header": "test_tampered_review_archive_original_source_edit_or_license_are_rejected (test_cargo_notices.LocalWebForkTests.test_tampered_review_archive_original_source_edit_or_license_are_rejected) (filename='src/erased.rs')",
+          "log_line": 1484
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='path')",
+          "log_line": 1500
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='source-file')",
+          "log_line": 1516
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='workspace-member')",
+          "log_line": 1532
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='name')",
+          "log_line": 1548
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='version')",
+          "log_line": 1564
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='license')",
+          "log_line": 1580
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='authors')",
+          "log_line": 1596
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='repository')",
+          "log_line": 1612
+        },
+        {
+          "header": "test_both_turn_versions_keep_original_notice_and_attribution (test_dependency_git_forks.GitForkNotices.test_both_turn_versions_keep_original_notice_and_attribution)",
+          "log_line": 1628
+        },
+        {
+          "header": "test_added_linked_source_is_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_added_linked_source_is_rejected)",
+          "log_line": 1644
+        },
+        {
+          "header": "test_exact_archive_original_empty_authors_and_grant_survive_collection (test_foundation_cargo_notices.FoundationNoticeTests.test_exact_archive_original_empty_authors_and_grant_survive_collection)",
+          "log_line": 1660
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='UPSTREAM.json')",
+          "log_line": 1676
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='UPSTREAM.md')",
+          "log_line": 1692
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='UPSTREAM.crate')",
+          "log_line": 1708
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='LICENSE')",
+          "log_line": 1724
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='Cargo.toml')",
+          "log_line": 1740
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='Cargo.toml.orig')",
+          "log_line": 1756
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='.cargo_vcs_info.json')",
+          "log_line": 1772
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='src/thread.rs')",
+          "log_line": 1788
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='src/lib.rs')",
+          "log_line": 1804
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='path')",
+          "log_line": 1820
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='workspace-member')",
+          "log_line": 1836
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='version')",
+          "log_line": 1852
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='license')",
+          "log_line": 1868
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='authors')",
+          "log_line": 1884
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='repository')",
+          "log_line": 1900
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='extra-source')",
+          "log_line": 1916
+        }
+      ],
+      "unique_exception_messages": [
+        "ValueError: Run cargo fetch --locked before testing dependency fork sources"
+      ],
+      "actual_test_summary_lines": [
+        {
+          "text": "Ran 16 tests in 0.166s",
+          "log_line": 1319
+        },
+        {
+          "text": "OK",
+          "log_line": 1321
+        },
+        {
+          "text": "Ran 14 tests in 0.031s",
+          "log_line": 1324
+        },
+        {
+          "text": "OK",
+          "log_line": 1326
+        },
+        {
+          "text": "Ran 292 tests in 3.987s",
+          "log_line": 1932
+        },
+        {
+          "text": "FAILED (errors=35, skipped=4)",
+          "log_line": 1934
+        }
+      ],
+      "actual_sanitizer_output_lines": [
+        {
+          "text": "VP8 bridge sanitizer: 96 real frames, 3072 mutated packets, every encoded-prefix truncation passed",
+          "log_line": 746
+        },
+        {
+          "text": "PipeWire audio production validators: 100000 PCM cases, permissions, channel/offset/stride bounds, silence, links and uint64 serial passed",
+          "log_line": 756
+        }
+      ]
+    },
+    {
+      "platform": "windows",
+      "job_id": 125675006834,
+      "job_url": "https://github.com/ZHanry/NestLink/actions/runs/41562145692/job/125675006834",
+      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+      "started_at": "2026-11-03T01:48:56Z",
+      "completed_at": "2026-11-03T01:52:37Z",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:48:57Z",
+          "completed_at": "2026-11-03T01:48:57Z"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:48:57Z",
+          "completed_at": "2026-11-03T01:49:06Z"
+        },
+        {
+          "number": 3,
+          "name": "Verify normal Windows test identity",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:06Z",
+          "completed_at": "2026-11-03T01:49:07Z"
+        },
+        {
+          "number": 4,
+          "name": "Set native codec location",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:07Z",
+          "completed_at": "2026-11-03T01:49:08Z"
+        },
+        {
+          "number": 5,
+          "name": "Run sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin xvfb xauth x11-xserver-utils gnome-keyring libsecret-tools libpam-systemd",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-03T01:49:08Z",
+          "completed_at": "2026-11-03T01:49:08Z"
+        },
+        {
+          "number": 6,
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:08Z",
+          "completed_at": "2026-11-03T01:49:27Z"
+        },
+        {
+          "number": 7,
+          "name": "Run python3 scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir \"D:\\a\\_temp/nestlink-codec-sources\" --work-dir \"D:\\a\\_temp/nestlink-codecs\"",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-03T01:49:27Z",
+          "completed_at": "2026-11-03T01:49:27Z"
+        },
+        {
+          "number": 8,
+          "name": "Run python scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir \"D:\\a\\_temp/nestlink-codec-sources\" --work-dir \"D:\\a\\_temp/nestlink-codecs\" --msys-bin \"D:\\a\\_temp\\msys64/usr/bin\" --nasm \"D:\\a\\_temp\\msys64/usr/bin/nasm.exe\"",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:49:27Z",
+          "completed_at": "2026-11-03T01:51:38Z"
+        },
+        {
+          "number": 9,
+          "name": "Run python scripts/refactor-native-codecs.py verify --target x86_64-pc-windows-msvc --prefix \"D:\\a\\_temp\\nestlink-codecs\\x86_64-pc-windows-msvc\"",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:51:38Z",
+          "completed_at": "2026-11-03T01:51:39Z"
+        },
+        {
+          "number": 10,
+          "name": "Run rustup show",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:51:39Z",
+          "completed_at": "2026-11-03T01:51:48Z"
+        },
+        {
+          "number": 11,
+          "name": "Allow the normal Windows token to use CI build inputs",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:51:48Z",
+          "completed_at": "2026-11-03T01:51:51Z"
+        },
+        {
+          "number": 12,
+          "name": "Run bash scripts/test-vp8-boundary-sanitizer.sh",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-03T01:51:51Z",
+          "completed_at": "2026-11-03T01:51:51Z"
+        },
+        {
+          "number": 13,
+          "name": "Run bash scripts/test-pipewire-audio-sanitizer.sh",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-03T01:51:51Z",
+          "completed_at": "2026-11-03T01:51:51Z"
+        },
+        {
+          "number": 14,
+          "name": "Browser tool regressions (Node)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:51:51Z",
+          "completed_at": "2026-11-03T01:52:04Z"
+        },
+        {
+          "number": 15,
+          "name": "Install pinned receipt test crypto on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:52:04Z",
+          "completed_at": "2026-11-03T01:52:09Z"
+        },
+        {
+          "number": 16,
+          "name": "Owned public tunnel tool and receipt regressions without network",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:52:09Z",
+          "completed_at": "2026-11-03T01:52:11Z"
+        },
+        {
+          "number": 17,
+          "name": "Run python -m unittest discover -s tests/refactor -p \"test_*.py\"",
+          "status": "completed",
+          "conclusion": "failure",
+          "started_at": "2026-11-03T01:52:11Z",
+          "completed_at": "2026-11-03T01:52:33Z"
+        },
+        {
+          "number": 18,
+          "name": "Run python scripts/refactor-ui-tokens.py --check",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-03T01:52:33Z",
+          "completed_at": "2026-11-03T01:52:33Z"
+        },
+        {
+          "number": 19,
+          "name": "Run cargo xtask check",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-03T01:52:33Z",
+          "completed_at": "2026-11-03T01:52:33Z"
+        },
+        {
+          "number": 38,
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:52:33Z",
+          "completed_at": "2026-11-03T01:52:35Z"
+        },
+        {
+          "number": 39,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-03T01:52:35Z",
+          "completed_at": "2026-11-03T01:52:35Z"
+        }
+      ],
+      "complete_job_log": "windows-boundary-job-125675006834.log",
+      "python_error_count": 35,
+      "python_error_headers": [
+        {
+          "header": "test_reviewed_real_forks_preserve_original_attribution_and_mit_grant (test_cargo_notices.LocalWebForkTests.test_reviewed_real_forks_preserve_original_attribution_and_mit_grant)",
+          "log_line": 1036
+        },
+        {
+          "header": "test_reviewed_web_forks_do_not_clear_an_unrelated_missing_original_notice (test_cargo_notices.LocalWebForkTests.test_reviewed_web_forks_do_not_clear_an_unrelated_missing_original_notice)",
+          "log_line": 1052
+        },
+        {
+          "header": "test_tampered_review_archive_original_source_edit_or_license_are_rejected (test_cargo_notices.LocalWebForkTests.test_tampered_review_archive_original_source_edit_or_license_are_rejected) (filename='UPSTREAM.json')",
+          "log_line": 1068
+        },
+        {
+          "header": "test_tampered_review_archive_original_source_edit_or_license_are_rejected (test_cargo_notices.LocalWebForkTests.test_tampered_review_archive_original_source_edit_or_license_are_rejected) (filename='UPSTREAM.md')",
+          "log_line": 1084
+        },
+        {
+          "header": "test_tampered_review_archive_original_source_edit_or_license_are_rejected (test_cargo_notices.LocalWebForkTests.test_tampered_review_archive_original_source_edit_or_license_are_rejected) (filename='UPSTREAM.crate')",
+          "log_line": 1100
+        },
+        {
+          "header": "test_tampered_review_archive_original_source_edit_or_license_are_rejected (test_cargo_notices.LocalWebForkTests.test_tampered_review_archive_original_source_edit_or_license_are_rejected) (filename='LICENSE')",
+          "log_line": 1116
+        },
+        {
+          "header": "test_tampered_review_archive_original_source_edit_or_license_are_rejected (test_cargo_notices.LocalWebForkTests.test_tampered_review_archive_original_source_edit_or_license_are_rejected) (filename='Cargo.toml.orig')",
+          "log_line": 1132
+        },
+        {
+          "header": "test_tampered_review_archive_original_source_edit_or_license_are_rejected (test_cargo_notices.LocalWebForkTests.test_tampered_review_archive_original_source_edit_or_license_are_rejected) (filename='src/erased.rs')",
+          "log_line": 1148
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='path')",
+          "log_line": 1164
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='source-file')",
+          "log_line": 1180
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='workspace-member')",
+          "log_line": 1196
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='name')",
+          "log_line": 1212
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='version')",
+          "log_line": 1228
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='license')",
+          "log_line": 1244
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='authors')",
+          "log_line": 1260
+        },
+        {
+          "header": "test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected (test_cargo_notices.LocalWebForkTests.test_unreviewed_path_source_file_and_first_party_reclassification_are_rejected) (fault='repository')",
+          "log_line": 1276
+        },
+        {
+          "header": "test_both_turn_versions_keep_original_notice_and_attribution (test_dependency_git_forks.GitForkNotices.test_both_turn_versions_keep_original_notice_and_attribution)",
+          "log_line": 1292
+        },
+        {
+          "header": "test_added_linked_source_is_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_added_linked_source_is_rejected)",
+          "log_line": 1308
+        },
+        {
+          "header": "test_exact_archive_original_empty_authors_and_grant_survive_collection (test_foundation_cargo_notices.FoundationNoticeTests.test_exact_archive_original_empty_authors_and_grant_survive_collection)",
+          "log_line": 1324
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='UPSTREAM.json')",
+          "log_line": 1340
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='UPSTREAM.md')",
+          "log_line": 1356
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='UPSTREAM.crate')",
+          "log_line": 1372
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='LICENSE')",
+          "log_line": 1388
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='Cargo.toml')",
+          "log_line": 1404
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='Cargo.toml.orig')",
+          "log_line": 1420
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='.cargo_vcs_info.json')",
+          "log_line": 1436
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='src/thread.rs')",
+          "log_line": 1452
+        },
+        {
+          "header": "test_source_archive_attribution_provenance_and_grant_edits_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_source_archive_attribution_provenance_and_grant_edits_are_rejected) (filename='src/lib.rs')",
+          "log_line": 1468
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='path')",
+          "log_line": 1484
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='workspace-member')",
+          "log_line": 1500
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='version')",
+          "log_line": 1516
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='license')",
+          "log_line": 1532
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='authors')",
+          "log_line": 1548
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='repository')",
+          "log_line": 1564
+        },
+        {
+          "header": "test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected (test_foundation_cargo_notices.FoundationNoticeTests.test_unreviewed_path_workspace_reclassification_and_inferred_authors_are_rejected) (fault='extra-source')",
+          "log_line": 1580
+        }
+      ],
+      "unique_exception_messages": [
+        "ValueError: Run cargo fetch --locked before testing dependency fork sources"
+      ],
+      "actual_test_summary_lines": [
+        {
+          "text": "Ran 16 tests in 0.314s",
+          "log_line": 983
+        },
+        {
+          "text": "OK",
+          "log_line": 985
+        },
+        {
+          "text": "Ran 14 tests in 0.141s",
+          "log_line": 988
+        },
+        {
+          "text": "OK",
+          "log_line": 990
+        },
+        {
+          "text": "Ran 292 tests in 21.243s",
+          "log_line": 1596
+        },
+        {
+          "text": "FAILED (errors=35, skipped=18)",
+          "log_line": 1598
+        }
+      ],
+      "actual_sanitizer_output_lines": []
+    }
+  ],
+  "findings": [
+    "Both original Python discovery commands actually ran all292 discovered tests. Linux completed in3.987s with errors35/skipped4; Windows in21.243s with errors35/skipped18. The35 ERROR records are notice fixtures with the sole exception ValueError: Run cargo fetch --locked before testing dependency fork sources, raised by scripts/refactor-cargo-notices.py dependency_fork_source before original notice assertions could execute. This is an unmet fresh-job dependency prerequisite, not successful notice qualification.",
+    "The independent job split retained the original Python command but no preceding cargo command populated its reviewed registry/git fork sources. A newer locked cargo-fetch prerequisite can repair scheduling; these original failed jobs cannot qualify that newer change. No test, attribution/license assertion or required fork is removed.",
+    "Linux original VP8 boundary sanitizer passed:96 real frames,3072 mutated packets and every encoded-prefix truncation. The original command instruments first-party vp8.c and its original adversarial corpus with ASan/UBSan, links pinned libvpx/libyuv and requires leak detection/halt-on-UB. The upstream static libraries themselves are outside that instrumentation boundary.",
+    "Linux original PipeWire boundary sanitizer passed:100000 PCM cases, permissions, channel/offset/stride bounds, silence, links and uint64 serial. Windows sanitizer steps were skipped under their original Linux-only condition, not failed or executed.",
+    "Original browser-tool and owned-public-tunnel regression steps passed both OS. Both later UI-token check and cargo xtask check were skipped after the original Python discovery failure. No complete notice inventory, full Rust workflow or release completion follows from the successful sanitizer subset.",
+    "No local project build, formatter, lint, test, Python execution or packaging occurred. Only completed original remote job metadata/logs were downloaded, parsed and independently hashed."
+  ],
+  "independent_verification": {
+    "complete_job_logs": 2,
+    "job_metadata_files": 2,
+    "downloaded_files_hashed": 4,
+    "files": [
+      {
+        "path": "linux-boundary-job-125675006634.log",
+        "bytes": 180563,
+        "sha256": "3d2ddfad7205956f97e59183b5b6114303190bef22ca0bbbebb94d3e4a2874b0"
+      },
+      {
+        "path": "linux-boundary-job.json",
+        "bytes": 5437,
+        "sha256": "9cf0ef53ca20618a6d480379264e617014a29d769db0af4606e4c31c075eb7f5"
+      },
+      {
+        "path": "windows-boundary-job-125675006834.log",
+        "bytes": 144927,
+        "sha256": "645b9217cf0dc7753d14ec8aa43fd3bb7bef136318beef2d5f9e944bea225bdf"
+      },
+      {
+        "path": "windows-boundary-job.json",
+        "bytes": 5414,
+        "sha256": "e46154048656985b21a237222ddea89f9ed932a2521e1bf50cd8fe04292fbcbb"
+      }
+    ]
+  }
+}

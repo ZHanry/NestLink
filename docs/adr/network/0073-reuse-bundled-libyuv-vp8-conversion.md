@@ -154,3 +154,21 @@ for both independently hashed complete logs, metadata and independently
 downloaded artifact ZIPs matching GitHub's official digests. Original timing,
 authority and cleanup assertions remain unchanged; newer platform ownership
 changes require newer exact-source hosted execution.
+
+Separate completed boundary-tools jobs in run41562145692, exact source
+`c5893625ebbe3b50406810bd7eb34c60cbbea849`, now actually pass the original
+Linux VP8 boundary ASan/UBSan command: 96 real frames, 3072 mutated packets and
+every encoded-prefix truncation. It instruments first-party vp8.c and the
+original adversarial fixture while linking the pinned libvpx/libyuv static
+libraries; upstream libraries themselves remain outside this instrumentation.
+The original PipeWire sanitizer also passes its 100000-case corpus. Both OS
+build and verify the native supplier, but their original 292-test Python
+discovery commands fail with 35 notice-fixture setup errors: the fresh job
+has not fetched the reviewed Cargo registry/git fork sources. Every recorded
+exception is the existing dependency_fork_source requirement to run cargo
+fetch --locked. Original notice assertions cannot be qualified before that
+prerequisite and a newer hosted run. Later UI-token/xtask checks are skipped.
+See [completed boundary-tools evidence](../../network-rewrite/evidence/boundary-tools-c589362.json)
+for complete original job/step metadata, error names, real sanitizer output
+and four independently hashed downloaded files. This scoped result does not
+claim the full Rust run, original resident suite or release gate completed.
