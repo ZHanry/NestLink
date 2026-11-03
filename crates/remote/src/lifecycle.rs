@@ -564,6 +564,15 @@ impl LeaseControl {
                 .report
                 .is_none_or(|report| matches!(report.cleanup, CleanupStatus::Failed(_)))
         {
+            eprintln!(
+                "reconnection budget rejected: external_closed={} external_stop={:?} network={:?} carrier={:?} forbidden={} cleanup={:?}",
+                self.inner.stop.has_changed().is_err(),
+                *self.inner.stop.borrow(),
+                self.inner.network.as_ref().and_then(NetworkBinding::reason),
+                self.inner.carrier.as_ref().and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released)),
+                managed.recovery_forbidden,
+                managed.report.map(|report| report.cleanup),
+            );
             return Err(RemoteError::Stopped);
         }
         if managed.renewal_peer_deadline.is_some() {

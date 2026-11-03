@@ -1,0 +1,107 @@
+name: Publish same-source 0.8.0RC preview
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Full main SHA of the frozen candidate
+        required: true
+        type: string
+      candidate_run_id:
+        description: Successful v15-candidate-build run for this exact source
+        required: true
+        type: string
+      action:
+        description: Verify, upload draft, or publish the explicitly authorized preview
+        required: true
+        default: verify
+        type: choice
+        options: [verify, upload-draft, publish]
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: nestlink-0-8-rc-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ github.token }}
+      EXPECTED_SOURCE: ${{ inputs.source_revision }}
+      CANDIDATE_RUN: ${{ inputs.candidate_run_id }}
+      PUBLICATION_ACTION: ${{ inputs.action }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Verify exact main, successful producer, official archive and required checks
+        shell: python
+        run: |
+          import hashlib, importlib.util, json, os, pathlib, re, subprocess, zipfile
+          source, run_id = os.environ['EXPECTED_SOURCE'], os.environ['CANDIDATE_RUN']
+          assert re.fullmatch('[0-9a-f]{40}', source) and re.fullmatch('[1-9][0-9]*', run_id)
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          assert os.environ['GITHUB_WORKFLOW_SHA'] == source
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip() == source
+          assert subprocess.check_output(['git','symbolic-ref','--short','HEAD'],text=True).strip() == 'main'
+          scratch = pathlib.Path(os.environ['RUNNER_TEMP'])/'rc-publication'
+          scratch.mkdir()
+          def api(path):
+              return json.loads(subprocess.check_output(['gh','api','--method','GET','repos/ZHanry/NestLink/'+path],timeout=60))
+          run = api('actions/runs/'+run_id)
+          assert run['head_sha'] == source and run['status'] == 'completed' and run['conclusion'] == 'success'
+          assert run['path'] == '.github/workflows/v15-candidate-build.yml' and run['event'] == 'workflow_dispatch'
+          artifacts = api('actions/runs/'+run_id+'/artifacts?per_page=100')['artifacts']
+          selected = [a for a in artifacts if a['name'] == 'rc-development-candidate-'+str(run['run_attempt']) and not a['expired']]
+          assert len(selected) == 1
+          artifact = selected[0]
+          assert artifact['workflow_run']['head_sha'] == source and artifact['workflow_run']['id'] == int(run_id)
+          archive = scratch/'candidate.zip'
+          with archive.open('wb') as output:
+              subprocess.run(['gh','api',f"repos/ZHanry/NestLink/actions/artifacts/{artifact['id']}/zip"],stdout=output,check=True,timeout=900)
+          digest = hashlib.file_digest(archive.open('rb'),'sha256').hexdigest()
+          assert artifact['digest'] == 'sha256:'+digest and archive.stat().st_size == artifact['size_in_bytes']
+          spec = importlib.util.spec_from_file_location('rc_policy', 'scripts/refactor-rc-publish.py')
+          policy = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(policy)
+          bundle = scratch/'bundle'
+          bundle.mkdir()
+          with zipfile.ZipFile(archive) as zipped:
+              seen, total = set(), 0
+              assert len(zipped.infolist()) <= 256
+              for entry in zipped.infolist():
+                  if entry.is_dir():
+                      continue
+                  policy.portable(entry.filename)
+                  assert entry.filename.casefold() not in seen and entry.file_size <= policy.MAX_ASSET_BYTES
+                  assert (entry.external_attr >> 16) & 0o170000 != 0o120000
+                  seen.add(entry.filename.casefold())
+                  total += entry.file_size
+                  assert total <= 8 * 1024**3
+                  zipped.extract(entry,bundle)
+          (scratch/'producer-archive.json').write_text(json.dumps({'run':run,'artifact':artifact,'verified_archive_sha256':digest},indent=2)+'\n')
+          subprocess.run(['python3','-B','scripts/refactor-required-checks.py','--source',source,'--output',str(scratch/'required-checks.json')],check=True,timeout=600)
+      - name: Publish immutable preview bytes with actual pending acceptance
+        shell: python
+        run: |
+          import os, pathlib, subprocess
+          scratch = pathlib.Path(os.environ['RUNNER_TEMP'])/'rc-publication'
+          bundle = scratch/'bundle'
+          subprocess.run(['python3','-B','scripts/refactor-rc-publish.py',os.environ['PUBLICATION_ACTION'],
+            '--repository','ZHanry/NestLink','--source-root',str(pathlib.Path.cwd()),
+            '--bundle',str(bundle),'--manifest',str(bundle/'candidate-build-manifest.json'),
+            '--deferred-target-acceptance','--output',str(scratch/'publication-receipt.json')],check=True,timeout=2700)
+      - name: Retain source, producer archive and publication receipts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: rc-publication-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/rc-publication/producer-archive.json
+            ${{ runner.temp }}/rc-publication/required-checks.json
+            ${{ runner.temp }}/rc-publication/publication-receipt.json
+          if-no-files-found: warn
