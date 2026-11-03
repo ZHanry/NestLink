@@ -54,10 +54,9 @@ static PLATFORM_OWNER: Semaphore = Semaphore::const_new(1);
 /// environment or installing a replacement platform/keyring implementation.
 pub struct Platform {
     env: Vec<(&'static str, String)>,
-    children: Vec<Child>,
-    // Fields drop in declaration order: retain ownership through child Drop,
-    // and through every awaited kill/reap in the original explicit shutdown.
-    _desktop_owner: SemaphorePermit<'static>,
+    pub(super) children: Vec<Child>,
+    // Keep the permit until explicit shutdown or Drop has reaped every child.
+    desktop_owner: Option<SemaphorePermit<'static>>,
 }
 impl Platform {
     pub async fn new(area: &Path) -> Result<Self> {
@@ -65,7 +64,7 @@ impl Platform {
         let value = Self {
             env: Vec::new(),
             children: Vec::new(),
-            _desktop_owner: desktop_owner,
+            desktop_owner: Some(desktop_owner),
         };
         #[cfg(target_os = "linux")]
         let mut value = value;
@@ -455,6 +454,54 @@ impl Platform {
     pub async fn shutdown(mut self) {
         for child in self.children.iter_mut().rev() {
             let _ = child.kill().await;
+        }
+    }
+}
+
+impl Drop for Platform {
+    fn drop(&mut self) {
+        let mut failure = None;
+        for child in self.children.iter_mut().rev() {
+            let mut kill_error = child.start_kill().err();
+            loop {
+                match child.try_wait() {
+                    Ok(Some(_)) => break,
+                    Ok(None) => {
+                        if let Some(error) = kill_error.take() {
+                            failure = Some(("kill", error));
+                            break;
+                        }
+                        // try_wait reaps the original process without relying
+                        // on the Tokio runtime that may already be unwinding.
+                        std::thread::sleep(Duration::from_millis(1));
+                    }
+                    Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+                    Err(error) => {
+                        failure = Some(("reap", error));
+                        break;
+                    }
+                }
+            }
+            if failure.is_some() {
+                break;
+            }
+        }
+        if let Some((stage, error)) = failure {
+            // An unknown physical cleanup result cannot admit another owner.
+            // Closing also wakes queued cases with an error instead of hanging.
+            PLATFORM_OWNER.close();
+            if let Some(owner) = self.desktop_owner.take() {
+                std::mem::forget(owner);
+            }
+            eprintln!(
+                "original_platform_cleanup stage={stage} io_kind={:?} os_code={:?}",
+                error.kind(),
+                error.raw_os_error()
+            );
+            if std::thread::panicking() {
+                return;
+            }
+            panic!("original platform cleanup did not reap its retained process");
         }
     }
 }

@@ -30,16 +30,22 @@ existing semaphore to put this same ownership boundary in Platform itself,
 so the complete workspace's default test parallelism cannot overlap these
 real platform lifecycles. There is one process-local permit. Acquisition occurs
 before creating OS owners or starting any original fixture/case deadline.
-The permit remains in Platform through its original awaited child shutdown;
-its last field drops after the original kill-on-drop child owners on all
-return, failure and cancellation paths. No retry or replacement OS owner is
-introduced. This is resource scheduling, not proof of the old PlatformChanged
-cause or permission to continue after a real platform failure.
+The permit remains in Platform through its original awaited child shutdown.
+Drop also starts termination and synchronously polls each original Child's
+try_wait until actual exit/reap before releasing the permit. A signal alone
+does not establish cleanup. This uses no asynchronous task that a shutting-down
+test runtime could cancel. An unknown kill/reap result closes the semaphore,
+retains its permit and fails the current case; queued cases fail closed rather
+than overlapping an unreaped owner. There is no new original cleanup deadline,
+retry of a case or replacement OS owner. This is resource scheduling, not proof
+of the old PlatformChanged cause or permission to continue after a real
+platform failure.
 
 The additional independent integration target creates the original real
 Platform, verifies a second owner remains queued, cancels that waiter, and
-then obtains owners after explicit shutdown and Drop. Linux therefore uses
-the original private D-Bus, gnome-keyring and Xvfb; Windows retains the original
+then obtains owners after explicit shutdown and Drop. Linux also checks the
+actual retained child PIDs have left /proc after each cleanup; it uses the
+original private D-Bus, gnome-keyring and Xvfb. Windows retains the original
 ordinary-token fixture. It is a separate one-test target and strict command,
 so the four original resident names/counts/assertions remain unchanged.
 
