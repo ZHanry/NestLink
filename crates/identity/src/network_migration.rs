@@ -10,24 +10,37 @@ pub use transcript::{Committed, Phase, Transcript};
 
 impl InstallationIdentity {
     pub fn sign_network_migration(&self, envelope: &Envelope) -> Result<[u8; 64], ContractError> {
-        Ok(self.key.sign(&domain_message(DOMAIN, &envelope.signing_bytes()?)).to_bytes())
+        Ok(self
+            .key
+            .sign(&domain_message(DOMAIN, &envelope.signing_bytes()?))
+            .to_bytes())
     }
 }
 
 pub fn fresh_challenge() -> [u8; 32] {
     let mut challenge = [0; 32];
-    while challenge == [0; 32] { OsRng.fill_bytes(&mut challenge); }
+    while challenge == [0; 32] {
+        OsRng.fill_bytes(&mut challenge);
+    }
     challenge
 }
 
 pub fn verify(envelope: &Envelope, public_key: &[u8; 32]) -> Result<(), ContractError> {
-    verify_signature(public_key, DOMAIN, &envelope.signing_bytes()?, &envelope.signature)
+    verify_signature(
+        public_key,
+        DOMAIN,
+        &envelope.signing_bytes()?,
+        &envelope.signature,
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nestlink_protocol::{network::{PeerId, PeerPair}, network_migration::{Binding, Kind}};
+    use nestlink_protocol::{
+        network::{PeerId, PeerPair},
+        network_migration::{Binding, Kind},
+    };
     #[test]
     fn signature_covers_both_connections_scope_epochs_phase_and_challenges()
     -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -35,14 +48,25 @@ mod tests {
         let mut envelope = Envelope {
             kind: Kind::Commit,
             binding: Binding {
-                deployment: [1; 32], space: [2; 32], session: [3; 32], permit: [4; 32],
-                path_grant: [5; 32], transport_group: [6; 32],
+                deployment: [1; 32],
+                space: [2; 32],
+                session: [3; 32],
+                permit: [4; 32],
+                path_grant: [5; 32],
+                transport_group: [6; 32],
                 peers: PeerPair::new(PeerId([7; 32]), PeerId([8; 32]))?,
-                original_route: [9; 32], candidate_route: [10; 32],
-                original_connection: [11; 32], control_connection: [12; 32],
-                business_generation: 3, previous_path_epoch: 7, next_path_epoch: 8,
+                original_route: [9; 32],
+                candidate_route: [10; 32],
+                original_connection: [11; 32],
+                control_connection: [12; 32],
+                business_generation: 3,
+                previous_path_epoch: 7,
+                next_path_epoch: 8,
                 expires_at_unix_ms: 30_000,
-            }, proposal: fresh_challenge(), challenge: fresh_challenge(), signature: [0; 64],
+            },
+            proposal: fresh_challenge(),
+            challenge: fresh_challenge(),
+            signature: [0; 64],
         };
         envelope.signature = identity.sign_network_migration(&envelope)?;
         verify(&envelope, &identity.public_key())?;

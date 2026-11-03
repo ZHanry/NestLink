@@ -58,15 +58,28 @@ pub struct Envelope {
 }
 
 fn invalid() -> ContractError {
-    ContractError::new(ErrorCode::InvalidMessage, "invalid path migration control envelope")
+    ContractError::new(
+        ErrorCode::InvalidMessage,
+        "invalid path migration control envelope",
+    )
 }
 
 impl Binding {
     fn digests(&self) -> [[u8; 32]; 12] {
-        [self.deployment, self.space, self.session, self.permit, self.path_grant,
-         self.transport_group, self.peers.first.0, self.peers.second.0,
-         self.original_route, self.candidate_route, self.original_connection,
-         self.control_connection]
+        [
+            self.deployment,
+            self.space,
+            self.session,
+            self.permit,
+            self.path_grant,
+            self.transport_group,
+            self.peers.first.0,
+            self.peers.second.0,
+            self.original_route,
+            self.candidate_route,
+            self.original_connection,
+            self.control_connection,
+        ]
     }
 
     pub fn validate(&self) -> Result<(), ContractError> {
@@ -87,8 +100,7 @@ impl Binding {
 impl Envelope {
     pub fn signing_bytes(&self) -> Result<Vec<u8>, ContractError> {
         self.binding.validate()?;
-        if self.proposal == [0; 32]
-            || (self.kind == Kind::Proposal) != (self.challenge == [0; 32])
+        if self.proposal == [0; 32] || (self.kind == Kind::Proposal) != (self.challenge == [0; 32])
         {
             return Err(invalid());
         }
@@ -98,8 +110,12 @@ impl Envelope {
         for digest in self.binding.digests() {
             bytes.extend_from_slice(&digest);
         }
-        for value in [self.binding.business_generation, self.binding.previous_path_epoch,
-                      self.binding.next_path_epoch, self.binding.expires_at_unix_ms] {
+        for value in [
+            self.binding.business_generation,
+            self.binding.previous_path_epoch,
+            self.binding.next_path_epoch,
+            self.binding.expires_at_unix_ms,
+        ] {
             bytes.extend_from_slice(&value.to_be_bytes());
         }
         bytes.extend_from_slice(&self.proposal);
@@ -125,10 +141,16 @@ impl Envelope {
             _ => return Err(invalid()),
         };
         let mut offset = 6;
-        fn take<const N: usize>(bytes: &[u8], offset: &mut usize) -> Result<[u8; N], ContractError> {
+        fn take<const N: usize>(
+            bytes: &[u8],
+            offset: &mut usize,
+        ) -> Result<[u8; N], ContractError> {
             let end = offset.checked_add(N).ok_or_else(invalid)?;
-            let value = bytes.get(*offset..end).ok_or_else(invalid)?
-                .try_into().map_err(|_| invalid())?;
+            let value = bytes
+                .get(*offset..end)
+                .ok_or_else(invalid)?
+                .try_into()
+                .map_err(|_| invalid())?;
             *offset = end;
             Ok(value)
         }
@@ -172,15 +194,28 @@ mod tests {
         Envelope {
             kind: Kind::Proposal,
             binding: Binding {
-                deployment: [1; 32], space: [2; 32], session: [3; 32], permit: [4; 32],
-                path_grant: [5; 32], transport_group: [6; 32],
-                peers: PeerPair { first: crate::network::PeerId([7; 32]), second: crate::network::PeerId([8; 32]) },
-                original_route: [9; 32], candidate_route: [10; 32],
-                original_connection: [11; 32], control_connection: [12; 32],
-                business_generation: 3, previous_path_epoch: 7, next_path_epoch: 8,
+                deployment: [1; 32],
+                space: [2; 32],
+                session: [3; 32],
+                permit: [4; 32],
+                path_grant: [5; 32],
+                transport_group: [6; 32],
+                peers: PeerPair {
+                    first: crate::network::PeerId([7; 32]),
+                    second: crate::network::PeerId([8; 32]),
+                },
+                original_route: [9; 32],
+                candidate_route: [10; 32],
+                original_connection: [11; 32],
+                control_connection: [12; 32],
+                business_generation: 3,
+                previous_path_epoch: 7,
+                next_path_epoch: 8,
                 expires_at_unix_ms: 30_000,
             },
-            proposal: [13; 32], challenge: [0; 32], signature: [0; 64],
+            proposal: [13; 32],
+            challenge: [0; 32],
+            signature: [0; 64],
         }
     }
     #[test]
@@ -189,11 +224,15 @@ mod tests {
         let bytes = original.encode()?;
         assert_eq!(bytes.len(), MAX_BYTES);
         assert_eq!(Envelope::decode(&bytes)?, original);
-        for length in 0..bytes.len() { assert!(Envelope::decode(&bytes[..length]).is_err()); }
-        let mut trailing = bytes.clone(); trailing.push(0);
+        for length in 0..bytes.len() {
+            assert!(Envelope::decode(&bytes[..length]).is_err());
+        }
+        let mut trailing = bytes.clone();
+        trailing.push(0);
         assert!(Envelope::decode(&trailing).is_err());
         for kind in [0, 5, 255] {
-            let mut altered = bytes.clone(); altered[5] = kind;
+            let mut altered = bytes.clone();
+            altered[5] = kind;
             assert!(Envelope::decode(&altered).is_err());
         }
         for mode in 0..5 {

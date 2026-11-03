@@ -616,7 +616,9 @@ async fn changed_identity_joins_original_target(change: IdentityChange) -> Resul
     );
     let error = match tokio::time::timeout(Duration::from_secs(10), command.join()).await?? {
         Err(error) => error,
-        Ok(()) => return Err("changed installation must stop after original physical cleanup".into()),
+        Ok(()) => {
+            return Err("changed installation must stop after original physical cleanup".into());
+        }
     };
     println!("private host identity stop: {change:?}: {error}");
     tokio::time::timeout(Duration::from_secs(3), target.join()).await???;
@@ -709,7 +711,9 @@ async fn host_identity_same_length_valid_key_change_is_terminal_after_original_k
     );
     let error = match guard.running() {
         Err(error) => error,
-        Ok(_) => return Err("valid replacement key must be checked against the original signer".into()),
+        Ok(_) => {
+            return Err("valid replacement key must be checked against the original signer".into());
+        }
     };
     assert!(error.to_string().contains("original signing identity"));
     std::fs::remove_file(&key)?;

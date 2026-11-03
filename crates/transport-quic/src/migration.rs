@@ -3,30 +3,52 @@
 //! product owner decides between a proved socket switch and safe recovery.
 use nestlink_identity::{InstallationIdentity, digest, network_migration::Transcript};
 use nestlink_protocol::{
-    network::{CapabilityOffer, CORE_CAPABILITY, MIGRATION_CAPABILITY, NegotiatedProtocol, PeerId, SCHEMA_VERSION},
-    network_migration::{Binding, CONNECTION_BINDING_LABEL, Envelope, MAX_BYTES, MAX_CONTROL_LIFETIME_MS},
+    network::{
+        CORE_CAPABILITY, CapabilityOffer, MIGRATION_CAPABILITY, NegotiatedProtocol, PeerId,
+        SCHEMA_VERSION,
+    },
+    network_migration::{
+        Binding, CONNECTION_BINDING_LABEL, Envelope, MAX_BYTES, MAX_CONTROL_LIFETIME_MS,
+    },
 };
-use std::{io, time::{Duration, SystemTime, UNIX_EPOCH}};
+use std::{
+    io,
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 use tokio::{sync::watch, time::Instant};
 
 pub struct CommittedMigration(nestlink_identity::network_migration::Committed);
 impl CommittedMigration {
-    pub fn binding(&self) -> &Binding { &self.0.binding }
-    pub fn transcript(&self) -> &nestlink_identity::network_migration::Committed { &self.0 }
+    pub fn binding(&self) -> &Binding {
+        &self.0.binding
+    }
+    pub fn transcript(&self) -> &nestlink_identity::network_migration::Committed {
+        &self.0
+    }
 }
 
 pub fn connection_binding(connection: &quinn::Connection) -> io::Result<[u8; 32]> {
     let mut material = [0; 32];
-    connection.export_keying_material(&mut material, CONNECTION_BINDING_LABEL, b"")
-        .map_err(|_| io::Error::new(io::ErrorKind::PermissionDenied, "migration TLS binding unavailable"))?;
+    connection
+        .export_keying_material(&mut material, CONNECTION_BINDING_LABEL, b"")
+        .map_err(|_| {
+            io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "migration TLS binding unavailable",
+            )
+        })?;
     let binding = digest(&material);
     material.fill(0);
     Ok(binding)
 }
 
 fn now_ms() -> io::Result<u64> {
-    SystemTime::now().duration_since(UNIX_EPOCH).map_err(io::Error::other)?
-        .as_millis().try_into().map_err(io::Error::other)
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(io::Error::other)?
+        .as_millis()
+        .try_into()
+        .map_err(io::Error::other)
 }
 
 struct Pending<'a>(Option<&'a quinn::Connection>);
@@ -41,7 +63,14 @@ fn cancelled(cancel: &watch::Receiver<bool>) -> bool {
     *cancel.borrow() || cancel.has_changed().is_err()
 }
 async fn wait_cancel(cancel: &mut watch::Receiver<bool>) {
-    loop { if cancelled(cancel) { return; } if cancel.changed().await.is_err() { return; } }
+    loop {
+        if cancelled(cancel) {
+            return;
+        }
+        if cancel.changed().await.is_err() {
+            return;
+        }
+    }
 }
 async fn read(receive: &mut quinn::RecvStream) -> crate::Result<Envelope> {
     let mut bytes = [0; MAX_BYTES];
@@ -81,61 +110,90 @@ pub async fn exchange<F>(
     deadline: Instant,
     mut check_current: F,
 ) -> crate::Result<CommittedMigration>
-where F: FnMut() -> io::Result<()> + Send {
+where
+    F: FnMut() -> io::Result<()> + Send,
+{
     let mut pending = Pending(Some(connection));
     check_current()?;
     let now = now_ms()?;
     let expires = expected.expires_at_unix_ms;
-    let remaining = expires.checked_sub(now).filter(|value| *value > 0)
+    let remaining = expires
+        .checked_sub(now)
+        .filter(|value| *value > 0)
         .ok_or_else(|| io::Error::from(io::ErrorKind::TimedOut))?;
-    let deadline = deadline.min(Instant::now() + Duration::from_millis(remaining.min(MAX_CONTROL_LIFETIME_MS)));
+    let deadline = deadline
+        .min(Instant::now() + Duration::from_millis(remaining.min(MAX_CONTROL_LIFETIME_MS)));
     let local_peer = PeerId(local.fingerprint());
-    if cancelled(&cancel) || Instant::now() >= deadline
+    if cancelled(&cancel)
+        || Instant::now() >= deadline
         || expected.control_connection != connection_binding(connection)?
         || expected.original_connection == expected.control_connection
         || crate::routed::authenticated_peer_fingerprint(connection)? != digest(remote_key)
-    { return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()); }
+    {
+        return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
+    }
     let mut transcript = Transcript::new(expected.clone(), local_peer, *remote_key, expires, now)?;
     let leader = transcript.leader();
     let operation = async {
-        let selected = crate::capability::exchange(connection, leader, expected_alpn,
+        let selected = crate::capability::exchange(
+            connection,
+            leader,
+            expected_alpn,
             &crate::capability::CapabilityBinding {
-                expected_peer: PeerId(digest(remote_key)), business_digest: expected.permit,
+                expected_peer: PeerId(digest(remote_key)),
+                business_digest: expected.permit,
                 transport_group: expected.transport_group,
-            }, &CapabilityOffer {
+            },
+            &CapabilityOffer {
                 schema_version: SCHEMA_VERSION,
                 supported: vec![CORE_CAPABILITY.into(), MIGRATION_CAPABILITY.into()],
                 required: vec![CORE_CAPABILITY.into(), MIGRATION_CAPABILITY.into()],
-            }, deadline).await?;
-        if selected != (NegotiatedProtocol::NetworkV1 { path_migration: true }) {
+            },
+            deadline,
+        )
+        .await?;
+        if selected
+            != (NegotiatedProtocol::NetworkV1 {
+                path_migration: true,
+            })
+        {
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
         }
         check_current()?;
-        let (mut send, mut receive) = if leader { connection.open_bi().await? }
-            else { connection.accept_bi().await? };
+        let (mut send, mut receive) = if leader {
+            connection.open_bi().await?
+        } else {
+            connection.accept_bi().await?
+        };
         if leader {
             write(&mut send, &transcript.propose(local, now_ms()?, true)?).await?;
             let accepted = read(&mut receive).await?;
             check_current()?;
-            let commit = transcript.receive(local, &accepted, now_ms()?, true)?
+            let commit = transcript
+                .receive(local, &accepted, now_ms()?, true)?
                 .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidData))?;
             write(&mut send, &commit).await?;
             send.finish()?;
             let committed = read(&mut receive).await?;
             check_current()?;
-            if transcript.receive(local, &committed, now_ms()?, true)?.is_some() {
+            if transcript
+                .receive(local, &committed, now_ms()?, true)?
+                .is_some()
+            {
                 return Err(io::Error::from(io::ErrorKind::InvalidData).into());
             }
             end(&mut receive).await?;
         } else {
             let proposal = read(&mut receive).await?;
             check_current()?;
-            let accepted = transcript.receive(local, &proposal, now_ms()?, true)?
+            let accepted = transcript
+                .receive(local, &proposal, now_ms()?, true)?
                 .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidData))?;
             write(&mut send, &accepted).await?;
             let commit = read(&mut receive).await?;
             check_current()?;
-            let committed = transcript.receive(local, &commit, now_ms()?, true)?
+            let committed = transcript
+                .receive(local, &commit, now_ms()?, true)?
                 .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidData))?;
             end(&mut receive).await?;
             check_current()?;
@@ -148,9 +206,14 @@ where F: FnMut() -> io::Result<()> + Send {
             }
         }
         check_current()?;
-        if Instant::now() >= deadline { return Err(io::Error::from(io::ErrorKind::TimedOut).into()); }
+        if Instant::now() >= deadline {
+            return Err(io::Error::from(io::ErrorKind::TimedOut).into());
+        }
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(CommittedMigration(
-            transcript.receipt().cloned().ok_or_else(|| io::Error::from(io::ErrorKind::InvalidData))?
+            transcript
+                .receipt()
+                .cloned()
+                .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidData))?,
         ))
     };
     let receipt = tokio::select! { biased;

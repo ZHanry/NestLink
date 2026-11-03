@@ -16,9 +16,10 @@ use std::{future::Future, io, pin::Pin, sync::Arc};
 use tokio::{sync::watch, time::Instant};
 mod control;
 pub use control::{
-    AuthenticatedPathRecovery, ContinuousRouteSetSession, PinnedNetworkSpace, RouteSetContinuationStatus,
-    RouteSetRecoveryProposal, VerifiedRemoteChain, VerifiedRemoteDirect, VerifiedRemotePreparation,
-    VerifiedRemoteRelay, VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet,
+    AuthenticatedPathRecovery, ContinuousRouteSetSession, PinnedNetworkSpace,
+    RouteSetContinuationStatus, RouteSetRecoveryProposal, VerifiedRemoteChain,
+    VerifiedRemoteDirect, VerifiedRemotePreparation, VerifiedRemoteRelay,
+    VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet,
 };
 pub use control::{RecoveredNetworkSession, RouteSetRecoveryConfig, RouteSetRecoverySource};
 use nestlink_transport_stream::owner::TaskOwner;

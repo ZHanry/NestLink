@@ -167,8 +167,10 @@ async fn original_owner_authenticates_bilateral_standby_control_then_joins_safe_
     let (set, _, controller_route) = reserve(&f, &second).await?;
     let controller_key = f.controller.identity.public_key();
     let host_key = f.host.identity.public_key();
-    let host_route = f.sdk.verified_network_remote_route_set(
-        &f.pin, &f.host, &f.permit, &controller_key, &set).await?;
+    let host_route = f
+        .sdk
+        .verified_network_remote_route_set(&f.pin, &f.host, &f.permit, &controller_key, &set)
+        .await?;
     let (_keep_stop, stop) = watch::channel(None);
     let (_keep_cancel, cancel) = watch::channel(false);
     let policy = AddressPolicy::new(&[])?;
@@ -176,18 +178,40 @@ async fn original_owner_authenticates_bilateral_standby_control_then_joins_safe_
     let deadline = Instant::now() + Duration::from_secs(5);
     let (mut controller, mut host) = tokio::try_join!(
         f.sdk.connect_continuing_network_remote_route_candidate(
-            controller_route, 1, addresses[0], &f.controller, &host_key,
-            f.setup(EndpointRole::Controller, stop.clone())?, &policy, cancel.clone(),
-            deadline, QualityConstraints::default()),
+            controller_route,
+            1,
+            addresses[0],
+            &f.controller,
+            &host_key,
+            f.setup(EndpointRole::Controller, stop.clone())?,
+            &policy,
+            cancel.clone(),
+            deadline,
+            QualityConstraints::default()
+        ),
         f.sdk.connect_continuing_network_remote_route_candidate(
-            host_route, 1, addresses[1], &f.host, &controller_key,
-            f.setup(EndpointRole::Host, stop)?, &policy, cancel,
-            deadline, QualityConstraints::default()),
+            host_route,
+            1,
+            addresses[1],
+            &f.host,
+            &controller_key,
+            f.setup(EndpointRole::Host, stop)?,
+            &policy,
+            cancel,
+            deadline,
+            QualityConstraints::default()
+        ),
     )?;
-    tokio::try_join!(controller.poll(&f.sdk, &f.controller, &host_key, true),
-        host.poll(&f.sdk, &f.host, &controller_key, true))?;
-    let standby = [controller.standby_local_addr().ok_or("controller standby")?,
-        host.standby_local_addr().ok_or("host standby")?];
+    tokio::try_join!(
+        controller.poll(&f.sdk, &f.controller, &host_key, true),
+        host.poll(&f.sdk, &f.host, &controller_key, true)
+    )?;
+    let standby = [
+        controller
+            .standby_local_addr()
+            .ok_or("controller standby")?,
+        host.standby_local_addr().ok_or("host standby")?,
+    ];
     let (controller_receipt, host_receipt) = tokio::try_join!(
         controller.authenticate_prepared_path_recovery(&f.sdk, &f.controller, &host_key, 0, None),
         host.authenticate_prepared_path_recovery(&f.sdk, &f.host, &controller_key, 0, None),
@@ -199,19 +223,32 @@ async fn original_owner_authenticates_bilateral_standby_control_then_joins_safe_
     assert!(host_receipt.requires_fresh_business_admission());
     // Control permission alone does not move the original business streams.
     let (sent, received) = tokio::join!(
-        host.channels().send(Channel::FileRead, b"original business after signed control"),
-        controller.channels().receive());
+        host.channels()
+            .send(Channel::FileRead, b"original business after signed control"),
+        controller.channels().receive()
+    );
     sent?;
     assert_eq!(received?.payload, b"original business after signed control");
     assert_eq!(f.control.counters()?.opened_connections, 2);
     assert_eq!(second.control.counters()?.opened_connections, 2);
     let (c, h) = tokio::try_join!(
-        controller.retire_authenticated_path_recovery(&f.sdk, &f.controller, &host_key, controller_receipt),
+        controller.retire_authenticated_path_recovery(
+            &f.sdk,
+            &f.controller,
+            &host_key,
+            controller_receipt
+        ),
         host.retire_authenticated_path_recovery(&f.sdk, &f.host, &controller_key, host_receipt),
     )?;
     assert_eq!(c.reason, StopReason::TransportLost);
     assert_eq!(h.reason, StopReason::TransportLost);
-    assert!(controller.channels().send(Channel::FileRead, b"old request").await.is_err());
+    assert!(
+        controller
+            .channels()
+            .send(Channel::FileRead, b"old request")
+            .await
+            .is_err()
+    );
     drop(rebind(&addresses)?);
     drop(rebind(&standby)?);
     second.finish().await?;

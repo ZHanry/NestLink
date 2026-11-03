@@ -284,9 +284,17 @@ impl Sdk {
                 active,
                 constraints,
             )?;
-            Ok((observation, group, originals, keys, scheduler, original_connection))
+            Ok((
+                observation,
+                group,
+                originals,
+                keys,
+                scheduler,
+                original_connection,
+            ))
         })();
-        let (observation, group, originals, keys, scheduler, original_connection) = match construct {
+        let (observation, group, originals, keys, scheduler, original_connection) = match construct
+        {
             Ok(value) => value,
             Err(error) => {
                 channels.shutdown(StopReason::Revoked).await?;
@@ -499,7 +507,10 @@ impl ContinuousRouteSetSession {
         // original owner must stop/recover before another control attempt;
         // neither a new random proposal nor a unilateral rollback is safe.
         if self.migration_interrupted {
-            let _ = self.channels.lease_control().stop(StopReason::TransportLost);
+            let _ = self
+                .channels
+                .lease_control()
+                .stop(StopReason::TransportLost);
             return Err(SdkError::Trust.into());
         }
         self.consume(sdk, local, peer_key, ContinuationDecision::default())
