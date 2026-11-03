@@ -1,5 +1,6 @@
 //! Private, pinned preparation owner. A directory response never installs trust.
 use super::*;
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_identity::network::remote_preparation_grant_ids;
 use nestlink_protocol::{
     api::{NetworkPolicyView, NetworkRemotePreparationRequest, NetworkRemotePreparationView},
