@@ -87,8 +87,14 @@ impl InspectArgs {
     }
     fn provider(&self) -> io::Result<NativeMediaProvider> {
         if self.mode == Mode::Vp9Rgb444 {
-            if self.chroma != Chroma::Yuv444 || self.dynamic_range != DynamicRange::Sdr || self.encoder.is_some() {
-                return Err(io::Error::new(io::ErrorKind::InvalidInput, "VP9 RGB444 requires explicit 444, SDR and its software encoder; no HEVC encoder applies"));
+            if self.chroma != Chroma::Yuv444
+                || self.dynamic_range != DynamicRange::Sdr
+                || self.encoder.is_some()
+            {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "VP9 RGB444 requires explicit 444, SDR and its software encoder; no HEVC encoder applies",
+                ));
             }
             return NativeMediaProvider::software_vp9_rgb444(self.target);
         }
@@ -108,7 +114,9 @@ impl InspectArgs {
         }
         let encoder = self.encoder.unwrap_or(NativeHevcEncoder::SystemMf).into();
         match self.mode {
-            Mode::Vp9Rgb444 => Err(io::Error::other("VP9 mode must use its exact RGB444 configuration")),
+            Mode::Vp9Rgb444 => Err(io::Error::other(
+                "VP9 mode must use its exact RGB444 configuration",
+            )),
             Mode::CpuH264 if self.encoder.is_some() => Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "HEVC encoder selection cannot apply to the explicit CPU H.264 mode",
@@ -219,15 +227,46 @@ mod tests {
     }
     #[test]
     fn rgb444_inspection_requires_explicit_chroma_and_software_mode() -> io::Result<()> {
-        let args = Cli::try_parse_from(["media-capabilities", "--mode", "vp9-rgb444", "--chroma", "444", "--direction", "decode", "--target", "641x481@144:8000"]).map_err(io::Error::other)?.args;
+        let args = Cli::try_parse_from([
+            "media-capabilities",
+            "--mode",
+            "vp9-rgb444",
+            "--chroma",
+            "444",
+            "--direction",
+            "decode",
+            "--target",
+            "641x481@144:8000",
+        ])
+        .map_err(io::Error::other)?
+        .args;
         args.provider()?;
         assert_eq!(args.report()["requested"]["mode"], "vp9-rgb444");
         assert_eq!(args.report()["requested"]["decoder"], "libvpx-software");
         assert!(args.encoder_name().is_none());
-        for extra in [vec![], vec!["--chroma", "420"], vec!["--chroma", "444", "--encoder", "amd-amf"], vec!["--chroma", "444", "--dynamic-range", "hdr10"]] {
-            let mut input = vec!["media-capabilities", "--mode", "vp9-rgb444", "--direction", "encode", "--target", "640x480@60:8000"];
+        for extra in [
+            vec![],
+            vec!["--chroma", "420"],
+            vec!["--chroma", "444", "--encoder", "amd-amf"],
+            vec!["--chroma", "444", "--dynamic-range", "hdr10"],
+        ] {
+            let mut input = vec![
+                "media-capabilities",
+                "--mode",
+                "vp9-rgb444",
+                "--direction",
+                "encode",
+                "--target",
+                "640x480@60:8000",
+            ];
             input.extend(extra);
-            assert!(Cli::try_parse_from(input).map_err(io::Error::other)?.args.provider().is_err());
+            assert!(
+                Cli::try_parse_from(input)
+                    .map_err(io::Error::other)?
+                    .args
+                    .provider()
+                    .is_err()
+            );
         }
         Ok(())
     }

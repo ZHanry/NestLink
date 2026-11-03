@@ -4,7 +4,8 @@ fn rate(fps: u32) -> FrameRate {
     FrameRate::new(fps, 1).unwrap_or_else(|error| panic!("valid fixture rejected: {error}"))
 }
 #[test]
-fn rgb444_v6_keeps_old_descriptors_and_rejects_relabeling() -> std::result::Result<(), ContractError> {
+fn rgb444_v6_keeps_old_descriptors_and_rejects_relabeling() -> std::result::Result<(), ContractError>
+{
     let h264 = VideoFormat::legacy_h264(31, 640, 480, rate(30), 4000)?;
     let old = (h264.encode()?, h264.digest()?);
     let rgb = VideoFormat::vp9_rgb444(641, 481, rate(144), 8000)?;
@@ -22,14 +23,47 @@ fn rgb444_v6_keeps_old_descriptors_and_rejects_relabeling() -> std::result::Resu
         assert!(VideoFormat::decode(&wire).is_err());
     }
     for wrong in [
-        VideoFormat { chroma: Chroma::Yuv420, ..rgb },
-        VideoFormat { bit_depth: BitDepth::Ten, ..rgb },
-        VideoFormat { profile: Profile::HevcRange444, ..rgb },
-        VideoFormat { color: Color::SDR_BT709_LIMITED, ..rgb },
-        VideoFormat { color: Color { matrix: Matrix::Bt709, ..rgb.color }, ..rgb },
-        VideoFormat { color: Color { range: Range::Limited, ..rgb.color }, ..rgb },
-        VideoFormat { geometry: Geometry { crop: [0, 1, 0, 0], coded_width: 642, coded_height: 481 }, ..rgb },
-    ] { assert!(wrong.validate().is_err()); }
+        VideoFormat {
+            chroma: Chroma::Yuv420,
+            ..rgb
+        },
+        VideoFormat {
+            bit_depth: BitDepth::Ten,
+            ..rgb
+        },
+        VideoFormat {
+            profile: Profile::HevcRange444,
+            ..rgb
+        },
+        VideoFormat {
+            color: Color::SDR_BT709_LIMITED,
+            ..rgb
+        },
+        VideoFormat {
+            color: Color {
+                matrix: Matrix::Bt709,
+                ..rgb.color
+            },
+            ..rgb
+        },
+        VideoFormat {
+            color: Color {
+                range: Range::Limited,
+                ..rgb.color
+            },
+            ..rgb
+        },
+        VideoFormat {
+            geometry: Geometry {
+                crop: [0, 1, 0, 0],
+                coded_width: 642,
+                coded_height: 481,
+            },
+            ..rgb
+        },
+    ] {
+        assert!(wrong.validate().is_err());
+    }
     assert_eq!((h264.encode()?, h264.digest()?), old);
     Ok(())
 }

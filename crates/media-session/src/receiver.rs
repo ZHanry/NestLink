@@ -85,7 +85,8 @@ impl DecodedVideo {
         let codec_matches = match execution {
             crate::LiveExecutionReceipt::Vp9Rgb444(_) => {
                 self.codec == nestlink_protocol::NativeVideoCodec::Vp9Rgb444 as u8
-                    && !self.hardware_decode && self.source_color == nestlink_protocol::media_format::Color::RGB_SRGB_FULL
+                    && !self.hardware_decode
+                    && self.source_color == nestlink_protocol::media_format::Color::RGB_SRGB_FULL
             }
             crate::LiveExecutionReceipt::H264(_) => {
                 self.codec == nestlink_protocol::NativeVideoCodec::H264Baseline as u8
@@ -1774,34 +1775,45 @@ impl Decoder {
             }
         }
         let color = if packet.codec == nestlink_protocol::NativeVideoCodec::Vp9Rgb444 as i32 {
-            let format = self.format.as_ref().ok_or_else(|| io::Error::other("VP9 RGB444 lacks exact selected format"))?;
-            let receipt = self.codec.as_ref().ok_or_else(|| io::Error::other("VP9 RGB444 lacks prepared decoder"))?
-                .current_execution()?.ok_or_else(|| io::Error::other("VP9 RGB444 lacks original decoder execution"))?;
+            let format = self
+                .format
+                .as_ref()
+                .ok_or_else(|| io::Error::other("VP9 RGB444 lacks exact selected format"))?;
+            let receipt = self
+                .codec
+                .as_ref()
+                .ok_or_else(|| io::Error::other("VP9 RGB444 lacks prepared decoder"))?
+                .current_execution()?
+                .ok_or_else(|| io::Error::other("VP9 RGB444 lacks original decoder execution"))?;
             crate::vp9_rgb444_execution_receipt_matches(&receipt, format.format)?;
-            nestlink_media_codec::validate_vp9_rgb444_keyframe(&payload, packet.width, packet.height)?;
-            nestlink_protocol::media_format::Color::RGB_SRGB_FULL
-        } else {
-        if self.prepare.is_none() {
-            self.prepare = Some(crate::legacy_format::LegacyPrepare::from_wire_cpu_visible(
-                packet.codec,
+            nestlink_media_codec::validate_vp9_rgb444_keyframe(
+                &payload,
                 packet.width,
                 packet.height,
-            )?);
-        }
-        let prepare = self
-            .prepare
-            .as_mut()
-            .ok_or_else(|| io::Error::other("missing legacy Prepare"))?;
-        let sps = prepare.validate(&payload, packet.keyframe)?;
-        if let Some(format) = &self.format {
-            crate::negotiated_format::receipt_matches(
-                prepare,
-                self.stream.codec,
-                sps,
-                format.format,
             )?;
-        }
-        prepare.surface().color
+            nestlink_protocol::media_format::Color::RGB_SRGB_FULL
+        } else {
+            if self.prepare.is_none() {
+                self.prepare = Some(crate::legacy_format::LegacyPrepare::from_wire_cpu_visible(
+                    packet.codec,
+                    packet.width,
+                    packet.height,
+                )?);
+            }
+            let prepare = self
+                .prepare
+                .as_mut()
+                .ok_or_else(|| io::Error::other("missing legacy Prepare"))?;
+            let sps = prepare.validate(&payload, packet.keyframe)?;
+            if let Some(format) = &self.format {
+                crate::negotiated_format::receipt_matches(
+                    prepare,
+                    self.stream.codec,
+                    sps,
+                    format.format,
+                )?;
+            }
+            prepare.surface().color
         };
         if self.codec.is_none() {
             let kind = match nestlink_protocol::NativeVideoCodec::try_from(packet.codec) {
@@ -2132,14 +2144,20 @@ fn prepare_display_decoder(
         let uses_external = external.is_some();
         if !uses_external {
             // Validate typed surface before creating the selected decoder.
-            decoder.prepare = if kind == VideoCodec::Vp9Rgb444 { None } else { Some(crate::legacy_format::LegacyPrepare::new_cpu_visible(
-                kind,
-                decoder.stream.codec.width,
-                decoder.stream.codec.height,
-            )?) };
+            decoder.prepare = if kind == VideoCodec::Vp9Rgb444 {
+                None
+            } else {
+                Some(crate::legacy_format::LegacyPrepare::new_cpu_visible(
+                    kind,
+                    decoder.stream.codec.width,
+                    decoder.stream.codec.height,
+                )?)
+            };
             decoder.codec = Some(if kind == VideoCodec::Vp9Rgb444 {
                 VideoDecoder::with_vp9_rgb444_execution_target(crate::vp9_rgb444_execution_target(
-                    execution_format.ok_or_else(|| io::Error::other("missing signed RGB444 execution target"))?
+                    execution_format.ok_or_else(|| {
+                        io::Error::other("missing signed RGB444 execution target")
+                    })?,
                 )?)?
             } else if format.is_some() || negotiated {
                 VideoDecoder::with_execution_target(crate::h264_execution_target(
@@ -2208,10 +2226,20 @@ fn receive(
             .iter()
             .all(|f| f.codec == nestlink_protocol::media_format::Codec::Hevc)
     });
-    let exact_rgb444 = formats.as_ref().is_some_and(|formats| formats.formats().iter().all(|f| f.codec == nestlink_protocol::media_format::Codec::Vp9));
+    let exact_rgb444 = formats.as_ref().is_some_and(|formats| {
+        formats
+            .formats()
+            .iter()
+            .all(|f| f.codec == nestlink_protocol::media_format::Codec::Vp9)
+    });
     let codec_kind = if exact_rgb444 {
-        if !lease.media_capability(nestlink_protocol::media_authority::VP9_RGB444_FORMAT_CAPABILITY).map_err(io::Error::other)? {
-            return Err(io::Error::other("VP9 RGB444 lacks its independent exact capability"));
+        if !lease
+            .media_capability(nestlink_protocol::media_authority::VP9_RGB444_FORMAT_CAPABILITY)
+            .map_err(io::Error::other)?
+        {
+            return Err(io::Error::other(
+                "VP9 RGB444 lacks its independent exact capability",
+            ));
         }
         nestlink_protocol::NativeVideoCodec::Vp9Rgb444 as i32
     } else if exact_hevc {

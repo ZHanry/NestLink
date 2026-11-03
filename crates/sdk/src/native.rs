@@ -429,7 +429,9 @@ impl NativeMediaEvidence {
             None => binding,
         };
         Ok(match &self.explicit_formats {
-            Some(formats) => binding.with_explicit_media_selection(formats.clone(), permit, &self.local, now)?,
+            Some(formats) => {
+                binding.with_explicit_media_selection(formats.clone(), permit, &self.local, now)?
+            }
             None => binding,
         })
     }

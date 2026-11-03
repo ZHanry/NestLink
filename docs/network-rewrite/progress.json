@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "3446604bdfbc94008dde49538b0996969eb24dd1",
-  "checkpoint_kind": "v6_production_and_authenticated_original_owner_migration_ready_for_hosted_integration",
+  "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+  "checkpoint_kind": "hosted_format_import_and_typed_migration_request_repair",
   "active_tasks": [
     "W00",
     "W02",
@@ -94,6 +94,8 @@
     "Complete remaining production fault matrix and all required target qualification before creating the 0.8.0RC release; preserve only main."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/full-rust-core-ca1e36a.json",
+    "docs/network-rewrite/evidence/format-da61be4.json",
     "docs/network-rewrite/evidence/vp9-software-owner-3446604.json",
     "docs/network-rewrite/evidence/network-ca1e36a.json",
     "docs/network-rewrite/evidence/web-production-ca1e36a.json",
@@ -761,15 +763,21 @@
       "whole_task_passed": false
     },
     "network": {
-      "run_id": 41596025365,
-      "source_revision": "ca1e36a0773e9c5e253ed040a68f488b8a7353ad",
-      "state": "success",
+      "run_id": 41601488609,
+      "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+      "state": "in_progress_with_original_compile_failures",
       "whole_task_passed": false
     },
     "web": {
       "run_id": 41596041323,
       "source_revision": "ca1e36a0773e9c5e253ed040a68f488b8a7353ad",
       "state": "success",
+      "whole_task_passed": false
+    },
+    "media_owner": {
+      "run_id": 41601479672,
+      "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+      "state": "in_progress_with_original_compile_failures",
       "whole_task_passed": false
     }
   },
@@ -812,8 +820,8 @@
     }
   },
   "continuation_checkpoint": {
-    "recorded_at": "2026-11-03T16:09:46.9055027+08:00",
-    "source_revision": "3446604bdfbc94008dde49538b0996969eb24dd1",
+    "recorded_at": "2026-11-03T16:18:16.7588307+08:00",
+    "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
     "user_decisions": [

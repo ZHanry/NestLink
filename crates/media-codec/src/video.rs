@@ -49,7 +49,9 @@ pub enum VideoEncoder {
     H264(H264Encoder),
 }
 impl VideoEncoder {
-    pub fn with_vp9_rgb444_execution_target(target: crate::Vp9Rgb444ExecutionTarget) -> io::Result<Self> {
+    pub fn with_vp9_rgb444_execution_target(
+        target: crate::Vp9Rgb444ExecutionTarget,
+    ) -> io::Result<Self> {
         Ok(Self::Execution {
             broker: crate::SoftwareExecution::start(crate::ExecutionDirection::Encode, target)?,
             last: None,
@@ -157,7 +159,9 @@ impl VideoEncoder {
     }
     pub fn new(codec: VideoCodec, config: VideoConfig) -> io::Result<Self> {
         match codec {
-            VideoCodec::Vp9Rgb444 => Err(io::Error::other("VP9 RGB444 requires an exact signed execution target")),
+            VideoCodec::Vp9Rgb444 => Err(io::Error::other(
+                "VP9 RGB444 requires an exact signed execution target",
+            )),
             VideoCodec::Vp8 => Ok(Self::Vp8(Vp8Encoder::new(config)?)),
             #[cfg(windows)]
             VideoCodec::H264Baseline => Ok(Self::H264(H264Encoder::new(config)?)),
@@ -239,7 +243,9 @@ pub enum VideoDecoder {
     H264(H264Decoder),
 }
 impl VideoDecoder {
-    pub fn with_vp9_rgb444_execution_target(target: crate::Vp9Rgb444ExecutionTarget) -> io::Result<Self> {
+    pub fn with_vp9_rgb444_execution_target(
+        target: crate::Vp9Rgb444ExecutionTarget,
+    ) -> io::Result<Self> {
         Ok(Self::Execution {
             broker: crate::SoftwareExecution::start(crate::ExecutionDirection::Decode, target)?,
             last: None,
@@ -295,7 +301,9 @@ impl VideoDecoder {
     /// Explicit software owner; never silently upgrades to an unprobed GPU.
     pub fn with_config_software(codec: VideoCodec, config: VideoConfig) -> io::Result<Self> {
         match codec {
-            VideoCodec::Vp9Rgb444 => Err(io::Error::other("VP9 RGB444 requires an exact signed execution target")),
+            VideoCodec::Vp9Rgb444 => Err(io::Error::other(
+                "VP9 RGB444 requires an exact signed execution target",
+            )),
             VideoCodec::Vp8 => Ok(Self::Vp8(Vp8Decoder::new(config.width, config.height)?)),
             #[cfg(windows)]
             VideoCodec::H264Baseline => Ok(Self::H264(H264Decoder::with_config_software(config)?)),
@@ -313,7 +321,9 @@ impl VideoDecoder {
     /// the existing CPU-only even padding and presentation crop wrapper.
     pub fn with_config(codec: VideoCodec, config: VideoConfig) -> io::Result<Self> {
         match codec {
-            VideoCodec::Vp9Rgb444 => Err(io::Error::other("VP9 RGB444 requires an exact signed execution target")),
+            VideoCodec::Vp9Rgb444 => Err(io::Error::other(
+                "VP9 RGB444 requires an exact signed execution target",
+            )),
             VideoCodec::Vp8 => Ok(Self::Vp8(Vp8Decoder::new(config.width, config.height)?)),
             #[cfg(windows)]
             VideoCodec::H264Baseline => Ok(Self::H264(H264Decoder::with_config(config)?)),
@@ -329,7 +339,9 @@ impl VideoDecoder {
     }
     pub fn new(codec: VideoCodec, width: u32, height: u32) -> io::Result<Self> {
         match codec {
-            VideoCodec::Vp9Rgb444 => Err(io::Error::other("VP9 RGB444 requires an exact signed execution target")),
+            VideoCodec::Vp9Rgb444 => Err(io::Error::other(
+                "VP9 RGB444 requires an exact signed execution target",
+            )),
             VideoCodec::Vp8 => Ok(Self::Vp8(Vp8Decoder::new(width, height)?)),
             #[cfg(windows)]
             VideoCodec::H264Baseline => Ok(Self::H264(H264Decoder::new(width, height)?)),

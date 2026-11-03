@@ -955,9 +955,12 @@ fn parse_native_media_target(value: &str) -> Result<nestlink_media_codec::VideoC
     nestlink_app_core::NativeMediaProvider::cpu_software(target).map_err(|e| e.to_string())?;
     Ok(target)
 }
-fn parse_native_vp9_rgb444_target(value: &str) -> Result<nestlink_media_codec::VideoConfig, String> {
+fn parse_native_vp9_rgb444_target(
+    value: &str,
+) -> Result<nestlink_media_codec::VideoConfig, String> {
     let target = parse_media_target_syntax(value)?;
-    nestlink_app_core::NativeMediaProvider::software_vp9_rgb444(target).map_err(|error| error.to_string())?;
+    nestlink_app_core::NativeMediaProvider::software_vp9_rgb444(target)
+        .map_err(|error| error.to_string())?;
     Ok(target)
 }
 
@@ -980,13 +983,38 @@ mod media_cli_tests {
     #[test]
     fn rgb444_cli_is_explicit_and_rejects_other_modes_and_invalid_bounds() -> std::io::Result<()> {
         use clap::Parser;
-        let args = super::Args::try_parse_from(["nestlink-daemon", "--native-vp9-rgb444-target", "641x481@144:8000"]).map_err(std::io::Error::other)?;
+        let args = super::Args::try_parse_from([
+            "nestlink-daemon",
+            "--native-vp9-rgb444-target",
+            "641x481@144:8000",
+        ])
+        .map_err(std::io::Error::other)?;
         assert!(args.native_vp9_rgb444_target.is_some());
         assert!(args.native_media_target.is_none());
-        for other in ["--native-media-target", "--native-gpu-hevc-target", "--native-gpu-hevc-main10-target", "--native-gpu-hevc-hdr10-target", "--native-gpu-hevc-fallback-target"] {
-            assert!(super::Args::try_parse_from(["nestlink-daemon", "--native-vp9-rgb444-target", "640x480@60:8000", other, "640x480@30:4000"]).is_err());
+        for other in [
+            "--native-media-target",
+            "--native-gpu-hevc-target",
+            "--native-gpu-hevc-main10-target",
+            "--native-gpu-hevc-hdr10-target",
+            "--native-gpu-hevc-fallback-target",
+        ] {
+            assert!(
+                super::Args::try_parse_from([
+                    "nestlink-daemon",
+                    "--native-vp9-rgb444-target",
+                    "640x480@60:8000",
+                    other,
+                    "640x480@30:4000"
+                ])
+                .is_err()
+            );
         }
-        for target in ["640x480@145:8000", "15x480@60:8000", "640x480@60:63", "8192x8192@60:8000"] {
+        for target in [
+            "640x480@145:8000",
+            "15x480@60:8000",
+            "640x480@60:63",
+            "8192x8192@60:8000",
+        ] {
             assert!(super::parse_native_vp9_rgb444_target(target).is_err());
         }
         Ok(())

@@ -234,7 +234,9 @@ async fn authorize_remote_observed<'a>(
     }));
     let mut pending = if let Some(epoch) = migration_epoch {
         routed::RoutedEstablishment::migratable(authorization, adjacency, epoch)?
-    } else { routed::RoutedEstablishment::new(authorization, adjacency) };
+    } else {
+        routed::RoutedEstablishment::new(authorization, adjacency)
+    };
     let established = tokio::select! { biased;
         _ = wait_setup_stop(&mut stop) => {
             revocation.revoke();
@@ -264,7 +266,9 @@ async fn authorize_remote_observed<'a>(
         transport,
         revocation,
         additional_revocations,
-        observed_member: observer.as_ref().and_then(control::RemoteRouteObserver::selected_member),
+        observed_member: observer
+            .as_ref()
+            .and_then(control::RemoteRouteObserver::selected_member),
         observer: None,
         guardians: Vec::new(),
     };
@@ -275,13 +279,18 @@ async fn authorize_remote_observed<'a>(
     let capability_initiator = matches!(setup.role, EndpointRole::Controller);
     let capability = async {
         use nestlink_protocol::network::{
-            CORE_CAPABILITY, MIGRATION_CAPABILITY, CapabilityOffer, NegotiatedProtocol, PeerId, REMOTE_CAPABILITY_ALPN,
+            CORE_CAPABILITY, CapabilityOffer, MIGRATION_CAPABILITY, NegotiatedProtocol, PeerId,
+            REMOTE_CAPABILITY_ALPN,
         };
         use nestlink_transport_quic::capability::{CapabilityBinding, exchange};
         let selected = exchange(
             &connection,
             capability_initiator,
-            if migration_epoch.is_some() { nestlink_protocol::network_migration::packet::REMOTE_ALPN } else { REMOTE_CAPABILITY_ALPN },
+            if migration_epoch.is_some() {
+                nestlink_protocol::network_migration::packet::REMOTE_ALPN
+            } else {
+                REMOTE_CAPABILITY_ALPN
+            },
             &CapabilityBinding {
                 expected_peer: PeerId(digest(peer_key)),
                 business_digest: observation_binding.business_grant_digest,
@@ -294,8 +303,16 @@ async fn authorize_remote_observed<'a>(
             },
             &CapabilityOffer {
                 schema_version: nestlink_protocol::network::SCHEMA_VERSION,
-                supported: if migration_epoch.is_some() { vec![CORE_CAPABILITY.into(), MIGRATION_CAPABILITY.into()] } else { vec![CORE_CAPABILITY.into()] },
-                required: if migration_epoch.is_some() { vec![CORE_CAPABILITY.into(), MIGRATION_CAPABILITY.into()] } else { vec![CORE_CAPABILITY.into()] },
+                supported: if migration_epoch.is_some() {
+                    vec![CORE_CAPABILITY.into(), MIGRATION_CAPABILITY.into()]
+                } else {
+                    vec![CORE_CAPABILITY.into()]
+                },
+                required: if migration_epoch.is_some() {
+                    vec![CORE_CAPABILITY.into(), MIGRATION_CAPABILITY.into()]
+                } else {
+                    vec![CORE_CAPABILITY.into()]
+                },
             },
             setup_deadline,
         )
@@ -313,13 +330,27 @@ async fn authorize_remote_observed<'a>(
             .into());
         }
         let permissions = &setup.session.current_verified_permit().claims().permissions;
-        let file_only = migration_epoch.is_some() && !permissions.is_empty() && permissions.iter().all(|permission|
-            matches!(nestlink_protocol::Permission::try_from(*permission),
-                Ok(nestlink_protocol::Permission::FileRead | nestlink_protocol::Permission::FileWrite)));
+        let file_only = migration_epoch.is_some()
+            && !permissions.is_empty()
+            && permissions.iter().all(|permission| {
+                matches!(
+                    nestlink_protocol::Permission::try_from(*permission),
+                    Ok(nestlink_protocol::Permission::FileRead
+                        | nestlink_protocol::Permission::FileWrite)
+                )
+            });
         if file_only {
-            nestlink_remote::quic::authorize_file_only_path_migration(connection, None, setup, &local.identity, peer_key).await
+            nestlink_remote::quic::authorize_file_only_path_migration(
+                connection,
+                None,
+                setup,
+                &local.identity,
+                peer_key,
+            )
+            .await
         } else {
-            nestlink_remote::quic::authorize(connection, None, setup, &local.identity, peer_key).await
+            nestlink_remote::quic::authorize(connection, None, setup, &local.identity, peer_key)
+                .await
         }
     };
     let proved = tokio::select! { biased;
@@ -412,7 +443,14 @@ impl StopHandler for RemoteRouteStop {
     fn check(&mut self) -> io::Result<()> {
         if Instant::now() >= self.deadline {
             self.revocation.revoke();
-            for revocation in self.additional_revocations.lock().unwrap_or_else(|error| error.into_inner()).iter() { revocation.revoke(); }
+            for revocation in self
+                .additional_revocations
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .iter()
+            {
+                revocation.revoke();
+            }
             return Err(io::ErrorKind::TimedOut.into());
         }
         match &mut self.previous {
@@ -426,10 +464,24 @@ impl StopHandler for RemoteRouteStop {
             StopReason::TransportLost | StopReason::NetworkChanged
         ) {
             self.revocation.retire_for_recovery();
-            for revocation in self.additional_revocations.lock().unwrap_or_else(|error| error.into_inner()).iter() { revocation.retire_for_recovery(); }
+            for revocation in self
+                .additional_revocations
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .iter()
+            {
+                revocation.retire_for_recovery();
+            }
         } else {
             self.revocation.revoke();
-            for revocation in self.additional_revocations.lock().unwrap_or_else(|error| error.into_inner()).iter() { revocation.revoke(); }
+            for revocation in self
+                .additional_revocations
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .iter()
+            {
+                revocation.revoke();
+            }
         }
         match &mut self.previous {
             Some(previous) => previous.stop(reason, effects),
@@ -440,7 +492,14 @@ impl StopHandler for RemoteRouteStop {
 impl Drop for RemoteRouteStop {
     fn drop(&mut self) {
         self.revocation.stop_if_live();
-        for revocation in self.additional_revocations.lock().unwrap_or_else(|error| error.into_inner()).iter() { revocation.stop_if_live(); }
+        for revocation in self
+            .additional_revocations
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .iter()
+        {
+            revocation.stop_if_live();
+        }
     }
 }
 
@@ -453,10 +512,19 @@ struct RemoteRouteOwner {
     guardians: Vec<TaskOwner>,
 }
 impl TransportOwner for RemoteRouteOwner {
-    fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> { Some(self) }
+    fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> {
+        Some(self)
+    }
     fn request_close(&self) {
         self.revocation.stop_if_live();
-        for revocation in self.additional_revocations.lock().unwrap_or_else(|error| error.into_inner()).iter() { revocation.stop_if_live(); }
+        for revocation in self
+            .additional_revocations
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .iter()
+        {
+            revocation.stop_if_live();
+        }
         if self.revocation.is_retired() {
             self.transport.request_close_for_recovery();
         } else {
@@ -465,7 +533,9 @@ impl TransportOwner for RemoteRouteOwner {
         if let Some(observer) = &self.observer {
             observer.request_close();
         }
-        for guardian in &self.guardians { guardian.request_close(); }
+        for guardian in &self.guardians {
+            guardian.request_close();
+        }
     }
     fn close_and_wait(
         &mut self,
@@ -477,7 +547,9 @@ impl TransportOwner for RemoteRouteOwner {
                 observer.close_and_wait(deadline).await?;
             }
             self.observer = None;
-            for guardian in &self.guardians { guardian.close_and_wait(deadline).await?; }
+            for guardian in &self.guardians {
+                guardian.close_and_wait(deadline).await?;
+            }
             self.guardians.clear();
             self.transport.close_and_wait(deadline).await
         })

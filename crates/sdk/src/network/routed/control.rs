@@ -489,7 +489,10 @@ pub(super) struct RemoteRouteObserver {
 enum ReadbackKind {
     Relay,
     Chain,
-    RouteSet { selected: Arc<std::sync::atomic::AtomicUsize>, migratable: bool },
+    RouteSet {
+        selected: Arc<std::sync::atomic::AtomicUsize>,
+        migratable: bool,
+    },
 }
 impl RemoteRouteObserver {
     pub(super) fn selected_member(&self) -> Option<Arc<std::sync::atomic::AtomicUsize>> {
@@ -535,7 +538,10 @@ impl RemoteRouteObserver {
         match &self.kind {
             ReadbackKind::Relay => self.matches_view::<NetworkRemoteRelayView>().await,
             ReadbackKind::Chain => self.matches_view::<NetworkRemoteRelayChainView>().await,
-            ReadbackKind::RouteSet { selected, migratable } => {
+            ReadbackKind::RouteSet {
+                selected,
+                migratable,
+            } => {
                 matches!(
                     crate::request::<nestlink_protocol::api::NetworkRemoteRouteSetView>(
                         &self.client, &self.origin, reqwest::Method::GET, &self.path,

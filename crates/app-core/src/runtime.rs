@@ -20,10 +20,10 @@ mod native_offline;
 pub use native_offline::*;
 #[path = "runtime/native_inbox.rs"]
 mod native_inbox;
+mod native_intra;
 #[path = "runtime/native_network_control.rs"]
 mod native_network_control;
 mod native_quality;
-mod native_intra;
 #[path = "runtime/native_recovery.rs"]
 mod native_recovery;
 #[path = "runtime/native_routed.rs"]
@@ -1271,8 +1271,17 @@ impl CoreHandle {
         binding: &NativeSessionBinding,
     ) -> Result<nestlink_media_codec::VideoCodec, NativeVideoError> {
         let route = self.native_host_video_route(binding)?;
-        if route.lease.media_formats().map_err(|_| NativeVideoError::Unauthorized)?
-            .is_some_and(|formats| formats.formats().iter().all(|format| format.codec == nestlink_protocol::media_format::Codec::Vp9)) {
+        if route
+            .lease
+            .media_formats()
+            .map_err(|_| NativeVideoError::Unauthorized)?
+            .is_some_and(|formats| {
+                formats
+                    .formats()
+                    .iter()
+                    .all(|format| format.codec == nestlink_protocol::media_format::Codec::Vp9)
+            })
+        {
             return Ok(nestlink_media_codec::VideoCodec::Vp9Rgb444);
         }
         if route
@@ -1457,8 +1466,11 @@ impl CoreHandle {
                 config
             } else if value.format.codec == nestlink_protocol::media_format::Codec::Vp9 {
                 let config = nestlink_media_session::vp9_rgb444_execution_target(value.format)
-                    .map_err(|_| NativeVideoError::Unauthorized)?.config();
-                if (config.width, config.height) != (source_binding.width, source_binding.height) { return Err(NativeVideoError::Unauthorized); }
+                    .map_err(|_| NativeVideoError::Unauthorized)?
+                    .config();
+                if (config.width, config.height) != (source_binding.width, source_binding.height) {
+                    return Err(NativeVideoError::Unauthorized);
+                }
                 config
             } else {
                 nestlink_media_session::h264_display_config(
@@ -1479,8 +1491,12 @@ impl CoreHandle {
             }
         }
         let ordinary_rgb444 = native_intra::ordinary_rgb444_output(
-            confirmed.as_ref().map(|value| value.format), execution.as_ref(),
-            pts_90khz, keyframe, repeated_source, &encoded_frame,
+            confirmed.as_ref().map(|value| value.format),
+            execution.as_ref(),
+            pts_90khz,
+            keyframe,
+            repeated_source,
+            &encoded_frame,
         );
         let (binding, sequence, keyframe_deadline) = {
             let mut cursor = route
@@ -1525,7 +1541,10 @@ impl CoreHandle {
                         .format,
                 )
                 .map_err(|_| NativeVideoError::Unauthorized)? as i32
-            } else if confirmed.as_ref().is_some_and(|v| v.format.codec == nestlink_protocol::media_format::Codec::Vp9) {
+            } else if confirmed
+                .as_ref()
+                .is_some_and(|v| v.format.codec == nestlink_protocol::media_format::Codec::Vp9)
+            {
                 nestlink_protocol::NativeVideoCodec::Vp9Rgb444 as i32
             } else if route
                 .lease

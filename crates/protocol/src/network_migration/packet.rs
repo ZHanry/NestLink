@@ -12,13 +12,21 @@ pub const INNER_MTU: u16 = 1200;
 pub const REMOTE_ALPN: &[u8] = b"nestlink/network-remote-migration/1";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Mode { Control, Business(u64) }
+pub enum Mode {
+    Control,
+    Business(u64),
+}
 
 fn invalid() -> ContractError {
-    ContractError::new(ErrorCode::InvalidMessage, "invalid migration packet demultiplexing envelope")
+    ContractError::new(
+        ErrorCode::InvalidMessage,
+        "invalid migration packet demultiplexing envelope",
+    )
 }
 pub fn encode(mode: Mode, payload: &[u8]) -> Result<Vec<u8>, ContractError> {
-    if payload.is_empty() || payload.len() > MAX_INNER_PACKET { return Err(invalid()); }
+    if payload.is_empty() || payload.len() > MAX_INNER_PACKET {
+        return Err(invalid());
+    }
     let (tag, epoch) = match mode {
         Mode::Control => (1, 0),
         Mode::Business(epoch) if epoch != 0 => (2, epoch),
@@ -32,9 +40,13 @@ pub fn encode(mode: Mode, payload: &[u8]) -> Result<Vec<u8>, ContractError> {
     Ok(bytes)
 }
 pub fn decode(bytes: &[u8]) -> Result<(Mode, &[u8]), ContractError> {
-    if bytes.len() <= HEADER || bytes.len() > network_datagram::PACKET_BYTES
-        || &bytes[..4] != b"NLM1" || bytes[5..8] != [0; 3]
-    { return Err(invalid()); }
+    if bytes.len() <= HEADER
+        || bytes.len() > network_datagram::PACKET_BYTES
+        || &bytes[..4] != b"NLM1"
+        || bytes[5..8] != [0; 3]
+    {
+        return Err(invalid());
+    }
     let epoch = u64::from_be_bytes(bytes[8..16].try_into().map_err(|_| invalid())?);
     let mode = match (bytes[4], epoch) {
         (1, 0) => Mode::Control,
@@ -56,9 +68,12 @@ mod tests {
             assert_eq!(parsed, mode);
             assert_eq!(payload, &[7; MAX_INNER_PACKET]);
             assert_eq!(bytes.len(), network_datagram::PACKET_BYTES);
-            for length in 0..=HEADER { assert!(decode(&bytes[..length]).is_err()); }
+            for length in 0..=HEADER {
+                assert!(decode(&bytes[..length]).is_err());
+            }
             for offset in 4..8 {
-                let mut wrong = bytes.clone(); wrong[offset] = 255;
+                let mut wrong = bytes.clone();
+                wrong[offset] = 255;
                 assert!(decode(&wrong).is_err());
             }
         }

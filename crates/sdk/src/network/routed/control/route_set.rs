@@ -72,7 +72,10 @@ impl VerifiedRemoteRouteCandidate<'_> {
 }
 impl VerifiedRemoteRouteSet {
     pub(super) fn member_authorized(&self, index: usize) -> bool {
-        self.view.members.get(index).is_some_and(|member| member.authorized)
+        self.view
+            .members
+            .get(index)
+            .is_some_and(|member| member.authorized)
     }
     pub fn membership_grant_ids(&self) -> [&str; 2] {
         [

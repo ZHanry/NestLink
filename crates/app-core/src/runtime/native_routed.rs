@@ -161,7 +161,12 @@ impl NativeConnection {
                     .min(Duration::from_secs(3));
             let mut interrupted = None;
             let outcome = {
-                let turn = session.poll_with_path_migration(&client.sdk, &request.identity, peer_key, true);
+                let turn = session.poll_with_path_migration(
+                    &client.sdk,
+                    &request.identity,
+                    peer_key,
+                    true,
+                );
                 tokio::pin!(turn);
                 tokio::select! { biased;
                     _ = wait_for_fence_invalidation(request.fence.clone()) => {
@@ -195,8 +200,23 @@ impl NativeConnection {
                                 .await;
                         }
                     }
-                    Some(Err(_)) | None => {
-                        let _ = session.control().stop(StopReason::Revoked);
+                    Some(Err(_)) => {
+                        // The SDK may already have stopped a failed migration
+                        // for safe recovery. Preserve its actual stop reason;
+                        // an unclassified live-session error remains terminal.
+                        let _ = session
+                            .channels()
+                            .lease_control()
+                            .stop_if_running(StopReason::Revoked);
+                    }
+                    None => {
+                        // An outer bounded wait can cancel detach or drain.
+                        // The retained owner still joins all original receipts
+                        // before recovery can independently recheck authority.
+                        let _ = session
+                            .channels()
+                            .lease_control()
+                            .stop_if_running(StopReason::TransportLost);
                     }
                 }
             }

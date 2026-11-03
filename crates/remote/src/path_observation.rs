@@ -29,9 +29,15 @@ pub struct PathObservation {
     stopped: Arc<AtomicBool>,
 }
 #[derive(Clone)]
-struct BindingRevision { binding: Arc<PathObservationBinding>, epoch: Option<u64> }
+struct BindingRevision {
+    binding: Arc<PathObservationBinding>,
+    epoch: Option<u64>,
+}
 #[derive(Clone, Default)]
-struct Measurements { epoch: Option<u64>, values: LocalPathMeasurements }
+struct Measurements {
+    epoch: Option<u64>,
+    values: LocalPathMeasurements,
+}
 impl PathObservation {
     pub fn binding(&self) -> Arc<PathObservationBinding> {
         self.binding.borrow().binding.clone()
@@ -47,8 +53,11 @@ impl PathObservation {
         let measurements = self.measurements.borrow();
         let now = elapsed_ms(self.started);
         let fresh = measurements.epoch == current.epoch;
-        let mut snapshot = if fresh { measurements.values.snapshot(&current.binding, now, stopped) }
-            else { LocalPathMeasurements::default().snapshot(&current.binding, now, stopped) };
+        let mut snapshot = if fresh {
+            measurements.values.snapshot(&current.binding, now, stopped)
+        } else {
+            LocalPathMeasurements::default().snapshot(&current.binding, now, stopped)
+        };
         snapshot.path_epoch = current.epoch;
         snapshot
     }
@@ -65,9 +74,13 @@ impl PathObservation {
         let measurements = self.measurements.borrow();
         let current = self.binding.borrow();
         let now_ms = elapsed_ms(self.started);
-        if measurements.epoch != current.epoch { return None; }
+        if measurements.epoch != current.epoch {
+            return None;
+        }
         let at_ms = measurements.values.rtt_observed_at_ms(now_ms)?;
-        let mut snapshot = measurements.values.snapshot(&current.binding, now_ms, false);
+        let mut snapshot = measurements
+            .values
+            .snapshot(&current.binding, now_ms, false);
         snapshot.path_epoch = current.epoch;
         Some((
             self.started.checked_add(Duration::from_millis(at_ms))?,
@@ -110,9 +123,13 @@ impl PathObservationOwner {
         let started = Instant::now();
         let stopped = Arc::new(AtomicBool::new(false));
         let epoch = binding.transport_group.map(|_| 1);
-        let (sender, measurements) = watch::channel(Measurements { epoch, values: LocalPathMeasurements::default() });
+        let (sender, measurements) = watch::channel(Measurements {
+            epoch,
+            values: LocalPathMeasurements::default(),
+        });
         let (binding_source, mut binding_updates) = watch::channel(BindingRevision {
-            binding: Arc::new(binding), epoch,
+            binding: Arc::new(binding),
+            epoch,
         });
         let mut terminal = lease.subscribe_stopped();
         let observation = PathObservation {
@@ -160,22 +177,33 @@ impl PathObservationOwner {
                     lost_packets: stats.path.lost_packets,
                     business_tx_bytes: business_tx.business_transmitted_bytes(),
                 };
-                sender
-                    .send_modify(|measurements| measurements.values.observe(elapsed_ms(started), sample));
+                sender.send_modify(|measurements| {
+                    measurements.values.observe(elapsed_ms(started), sample)
+                });
             }
         }));
-        Self { observation, task, binding: binding_source }
+        Self {
+            observation,
+            task,
+            binding: binding_source,
+        }
     }
     pub(crate) fn rebind(&self, binding: PathObservationBinding, epoch: u64) -> io::Result<()> {
         let current = self.binding.borrow();
         let mut expected = (*current.binding).clone();
         expected.route_binding = binding.route_binding;
-        if expected != binding || binding.route_binding.is_none()
+        if expected != binding
+            || binding.route_binding.is_none()
             || binding.route_binding == current.binding.route_binding
             || current.epoch.and_then(|previous| previous.checked_add(1)) != Some(epoch)
-        { return Err(io::ErrorKind::PermissionDenied.into()); }
+        {
+            return Err(io::ErrorKind::PermissionDenied.into());
+        }
         drop(current);
-        self.binding.send_replace(BindingRevision { binding: Arc::new(binding), epoch: Some(epoch) });
+        self.binding.send_replace(BindingRevision {
+            binding: Arc::new(binding),
+            epoch: Some(epoch),
+        });
         Ok(())
     }
     pub(crate) fn observation(&self) -> PathObservation {

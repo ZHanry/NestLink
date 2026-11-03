@@ -319,7 +319,8 @@ impl Store {
             // checking this member's current runtime and lease for admission.
             let available = match relay_node(self, &row.node_id, now) {
                 Ok(node) => {
-                    authorized && !row.closed
+                    authorized
+                        && !row.closed
                         && row.key == node.key
                         && row.runtime == node.runtime
                         && row.generation == node.generation

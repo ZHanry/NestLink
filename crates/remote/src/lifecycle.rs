@@ -413,8 +413,14 @@ impl LeaseControl {
         lifecycle: SessionLifecycle,
     ) -> Result<Self, RemoteError> {
         let permissions = &session.current_verified_permit().claims().permissions;
-        if permissions.is_empty() || permissions.iter().any(|permission|
-            !matches!(Permission::try_from(*permission), Ok(Permission::FileRead | Permission::FileWrite))) {
+        if permissions.is_empty()
+            || permissions.iter().any(|permission| {
+                !matches!(
+                    Permission::try_from(*permission),
+                    Ok(Permission::FileRead | Permission::FileWrite)
+                )
+            })
+        {
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
         }
         let required = Permission::try_from(permissions[0])

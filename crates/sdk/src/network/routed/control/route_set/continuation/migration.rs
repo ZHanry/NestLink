@@ -2,11 +2,11 @@
 //! receipt permits the existing owner to rebind its original inner connection
 //! or explicitly retire every carrier for independent application recovery.
 use super::*;
+use futures_util::FutureExt;
 use nestlink_identity::digest;
 use nestlink_protocol::network_migration::Binding;
-use nestlink_transport_quic::migration::{self, CommittedMigration};
-use futures_util::FutureExt;
 use nestlink_protocol::network_migration::request::Request;
+use nestlink_transport_quic::migration::{self, CommittedMigration};
 
 /// Only a completed pinned candidate transcript constructs this receipt.
 /// Only its original business owner can consume it. A retained-inner migration
@@ -46,7 +46,8 @@ impl ContinuousRouteSetSession {
         demand: bool,
     ) -> Result<RouteSetContinuationStatus, SessionEstablishError> {
         let status = self.poll(sdk, local, peer_key, demand).await?;
-        self.drive_path_migration(sdk, local, peer_key, status, None).await
+        self.drive_path_migration(sdk, local, peer_key, status, None)
+            .await
     }
 
     /// An explicit local request on the exact original prepared member. The
@@ -64,7 +65,8 @@ impl ContinuousRouteSetSession {
             return Err(SdkError::Trust.into());
         }
         let status = self.status()?;
-        self.drive_path_migration(sdk, local, peer_key, status, Some(candidate_index)).await
+        self.drive_path_migration(sdk, local, peer_key, status, Some(candidate_index))
+            .await
     }
 
     async fn drive_path_migration(
@@ -78,44 +80,83 @@ impl ContinuousRouteSetSession {
         if status.policy.terminal.is_some() || self.committed_recovery.is_some() {
             return Ok(status);
         }
-        if cancel_is_stopped(&self.cancel) || self.channels.lease_control().remaining().is_err()
-            || !self.route.is_current_for(sdk, local, &self.permit, peer_key) {
+        if cancel_is_stopped(&self.cancel)
+            || self.channels.lease_control().remaining().is_err()
+            || !self
+                .route
+                .is_current_for(sdk, local, &self.permit, peer_key)
+        {
             let _ = self.channels.lease_control().stop(StopReason::Revoked);
             return Err(SdkError::Trust.into());
         }
         let Some(slot) = self.standby.as_ref() else {
-            return if request_index.is_some() { Err(SdkError::Trust.into()) } else { Ok(status) };
+            return if request_index.is_some() {
+                Err(SdkError::Trust.into())
+            } else {
+                Ok(status)
+            };
         };
         let index = slot.index;
-        if request_index.is_some_and(|requested| requested != index) { return Err(SdkError::Trust.into()); }
+        if request_index.is_some_and(|requested| requested != index) {
+            return Err(SdkError::Trust.into());
+        }
         let initiate = status.recovery.is_some() || request_index.is_some();
-        let connection = slot.transport.as_ref().ok_or(SdkError::Trust)?
-            .connection().map_err(SdkError::ServiceIo)?.clone();
+        let connection = slot
+            .transport
+            .as_ref()
+            .ok_or(SdkError::Trust)?
+            .connection()
+            .map_err(SdkError::ServiceIo)?
+            .clone();
         // UNI requests are separate from the existing BI capability exchange
         // and four signed phases. Polling once never waits on a healthy idle
         // standby and never consumes any application/business stream.
         let incoming = match connection.accept_uni().now_or_never() {
             Some(Ok(stream)) => Some(stream),
             Some(Err(error)) => {
-                let _ = self.channels.lease_control().stop(StopReason::TransportLost);
+                let _ = self
+                    .channels
+                    .lease_control()
+                    .stop(StopReason::TransportLost);
                 return Err(SdkError::NodeQuic(error.into()).into());
-            },
+            }
             None => None,
         };
-        if incoming.is_none() && !initiate { return Ok(status); }
-        if !self.scheduler.accepts_prepared_transition(self.now()?, self.keys[self.selected], self.keys[index]) {
-            let _ = self.channels.lease_control().stop(StopReason::TransportLost);
+        if incoming.is_none() && !initiate {
+            return Ok(status);
+        }
+        if !self.scheduler.accepts_prepared_transition(
+            self.now()?,
+            self.keys[self.selected],
+            self.keys[index],
+        ) {
+            let _ = self
+                .channels
+                .lease_control()
+                .stop(StopReason::TransportLost);
             return Err(SdkError::Trust.into());
         }
         let expected = Request {
-            permit: self.permit.digest(), transport_group: self.route.transport_group(),
-            original_connection: self.original_connection, original_route: self.keys[self.selected].route_binding,
-            candidate_route: self.keys[index].route_binding, previous_path_epoch: status.policy.epoch,
+            permit: self.permit.digest(),
+            transport_group: self.route.transport_group(),
+            original_connection: self.original_connection,
+            original_route: self.keys[self.selected].route_binding,
+            candidate_route: self.keys[index].route_binding,
+            previous_path_epoch: status.policy.epoch,
         };
-        let mut deadline = self.route.deadline.min(Instant::now() + Duration::from_millis(
-            nestlink_protocol::network_migration::MAX_CONTROL_LIFETIME_MS));
-        if let Some(until) = self.channels.transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
-            .and_then(|owner| owner.transport.held_path_loss_deadline()) { deadline = deadline.min(until); }
+        let mut deadline = self.route.deadline.min(
+            Instant::now()
+                + Duration::from_millis(
+                    nestlink_protocol::network_migration::MAX_CONTROL_LIFETIME_MS,
+                ),
+        );
+        if let Some(until) = self
+            .channels
+            .transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
+            .and_then(|owner| owner.transport.held_path_loss_deadline())
+        {
+            deadline = deadline.min(until);
+        }
         let lease = self.channels.lease_control();
         let mut cancel = self.cancel.clone();
         let mut stopped = lease.subscribe_stopped();
@@ -134,24 +175,40 @@ impl ContinuousRouteSetSession {
         if let Err(error) = requested {
             let reason = match &error {
                 SessionEstablishError::Contract(_) => StopReason::ProtocolViolation,
-                SessionEstablishError::Sdk(SdkError::ServiceIo(error)) if error.kind() == io::ErrorKind::InvalidData => StopReason::ProtocolViolation,
-                SessionEstablishError::Cancelled | SessionEstablishError::Sdk(SdkError::Trust)
-                    | SessionEstablishError::Remote(RemoteError::Stopped) => StopReason::Revoked,
+                SessionEstablishError::Sdk(SdkError::ServiceIo(error))
+                    if error.kind() == io::ErrorKind::InvalidData =>
+                {
+                    StopReason::ProtocolViolation
+                }
+                SessionEstablishError::Cancelled
+                | SessionEstablishError::Sdk(SdkError::Trust)
+                | SessionEstablishError::Remote(RemoteError::Stopped) => StopReason::Revoked,
                 _ => StopReason::TransportLost,
             };
             let _ = lease.stop(reason);
             return Err(error);
         }
-        let receipt = self.authenticate_prepared(sdk, local, peer_key, index, status.recovery,
-            true, Some(deadline)).await?;
+        let receipt = self
+            .authenticate_prepared(
+                sdk,
+                local,
+                peer_key,
+                index,
+                status.recovery,
+                true,
+                Some(deadline),
+            )
+            .await?;
         if receipt.requires_fresh_business_admission() {
             // Existing input/platform handlers release held state at stop;
             // ChannelRuntime joins every old stream and discards its queues.
             // AppCore's existing recovery then proves a fresh generation and
             // attaches fresh media owners with the first keyframe required.
-            self.retire_authenticated_path_recovery(sdk, local, peer_key, receipt).await?;
+            self.retire_authenticated_path_recovery(sdk, local, peer_key, receipt)
+                .await?;
         } else {
-            self.commit_authenticated_path_migration(sdk, local, peer_key, receipt).await?;
+            self.commit_authenticated_path_migration(sdk, local, peer_key, receipt)
+                .await?;
         }
         Ok(self.status()?)
     }
@@ -198,7 +255,8 @@ impl ContinuousRouteSetSession {
         candidate_index: usize,
         proposal: Option<RouteSetRecoveryProposal>,
     ) -> Result<AuthenticatedPathRecovery, SessionEstablishError> {
-        self.authenticate_prepared(sdk, local, peer_key, candidate_index, proposal, false, None).await
+        self.authenticate_prepared(sdk, local, peer_key, candidate_index, proposal, false, None)
+            .await
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -218,7 +276,11 @@ impl ContinuousRouteSetSession {
             || candidate_index >= self.keys.len()
             || candidate_index == self.selected
             || status.policy.standby != Some(self.keys[candidate_index])
-            || !self.scheduler.accepts_prepared_transition(self.now()?, self.keys[self.selected], self.keys[candidate_index])
+            || !self.scheduler.accepts_prepared_transition(
+                self.now()?,
+                self.keys[self.selected],
+                self.keys[candidate_index],
+            )
             || proposal.as_ref().is_some_and(|proposal| {
                 status.policy.proposal.as_ref() != Some(&proposal.proposal)
                     || proposal.candidate_index != candidate_index
@@ -260,9 +322,14 @@ impl ContinuousRouteSetSession {
                 ),
             |proposal| self.started + Duration::from_millis(proposal.proposal.deadline_ms()),
         ));
-        if let Some(request_deadline) = request_deadline { deadline = deadline.min(request_deadline); }
-        if let Some(held_until) = self.channels.transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
-            .and_then(|owner| owner.transport.held_path_loss_deadline()) {
+        if let Some(request_deadline) = request_deadline {
+            deadline = deadline.min(request_deadline);
+        }
+        if let Some(held_until) = self
+            .channels
+            .transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
+            .and_then(|owner| owner.transport.held_path_loss_deadline())
+        {
             deadline = deadline.min(held_until);
         }
         let binding = Binding {
@@ -367,7 +434,10 @@ impl ContinuousRouteSetSession {
         if cancel_is_stopped(&self.cancel)
             || lease.remaining().is_err()
             || !self.route.member_authorized(self.selected)
-            || self.route.candidate_for_admission(sdk, local, &self.permit, peer_key, candidate_index).is_none()
+            || self
+                .route
+                .candidate_for_admission(sdk, local, &self.permit, peer_key, candidate_index)
+                .is_none()
             || Instant::now() >= deadline
         {
             let _ = lease.stop(StopReason::Revoked);
@@ -434,7 +504,8 @@ impl ContinuousRouteSetSession {
     ) -> Result<nestlink_transport_quic::routed::PathChange, SessionEstablishError> {
         let binding = receipt.committed.binding();
         if self.migration_interrupted
-            || !receipt.retained_business || !self.channels.can_retain_business_for_path_migration()?
+            || !receipt.retained_business
+            || !self.channels.can_retain_business_for_path_migration()?
             || self.committed_recovery != Some(receipt.committed.transcript().proposal)
             || binding.original_connection != self.original_connection
             || binding.permit != self.permit.digest()
@@ -442,56 +513,112 @@ impl ContinuousRouteSetSession {
             || binding.original_route != self.keys[self.selected].route_binding
             || receipt.candidate_index >= self.keys.len()
             || binding.candidate_route != self.keys[receipt.candidate_index].route_binding
-            || !self.route.is_current_for(sdk, local, &self.permit, peer_key)
+            || !self
+                .route
+                .is_current_for(sdk, local, &self.permit, peer_key)
             || !self.route.member_authorized(self.selected)
-            || self.route.candidate_for_admission(sdk, local, &self.permit, peer_key, receipt.candidate_index).is_none()
+            || self
+                .route
+                .candidate_for_admission(
+                    sdk,
+                    local,
+                    &self.permit,
+                    peer_key,
+                    receipt.candidate_index,
+                )
+                .is_none()
             || cancel_is_stopped(&self.cancel)
-        { return Err(SdkError::Trust.into()); }
+        {
+            return Err(SdkError::Trust.into());
+        }
         let from = self.keys[self.selected];
         let to = self.keys[receipt.candidate_index];
         let previous = binding.previous_path_epoch;
         let next = binding.next_path_epoch;
         let lease = self.channels.lease_control();
         lease.remaining()?;
-        let slot = self.standby.as_mut().filter(|slot| slot.index == receipt.candidate_index)
+        let slot = self
+            .standby
+            .as_mut()
+            .filter(|slot| slot.index == receipt.candidate_index)
             .ok_or(SdkError::Trust)?;
-        let owner = self.channels.transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
+        let owner = self
+            .channels
+            .transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
             .ok_or(SdkError::Trust)?;
-        if slot.transport.is_none() || slot.revocation.is_none() { return Err(SdkError::Trust.into()); }
+        if slot.transport.is_none() || slot.revocation.is_none() {
+            return Err(SdkError::Trust.into());
+        }
         let candidate = slot.transport.take().ok_or(SdkError::Trust)?;
         if let Some(revocation) = slot.revocation.take() {
-            owner.additional_revocations.lock().unwrap_or_else(|error| error.into_inner()).push(revocation);
-        } else { return Err(SdkError::Trust.into()); }
-        if let Some(guardian) = slot.stop_guardian.take() { owner.guardians.push(guardian); }
+            owner
+                .additional_revocations
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .push(revocation);
+        } else {
+            return Err(SdkError::Trust.into());
+        }
+        if let Some(guardian) = slot.stop_guardian.take() {
+            owner.guardians.push(guardian);
+        }
         self.migration_interrupted = true;
-        let result = owner.transport.migrate(candidate, &receipt.committed,
-            self.route.deadline.min(Instant::now() + Duration::from_secs(2))).await;
+        let result = owner
+            .transport
+            .migrate(
+                candidate,
+                &receipt.committed,
+                self.route
+                    .deadline
+                    .min(Instant::now() + Duration::from_secs(2)),
+            )
+            .await;
         let change = match result {
             Ok(change) => change,
             Err(error) => {
                 let _ = lease.stop(if error.kind() == io::ErrorKind::PermissionDenied {
                     StopReason::Revoked
-                } else { StopReason::TransportLost });
+                } else {
+                    StopReason::TransportLost
+                });
                 return Err(SdkError::ServiceIo(error).into());
             }
         };
         if let Some(selected) = &owner.observed_member {
-            selected.store(receipt.candidate_index, std::sync::atomic::Ordering::Release);
+            selected.store(
+                receipt.candidate_index,
+                std::sync::atomic::Ordering::Release,
+            );
         }
         lease.remaining()?;
-        if cancel_is_stopped(&self.cancel) || !self.route.is_current_for(sdk, local, &self.permit, peer_key) {
+        if cancel_is_stopped(&self.cancel)
+            || !self
+                .route
+                .is_current_for(sdk, local, &self.permit, peer_key)
+        {
             let _ = lease.stop(StopReason::Revoked);
             return Err(SdkError::Trust.into());
         }
         self.selected = receipt.candidate_index;
         self.standby = None;
-        if let Err(error) = self.channels.rebind_quic_path_observation(self.originals[self.selected].binding.clone(), next) {
+        if let Err(error) = self
+            .channels
+            .rebind_quic_path_observation(self.originals[self.selected].binding.clone(), next)
+        {
             let _ = lease.stop(StopReason::ProtocolViolation);
             return Err(error.into());
         }
-        let decision = self.step(sdk, local, peer_key, ContinuationInput::AuthenticatedCommit {
-            from, to, previous_epoch: previous, next_epoch: next,
-        })?;
+        let decision = self.step(
+            sdk,
+            local,
+            peer_key,
+            ContinuationInput::AuthenticatedCommit {
+                from,
+                to,
+                previous_epoch: previous,
+                next_epoch: next,
+            },
+        )?;
         if decision.rejected.is_some() {
             let _ = lease.stop(StopReason::ProtocolViolation);
             return Err(SdkError::Trust.into());
@@ -501,7 +628,10 @@ impl ContinuousRouteSetSession {
         let mut retirements = Vec::new();
         for action in decision.actions {
             if let ContinuationAction::Retire(token) = action {
-                if token.route() != from { let _ = lease.stop(StopReason::ProtocolViolation); return Err(SdkError::Trust.into()); }
+                if token.route() != from {
+                    let _ = lease.stop(StopReason::ProtocolViolation);
+                    return Err(SdkError::Trust.into());
+                }
                 retirements.push(token);
             } else if let ContinuationAction::Terminal(_) = action {
                 let _ = lease.stop(StopReason::Revoked);
@@ -510,12 +640,17 @@ impl ContinuousRouteSetSession {
         }
         self.pending_retirements.retain(|pending| {
             if pending.token.route() == from {
-                if !retirements.contains(&pending.token) { retirements.push(pending.token.clone()); }
+                if !retirements.contains(&pending.token) {
+                    retirements.push(pending.token.clone());
+                }
                 false
-            } else { true }
+            } else {
+                true
+            }
         });
         for token in retirements {
-            let acknowledged = self.step(sdk, local, peer_key, ContinuationInput::Retired(token))?;
+            let acknowledged =
+                self.step(sdk, local, peer_key, ContinuationInput::Retired(token))?;
             if acknowledged.rejected.is_some() {
                 let _ = lease.stop(StopReason::ProtocolViolation);
                 return Err(SdkError::Trust.into());
@@ -535,14 +670,26 @@ async fn exchange_request(
     initiate: bool,
 ) -> Result<(), SessionEstablishError> {
     if let Some(mut receive) = incoming {
-        let bytes = receive.read_to_end(nestlink_protocol::network_migration::request::MAX_BYTES)
-            .await.map_err(|error| SdkError::ServiceIo(io::Error::new(io::ErrorKind::InvalidData, error)))?;
-        if Request::decode(&bytes)? != *expected { return Err(SdkError::Trust.into()); }
+        let bytes = receive
+            .read_to_end(nestlink_protocol::network_migration::request::MAX_BYTES)
+            .await
+            .map_err(|error| {
+                SdkError::ServiceIo(io::Error::new(io::ErrorKind::InvalidData, error))
+            })?;
+        if Request::decode(&bytes)? != *expected {
+            return Err(SdkError::Trust.into());
+        }
     }
     if initiate {
-        let mut send = connection.open_uni().await.map_err(|error| SdkError::NodeQuic(error.into()))?;
-        send.write_all(&expected.encode()?).await.map_err(|error| SdkError::NodeQuic(error.into()))?;
-        send.finish().map_err(|error| SdkError::NodeQuic(error.into()))?;
+        let mut send = connection
+            .open_uni()
+            .await
+            .map_err(|error| SdkError::NodeQuic(error.into()))?;
+        send.write_all(&expected.encode()?)
+            .await
+            .map_err(|error| SdkError::NodeQuic(error.into()))?;
+        send.finish()
+            .map_err(|error| SdkError::NodeQuic(error.into()))?;
     }
     Ok(())
 }

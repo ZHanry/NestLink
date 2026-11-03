@@ -46,11 +46,17 @@ fn rgb444_wire_marker_requires_independent_format_identity_and_keyframe() -> Res
     // Structural envelope only; actual libvpx syntax/format is checked by owner.
     frame.payload = vec![0x80];
     assert_eq!(NativeVideoCodec::Vp9Rgb444 as i32, 4);
-    assert_eq!(NativeVideo::decode_validated(&frame.encode_validated()?)?, frame);
+    assert_eq!(
+        NativeVideo::decode_validated(&frame.encode_validated()?)?,
+        frame
+    );
     for case in 0..5 {
         let mut changed = frame.clone();
         match case {
-            0 => { changed.format_epoch = 0; changed.format_sha256.clear(); }
+            0 => {
+                changed.format_epoch = 0;
+                changed.format_sha256.clear();
+            }
             1 => changed.keyframe = false,
             2 => changed.payload.clear(),
             3 => changed.width = 15,

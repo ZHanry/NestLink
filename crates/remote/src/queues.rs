@@ -34,7 +34,9 @@ pub trait DeliveryGuard: Send + Sync {
 pub trait TransportOwner: Send + Sync {
     /// Typed in-crate adapters may recover their own unique transport owner.
     /// This exposes no carrier type or authority through the remote API.
-    fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> { None }
+    fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> {
+        None
+    }
     fn request_close(&self);
     fn close_and_wait(
         &mut self,
@@ -946,8 +948,10 @@ impl ChannelRuntime {
     /// Check the complete proved permission set, including idle channels.
     pub fn can_retain_business_for_path_migration(&self) -> Result<bool, RemoteError> {
         let (_, _, channels) = self.lease.transport_binding()?;
-        Ok(!channels.is_empty() && channels.iter().all(|channel|
-            matches!(channel, Channel::FileRead | Channel::FileWrite)))
+        Ok(!channels.is_empty()
+            && channels
+                .iter()
+                .all(|channel| matches!(channel, Channel::FileRead | Channel::FileWrite)))
     }
     /// Opaque TLS exporter of this proved connection. This is a transcript
     /// binding only; it neither exposes transport handles nor grants new I/O.
@@ -1028,10 +1032,15 @@ impl ChannelRuntime {
     }
     /// A successful original-owner path commit updates every cloned observer.
     /// This cannot change business authority, group, path rights or generation.
-    pub fn rebind_quic_path_observation(&mut self, binding: crate::PathObservationBinding, epoch: u64)
-    -> Result<(), RemoteError> {
+    pub fn rebind_quic_path_observation(
+        &mut self,
+        binding: crate::PathObservationBinding,
+        epoch: u64,
+    ) -> Result<(), RemoteError> {
         self.lease.remaining()?;
-        self.path_observation.as_ref().ok_or_else(|| io::Error::from(io::ErrorKind::Unsupported))?
+        self.path_observation
+            .as_ref()
+            .ok_or_else(|| io::Error::from(io::ErrorKind::Unsupported))?
             .rebind(binding, epoch)?;
         Ok(())
     }
@@ -1042,7 +1051,10 @@ impl ChannelRuntime {
         self
     }
     pub fn transport_owner_mut<T: std::any::Any>(&mut self) -> Option<&mut T> {
-        self.transport_owner.as_mut()?.as_any_mut()?.downcast_mut::<T>()
+        self.transport_owner
+            .as_mut()?
+            .as_any_mut()?
+            .downcast_mut::<T>()
     }
     pub(crate) fn quic(
         lease: LeaseControl,

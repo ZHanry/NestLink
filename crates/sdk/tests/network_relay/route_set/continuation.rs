@@ -1,18 +1,31 @@
 //! Real HTTP, two NodeControl owners, original business I/O and inner-TLS spare.
 use super::*;
 use nestlink_connectivity::continuation::{QualityConstraints, RouteIdentity};
-use nestlink_remote::input::{InputAction, InputController, InputDevice, InputEpoch, InputEvent, InputLayout, PlatformInput};
+use nestlink_remote::input::{
+    InputAction, InputController, InputDevice, InputEpoch, InputEvent, InputLayout, PlatformInput,
+};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[derive(Default)]
-struct InputFacts { releases: AtomicUsize, resets: AtomicUsize, actions: AtomicUsize }
+struct InputFacts {
+    releases: AtomicUsize,
+    resets: AtomicUsize,
+    actions: AtomicUsize,
+}
 struct MigrationInput(Arc<InputFacts>);
 impl InputDevice for MigrationInput {
-    fn reset(&mut self) -> io::Result<()> { self.0.resets.fetch_add(1, Ordering::SeqCst); Ok(()) }
+    fn reset(&mut self) -> io::Result<()> {
+        self.0.resets.fetch_add(1, Ordering::SeqCst);
+        Ok(())
+    }
     fn inject(&mut self, input: PlatformInput<'_>) -> io::Result<()> {
         match input {
-            PlatformInput::Action(_) => { self.0.actions.fetch_add(1, Ordering::SeqCst); },
-            PlatformInput::Release(_) => { self.0.releases.fetch_add(1, Ordering::SeqCst); },
+            PlatformInput::Action(_) => {
+                self.0.actions.fetch_add(1, Ordering::SeqCst);
+            }
+            PlatformInput::Release(_) => {
+                self.0.releases.fetch_add(1, Ordering::SeqCst);
+            }
         }
         Ok(())
     }
@@ -274,17 +287,26 @@ async fn original_owner_authenticates_bilateral_standby_control_then_joins_safe_
 
 async fn original_inner_migration(single_request: bool, transient: bool) -> Result {
     let mut f = if transient {
-        Fixture::with_permissions(None, vec![Permission::View, Permission::Input, Permission::FileRead]).await?
-    } else { Fixture::file_only().await? };
+        Fixture::with_permissions(
+            None,
+            vec![Permission::View, Permission::Input, Permission::FileRead],
+        )
+        .await?
+    } else {
+        Fixture::file_only().await?
+    };
     let mut second = super::super::chain::ChainNode::new(&f).await?;
     let (set, _, controller_route) = reserve(&f, &second).await?;
     let group = controller_route.transport_group();
-    let route_bindings = controller_route.candidates().map(|candidate| candidate.route_binding());
+    let route_bindings = controller_route
+        .candidates()
+        .map(|candidate| candidate.route_binding());
     let controller_key = f.controller.identity.public_key();
     let host_key = f.host.identity.public_key();
-    let host_route = f.sdk.verified_network_remote_route_set(
-        &f.pin, &f.host, &f.permit, &controller_key, &set,
-    ).await?;
+    let host_route = f
+        .sdk
+        .verified_network_remote_route_set(&f.pin, &f.host, &f.permit, &controller_key, &set)
+        .await?;
     let (_keep_stop, stop) = watch::channel(None);
     let (_keep_cancel, cancel) = watch::channel(false);
     let policy = AddressPolicy::new(&[])?;
@@ -292,42 +314,98 @@ async fn original_inner_migration(single_request: bool, transient: bool) -> Resu
     let deadline = Instant::now() + Duration::from_secs(5);
     let (mut controller, mut host) = tokio::try_join!(
         f.sdk.connect_continuing_network_remote_route_candidate(
-            controller_route, 1, addresses[0], &f.controller, &host_key,
-            f.setup(EndpointRole::Controller, stop.clone())?, &policy,
-            cancel.clone(), deadline, QualityConstraints::default(),
+            controller_route,
+            1,
+            addresses[0],
+            &f.controller,
+            &host_key,
+            f.setup(EndpointRole::Controller, stop.clone())?,
+            &policy,
+            cancel.clone(),
+            deadline,
+            QualityConstraints::default(),
         ),
         f.sdk.connect_continuing_network_remote_route_candidate(
-            host_route, 1, addresses[1], &f.host, &controller_key,
-            f.setup(EndpointRole::Host, stop)?, &policy,
-            cancel, deadline, QualityConstraints::default(),
+            host_route,
+            1,
+            addresses[1],
+            &f.host,
+            &controller_key,
+            f.setup(EndpointRole::Host, stop)?,
+            &policy,
+            cancel,
+            deadline,
+            QualityConstraints::default(),
         ),
     )?;
     let original_controller = controller.channels().network_connection_binding()?;
     let original_host = host.channels().network_connection_binding()?;
     assert_eq!(original_controller, original_host);
-    let controller_observation = controller.channels().path_observation().ok_or("controller observer")?;
+    let controller_observation = controller
+        .channels()
+        .path_observation()
+        .ok_or("controller observer")?;
     let host_observation = host.channels().path_observation().ok_or("host observer")?;
     let generation = f.permit.claims().connection_generation;
     let input_facts = Arc::new(InputFacts::default());
-    let input_epoch = InputEpoch { connection: generation, input: 1, layout: 1 };
+    let input_epoch = InputEpoch {
+        connection: generation,
+        input: 1,
+        layout: 1,
+    };
     let transient_receivers = if transient {
-        Some((controller.channels().claim_channel(Channel::Video)?, host.channels().claim_channel(Channel::Input)?))
-    } else { None };
+        Some((
+            controller.channels().claim_channel(Channel::Video)?,
+            host.channels().claim_channel(Channel::Input)?,
+        ))
+    } else {
+        None
+    };
     let input = if transient {
-        let input = InputController::attach(host.channels().lease_control(), MigrationInput(input_facts.clone()),
-            input_epoch, InputLayout { left: 0, top: 0, width: 640, height: 480 })?;
-        assert!(input.apply(&InputEvent { epoch: input_epoch, sequence: 1,
-            action: InputAction::Key { code: 4, down: true } })?);
-        let old_text = InputEvent { epoch: input_epoch, sequence: 2, action: InputAction::Text("old queued text".into()) };
-        controller.channels().send(Channel::Input, &old_text.encode()?).await?;
-        host.channels().send(Channel::Video, b"old queued reference frame").await?;
+        let input = InputController::attach(
+            host.channels().lease_control(),
+            MigrationInput(input_facts.clone()),
+            input_epoch,
+            InputLayout {
+                left: 0,
+                top: 0,
+                width: 640,
+                height: 480,
+            },
+        )?;
+        assert!(input.apply(&InputEvent {
+            epoch: input_epoch,
+            sequence: 1,
+            action: InputAction::Key {
+                code: 4,
+                down: true
+            }
+        })?);
+        let old_text = InputEvent {
+            epoch: input_epoch,
+            sequence: 2,
+            action: InputAction::Text("old queued text".into()),
+        };
+        controller
+            .channels()
+            .send(Channel::Input, &old_text.encode()?)
+            .await?;
+        host.channels()
+            .send(Channel::Video, b"old queued reference frame")
+            .await?;
         Some(input)
-    } else { None };
+    } else {
+        None
+    };
     let payload: Vec<u8> = (0..65_536u32).map(|index| (index % 251) as u8).collect();
     for chunk in payload.chunks(nestlink_protocol::FILE_CHUNK_BYTES as usize) {
         let (sent, received) = tokio::time::timeout(Duration::from_secs(2), async {
-            tokio::join!(host.channels().send(Channel::FileRead, chunk), controller.channels().receive())
-        }).await?;
+            tokio::join!(
+                host.channels().send(Channel::FileRead, chunk),
+                controller.channels().receive()
+            )
+        })
+        .await?;
         sent?;
         assert_eq!(received?.payload, chunk);
     }
@@ -335,8 +413,12 @@ async fn original_inner_migration(single_request: bool, transient: bool) -> Resu
         controller.poll(&f.sdk, &f.controller, &host_key, true),
         host.poll(&f.sdk, &f.host, &controller_key, true),
     )?;
-    let standby = [controller.standby_local_addr().ok_or("controller standby")?,
-        host.standby_local_addr().ok_or("host standby")?];
+    let standby = [
+        controller
+            .standby_local_addr()
+            .ok_or("controller standby")?,
+        host.standby_local_addr().ok_or("host standby")?,
+    ];
     assert_eq!(controller_observation.snapshot().path_epoch, Some(1));
     if single_request {
         // The larger ordered peer asks to switch. The smaller peer alone is
@@ -347,8 +429,12 @@ async fn original_inner_migration(single_request: bool, transient: bool) -> Resu
                 controller.request_prepared_path_migration(&f.sdk, &f.controller, &host_key, 0),
                 async {
                     loop {
-                        let status = host.poll_with_path_migration(&f.sdk, &f.host, &controller_key, true).await?;
-                        if status.policy.epoch == 2 || status.policy.terminal.is_some() { break Ok::<_, nestlink_sdk::native::SessionEstablishError>(()); }
+                        let status = host
+                            .poll_with_path_migration(&f.sdk, &f.host, &controller_key, true)
+                            .await?;
+                        if status.policy.epoch == 2 || status.policy.terminal.is_some() {
+                            break Ok::<_, nestlink_sdk::native::SessionEstablishError>(());
+                        }
                         assert!(status.recovery.is_none());
                         tokio::time::sleep(Duration::from_millis(10)).await;
                     }
@@ -360,8 +446,12 @@ async fn original_inner_migration(single_request: bool, transient: bool) -> Resu
                 host.request_prepared_path_migration(&f.sdk, &f.host, &controller_key, 0),
                 async {
                     loop {
-                        let status = controller.poll_with_path_migration(&f.sdk, &f.controller, &host_key, true).await?;
-                        if status.policy.epoch == 2 || status.policy.terminal.is_some() { break Ok::<_, nestlink_sdk::native::SessionEstablishError>(()); }
+                        let status = controller
+                            .poll_with_path_migration(&f.sdk, &f.controller, &host_key, true)
+                            .await?;
+                        if status.policy.epoch == 2 || status.policy.terminal.is_some() {
+                            break Ok::<_, nestlink_sdk::native::SessionEstablishError>(());
+                        }
                         assert!(status.recovery.is_none());
                         tokio::time::sleep(Duration::from_millis(10)).await;
                     }
@@ -371,19 +461,38 @@ async fn original_inner_migration(single_request: bool, transient: bool) -> Resu
         }
     } else {
         let (controller_receipt, host_receipt) = tokio::try_join!(
-            controller.authenticate_prepared_path_recovery(&f.sdk, &f.controller, &host_key, 0, None),
+            controller.authenticate_prepared_path_recovery(
+                &f.sdk,
+                &f.controller,
+                &host_key,
+                0,
+                None
+            ),
             host.authenticate_prepared_path_recovery(&f.sdk, &f.host, &controller_key, 0, None),
         )?;
         let (controller_change, host_change) = tokio::try_join!(
-            controller.commit_authenticated_path_migration(&f.sdk, &f.controller, &host_key, controller_receipt),
-            host.commit_authenticated_path_migration(&f.sdk, &f.host, &controller_key, host_receipt),
+            controller.commit_authenticated_path_migration(
+                &f.sdk,
+                &f.controller,
+                &host_key,
+                controller_receipt
+            ),
+            host.commit_authenticated_path_migration(
+                &f.sdk,
+                &f.host,
+                &controller_key,
+                host_receipt
+            ),
         )?;
         for change in [&controller_change, &host_change] {
             assert_eq!(change.previous_path_epoch, 1);
             assert_eq!(change.path_epoch, 2);
             assert_eq!(change.inner_stable_id, change.original_inner_stable_id);
             assert_eq!(change.inner_tls_binding, original_controller);
-            assert!(change.old_path_drain_limit_ms <= nestlink_protocol::network_migration::MAX_DRAIN_MS);
+            assert!(
+                change.old_path_drain_limit_ms
+                    <= nestlink_protocol::network_migration::MAX_DRAIN_MS
+            );
         }
     }
     if transient {
@@ -391,14 +500,43 @@ async fn original_inner_migration(single_request: bool, transient: bool) -> Resu
         assert_eq!(input_facts.releases.load(Ordering::SeqCst), 1);
         assert_eq!(input_facts.resets.load(Ordering::SeqCst), 1);
         let input = input.ok_or("missing original input owner")?;
-        assert!(input.apply(&InputEvent { epoch: input_epoch, sequence: 2,
-            action: InputAction::Text("old queued text".into()) }).is_err());
+        assert!(
+            input
+                .apply(&InputEvent {
+                    epoch: input_epoch,
+                    sequence: 2,
+                    action: InputAction::Text("old queued text".into())
+                })
+                .is_err()
+        );
         let (mut video, mut old_input) = transient_receivers.ok_or("missing old channel claims")?;
         assert!(video.receive().await.is_err());
         assert!(old_input.receive().await.is_err());
-        assert!(host.channels().send(Channel::FileRead, b"old business after teardown").await.is_err());
-        assert_eq!(controller.channels().lease_control().subscribe_stopped().borrow().as_ref().map(|report| report.reason), Some(StopReason::TransportLost));
-        assert_eq!(host.channels().lease_control().subscribe_stopped().borrow().as_ref().map(|report| report.reason), Some(StopReason::TransportLost));
+        assert!(
+            host.channels()
+                .send(Channel::FileRead, b"old business after teardown")
+                .await
+                .is_err()
+        );
+        assert_eq!(
+            controller
+                .channels()
+                .lease_control()
+                .subscribe_stopped()
+                .borrow()
+                .as_ref()
+                .map(|report| report.reason),
+            Some(StopReason::TransportLost)
+        );
+        assert_eq!(
+            host.channels()
+                .lease_control()
+                .subscribe_stopped()
+                .borrow()
+                .as_ref()
+                .map(|report| report.reason),
+            Some(StopReason::TransportLost)
+        );
         assert_eq!(controller_observation.snapshot().path_epoch, Some(1));
         assert!(controller_observation.snapshot().stopped);
         assert!(host_observation.snapshot().stopped);
@@ -408,7 +546,10 @@ async fn original_inner_migration(single_request: bool, transient: bool) -> Resu
         f.finish().await?;
         return Ok(());
     }
-    assert_eq!(controller.channels().network_connection_binding()?, original_controller);
+    assert_eq!(
+        controller.channels().network_connection_binding()?,
+        original_controller
+    );
     assert_eq!(host.channels().network_connection_binding()?, original_host);
     for observation in [&controller_observation, &host_observation] {
         let snapshot = observation.snapshot();
@@ -435,13 +576,22 @@ async fn original_inner_migration(single_request: bool, transient: bool) -> Resu
     tokio::time::sleep(Duration::from_millis(1100)).await;
     for chunk in payload.chunks(nestlink_protocol::FILE_CHUNK_BYTES as usize) {
         let (sent, received) = tokio::time::timeout(Duration::from_secs(2), async {
-            tokio::join!(host.channels().send(Channel::FileRead, chunk), controller.channels().receive())
-        }).await?;
+            tokio::join!(
+                host.channels().send(Channel::FileRead, chunk),
+                controller.channels().receive()
+            )
+        })
+        .await?;
         sent?;
         assert_eq!(received?.payload, chunk);
     }
-    f.sdk.revoke_network_remote_route_set(f.pin.space_id(), &set).await?;
-    tokio::try_join!(controller.shutdown(StopReason::Revoked), host.shutdown(StopReason::Revoked))?;
+    f.sdk
+        .revoke_network_remote_route_set(f.pin.space_id(), &set)
+        .await?;
+    tokio::try_join!(
+        controller.shutdown(StopReason::Revoked),
+        host.shutdown(StopReason::Revoked)
+    )?;
     drop(rebind(&standby)?);
     assert!(controller_observation.snapshot().stopped);
     assert!(host_observation.snapshot().stopped);
@@ -451,16 +601,19 @@ async fn original_inner_migration(single_request: bool, transient: bool) -> Resu
 }
 
 #[tokio::test]
-async fn signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release() -> Result {
+async fn signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release()
+-> Result {
     original_inner_migration(false, false).await
 }
 
 #[tokio::test]
-async fn one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer() -> Result {
+async fn one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer()
+-> Result {
     original_inner_migration(true, false).await
 }
 
 #[tokio::test]
-async fn input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery() -> Result {
+async fn input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery()
+-> Result {
     original_inner_migration(true, true).await
 }

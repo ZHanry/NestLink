@@ -12,12 +12,12 @@ mod migration_socket;
 mod socket;
 pub use adjacency::{Adjacency, AdjacencyEndpoint};
 pub use authorization::{RouteAuthorization, RouteRevocation};
-pub use migration::PathChange;
 pub use forwarding::{FragmentReplayWindow, RelayForwarder};
 pub use listener::{
     NetworkNodeListener, authenticated_peer_fingerprint, chain_node_client_config, node_listener,
     node_listener_with_legacy, topology_node_client_config,
 };
+pub use migration::PathChange;
 
 use crate::*;
 use nestlink_protocol::{
@@ -96,9 +96,15 @@ impl RoutedTransport {
             endpoint.close(0u32.into(), b"routed transport stopping");
         }
         self.receiver.request_close();
-        if let Some(hub) = &self.packet_hub { hub.request_close(); }
-        if let Some(candidate) = &self.pending_migration { candidate.request_close(); }
-        if let Some(old) = &self.draining { old.request_close(); }
+        if let Some(hub) = &self.packet_hub {
+            hub.request_close();
+        }
+        if let Some(candidate) = &self.pending_migration {
+            candidate.request_close();
+        }
+        if let Some(old) = &self.draining {
+            old.request_close();
+        }
         self.adjacency.request_close_with_code(code);
     }
     /// Cancellation retains all original task/socket receipts and the first
@@ -107,9 +113,15 @@ impl RoutedTransport {
         let deadline = *self.close_deadline.get_or_insert(deadline);
         self.request_close();
         self.receiver.close_and_wait(deadline).await?;
-        if let Some(hub) = &self.packet_hub { hub.close_and_wait(deadline).await?; }
-        if let Some(candidate) = &mut self.pending_migration { candidate.close_and_wait_boxed(deadline).await?; }
-        if let Some(old) = &mut self.draining { old.close_and_wait_boxed(deadline).await?; }
+        if let Some(hub) = &self.packet_hub {
+            hub.close_and_wait(deadline).await?;
+        }
+        if let Some(candidate) = &mut self.pending_migration {
+            candidate.close_and_wait_boxed(deadline).await?;
+        }
+        if let Some(old) = &mut self.draining {
+            old.close_and_wait_boxed(deadline).await?;
+        }
         self.pending_migration = None;
         self.draining = None;
         // A failed abstract receive can stop Quinn's endpoint driver before it
@@ -125,8 +137,10 @@ impl RoutedTransport {
     }
     // Box only the recursive cleanup branch. The owned original receipts stay
     // in place if a caller cancels this borrowed wait.
-    fn close_and_wait_boxed(&mut self, deadline: Instant)
-    -> std::pin::Pin<Box<dyn std::future::Future<Output = io::Result<()>> + Send + '_>> {
+    fn close_and_wait_boxed(
+        &mut self,
+        deadline: Instant,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = io::Result<()>> + Send + '_>> {
         Box::pin(self.close_and_wait(deadline))
     }
 }
@@ -191,12 +205,20 @@ impl RoutedEstablishment {
     /// Explicit endpoint-only framing and ALPN. Epoch zero is control-only;
     /// a nonzero epoch is the initial proved business path. Old constructors
     /// preserve their original unframed bytes and capability behavior.
-    pub fn migratable(authorization: RouteAuthorization, adjacency: Adjacency, epoch: u64) -> io::Result<Self> {
-        if authorization.migration_scope().is_none() { return Err(io::ErrorKind::Unsupported.into()); }
+    pub fn migratable(
+        authorization: RouteAuthorization,
+        adjacency: Adjacency,
+        epoch: u64,
+    ) -> io::Result<Self> {
+        if authorization.migration_scope().is_none() {
+            return Err(io::ErrorKind::Unsupported.into());
+        }
         let mut owner = Self::new(authorization, adjacency);
         owner.migration_mode = Some(if epoch == 0 {
             nestlink_protocol::network_migration::packet::Mode::Control
-        } else { nestlink_protocol::network_migration::packet::Mode::Business(epoch) });
+        } else {
+            nestlink_protocol::network_migration::packet::Mode::Business(epoch)
+        });
         Ok(owner)
     }
     pub async fn establish(
@@ -214,7 +236,9 @@ impl RoutedEstablishment {
         // isolation. A caller cannot relabel a service grant as remote control
         // or supply an arbitrary ALPN for an authenticated route.
         let inner_alpn = match authorization.purpose() {
-            Purpose::RemoteControl if self.migration_mode.is_some() => nestlink_protocol::network_migration::packet::REMOTE_ALPN,
+            Purpose::RemoteControl if self.migration_mode.is_some() => {
+                nestlink_protocol::network_migration::packet::REMOTE_ALPN
+            }
             Purpose::RemoteControl => nestlink_protocol::network::REMOTE_CAPABILITY_ALPN,
             Purpose::PrivateService => nestlink_protocol::service_plane::publication::SERVICE_ALPN,
             _ => return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()),
@@ -242,7 +266,9 @@ impl RoutedEstablishment {
         let mut config = transport_value();
         let mtu = if self.migration_mode.is_some() {
             nestlink_protocol::network_migration::packet::INNER_MTU
-        } else { wire::PACKET_BYTES as u16 };
+        } else {
+            wire::PACKET_BYTES as u16
+        };
         config.initial_mtu(mtu);
         config.min_mtu(mtu);
         config.mtu_discovery_config(None);
@@ -270,7 +296,9 @@ impl RoutedEstablishment {
             let view = hub.view(mode);
             self.packet_hub = Some(hub);
             view
-        } else { socket };
+        } else {
+            socket
+        };
         let socket = migration_gate::Socket::new(socket, gate_authority);
         self.failure = Some(socket.subscribe_failure()?);
         self.gate = Some(socket.clone());
@@ -328,7 +356,8 @@ impl RoutedEstablishment {
             || self.adjacency.is_none()
             || self.receiver.is_none()
             || self.failure.is_none()
-            || self.raw.is_none() || self.gate.is_none()
+            || self.raw.is_none()
+            || self.gate.is_none()
         {
             return Err(not_connected());
         }
@@ -365,7 +394,9 @@ impl RoutedEstablishment {
         if let Some(receiver) = &self.receiver {
             receiver.request_close();
         }
-        if let Some(hub) = &self.packet_hub { hub.request_close(); }
+        if let Some(hub) = &self.packet_hub {
+            hub.request_close();
+        }
     }
     pub async fn close_and_wait(&mut self, deadline: Instant) -> io::Result<()> {
         let deadline = *self.close_deadline.get_or_insert(deadline);
@@ -373,7 +404,9 @@ impl RoutedEstablishment {
         if let Some(receiver) = &mut self.receiver {
             receiver.close_and_wait(deadline).await?;
         }
-        if let Some(hub) = &self.packet_hub { hub.close_and_wait(deadline).await?; }
+        if let Some(hub) = &self.packet_hub {
+            hub.close_and_wait(deadline).await?;
+        }
         self.connection = None;
         self.endpoint = None;
         wait_socket_released(&mut self.released, deadline).await?;

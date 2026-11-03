@@ -141,12 +141,19 @@ impl Fixture {
         Self::with_peer_order(None).await
     }
     async fn with_peer_order(controller_first: Option<bool>) -> Result<Self> {
-        Self::with_permissions(controller_first, vec![Permission::View, Permission::FileRead]).await
+        Self::with_permissions(
+            controller_first,
+            vec![Permission::View, Permission::FileRead],
+        )
+        .await
     }
     async fn file_only() -> Result<Self> {
         Self::with_permissions(None, vec![Permission::FileRead]).await
     }
-    async fn with_permissions(controller_first: Option<bool>, permissions: Vec<Permission>) -> Result<Self> {
+    async fn with_permissions(
+        controller_first: Option<bool>,
+        permissions: Vec<Permission>,
+    ) -> Result<Self> {
         let deployment = random_id();
         let signer = PermitSigner::generate();
         let permit_issuer = signer.public_key();
@@ -242,7 +249,10 @@ impl Fixture {
                 id: random_id(),
                 controller_device_id: controller.device_id.clone(),
                 host_device_id: host.device_id.clone(),
-                permissions: permissions.iter().map(|permission| *permission as i32).collect(),
+                permissions: permissions
+                    .iter()
+                    .map(|permission| *permission as i32)
+                    .collect(),
                 path_mode: "relay_only".into(),
             })
             .await?;
@@ -251,7 +261,10 @@ impl Fixture {
             &remote,
             ApprovalChoice {
                 approved: true,
-                permissions: permissions.iter().map(|permission| *permission as i32).collect(),
+                permissions: permissions
+                    .iter()
+                    .map(|permission| *permission as i32)
+                    .collect(),
                 paths: vec![Path::Relay as i32],
             },
         )
@@ -461,7 +474,11 @@ impl Fixture {
                 policy_revision: p.policy_revision,
                 connection_generation: p.connection_generation,
                 capability_sha256: p.capability_sha256.as_slice().try_into()?,
-                granted_permissions: p.permissions.iter().map(|permission| Permission::try_from(*permission)).collect::<std::result::Result<_, _>>()?,
+                granted_permissions: p
+                    .permissions
+                    .iter()
+                    .map(|permission| Permission::try_from(*permission))
+                    .collect::<std::result::Result<_, _>>()?,
                 supported_capabilities: vec!["vp8".into()],
                 local_paths: PathSet::RELAY,
             },

@@ -154,20 +154,41 @@ impl NativeSessionConfig {
     }
     /// Explicit independently signed one-target software 4:4:4 mode. The two
     /// original direction probes and normal host approval remain required.
-    pub fn with_software_vp9_rgb444_target(mut self, target: nestlink_media_codec::VideoConfig) -> io::Result<Self> {
-        if self.media_provider.is_some() || self.gpu_hevc_main8_target.is_some() || self.internal_software_media_candidate.is_some() {
-            return Err(io::Error::other("VP9 RGB444 cannot replace a configured media mode"));
+    pub fn with_software_vp9_rgb444_target(
+        mut self,
+        target: nestlink_media_codec::VideoConfig,
+    ) -> io::Result<Self> {
+        if self.media_provider.is_some()
+            || self.gpu_hevc_main8_target.is_some()
+            || self.internal_software_media_candidate.is_some()
+        {
+            return Err(io::Error::other(
+                "VP9 RGB444 cannot replace a configured media mode",
+            ));
         }
         self.media_provider = Some(crate::NativeMediaProvider::software_vp9_rgb444(target)?);
         self.software_vp9_rgb444_target = Some(target);
         let capability = nestlink_protocol::media_authority::VP9_RGB444_FORMAT_CAPABILITY;
-        if !self.supported_capabilities.iter().any(|value| value == capability) { self.supported_capabilities.push(capability.into()); }
+        if !self
+            .supported_capabilities
+            .iter()
+            .any(|value| value == capability)
+        {
+            self.supported_capabilities.push(capability.into());
+        }
         Ok(self)
     }
     fn vp9_rgb444_provider(&self) -> io::Result<&crate::NativeMediaProvider> {
-        let target = self.software_vp9_rgb444_target.ok_or_else(|| io::Error::other("explicit VP9 RGB444 target unavailable"))?;
-        self.media_provider.as_ref().filter(|provider| self.gpu_hevc_main8_target.is_none()
-            && self.internal_software_media_candidate.is_none() && provider.matches_software_vp9_rgb444(target))
+        let target = self
+            .software_vp9_rgb444_target
+            .ok_or_else(|| io::Error::other("explicit VP9 RGB444 target unavailable"))?;
+        self.media_provider
+            .as_ref()
+            .filter(|provider| {
+                self.gpu_hevc_main8_target.is_none()
+                    && self.internal_software_media_candidate.is_none()
+                    && provider.matches_software_vp9_rgb444(target)
+            })
             .ok_or_else(|| io::Error::other("configured VP9 RGB444 provider changed"))
     }
     /// Explicit one-target Main8 hardware intent. The existing inbox publishes
@@ -318,7 +339,10 @@ impl NativeSessionConfig {
     ) -> io::Result<Option<(&crate::NativeMediaProvider, u32)>> {
         if self.software_vp9_rgb444_target.is_some() {
             validate_media_peers(deployment, account, controller, host)?;
-            return Ok(Some((self.vp9_rgb444_provider()?, nestlink_protocol::media_authority::VP9_RGB444_FORMAT_VERSION)));
+            return Ok(Some((
+                self.vp9_rgb444_provider()?,
+                nestlink_protocol::media_authority::VP9_RGB444_FORMAT_VERSION,
+            )));
         }
         if self.gpu_hevc_main8_target.is_some() {
             validate_media_peers(deployment, account, controller, host)?;
@@ -348,7 +372,10 @@ impl NativeSessionConfig {
     pub(crate) fn requires_local_media_approval(&self) -> bool {
         self.gpu_hevc_main8_target.is_some() || self.software_vp9_rgb444_target.is_some()
     }
-    pub(crate) fn explicit_media_formats(&self, scope: &FrozenMediaScope) -> io::Result<Option<nestlink_protocol::media_format::FormatSet>> {
+    pub(crate) fn explicit_media_formats(
+        &self,
+        scope: &FrozenMediaScope,
+    ) -> io::Result<Option<nestlink_protocol::media_format::FormatSet>> {
         let formats = scope.validate().map_err(io::Error::other)?;
         if let Some(target) = self.software_vp9_rgb444_target {
             self.vp9_rgb444_provider()?;
@@ -363,7 +390,12 @@ impl NativeSessionConfig {
             if scope.version != self.gpu_hevc_version {
                 return Err(io::Error::other("explicit GPU media version changed"));
             }
-            validate_gpu_formats(scope.version, &formats, target, self.gpu_hevc_fallback_target)?;
+            validate_gpu_formats(
+                scope.version,
+                &formats,
+                target,
+                self.gpu_hevc_fallback_target,
+            )?;
             return Ok(Some(formats));
         }
         Ok(None)
@@ -402,7 +434,9 @@ impl NativeSessionConfig {
         }
         let formats = scope.validate().map_err(io::Error::other)?;
         if let Some(target) = self.software_vp9_rgb444_target {
-            if scope.version != nestlink_protocol::media_authority::VP9_RGB444_FORMAT_VERSION { return Err(io::Error::other("VP9 RGB444 approval version differs")); }
+            if scope.version != nestlink_protocol::media_authority::VP9_RGB444_FORMAT_VERSION {
+                return Err(io::Error::other("VP9 RGB444 approval version differs"));
+            }
             validate_vp9_rgb444_formats(&formats, target)?;
             return self.vp9_rgb444_provider();
         }
@@ -565,8 +599,12 @@ impl NativeSessionConfig {
 
     pub(crate) fn validate(&self) -> bool {
         self.network_settings().validate().is_ok()
-            && self.software_vp9_rgb444_target.is_none_or(|_| self.vp9_rgb444_provider().is_ok()
-                && self.supported_capabilities.iter().any(|value| value == nestlink_protocol::media_authority::VP9_RGB444_FORMAT_CAPABILITY))
+            && self.software_vp9_rgb444_target.is_none_or(|_| {
+                self.vp9_rgb444_provider().is_ok()
+                    && self.supported_capabilities.iter().any(|value| {
+                        value == nestlink_protocol::media_authority::VP9_RGB444_FORMAT_CAPABILITY
+                    })
+            })
             && self.gpu_hevc_main8_target.is_none_or(|_| {
                 self.gpu_media_provider().is_ok()
                     && self.supported_capabilities.iter().any(|value| {
@@ -650,10 +688,22 @@ fn validate_gpu_formats(
     }
     Ok(())
 }
-fn validate_vp9_rgb444_formats(formats: &nestlink_protocol::media_format::FormatSet, target: nestlink_media_codec::VideoConfig) -> io::Result<()> {
-    let expected = nestlink_protocol::media_format::VideoFormat::vp9_rgb444(target.width, target.height,
-        nestlink_protocol::media_format::FrameRate::new(target.fps, 1).map_err(io::Error::other)?, target.bitrate_kbps).map_err(io::Error::other)?;
-    if formats.formats() != [expected] { return Err(io::Error::other("VP9 RGB444 scope differs from explicit exact target")); }
+fn validate_vp9_rgb444_formats(
+    formats: &nestlink_protocol::media_format::FormatSet,
+    target: nestlink_media_codec::VideoConfig,
+) -> io::Result<()> {
+    let expected = nestlink_protocol::media_format::VideoFormat::vp9_rgb444(
+        target.width,
+        target.height,
+        nestlink_protocol::media_format::FrameRate::new(target.fps, 1).map_err(io::Error::other)?,
+        target.bitrate_kbps,
+    )
+    .map_err(io::Error::other)?;
+    if formats.formats() != [expected] {
+        return Err(io::Error::other(
+            "VP9 RGB444 scope differs from explicit exact target",
+        ));
+    }
     Ok(())
 }
 
@@ -693,25 +743,67 @@ mod tests {
     async fn explicit_rgb444_requires_exact_v6_scope_and_original_configured_provider() -> Result {
         use nestlink_protocol::media_format::{FrameRate, VideoFormat};
         let ids: Vec<_> = (0..4).map(|_| nestlink_auth::random_id()).collect();
-        let target = nestlink_media_codec::VideoConfig { width: 641, height: 481, fps: 60, bitrate_kbps: 8000 };
+        let target = nestlink_media_codec::VideoConfig {
+            width: 641,
+            height: 481,
+            fps: 60,
+            bitrate_kbps: 8000,
+        };
         let rgb = config()?.with_software_vp9_rgb444_target(target)?;
         assert!(rgb.validate());
         assert!(rgb.requires_local_media_approval());
-        let (provider, version) = rgb.media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3])?.ok_or("RGB444 route absent")?;
+        let (provider, version) = rgb
+            .media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3])?
+            .ok_or("RGB444 route absent")?;
         assert_eq!(version, 6);
         assert!(provider.matches_software_vp9_rgb444(target));
         let exact = VideoFormat::vp9_rgb444(641, 481, FrameRate::new(60, 1)?, 8000)?;
-        rgb.media_provider_for_approval(&ids[0], &ids[1], &ids[3], &ids[2], &ids[3], &scope(vec![exact])?)?;
-        for format in [VideoFormat::vp9_rgb444(641, 481, FrameRate::new(30, 1)?, 8000)?, VideoFormat::vp9_rgb444(640, 480, FrameRate::new(60, 1)?, 8000)?, VideoFormat::legacy_h264(31, 640, 480, FrameRate::new(30, 1)?, 4000)?] {
-            assert!(rgb.media_provider_for_approval(&ids[0], &ids[1], &ids[3], &ids[2], &ids[3], &scope(vec![format])?).is_err());
+        rgb.media_provider_for_approval(
+            &ids[0],
+            &ids[1],
+            &ids[3],
+            &ids[2],
+            &ids[3],
+            &scope(vec![exact])?,
+        )?;
+        for format in [
+            VideoFormat::vp9_rgb444(641, 481, FrameRate::new(30, 1)?, 8000)?,
+            VideoFormat::vp9_rgb444(640, 480, FrameRate::new(60, 1)?, 8000)?,
+            VideoFormat::legacy_h264(31, 640, 480, FrameRate::new(30, 1)?, 4000)?,
+        ] {
+            assert!(
+                rgb.media_provider_for_approval(
+                    &ids[0],
+                    &ids[1],
+                    &ids[3],
+                    &ids[2],
+                    &ids[3],
+                    &scope(vec![format])?
+                )
+                .is_err()
+            );
         }
         assert!(rgb.clone().with_cpu_media_target(target).is_err());
         assert!(rgb.clone().with_gpu_hevc_main8_target(target).is_err());
-        assert!(rgb.clone().with_internal_software_media_candidate(software_policy()?).is_err());
+        assert!(
+            rgb.clone()
+                .with_internal_software_media_candidate(software_policy()?)
+                .is_err()
+        );
         let mut changed = rgb.clone();
-        changed.media_provider = Some(crate::NativeMediaProvider::cpu_software(nestlink_media_codec::VideoConfig { width: 640, height: 480, ..target })?);
+        changed.media_provider = Some(crate::NativeMediaProvider::cpu_software(
+            nestlink_media_codec::VideoConfig {
+                width: 640,
+                height: 480,
+                ..target
+            },
+        )?);
         assert!(!changed.validate());
-        assert!(changed.media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3]).is_err());
+        assert!(
+            changed
+                .media_provider_for_request(&ids[0], &ids[1], &ids[2], &ids[3])
+                .is_err()
+        );
         Ok(())
     }
     fn hevc_format(

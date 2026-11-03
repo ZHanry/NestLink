@@ -214,7 +214,12 @@ pub enum ContinuationInput {
     /// W14 owner receipt after an actual mutually authenticated transition.
     /// Unlike local quality proposals, either endpoint can accept its peer's
     /// still-permitted choice. The owner supplies the exact signed epochs.
-    AuthenticatedCommit { from: RouteIdentity, to: RouteIdentity, previous_epoch: u64, next_epoch: u64 },
+    AuthenticatedCommit {
+        from: RouteIdentity,
+        to: RouteIdentity,
+        previous_epoch: u64,
+        next_epoch: u64,
+    },
     RejectProposal(SwitchProposal),
     /// Receipt for completed physical cleanup, not merely a Drop request.
     Retired(RetirementToken),
@@ -356,11 +361,22 @@ impl Scheduler {
     /// A peer-authenticated transition still obeys this endpoint's original
     /// hard quality bounds. It need not independently win a second quality
     /// proposal race, but the actual prepared spare must be fresh and ready.
-    pub fn accepts_prepared_transition(&self, now_ms: u64, from: RouteIdentity, to: RouteIdentity) -> bool {
-        self.continuation.as_ref().is_some_and(|state| state.terminal.is_none()
-            && now_ms >= state.last_ms && now_ms < state.group.deadline_ms
-            && state.active == from && state.standby == Some(to) && state.standby_ready
-            && state.work.is_none() && state.within_limits(to, now_ms))
+    pub fn accepts_prepared_transition(
+        &self,
+        now_ms: u64,
+        from: RouteIdentity,
+        to: RouteIdentity,
+    ) -> bool {
+        self.continuation.as_ref().is_some_and(|state| {
+            state.terminal.is_none()
+                && now_ms >= state.last_ms
+                && now_ms < state.group.deadline_ms
+                && state.active == from
+                && state.standby == Some(to)
+                && state.standby_ready
+                && state.work.is_none()
+                && state.within_limits(to, now_ms)
+        })
     }
     pub fn advance_continuation(
         &mut self,
@@ -885,13 +901,23 @@ impl Continuation {
                 }
             }
             ContinuationInput::Commit(proposal) => self.commit(proposal, now_ms),
-            ContinuationInput::AuthenticatedCommit { from, to, previous_epoch, next_epoch } => {
-                if self.active != from || self.epoch != previous_epoch
+            ContinuationInput::AuthenticatedCommit {
+                from,
+                to,
+                previous_epoch,
+                next_epoch,
+            } => {
+                if self.active != from
+                    || self.epoch != previous_epoch
                     || previous_epoch.checked_add(1) != Some(next_epoch)
-                    || self.standby != Some(to) || !self.standby_ready
-                    || self.work.is_some() || !self.within_limits(to, now_ms)
+                    || self.standby != Some(to)
+                    || !self.standby_ready
+                    || self.work.is_some()
+                    || !self.within_limits(to, now_ms)
                     || !authority.available_routes.contains(&to)
-                { Err(ErrorCode::ReplayRejected) } else {
+                {
+                    Err(ErrorCode::ReplayRejected)
+                } else {
                     self.active = to;
                     self.active_failed = false;
                     self.standby = None;
@@ -905,7 +931,7 @@ impl Continuation {
                     self.retire(from);
                     Ok(())
                 }
-            },
+            }
             ContinuationInput::RejectProposal(proposal) => {
                 if self.proposal.as_ref() != Some(&proposal) {
                     Err(ErrorCode::ReplayRejected)
@@ -1195,9 +1221,12 @@ mod tests {
     }
 
     #[test]
-    fn authenticated_owner_commit_preserves_exact_epochs_hard_bounds_freshness_and_release_tokens() -> Result {
-        let constraints = QualityConstraints { maximum_rtt: Some(std::time::Duration::from_millis(25)),
-            ..QualityConstraints::default() };
+    fn authenticated_owner_commit_preserves_exact_epochs_hard_bounds_freshness_and_release_tokens()
+    -> Result {
+        let constraints = QualityConstraints {
+            maximum_rtt: Some(std::time::Duration::from_millis(25)),
+            ..QualityConstraints::default()
+        };
         let mut h = Harness::new(constraints)?;
         let from = h.keys[0];
         let to = h.keys[1];
@@ -1205,13 +1234,25 @@ mod tests {
         h.warm(Some(20))?;
         assert!(h.scheduler.accepts_prepared_transition(2, from, to));
         assert!(!h.scheduler.accepts_prepared_transition(0, from, to));
-        let wrong_epoch = h.step(2, ContinuationInput::AuthenticatedCommit {
-            from, to, previous_epoch: 1, next_epoch: 3,
-        });
+        let wrong_epoch = h.step(
+            2,
+            ContinuationInput::AuthenticatedCommit {
+                from,
+                to,
+                previous_epoch: 1,
+                next_epoch: 3,
+            },
+        );
         assert_eq!(wrong_epoch.rejected, Some(ErrorCode::ReplayRejected));
-        let committed = h.step(3, ContinuationInput::AuthenticatedCommit {
-            from, to, previous_epoch: 1, next_epoch: 2,
-        });
+        let committed = h.step(
+            3,
+            ContinuationInput::AuthenticatedCommit {
+                from,
+                to,
+                previous_epoch: 1,
+                next_epoch: 2,
+            },
+        );
         assert_eq!(committed.rejected, None);
         assert_eq!(h.status()?.active, Some(to));
         assert_eq!(h.status()?.epoch, 2);
@@ -1219,18 +1260,47 @@ mod tests {
         assert_eq!(releases.len(), 1);
         assert_eq!(releases[0].route(), from);
         assert_eq!(h.status()?.pending_retirements, 1);
-        assert_eq!(h.step(4, ContinuationInput::Retired(releases[0].clone())).rejected, None);
+        assert_eq!(
+            h.step(4, ContinuationInput::Retired(releases[0].clone()))
+                .rejected,
+            None
+        );
         assert_eq!(h.status()?.pending_retirements, 0);
-        assert_eq!(h.step(5, ContinuationInput::AuthenticatedCommit {
-            from, to, previous_epoch: 1, next_epoch: 2,
-        }).rejected, Some(ErrorCode::ReplayRejected));
+        assert_eq!(
+            h.step(
+                5,
+                ContinuationInput::AuthenticatedCommit {
+                    from,
+                    to,
+                    previous_epoch: 1,
+                    next_epoch: 2,
+                }
+            )
+            .rejected,
+            Some(ErrorCode::ReplayRejected)
+        );
         for (rtt, at) in [(40, 2), (20, OBSERVATION_FRESHNESS_MS + 1)] {
             let mut invalid = Harness::new(constraints)?;
             invalid.warm(Some(rtt))?;
-            assert!(!invalid.scheduler.accepts_prepared_transition(at, invalid.keys[0], invalid.keys[1]));
-            assert_eq!(invalid.step(at, ContinuationInput::AuthenticatedCommit {
-                from: invalid.keys[0], to: invalid.keys[1], previous_epoch: 1, next_epoch: 2,
-            }).rejected, Some(ErrorCode::ReplayRejected));
+            assert!(!invalid.scheduler.accepts_prepared_transition(
+                at,
+                invalid.keys[0],
+                invalid.keys[1]
+            ));
+            assert_eq!(
+                invalid
+                    .step(
+                        at,
+                        ContinuationInput::AuthenticatedCommit {
+                            from: invalid.keys[0],
+                            to: invalid.keys[1],
+                            previous_epoch: 1,
+                            next_epoch: 2,
+                        }
+                    )
+                    .rejected,
+                Some(ErrorCode::ReplayRejected)
+            );
             assert_eq!(invalid.status()?.active, Some(invalid.keys[0]));
         }
         Ok(())

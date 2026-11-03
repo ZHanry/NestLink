@@ -24,7 +24,6 @@ pub use live_execution::{LiveExecutionIdentity, LiveExecutionReceipt, LiveExecut
 mod negotiated_budget;
 mod negotiated_format;
 mod vp9_negotiated_format;
-pub use vp9_negotiated_format::{vp9_rgb444_execution_target, vp9_rgb444_execution_receipt_matches};
 #[cfg(windows)]
 pub use hevc_negotiated_format::{
     hevc_execution_receipt_matches, hevc_execution_target, hevc_submission_receipt_matches,
@@ -33,6 +32,9 @@ pub use negotiated_budget::{select_h264_budget, select_h264_display_budget};
 pub use negotiated_format::{
     execution_receipt_matches, h264_display_config, h264_execution_target,
     software_h264_execution_limits,
+};
+pub use vp9_negotiated_format::{
+    vp9_rgb444_execution_receipt_matches, vp9_rgb444_execution_target,
 };
 mod receiver;
 mod receiver_qos;

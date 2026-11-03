@@ -34,7 +34,9 @@ impl LegacyPrepare {
             return Err(io::Error::other("invalid legacy prepared surface"));
         }
         let (codec, color, h264) = match codec {
-            VideoCodec::Vp9Rgb444 => return Err(io::Error::other("VP9 RGB444 cannot enter legacy admission")),
+            VideoCodec::Vp9Rgb444 => {
+                return Err(io::Error::other("VP9 RGB444 cannot enter legacy admission"));
+            }
             VideoCodec::Vp8 => (Codec::Vp8, Color::LEGACY_VP8_BT601, None),
             VideoCodec::H264Baseline => (
                 Codec::H264,

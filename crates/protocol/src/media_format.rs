@@ -311,13 +311,18 @@ impl VideoFormat {
                 if self.chroma != Chroma::Yuv444
                     || self.bit_depth != BitDepth::Eight
                     || self.color != Color::RGB_SRGB_FULL
-                    || self.level != 0 || self.h264_constraints != 0
-                    || self.tier != Tier::NotApplicable || self.hevc_ptl.is_some()
-                    || self.width < 16 || self.height < 16
+                    || self.level != 0
+                    || self.h264_constraints != 0
+                    || self.tier != Tier::NotApplicable
+                    || self.hevc_ptl.is_some()
+                    || self.width < 16
+                    || self.height < 16
                     || self.frame_rate.denominator != 1
                     || !(64..=100_000).contains(&self.max_kbps)
                 {
-                    return Err(invalid("unsupported VP9 profile1 RGB444 format combination"));
+                    return Err(invalid(
+                        "unsupported VP9 profile1 RGB444 format combination",
+                    ));
                 }
             }
             (Codec::Vp8, Profile::Vp8) => {
@@ -408,12 +413,27 @@ impl VideoFormat {
     }
     /// Independent v6 software RGB444 contract. Actual native direction work
     /// and original executable owners must be proved separately.
-    pub fn vp9_rgb444(width: u32, height: u32, frame_rate: FrameRate, max_kbps: u32) -> Result<Self> {
+    pub fn vp9_rgb444(
+        width: u32,
+        height: u32,
+        frame_rate: FrameRate,
+        max_kbps: u32,
+    ) -> Result<Self> {
         let format = Self {
-            codec: Codec::Vp9, profile: Profile::Vp9Profile1, level: 0,
-            h264_constraints: 0, geometry: Geometry::uncropped(width, height),
-            tier: Tier::NotApplicable, chroma: Chroma::Yuv444, bit_depth: BitDepth::Eight,
-            color: Color::RGB_SRGB_FULL, width, height, frame_rate, max_kbps, hevc_ptl: None,
+            codec: Codec::Vp9,
+            profile: Profile::Vp9Profile1,
+            level: 0,
+            h264_constraints: 0,
+            geometry: Geometry::uncropped(width, height),
+            tier: Tier::NotApplicable,
+            chroma: Chroma::Yuv444,
+            bit_depth: BitDepth::Eight,
+            color: Color::RGB_SRGB_FULL,
+            width,
+            height,
+            frame_rate,
+            max_kbps,
+            hevc_ptl: None,
         };
         format.validate()?;
         Ok(format)
@@ -584,7 +604,11 @@ impl VideoFormat {
                 || bytes[..2] == HEVC_HDR10_FORMAT_VERSION.to_be_bytes());
         let exact_hevc =
             bytes.len() == 69 && (bytes[..2] == HEVC_FORMAT_VERSION.to_be_bytes() || main10);
-        if !exact_hevc && (bytes.len() != 57 || (bytes[..2] != VERSION.to_be_bytes() && bytes[..2] != VP9_RGB444_FORMAT_VERSION.to_be_bytes())) {
+        if !exact_hevc
+            && (bytes.len() != 57
+                || (bytes[..2] != VERSION.to_be_bytes()
+                    && bytes[..2] != VP9_RGB444_FORMAT_VERSION.to_be_bytes()))
+        {
             return Err(invalid("invalid canonical video format envelope"));
         }
         let u32_at = |offset| {

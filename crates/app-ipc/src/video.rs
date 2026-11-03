@@ -756,8 +756,22 @@ mod tests {
         }
     }
     #[test]
-    fn rgb444_bgra_export_requires_its_v6_marker_and_software_identity() -> Result<(), crate::Error> {
-        let original = encode_header(&binding(), HeaderFields { codec: 4, hardware_decode: false, kind: KIND_FRAME, layout_epoch: 2, sequence: 3, pts_90khz: 90, width: 641, height: 481, payload_bytes: 641 * 481 * 4 })?;
+    fn rgb444_bgra_export_requires_its_v6_marker_and_software_identity() -> Result<(), crate::Error>
+    {
+        let original = encode_header(
+            &binding(),
+            HeaderFields {
+                codec: 4,
+                hardware_decode: false,
+                kind: KIND_FRAME,
+                layout_epoch: 2,
+                sequence: 3,
+                pts_90khz: 90,
+                width: 641,
+                height: 481,
+                payload_bytes: 641 * 481 * 4,
+            },
+        )?;
         assert_eq!(&original[..8], VIDEO_RGB444_MAGIC);
         assert_eq!(decode_header(&original)?.codec, 4);
         assert!(!decode_header(&original)?.hardware_decode);

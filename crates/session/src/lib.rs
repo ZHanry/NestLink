@@ -5,8 +5,8 @@ use nestlink_protocol::{
     ContractError, EndpointProofClaims, ErrorCode, Path, Permission, SCHEMA_VERSION,
 };
 use rand_core::{OsRng, RngCore};
-mod offline_remote;
 mod explicit_media;
+mod offline_remote;
 pub use offline_remote::{OfflineRemoteAuthority, OfflineRemoteStatus};
 #[cfg(all(feature = "media-runtime-test-support", not(debug_assertions)))]
 compile_error!("media-runtime-test-support is restricted to debug regression builds");
@@ -61,7 +61,10 @@ impl MediaSessionBinding {
         now_unix_ms: u64,
     ) -> Result<Self, ContractError> {
         if self.explicit_selection.is_some() {
-            return Err(error(ErrorCode::PlatformUnsupported, "explicit media cannot enter the internal candidate route"));
+            return Err(error(
+                ErrorCode::PlatformUnsupported,
+                "explicit media cannot enter the internal candidate route",
+            ));
         }
         policy.authorize_permit(permit.claims())?;
         policy.authorize_announcement(local, now_unix_ms)?;
@@ -156,7 +159,12 @@ impl MediaSessionBinding {
         }
         if let Some(selection) = &self.explicit_selection {
             selection.authorize(permit.claims())?;
-            next = next.with_explicit_media_selection(selection.formats().clone(), permit, local, now_unix_ms)?;
+            next = next.with_explicit_media_selection(
+                selection.formats().clone(),
+                permit,
+                local,
+                now_unix_ms,
+            )?;
         }
         let replaced = next.probe != self.probe;
         if (replaced

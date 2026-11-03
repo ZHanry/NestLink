@@ -76,7 +76,12 @@ pub(crate) fn format_target(
     if format.width != encoded_width
         || format.height != encoded_height
         || format.frame_rate.denominator != 1
-        || !(1..=if codec == VideoCodec::Vp9Rgb444 { 144 } else { 120 }).contains(&format.frame_rate.numerator)
+        || !(1..=if codec == VideoCodec::Vp9Rgb444 {
+            144
+        } else {
+            120
+        })
+            .contains(&format.frame_rate.numerator)
         || !(64..=100_000).contains(&format.max_kbps)
     {
         return Err(io::Error::other(

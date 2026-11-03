@@ -236,15 +236,29 @@ impl ActualEncoder {
         let (send, packets) = std::sync::mpsc::channel();
         let worker = std::thread::spawn(move || {
             let mut encoder = if rgb444 {
-                VideoEncoder::with_vp9_rgb444_execution_target(nestlink_media_session::vp9_rgb444_execution_target(target)?)?
+                VideoEncoder::with_vp9_rgb444_execution_target(
+                    nestlink_media_session::vp9_rgb444_execution_target(target)?,
+                )?
             } else {
-                VideoEncoder::with_execution_target(nestlink_media_session::h264_execution_target(target, config)?)?
+                VideoEncoder::with_execution_target(nestlink_media_session::h264_execution_target(
+                    target, config,
+                )?)?
             };
             let mut prepare = if rgb444 {
-                nestlink_media_session::SoftwareVideoPrepare::with_format(nestlink_media_codec::VideoCodec::Vp9Rgb444, config.width, config.height, Some(target))?
+                nestlink_media_session::SoftwareVideoPrepare::with_format(
+                    nestlink_media_codec::VideoCodec::Vp9Rgb444,
+                    config.width,
+                    config.height,
+                    Some(target),
+                )?
             } else {
-                nestlink_media_session::SoftwareVideoPrepare::Legacy(nestlink_media_session::LegacyPrepare::new(
-                    nestlink_media_codec::VideoCodec::H264Baseline, config.width, config.height)?)
+                nestlink_media_session::SoftwareVideoPrepare::Legacy(
+                    nestlink_media_session::LegacyPrepare::new(
+                        nestlink_media_codec::VideoCodec::H264Baseline,
+                        config.width,
+                        config.height,
+                    )?,
+                )
             };
             let original_pixels =
                 Zeroizing::new([16, 128, 240, 255].repeat((source.0 * source.1) as usize));
@@ -340,14 +354,18 @@ impl ActualEncoder {
         // This fixture intentionally generates only independent IDRs. Core
         // rate-limits IDRs; wait before capturing their timestamp, rather than
         // presenting an already sealed AU after the pacing deadline expires.
-        let deadline = if self.rgb444 { None } else { route
-            .cursor
-            .lock()
-            .map_err(|_| "fixture video cursor poisoned")?
-            .last_keyframe
-            .map(|last| {
-                last + Duration::from_millis(nestlink_protocol::VIDEO_KEYFRAME_INTERVAL_MS)
-            }) };
+        let deadline = if self.rgb444 {
+            None
+        } else {
+            route
+                .cursor
+                .lock()
+                .map_err(|_| "fixture video cursor poisoned")?
+                .last_keyframe
+                .map(|last| {
+                    last + Duration::from_millis(nestlink_protocol::VIDEO_KEYFRAME_INTERVAL_MS)
+                })
+        };
         if let Some(deadline) = deadline {
             tokio::time::sleep_until(deadline.into()).await;
         }

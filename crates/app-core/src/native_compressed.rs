@@ -53,7 +53,10 @@ impl CoreHandle {
         if negotiated && !confirmed.as_ref().is_some_and(|v| v.display == selected) {
             return Err(NativeVideoError::Unauthorized);
         }
-        if confirmed.as_ref().is_some_and(|value| value.format.codec == nestlink_protocol::media_format::Codec::Vp9) {
+        if confirmed
+            .as_ref()
+            .is_some_and(|value| value.format.codec == nestlink_protocol::media_format::Codec::Vp9)
+        {
             return Err(NativeVideoError::Invalid);
         }
         let context = VideoSinkContext {

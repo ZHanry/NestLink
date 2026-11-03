@@ -458,7 +458,9 @@ impl ContinuousRouteSetSession {
                 // A prepared migration holds recoverable physical loss for
                 // one bounded interval. Keep the proved inner runtime alive
                 // while its peer-authenticated transition is still possible.
-                if self.channels.lease_control().remaining().is_ok() { break; }
+                if self.channels.lease_control().remaining().is_ok() {
+                    break;
+                }
                 // Only the original runtime's joined physical carrier receipt
                 // can acknowledge active retirement. stop/Drop is insufficient.
                 self.channels.wait_stopped_before(deadline).await?;
@@ -472,7 +474,10 @@ impl ContinuousRouteSetSession {
         Ok(work)
     }
     fn collect(&mut self, decision: ContinuationDecision, work: &mut Vec<WorkToken>) {
-        let terminal = decision.actions.iter().any(|action| matches!(action, ContinuationAction::Terminal(_)));
+        let terminal = decision
+            .actions
+            .iter()
+            .any(|action| matches!(action, ContinuationAction::Terminal(_)));
         for action in decision.actions {
             match action {
                 ContinuationAction::Prepare(token) | ContinuationAction::Probe(token) => {
@@ -480,7 +485,9 @@ impl ContinuousRouteSetSession {
                 }
                 ContinuationAction::Retire(token) => {
                     if token.route() == self.keys[self.selected] {
-                        if terminal { let _ = self.channels.lease_control().stop(StopReason::Revoked); }
+                        if terminal {
+                            let _ = self.channels.lease_control().stop(StopReason::Revoked);
+                        }
                     } else if let Some(standby) = &self.standby {
                         standby.request_close();
                     }
@@ -572,7 +579,9 @@ impl ContinuousRouteSetSession {
         }
         if !self.route.member_authorized(self.selected) {
             let _ = self.channels.lease_control().stop(StopReason::Revoked);
-            let decision = self.scheduler.stop_continuation(nestlink_protocol::ErrorCode::PolicyRevoked);
+            let decision = self
+                .scheduler
+                .stop_continuation(nestlink_protocol::ErrorCode::PolicyRevoked);
             self.consume(sdk, local, peer_key, decision).await?;
             return Ok(self.status()?);
         }
@@ -599,12 +608,25 @@ impl ContinuousRouteSetSession {
                 self.consume(sdk, local, peer_key, decision).await?;
             }
         }
-        let held_loss = self.channels.transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
+        let held_loss = self
+            .channels
+            .transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
             .is_some_and(|owner| owner.transport.held_path_loss_deadline().is_some());
-        if held_loss && let Some(observer) = self.scheduler.continuation_status().and_then(|status| status.active_observer) {
-            let decision = self.step(sdk, local, peer_key, ContinuationInput::RouteFailed {
-                observer, code: nestlink_protocol::ErrorCode::RelayUnavailable,
-            })?;
+        if held_loss
+            && let Some(observer) = self
+                .scheduler
+                .continuation_status()
+                .and_then(|status| status.active_observer)
+        {
+            let decision = self.step(
+                sdk,
+                local,
+                peer_key,
+                ContinuationInput::RouteFailed {
+                    observer,
+                    code: nestlink_protocol::ErrorCode::RelayUnavailable,
+                },
+            )?;
             self.consume(sdk, local, peer_key, decision).await?;
         }
         let decision = self.step(sdk, local, peer_key, ContinuationInput::Tick { demand })?;
@@ -761,7 +783,10 @@ impl ContinuousRouteSetSession {
                 .await
                 .map_err(SdkError::NodeQuic)?;
             slot.node = None;
-            slot.inner = Some(RoutedEstablishment::migratable(authorization, adjacency, 0).map_err(SdkError::ServiceIo)?);
+            slot.inner = Some(
+                RoutedEstablishment::migratable(authorization, adjacency, 0)
+                    .map_err(SdkError::ServiceIo)?,
+            );
             let inner = slot.inner.as_mut().ok_or(SdkError::Invalid)?;
             inner
                 .establish(&local.identity, deadline)
@@ -769,9 +794,11 @@ impl ContinuousRouteSetSession {
                 .map_err(SdkError::NodeQuic)?;
             slot.transport = Some(inner.take_transport().map_err(SdkError::ServiceIo)?);
             slot.inner = None;
-            self.channels.transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
-                .ok_or(SdkError::Trust)?.transport.arm_prepared_migration(
-                    slot.transport.as_ref().ok_or(SdkError::Trust)?)
+            self.channels
+                .transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
+                .ok_or(SdkError::Trust)?
+                .transport
+                .arm_prepared_migration(slot.transport.as_ref().ok_or(SdkError::Trust)?)
                 .map_err(SdkError::ServiceIo)?;
             let now = ms_between(self.started, Instant::now())?;
             sample(slot, now)?;
