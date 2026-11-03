@@ -396,7 +396,8 @@ class NativeRunnerTests(unittest.TestCase):
                 "passed": False, "error": "Rejected " + secret, "nested": {"access_token": "hidden"}})
             RUNNER.write_json(private / "native/database-cleanup.json", {"owned_temporary_database_removed": True})
             RUNNER.publish_receipts(private, output, [secret])
-            self.assertEqual({path.name for path in output.iterdir()}, {"browser-report.json", "database-cleanup.json"})
+            self.assertEqual({path.name for path in output.iterdir()}, {
+                "browser-report.json", "database-cleanup.json", "published-receipts.json"})
             published = (output / "browser-report.json").read_text(encoding="utf-8")
             self.assertNotIn(secret, published)
             self.assertNotIn("hidden", published)
@@ -418,7 +419,36 @@ class NativeRunnerTests(unittest.TestCase):
             for name in allowed | {"browser-report-unreviewed.png"}:
                 (private / "probe" / name).write_bytes(b"\x89PNG\r\n\x1a\nowned fixture")
             RUNNER.publish_receipts(private, output, [])
-            self.assertEqual({path.name for path in output.iterdir()}, allowed)
+            self.assertEqual({path.name for path in output.iterdir()}, allowed | {"published-receipts.json"})
+
+    def test_public_progress_inventory_hashes_sanitized_bytes_without_replacing_private_digest(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            private, output = root / "private", root / "public"
+            (private / "probe").mkdir(parents=True)
+            output.mkdir()
+            secret = "private-owned-password-948"
+            raw = ('{"stage":"failed","detail":"' + secret + '","password":"' + secret + '"}\n').encode()
+            raw_digest = RUNNER.sha256(raw)
+            (private / "probe/browser-report-progress.jsonl").write_bytes(raw)
+            RUNNER.write_json(private / "probe/browser-report.json", {
+                "passed": False, "progress_sha256": raw_digest, "error": secret})
+            RUNNER.publish_receipts(private, output, [secret])
+            published = (output / "browser-report-progress.jsonl").read_bytes()
+            report = RUNNER.read_json(output / "browser-report.json")
+            inventory = RUNNER.read_json(output / "published-receipts.json")
+            self.assertNotEqual(RUNNER.sha256(published), raw_digest)
+            self.assertEqual(report["progress_sha256"], raw_digest)
+            self.assertIs(report["passed"], False)
+            self.assertIs(inventory["acceptance_claimed"], False)
+            self.assertEqual({entry["path"] for entry in inventory["files"]}, {
+                "browser-report.json", "browser-report-progress.jsonl"})
+            for entry in inventory["files"]:
+                payload = (output / entry["path"]).read_bytes()
+                self.assertEqual(entry["bytes"], len(payload))
+                self.assertEqual(entry["sha256"], RUNNER.sha256(payload))
+                self.assertNotIn(secret.encode(), payload)
+            self.assertNotIn(secret, json.dumps(inventory))
 
     def test_negotiation_log_only_retains_fixed_categories_and_public_states(self):
         with tempfile.TemporaryDirectory() as temporary:

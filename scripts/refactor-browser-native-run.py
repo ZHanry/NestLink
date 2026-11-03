@@ -213,6 +213,38 @@ def publish_receipts(private, output, secrets):
                     or not source.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")):
                 raise ValueError("Expected a bounded PNG screenshot")
             shutil.copyfile(source, output / name)
+    publish_receipt_manifest(output)
+
+
+def publish_receipt_manifest(output):
+    """Hash the actual public bytes after sanitization and serialization.
+
+    browser-report.json:progress_sha256 belongs to the private raw JSONL. Keep
+    that observation intact; it cannot verify the differently encoded public
+    JSONL. This separate inventory makes no acceptance decision.
+    """
+    names = {"browser-report.json", "browser-report-progress.jsonl", "negotiation-events.jsonl",
+             *JSON_RECEIPTS, *JSONL_RECEIPTS, *PNG_RECEIPTS}
+    files = []
+    for name in sorted(names):
+        path = output / name
+        if not path.exists():
+            continue
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > 16 * 1024 * 1024:
+            raise ValueError("Expected a bounded regular published receipt")
+        payload = path.read_bytes()
+        files.append({"path": name, "bytes": len(payload), "sha256": sha256(payload)})
+    write_json(output / "published-receipts.json", {
+        "schema_version": 1,
+        "kind": "nestlink-browser-native-published-receipts",
+        "source_revision": os.environ.get("GITHUB_SHA"),
+        "run_id": os.environ.get("GITHUB_RUN_ID"),
+        "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+        "scope": "Exact public receipt bytes after sanitization; excludes the final runner result and this inventory",
+        "private_raw_progress_digest": "browser-report.json:progress_sha256",
+        "files": files,
+        "acceptance_claimed": False,
+    })
 
 
 def validate_workspace_ui(ui):
