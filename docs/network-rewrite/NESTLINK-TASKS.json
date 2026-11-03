@@ -1016,9 +1016,19 @@
         "未证实的可行性假设标明并映射后续原型"
       ],
       "evidence_refs": [
-        "docs/network-rewrite/evidence/development-run-4492f59.json"
+        "docs/network-rewrite/evidence/development-run-4492f59.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
-      "blockers": []
+      "blockers": [],
+      "scoped_validation_history": [],
+      "additional_scoped_validation": {
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
+        "whole_task_passed": false,
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      }
     },
     {
       "id": "W03",
@@ -1069,17 +1079,28 @@
       "evidence_refs": [
         "docs/network-rewrite/evidence/development-run-1249075.json",
         "docs/network-rewrite/evidence/development-run-bd1f298.json",
-        "docs/network-rewrite/evidence/production-carriers-745c05a.json"
+        "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
-        "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
-        "run_id": 41479920172,
-        "workflow_conclusion": "failure",
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
         "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
-      }
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      },
+      "scoped_validation_history": [
+        {
+          "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
+          "run_id": 41479920172,
+          "workflow_conclusion": "failure",
+          "whole_task_passed": false,
+          "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+          "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+        }
+      ]
     },
     {
       "id": "W04",
@@ -1133,8 +1154,19 @@
         "证据绑定本任务源码和制品，并区分构建来源和实际执行来源",
         "无未标明的外部验证缺口"
       ],
-      "evidence_refs": [],
-      "blockers": []
+      "evidence_refs": [
+        "docs/network-rewrite/evidence/network-run-c589362.json"
+      ],
+      "blockers": [],
+      "scoped_validation_history": [],
+      "additional_scoped_validation": {
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
+        "whole_task_passed": false,
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      }
     },
     {
       "id": "W05",
@@ -1187,9 +1219,19 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/network-rewrite/evidence/development-run-4492f59.json"
+        "docs/network-rewrite/evidence/development-run-4492f59.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
-      "blockers": []
+      "blockers": [],
+      "scoped_validation_history": [],
+      "additional_scoped_validation": {
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
+        "whole_task_passed": false,
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      }
     },
     {
       "id": "W06",
@@ -1247,17 +1289,28 @@
       ],
       "evidence_refs": [
         "docs/network-rewrite/evidence/development-run-4492f59.json",
-        "docs/network-rewrite/evidence/production-carriers-745c05a.json"
+        "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
-        "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
-        "run_id": 41479920172,
-        "workflow_conclusion": "failure",
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
         "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
-      }
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      },
+      "scoped_validation_history": [
+        {
+          "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
+          "run_id": 41479920172,
+          "workflow_conclusion": "failure",
+          "whole_task_passed": false,
+          "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+          "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+        }
+      ]
     },
     {
       "id": "W07",
@@ -1315,17 +1368,28 @@
         "docs/network-rewrite/IMPLEMENTATION-2026-10-30.md",
         "docs/network-rewrite/evidence/development-run-1249075.json",
         "docs/network-rewrite/evidence/production-carriers-e2e3657.json",
-        "docs/network-rewrite/evidence/production-carriers-745c05a.json"
+        "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
-        "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
-        "run_id": 41479920172,
-        "workflow_conclusion": "failure",
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
         "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
-      }
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      },
+      "scoped_validation_history": [
+        {
+          "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
+          "run_id": 41479920172,
+          "workflow_conclusion": "failure",
+          "whole_task_passed": false,
+          "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+          "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+        }
+      ]
     },
     {
       "id": "W08",
@@ -1379,9 +1443,19 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/adr/network/0005-dual-stack-discovery-generations.md"
+        "docs/adr/network/0005-dual-stack-discovery-generations.md",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
-      "blockers": []
+      "blockers": [],
+      "scoped_validation_history": [],
+      "additional_scoped_validation": {
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
+        "whole_task_passed": false,
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      }
     },
     {
       "id": "W09",
@@ -1444,17 +1518,28 @@
         "docs/network-rewrite/evidence/development-run-4492f59.json",
         "docs/network-rewrite/evidence/development-run-bd1f298.json",
         "docs/network-rewrite/evidence/production-carriers-e2e3657.json",
-        "docs/network-rewrite/evidence/production-carriers-745c05a.json"
+        "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
-        "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
-        "run_id": 41479920172,
-        "workflow_conclusion": "failure",
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
         "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
-      }
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      },
+      "scoped_validation_history": [
+        {
+          "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
+          "run_id": 41479920172,
+          "workflow_conclusion": "failure",
+          "whole_task_passed": false,
+          "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+          "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+        }
+      ]
     },
     {
       "id": "W10",
@@ -1574,16 +1659,17 @@
       "evidence_refs": [
         "docs/network-rewrite/evidence/development-run-bd1f298.json",
         "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "docs/network-rewrite/evidence/network-run-4a4496b.json"
+        "docs/network-rewrite/evidence/network-run-4a4496b.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
-        "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
-        "run_id": 41479920172,
-        "workflow_conclusion": "failure",
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
         "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
       },
       "latest_scoped_verification": {
         "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
@@ -1594,7 +1680,17 @@
         "evidence_refs": [
           "docs/network-rewrite/evidence/network-run-4a4496b.json"
         ]
-      }
+      },
+      "scoped_validation_history": [
+        {
+          "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
+          "run_id": 41479920172,
+          "workflow_conclusion": "failure",
+          "whole_task_passed": false,
+          "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+          "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+        }
+      ]
     },
     {
       "id": "W12",
@@ -1659,7 +1755,8 @@
         "docs/network-rewrite/evidence/development-run-fd1c027.json",
         "docs/network-rewrite/evidence/development-run-eab863b.json",
         "docs/adr/network/0024-scope-isolated-neighbor-observations.md",
-        "docs/network-rewrite/evidence/production-carriers-745c05a.json"
+        "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [],
       "implementation_notes": [
@@ -1675,13 +1772,23 @@
         "Exact cdcd667 hosted Actions native-ICE job passed every registered-chain case including both real FileRead/revoke orders, multi-space isolation and stopped-neighbor retirement. This scoped pass does not complete prefix forwarding ownership or full W12 acceptance."
       ],
       "additional_scoped_validation": {
-        "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
-        "run_id": 41479920172,
-        "workflow_conclusion": "failure",
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
         "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
-      }
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      },
+      "scoped_validation_history": [
+        {
+          "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
+          "run_id": 41479920172,
+          "workflow_conclusion": "failure",
+          "whole_task_passed": false,
+          "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+          "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+        }
+      ]
     },
     {
       "id": "W13",
@@ -1741,7 +1848,8 @@
       "evidence_refs": [
         "docs/adr/network/0026-original-connection-quality-observation.md",
         "docs/network-rewrite/evidence/development-run-eab863b.json",
-        "docs/network-rewrite/evidence/development-run-99f647b.json"
+        "docs/network-rewrite/evidence/development-run-99f647b.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [],
       "implementation_notes": [
@@ -1749,7 +1857,16 @@
         "Initial RTT estimates and expired/idle measurements remain unknown; loss counters are not fabricated percentages; business TX is not available bandwidth. No standby/successor selection or migration is implemented by this slice. W13 is incomplete.",
         "Exact 99f647b hosted Actions passed both local observation policy regressions and the original Quinn write/cleanup regression. Source now projects the original read-only native observation through existing app-core/IPC to the desktop, with request/candidate/network-generation/permit fences, terminal clearing and old IPC compatibility. Product projection awaits Actions; continuous main/standby route selection remains required.",
         "Exact cdcd667 Actions passed all four app-core projection/IPC regressions. New source adds one original PathGrant with two atomically reserved one-hop candidates, static split of one cumulative byte budget, independently observed node availability, current signed node resources and pinned SDK readback. This authority/data-admission slice awaits hosted checks; ongoing Scheduler ownership, carrier standby/switching and full W13 acceptance remain required."
-      ]
+      ],
+      "scoped_validation_history": [],
+      "additional_scoped_validation": {
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
+        "whole_task_passed": false,
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      }
     },
     {
       "id": "W14",
@@ -1811,22 +1928,34 @@
       "evidence_refs": [
         "docs/adr/network/0027-quinn-carrier-replacement-feasibility.md",
         "docs/network-rewrite/evidence/production-carriers-e2e3657.json",
-        "docs/network-rewrite/evidence/production-carriers-745c05a.json"
+        "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [],
       "implementation_notes": [
         "A private Linux libtest prototype reuses Quinn rebind_abstract and the existing signed routed carriers in four independent network namespaces. Dedicated Actions explicitly execute switch/cancel roles, retain original connection/stream/TLS exporter and measure inner/outer RTT/cwnd/PMTU after old physical paths close. This source has not yet executed and does not implement production migration.",
         "Production proposal/ACK, path epoch, simultaneous proposals, lost ACK, bounded drain, business proof and safe application recovery remain required. W14/AC22 completion stays false; feasibility does not authorize reuse of consumed production node allocations.",
-        "The first exact cdcd667 feasibility run compiled and executed both cases but failed the second endpoint's large-packet assertion because only its peer sent file payloads. New source transfers phase/round/direction-bound file data in both directions while preserving every original PMTU, deadline, quota, identity and cleanup assertion; re-execution remains required."
+        "The first exact cdcd667 feasibility run compiled and executed both cases but failed the second endpoint's large-packet assertion because only its peer sent file payloads. New source transfers phase/round/direction-bound file data in both directions while preserving every original PMTU, deadline, quota, identity and cleanup assertion; re-execution remains required.",
+        "New signed-space Direct->Direct safe application recovery is being finalized: exact dual-signed business receipt, durable schema51 ancestor checks with original expiry and16-transition bound, fixed request identities, onePOST/GET-only readback after lost response, fresh endpoint/proof/video/input bindings. Source/lock/schema50 refusal and real HTTP counterexamples require hosted qualification; no wholeW14/AC21-23 or arbitrary TCP replay claim."
       ],
       "additional_scoped_validation": {
-        "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
-        "run_id": 41479920172,
-        "workflow_conclusion": "failure",
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
         "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
-      }
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      },
+      "scoped_validation_history": [
+        {
+          "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
+          "run_id": 41479920172,
+          "workflow_conclusion": "failure",
+          "whole_task_passed": false,
+          "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+          "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+        }
+      ]
     },
     {
       "id": "W15",
@@ -1886,12 +2015,22 @@
         "docs/network-rewrite/NATIVE-OWNER-AUDIT.md",
         "crates/app-core/src/runtime/native_direct.rs",
         "crates/sdk/src/network/routed/control/direct.rs",
-        "crates/app-core/tests/native_session/route_set.rs"
+        "crates/app-core/tests/native_session/route_set.rs",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [
         "Signed direct and original route-set product owners are wired but require exact-source Actions validation; no W15 verification or release completion is claimed.",
         "W14 full recovery/continuity evidence remains incomplete. Signed direct currently stops on transport failure; default space-selection UI and two-Windows-device full remote-control evidence remain outstanding."
-      ]
+      ],
+      "scoped_validation_history": [],
+      "additional_scoped_validation": {
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
+        "whole_task_passed": false,
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      }
     },
     {
       "id": "W16",
@@ -1948,17 +2087,28 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/network-rewrite/evidence/production-carriers-745c05a.json"
+        "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
-        "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
-        "run_id": 41479920172,
-        "workflow_conclusion": "failure",
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
         "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
-      }
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      },
+      "scoped_validation_history": [
+        {
+          "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
+          "run_id": 41479920172,
+          "workflow_conclusion": "failure",
+          "whole_task_passed": false,
+          "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+          "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+        }
+      ]
     },
     {
       "id": "W17",
@@ -2134,10 +2284,20 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/network-rewrite/evidence/kernel-dns-fe5b3cf.json"
+        "docs/network-rewrite/evidence/kernel-dns-fe5b3cf.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [],
-      "verification_notes": "Linux system resolver/ULA, ordinary ownership, exact recovery and unrelated policy preservation passed on fe5b3cf and 4a6ca59; Windows first source failed compiling Winsock adapter. New Windows run 41177705173 is under diagnosis; full cross-platform AC31/AC32 and target VPN coexistence remain open."
+      "verification_notes": "Linux system resolver/ULA, ordinary ownership, exact recovery and unrelated policy preservation passed on fe5b3cf and 4a6ca59; Windows first source failed compiling Winsock adapter. New Windows run 41177705173 is under diagnosis; full cross-platform AC31/AC32 and target VPN coexistence remain open.",
+      "scoped_validation_history": [],
+      "additional_scoped_validation": {
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
+        "whole_task_passed": false,
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      }
     },
     {
       "id": "W20",
@@ -2202,16 +2362,17 @@
         "docs/adr/network/0037-private-service-relay-authority.md",
         "docs/network-rewrite/evidence/private-business-145e26b.json",
         "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "docs/network-rewrite/evidence/network-run-4a4496b.json"
+        "docs/network-rewrite/evidence/network-run-4a4496b.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
-        "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
-        "run_id": 41479920172,
-        "workflow_conclusion": "failure",
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
         "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
       },
       "latest_scoped_verification": {
         "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
@@ -2222,7 +2383,17 @@
         "evidence_refs": [
           "docs/network-rewrite/evidence/network-run-4a4496b.json"
         ]
-      }
+      },
+      "scoped_validation_history": [
+        {
+          "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
+          "run_id": 41479920172,
+          "workflow_conclusion": "failure",
+          "whole_task_passed": false,
+          "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+          "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+        }
+      ]
     },
     {
       "id": "W21",
@@ -2284,18 +2455,29 @@
         "docs/adr/network/0040-windows-local-port-admission.md",
         "docs/network-rewrite/evidence/kernel-dns-fe5b3cf.json",
         "docs/network-rewrite/evidence/raw-local-tls-01cbe7a.json",
-        "docs/network-rewrite/evidence/production-carriers-745c05a.json"
+        "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+        "docs/network-rewrite/evidence/network-run-c589362.json"
       ],
       "blockers": [],
       "verification_notes": "Linux real ordinary SDK/root helper/different UID TCP+UDP, helper crash persistence, empty datagrams, foreign policy preservation and original-process exit cleanup passed. Local TLS wrong-name rejection, real binary backend bytes and unchanged kernel receipt passed on 01cbe7a run 41177562082. Production CLI L3, Windows WFP kernel and target coexistence are pending; entire AC34 is not passed.",
       "additional_scoped_validation": {
-        "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
-        "run_id": 41479920172,
-        "workflow_conclusion": "failure",
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562170514,
+        "workflow_conclusion": "success",
         "whole_task_passed": false,
-        "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
-      }
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json",
+        "scope": "All9 original hosted network jobs passed. EachOS contract tests749passed;309 business passes/10 dedicated-role ignored across original scoped logs, including private-service32passed/5 dedicated-role ignored. Real namespace/socket/registered carriers and Quinn replacement feasibility remain laboratory scopes; no full migration/target/release claim."
+      },
+      "scoped_validation_history": [
+        {
+          "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
+          "run_id": 41479920172,
+          "workflow_conclusion": "failure",
+          "whole_task_passed": false,
+          "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
+          "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
+        }
+      ]
     },
     {
       "id": "W22",
@@ -2733,7 +2915,8 @@
         "docs/network-rewrite/evidence/native-offline-resident-f570243.json",
         "docs/network-rewrite/evidence/media-libyuv-fa52387.json",
         "docs/adr/network/0073-reuse-bundled-libyuv-vp8-conversion.md",
-        "docs/network-rewrite/evidence/native-offline-resident-4a4496b.json"
+        "docs/network-rewrite/evidence/native-offline-resident-4a4496b.json",
+        "docs/network-rewrite/evidence/native-offline-resident-c589362.json"
       ],
       "blockers": [],
       "partial_verification": {
@@ -2747,13 +2930,12 @@
       },
       "implementation_notes": "有限离线 AppCore、实际守护进程 CLI/IPC、捕获、文件及重建路径已接线。78a7cb4/41451102046 的 Windows TLS 原始全数据、两次262144字节下载、重建和 IPC退出通过；该轮 Windows2/4、Linux0/4，仍保留整体失败。f570243 修复真实 Xauthority 与成功载体退役竞态，41455823431 按原断言验证中；保护登录固定阶段诊断继续定位独立失败，完整 W27 及目标验收未完成。 f570243/41455823431实际Windows3/4、Linux0/4；保留两边QUIC提前终止及Linux原即时预算断言失败。c0bb7ac直接读取同一累计meter，新增原真实文件后即时读回断言及停止原因诊断，1dd4efd/41461596961按原范围复验中。",
       "latest_scoped_verification": {
-        "recorded_at": "2026-11-03T01:41:30.700Z",
-        "scope": "4a4496b /41488486927 original focused resident workflow success: bothOS original4/4 including actual capture/VP8 pixels, two262144B file reads, original rebuild/Exit/management-terminal fences; all46 files and38 producer entries verified. This is the exact focused matrix scope, not wholeW27/target acceptance.",
-        "scoped_passed": true,
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562179075,
+        "conclusion": "success",
         "whole_task_passed": false,
-        "evidence_refs": [
-          "docs/network-rewrite/evidence/native-offline-resident-4a4496b.json"
-        ]
+        "scope": "Original focused resident4/4 bothOS and existing owner/lint/SecretCLI scoped passes; complete Rust sourcec589 failures remain separately failed.",
+        "evidence_ref": "docs/network-rewrite/evidence/native-offline-resident-c589362.json"
       }
     },
     {
@@ -2940,7 +3122,8 @@
       ],
       "evidence_refs": [
         "docs/network-rewrite/evidence/subnet-browser-623d55a.json",
-        "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json"
+        "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json",
+        "docs/network-rewrite/evidence/native-offline-resident-c589362.json"
       ],
       "blockers": [],
       "partial_verification": {
@@ -2955,7 +3138,15 @@
           "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json"
         ]
       },
-      "implementation_notes": "Native desktop setup guide projects actual server/account/device/session and local-consent facts, then navigates original devices/remote/services/diagnostics owners. Web setup guide explicitly reads real pinned SDK account, device, discovery, service publication and administrator policy per purpose; no write/probe or permission expansion. Old snapshots, partial read errors, expired account and unmounted/late replies do not become success. NewUI still awaits exact-source hosted compilation/browser execution and complete installed onboarding; W30/AC51/AC52 remain in_progress."
+      "implementation_notes": "Native desktop setup guide projects actual server/account/device/session and local-consent facts, then navigates original devices/remote/services/diagnostics owners. Web setup guide explicitly reads real pinned SDK account, device, discovery, service publication and administrator policy per purpose; no write/probe or permission expansion. Old snapshots, partial read errors, expired account and unmounted/late replies do not become success. NewUI still awaits exact-source hosted compilation/browser execution and complete installed onboarding; W30/AC51/AC52 remain in_progress.",
+      "latest_scoped_verification": {
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "run_id": 41562179075,
+        "conclusion": "success",
+        "whole_task_passed": false,
+        "scope": "Original focused resident4/4 bothOS and existing owner/lint/SecretCLI scoped passes; complete Rust sourcec589 failures remain separately failed.",
+        "evidence_ref": "docs/network-rewrite/evidence/native-offline-resident-c589362.json"
+      }
     },
     {
       "id": "W31",

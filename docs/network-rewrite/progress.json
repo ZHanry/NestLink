@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "f95fb92ed8c06df1ef246630391a38a3b8e964af",
-  "checkpoint_kind": "verified_original_resident_and_unsampled_capacity_scopes_media_target_failed_full_rust_failed_fixes_pending",
+  "source_revision": "489c841b83d0118dd28716e0dcb71080737f547e",
+  "checkpoint_kind": "network_and_focused_resident_scopes_passed_full_rust_failed_repairs_and_signed_direct_recovery_pending",
   "active_tasks": [
     "W00",
     "W02",
@@ -53,9 +53,10 @@
     "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
   ],
   "unverified_assumptions": [
-    "AMFf0c65 Main8 now fails originalnewdescriptor guard at HevcFrameRate query (result0/nonnull); no actualdescriptorname was logged, so no alias/rootcause attribution. Diagnostic-onlyf95 preserves failure and records bounded actualdescriptorname/type/index fornexttargetrun. Main10P010 remains unsupported onthe actualAMDscope; all16priorcommandfailures retained.",
-    "Full Rust745c run41479911345 failed: Linux defaultparallel workspace originalresident1/4; Windowshit original60minutejoblimit afterworkspacebegan47m50s. Originalserial earlyresident4/4bothOS remains scoped. RealPlatformfixture lifecycle isolation andindependent requiredjobs are being implemented; no assertion/deadline relaxation.",
-    "VP8boundary/PipeWiresanitizers,Python supply/notice regressions andxtask were skipped afteroriginalworkspace failure; independently require actualnewsource execution. OriginalRustprefixvalidation tests did execute, keep separate fromskippedPython regressions.",
+    "Exact c589 network workflow all9 jobs passed and focused original resident4/4 both OS; scoped results do not qualify complete work packages or the rewrite.",
+    "Full Rust c589 failed all6 core/workspace/boundary matrix jobs. Original Windows peer_udp_bind Os10013 is now localized; carrier-specific fixture selection is committed unverified. Workspace HTTPS freeze and locked notice fetch repairs await new exact-source execution. Linux original DNS Os98 and Windows native_session DirectUnavailable remain unexplained failures; DNS now retains bind protocol and original IO source.",
+    "Exact 8f1 media owner/tools dispatched after precise documented AMF TL0.QL0 alias identity and typed roundtrip repair. Actual original8 Windows finite commands need verified new artifacts; earlier failures remain failed. Main10 hardware support not established.",
+    "Signed-space Direct->Direct recovery/schema51 is committed in 59acbdb and 26fda38. Hosted lock derivation41567629082 passed; only existing futures-util app-core test edge imported489c841. New source schema50 refusal, real HTTP races, native recovery, complete Rust and formatting still require hosted Actions.",
     "Mandatory remaining implementation includescomplete productUI/CLI lifecycle, productionunifiedpath migration, advanced GPUformat/fallback, whole-systemE2E andindependentsecurityreview. Existing finiteprobesandlabtestscannotclose these.",
     "Mandatory targetevidence still includespairedWindows desktop/input/audio/concurrentfiles,Android+iOS standardWireGuard,independentNAT/overlappingsites/public fixedentryDNS,fullmixedversions/signing andcrossday24hoursoaks. Internalimplementation gaps are not externalblockers.",
     "W28Luanti original25second disconnectdisplay check remains failed byexplicituserdecision; retainofficial30second behaviorrecord andoriginalNestLink5secondcleanupgate withoutdeadlinechange."
@@ -88,12 +89,16 @@
     }
   ],
   "next_steps": [
-    "FinishAMFrequired/optional descriptor compatibility andrealPlatformowner cleanup; keepall originalgates.",
-    "Push exactreviewedsource; dispatchrequired fullRust splitjobs,originalresident,network,mediaowner/tools andformat onthat source; readfailures ratherthaninferpass.",
-    "Downloadandhash newActions tools, rerun actualMF+AMF finiteWindowscommands independently, preservingall eightpriorfailures.",
-    "Continue complete product paths andthe remainingmandatory implementation; prepare same-sourcecandidate onlyafter requiredgates, do notpubliclyrelease0.8.0RC while not_ready."
+    "Push reviewed signed direct implementation, schema compatibility producer and verified hosted lock; apply hosted formatting patch and run exact-source Rust/network/resident/upgrade checks.",
+    "Run exact-source complete Rust, original resident, network contract and schema upgrade workflows, preserve original failures and fix observed causes.",
+    "Verify newly built Windows tools and execute the original8 finite MF/AMF directions on the ordinary target with all original gates.",
+    "Continue remaining production user flows, unified path migration, advanced media and independent security/system acceptance; release remains not_ready and original Luanti25-second failure unchanged."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/direct-recovery-lock-bf364e0.json",
+    "docs/network-rewrite/evidence/full-rust-core-c589362.json",
+    "docs/network-rewrite/evidence/native-offline-resident-c589362.json",
+    "docs/network-rewrite/evidence/network-run-c589362.json",
     "docs/network-rewrite/evidence/boundary-tools-c589362.json",
     "docs/network-rewrite/evidence/windows-hevc-target-f0c65e1.json",
     "docs/network-rewrite/evidence/full-rust-core-745c05a.json",
@@ -759,63 +764,88 @@
     "rust": {
       "run_id": 41562145692,
       "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
-      "state": "in_progress_original_boundary_python_failures_under_diagnosis",
+      "state": "completed_failure_core_both_os_workspace_both_os_boundary_both_os",
       "whole_task_passed": false
     },
     "network": {
       "run_id": 41562170514,
       "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
-      "state": "in_progress",
-      "whole_task_passed": false
+      "state": "completed_all9jobs_success_scope_only",
+      "whole_task_passed": false,
+      "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json"
     },
     "resident": {
       "run_id": 41562179075,
       "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
-      "state": "in_progress",
-      "whole_task_passed": false
+      "state": "completed_original4of4_both_os_success_scope_only",
+      "whole_task_passed": false,
+      "evidence_ref": "docs/network-rewrite/evidence/native-offline-resident-c589362.json"
     },
     "windows_owner": {
-      "run_id": 41561895385,
-      "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
-      "state": "in_progress",
+      "run_id": 41566896922,
+      "source_revision": "8f1ac1d65ed53218087bf17b55f1d279bf772c9e",
+      "state": "dispatched",
       "whole_task_passed": false
     },
     "windows_tools": {
-      "run_id": 41561899380,
-      "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
-      "state": "completed_hosted_build_verified_target8failed_diagnostic_source_f95_pending_newtools",
+      "run_id": 41566900475,
+      "source_revision": "8f1ac1d65ed53218087bf17b55f1d279bf772c9e",
+      "state": "dispatched",
       "whole_task_passed": false
     }
   },
   "continuation_checkpoint": {
-    "at": "2026-11-03T02:00:15.077Z",
-    "source_revision": "f95fb92ed8c06df1ef246630391a38a3b8e964af",
+    "at": "2026-11-03T02:35:55.632Z",
+    "source_revision": "8f1ac1d65ed53218087bf17b55f1d279bf772c9e",
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
-    "user_decision": "Keep original Luanti25-second disconnect-display check and failed status.",
+    "user_decision": "Keep original Luanti 25-second check and its failed status; no timeout/assertion relaxation.",
     "verified_scopes": [
-      "4a4496b /41488486927 original focused resident workflow success: bothOS original4/4 including actual capture/VP8 pixels, two262144B file reads, original rebuild/Exit/management-terminal fences; all46 files and38 producer entries verified. This is the exact focused matrix scope, not wholeW27/target acceptance.",
-      "4ec2c3c /41486568717 formal unsampled release capacity success:100registered nodes,20active pairs,1000liveflows perwave,3waves, original2secondhold anddrain/rebind; all31producer payloads andofficialZIP verified. Previous failedattempts and diagnostic passed=false remain; no wholeAC68 or24hoursoak claim.",
-      "4a4496b /41488394638 all4original Windows2022/2025 owner+Windows/Linux peerjobs success; /41488400735 tools strictbuild success;5officialZIP and234fileentries verified,171producer entries match. OriginalAMFnotice bytes restored without altering originaldigest.",
-      "4a4496b /41488408420 Linux x86_64+ARM64 packagejobs success: actual unsigned installeddaemon/server, ordinary/root refusal, installedTCPconflict, interrupteddpkg upgrade andoriginalpackage rollback;4officialZIP,92downloadfiles,86producer payloads verified. No signedproduction update orfullsystem claim.",
-      "4a4496b /41488417514 network workflow7/9jobs success; bothOS tests/strictlint passed andonlyformat failed; nativeICE originalprivate-services32passed/0failed/5dedicated-roleignored, including originaltwo-relayUDP success. Complete evidence owner is finishing officialinventories. No fullworkflow orproductionmigration claim.",
-      "Actions formatter41488388067 officialZIP and3producer payloads verified; sole daemonmain.rs patch reviewed/applied inebc1ecc. No localformatter."
+      "c589 /41562170514: all9 network jobs success;11 officialZIPs and1642 extracted files independently hashed;1582 producer payloads match; hosted namespace/laboratory only.",
+      "c589 /41562179075: original resident4/4 on eachOS, focused owner/lint/SecretCLI scope; separate complete Rust failure remains."
     ],
-    "retained_failures": [
-      "4a Windows originalMFfour+explicitAMFfourfinitecommands all exit1, fullrawlogs/source/toolhashes inwindows-hevc-target-4a4496b.json.",
-      "745c fullRustLinuxworkspace failure andWindows60mintimeout retained.",
-      "All originalcapacity,networkUDP,resident,media andLuanti failures remain inhistoricalevidence."
+    "pending_source": [
+      "62a0668 constructor child ownership before every await",
+      "dd8c39d complete workspace original HTTPS prerequisite",
+      "00f5e7a original carrier-specific fixture port selection",
+      "e70a30e exact AMF base-layer aliases",
+      "8f1ac1d DNS bind-stage original error",
+      "Signed direct recovery/schema51 source being finalized"
     ],
-    "unverified_source": [
-      "AMFMain8 older-runtime optional property compatibility requires new exact-source hostedowner/tools validation and repeat original finiteWindowsdirections. Main10 nativeformat unsupported onthisAMDtarget; nohardwarequalification.",
-      "Full Rust745c run41479911345 failed: Linux defaultparallel workspace originalresident1/4; Windowshit original60minutejoblimit afterworkspacebegan47m50s. Originalserial earlyresident4/4bothOS remains scoped. RealPlatformfixture lifecycle isolation andindependent requiredjobs are being implemented; no assertion/deadline relaxation.",
-      "VP8boundary/PipeWiresanitizers,Python supply/notice regressions andxtask were skipped afteroriginalworkspace failure; independently require actualnewsource execution. OriginalRustprefixvalidation tests did execute, keep separate fromskippedPython regressions.",
-      "Mandatory remaining implementation includescomplete productUI/CLI lifecycle, productionunifiedpath migration, advanced GPUformat/fallback, whole-systemE2E andindependentsecurityreview. Existing finiteprobesandlabtestscannotclose these.",
-      "Mandatory targetevidence still includespairedWindows desktop/input/audio/concurrentfiles,Android+iOS standardWireGuard,independentNAT/overlappingsites/public fixedentryDNS,fullmixedversions/signing andcrossday24hoursoaks. Internalimplementation gaps are not externalblockers.",
-      "W28Luanti original25second disconnectdisplay check remains failed byexplicituserdecision; retainofficial30second behaviorrecord andoriginalNestLink5secondcleanupgate withoutdeadlinechange."
-    ],
-    "branch_inventory": "Localheads andGitHubbranches API bothmainonly at2026-11-03T01:39:40Z; capacitytemporarybranch alreadyremoved.",
-    "git_sync": "Directgithub.com smartHTTP repeatedlyreset; GitDataAPI reconstructed eachoriginalblob/tree/commit andverifiedbyte-identicalSHAs before nonforcedfastforward to c75c776; nohistoryrewrite."
+    "runs": {
+      "rust": {
+        "run_id": 41562145692,
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "state": "completed_failure_core_both_os_workspace_both_os_boundary_both_os",
+        "whole_task_passed": false
+      },
+      "network": {
+        "run_id": 41562170514,
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "state": "completed_all9jobs_success_scope_only",
+        "whole_task_passed": false,
+        "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json"
+      },
+      "resident": {
+        "run_id": 41562179075,
+        "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "state": "completed_original4of4_both_os_success_scope_only",
+        "whole_task_passed": false,
+        "evidence_ref": "docs/network-rewrite/evidence/native-offline-resident-c589362.json"
+      },
+      "windows_owner": {
+        "run_id": 41566896922,
+        "source_revision": "8f1ac1d65ed53218087bf17b55f1d279bf772c9e",
+        "state": "dispatched",
+        "whole_task_passed": false
+      },
+      "windows_tools": {
+        "run_id": 41566900475,
+        "source_revision": "8f1ac1d65ed53218087bf17b55f1d279bf772c9e",
+        "state": "dispatched",
+        "whole_task_passed": false
+      }
+    }
   },
   "dispatch_corrections": [
     {
