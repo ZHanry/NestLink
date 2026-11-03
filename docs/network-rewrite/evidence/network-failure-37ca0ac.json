@@ -1,0 +1,975 @@
+{
+  "schema_version": 1,
+  "scope": "Exact-source historical failure preservation from official completed run/job API metadata and independently downloaded/hashed failed job logs. No new build/test execution or complete artifact qualification.",
+  "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+  "workflow": ".github/workflows/network-rewrite.yml",
+  "run_id": 41586142163,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41586142163",
+  "run_attempt": 1,
+  "status": "completed",
+  "conclusion": "failure",
+  "whole_task_passed": false,
+  "build_provenance": {
+    "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+    "workflow_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+    "event": "workflow_dispatch",
+    "runner_environment": "github-hosted",
+    "run_started_at": "2026-11-03T05:49:28Z"
+  },
+  "execution_provenance": {
+    "source": "Official Actions job metadata/logs only",
+    "local_project_execution": false,
+    "physical_target_or_public_nat_acceptance_claimed": false
+  },
+  "job_count": 9,
+  "job_conclusion_counts": {
+    "success": 6,
+    "failure": 3
+  },
+  "jobs": [
+    {
+      "id": 125751976637,
+      "name": "topology-carrier",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41586142163/job/125751976637",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:49:38Z",
+      "completed_at": "2026-11-03T05:52:36Z",
+      "failed_steps": [],
+      "skipped_steps": [],
+      "evidence_scope": "Official completed job metadata only; successful job payloads and logs are not independently verified in this failure record."
+    },
+    {
+      "id": 125751976794,
+      "name": "routed-kernel-nat-slice",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41586142163/job/125751976794",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:49:38Z",
+      "completed_at": "2026-11-03T05:51:41Z",
+      "failed_steps": [],
+      "skipped_steps": [],
+      "evidence_scope": "Official completed job metadata only; successful job payloads and logs are not independently verified in this failure record."
+    },
+    {
+      "id": 125751976831,
+      "name": "native-ice-kernel-nat-slice",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41586142163/job/125751976831",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "status": "completed",
+      "conclusion": "failure",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:49:41Z",
+      "completed_at": "2026-11-03T05:58:26Z",
+      "failed_steps": [
+        {
+          "number": 7,
+          "name": "Exercise production signed native ICE, Quinn and FileRead across two kernel NATs",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "number": 9,
+          "name": "Exercise registered NRD2 nodes through management and the production listener",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "number": 10,
+          "name": "Exercise actual route-set SDK node admission and space address APIs",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "number": 11,
+          "name": "Exercise actual space address HTTP SDK APIs",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "number": 12,
+          "name": "Exercise pinned ordinary-member preparation through actual HTTP body loss",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "number": 14,
+          "name": "Exercise private HTTP TCP UDP access, shared accounting and revocation",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "number": 15,
+          "name": "Exercise product original-route recovery, old input release and fresh video",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "number": 16,
+          "name": "Exercise public service original consent, half-close and physical teardown",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "number": 18,
+          "name": "Exercise application management ownership and dynamic TLS admission boundaries",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "skipped_steps": [],
+      "independently_downloaded_job_log": {
+        "path": "job-125751976831.log",
+        "bytes": 534975,
+        "sha256": "be4b165773776e781fad9de32b4f0c9e3b84dfe719ed0d7d9d3331a6dc374acc"
+      },
+      "job_log_download_api": "repos/ZHanry/NestLink/actions/jobs/125751976831/logs",
+      "excerpt_normalization": "One-based original downloaded job-log line numbers; ANSI display codes and per-line Actions timestamps removed only from displayed excerpt text. Original downloaded bytes are independently hashed and retained.",
+      "compiler_E0433_count": 9,
+      "compiler_excerpt": [
+        {
+          "line": 1091,
+          "text": "error[E0433]: cannot find module or crate `log` in this scope"
+        },
+        {
+          "line": 1092,
+          "text": "--> crates/sdk/src/webrtc_host.rs:142:5"
+        },
+        {
+          "line": 1094,
+          "text": "142 |     log::info!(target: \"nestlink_sdk::webrtc_host::ice_snapshot\", \"{}\","
+        },
+        {
+          "line": 1095,
+          "text": "|     ^^^ use of unresolved module or unlinked crate `log`"
+        },
+        {
+          "line": 1098,
+          "text": "error: could not compile `nestlink-sdk` (lib) due to 1 previous error"
+        },
+        {
+          "line": 2297,
+          "text": "error[E0433]: cannot find module or crate `log` in this scope"
+        },
+        {
+          "line": 2298,
+          "text": "--> crates/sdk/src/webrtc_host.rs:142:5"
+        },
+        {
+          "line": 2300,
+          "text": "142 |     log::info!(target: \"nestlink_sdk::webrtc_host::ice_snapshot\", \"{}\","
+        },
+        {
+          "line": 2301,
+          "text": "|     ^^^ use of unresolved module or unlinked crate `log`"
+        },
+        {
+          "line": 2304,
+          "text": "error: could not compile `nestlink-sdk` (lib) due to 1 previous error"
+        },
+        {
+          "line": 2647,
+          "text": "error[E0433]: cannot find module or crate `log` in this scope"
+        },
+        {
+          "line": 2648,
+          "text": "--> crates/sdk/src/webrtc_host.rs:142:5"
+        }
+      ],
+      "formatting_diff_headers": [],
+      "producer_command_outcomes_in_job_log": [
+        {
+          "line": 740,
+          "name": "001-tool-index",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "001-tool-index.log",
+          "producer_reported_log_bytes": 506,
+          "producer_reported_log_sha256": "e6a5ded515b81de67d2fe7bfcb5e9d85d02201268df03cea24f9300fd3b31c92"
+        },
+        {
+          "line": 800,
+          "name": "002-network-tools",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "002-network-tools.log",
+          "producer_reported_log_bytes": 2267,
+          "producer_reported_log_sha256": "c6af8e563f0de5b6c92c61d2a78095fb2af7b60aa9a1f2a5ef3c4ea64aeb080c"
+        },
+        {
+          "line": 814,
+          "name": "003-rust-version",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "003-rust-version.log",
+          "producer_reported_log_bytes": 495,
+          "producer_reported_log_sha256": "d1ac95866d401d7c81aa580b0558a2c09c526fbf9aa4688e7842b5d69c8acc79"
+        },
+        {
+          "line": 818,
+          "name": "004-cargo-version",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "004-cargo-version.log",
+          "producer_reported_log_bytes": 107,
+          "producer_reported_log_sha256": "1cdea06d1ef38f6f3415e5a8dfbadfe285038ca59d828938cceeb9ac9f63b0c1"
+        },
+        {
+          "line": 822,
+          "name": "005-kernel",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "005-kernel.log",
+          "producer_reported_log_bytes": 192,
+          "producer_reported_log_sha256": "fe7f8d8fc3a6e37f4668a0a66a0e1b4a30e8c30d62e05bb5c75e65a092f5ca15"
+        },
+        {
+          "line": 826,
+          "name": "006-iptables-version",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "006-iptables-version.log",
+          "producer_reported_log_bytes": 103,
+          "producer_reported_log_sha256": "fa1131833150d8ad85cf308a734299e47488ff2177d2fc631d131b36cc99587e"
+        },
+        {
+          "line": 830,
+          "name": "007-conntrack-version",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "007-conntrack-version.log",
+          "producer_reported_log_bytes": 110,
+          "producer_reported_log_sha256": "4d960b351ea9a17f5f3698abfa8bb75fa6c4adeeebe658cd788f97cef43e4e2b"
+        },
+        {
+          "line": 838,
+          "name": "008-native-ice-boundaries",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "008-native-ice-boundaries.log",
+          "producer_reported_log_bytes": 269,
+          "producer_reported_log_sha256": "9fe0294c8e90b80832e7b7df92a09eb1b5681f9af433c6d7fcc663534b392a4c"
+        },
+        {
+          "line": 1100,
+          "name": "009-lint-native-ice-roles",
+          "return_code": 101,
+          "timed_out": false,
+          "producer_log": "009-lint-native-ice-roles.log",
+          "producer_reported_log_bytes": 60542,
+          "producer_reported_log_sha256": "d42abaac5cd611ae1d22d16e8847f48dc2072b267ca7a897a334ef550065f4cd"
+        }
+      ],
+      "producer_command_digest_scope": "Per-command log hashes are producer-reported entries in the independently hashed official job log; separate command payload files/ZIP bytes were not downloaded or independently verified here.",
+      "visible_test_summaries": [
+        {
+          "line": 834,
+          "text": "Ran 7 tests in 0.004s"
+        },
+        {
+          "line": 1954,
+          "text": "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 175 filtered out; finished in 4.68s"
+        },
+        {
+          "line": 3711,
+          "text": "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 194 filtered out; finished in 11.03s"
+        },
+        {
+          "line": 4875,
+          "text": "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 186 filtered out; finished in 3.49s"
+        },
+        {
+          "line": 5578,
+          "text": "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 190 filtered out; finished in 0.04s"
+        }
+      ],
+      "test_summary_scope": "Only summary lines visible in the retained official job log; this is not an independent complete-harness/case inventory."
+    },
+    {
+      "id": 125751976875,
+      "name": "topology-journal",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41586142163/job/125751976875",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:49:32Z",
+      "completed_at": "2026-11-03T05:53:40Z",
+      "failed_steps": [],
+      "skipped_steps": [],
+      "evidence_scope": "Official completed job metadata only; successful job payloads and logs are not independently verified in this failure record."
+    },
+    {
+      "id": 125751976914,
+      "name": "contract (windows-2022)",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41586142163/job/125751976914",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "status": "completed",
+      "conclusion": "failure",
+      "runner_labels": [
+        "windows-2022"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:49:31Z",
+      "completed_at": "2026-11-03T06:03:36Z",
+      "failed_steps": [
+        {
+          "number": 5,
+          "name": "Check exact-source contracts and retain every command result",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "skipped_steps": [],
+      "independently_downloaded_job_log": {
+        "path": "job-125751976914.log",
+        "bytes": 121680,
+        "sha256": "bb8ef16e33ce1ee0b232efed385f8f3cdcf9d5cd6923a18b8046c32e86f2bed9"
+      },
+      "job_log_download_api": "repos/ZHanry/NestLink/actions/jobs/125751976914/logs",
+      "excerpt_normalization": "One-based original downloaded job-log line numbers; ANSI display codes and per-line Actions timestamps removed only from displayed excerpt text. Original downloaded bytes are independently hashed and retained.",
+      "compiler_E0433_count": 0,
+      "compiler_excerpt": [],
+      "formatting_diff_headers": [
+        {
+          "line": 405,
+          "text": "Diff in \\\\?\\D:\\a\\NestLink\\NestLink\\apps\\web\\src\\browser_peer.rs:3370:"
+        },
+        {
+          "line": 420,
+          "text": "Diff in \\\\?\\D:\\a\\NestLink\\NestLink\\apps\\web\\src\\browser_peer.rs:3442:"
+        },
+        {
+          "line": 430,
+          "text": "Diff in \\\\?\\D:\\a\\NestLink\\NestLink\\crates\\sdk\\src\\webrtc_host\\tests\\turn_fallback_tests.rs:21:"
+        },
+        {
+          "line": 440,
+          "text": "Diff in \\\\?\\D:\\a\\NestLink\\NestLink\\crates\\sdk\\src\\webrtc_host\\tests\\turn_fallback_tests.rs:32:"
+        },
+        {
+          "line": 450,
+          "text": "Diff in \\\\?\\D:\\a\\NestLink\\NestLink\\crates\\sdk\\src\\webrtc_host.rs:153:"
+        },
+        {
+          "line": 462,
+          "text": "Diff in \\\\?\\D:\\a\\NestLink\\NestLink\\crates\\sdk\\src\\webrtc_host.rs:1986:"
+        },
+        {
+          "line": 473,
+          "text": "Diff in \\\\?\\D:\\a\\NestLink\\NestLink\\crates\\sdk\\src\\webrtc_host.rs:2103:"
+        }
+      ],
+      "producer_command_outcomes_in_job_log": [
+        {
+          "line": 391,
+          "name": "ordinary-windows-token",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "ordinary-windows-token.log",
+          "producer_reported_log_bytes": 464,
+          "producer_reported_log_sha256": "7333c6a51bb821d09da8816ed0ff2d3799622a8b17074efa595bd22f78caea3e"
+        },
+        {
+          "line": 401,
+          "name": "rust-toolchain",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "rust-toolchain.log",
+          "producer_reported_log_bytes": 278,
+          "producer_reported_log_sha256": "24324ca385686a194cce01e3ad85cf90275e480e22c5b917d14b36127430a834"
+        },
+        {
+          "line": 486,
+          "name": "format-check",
+          "return_code": 1,
+          "timed_out": false,
+          "producer_log": "format-check.log",
+          "producer_reported_log_bytes": 10540,
+          "producer_reported_log_sha256": "65caa9ca513310502b4104eed70ec14b5294ac28a61b7da2a02b2c7f95c76383"
+        },
+        {
+          "line": 491,
+          "name": "format-worktree-create",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "format-worktree-create.log",
+          "producer_reported_log_bytes": 302,
+          "producer_reported_log_sha256": "4d14dc24dd2b4db56fdc15f00ef90d9314200bb93b1d970e5fca80043f478db9"
+        },
+        {
+          "line": 497,
+          "name": "format-patch-generate",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "format-patch-generate.log",
+          "producer_reported_log_bytes": 5911,
+          "producer_reported_log_sha256": "842b464d1f7f87915dc25fe5589fd27a37502b8cd95a6d9a28bcc85f107e4e0c"
+        },
+        {
+          "line": 500,
+          "name": "format-worktree-remove",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "format-worktree-remove.log",
+          "producer_reported_log_bytes": 159,
+          "producer_reported_log_sha256": "f7c04e740feea879f18d7da70bd3ec3812383f3e94f6db46caf1b30ce99267cc"
+        },
+        {
+          "line": 840,
+          "name": "contract-clippy",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "contract-clippy.log",
+          "producer_reported_log_bytes": 28925,
+          "producer_reported_log_sha256": "f31c4def7fe1fdbc7e6da5f3b40950ee601a1f12b42a3b2c81d0f0552f127f67"
+        },
+        {
+          "line": 1078,
+          "name": "contract-tests",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "contract-tests.log",
+          "producer_reported_log_bytes": 99731,
+          "producer_reported_log_sha256": "fd8f7add880fb47421044796ed0f3cc3b9f3a2fb06b1735345657c6ebc766251"
+        },
+        {
+          "line": 1117,
+          "name": "ci-evidence-tests",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "ci-evidence-tests.log",
+          "producer_reported_log_bytes": 6009,
+          "producer_reported_log_sha256": "424d97bd103c15d9553f32ea22935d87ad4ad061bb2acf55e159a001c80b1d83"
+        }
+      ],
+      "producer_command_digest_scope": "Per-command log hashes are producer-reported entries in the independently hashed official job log; separate command payload files/ZIP bytes were not downloaded or independently verified here.",
+      "visible_test_summaries": [
+        {
+          "line": 843,
+          "text": "test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.80s"
+        },
+        {
+          "line": 851,
+          "text": "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.82s"
+        },
+        {
+          "line": 860,
+          "text": "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.85s"
+        },
+        {
+          "line": 868,
+          "text": "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.53s"
+        },
+        {
+          "line": 886,
+          "text": "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.36s"
+        },
+        {
+          "line": 908,
+          "text": "test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.72s"
+        },
+        {
+          "line": 929,
+          "text": "test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.68s"
+        },
+        {
+          "line": 941,
+          "text": "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s"
+        },
+        {
+          "line": 1001,
+          "text": "test result: ok. 54 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.54s"
+        },
+        {
+          "line": 1010,
+          "text": "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.08s"
+        },
+        {
+          "line": 1018,
+          "text": "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s"
+        },
+        {
+          "line": 1024,
+          "text": "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+        },
+        {
+          "line": 1032,
+          "text": "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s"
+        },
+        {
+          "line": 1041,
+          "text": "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s"
+        },
+        {
+          "line": 1051,
+          "text": "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.03s"
+        },
+        {
+          "line": 1075,
+          "text": "test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.13s"
+        },
+        {
+          "line": 1113,
+          "text": "Ran 30 tests in 2.152s"
+        }
+      ],
+      "test_summary_scope": "Only summary lines visible in the retained official job log; this is not an independent complete-harness/case inventory."
+    },
+    {
+      "id": 125751976962,
+      "name": "production-socket-slice",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41586142163/job/125751976962",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:49:31Z",
+      "completed_at": "2026-11-03T05:51:33Z",
+      "failed_steps": [],
+      "skipped_steps": [],
+      "evidence_scope": "Official completed job metadata only; successful job payloads and logs are not independently verified in this failure record."
+    },
+    {
+      "id": 125751976997,
+      "name": "contract (ubuntu-24.04)",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41586142163/job/125751976997",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "status": "completed",
+      "conclusion": "failure",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:49:31Z",
+      "completed_at": "2026-11-03T06:00:10Z",
+      "failed_steps": [
+        {
+          "number": 5,
+          "name": "Check exact-source contracts and retain every command result",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "skipped_steps": [
+        {
+          "number": 4,
+          "name": "Prepare existing build inputs for the ordinary Windows test token",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ],
+      "independently_downloaded_job_log": {
+        "path": "job-125751976997.log",
+        "bytes": 114690,
+        "sha256": "b5c63b837ec664d2bd60adc429f40d4423a6b8e9c5cbbcb6ded1b677ea56bd9d"
+      },
+      "job_log_download_api": "repos/ZHanry/NestLink/actions/jobs/125751976997/logs",
+      "excerpt_normalization": "One-based original downloaded job-log line numbers; ANSI display codes and per-line Actions timestamps removed only from displayed excerpt text. Original downloaded bytes are independently hashed and retained.",
+      "compiler_E0433_count": 0,
+      "compiler_excerpt": [],
+      "formatting_diff_headers": [
+        {
+          "line": 382,
+          "text": "Diff in /home/runner/work/NestLink/NestLink/apps/web/src/browser_peer.rs:3370:"
+        },
+        {
+          "line": 397,
+          "text": "Diff in /home/runner/work/NestLink/NestLink/apps/web/src/browser_peer.rs:3442:"
+        },
+        {
+          "line": 407,
+          "text": "Diff in /home/runner/work/NestLink/NestLink/crates/sdk/src/webrtc_host/tests/turn_fallback_tests.rs:21:"
+        },
+        {
+          "line": 417,
+          "text": "Diff in /home/runner/work/NestLink/NestLink/crates/sdk/src/webrtc_host/tests/turn_fallback_tests.rs:32:"
+        },
+        {
+          "line": 427,
+          "text": "Diff in /home/runner/work/NestLink/NestLink/crates/sdk/src/webrtc_host.rs:153:"
+        },
+        {
+          "line": 439,
+          "text": "Diff in /home/runner/work/NestLink/NestLink/crates/sdk/src/webrtc_host.rs:1986:"
+        },
+        {
+          "line": 450,
+          "text": "Diff in /home/runner/work/NestLink/NestLink/crates/sdk/src/webrtc_host.rs:2103:"
+        }
+      ],
+      "producer_command_outcomes_in_job_log": [
+        {
+          "line": 378,
+          "name": "rust-toolchain",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "rust-toolchain.log",
+          "producer_reported_log_bytes": 280,
+          "producer_reported_log_sha256": "dc08bb2a9a01b3ca65bd5171e8dd4714a123791bb23e09ebeb57533045920f01"
+        },
+        {
+          "line": 463,
+          "name": "format-check",
+          "return_code": 1,
+          "timed_out": false,
+          "producer_log": "format-check.log",
+          "producer_reported_log_bytes": 10292,
+          "producer_reported_log_sha256": "e36bbdb8a61f8adf65216050043b7ccffb4853f4022b6e502f1efe940839db2a"
+        },
+        {
+          "line": 468,
+          "name": "format-worktree-create",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "format-worktree-create.log",
+          "producer_reported_log_bytes": 311,
+          "producer_reported_log_sha256": "f51fe5e59b5db48cbd35dea7b52154fffbb0e82d57ed4a393469f2bc4ee62182"
+        },
+        {
+          "line": 474,
+          "name": "format-patch-generate",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "format-patch-generate.log",
+          "producer_reported_log_bytes": 5870,
+          "producer_reported_log_sha256": "534a89098b0704e39afd059269bf66588f39f82285ef11313df089b5f380d210"
+        },
+        {
+          "line": 477,
+          "name": "format-worktree-remove",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "format-worktree-remove.log",
+          "producer_reported_log_bytes": 168,
+          "producer_reported_log_sha256": "528a7c94d8394b2053700a8993a5dad521b3abc71d4e835a3516328572753847"
+        },
+        {
+          "line": 813,
+          "name": "contract-clippy",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "contract-clippy.log",
+          "producer_reported_log_bytes": 29016,
+          "producer_reported_log_sha256": "e23c5e90cae3a97d8cac3a237bb0df808283c3a28a6acaf6f570bef1aeb9cda0"
+        },
+        {
+          "line": 1044,
+          "name": "contract-tests",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "contract-tests.log",
+          "producer_reported_log_bytes": 100928,
+          "producer_reported_log_sha256": "e19e874c53e23894563dd4deacbe059654be3538a5b91d4781f18121a75c8a36"
+        },
+        {
+          "line": 1082,
+          "name": "ci-evidence-tests",
+          "return_code": 0,
+          "timed_out": false,
+          "producer_log": "ci-evidence-tests.log",
+          "producer_reported_log_bytes": 5288,
+          "producer_reported_log_sha256": "a386f54b0164e78ec3ed2b73d366bf5f54c8854f06dbcb7687d6bc9cab13ab7e"
+        }
+      ],
+      "producer_command_digest_scope": "Per-command log hashes are producer-reported entries in the independently hashed official job log; separate command payload files/ZIP bytes were not downloaded or independently verified here.",
+      "visible_test_summaries": [
+        {
+          "line": 817,
+          "text": "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.90s"
+        },
+        {
+          "line": 825,
+          "text": "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.33s"
+        },
+        {
+          "line": 843,
+          "text": "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.94s"
+        },
+        {
+          "line": 865,
+          "text": "test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.83s"
+        },
+        {
+          "line": 886,
+          "text": "test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.15s"
+        },
+        {
+          "line": 898,
+          "text": "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s"
+        },
+        {
+          "line": 963,
+          "text": "test result: ok. 54 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 6.43s"
+        },
+        {
+          "line": 972,
+          "text": "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.05s"
+        },
+        {
+          "line": 980,
+          "text": "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s"
+        },
+        {
+          "line": 990,
+          "text": "test result: ok. 0 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+        },
+        {
+          "line": 998,
+          "text": "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s"
+        },
+        {
+          "line": 1007,
+          "text": "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s"
+        },
+        {
+          "line": 1017,
+          "text": "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+        },
+        {
+          "line": 1041,
+          "text": "test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.11s"
+        },
+        {
+          "line": 1078,
+          "text": "Ran 30 tests in 2.141s"
+        }
+      ],
+      "test_summary_scope": "Only summary lines visible in the retained official job log; this is not an independent complete-harness/case inventory."
+    },
+    {
+      "id": 125751977024,
+      "name": "quinn-carrier-replacement-feasibility",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41586142163/job/125751977024",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:49:31Z",
+      "completed_at": "2026-11-03T05:51:44Z",
+      "failed_steps": [],
+      "skipped_steps": [],
+      "evidence_scope": "Official completed job metadata only; successful job payloads and logs are not independently verified in this failure record."
+    },
+    {
+      "id": 125751977107,
+      "name": "independent-vectors",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41586142163/job/125751977107",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:49:31Z",
+      "completed_at": "2026-11-03T05:49:37Z",
+      "failed_steps": [],
+      "skipped_steps": [],
+      "evidence_scope": "Official completed job metadata only; successful job payloads and logs are not independently verified in this failure record."
+    }
+  ],
+  "artifact_references": [
+    {
+      "id": 13209250144,
+      "name": "network-rewrite-windows-2022-37ca0acedc7e2139459e645cfbb158325ba54f9f-1",
+      "size_in_bytes": 42228,
+      "official_digest": "sha256:c61c2f196cdd2a861dd1680ec55a451a7463355b52380ade84ea60f5792e46fa",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13209250144",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "run_id": 41586142163,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    },
+    {
+      "id": 13208990073,
+      "name": "network-rewrite-ubuntu-24.04-37ca0acedc7e2139459e645cfbb158325ba54f9f-1",
+      "size_in_bytes": 41407,
+      "official_digest": "sha256:6aca7dbdf5bcdd8c769c66ee68567e30dcde9ad12df77e02359743ea4b7ae685",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13208990073",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "run_id": 41586142163,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    },
+    {
+      "id": 13208601076,
+      "name": "network-native-ice-37ca0acedc7e2139459e645cfbb158325ba54f9f-1",
+      "size_in_bytes": 14651,
+      "official_digest": "sha256:803aab240146fc2dcb8109b67fb4f6bf5068b9d2ffe71d110efa6d30f22db450",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13208601076",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "run_id": 41586142163,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    },
+    {
+      "id": 13208520550,
+      "name": "network-route-set-directory-37ca0acedc7e2139459e645cfbb158325ba54f9f-1",
+      "size_in_bytes": 2813,
+      "official_digest": "sha256:4b87433fcbc42e317872314445be5f2aa732279d4f7064857edd91ba3def68ca",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13208520550",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "run_id": 41586142163,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    },
+    {
+      "id": 13208416498,
+      "name": "network-chain-business-37ca0acedc7e2139459e645cfbb158325ba54f9f-1",
+      "size_in_bytes": 38007,
+      "official_digest": "sha256:80328a365aa3d428be24e24906b6589226a8f72c7b57285aa88261b25fdecad8",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13208416498",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "run_id": 41586142163,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    },
+    {
+      "id": 13208285685,
+      "name": "network-routed-37ca0acedc7e2139459e645cfbb158325ba54f9f-1",
+      "size_in_bytes": 1644963,
+      "official_digest": "sha256:450e83563082206cf671f424feef77c6fe148222848a58d120ac3917e1c02d78",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13208285685",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "run_id": 41586142163,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    },
+    {
+      "id": 13207987339,
+      "name": "network-migration-feasibility-37ca0acedc7e2139459e645cfbb158325ba54f9f-1",
+      "size_in_bytes": 4258120,
+      "official_digest": "sha256:83569cd9ba081ae1487d446be61ca09e9936b6926e3bd398ed23834f84745356",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13207987339",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "run_id": 41586142163,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    },
+    {
+      "id": 13207909631,
+      "name": "network-topology-carrier-37ca0acedc7e2139459e645cfbb158325ba54f9f-1",
+      "size_in_bytes": 16417,
+      "official_digest": "sha256:a0dc76ec32a2a7be58479afd48751666baf07bce4a9abc82d25f37f33061a748",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13207909631",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "run_id": 41586142163,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    },
+    {
+      "id": 13207818510,
+      "name": "network-socket-37ca0acedc7e2139459e645cfbb158325ba54f9f-1",
+      "size_in_bytes": 1281042,
+      "official_digest": "sha256:60a9b75948dfb3699c49737f17437afb3a7a6592953f511750afb7a9c3bd9d04",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13207818510",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "run_id": 41586142163,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    },
+    {
+      "id": 13207778795,
+      "name": "network-topology-37ca0acedc7e2139459e645cfbb158325ba54f9f-1",
+      "size_in_bytes": 11250,
+      "official_digest": "sha256:b6a8d2383934b4b8458b47eddd600f68d435879a396be0e1b0cd118dfc8dba3a",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13207778795",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "run_id": 41586142163,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    },
+    {
+      "id": 13207543645,
+      "name": "network-reference-37ca0acedc7e2139459e645cfbb158325ba54f9f-1",
+      "size_in_bytes": 4319,
+      "official_digest": "sha256:132128488a2224f290323dcb87c41f8e4fe73ed59a45cb1d25066c382bb8c94b",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13207543645",
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "run_id": 41586142163,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    }
+  ],
+  "artifact_verification_scope": "Metadata-only references: no ZIP downloaded, official ZIP digest or payload verification claimed.",
+  "historical_firefox_failure": {
+    "record": {
+      "path": "docs/network-rewrite/evidence/web-firefox-f24b79f.json",
+      "bytes": 9834,
+      "sha256": "ba1e353793c23ee7b4f86acce0d829cd7ecedb3e880ecc1a3677d502b3926264"
+    },
+    "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
+    "run_id": 41577474838,
+    "status": "preserved_failed",
+    "new_firefox_execution_result_claimed": false
+  },
+  "later_source_corrections": {
+    "production_log_dependency_commit": "b28a879caf0412c8b7470f956f1f7842325adf56",
+    "version_changed": false,
+    "local_lock_generation": false,
+    "format_commit": "31fd981d05e93fb0eb990a1afbc1ac61deaa1890",
+    "existing_hosted_format_evidence": {
+      "path": "docs/network-rewrite/evidence/format-760f232.json",
+      "bytes": 9480,
+      "sha256": "7f69a3ceb15e05694599309f0735caf66a430a6e6271fb51f5429b9cb9d66bd2"
+    },
+    "historical_failed_outcomes_changed": false,
+    "new_run_success_claimed": false
+  },
+  "findings": [
+    "The workflow remains failed: official job conclusions are six successes and three failures. Successful topology/carrier/journal/routed/socket/migration/vector jobs are metadata observations; their artifacts are not independently qualified by this record.",
+    "The native-ice-kernel-nat-slice failed job contains nine failed steps. Its official log reports repeated E0433 for production log::info! in crates/sdk/src/webrtc_host.rs:142:5 while compiling/linting SDK-dependent actual roles and business paths. Existing storage/local-fence test summaries that executed successfully are preserved separately and cannot turn those failed steps into passes.",
+    "Both original contract jobs fail their formatting check with seven original hunks across apps/web/src/browser_peer.rs, crates/sdk/src/webrtc_host.rs and crates/sdk/src/webrtc_host/tests/turn_fallback_tests.rs. Their visible original command receipts report format-check1, contract-clippy0, contract-tests0 and ci-evidence-tests0. No E0433 appears in those two contract job logs.",
+    "The separate hosted formatting record format-760f232.json and its later 31fd981 application do not alter the old 37ca0ac job outcomes. The later b28a879 production logger dependency repair likewise leaves this exact-source failed run failed; neither subsequent source edit is proof of a new successful run.",
+    "Original public/NAT/network business role execution is not established for commands that stopped during SDK compilation. No case, deadline, assertion or historical Firefox403 result is changed."
+  ],
+  "independent_verification": {
+    "scope": "Only local bytes of official downloaded metadata and failed job logs; per-command/ZIP digests retain their explicitly limited scope above",
+    "files_hashed": 6,
+    "files": [
+      {
+        "path": "run.json",
+        "bytes": 11722,
+        "sha256": "43a4bfbff50bcb97e674ad509d9e172b1cff8c907b17a8b410f24a9a9eb67b2b"
+      },
+      {
+        "path": "jobs.json",
+        "bytes": 26566,
+        "sha256": "bb831fd9db972e303235cd86174639304294dccbd1a8c8f072bac33e48e060e1"
+      },
+      {
+        "path": "artifacts.json",
+        "bytes": 7984,
+        "sha256": "9e3178b0679c64fab36c6bda300ff75f4627870770904098e7e977d1b6a0e70b"
+      },
+      {
+        "path": "job-125751976831.log",
+        "bytes": 534975,
+        "sha256": "be4b165773776e781fad9de32b4f0c9e3b84dfe719ed0d7d9d3331a6dc374acc"
+      },
+      {
+        "path": "job-125751976914.log",
+        "bytes": 121680,
+        "sha256": "bb8ef16e33ce1ee0b232efed385f8f3cdcf9d5cd6923a18b8046c32e86f2bed9"
+      },
+      {
+        "path": "job-125751976997.log",
+        "bytes": 114690,
+        "sha256": "b5c63b837ec664d2bd60adc429f40d4423a6b8e9c5cbbcb6ded1b677ea56bd9d"
+      }
+    ]
+  },
+  "raw_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-baseline\\37ca0ac-network"
+}

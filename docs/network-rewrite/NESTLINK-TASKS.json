@@ -917,7 +917,11 @@
         "docs/network-rewrite/evidence/schema-upgrade-4d837d9.json",
         "docs/network-rewrite/evidence/product-space-owner-4d837d9.json",
         "docs/network-rewrite/evidence/format-4d837d9.json",
-        "docs/network-rewrite/evidence/network-run-409d315.json"
+        "docs/network-rewrite/evidence/network-run-409d315.json",
+        "docs/network-rewrite/evidence/format-a1afd8b.json",
+        "docs/network-rewrite/evidence/native-offline-resident-9a52c41.json",
+        "docs/network-rewrite/evidence/web-native-build-failure-760f232.json",
+        "docs/network-rewrite/evidence/network-failure-37ca0ac.json"
       ],
       "blockers": []
     },
@@ -1090,7 +1094,11 @@
         "docs/network-rewrite/evidence/format-4d837d9.json",
         "docs/network-rewrite/evidence/network-run-409d315.json",
         "docs/network-rewrite/evidence/native-offline-resident-f24b79f-linux.json",
-        "docs/network-rewrite/evidence/product-space-owner-f24b79f.json"
+        "docs/network-rewrite/evidence/product-space-owner-f24b79f.json",
+        "docs/network-rewrite/evidence/format-a1afd8b.json",
+        "docs/network-rewrite/evidence/native-offline-resident-9a52c41.json",
+        "docs/network-rewrite/evidence/web-native-build-failure-760f232.json",
+        "docs/network-rewrite/evidence/network-failure-37ca0ac.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
@@ -1943,7 +1951,8 @@
         "docs/adr/network/0027-quinn-carrier-replacement-feasibility.md",
         "docs/network-rewrite/evidence/production-carriers-e2e3657.json",
         "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "docs/network-rewrite/evidence/network-run-c589362.json"
+        "docs/network-rewrite/evidence/network-run-c589362.json",
+        "docs/network-rewrite/NATIVE-RECOVERY-VIEWPORT.md"
       ],
       "blockers": [],
       "implementation_notes": [
@@ -1951,7 +1960,8 @@
         "Production proposal/ACK, path epoch, simultaneous proposals, lost ACK, bounded drain, business proof and safe application recovery remain required. W14/AC22 completion stays false; feasibility does not authorize reuse of consumed production node allocations.",
         "The first exact cdcd667 feasibility run compiled and executed both cases but failed the second endpoint's large-packet assertion because only its peer sent file payloads. New source transfers phase/round/direction-bound file data in both directions while preserving every original PMTU, deadline, quota, identity and cleanup assertion; re-execution remains required.",
         "New signed-space Direct->Direct safe application recovery is being finalized: exact dual-signed business receipt, durable schema51 ancestor checks with original expiry and16-transition bound, fixed request identities, onePOST/GET-only readback after lost response, fresh endpoint/proof/video/input bindings. Source/lock/schema50 refusal and real HTTP counterexamples require hosted qualification; no wholeW14/AC21-23 or arbitrary TCP replay claim.",
-        "Read-only productionaudit onb491 confirms missing authenticated bilateral path-epoch migration/Commit/finite-drain; existing recovery incrementsbusinessgeneration and cannot closeAC21-23. This is sourcework, separately from externalWindows/NAT evidence."
+        "Read-only productionaudit onb491 confirms missing authenticated bilateral path-epoch migration/Commit/finite-drain; existing recovery incrementsbusinessgeneration and cannot closeAC21-23. This is sourcework, separately from externalWindows/NAT evidence.",
+        "944880f fixes the original desktop recovery window and cancellation using a Core-proved continuous lineage, preserving runtime/login/request ownership and close cleanup. Pending exact hosted checks; safe application recovery does not complete W14 in-place path migration."
       ],
       "additional_scoped_validation": {
         "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
@@ -2125,6 +2135,9 @@
           "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
           "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
         }
+      ],
+      "implementation_notes": [
+        "92c046a binds the original private service host to exact installation manifest bytes, actual protected signing key and SDK account. Identity changes, deletion or unsafe permissions stop and join the original owner; restored files cannot revive it. New actual backend-byte/EOF/UDP-release regressions await hosted qualification."
       ]
     },
     {
@@ -2420,6 +2433,9 @@
           "evidence_ref": "docs/network-rewrite/evidence/production-carriers-745c05a.json",
           "scope": "Eight hosted jobs passed including exact-source two-OS contract/strict lint, actual native ICE/FileRead over two kernel NATs, routed SNAT, socket faults, topology and rebind feasibility. Original two-relay private UDP failed Elapsed in the later private-services suite (31 passed/1 failed/5 dedicated-role ignored). No complete migration, target or release claim."
         }
+      ],
+      "implementation_notes": [
+        "92c046a binds the original private service host to exact installation manifest bytes, actual protected signing key and SDK account. Identity changes, deletion or unsafe permissions stop and join the original owner; restored files cannot revive it. New actual backend-byte/EOF/UDP-release regressions await hosted qualification."
       ]
     },
     {
@@ -3157,7 +3173,8 @@
         "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json",
         "docs/network-rewrite/evidence/native-offline-resident-c589362.json",
         "docs/network-rewrite/evidence/native-offline-resident-f24b79f-linux.json",
-        "docs/network-rewrite/evidence/product-space-owner-f24b79f.json"
+        "docs/network-rewrite/evidence/product-space-owner-f24b79f.json",
+        "docs/network-rewrite/NATIVE-RECOVERY-VIEWPORT.md"
       ],
       "blockers": [],
       "partial_verification": {
@@ -3174,7 +3191,8 @@
       },
       "implementation_notes": [
         "Native desktop setup guide projects actual server/account/device/session and local-consent facts, then navigates original devices/remote/services/diagnostics owners. Web setup guide explicitly reads real pinned SDK account, device, discovery, service publication and administrator policy per purpose; no write/probe or permission expansion. Old snapshots, partial read errors, expired account and unmounted/late replies do not become success. NewUI still awaits exact-source hosted compilation/browser execution and complete installed onboarding; W30/AC51/AC52 remain in_progress.",
-        "Source37ca0acconnects setup Networkmode to actualnativeaccountSpacesowner forall signed-inaccounts; originalpermissions andexplicitlocalapproval remain. Previously theguide incorrectlyofferedonlya deploymentadminWeblink. Newnativebuild/UIqualification pending."
+        "Source37ca0acconnects setup Networkmode to actualnativeaccountSpacesowner forall signed-inaccounts; originalpermissions andexplicitlocalapproval remain. Previously theguide incorrectlyofferedonlya deploymentadminWeblink. Newnativebuild/UIqualification pending.",
+        "944880f fixes the original desktop recovery window and cancellation using a Core-proved continuous lineage, preserving runtime/login/request ownership and close cleanup. Pending exact hosted checks; safe application recovery does not complete W14 in-place path migration."
       ],
       "latest_scoped_verification": {
         "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
@@ -3339,12 +3357,15 @@
         "docs/network-rewrite/evidence/windows-media-owner-3cac12f.json",
         "docs/network-rewrite/evidence/windows-hevc-target-3e292c4.json",
         "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
-        "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json"
+        "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json",
+        "docs/network-rewrite/MEDIA-CAPABILITY-INSPECTION.md",
+        "docs/network-rewrite/HEVC-EXPLICIT-BUDGET-FALLBACK.md"
       ],
       "blockers": [],
       "implementation_notes": [
         "Existing production Windows capture H264 and same-device GPU presenter are retained. Source50df7ec adds bounded actual DXGI-submit QPC cadence and exact original-owner target analyzer; hosted source50 workflow41369064258 and source1518218 workflow41369702948 running. Submit cadence is not scanout or complete GPU/58fps/p95 qualification; full target chain remains open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33. 2ffc870/41452426792的工具已由Actions构建并严格检查，官方归档及160个文件全部核验后在真实Windows11普通交互令牌执行7个原始有限合成工作负载：H264 CPU编码/解码通过；GPU controller coded/display几何失败，HEVC Main8两个方向严格VUI色彩拒绝，Main10两个方向MF创建失败。原始失败保留；不能抵扣实际桌面58fps/HDR/444或整个W32/W33验收。 670c662/41457044725原实机GPU有限命令通过，24输入/17解码色彩校验提交、checked flush及owner关闭；仍非60fps/scanout或完整W32/W33。0f8d9a3/41455441207在Windows 2025原2TLS/12帧IPC测试及整个owner工作流通过；保留先前Windows 2022失败。HEVC Main8/Main10原失败不变。",
-        "Exact4de verifiedActions tools executed original8directions on ordinaryWindows; all8failed. AMFHRD/fillerfalse removed41060Bfiller; Main8sps.poc_timing stillfailed. IndependentFFmpeg timingdiagnostic pending. No assertion/parser/deadlinechange."
+        "Exact4de verifiedActions tools executed original8directions on ordinaryWindows; all8failed. AMFHRD/fillerfalse removed41060Bfiller; Main8sps.poc_timing stillfailed. IndependentFFmpeg timingdiagnostic pending. No assertion/parser/deadlinechange.",
+        "a1afd8b adds actual product direction inspection and one explicitly configured lower HEVC budget. Both targets require same-runtime real probes and signed approval; switching pauses the old format gate, checked-joins the old owner and requires a fresh exact ACK. Original AMF geometry/timing failures remain. Advanced 4:4:4/HDR and whole qualification remain mandatory implementation/target work."
       ],
       "latest_scoped_verification": {
         "recorded_at": "2026-11-03T01:41:30.7Z",
@@ -3424,10 +3445,12 @@
         "docs/network-rewrite/evidence/windows-media-owner-tools-4a4496b.json",
         "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json",
         "docs/network-rewrite/evidence/windows-hevc-target-aa1f5f0.json",
-        "docs/network-rewrite/evidence/windows-media-owner-aa1f5f0.json"
+        "docs/network-rewrite/evidence/windows-media-owner-aa1f5f0.json",
+        "docs/network-rewrite/MEDIA-CAPABILITY-INSPECTION.md",
+        "docs/network-rewrite/HEVC-EXPLICIT-BUDGET-FALLBACK.md"
       ],
       "blockers": [],
-      "implementation_notes": "Sourcebc52249/1518218 adds strict actual Main8 complete96bit PTL/geometry/VUI output validation and original-GPU-NV12 MF encoder owner boundary. Source7a53a28 adds independentv3 canonical69-byte format while preservingv2 H26457-byte contract; signed authority/NLMF/IPC/provider/capture/presenter production integration remains in progress. Synthetic HEVC probes do not complete this task; advanced444/10bit/HDR/high-frame fallback remains mandatory work. Source59882e4 additionally wires Main10/P010/v4 explicit SDR authority, compressed/readback/shared-surface ownership and separate8byte64MiB admission;4K144 is a target configuration rather than actual probe evidence. Originalhardware/HDR/444/target gaps remain open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33. 2ffc870/41452426792的工具已由Actions构建并严格检查，官方归档及160个文件全部核验后在真实Windows11普通交互令牌执行7个原始有限合成工作负载：H264 CPU编码/解码通过；GPU controller coded/display几何失败，HEVC Main8两个方向严格VUI色彩拒绝，Main10两个方向MF创建失败。原始失败保留；不能抵扣实际桌面58fps/HDR/444或整个W32/W33验收。 670c662/41457044725原实机GPU有限命令通过，24输入/17解码色彩校验提交、checked flush及owner关闭；仍非60fps/scanout或完整W32/W33。0f8d9a3/41455441207在Windows 2025原2TLS/12帧IPC测试及整个owner工作流通过；保留先前Windows 2022失败。HEVC Main8/Main10原失败不变。 b6b5520原Main8两个方向实机仍同SPS primaries=0拒绝；8项CodecAPI IsSupported均E_NOTIMPL，MF两侧属性正确，独立成熟解析待执行。",
+      "implementation_notes": "Sourcebc52249/1518218 adds strict actual Main8 complete96bit PTL/geometry/VUI output validation and original-GPU-NV12 MF encoder owner boundary. Source7a53a28 adds independentv3 canonical69-byte format while preservingv2 H26457-byte contract; signed authority/NLMF/IPC/provider/capture/presenter production integration remains in progress. Synthetic HEVC probes do not complete this task; advanced444/10bit/HDR/high-frame fallback remains mandatory work. Source59882e4 additionally wires Main10/P010/v4 explicit SDR authority, compressed/readback/shared-surface ownership and separate8byte64MiB admission;4K144 is a target configuration rather than actual probe evidence. Originalhardware/HDR/444/target gaps remain open. Source6f46f38 run41442724948 wholehostedWindowsownerworkflow success:106media-boundary+51nativeIPC tests, strictdesktop/daemon tests passed;3officialZIPsverified. DoesnotqualifyactualhardwareorwholeW32/W33. 2ffc870/41452426792的工具已由Actions构建并严格检查，官方归档及160个文件全部核验后在真实Windows11普通交互令牌执行7个原始有限合成工作负载：H264 CPU编码/解码通过；GPU controller coded/display几何失败，HEVC Main8两个方向严格VUI色彩拒绝，Main10两个方向MF创建失败。原始失败保留；不能抵扣实际桌面58fps/HDR/444或整个W32/W33验收。 670c662/41457044725原实机GPU有限命令通过，24输入/17解码色彩校验提交、checked flush及owner关闭；仍非60fps/scanout或完整W32/W33。0f8d9a3/41455441207在Windows 2025原2TLS/12帧IPC测试及整个owner工作流通过；保留先前Windows 2022失败。HEVC Main8/Main10原失败不变。 b6b5520原Main8两个方向实机仍同SPS primaries=0拒绝；8项CodecAPI IsSupported均E_NOTIMPL，MF两侧属性正确，独立成熟解析待执行。a1afd8b adds actual product direction inspection and one explicitly configured lower HEVC budget. Both targets require same-runtime real probes and signed approval; switching pauses the old format gate, checked-joins the old owner and requires a fresh exact ACK. Original AMF geometry/timing failures remain. Advanced 4:4:4/HDR and whole qualification remain mandatory implementation/target work.",
       "latest_scoped_verification": {
         "source_revision": "aa1f5f0d865f656c79114d232bafcd58093ae403",
         "tools_run": 41570304734,
@@ -3507,7 +3530,11 @@
       "evidence_refs": [
         "docs/network-rewrite/evidence/linux-package-upgrade-index.json",
         "docs/network-rewrite/evidence/linux-package-attempt-2f79d4b.json",
-        "docs/network-rewrite/evidence/linux-package-4a4496b.json"
+        "docs/network-rewrite/evidence/linux-package-4a4496b.json",
+        "docs/network-rewrite/evidence/format-a1afd8b.json",
+        "docs/network-rewrite/evidence/native-offline-resident-9a52c41.json",
+        "docs/network-rewrite/evidence/web-native-build-failure-760f232.json",
+        "docs/network-rewrite/evidence/network-failure-37ca0ac.json"
       ],
       "blockers": [],
       "implementation_notes": "Exactsource2f79d4b run41412721054 Linux x64+ARM64 fully passed real dpkg SIGKILL interrupted-upgrade, pinned old-package recovery, originalpayload/modes/sentinel, current-candidate restore/uninstall and owned-port-conflict recovery. All4 ZIPs/86receiptfiles/74commandlog digests checked. Actual Windows Inno install/reinstall/payload/uninstall required path implemented, awaits new same-source candidate. Originalproductversion0.7.0-rc.1; no0.8/GPU/target/signing qualification.",
@@ -3670,10 +3697,14 @@
       "evidence_refs": [
         "docs/adr/network/0063-coverage-guided-network-parsers.md",
         "docs/network-rewrite/evidence/security-parser-fuzz-648f811.json",
-        "docs/network-rewrite/evidence/secret-scan-319a5af.json"
+        "docs/network-rewrite/evidence/secret-scan-319a5af.json",
+        "docs/network-rewrite/evidence/format-a1afd8b.json",
+        "docs/network-rewrite/evidence/native-offline-resident-9a52c41.json",
+        "docs/network-rewrite/evidence/web-native-build-failure-760f232.json",
+        "docs/network-rewrite/evidence/network-failure-37ca0ac.json"
       ],
       "blockers": [],
-      "implementation_notes": "Exactsource648f811 run41414876864 passed locked nightly coverage-guided production parser ASan fuzz,7023970 executions/121s, peakRSS583MiB. All2738retained files verified; priorstable-compiler failure retained. Full independent authorization/lifecycle review remains open."
+      "implementation_notes": "Exactsource648f811 run41414876864 passed locked nightly coverage-guided production parser ASan fuzz,7023970 executions/121s, peakRSS583MiB. All2738retained files verified; priorstable-compiler failure retained. Full independent authorization/lifecycle review remains open.92c046a binds the original private service host to exact installation manifest bytes, actual protected signing key and SDK account. Identity changes, deletion or unsafe permissions stop and join the original owner; restored files cannot revive it. New actual backend-byte/EOF/UDP-release regressions await hosted qualification."
     },
     {
       "id": "W37",
@@ -3860,7 +3891,11 @@
         "docs/network-rewrite/evidence/schema-upgrade-4d837d9.json",
         "docs/network-rewrite/evidence/product-space-owner-4d837d9.json",
         "docs/network-rewrite/evidence/format-4d837d9.json",
-        "docs/network-rewrite/evidence/network-run-409d315.json"
+        "docs/network-rewrite/evidence/network-run-409d315.json",
+        "docs/network-rewrite/evidence/format-a1afd8b.json",
+        "docs/network-rewrite/evidence/native-offline-resident-9a52c41.json",
+        "docs/network-rewrite/evidence/web-native-build-failure-760f232.json",
+        "docs/network-rewrite/evidence/network-failure-37ca0ac.json"
       ],
       "blockers": [],
       "implementation_notes": "Original100enrolled-installation/20pair/1000realTCPflow/3wave capacity implemented. All failed attempts retained, including private-parent, originalPOSTrate, originaldatabase429 and debug8c6 immutableleaseexpiry. Run41431119457 passed7nativeHTTP+6multiplex+negotiation, established20control owners, butzero flow_ready. Explicitproductionrelease-profile41434724934runs unchangedassertions/deadlines/rates/quotas/currentness checks; no success inferred. Real24hourtargetsoak remainsunrun. Sourceb971 run41437445247 now executed release load: original7HTTP/1negotiation/6multiplex pass,20controlready,61flowready, original3s management timeout before1000live. Failure and11receipt hashes plus officialZIP verified. Separate named eight-open shared-origin ramp observation added without altering original pair-window execution or full-load/lease/assertion requirements; neither passed nor fullW39 qualification claimed. Explicit8a35c4e origin-window release41441918578 reached598flowready thenoriginalauthorityexpiry; stillfailed before1000live. ADR0066 removesrepeatedsame-requestverificationwithoutcache,originaldeadlinesunchanged;newexact-sourcevalidationpending. d7e735d原release pair-window在751flow_ready后原权限期限拒绝；f3的1000readiness随后原2秒保持检查存活数为0，仍失败。ADR0069复用单次调用内同一sealed lease，9df4140/41454242981原100/20/1000/3wave pair-window在跑，所有原期限、实时管理校验、配额和断言保持。 9df4140/41454242981已失败：798 flow_ready后原403权限拒绝，未完成1000同时存活流。ADR0070同事务路径复用ddadc328/41459674511与ADR0071原usage verifier typed projection复用a233500/41460136078按原负载验证中；不改期限、预算、配额或实时授权。",

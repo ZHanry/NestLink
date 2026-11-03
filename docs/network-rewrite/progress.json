@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "31fd981d05e93fb0eb990a1afbc1ac61deaa1890",
-  "checkpoint_kind": "ice_completion_race_fixed_pending_exact_hosted_browser_and_parallel_product_lifecycle_fixes",
+  "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+  "checkpoint_kind": "reviewed_product_lifecycle_and_explicit_media_budgets_in_hosted_validation_production_migration_and_hdr_in_progress",
   "active_tasks": [
     "W00",
     "W02",
@@ -53,12 +53,13 @@
     "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
   ],
   "unverified_assumptions": [
-    "Exact9a52c41 resident workflow41583603127 bothOS concludedsuccess; Linux original4/4 passed219.26seconds. Windows official payload verification is being completed. Earlierf24/b491 publicHTTPSDNSfailures remain retained; rootcause is not established by a later pass.",
-    "Independent9a52c41 FFmpeg41583603301 confirms AMF60/1clock,POCflag1/ticksMinus1=0 andcoded1920x1088cropped8rowsfor1080display. Parameter-onlyinput, traceexit234, acceptancefalse; original8GPUfailures remain. Originalexactuncroppedgeometrycontract unchanged.",
-    "Source760f232 corrects nativecompletion-before-SDPread and browserinitialtricklecompletion; addedrealfastgatheringregression plus fixed-labelpublishobservations. Exactoriginalfullbrowser41585962968 andnetwork37ca0ac41586142163 pending. Priorf24Firefox403 afterinitial204 preserved; exactcause not yetproven.",
-    "W14 actualbilateralpath-epochmigration, authenticatedcommit andfinitedrain remain mandatorysourcework. ParallelCore/desktop fix addsprovedrecoverylineage so originalwindow can follow/stop successors; this is safeapplicationrecovery, notinplacemigration.",
-    "Parallelprivatehost identity-fileterminalfence andexplicitboundedHEVCtwo-targetfallback are implementationwork pending reviewedsource andnewActions. MandatorypairedWindows/mobile/publicNAT/signing/24hourtargetevidence remains.",
-    "Explicituserdecisions retained:Luanti25secondcheck remains failed; onlytwo newincorrectNone terminalexpectations corrected to exactUnauthorized inf2987b3."
+    "Exact 9a52c41 resident run 41583603127 passed the original four cases on each OS: Linux 219.26 seconds and Windows 275.57 seconds. Both official ZIPs and 74 producer entries are independently verified. Prior f24/b491 public HTTPS DNS failures remain retained; a later pass does not establish a root-cause fix.",
+    "The 760f232 Web run 41585962968 stopped all three browser flows at native fixture compilation (E0433: log was a dev dependency only). The 37ca0ac network run 41586142163 retained the same compile failure plus original contract-format failures. No new Firefox runtime result exists in these runs. b28a879 moves the same locked logger to native production dependencies; original f24 Firefox 403 remains retained.",
+    "Reviewed commits 92c046a, 944880f and a1afd8b bind private hosts to their real installation identity, continue/close only a proved desktop recovery lineage, and expose real media direction inspection plus explicit signed HEVC budget switching. Original deadlines, safe cleanup and new exact format ACK remain required; these sources are awaiting the current hosted checks.",
+    "W14 production migration remains internal implementation work: authenticated bilateral proposal/commit, dynamic path epochs, simultaneous proposal convergence, lost-ACK idempotence, control through complete old-path loss and bounded drain. The reviewed desktop repair continues safe application recovery and does not complete in-place migration.",
+    "Full 4:4:4/HDR owners and their end-to-end signed format paths remain internal implementation work. Main10/P010 is explicitly SDR. Current AMF target failures, uncropped-geometry requirements and unsupported syntax remain unchanged.",
+    "Mandatory paired Windows, mobile WireGuard, independent NAT/overlap, public fixed ingress, signing, complete mixed-version and cross-day 24-hour evidence is still pending. These external needs do not conceal the remaining source work.",
+    "Explicit user decisions remain: Luanti 25-second display check and its failure stay unchanged; only two newly incorrect terminal expectations were corrected to exact Unauthorized in f2987b3."
   ],
   "external_prerequisites": [
     {
@@ -88,9 +89,9 @@
     }
   ],
   "next_steps": [
-    "Finish and manuallyreview privatehostidentityterminalfence, proved desktoprecoverywindow lifecycle, actualsamecodecHEVCtwo-targetfallback; commit separately andvalidate exactcombinedsource throughGitHubhostedActions.",
-    "Read original760f232Web and37ca0acnetwork results. Retainall priorfailures anduse fixedtyped ICE observations to resolveanyremainingFirefox failure withoutrelaxing assertions/deadlines.",
-    "Continue mandatoryproductionmigration, completeproductlifecycle/security andtargetevidence. Produce/freeze same-sourcecandidate onlyafter requiredchecks. Publish0.8.0RC onlywith realoriginalreleasegates satisfied; onlymain remains."
+    "Read the exact 59abafc complete Rust/network/media-owner results and a1afd8b original full Web results; preserve each failure and repair source without relaxing original assertions.",
+    "Complete production W14 transport-owner migration and the independent HDR/advanced-format chain while current hosted jobs execute. Integrate only reviewed stable paths, then qualify each exact source again.",
+    "Finish all mandatory implementation and target evidence, then freeze same-source candidates through the original required checks. Publish 0.8.0RC only after the original release gates pass. Both local and remote branches are currently main only."
   ],
   "evidence_index": [
     "docs/network-rewrite/evidence/format-b491.json",
@@ -301,7 +302,14 @@
     "docs/network-rewrite/evidence/native-offline-resident-b491f83.json",
     "docs/network-rewrite/evidence/web-firefox-f24b79f.json",
     "docs/network-rewrite/evidence/format-760f232.json",
-    "docs/network-rewrite/WEBRTC-ICE-COMPLETION.md"
+    "docs/network-rewrite/WEBRTC-ICE-COMPLETION.md",
+    "docs/network-rewrite/evidence/format-a1afd8b.json",
+    "docs/network-rewrite/evidence/native-offline-resident-9a52c41.json",
+    "docs/network-rewrite/evidence/web-native-build-failure-760f232.json",
+    "docs/network-rewrite/evidence/network-failure-37ca0ac.json",
+    "docs/network-rewrite/NATIVE-RECOVERY-VIEWPORT.md",
+    "docs/network-rewrite/MEDIA-CAPABILITY-INSPECTION.md",
+    "docs/network-rewrite/HEVC-EXPLICIT-BUDGET-FALLBACK.md"
   ],
   "observed_actions": [
     {
@@ -570,44 +578,51 @@
     }
   ],
   "current_validation_checkpoint": {
-    "recorded_at": "2026-11-03T01:41:30.697Z",
-    "source_revision": "f95fb92ed8c06df1ef246630391a38a3b8e964af",
-    "tested_source_revisions": [
-      "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
-      "4ec2c3c0addea9d708629d58b2932ec035bd5569",
-      "745c05a8016c1d33c193706171714fa8b72c30cf"
-    ],
+    "recorded_at": "2026-11-03T14:19:58.7774877+08:00",
+    "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
     "completed_scope": [
-      "4a4496b /41488486927 original focused resident workflow success: bothOS original4/4 including actual capture/VP8 pixels, two262144B file reads, original rebuild/Exit/management-terminal fences; all46 files and38 producer entries verified. This is the exact focused matrix scope, not wholeW27/target acceptance.",
-      "4ec2c3c /41486568717 formal unsampled release capacity success:100registered nodes,20active pairs,1000liveflows perwave,3waves, original2secondhold anddrain/rebind; all31producer payloads andofficialZIP verified. Previous failedattempts and diagnostic passed=false remain; no wholeAC68 or24hoursoak claim.",
-      "4a4496b /41488394638 all4original Windows2022/2025 owner+Windows/Linux peerjobs success; /41488400735 tools strictbuild success;5officialZIP and234fileentries verified,171producer entries match. OriginalAMFnotice bytes restored without altering originaldigest.",
-      "4a4496b /41488408420 Linux x86_64+ARM64 packagejobs success: actual unsigned installeddaemon/server, ordinary/root refusal, installedTCPconflict, interrupteddpkg upgrade andoriginalpackage rollback;4officialZIP,92downloadfiles,86producer payloads verified. No signedproduction update orfullsystem claim.",
-      "4a4496b /41488417514 network workflow7/9jobs success; bothOS tests/strictlint passed andonlyformat failed; nativeICE originalprivate-services32passed/0failed/5dedicated-roleignored, including originaltwo-relayUDP success. Complete evidence owner is finishing officialinventories. No fullworkflow orproductionmigration claim.",
-      "Actions formatter41488388067 officialZIP and3producer payloads verified; sole daemonmain.rs patch reviewed/applied inebc1ecc. No localformatter."
+      "Reviewed private host identity and recovery-window fixes plus explicit real media inspection/two-budget implementation are committed; target acceptance is not claimed.",
+      "Hosted formatter run 41588461255 succeeded for a1afd8b; official ZIP digest/size and all three producer entries verified, reviewed patch applied as 59abafc.",
+      "Original 9a resident run passed both OS four-case scopes with independently verified receipts.",
+      "Local and remote branch inventory queried: main only."
     ],
     "retained_failures": [
-      "4a Windows originalMFfour+explicitAMFfourfinitecommands all exit1, fullrawlogs/source/toolhashes inwindows-hevc-target-4a4496b.json.",
-      "745c fullRustLinuxworkspace failure andWindows60mintimeout retained.",
-      "All originalcapacity,networkUDP,resident,media andLuanti failures remain inhistoricalevidence.",
-      "f0c65 actualnew8directions allfailed; exactHevcFrameRate descriptorguard now rejected Main8 beforeSet/readback. Sourcef95 only addsactualname/type diagnostics; no acceptingconditions changed.",
-      "c589 boundaryPython292cases/35errorsbothOS missinglockedforksourceprefetch; explicitcargo-fetch fixpendingnextsource. Linux originalVP8+PipeWiresanitizers pass, laterUI/xtask skipped."
+      "Original f24 Firefox 403 and subsequent 760 browser build E0433 failures.",
+      "Original 37ca0ac network compile and formatting failures.",
+      "Original Luanti 25-second failure and all eight AMF/MF target failures.",
+      "Prior resident DNS, capacity and original workflow failures remain in their historical evidence files."
     ],
     "implementation_remaining": [
-      "AMFMain8 older-runtime optional property compatibility requires new exact-source hostedowner/tools validation and repeat original finiteWindowsdirections. Main10 nativeformat unsupported onthisAMDtarget; nohardwarequalification.",
-      "Full Rust745c run41479911345 failed: Linux defaultparallel workspace originalresident1/4; Windowshit original60minutejoblimit afterworkspacebegan47m50s. Originalserial earlyresident4/4bothOS remains scoped. RealPlatformfixture lifecycle isolation andindependent requiredjobs are being implemented; no assertion/deadline relaxation.",
-      "VP8boundary/PipeWiresanitizers,Python supply/notice regressions andxtask were skipped afteroriginalworkspace failure; independently require actualnewsource execution. OriginalRustprefixvalidation tests did execute, keep separate fromskippedPython regressions.",
-      "Mandatory remaining implementation includescomplete productUI/CLI lifecycle, productionunifiedpath migration, advanced GPUformat/fallback, whole-systemE2E andindependentsecurityreview. Existing finiteprobesandlabtestscannotclose these.",
-      "Mandatory targetevidence still includespairedWindows desktop/input/audio/concurrentfiles,Android+iOS standardWireGuard,independentNAT/overlappingsites/public fixedentryDNS,fullmixedversions/signing andcrossday24hoursoaks. Internalimplementation gaps are not externalblockers.",
-      "W28Luanti original25second disconnectdisplay check remains failed byexplicituserdecision; retainofficial30second behaviorrecord andoriginalNestLink5secondcleanupgate withoutdeadlinechange.",
-      "Newly audited signed-space Direct connection cannot enter safe recovery; implementing current-scope direct-to-direct generation recovery with server-enforced persistent parent authorization lineage. Do not use legacy reconnection to detach from original revocation or absolute expiry. Source/protocol/rollback/negative evidence is pending."
+      "Full W14 production bilateral path migration and bounded drain.",
+      "Complete 4:4:4/HDR production chain and whole media qualification.",
+      "Remaining product lifecycle, independent security, full E2E, mixed versions and target evidence required by all 41 work packages and 70 acceptance groups."
     ],
-    "pending_runs": [
-      41562145692,
-      41562170514,
-      41562179075,
-      41561895385,
-      41561899380
-    ],
+    "pending_runs": {
+      "rust": {
+        "run_id": 41588867968,
+        "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+        "state": "dispatched",
+        "whole_task_passed": false
+      },
+      "network": {
+        "run_id": 41588874179,
+        "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+        "state": "dispatched",
+        "whole_task_passed": false
+      },
+      "windows_owner": {
+        "run_id": 41588898806,
+        "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+        "state": "dispatched",
+        "whole_task_passed": false
+      },
+      "web": {
+        "run_id": 41588464893,
+        "source_revision": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+        "state": "in_progress",
+        "whole_task_passed": false
+      }
+    },
     "qualification": "scoped_only_no_complete_task_or_release_claim"
   },
   "release_state": "not_ready",
@@ -748,36 +763,29 @@
     }
   ],
   "current_hosted_runs": {
-    "resident": {
-      "run_id": 41580245060,
-      "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
-      "whole_task_passed": false,
-      "state": "running_five_log_collection_regressions_passed_both_os"
+    "rust": {
+      "run_id": 41588867968,
+      "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+      "state": "dispatched",
+      "whole_task_passed": false
     },
     "network": {
-      "run_id": 41580250844,
-      "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
-      "whole_task_passed": false,
-      "state": "running"
+      "run_id": 41588874179,
+      "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+      "state": "dispatched",
+      "whole_task_passed": false
     },
-    "windows_tools": {
-      "run_id": 41580255667,
-      "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
-      "whole_task_passed": false,
-      "state": "running"
+    "windows_owner": {
+      "run_id": 41588898806,
+      "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+      "state": "dispatched",
+      "whole_task_passed": false
     },
-    "format": {
-      "run_id": 41580263958,
-      "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
-      "whole_task_passed": false,
-      "evidence_ref": "docs/network-rewrite/evidence/format-b491.json",
-      "state": "completed_success_empty_patch"
-    },
-    "rust_f24": {
-      "run_id": 41577474757,
-      "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
-      "whole_task_passed": false,
-      "state": "running_linux_workspace_complete_2106passed_1failed_49originalignores"
+    "web": {
+      "run_id": 41588464893,
+      "source_revision": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+      "state": "in_progress",
+      "whole_task_passed": false
     }
   },
   "branch_inventory": {
@@ -794,58 +802,72 @@
   },
   "pending_runs": {
     "rust": {
-      "run_id": 41562145692,
-      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
-      "state": "completed_failure_core_both_os_workspace_both_os_boundary_both_os",
+      "run_id": 41588867968,
+      "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+      "state": "dispatched",
       "whole_task_passed": false
     },
     "network": {
-      "run_id": 41562170514,
-      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
-      "state": "completed_all9jobs_success_scope_only",
-      "whole_task_passed": false,
-      "evidence_ref": "docs/network-rewrite/evidence/network-run-c589362.json"
-    },
-    "resident": {
-      "run_id": 41562179075,
-      "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
-      "state": "completed_original4of4_both_os_success_scope_only",
-      "whole_task_passed": false,
-      "evidence_ref": "docs/network-rewrite/evidence/native-offline-resident-c589362.json"
-    },
-    "windows_owner": {
-      "run_id": 41566896922,
-      "source_revision": "8f1ac1d65ed53218087bf17b55f1d279bf772c9e",
+      "run_id": 41588874179,
+      "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
       "state": "dispatched",
       "whole_task_passed": false
     },
-    "windows_tools": {
-      "run_id": 41566900475,
-      "source_revision": "8f1ac1d65ed53218087bf17b55f1d279bf772c9e",
+    "windows_owner": {
+      "run_id": 41588898806,
+      "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
       "state": "dispatched",
+      "whole_task_passed": false
+    },
+    "web": {
+      "run_id": 41588464893,
+      "source_revision": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+      "state": "in_progress",
       "whole_task_passed": false
     }
   },
   "continuation_checkpoint": {
-    "at": "2026-11-03T13:57:06.4176770+08:00",
-    "source_revision": "31fd981d05e93fb0eb990a1afbc1ac61deaa1890",
+    "at": "2026-11-03T14:19:58.7774877+08:00",
+    "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
     "current_work": {
-      "root": "WebRTC snapshot-completion race, hosted validation, source/evidence integration",
-      "mechanism_research": "Explicit originalprovider capability CLI and bounded samecodecHEVCfallback",
-      "baseline_ci": "Exact9a resident evidence and original privatehost localidentity fence",
-      "core_audit": "Proved recovery-chain viewport continuation and cancellation; W14 migration remains"
+      "root": "Integrate and verify exact hosted source; preserve original failures and release gates",
+      "core_audit": "Production bilateral migration control and single transport owner",
+      "mechanism_research": "Independent real HDR capture and complete advanced format integration",
+      "baseline_ci": "Historical failure receipts and noncreating private host identity entry"
     },
     "pending_runs": {
-      "network": 41586142163,
-      "web": 41585962968
+      "rust": {
+        "run_id": 41588867968,
+        "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+        "state": "dispatched",
+        "whole_task_passed": false
+      },
+      "network": {
+        "run_id": 41588874179,
+        "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+        "state": "dispatched",
+        "whole_task_passed": false
+      },
+      "windows_owner": {
+        "run_id": 41588898806,
+        "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+        "state": "dispatched",
+        "whole_task_passed": false
+      },
+      "web": {
+        "run_id": 41588464893,
+        "source_revision": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+        "state": "in_progress",
+        "whole_task_passed": false
+      }
     },
     "user_decisions": [
-      "Retain original Luanti25second failure.",
-      "Two new wrongNone terminalcounterexamples corrected to exactUnauthorized inf2987b3."
+      "Retain original Luanti 25-second failure.",
+      "Only two new incorrect None expectations corrected to exact Unauthorized in f2987b3."
     ],
-    "qualification": "Scoped development only; required production and target work remains."
+    "qualification": "Scoped implementation and validation only; mandatory source and target work remains."
   },
   "dispatch_corrections": [
     {
@@ -899,11 +921,11 @@
   ],
   "latest_completed_runs": {
     "resident": {
-      "run_id": 41568724100,
-      "source_revision": "a6c4ddbf6976db2954a2337a4111c094355930c2",
-      "conclusion": "failure",
+      "run_id": 41583603127,
+      "source_revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+      "conclusion": "success",
       "whole_task_passed": false,
-      "evidence_ref": "docs/network-rewrite/evidence/native-offline-resident-a6c4ddb.json"
+      "evidence_ref": "docs/network-rewrite/evidence/native-offline-resident-9a52c41.json"
     },
     "capacity": {
       "run_id": 41486568717,
@@ -935,11 +957,11 @@
       "evidence_ref": "docs/network-rewrite/evidence/linux-package-4a4496b.json"
     },
     "network": {
-      "run_id": 41488417514,
-      "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
-      "conclusion": "failure_format_only",
+      "run_id": 41586142163,
+      "source_revision": "37ca0acedc7e2139459e645cfbb158325ba54f9f",
+      "conclusion": "failure",
       "whole_task_passed": false,
-      "evidence_ref": "docs/network-rewrite/evidence/network-run-4a4496b.json"
+      "evidence_ref": "docs/network-rewrite/evidence/network-failure-37ca0ac.json"
     },
     "rust": {
       "run_id": 41577474757,
@@ -957,6 +979,13 @@
       "target_result": "all8commands_failed",
       "whole_task_passed": false,
       "target_evidence_ref": "docs/network-rewrite/evidence/windows-hevc-target-f0c65e1.json"
+    },
+    "web": {
+      "run_id": 41585962968,
+      "source_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
+      "conclusion": "failure",
+      "whole_task_passed": false,
+      "evidence_ref": "docs/network-rewrite/evidence/web-native-build-failure-760f232.json"
     }
   }
 }

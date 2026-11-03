@@ -1,0 +1,433 @@
+{
+  "schema_version": 1,
+  "scope": "Exact-source historical failure preservation from official completed run/job API metadata and independently downloaded/hashed failed job logs. No new build/test execution or complete artifact qualification.",
+  "source_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
+  "workflow": ".github/workflows/web-build.yml",
+  "run_id": 41585962968,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41585962968",
+  "run_attempt": 1,
+  "status": "completed",
+  "conclusion": "failure",
+  "whole_task_passed": false,
+  "build_provenance": {
+    "source_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
+    "workflow_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
+    "event": "workflow_dispatch",
+    "runner_environment": "github-hosted",
+    "run_started_at": "2026-11-03T05:47:34Z"
+  },
+  "execution_provenance": {
+    "source": "Official Actions job metadata/logs only",
+    "local_project_execution": false,
+    "physical_target_or_public_nat_acceptance_claimed": false
+  },
+  "job_count": 5,
+  "job_conclusion_counts": {
+    "success": 2,
+    "failure": 3
+  },
+  "jobs": [
+    {
+      "id": 125751387207,
+      "name": "Browser runner and observer contracts",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41585962968/job/125751387207",
+      "source_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:47:37Z",
+      "completed_at": "2026-11-03T05:47:47Z",
+      "failed_steps": [],
+      "skipped_steps": [],
+      "evidence_scope": "Official completed job metadata only; successful job payloads and logs are not independently verified in this failure record."
+    },
+    {
+      "id": 125751387442,
+      "name": "release-site",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41585962968/job/125751387442",
+      "source_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:47:38Z",
+      "completed_at": "2026-11-03T05:59:55Z",
+      "failed_steps": [],
+      "skipped_steps": [],
+      "evidence_scope": "Official completed job metadata only; successful job payloads and logs are not independently verified in this failure record."
+    },
+    {
+      "id": 125755136184,
+      "name": "Production Web to native host (chrome)",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41585962968/job/125755136184",
+      "source_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
+      "status": "completed",
+      "conclusion": "failure",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:59:57Z",
+      "completed_at": "2026-11-03T06:06:53Z",
+      "failed_steps": [
+        {
+          "number": 8,
+          "name": "Build the optimized native host fixture on GitHub",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "skipped_steps": [
+        {
+          "number": 9,
+          "name": "Install pinned browser driver and TLS proxy",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 10,
+          "name": "Select the runner's stable Chrome",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 11,
+          "name": "Extract the reviewed stable Edge package without package install hooks",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 12,
+          "name": "Extract the SHA512-pinned official stable Firefox archive",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 13,
+          "name": "Exercise real video, audio, input, files and cleanup",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ],
+      "independently_downloaded_job_log": {
+        "path": "job-125755136184.log",
+        "bytes": 149941,
+        "sha256": "0a1c57c3981f2ac7af6b2283b72e464983c20d4310e0bd0dc954afcdd485fd28"
+      },
+      "job_log_download_api": "repos/ZHanry/NestLink/actions/jobs/125755136184/logs",
+      "excerpt_normalization": "One-based original downloaded job-log line numbers; ANSI display codes and per-line Actions timestamps removed only from displayed excerpt text. Original downloaded bytes are independently hashed and retained.",
+      "compiler_E0433_count": 1,
+      "compiler_excerpt": [
+        {
+          "line": 1758,
+          "text": "error[E0433]: cannot find module or crate `log` in this scope"
+        },
+        {
+          "line": 1759,
+          "text": "--> /home/runner/work/NestLink/NestLink/crates/sdk/src/webrtc_host.rs:142:5"
+        },
+        {
+          "line": 1761,
+          "text": "142 |     log::info!(target: \"nestlink_sdk::webrtc_host::ice_snapshot\", \"{}\","
+        },
+        {
+          "line": 1762,
+          "text": "|     ^^^ use of unresolved module or unlinked crate `log`"
+        },
+        {
+          "line": 1767,
+          "text": "error: could not compile `nestlink-sdk` (lib) due to 1 previous error"
+        }
+      ],
+      "formatting_diff_headers": [],
+      "producer_command_outcomes_in_job_log": [],
+      "producer_command_digest_scope": "Per-command log hashes are producer-reported entries in the independently hashed official job log; separate command payload files/ZIP bytes were not downloaded or independently verified here.",
+      "visible_test_summaries": [],
+      "test_summary_scope": "Only summary lines visible in the retained official job log; this is not an independent complete-harness/case inventory."
+    },
+    {
+      "id": 125755136204,
+      "name": "Production Web to native host (firefox)",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41585962968/job/125755136204",
+      "source_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
+      "status": "completed",
+      "conclusion": "failure",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:59:57Z",
+      "completed_at": "2026-11-03T06:07:01Z",
+      "failed_steps": [
+        {
+          "number": 8,
+          "name": "Build the optimized native host fixture on GitHub",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "skipped_steps": [
+        {
+          "number": 9,
+          "name": "Install pinned browser driver and TLS proxy",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 10,
+          "name": "Select the runner's stable Chrome",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 11,
+          "name": "Extract the reviewed stable Edge package without package install hooks",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 12,
+          "name": "Extract the SHA512-pinned official stable Firefox archive",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 13,
+          "name": "Exercise real video, audio, input, files and cleanup",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ],
+      "independently_downloaded_job_log": {
+        "path": "job-125755136204.log",
+        "bytes": 149947,
+        "sha256": "fce77e24095b78cb1a05a170756f861ec62456b380da7ca87c1a9f20db544b7d"
+      },
+      "job_log_download_api": "repos/ZHanry/NestLink/actions/jobs/125755136204/logs",
+      "excerpt_normalization": "One-based original downloaded job-log line numbers; ANSI display codes and per-line Actions timestamps removed only from displayed excerpt text. Original downloaded bytes are independently hashed and retained.",
+      "compiler_E0433_count": 1,
+      "compiler_excerpt": [
+        {
+          "line": 1758,
+          "text": "error[E0433]: cannot find module or crate `log` in this scope"
+        },
+        {
+          "line": 1759,
+          "text": "--> /home/runner/work/NestLink/NestLink/crates/sdk/src/webrtc_host.rs:142:5"
+        },
+        {
+          "line": 1761,
+          "text": "142 |     log::info!(target: \"nestlink_sdk::webrtc_host::ice_snapshot\", \"{}\","
+        },
+        {
+          "line": 1762,
+          "text": "|     ^^^ use of unresolved module or unlinked crate `log`"
+        },
+        {
+          "line": 1767,
+          "text": "error: could not compile `nestlink-sdk` (lib) due to 1 previous error"
+        }
+      ],
+      "formatting_diff_headers": [],
+      "producer_command_outcomes_in_job_log": [],
+      "producer_command_digest_scope": "Per-command log hashes are producer-reported entries in the independently hashed official job log; separate command payload files/ZIP bytes were not downloaded or independently verified here.",
+      "visible_test_summaries": [],
+      "test_summary_scope": "Only summary lines visible in the retained official job log; this is not an independent complete-harness/case inventory."
+    },
+    {
+      "id": 125755136208,
+      "name": "Production Web to native host (edge)",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41585962968/job/125755136208",
+      "source_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
+      "status": "completed",
+      "conclusion": "failure",
+      "runner_labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_group": "GitHub Actions",
+      "started_at": "2026-11-03T05:59:57Z",
+      "completed_at": "2026-11-03T06:06:38Z",
+      "failed_steps": [
+        {
+          "number": 8,
+          "name": "Build the optimized native host fixture on GitHub",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "skipped_steps": [
+        {
+          "number": 9,
+          "name": "Install pinned browser driver and TLS proxy",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 10,
+          "name": "Select the runner's stable Chrome",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 11,
+          "name": "Extract the reviewed stable Edge package without package install hooks",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 12,
+          "name": "Extract the SHA512-pinned official stable Firefox archive",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 13,
+          "name": "Exercise real video, audio, input, files and cleanup",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ],
+      "independently_downloaded_job_log": {
+        "path": "job-125755136208.log",
+        "bytes": 149938,
+        "sha256": "5741e342c36e9843404e33a06c6687e5835429d8be6616b35216330da992bcde"
+      },
+      "job_log_download_api": "repos/ZHanry/NestLink/actions/jobs/125755136208/logs",
+      "excerpt_normalization": "One-based original downloaded job-log line numbers; ANSI display codes and per-line Actions timestamps removed only from displayed excerpt text. Original downloaded bytes are independently hashed and retained.",
+      "compiler_E0433_count": 1,
+      "compiler_excerpt": [
+        {
+          "line": 1757,
+          "text": "error[E0433]: cannot find module or crate `log` in this scope"
+        },
+        {
+          "line": 1758,
+          "text": "--> /home/runner/work/NestLink/NestLink/crates/sdk/src/webrtc_host.rs:142:5"
+        },
+        {
+          "line": 1760,
+          "text": "142 |     log::info!(target: \"nestlink_sdk::webrtc_host::ice_snapshot\", \"{}\","
+        },
+        {
+          "line": 1761,
+          "text": "|     ^^^ use of unresolved module or unlinked crate `log`"
+        },
+        {
+          "line": 1767,
+          "text": "error: could not compile `nestlink-sdk` (lib) due to 1 previous error"
+        }
+      ],
+      "formatting_diff_headers": [],
+      "producer_command_outcomes_in_job_log": [],
+      "producer_command_digest_scope": "Per-command log hashes are producer-reported entries in the independently hashed official job log; separate command payload files/ZIP bytes were not downloaded or independently verified here.",
+      "visible_test_summaries": [],
+      "test_summary_scope": "Only summary lines visible in the retained official job log; this is not an independent complete-harness/case inventory."
+    }
+  ],
+  "artifact_references": [
+    {
+      "id": 13207714824,
+      "name": "nestlink-web-dist",
+      "size_in_bytes": 2097140,
+      "official_digest": "sha256:2dca0dc11211794d685ba8e17f2e029769c68160a20ad7c6019f0b6b8064dda2",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13207714824",
+      "source_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
+      "run_id": 41585962968,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    },
+    {
+      "id": 13207594762,
+      "name": "release-web-source-lock-evidence-1",
+      "size_in_bytes": 145831,
+      "official_digest": "sha256:d8066c6bdd115b37e7938c4d7d7eaa37e310bdb8e9f6a6ba4a20439b882eecd1",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13207594762",
+      "source_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
+      "run_id": 41585962968,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    },
+    {
+      "id": 13206989967,
+      "name": "nestlink-browser-contracts-760f232d8c9060f08ccd93682d775ada334f2dbf-1",
+      "size_in_bytes": 4209,
+      "official_digest": "sha256:fa09687b86a6c924c1fbab7f97313fd9b7c27d7802dc2e5c338979674b884d9b",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13206989967",
+      "source_revision": "760f232d8c9060f08ccd93682d775ada334f2dbf",
+      "run_id": 41585962968,
+      "verification_scope": "Official API metadata only; ZIP not downloaded, digest/bytes not independently checked, producer payloads not independently verified"
+    }
+  ],
+  "artifact_verification_scope": "Metadata-only references: no ZIP downloaded, official ZIP digest or payload verification claimed.",
+  "historical_firefox_failure": {
+    "record": {
+      "path": "docs/network-rewrite/evidence/web-firefox-f24b79f.json",
+      "bytes": 9834,
+      "sha256": "ba1e353793c23ee7b4f86acce0d829cd7ecedb3e880ecc1a3677d502b3926264"
+    },
+    "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
+    "run_id": 41577474838,
+    "status": "preserved_failed",
+    "new_firefox_execution_result_claimed": false
+  },
+  "later_source_corrections": {
+    "production_log_dependency_commit": "b28a879caf0412c8b7470f956f1f7842325adf56",
+    "version_changed": false,
+    "local_lock_generation": false,
+    "format_commit": "31fd981d05e93fb0eb990a1afbc1ac61deaa1890",
+    "existing_hosted_format_evidence": {
+      "path": "docs/network-rewrite/evidence/format-760f232.json",
+      "bytes": 9480,
+      "sha256": "7f69a3ceb15e05694599309f0735caf66a430a6e6271fb51f5429b9cb9d66bd2"
+    },
+    "historical_failed_outcomes_changed": false,
+    "new_run_success_claimed": false
+  },
+  "findings": [
+    "The workflow remains failed: official job conclusions are two successes and three failures. Browser runner contracts and release-site success are metadata observations only.",
+    "All three Chrome/Firefox/Edge production jobs failed while building the optimized original native fixture with cargo build --release --locked. Each official failed job log reports E0433 at crates/sdk/src/webrtc_host.rs:142:5: production log::info! cannot resolve crate log.",
+    "The old exact-source SDK manifest placed log = =0.4.34 only in dev-dependencies. This fails when SDK is compiled as the fixture production library. The separately committed b28a879 keeps the exact same version, moves it to existing native target dependencies and adds the SDK log edge to the existing fixture lock. No local lock generation or dependency install is claimed.",
+    "Native fixture build failure preceded browser selection/extraction and the actual video/audio/input/files/cleanup step; those steps are skipped in all three jobs. This run contains no new Firefox execution outcome and no ICE/403 root-cause conclusion.",
+    "The original f24 Firefox actual runtime failure, including first native signal POST204 then POST403 and the unchanged original timeout, remains recorded in web-firefox-f24b79f.json. Its failure is not replaced by this later compilation failure or by successful Web-site build metadata."
+  ],
+  "independent_verification": {
+    "scope": "Only local bytes of official downloaded metadata and failed job logs; per-command/ZIP digests retain their explicitly limited scope above",
+    "files_hashed": 6,
+    "files": [
+      {
+        "path": "run.json",
+        "bytes": 11698,
+        "sha256": "5e028173dffb38a2543e48a66ca198c83d8e6e683be3cc32bc0ac50ea8e7c67c"
+      },
+      {
+        "path": "jobs.json",
+        "bytes": 16996,
+        "sha256": "d67bfced23bc557d605050fea17c6252d20ae4264ee1859e8c2538cf097c9aa1"
+      },
+      {
+        "path": "artifacts.json",
+        "bytes": 2127,
+        "sha256": "14b97f69970fb10d0a7f9b6686728a0ffcac3958238fa977f7426b678ca894f1"
+      },
+      {
+        "path": "job-125755136184.log",
+        "bytes": 149941,
+        "sha256": "0a1c57c3981f2ac7af6b2283b72e464983c20d4310e0bd0dc954afcdd485fd28"
+      },
+      {
+        "path": "job-125755136204.log",
+        "bytes": 149947,
+        "sha256": "fce77e24095b78cb1a05a170756f861ec62456b380da7ca87c1a9f20db544b7d"
+      },
+      {
+        "path": "job-125755136208.log",
+        "bytes": 149938,
+        "sha256": "5741e342c36e9843404e33a06c6687e5835429d8be6616b35216330da992bcde"
+      }
+    ]
+  },
+  "raw_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-baseline\\760f232-web"
+}
