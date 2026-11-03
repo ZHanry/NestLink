@@ -335,3 +335,36 @@ async fn cancelling_after_real_rebind_retains_drain_and_current_revocation_still
     }
     Ok(())
 }
+
+#[tokio::test]
+async fn successful_safe_recovery_joins_both_control_drivers_before_revoking_their_raw_carriers()
+-> TestResult {
+    let fixture = MigrationFixture::new()?;
+    let mut original = RoutePair::new(&fixture, 0, 1).await?;
+    let mut candidate = RoutePair::new(&fixture, 1, 0).await?;
+    let [first_receipt, second_receipt] = receipts(&fixture, &original, &candidate).await?;
+    let first = candidate.first.as_mut().ok_or("candidate first")?;
+    let second = candidate.second.as_mut().ok_or("candidate second")?;
+    let deadline = Instant::now() + Duration::from_secs(2);
+    tokio::try_join!(
+        first.finish_control_for_recovery(&first_receipt, deadline),
+        second.finish_control_for_recovery(&second_receipt, deadline),
+    )?;
+    for transport in [&*first, &*second] {
+        assert!(transport.connection.is_none());
+        assert!(transport.endpoint.is_none());
+        assert!(transport.released.is_none());
+        assert!(transport.packet_hub.is_some());
+        assert!(transport.raw.as_ref().ok_or("live raw carrier")?.authorization().check_live().is_ok());
+        assert!(transport.subscribe_failure().borrow().is_none());
+    }
+    // Control driver release did not stand in for actual physical raw/outer
+    // release. Those owners remain live until the subsequent complete stop.
+    in_use(candidate.addresses[1]);
+    in_use(candidate.addresses[3]);
+    let cleanup = Instant::now() + Duration::from_secs(5);
+    original.close(cleanup).await?;
+    candidate.close(cleanup).await?;
+    rebound(original.addresses.into_iter().chain(candidate.addresses))?;
+    Ok(())
+}

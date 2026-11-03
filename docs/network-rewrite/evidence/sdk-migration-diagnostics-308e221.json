@@ -1,0 +1,1799 @@
+{
+  "schema_version": 1,
+  "kind": "original-six-case-migration-exact-source-independent-verification",
+  "recorded_at_utc": "2026-11-03T09:12:52.8537889Z",
+  "repository": "ZHanry/NestLink",
+  "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+  "run_id": 41607835980,
+  "run_attempt": 1,
+  "workflow": "Original SDK migration failure diagnostics",
+  "workflow_path": ".github/workflows/network-migration-diagnostics.yml",
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41607835980",
+  "status": "completed",
+  "conclusion": "failure",
+  "metadata_files": [
+    {
+      "path": "run.json",
+      "bytes": 11762,
+      "sha256": "e59140bc203ff691080b7e4f5d68a5c4522d016c4f2767af8ec36ec07695d691"
+    },
+    {
+      "path": "jobs.json",
+      "bytes": 2475,
+      "sha256": "5961314dcbc8e7740ba9191b19e62936959432c3458048a11b15951ecdfe715a"
+    },
+    {
+      "path": "artifacts.json",
+      "bytes": 754,
+      "sha256": "1d6abbd071de1dc28538520eb324be70f5802421c6d0296e788c25788850785f"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 125822017769,
+      "name": "original-cases",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T09:02:55Z",
+      "completed_at": "2026-11-03T09:07:22Z",
+      "runner_name": "GitHub Actions 1000012335",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T09:02:56Z",
+          "completed_at": "2026-11-03T09:02:57Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T09:02:57Z",
+          "completed_at": "2026-11-03T09:03:00Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T09:03:00Z",
+          "completed_at": "2026-11-03T09:03:09Z"
+        },
+        {
+          "name": "Prepare the original pinned native build on the hosted runner",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T09:03:09Z",
+          "completed_at": "2026-11-03T09:04:23Z"
+        },
+        {
+          "name": "Retain every original case independently, including abort diagnostics",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 5,
+          "started_at": "2026-11-03T09:04:23Z",
+          "completed_at": "2026-11-03T09:07:18Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T09:07:18Z",
+          "completed_at": "2026-11-03T09:07:19Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-03T09:07:19Z",
+          "completed_at": "2026-11-03T09:07:20Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-03T09:07:20Z",
+          "completed_at": "2026-11-03T09:07:20Z"
+        }
+      ]
+    }
+  ],
+  "artifact_count": 1,
+  "official_zip_verification_count": 1,
+  "independent_downloaded_file_count": 8.0,
+  "producer_payload_verification_count": 7.0,
+  "producer_command_log_verification_count": 0.0,
+  "artifacts": [
+    {
+      "id": 13218180764,
+      "name": "original-sdk-migration-308e221007abe4369b44630f88acf13a46412bbb-1",
+      "official_digest": "sha256:70dc671244094ee780bd288047bdebca3f8352a097da439e6ac6512152491e39",
+      "zip_sha256": "70dc671244094ee780bd288047bdebca3f8352a097da439e6ac6512152491e39",
+      "zip_bytes": 26140,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 8,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "build.log",
+          "bytes": 60184,
+          "sha256": "dc7c6cd9bf1bdd06c002778e8326f6e6f2ee9124584dd0d1664a60600257a748"
+        },
+        {
+          "path": "case-1.log",
+          "bytes": 20466,
+          "sha256": "0c226072f2e0191341b23b212d359eeaa4c2fc372600c1d80b77d352f4f01cdf"
+        },
+        {
+          "path": "case-2.log",
+          "bytes": 20186,
+          "sha256": "ca19b3a102b682f48454e5262404c3dcdb7f881c7592d21d8ba215599ae82955"
+        },
+        {
+          "path": "case-3.log",
+          "bytes": 20829,
+          "sha256": "97997f1c101a64c603b844fbdbc9c01969f426659fcc491e10f3f52ccda06b1c"
+        },
+        {
+          "path": "case-4.log",
+          "bytes": 20813,
+          "sha256": "e04f6c02e11d458fd2680b883ad40bb1b4fd13bc72167b3d4881b533224ff14b"
+        },
+        {
+          "path": "case-5.log",
+          "bytes": 20823,
+          "sha256": "8401a7a470f7e94a9ea69c3acafba926ee7834dc634402092358fc0007e7e7df"
+        },
+        {
+          "path": "case-6.log",
+          "bytes": 20537,
+          "sha256": "e4791ab791dbe6c95541ddd752ea39369cfd0968c01b0d8f9a026499bfc653db"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 6010,
+          "sha256": "af70b5d87dc8a2fffa26ef54e6d0ef1ae2a881e814c3b78fcb59b8ae5cda5034"
+        }
+      ],
+      "producer_payload_inventory_count": 7,
+      "producer_payload_verifications": [
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "build.log",
+          "bytes": 60184,
+          "sha256": "dc7c6cd9bf1bdd06c002778e8326f6e6f2ee9124584dd0d1664a60600257a748",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "case-1.log",
+          "bytes": 20466,
+          "sha256": "0c226072f2e0191341b23b212d359eeaa4c2fc372600c1d80b77d352f4f01cdf",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "case-2.log",
+          "bytes": 20186,
+          "sha256": "ca19b3a102b682f48454e5262404c3dcdb7f881c7592d21d8ba215599ae82955",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "case-3.log",
+          "bytes": 20829,
+          "sha256": "97997f1c101a64c603b844fbdbc9c01969f426659fcc491e10f3f52ccda06b1c",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "case-4.log",
+          "bytes": 20813,
+          "sha256": "e04f6c02e11d458fd2680b883ad40bb1b4fd13bc72167b3d4881b533224ff14b",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "case-5.log",
+          "bytes": 20823,
+          "sha256": "8401a7a470f7e94a9ea69c3acafba926ee7834dc634402092358fc0007e7e7df",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "case-6.log",
+          "bytes": 20537,
+          "sha256": "e4791ab791dbe6c95541ddd752ea39369cfd0968c01b0d8f9a026499bfc653db",
+          "producer_matches": true
+        }
+      ],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": true,
+      "producer_inventory_limitation": null,
+      "reports": [
+        {
+          "file": "receipt.json",
+          "source_claims": [
+            {
+              "field": "source_revision",
+              "value": "308e221007abe4369b44630f88acf13a46412bbb",
+              "matches": true
+            },
+            {
+              "field": "workflow_revision",
+              "value": "308e221007abe4369b44630f88acf13a46412bbb",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": false,
+          "status": null,
+          "scope": "Independent original SDK cases with unchanged assertions, deadlines and ordinary stack. Each log is streamed so a later abort cannot hide an earlier failure. This does not replace the complete network suite.",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [
+            {
+              "name": "build",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "--no-run"
+              ],
+              "return_code": 0,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            },
+            {
+              "name": "case-1",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration",
+                "--",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "--color",
+                "never"
+              ],
+              "return_code": 0,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            },
+            {
+              "name": "case-2",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery",
+                "--",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "--color",
+                "never"
+              ],
+              "return_code": 0,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            },
+            {
+              "name": "case-3",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer",
+                "--",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "--color",
+                "never"
+              ],
+              "return_code": 101,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            },
+            {
+              "name": "case-4",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release",
+                "--",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "--color",
+                "never"
+              ],
+              "return_code": 101,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            },
+            {
+              "name": "case-5",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup",
+                "--",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "--color",
+                "never"
+              ],
+              "return_code": 101,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            },
+            {
+              "name": "case-6",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay",
+                "--",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "--color",
+                "never"
+              ],
+              "return_code": 101,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            }
+          ],
+          "cases": [],
+          "acceptance_flags": {},
+          "runner_os": "Linux",
+          "runner_environment": "github-hosted",
+          "cargo_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839"
+        }
+      ],
+      "test_logs": [
+        {
+          "file": "case-1.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 21,
+              "elapsed_seconds": 5.19
+            }
+          ],
+          "case_lines": []
+        },
+        {
+          "file": "case-2.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 21,
+              "elapsed_seconds": 2.64
+            }
+          ],
+          "case_lines": [
+            "test route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery ... ok"
+          ]
+        },
+        {
+          "file": "case-3.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "FAILED",
+              "passed": 0,
+              "failed": 1,
+              "ignored": 0,
+              "filtered": 21,
+              "elapsed_seconds": 4.29
+            }
+          ],
+          "case_lines": []
+        },
+        {
+          "file": "case-4.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "FAILED",
+              "passed": 0,
+              "failed": 1,
+              "ignored": 0,
+              "filtered": 21,
+              "elapsed_seconds": 4.22
+            }
+          ],
+          "case_lines": []
+        },
+        {
+          "file": "case-5.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "FAILED",
+              "passed": 0,
+              "failed": 1,
+              "ignored": 0,
+              "filtered": 21,
+              "elapsed_seconds": 4.26
+            }
+          ],
+          "case_lines": []
+        },
+        {
+          "file": "case-6.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "FAILED",
+              "passed": 0,
+              "failed": 1,
+              "ignored": 0,
+              "filtered": 21,
+              "elapsed_seconds": 2.5
+            }
+          ],
+          "case_lines": []
+        }
+      ],
+      "retained_log_diagnostics": [
+        {
+          "file": "case-3.log",
+          "diagnostics": [
+            "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "case-4.log",
+          "diagnostics": [
+            "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "case-5.log",
+          "diagnostics": [
+            "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "case-6.log",
+          "diagnostics": [
+            "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Actions results apply only to this exact source SHA. Historical failures remain unchanged.",
+    "Producer executable/native-library inventories whose bytes are absent from the ZIP are supplier receipts, not independent verification of those binaries.",
+    "Hosted browser/media/network success does not establish physical GPU, real device, public NAT/HA, cross-day or release eligibility."
+  ],
+  "producer_identity": {
+    "id": "diagnostics",
+    "workflow_path": ".github/workflows/network-migration-diagnostics.yml",
+    "receipt": "receipt.json",
+    "different_producer_from_other_308e221_run": true
+  },
+  "original_producer_receipt": {
+    "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+    "run_id": "41607835980",
+    "run_attempt": "1",
+    "workflow_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+    "runner_environment": "github-hosted",
+    "runner_os": "Linux",
+    "cargo_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+    "stack_override": false,
+    "commands": [
+      {
+        "name": "build",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "--no-run"
+        ],
+        "return_code": 0,
+        "timed_out": false
+      },
+      {
+        "name": "case-1",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration",
+          "--",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 0,
+        "timed_out": false,
+        "original_case": "route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration",
+        "exact_one_pass_zero_ignored": true
+      },
+      {
+        "name": "case-2",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery",
+          "--",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 0,
+        "timed_out": false,
+        "original_case": "route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery",
+        "exact_one_pass_zero_ignored": true
+      },
+      {
+        "name": "case-3",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer",
+          "--",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 101,
+        "timed_out": false,
+        "original_case": "route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer",
+        "exact_one_pass_zero_ignored": false
+      },
+      {
+        "name": "case-4",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release",
+          "--",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 101,
+        "timed_out": false,
+        "original_case": "route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release",
+        "exact_one_pass_zero_ignored": false
+      },
+      {
+        "name": "case-5",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup",
+          "--",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 101,
+        "timed_out": false,
+        "original_case": "route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup",
+        "exact_one_pass_zero_ignored": false
+      },
+      {
+        "name": "case-6",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay",
+          "--",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 101,
+        "timed_out": false,
+        "original_case": "route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay",
+        "exact_one_pass_zero_ignored": false
+      }
+    ],
+    "passed": false,
+    "whole_acceptance_claimed": false,
+    "scope": "Independent original SDK cases with unchanged assertions, deadlines and ordinary stack. Each log is streamed so a later abort cannot hide an earlier failure. This does not replace the complete network suite.",
+    "files": [
+      {
+        "path": "build.log",
+        "bytes": 60184,
+        "sha256": "dc7c6cd9bf1bdd06c002778e8326f6e6f2ee9124584dd0d1664a60600257a748"
+      },
+      {
+        "path": "case-1.log",
+        "bytes": 20466,
+        "sha256": "0c226072f2e0191341b23b212d359eeaa4c2fc372600c1d80b77d352f4f01cdf"
+      },
+      {
+        "path": "case-2.log",
+        "bytes": 20186,
+        "sha256": "ca19b3a102b682f48454e5262404c3dcdb7f881c7592d21d8ba215599ae82955"
+      },
+      {
+        "path": "case-3.log",
+        "bytes": 20829,
+        "sha256": "97997f1c101a64c603b844fbdbc9c01969f426659fcc491e10f3f52ccda06b1c"
+      },
+      {
+        "path": "case-4.log",
+        "bytes": 20813,
+        "sha256": "e04f6c02e11d458fd2680b883ad40bb1b4fd13bc72167b3d4881b533224ff14b"
+      },
+      {
+        "path": "case-5.log",
+        "bytes": 20823,
+        "sha256": "8401a7a470f7e94a9ea69c3acafba926ee7834dc634402092358fc0007e7e7df"
+      },
+      {
+        "path": "case-6.log",
+        "bytes": 20537,
+        "sha256": "e4791ab791dbe6c95541ddd752ea39369cfd0968c01b0d8f9a026499bfc653db"
+      }
+    ]
+  },
+  "verification_summary": {
+    "job_count": 1,
+    "successful_jobs": 0,
+    "failed_jobs": 1,
+    "official_zips_verified": 1,
+    "actual_extracted_files_independently_hashed": 8,
+    "producer_payload_entries_independently_verified": 7,
+    "producer_command_log_entries_independently_verified": 0,
+    "complete_official_job_raw_logs_independently_hashed": 1,
+    "exact_git_source_blob_files_independently_hashed": 10,
+    "build_return_code": 0,
+    "original_case_commands_executed": 6,
+    "completed_rust_harnesses": 6,
+    "whole_original_cases_passed": 2,
+    "whole_original_cases_failed": 4,
+    "ignored_cases": 0,
+    "case_return_codes": [
+      0,
+      0,
+      101,
+      101,
+      101,
+      101
+    ],
+    "stack_abort_observed": false,
+    "later_sdk_drop_result_not_substituted_for_original_case_outcomes": true
+  },
+  "exact_git_source_blob_inventory": [
+    {
+      "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+      "repository_path": "Cargo.lock",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 209815,
+      "sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+      "local_snapshot_file": "Cargo.lock"
+    },
+    {
+      "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+      "repository_path": ".github/workflows/network-migration-diagnostics.yml",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 6222,
+      "sha256": "a628485d7ca42e1bd7d1ac28366e17d966c0c7b5b9b87b0c90ae3f20e1e77e37",
+      "local_snapshot_file": ".github__workflows__network-migration-diagnostics.yml"
+    },
+    {
+      "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+      "repository_path": ".github/workflows/network-sdk-migration.yml",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 2587,
+      "sha256": "c50d64f84dca3df94d79dbdf1d4127c6f5dfaf5eef2de67bfcd251e8253c74e8",
+      "local_snapshot_file": ".github__workflows__network-sdk-migration.yml"
+    },
+    {
+      "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+      "repository_path": "scripts/network-rewrite-sdk-migration.py",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 18430,
+      "sha256": "3d1de8b1ccc216b413aeb468a4d4816ad20d21937653c5ce73236470bcc88c77",
+      "local_snapshot_file": "scripts__network-rewrite-sdk-migration.py"
+    },
+    {
+      "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+      "repository_path": "crates/sdk/tests/network_relay/route_set/physical_loss.rs",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 13064,
+      "sha256": "05d3c8b25c556473312d619e8970aecc416574432516e31f752374a651034e68",
+      "local_snapshot_file": "crates__sdk__tests__network_relay__route_set__physical_loss.rs"
+    },
+    {
+      "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+      "repository_path": "crates/sdk/tests/network_relay.rs",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 32465,
+      "sha256": "86c49b73ade6d127bdea683f1052b752396d8334baa48adf0ae41e51bf83161b",
+      "local_snapshot_file": "crates__sdk__tests__network_relay.rs"
+    },
+    {
+      "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+      "repository_path": "crates/sdk/tests/network_relay/chain.rs",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 26725,
+      "sha256": "d7911b70c9dd936980e7c501fce99e60db7ed3ca4c1d74d2954f88f3a53d8425",
+      "local_snapshot_file": "crates__sdk__tests__network_relay__chain.rs"
+    },
+    {
+      "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+      "repository_path": "crates/sdk/tests/network_relay/route_set.rs",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 15747,
+      "sha256": "4e69aa309d92ac8862db1c164b6832e6f8587146cfc1c438775d71181804a728",
+      "local_snapshot_file": "crates__sdk__tests__network_relay__route_set.rs"
+    },
+    {
+      "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+      "repository_path": "crates/sdk/tests/network_relay/route_set/continuation.rs",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 25168,
+      "sha256": "33785b6f48c0ed3bc7d4161459555e0032d3256e75fbb68eb60eb096f7618a73",
+      "local_snapshot_file": "crates__sdk__tests__network_relay__route_set__continuation.rs"
+    },
+    {
+      "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+      "repository_path": "crates/sdk/tests/network_relay/route_set/recovery.rs",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 13963,
+      "sha256": "bc07664ed75afa3780b1d15afb7180d6b67571eba06686b71c467a9b83a703d2",
+      "local_snapshot_file": "crates__sdk__tests__network_relay__route_set__recovery.rs"
+    }
+  ],
+  "original_job_raw_logs": [
+    {
+      "job_id": 125822017769,
+      "job_name": "original-cases",
+      "official_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125822017769/logs",
+      "observation": {
+        "file": {
+          "path": "job-125822017769.log",
+          "bytes": 56469,
+          "sha256": "d7f303e38a4ae95fe4901aa6bf7cdf9c0fb434806abe4aefb795f0b27d8e99c6"
+        },
+        "completed_rust_result_blocks": [],
+        "runtime_case_result_lines": [],
+        "compiler_diagnostics": [],
+        "retained_failure_contexts": [
+          {
+            "line": 619,
+            "group": "import hashlib, json, os, pathlib, re, subprocess",
+            "first_line": 616,
+            "lines": [
+              "  CARGO_TERM_COLOR: always",
+              "  NESTLINK_CODEC_PREFIX: /home/runner/work/_temp/migration-codecs/x86_64-unknown-linux-gnu",
+              "##[endgroup]",
+              "Traceback (most recent call last):",
+              "  File \"/home/runner/work/_temp/acd42098-0cea-423b-a9c3-fb8e3dc9ad90.py\", line 53, in <module>",
+              "    assert receipt['passed'], 'Original cases failed; all independent failure logs retained'",
+              "           ~~~~~~~^^^^^^^^^^",
+              "AssertionError: Original cases failed; all independent failure logs retained",
+              "##[error]Process completed with exit code 1.",
+              "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "with:",
+              "  name: original-sdk-migration-308e221007abe4369b44630f88acf13a46412bbb-1",
+              "  path: /home/runner/work/_temp/migration-original-diagnostics/",
+              "  if-no-files-found: error",
+              "  retention-days: 30",
+              "  compression-level: 6",
+              "  overwrite: false",
+              "  include-hidden-files: false",
+              "  archive: true",
+              "env:",
+              "  CARGO_INCREMENTAL: 0",
+              "  CARGO_PROFILE_DEV_DEBUG: 0",
+              "  CARGO_PROFILE_TEST_DEBUG: 0"
+            ]
+          },
+          {
+            "line": 623,
+            "group": "import hashlib, json, os, pathlib, re, subprocess",
+            "first_line": 620,
+            "lines": [
+              "  File \"/home/runner/work/_temp/acd42098-0cea-423b-a9c3-fb8e3dc9ad90.py\", line 53, in <module>",
+              "    assert receipt['passed'], 'Original cases failed; all independent failure logs retained'",
+              "           ~~~~~~~^^^^^^^^^^",
+              "AssertionError: Original cases failed; all independent failure logs retained",
+              "##[error]Process completed with exit code 1.",
+              "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "with:",
+              "  name: original-sdk-migration-308e221007abe4369b44630f88acf13a46412bbb-1",
+              "  path: /home/runner/work/_temp/migration-original-diagnostics/",
+              "  if-no-files-found: error",
+              "  retention-days: 30",
+              "  compression-level: 6",
+              "  overwrite: false",
+              "  include-hidden-files: false",
+              "  archive: true",
+              "env:",
+              "  CARGO_INCREMENTAL: 0",
+              "  CARGO_PROFILE_DEV_DEBUG: 0",
+              "  CARGO_PROFILE_TEST_DEBUG: 0",
+              "  PYTHONDONTWRITEBYTECODE: 1",
+              "  EXPECTED_SOURCE: 308e221007abe4369b44630f88acf13a46412bbb",
+              "  CARGO_HOME: /home/runner/.cargo",
+              "  CARGO_TERM_COLOR: always"
+            ]
+          },
+          {
+            "line": 624,
+            "group": "import hashlib, json, os, pathlib, re, subprocess",
+            "first_line": 621,
+            "lines": [
+              "    assert receipt['passed'], 'Original cases failed; all independent failure logs retained'",
+              "           ~~~~~~~^^^^^^^^^^",
+              "AssertionError: Original cases failed; all independent failure logs retained",
+              "##[error]Process completed with exit code 1.",
+              "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "with:",
+              "  name: original-sdk-migration-308e221007abe4369b44630f88acf13a46412bbb-1",
+              "  path: /home/runner/work/_temp/migration-original-diagnostics/",
+              "  if-no-files-found: error",
+              "  retention-days: 30",
+              "  compression-level: 6",
+              "  overwrite: false",
+              "  include-hidden-files: false",
+              "  archive: true",
+              "env:",
+              "  CARGO_INCREMENTAL: 0",
+              "  CARGO_PROFILE_DEV_DEBUG: 0",
+              "  CARGO_PROFILE_TEST_DEBUG: 0",
+              "  PYTHONDONTWRITEBYTECODE: 1",
+              "  EXPECTED_SOURCE: 308e221007abe4369b44630f88acf13a46412bbb",
+              "  CARGO_HOME: /home/runner/.cargo",
+              "  CARGO_TERM_COLOR: always",
+              "  NESTLINK_CODEC_PREFIX: /home/runner/work/_temp/migration-codecs/x86_64-unknown-linux-gnu"
+            ]
+          }
+        ],
+        "cargo_json_errors": [],
+        "cargo_json_build_finished": [],
+        "cargo_json_target_executables": [],
+        "original_step_exit_codes": [
+          {
+            "group": "import hashlib, json, os, pathlib, re, subprocess",
+            "return_code": 1,
+            "line": 624
+          }
+        ]
+      },
+      "failed_steps": [
+        {
+          "name": "Retain every original case independently, including abort diagnostics",
+          "number": 5,
+          "conclusion": "failure"
+        }
+      ]
+    }
+  ],
+  "uploaded_log_observations": [
+    {
+      "file": {
+        "path": "case-1.log",
+        "bytes": 20466,
+        "sha256": "0c226072f2e0191341b23b212d359eeaa4c2fc372600c1d80b77d352f4f01cdf"
+      },
+      "completed_rust_result_blocks": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 5.19s"
+      ],
+      "runtime_case_result_lines": [],
+      "compiler_diagnostics": [],
+      "retained_failure_contexts": [],
+      "cargo_json_errors": [],
+      "cargo_json_build_finished": [],
+      "cargo_json_target_executables": [],
+      "original_step_exit_codes": []
+    },
+    {
+      "file": {
+        "path": "case-2.log",
+        "bytes": 20186,
+        "sha256": "ca19b3a102b682f48454e5262404c3dcdb7f881c7592d21d8ba215599ae82955"
+      },
+      "completed_rust_result_blocks": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 2.64s"
+      ],
+      "runtime_case_result_lines": [
+        "test route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery ... ok"
+      ],
+      "compiler_diagnostics": [],
+      "retained_failure_contexts": [],
+      "cargo_json_errors": [],
+      "cargo_json_build_finished": [],
+      "cargo_json_target_executables": [],
+      "original_step_exit_codes": []
+    },
+    {
+      "file": {
+        "path": "case-3.log",
+        "bytes": 20829,
+        "sha256": "97997f1c101a64c603b844fbdbc9c01969f426659fcc491e10f3f52ccda06b1c"
+      },
+      "completed_rust_result_blocks": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 4.29s"
+      ],
+      "runtime_case_result_lines": [],
+      "compiler_diagnostics": [
+        "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`"
+      ],
+      "retained_failure_contexts": [
+        {
+          "line": 335,
+          "group": null,
+          "first_line": 332,
+          "lines": [
+            "running 1 test",
+            "test route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer ... network-relay management rejection: POST /api/v3/nodes/7e6d83b4-4968-47f4-a536-650f04fd4743/turn-resources status=403 Forbidden elapsed_us=649",
+            "network-relay management rejection: POST /api/v3/nodes/7e6d83b4-4968-47f4-a536-650f04fd4743/resources status=403 Forbidden elapsed_us=454",
+            "Error: Custom { kind: PermissionDenied, error: \"fixture B node listener shutdown: node QUIC relay stopped or refused\" }",
+            "FAILED",
+            "",
+            "failures:",
+            "",
+            "failures:",
+            "    route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer",
+            "",
+            "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 4.29s",
+            "",
+            "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`",
+            ""
+          ]
+        },
+        {
+          "line": 345,
+          "group": null,
+          "first_line": 342,
+          "lines": [
+            "",
+            "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 4.29s",
+            "",
+            "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`",
+            ""
+          ]
+        }
+      ],
+      "cargo_json_errors": [],
+      "cargo_json_build_finished": [],
+      "cargo_json_target_executables": [],
+      "original_step_exit_codes": []
+    },
+    {
+      "file": {
+        "path": "case-4.log",
+        "bytes": 20813,
+        "sha256": "e04f6c02e11d458fd2680b883ad40bb1b4fd13bc72167b3d4881b533224ff14b"
+      },
+      "completed_rust_result_blocks": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 4.22s"
+      ],
+      "runtime_case_result_lines": [],
+      "compiler_diagnostics": [
+        "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`"
+      ],
+      "retained_failure_contexts": [
+        {
+          "line": 335,
+          "group": null,
+          "first_line": 332,
+          "lines": [
+            "running 1 test",
+            "test route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release ... network-relay management rejection: POST /api/v3/nodes/b3ad2688-20af-495d-a5ad-e2edc4b52c9b/turn-resources status=403 Forbidden elapsed_us=928",
+            "network-relay management rejection: POST /api/v3/nodes/b3ad2688-20af-495d-a5ad-e2edc4b52c9b/resources status=403 Forbidden elapsed_us=741",
+            "Error: Custom { kind: PermissionDenied, error: \"fixture B node listener shutdown: node QUIC relay stopped or refused\" }",
+            "FAILED",
+            "",
+            "failures:",
+            "",
+            "failures:",
+            "    route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release",
+            "",
+            "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 4.22s",
+            "",
+            "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`",
+            ""
+          ]
+        },
+        {
+          "line": 345,
+          "group": null,
+          "first_line": 342,
+          "lines": [
+            "",
+            "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 4.22s",
+            "",
+            "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`",
+            ""
+          ]
+        }
+      ],
+      "cargo_json_errors": [],
+      "cargo_json_build_finished": [],
+      "cargo_json_target_executables": [],
+      "original_step_exit_codes": []
+    },
+    {
+      "file": {
+        "path": "case-5.log",
+        "bytes": 20823,
+        "sha256": "8401a7a470f7e94a9ea69c3acafba926ee7834dc634402092358fc0007e7e7df"
+      },
+      "completed_rust_result_blocks": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 4.26s"
+      ],
+      "runtime_case_result_lines": [],
+      "compiler_diagnostics": [
+        "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`"
+      ],
+      "retained_failure_contexts": [
+        {
+          "line": 335,
+          "group": null,
+          "first_line": 332,
+          "lines": [
+            "running 1 test",
+            "test route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup ... network-relay management rejection: POST /api/v3/nodes/88fbbe2c-d0c9-41f0-90bb-1957b21c3fe1/turn-resources status=403 Forbidden elapsed_us=754",
+            "network-relay management rejection: POST /api/v3/nodes/88fbbe2c-d0c9-41f0-90bb-1957b21c3fe1/resources status=403 Forbidden elapsed_us=718",
+            "Error: Custom { kind: PermissionDenied, error: \"fixture B node listener shutdown: node QUIC relay stopped or refused\" }",
+            "FAILED",
+            "",
+            "failures:",
+            "",
+            "failures:",
+            "    route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup",
+            "",
+            "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 4.26s",
+            "",
+            "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`",
+            ""
+          ]
+        },
+        {
+          "line": 345,
+          "group": null,
+          "first_line": 342,
+          "lines": [
+            "",
+            "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 4.26s",
+            "",
+            "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`",
+            ""
+          ]
+        }
+      ],
+      "cargo_json_errors": [],
+      "cargo_json_build_finished": [],
+      "cargo_json_target_executables": [],
+      "original_step_exit_codes": []
+    },
+    {
+      "file": {
+        "path": "case-6.log",
+        "bytes": 20537,
+        "sha256": "e4791ab791dbe6c95541ddd752ea39369cfd0968c01b0d8f9a026499bfc653db"
+      },
+      "completed_rust_result_blocks": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 2.50s"
+      ],
+      "runtime_case_result_lines": [],
+      "compiler_diagnostics": [
+        "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`"
+      ],
+      "retained_failure_contexts": [
+        {
+          "line": 333,
+          "group": null,
+          "first_line": 330,
+          "lines": [
+            "     Running tests/network_relay.rs (target/debug/deps/network_relay-e83786fa1eee6e52)",
+            "",
+            "running 1 test",
+            "test route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay ... Error: Custom { kind: Other, error: \"route-set recovery stopped old pair into unique recovery sources: Sdk(Trust)\" }",
+            "FAILED",
+            "",
+            "failures:",
+            "",
+            "failures:",
+            "    route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay",
+            "",
+            "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 2.50s",
+            "",
+            "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`",
+            ""
+          ]
+        },
+        {
+          "line": 343,
+          "group": null,
+          "first_line": 340,
+          "lines": [
+            "",
+            "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 2.50s",
+            "",
+            "error: test failed, to rerun pass `-p nestlink-sdk --test network_relay`",
+            ""
+          ]
+        }
+      ],
+      "cargo_json_errors": [],
+      "cargo_json_build_finished": [],
+      "cargo_json_target_executables": [],
+      "original_step_exit_codes": []
+    },
+    {
+      "file": {
+        "path": "build.log",
+        "bytes": 60184,
+        "sha256": "dc7c6cd9bf1bdd06c002778e8326f6e6f2ee9124584dd0d1664a60600257a748"
+      },
+      "completed_rust_result_blocks": [],
+      "runtime_case_result_lines": [],
+      "compiler_diagnostics": [],
+      "retained_failure_contexts": [],
+      "cargo_json_errors": [],
+      "cargo_json_build_finished": [],
+      "cargo_json_target_executables": [],
+      "original_step_exit_codes": []
+    }
+  ],
+  "independent_interpretation_details": {
+    "case_observations": [
+      {
+        "case_number": 1,
+        "name": "route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration",
+        "command": {
+          "name": "case-1",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-sdk",
+            "--test",
+            "network_relay",
+            "route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration",
+            "--",
+            "--exact",
+            "--nocapture",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "return_code": 0,
+          "timed_out": false,
+          "original_case": "route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration",
+          "exact_one_pass_zero_ignored": true
+        },
+        "log_file": {
+          "path": "case-1.log",
+          "bytes": 20466,
+          "sha256": "0c226072f2e0191341b23b212d359eeaa4c2fc372600c1d80b77d352f4f01cdf"
+        },
+        "original_summary": "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 5.19s",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "filtered": 21,
+        "elapsed_seconds": 5.19,
+        "classification": "complete-original-case-pass",
+        "original_error_lines": [],
+        "stack_abort_observed": false,
+        "business_assertions_before_fixture_finish_reached_by_exact_source_control_flow_inference": false,
+        "whole_case_passed": true,
+        "complete_fixture_cleanup_succeeded": null
+      },
+      {
+        "case_number": 2,
+        "name": "route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery",
+        "command": {
+          "name": "case-2",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-sdk",
+            "--test",
+            "network_relay",
+            "route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery",
+            "--",
+            "--exact",
+            "--nocapture",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "return_code": 0,
+          "timed_out": false,
+          "original_case": "route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery",
+          "exact_one_pass_zero_ignored": true
+        },
+        "log_file": {
+          "path": "case-2.log",
+          "bytes": 20186,
+          "sha256": "ca19b3a102b682f48454e5262404c3dcdb7f881c7592d21d8ba215599ae82955"
+        },
+        "original_summary": "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 2.64s",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "filtered": 21,
+        "elapsed_seconds": 2.64,
+        "classification": "complete-original-case-pass",
+        "original_error_lines": [],
+        "stack_abort_observed": false,
+        "business_assertions_before_fixture_finish_reached_by_exact_source_control_flow_inference": false,
+        "whole_case_passed": true,
+        "complete_fixture_cleanup_succeeded": null
+      },
+      {
+        "case_number": 3,
+        "name": "route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer",
+        "command": {
+          "name": "case-3",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-sdk",
+            "--test",
+            "network_relay",
+            "route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer",
+            "--",
+            "--exact",
+            "--nocapture",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "return_code": 101,
+          "timed_out": false,
+          "original_case": "route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer",
+          "exact_one_pass_zero_ignored": false
+        },
+        "log_file": {
+          "path": "case-3.log",
+          "bytes": 20829,
+          "sha256": "97997f1c101a64c603b844fbdbc9c01969f426659fcc491e10f3f52ccda06b1c"
+        },
+        "original_summary": "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 4.29s",
+        "passed": 0,
+        "failed": 1,
+        "ignored": 0,
+        "filtered": 21,
+        "elapsed_seconds": 4.29,
+        "classification": "original-case-failed-during-revoked-node-fixture-listener-join",
+        "original_error_lines": [
+          "Error: Custom { kind: PermissionDenied, error: \"fixture B node listener shutdown: node QUIC relay stopped or refused\" }"
+        ],
+        "stack_abort_observed": false,
+        "business_assertions_before_fixture_finish_reached_by_exact_source_control_flow_inference": true,
+        "whole_case_passed": false,
+        "complete_fixture_cleanup_succeeded": false
+      },
+      {
+        "case_number": 4,
+        "name": "route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release",
+        "command": {
+          "name": "case-4",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-sdk",
+            "--test",
+            "network_relay",
+            "route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release",
+            "--",
+            "--exact",
+            "--nocapture",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "return_code": 101,
+          "timed_out": false,
+          "original_case": "route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release",
+          "exact_one_pass_zero_ignored": false
+        },
+        "log_file": {
+          "path": "case-4.log",
+          "bytes": 20813,
+          "sha256": "e04f6c02e11d458fd2680b883ad40bb1b4fd13bc72167b3d4881b533224ff14b"
+        },
+        "original_summary": "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 4.22s",
+        "passed": 0,
+        "failed": 1,
+        "ignored": 0,
+        "filtered": 21,
+        "elapsed_seconds": 4.22,
+        "classification": "original-case-failed-during-revoked-node-fixture-listener-join",
+        "original_error_lines": [
+          "Error: Custom { kind: PermissionDenied, error: \"fixture B node listener shutdown: node QUIC relay stopped or refused\" }"
+        ],
+        "stack_abort_observed": false,
+        "business_assertions_before_fixture_finish_reached_by_exact_source_control_flow_inference": true,
+        "whole_case_passed": false,
+        "complete_fixture_cleanup_succeeded": false
+      },
+      {
+        "case_number": 5,
+        "name": "route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup",
+        "command": {
+          "name": "case-5",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-sdk",
+            "--test",
+            "network_relay",
+            "route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup",
+            "--",
+            "--exact",
+            "--nocapture",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "return_code": 101,
+          "timed_out": false,
+          "original_case": "route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup",
+          "exact_one_pass_zero_ignored": false
+        },
+        "log_file": {
+          "path": "case-5.log",
+          "bytes": 20823,
+          "sha256": "8401a7a470f7e94a9ea69c3acafba926ee7834dc634402092358fc0007e7e7df"
+        },
+        "original_summary": "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 4.26s",
+        "passed": 0,
+        "failed": 1,
+        "ignored": 0,
+        "filtered": 21,
+        "elapsed_seconds": 4.26,
+        "classification": "original-case-failed-during-revoked-node-fixture-listener-join",
+        "original_error_lines": [
+          "Error: Custom { kind: PermissionDenied, error: \"fixture B node listener shutdown: node QUIC relay stopped or refused\" }"
+        ],
+        "stack_abort_observed": false,
+        "business_assertions_before_fixture_finish_reached_by_exact_source_control_flow_inference": true,
+        "whole_case_passed": false,
+        "complete_fixture_cleanup_succeeded": false
+      },
+      {
+        "case_number": 6,
+        "name": "route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay",
+        "command": {
+          "name": "case-6",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-sdk",
+            "--test",
+            "network_relay",
+            "route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay",
+            "--",
+            "--exact",
+            "--nocapture",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "return_code": 101,
+          "timed_out": false,
+          "original_case": "route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay",
+          "exact_one_pass_zero_ignored": false
+        },
+        "log_file": {
+          "path": "case-6.log",
+          "bytes": 20537,
+          "sha256": "e4791ab791dbe6c95541ddd752ea39369cfd0968c01b0d8f9a026499bfc653db"
+        },
+        "original_summary": "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 21 filtered out; finished in 2.50s",
+        "passed": 0,
+        "failed": 1,
+        "ignored": 0,
+        "filtered": 21,
+        "elapsed_seconds": 2.5,
+        "classification": "original-case-failed-with-sdk-trust-recovery-error",
+        "original_error_lines": [
+          "Error: Custom { kind: Other, error: \"route-set recovery stopped old pair into unique recovery sources: Sdk(Trust)\" }"
+        ],
+        "stack_abort_observed": false,
+        "business_assertions_before_fixture_finish_reached_by_exact_source_control_flow_inference": false,
+        "whole_case_passed": false,
+        "complete_fixture_cleanup_succeeded": null
+      }
+    ],
+    "source_control_flow_context": [
+      {
+        "file": "crates/sdk/tests/network_relay/route_set/continuation.rs",
+        "first_line": 556,
+        "lines": [
+          "    }",
+          "    assert_eq!(",
+          "        controller.channels().network_connection_binding()?,",
+          "        original_controller",
+          "    );",
+          "    assert_eq!(host.channels().network_connection_binding()?, original_host);",
+          "    for observation in [&controller_observation, &host_observation] {",
+          "        let snapshot = observation.snapshot();",
+          "        assert_eq!(snapshot.path_epoch, Some(2));",
+          "        assert_eq!(snapshot.binding.route_binding, Some(route_bindings[0]));",
+          "        assert_eq!(snapshot.binding.business_generation, generation);",
+          "        assert_eq!(snapshot.binding.transport_group, Some(group));",
+          "        // Old ACK/counter windows cannot change their route label at commit.",
+          "        assert_eq!(snapshot.rtt, None);",
+          "        assert_eq!(snapshot.business_tx, None);",
+          "        assert_eq!(snapshot.packet_loss, None);",
+          "    }",
+          "    drop(rebind(&addresses)?);",
+          "    assert_eq!(controller.status()?.policy.epoch, 2);",
+          "    assert_eq!(host.status()?.policy.epoch, 2);",
+          "    assert_eq!(controller.status()?.policy.pending_retirements, 0);",
+          "    assert_eq!(host.status()?.policy.pending_retirements, 0);",
+          "    assert_eq!(f.control.counters()?.opened_connections, 2);",
+          "    assert_eq!(second.control.counters()?.opened_connections, 2);",
+          "    // The same original observer must follow the actual committed owner.",
+          "    // Withdrawal of the fully released old member cannot revoke the healthy",
+          "    // new member, while its immutable signed group remains unchanged.",
+          "    f.sdk.revoke_node(&second.id).await?;",
+          "    tokio::time::sleep(Duration::from_millis(1100)).await;",
+          "    for chunk in payload.chunks(nestlink_protocol::FILE_CHUNK_BYTES as usize) {",
+          "        let (sent, received) = tokio::time::timeout(Duration::from_secs(2), async {",
+          "            tokio::join!(",
+          "                host.channels().send(Channel::FileRead, chunk),",
+          "                controller.channels().receive()",
+          "            )",
+          "        })",
+          "        .await?;",
+          "        sent?;",
+          "        assert_eq!(received?.payload, chunk);",
+          "    }",
+          "    if recoverable_teardown {",
+          "        let (controller_report, host_report) = tokio::try_join!(",
+          "            controller.shutdown(StopReason::TransportLost),",
+          "            host.shutdown(StopReason::TransportLost),",
+          "        )?;",
+          "        assert_eq!(controller_report.reason, StopReason::TransportLost);",
+          "        assert_eq!(host_report.reason, StopReason::TransportLost);",
+          "        // These budgets follow actual current/old carrier and guardian joins.",
+          "        // A late guardian Drop must not turn their recoverable retirement",
+          "        // into PermissionDenied or extend the original signed deadline.",
+          "        for (budget, original_deadline) in [",
+          "            controller",
+          "                .channels()",
+          "                .lease_control()",
+          "                .reconnection_budget()?,",
+          "            host.channels().lease_control().reconnection_budget()?,",
+          "        ]",
+          "        .into_iter()",
+          "        .zip(original_lease_deadlines)",
+          "        {",
+          "            assert_eq!(budget.permit().digest(), f.permit.digest());",
+          "            assert_eq!(budget.deadline(), original_deadline);",
+          "            assert!(budget.deadline() > Instant::now().into_std());",
+          "        }",
+          "        f.sdk",
+          "            .revoke_network_remote_route_set(f.pin.space_id(), &set)",
+          "            .await?;",
+          "    } else {",
+          "        f.sdk",
+          "            .revoke_network_remote_route_set(f.pin.space_id(), &set)",
+          "            .await?;",
+          "        tokio::try_join!(",
+          "            controller.shutdown(StopReason::Revoked),",
+          "            host.shutdown(StopReason::Revoked)",
+          "        )?;",
+          "    }",
+          "    drop(rebind(&standby)?);",
+          "    assert!(controller_observation.snapshot().stopped);",
+          "    assert!(host_observation.snapshot().stopped);",
+          "    second.finish().await?;",
+          "    f.finish().await?;",
+          "    Ok(())",
+          "}",
+          "",
+          "#[tokio::test]",
+          "async fn signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release()",
+          "-> Result {",
+          "    original_inner_migration(false, false, false).await",
+          "}",
+          "",
+          "#[tokio::test]",
+          "async fn one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer()",
+          "-> Result {",
+          "    original_inner_migration(true, false, false).await",
+          "}",
+          "",
+          "#[tokio::test]",
+          "async fn input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery()",
+          "-> Result {",
+          "    original_inner_migration(true, true, false).await",
+          "}",
+          "",
+          "#[tokio::test]",
+          "async fn migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup()",
+          "-> Result {",
+          "    original_inner_migration(false, false, true).await",
+          "}"
+        ],
+        "explanation": "In original_inner_migration(false transient), original inner/epoch/binding, released old sockets, deliberate second-node revocation, continued file chunks, shutdown/recovery-budget and spare rebind assertions precede second.finish at line 635. Exact wrappers at 641-661 bind cases 3/4/5 to this branch."
+      },
+      {
+        "file": "crates/sdk/tests/network_relay/chain.rs",
+        "first_line": 133,
+        "lines": [
+          "    pub(super) async fn finish(&mut self) -> Result {",
+          "        self.shutdown.send_replace(true);",
+          "        if let Some(task) = self.task.as_mut() {",
+          "            tokio::time::timeout(Duration::from_secs(5), task)",
+          "                .await",
+          "                .map_err(|error| {",
+          "                    io::Error::new(",
+          "                        io::ErrorKind::TimedOut,",
+          "                        format!(\"fixture B node listener task join: {error}\"),",
+          "                    )",
+          "                })?",
+          "                .map_err(|error| {",
+          "                    io::Error::other(format!(\"fixture B node listener task join failed: {error}\"))",
+          "                })?",
+          "                .map_err(|error| {",
+          "                    io::Error::new(",
+          "                        error.kind(),",
+          "                        format!(\"fixture B node listener shutdown: {error}\"),",
+          "                    )",
+          "                })?;",
+          "        }",
+          "        self.task = None;",
+          "        self.listener",
+          "            .close_and_wait(Instant::now() + Duration::from_secs(5))",
+          "            .await",
+          "            .map_err(|error| {",
+          "                io::Error::new(",
+          "                    error.kind(),",
+          "                    format!(\"fixture B node listener physical release: {error}\"),",
+          "                )",
+          "            })?;",
+          "        Ok(())",
+          "    }"
+        ],
+        "explanation": "The exact reported fixture B node listener shutdown prefix is created only by ChainNode.finish when the joined listener returns an error, before its subsequent listener close_and_wait."
+      }
+    ],
+    "preexisting_diagnostics_download_comparison": [
+      {
+        "path": "build.log",
+        "bytes": 60184,
+        "sha256": "dc7c6cd9bf1bdd06c002778e8326f6e6f2ee9124584dd0d1664a60600257a748",
+        "matches_independently_verified_official_payload": true
+      },
+      {
+        "path": "case-1.log",
+        "bytes": 20466,
+        "sha256": "0c226072f2e0191341b23b212d359eeaa4c2fc372600c1d80b77d352f4f01cdf",
+        "matches_independently_verified_official_payload": true
+      },
+      {
+        "path": "case-2.log",
+        "bytes": 20186,
+        "sha256": "ca19b3a102b682f48454e5262404c3dcdb7f881c7592d21d8ba215599ae82955",
+        "matches_independently_verified_official_payload": true
+      },
+      {
+        "path": "case-3.log",
+        "bytes": 20829,
+        "sha256": "97997f1c101a64c603b844fbdbc9c01969f426659fcc491e10f3f52ccda06b1c",
+        "matches_independently_verified_official_payload": true
+      },
+      {
+        "path": "case-4.log",
+        "bytes": 20813,
+        "sha256": "e04f6c02e11d458fd2680b883ad40bb1b4fd13bc72167b3d4881b533224ff14b",
+        "matches_independently_verified_official_payload": true
+      },
+      {
+        "path": "case-5.log",
+        "bytes": 20823,
+        "sha256": "8401a7a470f7e94a9ea69c3acafba926ee7834dc634402092358fc0007e7e7df",
+        "matches_independently_verified_official_payload": true
+      },
+      {
+        "path": "case-6.log",
+        "bytes": 20537,
+        "sha256": "e4791ab791dbe6c95541ddd752ea39369cfd0968c01b0d8f9a026499bfc653db",
+        "matches_independently_verified_official_payload": true
+      },
+      {
+        "path": "receipt.json",
+        "bytes": 6010,
+        "sha256": "af70b5d87dc8a2fffa26ef54e6d0ef1ae2a881e814c3b78fcb59b8ae5cda5034",
+        "matches_independently_verified_official_payload": true
+      }
+    ]
+  },
+  "interpretation": [
+    "Original six-case diagnostics run 41607835980 completed/failure at this exact source. Build succeeds, all six original exact cases execute independently with ordinary stack, no timeout, and one complete result block each. Cases 1/2 pass; cases 3/4/5/6 retain exit 101 and failed original harness outcomes. No case is relabeled as a full pass.",
+    "Cases 3/4/5 return PermissionDenied with fixture B node listener shutdown: node QUIC relay stopped or refused. The exact-source helper control flow establishes that their earlier business, binding and socket/standby assertions were reached before the deliberate old-node revocation was rejected by the ordinary fixture finish path. This is a source-control-flow inference grounded in the returned error and retained source context. The whole cases and full fixture cleanup remain failed.",
+    "Case 6 now completes its Rust harness with an ordinary Sdk(Trust) recovery error: route-set recovery stopped old pair into unique recovery sources. This run has no stack abort. That changes the observed failure mode, not the original failed outcome, and does not certify successful safe recovery.",
+    "The official ZIP, all eight extracted files, seven producer payload digest entries and complete official raw job log are independently verified. The preexisting diagnostics download is compared byte for byte with the official verified payload without overwriting it. Exact Git source hashes retain the workflow, original test and fixture code used for the interpretation.",
+    "The separate production SDK relay DROP producer is not substituted for these six original cases. Whole acceptance and release eligibility remain unclaimed; assertions, stack, deadlines, selectors, public trust and product thresholds are unchanged. Local work consists only of artifact/log/source bytes and read-only parsing; no project build, lint or test runs locally."
+  ],
+  "acceptance_claims": [],
+  "release_eligibility_claimed": false,
+  "independent_audit_execution": {
+    "kind": "local_uploaded_artifact_and_exact_git_blob_bytes_only",
+    "source_builds_or_project_tests_or_project_parsers_run_locally": false,
+    "operations": [
+      "official metadata/log/artifact downloads",
+      "official ZIP identity/size/SHA256 comparison and extraction",
+      "all actual file and producer byte/hash comparisons",
+      "exact Git source blob binary exports and hashes",
+      "read-only original receipt/log/source control flow observations",
+      "for DROP only: independent PowerShell nft/pcap parsing and nearest-rank sample aggregation"
+    ]
+  }
+}

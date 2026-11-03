@@ -4,6 +4,10 @@ use crate::migration::{CommittedMigration, connection_binding};
 use nestlink_protocol::network_migration::packet::Mode;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+// Authenticated inner control lifecycle only, after all four signed phases.
+// This is never a business/path authorization or a recoverable physical fault.
+const CONTROL_COMPLETE_CLOSE_CODE: u32 = 0x4e05;
+
 #[derive(Clone, Debug)]
 pub struct PathChange {
     pub previous_path_epoch: u64,
@@ -28,6 +32,68 @@ fn now_ms() -> io::Result<u64> {
 }
 
 impl RoutedTransport {
+    /// Join the successful control endpoint before safe-generation recovery
+    /// revokes its raw carrier. The unique Committed writer has already seen
+    /// Quinn acknowledge its final signed bytes; only it may close first.
+    /// The reader keeps its raw I/O alive until that exact authenticated close,
+    /// so it cannot destroy the writer's still-pending final ACK path.
+    pub async fn finish_control_for_recovery(
+        &mut self,
+        receipt: &CommittedMigration,
+        deadline: Instant,
+    ) -> io::Result<()> {
+        let binding = receipt.binding();
+        let raw = self.raw.as_ref().ok_or_else(not_connected)?;
+        let authority = raw.authorization();
+        authority.check_live()?;
+        if self.close_deadline.is_some()
+            || self.migration_mode != Some(Mode::Control)
+            || self.path_epoch != 0
+            || !authority.migration_scope().is_some_and(|scope| scope.matches(binding))
+            || binding.candidate_route != authority.binding_digest()
+            || binding.peers != authority.peers()
+            || binding.control_connection != connection_binding(self.connection()?)?
+        {
+            return Err(denied());
+        }
+        let remaining = binding.expires_at_unix_ms.checked_sub(now_ms()?)
+            .filter(|remaining| *remaining > 0)
+            .ok_or_else(|| io::Error::from(io::ErrorKind::TimedOut))?;
+        let deadline = deadline.min(authority.deadline())
+            .min(Instant::now() + Duration::from_millis(remaining));
+        if Instant::now() >= deadline {
+            return Err(io::ErrorKind::TimedOut.into());
+        }
+        if self.adjacency.local() == binding.peers.first {
+            // The Proposal writer reads Committed. It must not revoke the raw
+            // socket while the other endpoint is still awaiting its final ACK.
+            match tokio::time::timeout_at(deadline, self.connection()?.closed()).await {
+                Ok(quinn::ConnectionError::ApplicationClosed(close))
+                    if close.error_code == quinn::VarInt::from_u32(CONTROL_COMPLETE_CLOSE_CODE) => {}
+                Ok(error) => return Err(io::Error::new(io::ErrorKind::PermissionDenied, error)),
+                Err(_) => return Err(io::ErrorKind::TimedOut.into()),
+            }
+        } else {
+            self.connection()?.close(CONTROL_COMPLETE_CLOSE_CODE.into(), b"signed migration control complete");
+        }
+        if let Some(endpoint) = &self.endpoint {
+            endpoint.close(CONTROL_COMPLETE_CLOSE_CODE.into(), b"signed migration control complete");
+        }
+        self.connection = None;
+        self.endpoint = None;
+        // Retain raw/hub/adjacency and their authority during Quinn's mature
+        // close/drain. Only its actual tracked driver and pollers acknowledge
+        // release; cancellation leaves the original receiver in this owner.
+        wait_socket_released(&mut self.released, deadline)
+            .await
+            .map_err(|error| io::Error::new(error.kind(), format!("completed migration control endpoint release: {error}")))?;
+        self.raw.as_ref().ok_or_else(not_connected)?.authorization().check_live()?;
+        if now_ms()? >= binding.expires_at_unix_ms || Instant::now() >= deadline {
+            return Err(io::ErrorKind::TimedOut.into());
+        }
+        Ok(())
+    }
+
     fn candidate_scope(&self, candidate: &Self) -> io::Result<()> {
         let original = self.raw.as_ref().ok_or_else(not_connected)?.authorization();
         let next = candidate

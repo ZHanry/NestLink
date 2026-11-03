@@ -116,7 +116,7 @@ def run_slice(experiment: SOCKET.Experiment, executable: Path, private: Path) ->
         ids = (experiment.output / result["log"]).read_text().splitlines()[1:]
         require(len(ids) == 1 and ids[0] != os.readlink("/proc/self/ns/net"), "dedicated kernel namespace required")
         facts["kernel_namespace"] = ids[0]
-        capture = experiment.launch("production-sdk-capture", [*prefix, "tcpdump", "--immediate-mode", "-i", "lo", "-nn", "-U", "-s", "0", "-Z", pwd.getpwuid(os.getuid()).pw_name, "-w", str(experiment.output / "production-sdk.pcap"), "udp"])
+        capture = experiment.launch("production-sdk-capture", [*prefix, "tcpdump", "--immediate-mode", "-B", "4096", "-i", "lo", "-nn", "-U", "-s", "0", "-Z", pwd.getpwuid(os.getuid()).pw_name, "-w", str(experiment.output / "production-sdk.pcap"), "udp"])
         deadline = time.monotonic() + 3
         while "listening on lo" not in (experiment.output / capture[2]["log"]).read_text(errors="replace"):
             require(capture[0].poll() is None and time.monotonic() < deadline, "tcpdump did not become ready")
@@ -170,8 +170,15 @@ def run_slice(experiment: SOCKET.Experiment, executable: Path, private: Path) ->
         durations = sorted(trial["elapsed_us"] for trial in samples)
         require(receipt["p95_us"] == durations[(TRIALS * 95 + 99) // 100 - 1], "p95 must match the actual samples")
         facts["sdk"] = receipt
-        experiment.stop_capture(capture)
-        capture = None
+        try:
+            experiment.stop_capture(capture)
+        finally:
+            # stop_capture may reap the process and then reject dropped packets.
+            # Preserve that failure without reporting the already reaped owner
+            # as an additional early-exit cleanup error. A live owner is still
+            # retained for the existing finally cleanup path.
+            if capture[0].poll() is not None:
+                capture = None
         experiment.command("capture-readable", ["sudo", "-n", "chown", pwd.getpwuid(os.getuid()).pw_name, str(experiment.output / "production-sdk.pcap")])
         facts["capture"] = capture_facts(experiment.output / "production-sdk.pcap", facts["trials"])
         facts["passed"] = True

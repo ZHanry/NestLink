@@ -132,6 +132,21 @@ arbitrary request is replayed. Native media does not claim original-generation
 seamless continuity. The lower-level commit API independently rejects these
 unsafe channel sets, so callers cannot bypass the product boundary.
 
+Successful safe recovery first joins the control endpoint while its raw
+carrier remains authorized and owned. The unique Committed writer already
+awaits Quinn's acknowledgement of the final signed bytes; it then initiates a
+dedicated inner-control completion close. The Committed reader waits for that
+exact authenticated close before closing its own control endpoint. Both await
+their original tracked endpoint/driver/poller release receipts within the same
+original two-second control deadline, then repeat the existing exact authority
+GET before returning a recovery receipt. Only after those joins may full
+business shutdown revoke standby raw I/O. Otherwise the reader could destroy
+the final ACK path while the writer still awaits it. This completion close is
+control lifecycle evidence after all four signed phases, never new business
+authority or a recoverable physical-fault classification. Real denial,
+revocation, cancellation and expiry still revoke immediately; no generic
+ConnectionLost or ApplicationClosed error is accepted as completion.
+
 This bounded two-member route set consumes each original node admission once.
 After a retained-file migration the old allocation is fully released and is
 not replayed as another standby. A later failure uses the existing independently

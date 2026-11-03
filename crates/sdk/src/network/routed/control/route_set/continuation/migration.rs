@@ -416,6 +416,31 @@ impl ContinuousRouteSetSession {
                 return Err(SdkError::NodeQuic(error).into());
             }
         };
+        let retained_business = self.channels.can_retain_business_for_path_migration()?;
+        // This borrowed authentication future owns no control connection clone
+        // during driver release. Keep the actual carrier owner in the standby.
+        drop(connection);
+        if !retained_business {
+            // Full business teardown revokes standby raw I/O. First let the
+            // unique Committed writer finish its real QUIC ACK, then join both
+            // successful control drivers in role order within the SAME bound.
+            // A denial/cancel/error keeps the existing immediate revoke path.
+            let finished = self.standby
+                .as_mut()
+                .filter(|slot| slot.index == candidate_index)
+                .and_then(|slot| slot.transport.as_mut())
+                .ok_or(SdkError::Trust)?
+                .finish_control_for_recovery(&committed, deadline)
+                .await;
+            if let Err(error) = finished {
+                let _ = lease.stop(if error.kind() == io::ErrorKind::PermissionDenied {
+                    StopReason::Revoked
+                } else {
+                    StopReason::TransportLost
+                });
+                return Err(SdkError::ServiceIo(error).into());
+            }
+        }
         // Refresh exact original authority again after signatures, before the
         // caller may retire a still-working business generation.
         self.route = match tokio::time::timeout_at(
@@ -449,7 +474,7 @@ impl ContinuousRouteSetSession {
             proposal,
             candidate_index,
             committed,
-            retained_business: self.channels.can_retain_business_for_path_migration()?,
+            retained_business,
         })
     }
 

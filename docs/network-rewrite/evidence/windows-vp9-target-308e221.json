@@ -1,0 +1,3938 @@
+{
+  "schema_version": 1,
+  "kind": "windows-vp9-rgb444-exact-source-artifact-and-ordinary-target-direction-acceptance",
+  "recorded_at_utc": "2026-11-03T09:26:46.7340024Z",
+  "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+  "build": {
+    "repository": "ZHanry/NestLink",
+    "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+    "workflow_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+    "run_id": 41608290304,
+    "attempt": 1,
+    "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41608290304",
+    "status": "completed",
+    "conclusion": "success",
+    "workflow_path": ".github/workflows/windows-media-target-tools.yml",
+    "created_at": "2026-11-03T09:06:15Z",
+    "updated_at": "2026-11-03T09:11:29Z",
+    "metadata_files": [
+      {
+        "path": "run.json",
+        "bytes": 11811,
+        "sha256": "347797b46cdbc251fa02965c00bc52006b8394f6fe99321c8784829decfc4b0d"
+      },
+      {
+        "path": "jobs.json",
+        "bytes": 2867,
+        "sha256": "80e3f50812d7b906ec8d0f74059000707617bd62be74bafdf8a210342bf27c34"
+      },
+      {
+        "path": "artifacts.json",
+        "bytes": 761,
+        "sha256": "bd1cd2fb8c3de2350dd336b243d3d18c7f3575778010c76f0453b0e9295110f8"
+      }
+    ],
+    "job": {
+      "id": 125823518540,
+      "run_id": 41608290304,
+      "workflow_name": "Build original Windows media direction tools for target diagnostics",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/ZHanry/NestLink/actions/runs/41608290304",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVNHMvs8AAAAdS6qHTA",
+      "head_sha": "308e221007abe4369b44630f88acf13a46412bbb",
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125823518540",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41608290304/job/125823518540",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-03T09:06:17Z",
+      "started_at": "2026-11-03T09:06:47Z",
+      "completed_at": "2026-11-03T09:11:28Z",
+      "name": "tools",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T09:06:50Z",
+          "completed_at": "2026-11-03T09:06:52Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T09:06:52Z",
+          "completed_at": "2026-11-03T09:07:01Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T09:07:01Z",
+          "completed_at": "2026-11-03T09:07:13Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T09:07:13Z",
+          "completed_at": "2026-11-03T09:07:31Z"
+        },
+        {
+          "name": "Select original locked codec prefix",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T09:07:31Z",
+          "completed_at": "2026-11-03T09:07:32Z"
+        },
+        {
+          "name": "Build and verify original native components on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T09:07:32Z",
+          "completed_at": "2026-11-03T09:09:49Z"
+        },
+        {
+          "name": "Build bounded original direction tools and retain exact executable hashes",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T09:09:49Z",
+          "completed_at": "2026-11-03T09:11:23Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T09:11:23Z",
+          "completed_at": "2026-11-03T09:11:25Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-11-03T09:11:25Z",
+          "completed_at": "2026-11-03T09:11:26Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-03T09:11:26Z",
+          "completed_at": "2026-11-03T09:11:26Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/ZHanry/NestLink/check-runs/125823518540",
+      "labels": [
+        "windows-2025"
+      ],
+      "runner_id": 1000012367,
+      "runner_name": "GitHub Actions 1000012367",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    "artifact": {
+      "id": 13218101585,
+      "node_id": "MDg6QXJ0aWZhY3QxMzIxODEwMTU4NQ==",
+      "name": "windows-media-target-tools-308e221007abe4369b44630f88acf13a46412bbb-1",
+      "size_in_bytes": 1784794,
+      "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13218101585",
+      "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13218101585/zip",
+      "expired": false,
+      "digest": "sha256:0cdee2a7721928a49dd449b21035e44d551db339f057b7607584367f5cdf0669",
+      "created_at": "2026-11-03T09:11:24Z",
+      "updated_at": "2026-11-03T09:11:24Z",
+      "expires_at": "2026-12-03T09:11:23Z",
+      "workflow_run": {
+        "id": 41608290304,
+        "repository_id": 1423035582,
+        "head_repository_id": 1423035582,
+        "head_branch": "main",
+        "head_sha": "308e221007abe4369b44630f88acf13a46412bbb"
+      }
+    },
+    "zip": {
+      "path": "vp9-tools-308e221-verified.zip",
+      "bytes": 1784794,
+      "sha256": "0cdee2a7721928a49dd449b21035e44d551db339f057b7607584367f5cdf0669"
+    },
+    "official_zip_digest_size_run_source_verified": true,
+    "producer_receipt_file": {
+      "path": "receipt.json",
+      "bytes": 35475,
+      "sha256": "e1e7b89dfca15115a104a3f00e6425af01b23ac594f8c2f6de27941939bf04cf"
+    },
+    "producer_receipt": {
+      "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+      "workflow_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+      "workflow": "ZHanry/NestLink/.github/workflows/windows-media-target-tools.yml@refs/heads/main",
+      "run_id": "41608290304",
+      "run_attempt": "1",
+      "runner_environment": "github-hosted",
+      "runner_os": "Windows",
+      "cargo_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+      "scope": "Finite original native direction workloads with synthetic input. No desktop capture, transport, scanout, sustained performance, HDR or native ten-bit capture qualification.",
+      "target_execution_performed": false,
+      "commands": [
+        {
+          "name": "build",
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked",
+            "-p",
+            "nestlink-media-codec",
+            "--examples"
+          ],
+          "return_code": 0
+        },
+        {
+          "name": "strict",
+          "argv": [
+            "cargo",
+            "clippy",
+            "--release",
+            "--locked",
+            "-p",
+            "nestlink-media-codec",
+            "--examples",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "return_code": 0
+        }
+      ],
+      "passed": true,
+      "files": [
+        {
+          "path": "build.log",
+          "bytes": 5259,
+          "sha256": "437ad1e06e4ae868277421995214ac0b94880292d0d7f15ec8be28aeeed8d208"
+        },
+        {
+          "path": "Cargo.lock",
+          "bytes": 209815,
+          "sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 11354,
+          "sha256": "06a4d0421042d3d1e428040475b124cde7f4f25c39a68a1898fa66a9c1fbf7cc"
+        },
+        {
+          "path": "native-codecs.lock.json",
+          "bytes": 4682,
+          "sha256": "7b529084629ed34e5c62838680c764f2730227740cd92e2dc079bf16a058d3df"
+        },
+        {
+          "path": "native-licenses/amf/AMF/core/Factory.h",
+          "bytes": 6139,
+          "sha256": "644814e97dd359f08d66a73748b60262149b106d28423c31b573cecb4be57979"
+        },
+        {
+          "path": "native-licenses/libvpx/LICENSE",
+          "bytes": 1537,
+          "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615"
+        },
+        {
+          "path": "native-licenses/libvpx/PATENTS",
+          "bytes": 1436,
+          "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+        },
+        {
+          "path": "native-licenses/libvpx/third_party/libyuv/LICENSE",
+          "bytes": 1506,
+          "sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f"
+        },
+        {
+          "path": "native-licenses/libvpx/third_party/libyuv/README.libvpx",
+          "bytes": 727,
+          "sha256": "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814"
+        },
+        {
+          "path": "native-licenses/libvpx/third_party/x86inc/LICENSE",
+          "bytes": 936,
+          "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8"
+        },
+        {
+          "path": "native-licenses/opus/COPYING",
+          "bytes": 1945,
+          "sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551"
+        },
+        {
+          "path": "native-licenses/opus/LICENSE_PLEASE_READ.txt",
+          "bytes": 703,
+          "sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d"
+        },
+        {
+          "path": "nestlink-codecs.json",
+          "bytes": 44740,
+          "sha256": "74007acfdde3c5c9dfaf42acad45903bb56090a0ecead9d7671a593a38df5ea1"
+        },
+        {
+          "path": "notices/amf-1.5.3-LICENSE.txt",
+          "bytes": 1747,
+          "sha256": "eb297397aaa455b5668ab67d216b83828466152dab123fa92384c6ec16b74170"
+        },
+        {
+          "path": "notices/async-broadcast-0.7.2-MIT.txt",
+          "bytes": 1079,
+          "sha256": "24e5860bf589d8501643e6ea51ffb3df66db2867492b09033d486183efbfa970"
+        },
+        {
+          "path": "notices/async-recursion-1.2.0-MIT.txt",
+          "bytes": 1022,
+          "sha256": "30fefc3a7d6a0041541858293bcbea2dde4caa4c0a5802f996a7f7e8c0085652"
+        },
+        {
+          "path": "notices/async-trait-0.1.92-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/base16-0.2.1-LICENSE-CC0.txt",
+          "bytes": 7048,
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+          "bytes": 1559,
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-APACHE",
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-MIT",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE.chromium",
+          "bytes": 1559,
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-APACHE",
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-MIT",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE.chromium",
+          "bytes": 1559,
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-APACHE",
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-MIT",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE.chromium",
+          "bytes": 1559,
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+        },
+        {
+          "path": "notices/cargo-upstream/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-APACHE",
+          "bytes": 10818,
+          "sha256": "10d30a673cd5e9349bdc02aeb48f14b3386d27d0da32df8f0a555d4aa16aa551"
+        },
+        {
+          "path": "notices/cargo-upstream/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-MIT",
+          "bytes": 1093,
+          "sha256": "c8167fdeeed46d3f244d3f85c5bf998ce889343691c32be2c61a8bc4b5c08333"
+        },
+        {
+          "path": "notices/cargo-upstream/brendanzab/gl-rs/ea503e8d5fb6d73c6030e6191ce738cd3bf3433e/LICENSE",
+          "bytes": 11358,
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "notices/cargo-upstream/brendanzab/gl-rs/f150967b1c44ae888e6676f93f639ebc82771bdc/LICENSE",
+          "bytes": 11358,
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "notices/cargo-upstream/DoumanAsh/clipboard-win/3b27cf2bfd1adcfa6e0264eb51c1025ddaf0f342/LICENSE",
+          "bytes": 1338,
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "path": "notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "bytes": 10850,
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "bytes": 1092,
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        },
+        {
+          "path": "notices/cargo-upstream/jni-rs/jni-rs/33045a124105c939d1e2cbdcb5a39e5d868ffa03/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/jni-rs/jni-rs/33045a124105c939d1e2cbdcb5a39e5d868ffa03/LICENSE-MIT",
+          "bytes": 1104,
+          "sha256": "fea1d5bf3dd71605ce5d7d2ff695c1837e914c77195e523a86b5391716477960"
+        },
+        {
+          "path": "notices/cargo-upstream/jni-rs/jni-rs/5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/jni-rs/jni-rs/5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7/LICENSE-MIT",
+          "bytes": 1104,
+          "sha256": "fea1d5bf3dd71605ce5d7d2ff695c1837e914c77195e523a86b5391716477960"
+        },
+        {
+          "path": "notices/cargo-upstream/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-APACHE",
+          "bytes": 11358,
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "notices/cargo-upstream/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-MIT",
+          "bytes": 1071,
+          "sha256": "1d85bd754b04ceec93e98e890edd1fa3c6a22e81bcb32135806beeccefa51cd1"
+        },
+        {
+          "path": "notices/cargo-upstream/JulianSchmid/etherparse/70f72bee542ae49efebb8d2106bde64f84f02a43/LICENSE-APACHE",
+          "bytes": 11342,
+          "sha256": "affcd3a3acd2a70d6405c6a5088413da8f97b91f5074ae313fbaa2ec4b45b19f"
+        },
+        {
+          "path": "notices/cargo-upstream/JulianSchmid/etherparse/70f72bee542ae49efebb8d2106bde64f84f02a43/LICENSE-MIT",
+          "bytes": 1069,
+          "sha256": "4be7e6a9b3e7293807bbebfd081941c2d87fa445733e1ad0a9fc6efbc4f3029a"
+        },
+        {
+          "path": "notices/cargo-upstream/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-APACHE",
+          "bytes": 10850,
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "notices/cargo-upstream/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-MIT",
+          "bytes": 1053,
+          "sha256": "2710a622a896bba67356913d4d0492cab5465f61b2ecce6d880aeb483834fb50"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/30fa4e039455bea69c9467e8ec45cad7fce0722f/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/43359694b6596f88d911b9c8d8d92a121c27d0ce/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/4e23d2b6f1cb74ef7eb08b40ef7f14baa85a7285/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/5f2d5115537d08043bba0293c406c4f9b97a4dae/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/6865c1f951bfa0bc5b107aa69286a110cd6f45ca/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/9b2e313d20c89603ddc0deb7b1133e60c877faed/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/d665dd4b89151e5d797df3db5cd2260cbe1e8fae/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/da62c0cb9a1d814cf480c2f1dae5f67f4ea4773f/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "bytes": 1070,
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/4fc083f1c6d6784577e38b0ee8dbd344481e2fd2/LICENSE.txt",
+          "bytes": 1066,
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/5237cbf081d04ef75a1f6a207b4018e7c1ae7438/LICENSE.txt",
+          "bytes": 1066,
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "bytes": 1066,
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "bytes": 1339,
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/8852b424193ca41602281b3d7540d7c8ed51e49a/LICENSE.md",
+          "bytes": 1339,
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/8d214f5477365ffcbcbb7de058c86ed9a518efb7/LICENSE.md",
+          "bytes": 1339,
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/b4167b582b2f75f9a1be75495c41b765344fd03c/LICENSE.md",
+          "bytes": 1339,
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/d7d2fa23ceaa5e6096c923b081040e5d81b3b9df/LICENSE.md",
+          "bytes": 1339,
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+        },
+        {
+          "path": "notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "bytes": 1066,
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+        },
+        {
+          "path": "notices/cargo-upstream/protobuf-36.2-LICENSE-BSD-3-Clause.txt",
+          "bytes": 1732,
+          "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d"
+        },
+        {
+          "path": "notices/cargo-upstream/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-MIT",
+          "bytes": 1055,
+          "sha256": "2a7df90e60fd5512b8bca35d3ce90e068f21c52d962855053fd1d9e2e7ca0f16"
+        },
+        {
+          "path": "notices/cargo-upstream/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-APACHE",
+          "bytes": 11357,
+          "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+        },
+        {
+          "path": "notices/cargo-upstream/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-MIT",
+          "bytes": 1073,
+          "sha256": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b"
+        },
+        {
+          "path": "notices/cargo-upstream/rs-tml/rstml/9fe0f4616a8224d37d64a53fa91722a08d736952/LICENSE",
+          "bytes": 1097,
+          "sha256": "f99321bd5b3678fae12d43f1ae77064b2a0f6db3646c36d5171a38ecd01e744c"
+        },
+        {
+          "path": "notices/cargo-upstream/rust-lang/rust/a59de37e99060162a2674e3ff45409ac73595c0e/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-APACHE",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "notices/cargo-upstream/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-MIT",
+          "bytes": 1036,
+          "sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1"
+        },
+        {
+          "path": "notices/cargo-upstream/rust-windowing/android-ndk-rs/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-APACHE",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "notices/cargo-upstream/rust-windowing/android-ndk-rs/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-MIT",
+          "bytes": 1036,
+          "sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1"
+        },
+        {
+          "path": "notices/cargo-upstream/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-MIT",
+          "bytes": 1060,
+          "sha256": "a5c61b93b6ee1d104af9920cf020ff3c7efe818e31fe562c72261847a728f513"
+        },
+        {
+          "path": "notices/cargo-upstream/rustwasm/gloo/40c6daa612a90a138ba3e3d70804fcbc5ad4911e/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/rustwasm/gloo/40c6daa612a90a138ba3e3d70804fcbc5ad4911e/LICENSE-MIT",
+          "bytes": 1078,
+          "sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66"
+        },
+        {
+          "path": "notices/cargo-upstream/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-MIT",
+          "bytes": 1078,
+          "sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66"
+        },
+        {
+          "path": "notices/cargo-upstream/spdx/license-list-data/279b7e997a87c09be00dd6bdda189519ade502cf/text/MIT.txt",
+          "bytes": 1078,
+          "sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5"
+        },
+        {
+          "path": "notices/cargo-upstream/sqlite-3.50.2-PUBLIC-DOMAIN.txt",
+          "bytes": 271,
+          "sha256": "ad89cf5f9a0ca133418eae187ae954f2805fd3261aa00716642ed93fc7f3892d"
+        },
+        {
+          "path": "notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "bytes": 1057,
+          "sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a"
+        },
+        {
+          "path": "notices/cargo-upstream/tokio-rs/valuable/9efc29b6e58cef28f6566a47aa7e142a55fead77/LICENSE",
+          "bytes": 1065,
+          "sha256": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44"
+        },
+        {
+          "path": "notices/cargo-upstream/webrtc-rs/webrtc/a1f8f1919235d8452835852e018efd654f2f8366/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/webrtc-rs/webrtc/a1f8f1919235d8452835852e018efd654f2f8366/LICENSE-MIT",
+          "bytes": 1066,
+          "sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d"
+        },
+        {
+          "path": "notices/cargo-upstream/WorldSEnder/wasm-split-prototype/a3266fe9d998b3f8b0d2111500b7c4b8ec892506/LICENSE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/WorldSEnder/wasm-split-prototype/d8263b20578e8c49b02851009ae3bc7d43c567bd/LICENSE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/Apache-2.0.txt",
+          "bytes": 10280,
+          "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"
+        },
+        {
+          "path": "notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/CC0-1.0.txt",
+          "bytes": 7048,
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+        },
+        {
+          "path": "notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/MIT.txt",
+          "bytes": 1078,
+          "sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0"
+        },
+        {
+          "path": "notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/Apache-2.0.txt",
+          "bytes": 10280,
+          "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"
+        },
+        {
+          "path": "notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/CC0-1.0.txt",
+          "bytes": 7048,
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+        },
+        {
+          "path": "notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/MIT.txt",
+          "bytes": 1078,
+          "sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0"
+        },
+        {
+          "path": "notices/cargo-upstream/zrzka/anes-rs/378ac7461ecac29fde9e10df7b08359d1315a9ad/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/cargo-upstream/zrzka/anes-rs/378ac7461ecac29fde9e10df7b08359d1315a9ad/LICENSE-MIT",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/cc-1.8.0-MIT.txt",
+          "bytes": 1057,
+          "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+        },
+        {
+          "path": "notices/clipboard-win-5.4.1-BSL-1.0.txt",
+          "bytes": 1338,
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "path": "notices/crab_nat-0.8.1-NOTICE.txt",
+          "bytes": 2019,
+          "sha256": "948884d5dd459fee115c53513e9b57df5bd34f4a01df065cec3ff46fc3f4b48b"
+        },
+        {
+          "path": "notices/endi-1.1.1-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/enum-map-2.7.3-COPYRIGHT.txt",
+          "bytes": 2850,
+          "sha256": "3343c9876af0d8ec0b955bbf671ebb3691780b3ee510ff2e382846c6bfe037fa"
+        },
+        {
+          "path": "notices/enum-map-derive-0.17.0-COPYRIGHT.txt",
+          "bytes": 1268,
+          "sha256": "c4388e2a98c0ccc8ed866acb88789e9bc0e72e5f358e089126abde9faacf9d1b"
+        },
+        {
+          "path": "notices/enumflags2-0.7.12-MIT.txt",
+          "bytes": 1077,
+          "sha256": "2e3edd2716fb15616e867bd53f724f0906732242e9ae76bb1faad1d88f7eeebd"
+        },
+        {
+          "path": "notices/enumflags2_derive-0.7.12-MIT.txt",
+          "bytes": 1054,
+          "sha256": "d13669f0eaff9b7015bff0d8637297213b53d9f239826636c07a15633acf7052"
+        },
+        {
+          "path": "notices/error-code-3.4.0-BSL-1.0.txt",
+          "bytes": 1338,
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "path": "notices/event-listener-5.4.2-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/event-listener-strategy-0.5.4-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/font-types-0.11.3-LICENSE-APACHE.txt",
+          "bytes": 9695,
+          "sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0"
+        },
+        {
+          "path": "notices/font-types-0.11.3-LICENSE-MIT.txt",
+          "bytes": 1058,
+          "sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434"
+        },
+        {
+          "path": "notices/futures-lite-2.6.1-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/futures-lite-2.6.1-THIRD-PARTY.txt",
+          "bytes": 1849,
+          "sha256": "6226d0632e2e1a80c23597e964da9812ae193c535fe058154afb034e94167aa5"
+        },
+        {
+          "path": "notices/gethostname-1.1.0-Apache-2.0.txt",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/hex-0.4.3-MIT.txt",
+          "bytes": 1125,
+          "sha256": "f7bdb3426d045cd50efd4953026e3eb5a83d0199f458a075602611b9344da5b9"
+        },
+        {
+          "path": "notices/hkdf-MIT.txt",
+          "bytes": 1108,
+          "sha256": "d288f9c9b4590446ec18c22ead8f8b5a12a3d4025b68f62dc9015063eb9cca69"
+        },
+        {
+          "path": "notices/if-addrs-MIT.txt",
+          "bytes": 1085,
+          "sha256": "3990ddb78a5a2cfd64a5ffe5cebc3306f3298f6880c644afdf15043ef7d702d9"
+        },
+        {
+          "path": "notices/JSON-java-20250517-PUBLIC-DOMAIN.txt",
+          "bytes": 16,
+          "sha256": "86cc84f1773e3318ba26fd61b3ae508a167df38b361695e105f6e499e7a2736f"
+        },
+        {
+          "path": "notices/libc-MIT.txt",
+          "bytes": 1066,
+          "sha256": "123a331b5dbf04c30097fa43b8f858bc85df671fe776de498d01f3d6b7c1f69e"
+        },
+        {
+          "path": "notices/libvpx-1.16.0-LICENSE.txt",
+          "bytes": 1537,
+          "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615"
+        },
+        {
+          "path": "notices/libvpx-1.16.0-PATENTS.txt",
+          "bytes": 1436,
+          "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+        },
+        {
+          "path": "notices/libvpx-1.16.0-third_party-x86inc-LICENSE.txt",
+          "bytes": 936,
+          "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8"
+        },
+        {
+          "path": "notices/libyuv-1711-LICENSE.txt",
+          "bytes": 1506,
+          "sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f"
+        },
+        {
+          "path": "notices/libyuv-1711-README.libvpx.txt",
+          "bytes": 727,
+          "sha256": "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814"
+        },
+        {
+          "path": "notices/memoffset-0.9.1-MIT.txt",
+          "bytes": 1055,
+          "sha256": "3234ac55816264ee7b6c7ee27efd61cf0a1fe775806870e3d9b4c41ea73c5cb1"
+        },
+        {
+          "path": "notices/opus-1.6.1-COPYING.txt",
+          "bytes": 1945,
+          "sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551"
+        },
+        {
+          "path": "notices/opus-1.6.1-LICENSE_PLEASE_READ.txt",
+          "bytes": 703,
+          "sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d"
+        },
+        {
+          "path": "notices/opus-1.6.1-source-notices.txt",
+          "bytes": 145940,
+          "sha256": "e66bfc995afb6397369afc2002c1e0739db5fc72b6178f559d07b3303fab5c2c"
+        },
+        {
+          "path": "notices/ordered-stream-0.2.0-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/parking-2.2.1-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/parking-2.2.1-THIRD-PARTY.txt",
+          "bytes": 451,
+          "sha256": "9a6d7a3c1b8edcc706c4b6c37f8dae9a77f02c7f9051df603f975db136b55419"
+        },
+        {
+          "path": "notices/PipeWire-1.0.5-Debian-copyright.txt",
+          "bytes": 9011,
+          "sha256": "4a870a368fbb14aae8ff343f0e7cb6758f6a83c13a7bcab17b7509452ae6064a"
+        },
+        {
+          "path": "notices/pkg-config-0.3.34-MIT.txt",
+          "bytes": 1057,
+          "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+        },
+        {
+          "path": "notices/proc-macro-crate-3.5.0-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/read-fonts-0.37.0-LICENSE-APACHE.txt",
+          "bytes": 9695,
+          "sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0"
+        },
+        {
+          "path": "notices/read-fonts-0.37.0-LICENSE-MIT.txt",
+          "bytes": 1058,
+          "sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434"
+        },
+        {
+          "path": "notices/rustls-0.23.46-LICENSE-APACHE.txt",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/rustls-0.23.46-LICENSE-ISC.txt",
+          "bytes": 775,
+          "sha256": "7cfafc877eccc46c0e346ccbaa5c51bb6b894d2b818e617d970211e232785ad4"
+        },
+        {
+          "path": "notices/rustls-0.23.46-LICENSE-MIT.txt",
+          "bytes": 1082,
+          "sha256": "709e3175b4212f7b13aa93971c9f62ff8c69ec45ad8c6532a7e0c41d7a7d6f8c"
+        },
+        {
+          "path": "notices/serde_repr-0.1.21-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "notices/skrifa-0.40.0-LICENSE-APACHE.txt",
+          "bytes": 9695,
+          "sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0"
+        },
+        {
+          "path": "notices/skrifa-0.40.0-LICENSE-MIT.txt",
+          "bytes": 1058,
+          "sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434"
+        },
+        {
+          "path": "notices/toml_datetime-1.1.2+spec-1.1.0-MIT.txt",
+          "bytes": 1062,
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        },
+        {
+          "path": "notices/toml_edit-0.25.17+spec-1.1.0-MIT.txt",
+          "bytes": 1062,
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        },
+        {
+          "path": "notices/tracing-attributes-0.1.31-MIT.txt",
+          "bytes": 1062,
+          "sha256": "898b1ae9821e98daf8964c8d6c7f61641f5f5aa78ad500020771c0939ee0dea1"
+        },
+        {
+          "path": "notices/uds_windows-1.2.1-MIT.txt",
+          "bytes": 1162,
+          "sha256": "27ebda9d51f0a56b7e281ccd8230a27236dcb51c05f64b07869ecf6e965d68b0"
+        },
+        {
+          "path": "notices/waitgroup-0.1.2-Apache-2.0.txt",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "notices/webpki-roots-CDLA-Permissive-2.0.txt",
+          "bytes": 2371,
+          "sha256": "e271993808fec50ab29350b39539cdec611a9103f827e0aa26d61da70e2d33f8"
+        },
+        {
+          "path": "notices/webrtc-rs-LICENSE-APACHE-2.0.txt",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "notices/webrtc-rs-LICENSE-MIT.txt",
+          "bytes": 1066,
+          "sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d"
+        },
+        {
+          "path": "notices/x11rb-0.13.2-MIT.txt",
+          "bytes": 1058,
+          "sha256": "a72561f47c1f665535930f606739d9098a6186802d5e2e8ec491faf00f4add5b"
+        },
+        {
+          "path": "notices/x11rb-protocol-0.13.2-MIT.txt",
+          "bytes": 1058,
+          "sha256": "a72561f47c1f665535930f606739d9098a6186802d5e2e8ec491faf00f4add5b"
+        },
+        {
+          "path": "notices/xxhash-rust-0.8.19-BSL-1.0.txt",
+          "bytes": 1338,
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "path": "notices/zbus-5.19.0-MIT.txt",
+          "bytes": 1080,
+          "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+        },
+        {
+          "path": "notices/zbus_macros-5.19.0-MIT.txt",
+          "bytes": 1080,
+          "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+        },
+        {
+          "path": "notices/zbus_names-4.3.4-MIT.txt",
+          "bytes": 1080,
+          "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+        },
+        {
+          "path": "notices/zcheapstr-1.1.0-MIT.txt",
+          "bytes": 1085,
+          "sha256": "59871bb1612f8a0569655c10b995636827eceab42c6578cebdc45ad2922e0142"
+        },
+        {
+          "path": "notices/zvariant-5.15.0-MIT.txt",
+          "bytes": 1080,
+          "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+        },
+        {
+          "path": "notices/zvariant_derive-5.15.0-MIT.txt",
+          "bytes": 1080,
+          "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+        },
+        {
+          "path": "notices/zvariant_utils-4.2.0-MIT.txt",
+          "bytes": 1023,
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "README.md",
+          "bytes": 9365,
+          "sha256": "ab9a8df876ef06346dd407bbe6417667861232f5ef5e3cc0acf4e4951896c856"
+        },
+        {
+          "path": "strict.log",
+          "bytes": 1876,
+          "sha256": "e906cf3fb8a191b1118167617dc7fcd709bef4953544007ea675c47bd1a9501d"
+        },
+        {
+          "path": "vp9-rgb444-direction-probe.exe",
+          "bytes": 1224192,
+          "sha256": "a377b579392d2e43ee579a06d996ec4580f6fedfe229403e1b0181135898a44f"
+        },
+        {
+          "path": "windows-amf-hevc-direction-probe.exe",
+          "bytes": 370688,
+          "sha256": "b12450a881c58c8417a5d24443b5bbc36944445baa56074645064c8a5d4fdf4c"
+        },
+        {
+          "path": "windows-controller-direction-probe.exe",
+          "bytes": 389632,
+          "sha256": "f66ff7c02a66f12f33df3e3075482de733469b7d18e03c3b63992e60fbfb8b0e"
+        },
+        {
+          "path": "windows-cpu-direction-probe.exe",
+          "bytes": 322560,
+          "sha256": "96e15bd765e92f2ed09f0938869aa4b8318a8b9a5f904e3284c59d0904284b01"
+        },
+        {
+          "path": "windows-hdr10-direction-probe.exe",
+          "bytes": 370688,
+          "sha256": "8b787aec423b2301892bbc48aa7aebcbc8712797dfb9b058a3e4ec5c74ec18d8"
+        },
+        {
+          "path": "windows-hevc-direction-probe.exe",
+          "bytes": 368640,
+          "sha256": "1c9dfdd1d6e70f1072f228f9d89a10e2a38863c5c3dad48b4c44a4fe5b3e4253"
+        }
+      ]
+    },
+    "producer_payload_verifications": [
+      {
+        "path": "build.log",
+        "producer_bytes": 5259,
+        "producer_sha256": "437ad1e06e4ae868277421995214ac0b94880292d0d7f15ec8be28aeeed8d208",
+        "actual_bytes": 5259,
+        "actual_sha256": "437ad1e06e4ae868277421995214ac0b94880292d0d7f15ec8be28aeeed8d208",
+        "matches": true
+      },
+      {
+        "path": "Cargo.lock",
+        "producer_bytes": 209815,
+        "producer_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+        "actual_bytes": 209815,
+        "actual_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+        "matches": true
+      },
+      {
+        "path": "LICENSE",
+        "producer_bytes": 11354,
+        "producer_sha256": "06a4d0421042d3d1e428040475b124cde7f4f25c39a68a1898fa66a9c1fbf7cc",
+        "actual_bytes": 11354,
+        "actual_sha256": "06a4d0421042d3d1e428040475b124cde7f4f25c39a68a1898fa66a9c1fbf7cc",
+        "matches": true
+      },
+      {
+        "path": "native-codecs.lock.json",
+        "producer_bytes": 4682,
+        "producer_sha256": "7b529084629ed34e5c62838680c764f2730227740cd92e2dc079bf16a058d3df",
+        "actual_bytes": 4682,
+        "actual_sha256": "7b529084629ed34e5c62838680c764f2730227740cd92e2dc079bf16a058d3df",
+        "matches": true
+      },
+      {
+        "path": "native-licenses/amf/AMF/core/Factory.h",
+        "producer_bytes": 6139,
+        "producer_sha256": "644814e97dd359f08d66a73748b60262149b106d28423c31b573cecb4be57979",
+        "actual_bytes": 6139,
+        "actual_sha256": "644814e97dd359f08d66a73748b60262149b106d28423c31b573cecb4be57979",
+        "matches": true
+      },
+      {
+        "path": "native-licenses/libvpx/LICENSE",
+        "producer_bytes": 1537,
+        "producer_sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+        "actual_bytes": 1537,
+        "actual_sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+        "matches": true
+      },
+      {
+        "path": "native-licenses/libvpx/PATENTS",
+        "producer_bytes": 1436,
+        "producer_sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+        "actual_bytes": 1436,
+        "actual_sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+        "matches": true
+      },
+      {
+        "path": "native-licenses/libvpx/third_party/libyuv/LICENSE",
+        "producer_bytes": 1506,
+        "producer_sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f",
+        "actual_bytes": 1506,
+        "actual_sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f",
+        "matches": true
+      },
+      {
+        "path": "native-licenses/libvpx/third_party/libyuv/README.libvpx",
+        "producer_bytes": 727,
+        "producer_sha256": "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814",
+        "actual_bytes": 727,
+        "actual_sha256": "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814",
+        "matches": true
+      },
+      {
+        "path": "native-licenses/libvpx/third_party/x86inc/LICENSE",
+        "producer_bytes": 936,
+        "producer_sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8",
+        "actual_bytes": 936,
+        "actual_sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8",
+        "matches": true
+      },
+      {
+        "path": "native-licenses/opus/COPYING",
+        "producer_bytes": 1945,
+        "producer_sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551",
+        "actual_bytes": 1945,
+        "actual_sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551",
+        "matches": true
+      },
+      {
+        "path": "native-licenses/opus/LICENSE_PLEASE_READ.txt",
+        "producer_bytes": 703,
+        "producer_sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d",
+        "actual_bytes": 703,
+        "actual_sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d",
+        "matches": true
+      },
+      {
+        "path": "nestlink-codecs.json",
+        "producer_bytes": 44740,
+        "producer_sha256": "74007acfdde3c5c9dfaf42acad45903bb56090a0ecead9d7671a593a38df5ea1",
+        "actual_bytes": 44740,
+        "actual_sha256": "74007acfdde3c5c9dfaf42acad45903bb56090a0ecead9d7671a593a38df5ea1",
+        "matches": true
+      },
+      {
+        "path": "notices/amf-1.5.3-LICENSE.txt",
+        "producer_bytes": 1747,
+        "producer_sha256": "eb297397aaa455b5668ab67d216b83828466152dab123fa92384c6ec16b74170",
+        "actual_bytes": 1747,
+        "actual_sha256": "eb297397aaa455b5668ab67d216b83828466152dab123fa92384c6ec16b74170",
+        "matches": true
+      },
+      {
+        "path": "notices/async-broadcast-0.7.2-MIT.txt",
+        "producer_bytes": 1079,
+        "producer_sha256": "24e5860bf589d8501643e6ea51ffb3df66db2867492b09033d486183efbfa970",
+        "actual_bytes": 1079,
+        "actual_sha256": "24e5860bf589d8501643e6ea51ffb3df66db2867492b09033d486183efbfa970",
+        "matches": true
+      },
+      {
+        "path": "notices/async-recursion-1.2.0-MIT.txt",
+        "producer_bytes": 1022,
+        "producer_sha256": "30fefc3a7d6a0041541858293bcbea2dde4caa4c0a5802f996a7f7e8c0085652",
+        "actual_bytes": 1022,
+        "actual_sha256": "30fefc3a7d6a0041541858293bcbea2dde4caa4c0a5802f996a7f7e8c0085652",
+        "matches": true
+      },
+      {
+        "path": "notices/async-trait-0.1.92-MIT.txt",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/base16-0.2.1-LICENSE-CC0.txt",
+        "producer_bytes": 7048,
+        "producer_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+        "actual_bytes": 7048,
+        "actual_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+        "producer_bytes": 9723,
+        "producer_sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "actual_bytes": 9723,
+        "actual_sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+        "producer_bytes": 1559,
+        "producer_sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+        "actual_bytes": 1559,
+        "actual_sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-APACHE",
+        "producer_bytes": 9723,
+        "producer_sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "actual_bytes": 9723,
+        "actual_sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-MIT",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE.chromium",
+        "producer_bytes": 1559,
+        "producer_sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+        "actual_bytes": 1559,
+        "actual_sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-APACHE",
+        "producer_bytes": 9723,
+        "producer_sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "actual_bytes": 9723,
+        "actual_sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-MIT",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE.chromium",
+        "producer_bytes": 1559,
+        "producer_sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+        "actual_bytes": 1559,
+        "actual_sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-APACHE",
+        "producer_bytes": 9723,
+        "producer_sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "actual_bytes": 9723,
+        "actual_sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-MIT",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE.chromium",
+        "producer_bytes": 1559,
+        "producer_sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+        "actual_bytes": 1559,
+        "actual_sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-APACHE",
+        "producer_bytes": 10818,
+        "producer_sha256": "10d30a673cd5e9349bdc02aeb48f14b3386d27d0da32df8f0a555d4aa16aa551",
+        "actual_bytes": 10818,
+        "actual_sha256": "10d30a673cd5e9349bdc02aeb48f14b3386d27d0da32df8f0a555d4aa16aa551",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-MIT",
+        "producer_bytes": 1093,
+        "producer_sha256": "c8167fdeeed46d3f244d3f85c5bf998ce889343691c32be2c61a8bc4b5c08333",
+        "actual_bytes": 1093,
+        "actual_sha256": "c8167fdeeed46d3f244d3f85c5bf998ce889343691c32be2c61a8bc4b5c08333",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/brendanzab/gl-rs/ea503e8d5fb6d73c6030e6191ce738cd3bf3433e/LICENSE",
+        "producer_bytes": 11358,
+        "producer_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "actual_bytes": 11358,
+        "actual_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/brendanzab/gl-rs/f150967b1c44ae888e6676f93f639ebc82771bdc/LICENSE",
+        "producer_bytes": 11358,
+        "producer_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "actual_bytes": 11358,
+        "actual_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/DoumanAsh/clipboard-win/3b27cf2bfd1adcfa6e0264eb51c1025ddaf0f342/LICENSE",
+        "producer_bytes": 1338,
+        "producer_sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+        "actual_bytes": 1338,
+        "actual_sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+        "producer_bytes": 10850,
+        "producer_sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "actual_bytes": 10850,
+        "actual_sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+        "producer_bytes": 1092,
+        "producer_sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
+        "actual_bytes": 1092,
+        "actual_sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/jni-rs/jni-rs/33045a124105c939d1e2cbdcb5a39e5d868ffa03/LICENSE-APACHE",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/jni-rs/jni-rs/33045a124105c939d1e2cbdcb5a39e5d868ffa03/LICENSE-MIT",
+        "producer_bytes": 1104,
+        "producer_sha256": "fea1d5bf3dd71605ce5d7d2ff695c1837e914c77195e523a86b5391716477960",
+        "actual_bytes": 1104,
+        "actual_sha256": "fea1d5bf3dd71605ce5d7d2ff695c1837e914c77195e523a86b5391716477960",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/jni-rs/jni-rs/5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7/LICENSE-APACHE",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/jni-rs/jni-rs/5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7/LICENSE-MIT",
+        "producer_bytes": 1104,
+        "producer_sha256": "fea1d5bf3dd71605ce5d7d2ff695c1837e914c77195e523a86b5391716477960",
+        "actual_bytes": 1104,
+        "actual_sha256": "fea1d5bf3dd71605ce5d7d2ff695c1837e914c77195e523a86b5391716477960",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-APACHE",
+        "producer_bytes": 11358,
+        "producer_sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+        "actual_bytes": 11358,
+        "actual_sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-MIT",
+        "producer_bytes": 1071,
+        "producer_sha256": "1d85bd754b04ceec93e98e890edd1fa3c6a22e81bcb32135806beeccefa51cd1",
+        "actual_bytes": 1071,
+        "actual_sha256": "1d85bd754b04ceec93e98e890edd1fa3c6a22e81bcb32135806beeccefa51cd1",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/JulianSchmid/etherparse/70f72bee542ae49efebb8d2106bde64f84f02a43/LICENSE-APACHE",
+        "producer_bytes": 11342,
+        "producer_sha256": "affcd3a3acd2a70d6405c6a5088413da8f97b91f5074ae313fbaa2ec4b45b19f",
+        "actual_bytes": 11342,
+        "actual_sha256": "affcd3a3acd2a70d6405c6a5088413da8f97b91f5074ae313fbaa2ec4b45b19f",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/JulianSchmid/etherparse/70f72bee542ae49efebb8d2106bde64f84f02a43/LICENSE-MIT",
+        "producer_bytes": 1069,
+        "producer_sha256": "4be7e6a9b3e7293807bbebfd081941c2d87fa445733e1ad0a9fc6efbc4f3029a",
+        "actual_bytes": 1069,
+        "actual_sha256": "4be7e6a9b3e7293807bbebfd081941c2d87fa445733e1ad0a9fc6efbc4f3029a",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-APACHE",
+        "producer_bytes": 10850,
+        "producer_sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "actual_bytes": 10850,
+        "actual_sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-MIT",
+        "producer_bytes": 1053,
+        "producer_sha256": "2710a622a896bba67356913d4d0492cab5465f61b2ecce6d880aeb483834fb50",
+        "actual_bytes": 1053,
+        "actual_sha256": "2710a622a896bba67356913d4d0492cab5465f61b2ecce6d880aeb483834fb50",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/leptos-rs/leptos/30fa4e039455bea69c9467e8ec45cad7fce0722f/LICENSE",
+        "producer_bytes": 1070,
+        "producer_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "actual_bytes": 1070,
+        "actual_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/leptos-rs/leptos/43359694b6596f88d911b9c8d8d92a121c27d0ce/LICENSE",
+        "producer_bytes": 1070,
+        "producer_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "actual_bytes": 1070,
+        "actual_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/leptos-rs/leptos/4e23d2b6f1cb74ef7eb08b40ef7f14baa85a7285/LICENSE",
+        "producer_bytes": 1070,
+        "producer_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "actual_bytes": 1070,
+        "actual_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+        "producer_bytes": 1070,
+        "producer_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "actual_bytes": 1070,
+        "actual_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/leptos-rs/leptos/5f2d5115537d08043bba0293c406c4f9b97a4dae/LICENSE",
+        "producer_bytes": 1070,
+        "producer_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "actual_bytes": 1070,
+        "actual_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/leptos-rs/leptos/6865c1f951bfa0bc5b107aa69286a110cd6f45ca/LICENSE",
+        "producer_bytes": 1070,
+        "producer_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "actual_bytes": 1070,
+        "actual_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/leptos-rs/leptos/9b2e313d20c89603ddc0deb7b1133e60c877faed/LICENSE",
+        "producer_bytes": 1070,
+        "producer_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "actual_bytes": 1070,
+        "actual_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/leptos-rs/leptos/d665dd4b89151e5d797df3db5cd2260cbe1e8fae/LICENSE",
+        "producer_bytes": 1070,
+        "producer_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "actual_bytes": 1070,
+        "actual_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/leptos-rs/leptos/da62c0cb9a1d814cf480c2f1dae5f67f4ea4773f/LICENSE",
+        "producer_bytes": 1070,
+        "producer_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "actual_bytes": 1070,
+        "actual_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+        "producer_bytes": 1070,
+        "producer_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "actual_bytes": 1070,
+        "actual_sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/madsmtm/objc2/4fc083f1c6d6784577e38b0ee8dbd344481e2fd2/LICENSE.txt",
+        "producer_bytes": 1066,
+        "producer_sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+        "actual_bytes": 1066,
+        "actual_sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/madsmtm/objc2/5237cbf081d04ef75a1f6a207b4018e7c1ae7438/LICENSE.txt",
+        "producer_bytes": 1066,
+        "producer_sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+        "actual_bytes": 1066,
+        "actual_sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+        "producer_bytes": 1066,
+        "producer_sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+        "actual_bytes": 1066,
+        "actual_sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+        "producer_bytes": 1339,
+        "producer_sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+        "actual_bytes": 1339,
+        "actual_sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/madsmtm/objc2/8852b424193ca41602281b3d7540d7c8ed51e49a/LICENSE.md",
+        "producer_bytes": 1339,
+        "producer_sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+        "actual_bytes": 1339,
+        "actual_sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/madsmtm/objc2/8d214f5477365ffcbcbb7de058c86ed9a518efb7/LICENSE.md",
+        "producer_bytes": 1339,
+        "producer_sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+        "actual_bytes": 1339,
+        "actual_sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/madsmtm/objc2/b4167b582b2f75f9a1be75495c41b765344fd03c/LICENSE.md",
+        "producer_bytes": 1339,
+        "producer_sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+        "actual_bytes": 1339,
+        "actual_sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/madsmtm/objc2/d7d2fa23ceaa5e6096c923b081040e5d81b3b9df/LICENSE.md",
+        "producer_bytes": 1339,
+        "producer_sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+        "actual_bytes": 1339,
+        "actual_sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+        "producer_bytes": 1066,
+        "producer_sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+        "actual_bytes": 1066,
+        "actual_sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/protobuf-36.2-LICENSE-BSD-3-Clause.txt",
+        "producer_bytes": 1732,
+        "producer_sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+        "actual_bytes": 1732,
+        "actual_sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-APACHE",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-MIT",
+        "producer_bytes": 1055,
+        "producer_sha256": "2a7df90e60fd5512b8bca35d3ce90e068f21c52d962855053fd1d9e2e7ca0f16",
+        "actual_bytes": 1055,
+        "actual_sha256": "2a7df90e60fd5512b8bca35d3ce90e068f21c52d962855053fd1d9e2e7ca0f16",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-APACHE",
+        "producer_bytes": 11357,
+        "producer_sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+        "actual_bytes": 11357,
+        "actual_sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-MIT",
+        "producer_bytes": 1073,
+        "producer_sha256": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+        "actual_bytes": 1073,
+        "actual_sha256": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/rs-tml/rstml/9fe0f4616a8224d37d64a53fa91722a08d736952/LICENSE",
+        "producer_bytes": 1097,
+        "producer_sha256": "f99321bd5b3678fae12d43f1ae77064b2a0f6db3646c36d5171a38ecd01e744c",
+        "actual_bytes": 1097,
+        "actual_sha256": "f99321bd5b3678fae12d43f1ae77064b2a0f6db3646c36d5171a38ecd01e744c",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/rust-lang/rust/a59de37e99060162a2674e3ff45409ac73595c0e/LICENSE-APACHE",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-APACHE",
+        "producer_bytes": 11357,
+        "producer_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "actual_bytes": 11357,
+        "actual_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-MIT",
+        "producer_bytes": 1036,
+        "producer_sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1",
+        "actual_bytes": 1036,
+        "actual_sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/rust-windowing/android-ndk-rs/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-APACHE",
+        "producer_bytes": 11357,
+        "producer_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "actual_bytes": 11357,
+        "actual_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/rust-windowing/android-ndk-rs/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-MIT",
+        "producer_bytes": 1036,
+        "producer_sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1",
+        "actual_bytes": 1036,
+        "actual_sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-APACHE",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-MIT",
+        "producer_bytes": 1060,
+        "producer_sha256": "a5c61b93b6ee1d104af9920cf020ff3c7efe818e31fe562c72261847a728f513",
+        "actual_bytes": 1060,
+        "actual_sha256": "a5c61b93b6ee1d104af9920cf020ff3c7efe818e31fe562c72261847a728f513",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/rustwasm/gloo/40c6daa612a90a138ba3e3d70804fcbc5ad4911e/LICENSE-APACHE",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/rustwasm/gloo/40c6daa612a90a138ba3e3d70804fcbc5ad4911e/LICENSE-MIT",
+        "producer_bytes": 1078,
+        "producer_sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66",
+        "actual_bytes": 1078,
+        "actual_sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-APACHE",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-MIT",
+        "producer_bytes": 1078,
+        "producer_sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66",
+        "actual_bytes": 1078,
+        "actual_sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/spdx/license-list-data/279b7e997a87c09be00dd6bdda189519ade502cf/text/MIT.txt",
+        "producer_bytes": 1078,
+        "producer_sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5",
+        "actual_bytes": 1078,
+        "actual_sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/sqlite-3.50.2-PUBLIC-DOMAIN.txt",
+        "producer_bytes": 271,
+        "producer_sha256": "ad89cf5f9a0ca133418eae187ae954f2805fd3261aa00716642ed93fc7f3892d",
+        "actual_bytes": 271,
+        "actual_sha256": "ad89cf5f9a0ca133418eae187ae954f2805fd3261aa00716642ed93fc7f3892d",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+        "producer_bytes": 1057,
+        "producer_sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a",
+        "actual_bytes": 1057,
+        "actual_sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/tokio-rs/valuable/9efc29b6e58cef28f6566a47aa7e142a55fead77/LICENSE",
+        "producer_bytes": 1065,
+        "producer_sha256": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44",
+        "actual_bytes": 1065,
+        "actual_sha256": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/webrtc-rs/webrtc/a1f8f1919235d8452835852e018efd654f2f8366/LICENSE-APACHE",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/webrtc-rs/webrtc/a1f8f1919235d8452835852e018efd654f2f8366/LICENSE-MIT",
+        "producer_bytes": 1066,
+        "producer_sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d",
+        "actual_bytes": 1066,
+        "actual_sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/WorldSEnder/wasm-split-prototype/a3266fe9d998b3f8b0d2111500b7c4b8ec892506/LICENSE",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/WorldSEnder/wasm-split-prototype/d8263b20578e8c49b02851009ae3bc7d43c567bd/LICENSE",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/Apache-2.0.txt",
+        "producer_bytes": 10280,
+        "producer_sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff",
+        "actual_bytes": 10280,
+        "actual_sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/CC0-1.0.txt",
+        "producer_bytes": 7048,
+        "producer_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+        "actual_bytes": 7048,
+        "actual_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/MIT.txt",
+        "producer_bytes": 1078,
+        "producer_sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0",
+        "actual_bytes": 1078,
+        "actual_sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/Apache-2.0.txt",
+        "producer_bytes": 10280,
+        "producer_sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff",
+        "actual_bytes": 10280,
+        "actual_sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/CC0-1.0.txt",
+        "producer_bytes": 7048,
+        "producer_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+        "actual_bytes": 7048,
+        "actual_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/MIT.txt",
+        "producer_bytes": 1078,
+        "producer_sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0",
+        "actual_bytes": 1078,
+        "actual_sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/zrzka/anes-rs/378ac7461ecac29fde9e10df7b08359d1315a9ad/LICENSE-APACHE",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/cargo-upstream/zrzka/anes-rs/378ac7461ecac29fde9e10df7b08359d1315a9ad/LICENSE-MIT",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/cc-1.8.0-MIT.txt",
+        "producer_bytes": 1057,
+        "producer_sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+        "actual_bytes": 1057,
+        "actual_sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+        "matches": true
+      },
+      {
+        "path": "notices/clipboard-win-5.4.1-BSL-1.0.txt",
+        "producer_bytes": 1338,
+        "producer_sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+        "actual_bytes": 1338,
+        "actual_sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+        "matches": true
+      },
+      {
+        "path": "notices/crab_nat-0.8.1-NOTICE.txt",
+        "producer_bytes": 2019,
+        "producer_sha256": "948884d5dd459fee115c53513e9b57df5bd34f4a01df065cec3ff46fc3f4b48b",
+        "actual_bytes": 2019,
+        "actual_sha256": "948884d5dd459fee115c53513e9b57df5bd34f4a01df065cec3ff46fc3f4b48b",
+        "matches": true
+      },
+      {
+        "path": "notices/endi-1.1.1-MIT.txt",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/enum-map-2.7.3-COPYRIGHT.txt",
+        "producer_bytes": 2850,
+        "producer_sha256": "3343c9876af0d8ec0b955bbf671ebb3691780b3ee510ff2e382846c6bfe037fa",
+        "actual_bytes": 2850,
+        "actual_sha256": "3343c9876af0d8ec0b955bbf671ebb3691780b3ee510ff2e382846c6bfe037fa",
+        "matches": true
+      },
+      {
+        "path": "notices/enum-map-derive-0.17.0-COPYRIGHT.txt",
+        "producer_bytes": 1268,
+        "producer_sha256": "c4388e2a98c0ccc8ed866acb88789e9bc0e72e5f358e089126abde9faacf9d1b",
+        "actual_bytes": 1268,
+        "actual_sha256": "c4388e2a98c0ccc8ed866acb88789e9bc0e72e5f358e089126abde9faacf9d1b",
+        "matches": true
+      },
+      {
+        "path": "notices/enumflags2-0.7.12-MIT.txt",
+        "producer_bytes": 1077,
+        "producer_sha256": "2e3edd2716fb15616e867bd53f724f0906732242e9ae76bb1faad1d88f7eeebd",
+        "actual_bytes": 1077,
+        "actual_sha256": "2e3edd2716fb15616e867bd53f724f0906732242e9ae76bb1faad1d88f7eeebd",
+        "matches": true
+      },
+      {
+        "path": "notices/enumflags2_derive-0.7.12-MIT.txt",
+        "producer_bytes": 1054,
+        "producer_sha256": "d13669f0eaff9b7015bff0d8637297213b53d9f239826636c07a15633acf7052",
+        "actual_bytes": 1054,
+        "actual_sha256": "d13669f0eaff9b7015bff0d8637297213b53d9f239826636c07a15633acf7052",
+        "matches": true
+      },
+      {
+        "path": "notices/error-code-3.4.0-BSL-1.0.txt",
+        "producer_bytes": 1338,
+        "producer_sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+        "actual_bytes": 1338,
+        "actual_sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+        "matches": true
+      },
+      {
+        "path": "notices/event-listener-5.4.2-MIT.txt",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/event-listener-strategy-0.5.4-MIT.txt",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/font-types-0.11.3-LICENSE-APACHE.txt",
+        "producer_bytes": 9695,
+        "producer_sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0",
+        "actual_bytes": 9695,
+        "actual_sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0",
+        "matches": true
+      },
+      {
+        "path": "notices/font-types-0.11.3-LICENSE-MIT.txt",
+        "producer_bytes": 1058,
+        "producer_sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434",
+        "actual_bytes": 1058,
+        "actual_sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434",
+        "matches": true
+      },
+      {
+        "path": "notices/futures-lite-2.6.1-MIT.txt",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/futures-lite-2.6.1-THIRD-PARTY.txt",
+        "producer_bytes": 1849,
+        "producer_sha256": "6226d0632e2e1a80c23597e964da9812ae193c535fe058154afb034e94167aa5",
+        "actual_bytes": 1849,
+        "actual_sha256": "6226d0632e2e1a80c23597e964da9812ae193c535fe058154afb034e94167aa5",
+        "matches": true
+      },
+      {
+        "path": "notices/gethostname-1.1.0-Apache-2.0.txt",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/hex-0.4.3-MIT.txt",
+        "producer_bytes": 1125,
+        "producer_sha256": "f7bdb3426d045cd50efd4953026e3eb5a83d0199f458a075602611b9344da5b9",
+        "actual_bytes": 1125,
+        "actual_sha256": "f7bdb3426d045cd50efd4953026e3eb5a83d0199f458a075602611b9344da5b9",
+        "matches": true
+      },
+      {
+        "path": "notices/hkdf-MIT.txt",
+        "producer_bytes": 1108,
+        "producer_sha256": "d288f9c9b4590446ec18c22ead8f8b5a12a3d4025b68f62dc9015063eb9cca69",
+        "actual_bytes": 1108,
+        "actual_sha256": "d288f9c9b4590446ec18c22ead8f8b5a12a3d4025b68f62dc9015063eb9cca69",
+        "matches": true
+      },
+      {
+        "path": "notices/if-addrs-MIT.txt",
+        "producer_bytes": 1085,
+        "producer_sha256": "3990ddb78a5a2cfd64a5ffe5cebc3306f3298f6880c644afdf15043ef7d702d9",
+        "actual_bytes": 1085,
+        "actual_sha256": "3990ddb78a5a2cfd64a5ffe5cebc3306f3298f6880c644afdf15043ef7d702d9",
+        "matches": true
+      },
+      {
+        "path": "notices/JSON-java-20250517-PUBLIC-DOMAIN.txt",
+        "producer_bytes": 16,
+        "producer_sha256": "86cc84f1773e3318ba26fd61b3ae508a167df38b361695e105f6e499e7a2736f",
+        "actual_bytes": 16,
+        "actual_sha256": "86cc84f1773e3318ba26fd61b3ae508a167df38b361695e105f6e499e7a2736f",
+        "matches": true
+      },
+      {
+        "path": "notices/libc-MIT.txt",
+        "producer_bytes": 1066,
+        "producer_sha256": "123a331b5dbf04c30097fa43b8f858bc85df671fe776de498d01f3d6b7c1f69e",
+        "actual_bytes": 1066,
+        "actual_sha256": "123a331b5dbf04c30097fa43b8f858bc85df671fe776de498d01f3d6b7c1f69e",
+        "matches": true
+      },
+      {
+        "path": "notices/libvpx-1.16.0-LICENSE.txt",
+        "producer_bytes": 1537,
+        "producer_sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+        "actual_bytes": 1537,
+        "actual_sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+        "matches": true
+      },
+      {
+        "path": "notices/libvpx-1.16.0-PATENTS.txt",
+        "producer_bytes": 1436,
+        "producer_sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+        "actual_bytes": 1436,
+        "actual_sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+        "matches": true
+      },
+      {
+        "path": "notices/libvpx-1.16.0-third_party-x86inc-LICENSE.txt",
+        "producer_bytes": 936,
+        "producer_sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8",
+        "actual_bytes": 936,
+        "actual_sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8",
+        "matches": true
+      },
+      {
+        "path": "notices/libyuv-1711-LICENSE.txt",
+        "producer_bytes": 1506,
+        "producer_sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f",
+        "actual_bytes": 1506,
+        "actual_sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f",
+        "matches": true
+      },
+      {
+        "path": "notices/libyuv-1711-README.libvpx.txt",
+        "producer_bytes": 727,
+        "producer_sha256": "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814",
+        "actual_bytes": 727,
+        "actual_sha256": "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814",
+        "matches": true
+      },
+      {
+        "path": "notices/memoffset-0.9.1-MIT.txt",
+        "producer_bytes": 1055,
+        "producer_sha256": "3234ac55816264ee7b6c7ee27efd61cf0a1fe775806870e3d9b4c41ea73c5cb1",
+        "actual_bytes": 1055,
+        "actual_sha256": "3234ac55816264ee7b6c7ee27efd61cf0a1fe775806870e3d9b4c41ea73c5cb1",
+        "matches": true
+      },
+      {
+        "path": "notices/opus-1.6.1-COPYING.txt",
+        "producer_bytes": 1945,
+        "producer_sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551",
+        "actual_bytes": 1945,
+        "actual_sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551",
+        "matches": true
+      },
+      {
+        "path": "notices/opus-1.6.1-LICENSE_PLEASE_READ.txt",
+        "producer_bytes": 703,
+        "producer_sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d",
+        "actual_bytes": 703,
+        "actual_sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d",
+        "matches": true
+      },
+      {
+        "path": "notices/opus-1.6.1-source-notices.txt",
+        "producer_bytes": 145940,
+        "producer_sha256": "e66bfc995afb6397369afc2002c1e0739db5fc72b6178f559d07b3303fab5c2c",
+        "actual_bytes": 145940,
+        "actual_sha256": "e66bfc995afb6397369afc2002c1e0739db5fc72b6178f559d07b3303fab5c2c",
+        "matches": true
+      },
+      {
+        "path": "notices/ordered-stream-0.2.0-MIT.txt",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/parking-2.2.1-MIT.txt",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/parking-2.2.1-THIRD-PARTY.txt",
+        "producer_bytes": 451,
+        "producer_sha256": "9a6d7a3c1b8edcc706c4b6c37f8dae9a77f02c7f9051df603f975db136b55419",
+        "actual_bytes": 451,
+        "actual_sha256": "9a6d7a3c1b8edcc706c4b6c37f8dae9a77f02c7f9051df603f975db136b55419",
+        "matches": true
+      },
+      {
+        "path": "notices/PipeWire-1.0.5-Debian-copyright.txt",
+        "producer_bytes": 9011,
+        "producer_sha256": "4a870a368fbb14aae8ff343f0e7cb6758f6a83c13a7bcab17b7509452ae6064a",
+        "actual_bytes": 9011,
+        "actual_sha256": "4a870a368fbb14aae8ff343f0e7cb6758f6a83c13a7bcab17b7509452ae6064a",
+        "matches": true
+      },
+      {
+        "path": "notices/pkg-config-0.3.34-MIT.txt",
+        "producer_bytes": 1057,
+        "producer_sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+        "actual_bytes": 1057,
+        "actual_sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+        "matches": true
+      },
+      {
+        "path": "notices/proc-macro-crate-3.5.0-MIT.txt",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/read-fonts-0.37.0-LICENSE-APACHE.txt",
+        "producer_bytes": 9695,
+        "producer_sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0",
+        "actual_bytes": 9695,
+        "actual_sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0",
+        "matches": true
+      },
+      {
+        "path": "notices/read-fonts-0.37.0-LICENSE-MIT.txt",
+        "producer_bytes": 1058,
+        "producer_sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434",
+        "actual_bytes": 1058,
+        "actual_sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434",
+        "matches": true
+      },
+      {
+        "path": "notices/rustls-0.23.46-LICENSE-APACHE.txt",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/rustls-0.23.46-LICENSE-ISC.txt",
+        "producer_bytes": 775,
+        "producer_sha256": "7cfafc877eccc46c0e346ccbaa5c51bb6b894d2b818e617d970211e232785ad4",
+        "actual_bytes": 775,
+        "actual_sha256": "7cfafc877eccc46c0e346ccbaa5c51bb6b894d2b818e617d970211e232785ad4",
+        "matches": true
+      },
+      {
+        "path": "notices/rustls-0.23.46-LICENSE-MIT.txt",
+        "producer_bytes": 1082,
+        "producer_sha256": "709e3175b4212f7b13aa93971c9f62ff8c69ec45ad8c6532a7e0c41d7a7d6f8c",
+        "actual_bytes": 1082,
+        "actual_sha256": "709e3175b4212f7b13aa93971c9f62ff8c69ec45ad8c6532a7e0c41d7a7d6f8c",
+        "matches": true
+      },
+      {
+        "path": "notices/serde_repr-0.1.21-MIT.txt",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "notices/skrifa-0.40.0-LICENSE-APACHE.txt",
+        "producer_bytes": 9695,
+        "producer_sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0",
+        "actual_bytes": 9695,
+        "actual_sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0",
+        "matches": true
+      },
+      {
+        "path": "notices/skrifa-0.40.0-LICENSE-MIT.txt",
+        "producer_bytes": 1058,
+        "producer_sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434",
+        "actual_bytes": 1058,
+        "actual_sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434",
+        "matches": true
+      },
+      {
+        "path": "notices/toml_datetime-1.1.2+spec-1.1.0-MIT.txt",
+        "producer_bytes": 1062,
+        "producer_sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6",
+        "actual_bytes": 1062,
+        "actual_sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6",
+        "matches": true
+      },
+      {
+        "path": "notices/toml_edit-0.25.17+spec-1.1.0-MIT.txt",
+        "producer_bytes": 1062,
+        "producer_sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6",
+        "actual_bytes": 1062,
+        "actual_sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6",
+        "matches": true
+      },
+      {
+        "path": "notices/tracing-attributes-0.1.31-MIT.txt",
+        "producer_bytes": 1062,
+        "producer_sha256": "898b1ae9821e98daf8964c8d6c7f61641f5f5aa78ad500020771c0939ee0dea1",
+        "actual_bytes": 1062,
+        "actual_sha256": "898b1ae9821e98daf8964c8d6c7f61641f5f5aa78ad500020771c0939ee0dea1",
+        "matches": true
+      },
+      {
+        "path": "notices/uds_windows-1.2.1-MIT.txt",
+        "producer_bytes": 1162,
+        "producer_sha256": "27ebda9d51f0a56b7e281ccd8230a27236dcb51c05f64b07869ecf6e965d68b0",
+        "actual_bytes": 1162,
+        "actual_sha256": "27ebda9d51f0a56b7e281ccd8230a27236dcb51c05f64b07869ecf6e965d68b0",
+        "matches": true
+      },
+      {
+        "path": "notices/waitgroup-0.1.2-Apache-2.0.txt",
+        "producer_bytes": 11357,
+        "producer_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "actual_bytes": 11357,
+        "actual_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "matches": true
+      },
+      {
+        "path": "notices/webpki-roots-CDLA-Permissive-2.0.txt",
+        "producer_bytes": 2371,
+        "producer_sha256": "e271993808fec50ab29350b39539cdec611a9103f827e0aa26d61da70e2d33f8",
+        "actual_bytes": 2371,
+        "actual_sha256": "e271993808fec50ab29350b39539cdec611a9103f827e0aa26d61da70e2d33f8",
+        "matches": true
+      },
+      {
+        "path": "notices/webrtc-rs-LICENSE-APACHE-2.0.txt",
+        "producer_bytes": 10847,
+        "producer_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "actual_bytes": 10847,
+        "actual_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "matches": true
+      },
+      {
+        "path": "notices/webrtc-rs-LICENSE-MIT.txt",
+        "producer_bytes": 1066,
+        "producer_sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d",
+        "actual_bytes": 1066,
+        "actual_sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d",
+        "matches": true
+      },
+      {
+        "path": "notices/x11rb-0.13.2-MIT.txt",
+        "producer_bytes": 1058,
+        "producer_sha256": "a72561f47c1f665535930f606739d9098a6186802d5e2e8ec491faf00f4add5b",
+        "actual_bytes": 1058,
+        "actual_sha256": "a72561f47c1f665535930f606739d9098a6186802d5e2e8ec491faf00f4add5b",
+        "matches": true
+      },
+      {
+        "path": "notices/x11rb-protocol-0.13.2-MIT.txt",
+        "producer_bytes": 1058,
+        "producer_sha256": "a72561f47c1f665535930f606739d9098a6186802d5e2e8ec491faf00f4add5b",
+        "actual_bytes": 1058,
+        "actual_sha256": "a72561f47c1f665535930f606739d9098a6186802d5e2e8ec491faf00f4add5b",
+        "matches": true
+      },
+      {
+        "path": "notices/xxhash-rust-0.8.19-BSL-1.0.txt",
+        "producer_bytes": 1338,
+        "producer_sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+        "actual_bytes": 1338,
+        "actual_sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+        "matches": true
+      },
+      {
+        "path": "notices/zbus-5.19.0-MIT.txt",
+        "producer_bytes": 1080,
+        "producer_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+        "actual_bytes": 1080,
+        "actual_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+        "matches": true
+      },
+      {
+        "path": "notices/zbus_macros-5.19.0-MIT.txt",
+        "producer_bytes": 1080,
+        "producer_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+        "actual_bytes": 1080,
+        "actual_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+        "matches": true
+      },
+      {
+        "path": "notices/zbus_names-4.3.4-MIT.txt",
+        "producer_bytes": 1080,
+        "producer_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+        "actual_bytes": 1080,
+        "actual_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+        "matches": true
+      },
+      {
+        "path": "notices/zcheapstr-1.1.0-MIT.txt",
+        "producer_bytes": 1085,
+        "producer_sha256": "59871bb1612f8a0569655c10b995636827eceab42c6578cebdc45ad2922e0142",
+        "actual_bytes": 1085,
+        "actual_sha256": "59871bb1612f8a0569655c10b995636827eceab42c6578cebdc45ad2922e0142",
+        "matches": true
+      },
+      {
+        "path": "notices/zvariant-5.15.0-MIT.txt",
+        "producer_bytes": 1080,
+        "producer_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+        "actual_bytes": 1080,
+        "actual_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+        "matches": true
+      },
+      {
+        "path": "notices/zvariant_derive-5.15.0-MIT.txt",
+        "producer_bytes": 1080,
+        "producer_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+        "actual_bytes": 1080,
+        "actual_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+        "matches": true
+      },
+      {
+        "path": "notices/zvariant_utils-4.2.0-MIT.txt",
+        "producer_bytes": 1023,
+        "producer_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "actual_bytes": 1023,
+        "actual_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "matches": true
+      },
+      {
+        "path": "README.md",
+        "producer_bytes": 9365,
+        "producer_sha256": "ab9a8df876ef06346dd407bbe6417667861232f5ef5e3cc0acf4e4951896c856",
+        "actual_bytes": 9365,
+        "actual_sha256": "ab9a8df876ef06346dd407bbe6417667861232f5ef5e3cc0acf4e4951896c856",
+        "matches": true
+      },
+      {
+        "path": "strict.log",
+        "producer_bytes": 1876,
+        "producer_sha256": "e906cf3fb8a191b1118167617dc7fcd709bef4953544007ea675c47bd1a9501d",
+        "actual_bytes": 1876,
+        "actual_sha256": "e906cf3fb8a191b1118167617dc7fcd709bef4953544007ea675c47bd1a9501d",
+        "matches": true
+      },
+      {
+        "path": "vp9-rgb444-direction-probe.exe",
+        "producer_bytes": 1224192,
+        "producer_sha256": "a377b579392d2e43ee579a06d996ec4580f6fedfe229403e1b0181135898a44f",
+        "actual_bytes": 1224192,
+        "actual_sha256": "a377b579392d2e43ee579a06d996ec4580f6fedfe229403e1b0181135898a44f",
+        "matches": true
+      },
+      {
+        "path": "windows-amf-hevc-direction-probe.exe",
+        "producer_bytes": 370688,
+        "producer_sha256": "b12450a881c58c8417a5d24443b5bbc36944445baa56074645064c8a5d4fdf4c",
+        "actual_bytes": 370688,
+        "actual_sha256": "b12450a881c58c8417a5d24443b5bbc36944445baa56074645064c8a5d4fdf4c",
+        "matches": true
+      },
+      {
+        "path": "windows-controller-direction-probe.exe",
+        "producer_bytes": 389632,
+        "producer_sha256": "f66ff7c02a66f12f33df3e3075482de733469b7d18e03c3b63992e60fbfb8b0e",
+        "actual_bytes": 389632,
+        "actual_sha256": "f66ff7c02a66f12f33df3e3075482de733469b7d18e03c3b63992e60fbfb8b0e",
+        "matches": true
+      },
+      {
+        "path": "windows-cpu-direction-probe.exe",
+        "producer_bytes": 322560,
+        "producer_sha256": "96e15bd765e92f2ed09f0938869aa4b8318a8b9a5f904e3284c59d0904284b01",
+        "actual_bytes": 322560,
+        "actual_sha256": "96e15bd765e92f2ed09f0938869aa4b8318a8b9a5f904e3284c59d0904284b01",
+        "matches": true
+      },
+      {
+        "path": "windows-hdr10-direction-probe.exe",
+        "producer_bytes": 370688,
+        "producer_sha256": "8b787aec423b2301892bbc48aa7aebcbc8712797dfb9b058a3e4ec5c74ec18d8",
+        "actual_bytes": 370688,
+        "actual_sha256": "8b787aec423b2301892bbc48aa7aebcbc8712797dfb9b058a3e4ec5c74ec18d8",
+        "matches": true
+      },
+      {
+        "path": "windows-hevc-direction-probe.exe",
+        "producer_bytes": 368640,
+        "producer_sha256": "1c9dfdd1d6e70f1072f228f9d89a10e2a38863c5c3dad48b4c44a4fe5b3e4253",
+        "actual_bytes": 368640,
+        "actual_sha256": "1c9dfdd1d6e70f1072f228f9d89a10e2a38863c5c3dad48b4c44a4fe5b3e4253",
+        "matches": true
+      }
+    ],
+    "producer_payload_count": 169,
+    "total_downloaded_files": 170,
+    "historical_git_blob_source_inputs": [
+      {
+        "path": "Cargo.lock",
+        "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+        "bytes": 209815,
+        "sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839"
+      },
+      {
+        "path": "docs/refactor/native-codecs.lock.json",
+        "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+        "bytes": 4682,
+        "sha256": "7b529084629ed34e5c62838680c764f2730227740cd92e2dc079bf16a058d3df"
+      },
+      {
+        "path": "scripts/refactor-native-codecs.py",
+        "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+        "bytes": 46396,
+        "sha256": "bf30e8d8f6d2ad3aaedebed1a5f2d20f31cc9bf7ffadf9a3c5441a43605d459f"
+      },
+      {
+        "path": ".github/workflows/windows-media-target-tools.yml",
+        "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+        "bytes": 5822,
+        "sha256": "7d2661ef1fab2029c69f09cd6aca0eaf42887545e0e02e18b73b2df5a1e227f7"
+      },
+      {
+        "path": "crates/media-codec/Cargo.toml",
+        "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+        "bytes": 717,
+        "sha256": "409f34a72c88cc500421b00ba83ff3d48c578f5ee90f107186d2eedfbf8da4ba"
+      },
+      {
+        "path": "crates/media-codec/build.rs",
+        "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+        "bytes": 3875,
+        "sha256": "219e2fba92eb61a4762b4ffabd0805be4c3954e02cdee671e4d6d05a4170c039"
+      },
+      {
+        "path": "crates/media-codec/src/vp9.c",
+        "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+        "bytes": 8765,
+        "sha256": "63fa4dff96b2160c55e8deff57c340bb6a3530faf17b4805b3e9c7427e00d2ec"
+      },
+      {
+        "path": "crates/media-codec/src/vp9.rs",
+        "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+        "bytes": 9952,
+        "sha256": "ed7b1e56fc3cc3eb1ae802d47fc0fcbdcc3b41b6be911ec8b4afcd7c569293f2"
+      },
+      {
+        "path": "crates/media-codec/src/vp9_direction_probe.rs",
+        "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+        "bytes": 11615,
+        "sha256": "1848651afbba61f07568be041d401ad456739494be01c8ed51b25bead1590240"
+      },
+      {
+        "path": "crates/media-codec/examples/vp9-rgb444-direction-probe.rs",
+        "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+        "bytes": 1564,
+        "sha256": "58c6c88a3393cdfd77847e1e278b5b4aae2e830a34b8d48fcf5516f6e61abd55"
+      },
+      {
+        "path": "docs/network-rewrite/WINDOWS-MEDIA-TARGET-TOOLS.md",
+        "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+        "bytes": 9365,
+        "sha256": "ab9a8df876ef06346dd407bbe6417667861232f5ef5e3cc0acf4e4951896c856"
+      },
+      {
+        "path": "LICENSE",
+        "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+        "bytes": 11354,
+        "sha256": "06a4d0421042d3d1e428040475b124cde7f4f25c39a68a1898fa66a9c1fbf7cc"
+      }
+    ],
+    "native_supplier_and_source_identities_match_historical_lock": true,
+    "native_supplier_script_matches_historical_source": true,
+    "native_manifest": {
+      "schema_version": 1,
+      "kind": "nestlink-native-codecs",
+      "target": "x86_64-pc-windows-msvc",
+      "profile": "release",
+      "linkage": "static",
+      "crt": "dynamic",
+      "lock_sha256": "7b529084629ed34e5c62838680c764f2730227740cd92e2dc079bf16a058d3df",
+      "sources": [
+        {
+          "name": "amf",
+          "version": "1.5.3",
+          "commit": "57ee0cfb0e1a08d9041f77435653794c1b012be0",
+          "archive_sha256": "0f521ad98041f8001147cded4a660127f18b1c27a801a5cd691bda1fa48381be",
+          "archive_bytes": 88584,
+          "source_tree_sha256": "d3b861fe06688038e53b4f1ddf0c35dc41c9ab66c6fcca35ff67fe097d1f17df",
+          "source_tree_format": "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+          "source_file_count": 57
+        },
+        {
+          "name": "libvpx",
+          "version": "1.16.0",
+          "commit": "1024874c5919305883187e2953de8fcb4c3d7fa6",
+          "archive_sha256": "274c00c0b21f03a9152e324b1989f73b74268aa8545b39ef5faccc50fdb56393",
+          "archive_bytes": 5637178,
+          "source_tree_sha256": "5b81a0b7a847c3da45b8ccbad7f0bcd68b0c462849f2fc83a37ba2e46feedc43",
+          "source_tree_format": "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+          "source_file_count": 1250
+        },
+        {
+          "name": "opus",
+          "version": "1.6.1",
+          "commit": "22244de5a79bd1d6d623c32e72bf1954b56235be",
+          "archive_sha256": "3267aa969b2b26542417f57819a5bc25d5079355300307dd2dddc7c704aed418",
+          "archive_bytes": 4888967,
+          "source_tree_sha256": "b0d7439aa9aa8ddd60da5c76478cf8f1a845cb8231bf039ff47f0da5fb7ceed6",
+          "source_tree_format": "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+          "source_file_count": 752
+        }
+      ],
+      "bundled_components": [
+        {
+          "name": "libyuv",
+          "version": "1711",
+          "commit": "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1",
+          "repository": "https://chromium.googlesource.com/libyuv/libyuv",
+          "parent_source": "libvpx",
+          "path": "third_party/libyuv",
+          "license": "BSD-3-Clause",
+          "source_files": [
+            "convert_argb.cc",
+            "convert_from_argb.cc",
+            "cpu_id.cc",
+            "planar_functions.cc",
+            "row_any.cc",
+            "row_common.cc",
+            "row_gcc.cc",
+            "row_win.cc",
+            "row_neon.cc",
+            "row_neon64.cc",
+            "row_msa.cc",
+            "scale_any.cc",
+            "scale_common.cc",
+            "scale_gcc.cc",
+            "scale_win.cc",
+            "scale_neon.cc",
+            "scale_neon64.cc",
+            "scale_msa.cc"
+          ]
+        }
+      ],
+      "features": {
+        "vp8": true,
+        "vp8_encoder": true,
+        "vp8_decoder": true,
+        "vp9": true,
+        "vp9_encoder": true,
+        "vp9_decoder": true,
+        "libyuv_rgb444": true,
+        "libyuv_i420_to_bgra": true,
+        "opus_float": true,
+        "opus_fixed_point": false,
+        "opus_dred": false,
+        "opus_deep_plc": false,
+        "opus_osce": false,
+        "opus_custom_modes": false,
+        "opus_nonthreadsafe_pseudostack": false
+      },
+      "libraries": {
+        "vpx": "lib/vpx.lib",
+        "opus": "lib/opus.lib",
+        "yuv": "lib/yuv.lib"
+      },
+      "configuration": {
+        "amf": {
+          "headers_only": true,
+          "runtime_distributed": false,
+          "runtime_load_scope": "Windows System32; explicit AMD AMF encoder selection only"
+        },
+        "libvpx": [
+          "--enable-vp8",
+          "--enable-vp8-encoder",
+          "--enable-vp8-decoder",
+          "--enable-vp9",
+          "--enable-vp9-encoder",
+          "--enable-vp9-decoder",
+          "--enable-static",
+          "--disable-shared",
+          "--enable-realtime-only",
+          "--disable-examples",
+          "--disable-tools",
+          "--disable-docs",
+          "--disable-unit-tests",
+          "--disable-webm-io",
+          "--disable-libyuv",
+          "--disable-postproc",
+          "--disable-vp9-postproc",
+          "--target=x86_64-win64-vs17",
+          "--as=nasm",
+          "--disable-static-msvcrt"
+        ],
+        "opus": [
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_INSTALL_PREFIX=D:\\a\\_temp\\target-tools-codecs\\x86_64-pc-windows-msvc",
+          "-DCMAKE_INSTALL_LIBDIR=lib",
+          "-DCMAKE_C_COMPILER=C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe",
+          "-DCMAKE_MAKE_PROGRAM=C:/ProgramData/chocolatey/bin/ninja.exe",
+          "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+          "-DOPUS_PACKAGE_VERSION=1.6.1",
+          "-DBUILD_SHARED_LIBS=OFF",
+          "-DOPUS_BUILD_SHARED_LIBRARY=OFF",
+          "-DOPUS_DRED=OFF",
+          "-DOPUS_DEEP_PLC=OFF",
+          "-DOPUS_OSCE=OFF",
+          "-DOPUS_CUSTOM_MODES=OFF",
+          "-DOPUS_BUILD_PROGRAMS=OFF",
+          "-DOPUS_BUILD_TESTING=OFF",
+          "-DBUILD_TESTING=OFF",
+          "-DOPUS_FIXED_POINT=OFF",
+          "-DOPUS_ENABLE_FLOAT_API=ON",
+          "-DOPUS_NONTHREADSAFE_PSEUDOSTACK=OFF",
+          "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+          "-DOPUS_STATIC_RUNTIME=OFF",
+          "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL"
+        ],
+        "libyuv": {
+          "options": [
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_INSTALL_PREFIX=D:\\a\\_temp\\target-tools-codecs\\x86_64-pc-windows-msvc",
+            "-DCMAKE_CXX_COMPILER=C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe",
+            "-DCMAKE_MAKE_PROGRAM=C:/ProgramData/chocolatey/bin/ninja.exe",
+            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+            "-DLIBYUV_SOURCE=D:/a/_temp/target-tools-codecs/sources/libvpx-1024874c5919305883187e2953de8fcb4c3d7fa6/third_party/libyuv",
+            "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL"
+          ],
+          "source_files": [
+            "convert_argb.cc",
+            "convert_from_argb.cc",
+            "cpu_id.cc",
+            "planar_functions.cc",
+            "row_any.cc",
+            "row_common.cc",
+            "row_gcc.cc",
+            "row_win.cc",
+            "row_neon.cc",
+            "row_neon64.cc",
+            "row_msa.cc",
+            "scale_any.cc",
+            "scale_common.cc",
+            "scale_gcc.cc",
+            "scale_win.cc",
+            "scale_neon.cc",
+            "scale_neon64.cc",
+            "scale_msa.cc"
+          ],
+          "compile_command_count": 18,
+          "cmake_project_sha256": "dd11fe44beffba99d207a4d0f51709c3c28c587d53b7371e2faf6db92e917987",
+          "compile_commands_sha256": "bc5ca9b81bd7c702093d873c2569b37817dad256b173338c6f093fc139b096ee"
+        }
+      },
+      "tools": [
+        {
+          "name": "vswhere",
+          "path": "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe",
+          "version": "Visual Studio Locator version 3.1.7+f39851e70f [query version 4.8.41.48107]\r\nCopyright (C) Microsoft Corporation. All rights reserved.\r\n\r\nUsage:  [options]\r\n\r\nOptions:\r\n  -all           Finds instances in complete, launchable, and incomplete states. By default, only instances\r\n                 in a complete state - no errors or reboot required - are searched.\r\n  -prerelease    Also searches prereleases. By default, only releases are searched.\r\n  -products arg  One or more product IDs to find. Defaults to Community, Professional, and Enterprise.\r\n                 Specify \"*\" by itself to search all product instances installed.\r\n                 See https://aka.ms/vs/workloads for a list of product IDs.\r\n  -requires arg  One or more workload or component IDs required when finding instances.\r\n                 All specified IDs must be installed unless -requiresAny is specified.\r\n                 You can specify wildcards including \"?\" to match any one character,\r\n                 or \"*\" to match zero or more of any characters.\r\n                 See https://aka.ms/vs/workloads for a list of workload and component IDs.\r\n  -requiresAny   Find instances with any one or more workload or components IDs passed to -requires.\r\n  -version arg   A version range for instances to find. Example: [15.0,16.0) will find versions 15.*.\r\n                 See https://aka.ms/vswhere/versions for more information about versions.\r\n  -latest        Return only the newest version and last installed.\r\n  -sort          Sorts the instances from newest version and last installed to oldest.\r\n                 When used with \"find\", first instances are sorted then files are sorted lexigraphically.\r\n  -legacy        Also searches Visual Studio 2015 and older products. Information is limited.\r\n                 This option cannot be used with either -products or -requires.\r\n  -path          Gets the instance for the current path. Not compatible with any other selection option.\r\n  -format arg    Return i",
+          "sha256": "c54f3b7c9164ea9a0db8641e81ecdda80c2664ef5a47c4191406f848cc07c662"
+        },
+        {
+          "name": "msbuild",
+          "path": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\MSBuild\\Current\\Bin\\MSBuild.exe",
+          "version": "18.11.1.51303",
+          "sha256": "041961b39839abd2521cc26f6f0820b202d4418167b46fb9e30970a3a6c26537"
+        },
+        {
+          "name": "cc",
+          "path": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\cl.exe",
+          "version": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64\r\nCopyright (C) Microsoft Corporation.  All rights reserved.\r\n\r\nusage: cl [ option... ] filename... [ /link linkoption... ]",
+          "sha256": "b0a1818ebae6da7f18230a84e76ce839212584ac4c2ab55b97a0d5268085da57"
+        },
+        {
+          "name": "cxx",
+          "path": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\cl.exe",
+          "version": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64\r\nCopyright (C) Microsoft Corporation.  All rights reserved.\r\n\r\nusage: cl [ option... ] filename... [ /link linkoption... ]",
+          "sha256": "b0a1818ebae6da7f18230a84e76ce839212584ac4c2ab55b97a0d5268085da57"
+        },
+        {
+          "name": "lib",
+          "path": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\lib.exe",
+          "version": "Microsoft (R) Library Manager Version 14.51.36260.0\r\nCopyright (C) Microsoft Corporation.  All rights reserved.\r\n\r\nusage: LIB [options] [files]\r\n\r\n   options:\r\n\r\n      /DEF[:filename]\r\n      /ERRORREPORT:{NONE|PROMPT|QUEUE|SEND}\r\n      /EXPORT:symbol\r\n      /EXTRACT:membername\r\n      /INCLUDE:symbol\r\n      /LIBPATH:dir\r\n      /LINKREPRO:dir\r\n      /LINKREPROFULLPATHRSP:filename\r\n      /LINKREPROTARGET:filename\r\n      /LIST[:filename]\r\n      /LTCG\r\n      /MACHINE:{ARM64|ARM64X|EBC|X64|X86}\r\n      /NAME:filename\r\n      /NODEFAULTLIB[:library]\r\n      /NOLOGO\r\n      /OUT:filename\r\n      /REMOVE:membername\r\n      /SUBSYSTEM:{BOOT_APPLICATION|CONSOLE|EFI_APPLICATION|\r\n                  EFI_BOOT_SERVICE_DRIVER|EFI_ROM|EFI_RUNTIME_DRIVER|\r\n                  NATIVE|POSIX|WINDOWS|WINDOWSCE}[,#[.##]]\r\n      /VERBOSE\r\n      /WX[:NO]\r\n      /WX[:nnnn[,nnnn...]]",
+          "sha256": "d8dae02a50c7571c6c0ea5cd7a853830aaca8fad13f8f4be147828d51dd4adec"
+        },
+        {
+          "name": "nasm",
+          "path": "D:\\a\\_temp\\msys64\\usr\\bin\\nasm.exe",
+          "version": "NASM version 3.02 compiled on Sep 18 2026",
+          "sha256": "8d172e56d0cb0db80cd93219221db5f0a45accecb9044f5d11bb9319266cef48"
+        },
+        {
+          "name": "cmake",
+          "path": "C:\\Program Files\\CMake\\bin\\cmake.exe",
+          "version": "cmake version 4.4.5\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).",
+          "sha256": "84935c0b7cb09c140de0d3b042d4e93e5fac4e6371e75bf28eae3d841f79dfb3"
+        },
+        {
+          "name": "ninja",
+          "path": "C:\\ProgramData\\chocolatey\\bin\\ninja.exe",
+          "version": "1.13.2",
+          "sha256": "5142e84796e4bd57acb91ee19d30174d11bcca2b1a99d45a43251b9b1e6c32a9"
+        },
+        {
+          "name": "bash",
+          "path": "D:\\a\\_temp\\msys64\\usr\\bin\\bash.exe",
+          "version": "GNU bash, version 5.3.20(1)-release (x86_64-pc-cygwin)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.",
+          "sha256": "7b4dc5d6878aacdec5d09ca9c5d8e2b43b925a6bbf631873a24c692980b792b2"
+        },
+        {
+          "name": "make",
+          "path": "D:\\a\\_temp\\msys64\\usr\\bin\\make.exe",
+          "version": "GNU Make 4.4.1\nBuilt for x86_64-pc-cygwin\nCopyright (C) 1988-2023 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.",
+          "sha256": "91b7e155590d59db22e5eb0a3ffeec6350149f70f9ed2c242d133e584eb72fee"
+        },
+        {
+          "name": "perl",
+          "path": "D:\\a\\_temp\\msys64\\usr\\bin\\perl.exe",
+          "version": "This is perl 5, version 42, subversion 3 (v5.42.3) built for x86_64-cygwin-thread-multi\n\nCopyright 1987-2026, Larry Wall\n\nPerl may be copied only under the terms of either the Artistic License or the\nGNU General Public License, which may be found in the Perl 5 source kit.\n\nComplete documentation for Perl, including FAQ lists, should be found on\nthis system using \"man perl\" or \"perldoc perl\".  If you have access to the\nInternet, point your browser at https://www.perl.org/, the Perl Home Page.",
+          "sha256": "7c4c60e1cad4f308a7a58ea220f219f4d903e0be97af758e82c902a830c57baa"
+        },
+        {
+          "name": "sed",
+          "path": "D:\\a\\_temp\\msys64\\usr\\bin\\sed.exe",
+          "version": "/usr/bin/sed (GNU sed) 4.9\nCopyright (C) 2022 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by Jay Fenlason, Tom Lord, Ken Pizzini,\nPaolo Bonzini, Jim Meyering, and Assaf Gordon.\n\nThis sed program was built without SELinux support.\n\nGNU sed home page: <https://www.gnu.org/software/sed/>.\nGeneral help using GNU software: <https://www.gnu.org/gethelp/>.\nE-mail bug reports to: <bug-sed@gnu.org>.",
+          "sha256": "8d54e322dfc3faa60f0464691aba8634197406e53367aa8942409181c0808be8"
+        },
+        {
+          "name": "awk",
+          "path": "D:\\a\\_temp\\msys64\\usr\\bin\\awk.exe",
+          "version": "GNU Awk 5.4.1, API 4.1, PMA Avon 8-g1, (GNU MPFR 4.2.2, GNU MP 6.3.0)\nCopyright (C) 1989, 1991-2026 Free Software Foundation.\n\nThis program is free software; you can redistribute it and/or modify\nit under the terms of the GNU General Public License as published by\nthe Free Software Foundation; either version 3 of the License, or\n(at your option) any later version.\n\nThis program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License\nalong with this program. If not, see http://www.gnu.org/licenses/.",
+          "sha256": "f123d2c120b2ad2158aa8c69d8eeedf14c0d681e68ee76ff103e06ac49986200"
+        },
+        {
+          "name": "grep",
+          "path": "D:\\a\\_temp\\msys64\\usr\\bin\\grep.exe",
+          "version": "grep (GNU grep) 3.0\nCopyright (C) 2017 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by Mike Haertel and others, see <http://git.sv.gnu.org/cgit/grep.git/tree/AUTHORS>.",
+          "sha256": "497202418334f8a48d9f34cd2e1b2c03c4f957e02304b613e10931c0457e8d4a"
+        },
+        {
+          "name": "diff",
+          "path": "D:\\a\\_temp\\msys64\\usr\\bin\\diff.exe",
+          "version": "diff (GNU diffutils) 3.12\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by Paul Eggert, Mike Haertel, David Hayes,\nRichard Stallman, and Len Tower.",
+          "sha256": "d64621f766d8910a92cb3d99bd7f23c0b1c736eece0e19dccbccead93aa81854"
+        },
+        {
+          "name": "uname",
+          "path": "D:\\a\\_temp\\msys64\\usr\\bin\\uname.exe",
+          "version": "MSYS_NT-10.0-26100 runnervmhao91 3.6.10-c770e1b9.x86_64 2026-09-26 06:38 UTC x86_64 Msys",
+          "sha256": "1cba275ff8e0c81f48898f017758c558ee5951cb0448c36628580beffdf4ef89"
+        }
+      ],
+      "supplier": {
+        "script_sha256": "bf30e8d8f6d2ad3aaedebed1a5f2d20f31cc9bf7ffadf9a3c5441a43605d459f",
+        "python_version": "3.12.10",
+        "python_executable": "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe"
+      },
+      "commands": [
+        {
+          "argv": [
+            "D:\\a\\_temp\\msys64\\usr\\bin\\bash.exe",
+            "--noprofile",
+            "--norc",
+            "D:/a/_temp/target-tools-codecs/sources/libvpx-1024874c5919305883187e2953de8fcb4c3d7fa6/configure",
+            "--enable-vp8",
+            "--enable-vp8-encoder",
+            "--enable-vp8-decoder",
+            "--enable-vp9",
+            "--enable-vp9-encoder",
+            "--enable-vp9-decoder",
+            "--enable-static",
+            "--disable-shared",
+            "--enable-realtime-only",
+            "--disable-examples",
+            "--disable-tools",
+            "--disable-docs",
+            "--disable-unit-tests",
+            "--disable-webm-io",
+            "--disable-libyuv",
+            "--disable-postproc",
+            "--disable-vp9-postproc",
+            "--target=x86_64-win64-vs17",
+            "--as=nasm",
+            "--disable-static-msvcrt"
+          ],
+          "cwd": "D:\\a\\_temp\\target-tools-codecs\\build\\libvpx",
+          "log_path": "D:\\a\\_temp\\target-tools-codecs\\logs\\vpx-configure.log",
+          "log_sha256": "62a0273f5fdaf02b3adf0b555c8e257a71d1a7c002686105b53363452132d79d",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "D:\\a\\_temp\\msys64\\usr\\bin\\make.exe",
+            "dist"
+          ],
+          "cwd": "D:\\a\\_temp\\target-tools-codecs\\build\\libvpx",
+          "log_path": "D:\\a\\_temp\\target-tools-codecs\\logs\\vpx-project.log",
+          "log_sha256": "7348169319203d892110319e1754fdbb3bcb81b6ce14896e3609404a1a71bf93",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\MSBuild\\Current\\Bin\\MSBuild.exe",
+            "D:\\a\\_temp\\target-tools-codecs\\build\\libvpx\\vpx.vcxproj",
+            "/m:4",
+            "/p:Configuration=Release",
+            "/p:Platform=x64",
+            "/p:PlatformToolset=v143",
+            "/p:WholeProgramOptimization=false"
+          ],
+          "cwd": "D:\\a\\_temp\\target-tools-codecs\\build\\libvpx",
+          "log_path": "D:\\a\\_temp\\target-tools-codecs\\logs\\vpx-build.log",
+          "log_sha256": "aac84234517d18dc7a8d85c960c4630b61ac06d55403204606fa06271cf4afcc",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "C:\\Program Files\\CMake\\bin\\cmake.exe",
+            "-S",
+            "D:\\a\\_temp\\target-tools-codecs\\sources\\opus-22244de5a79bd1d6d623c32e72bf1954b56235be",
+            "-B",
+            "D:\\a\\_temp\\target-tools-codecs\\build\\opus",
+            "-G",
+            "Ninja",
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_INSTALL_PREFIX=D:\\a\\_temp\\target-tools-codecs\\x86_64-pc-windows-msvc",
+            "-DCMAKE_INSTALL_LIBDIR=lib",
+            "-DCMAKE_C_COMPILER=C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe",
+            "-DCMAKE_MAKE_PROGRAM=C:/ProgramData/chocolatey/bin/ninja.exe",
+            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+            "-DOPUS_PACKAGE_VERSION=1.6.1",
+            "-DBUILD_SHARED_LIBS=OFF",
+            "-DOPUS_BUILD_SHARED_LIBRARY=OFF",
+            "-DOPUS_DRED=OFF",
+            "-DOPUS_DEEP_PLC=OFF",
+            "-DOPUS_OSCE=OFF",
+            "-DOPUS_CUSTOM_MODES=OFF",
+            "-DOPUS_BUILD_PROGRAMS=OFF",
+            "-DOPUS_BUILD_TESTING=OFF",
+            "-DBUILD_TESTING=OFF",
+            "-DOPUS_FIXED_POINT=OFF",
+            "-DOPUS_ENABLE_FLOAT_API=ON",
+            "-DOPUS_NONTHREADSAFE_PSEUDOSTACK=OFF",
+            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+            "-DOPUS_STATIC_RUNTIME=OFF",
+            "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL"
+          ],
+          "cwd": "D:\\a\\_temp\\target-tools-codecs",
+          "log_path": "D:\\a\\_temp\\target-tools-codecs\\logs\\opus-configure.log",
+          "log_sha256": "09976c7f76e5e028eb9f4d3bfbf6f814ef85cc543c9dfc12bda07f2084490952",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "C:\\Program Files\\CMake\\bin\\cmake.exe",
+            "--build",
+            "D:\\a\\_temp\\target-tools-codecs\\build\\opus",
+            "--config",
+            "Release",
+            "--parallel",
+            "4"
+          ],
+          "cwd": "D:\\a\\_temp\\target-tools-codecs",
+          "log_path": "D:\\a\\_temp\\target-tools-codecs\\logs\\opus-build.log",
+          "log_sha256": "d08701b5cf29117d66abc76426076be37307301eb452cd66bc7c16e32ca99b08",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "C:\\Program Files\\CMake\\bin\\cmake.exe",
+            "--install",
+            "D:\\a\\_temp\\target-tools-codecs\\build\\opus",
+            "--config",
+            "Release"
+          ],
+          "cwd": "D:\\a\\_temp\\target-tools-codecs",
+          "log_path": "D:\\a\\_temp\\target-tools-codecs\\logs\\opus-install.log",
+          "log_sha256": "0922320d48f8d2769b231c1419b3fe35ceac7507dfcbf95bcafb4f15eed7b880",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "C:\\Program Files\\CMake\\bin\\cmake.exe",
+            "-S",
+            "D:\\a\\_temp\\target-tools-codecs\\projects\\libyuv",
+            "-B",
+            "D:\\a\\_temp\\target-tools-codecs\\build\\libyuv",
+            "-G",
+            "Ninja",
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_INSTALL_PREFIX=D:\\a\\_temp\\target-tools-codecs\\x86_64-pc-windows-msvc",
+            "-DCMAKE_CXX_COMPILER=C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe",
+            "-DCMAKE_MAKE_PROGRAM=C:/ProgramData/chocolatey/bin/ninja.exe",
+            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+            "-DLIBYUV_SOURCE=D:/a/_temp/target-tools-codecs/sources/libvpx-1024874c5919305883187e2953de8fcb4c3d7fa6/third_party/libyuv",
+            "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL"
+          ],
+          "cwd": "D:\\a\\_temp\\target-tools-codecs",
+          "log_path": "D:\\a\\_temp\\target-tools-codecs\\logs\\yuv-configure.log",
+          "log_sha256": "2f9246d0e8968b7e628ac2a6af1458b4fc3831a4749e5ad5df5fae23f36d1f2d",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "C:\\Program Files\\CMake\\bin\\cmake.exe",
+            "--build",
+            "D:\\a\\_temp\\target-tools-codecs\\build\\libyuv",
+            "--config",
+            "Release",
+            "--parallel",
+            "4"
+          ],
+          "cwd": "D:\\a\\_temp\\target-tools-codecs",
+          "log_path": "D:\\a\\_temp\\target-tools-codecs\\logs\\yuv-build.log",
+          "log_sha256": "e1b7cd689b4f5af145a8225dd950f948d135e2601fd97e16fd571506e9ba6ec3",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "C:\\Program Files\\CMake\\bin\\cmake.exe",
+            "--install",
+            "D:\\a\\_temp\\target-tools-codecs\\build\\libyuv",
+            "--config",
+            "Release"
+          ],
+          "cwd": "D:\\a\\_temp\\target-tools-codecs",
+          "log_path": "D:\\a\\_temp\\target-tools-codecs\\logs\\yuv-install.log",
+          "log_sha256": "6ffc2ed0d213701532e74c8432affebd1bbfab3483cfc67f2cb52994157b6ec4",
+          "exit_code": 0
+        }
+      ],
+      "validation": {
+        "fresh_source_verified_before_and_after_build": true,
+        "configured_features_verified": true,
+        "archive_architectures": {},
+        "native_runtime_tests_run": false
+      },
+      "files": [
+        {
+          "path": "include/AMF/components/Ambisonic2SRenderer.h",
+          "kind": "header",
+          "bytes": 4333,
+          "sha256": "27770ae77d2f7a16eca9ab1f8b9ce87cf0c0350425b950bdd39189c2c91a519a"
+        },
+        {
+          "path": "include/AMF/components/AMFXInput.h",
+          "kind": "header",
+          "bytes": 8070,
+          "sha256": "d1944fb5ba936062a83deb4ba1f5b912a576052cb28946b9d0b2e71afcdd3ffa"
+        },
+        {
+          "path": "include/AMF/components/AudioCapture.h",
+          "kind": "header",
+          "bytes": 4633,
+          "sha256": "05a9ebc32217e69b6c4659f4744dbda9e5a2792f3e56bc1bcf61c15dcfd46cab"
+        },
+        {
+          "path": "include/AMF/components/Capture.h",
+          "kind": "header",
+          "bytes": 11163,
+          "sha256": "ea2f707d4dc4775d53d678f92cbf896055022826d5a8462f754335be9a762ef8"
+        },
+        {
+          "path": "include/AMF/components/ChromaKey.h",
+          "kind": "header",
+          "bytes": 4937,
+          "sha256": "a3a89490d44adaffc2fa2cccc14313f8f65e5af7a6431d89d85bd80e36c628a1"
+        },
+        {
+          "path": "include/AMF/components/ColorSpace.h",
+          "kind": "header",
+          "bytes": 9609,
+          "sha256": "5f6757244c6aac90c613e42e34a94cad2b8fb60c790768ac1e998573e2685a13"
+        },
+        {
+          "path": "include/AMF/components/Component.h",
+          "kind": "header",
+          "bytes": 28844,
+          "sha256": "4dda42a6e17247a0ce20803e500a869adb36fb33aedda8d314dd9fcbac499ef4"
+        },
+        {
+          "path": "include/AMF/components/ComponentCaps.h",
+          "kind": "header",
+          "bytes": 8420,
+          "sha256": "2479eb2a6174a1b63552c509abac1b701eddcab5a5eac5a7f4d9f40274d588b4"
+        },
+        {
+          "path": "include/AMF/components/CursorCapture.h",
+          "kind": "header",
+          "bytes": 2486,
+          "sha256": "7c22337ff313320bd7fe20ef0fb00756735012367a5daa7c621725030f578863"
+        },
+        {
+          "path": "include/AMF/components/DisplayCapture.h",
+          "kind": "header",
+          "bytes": 5881,
+          "sha256": "aa09b9fde31d2d7da3d38590e1f38022e74796a2b6d2c6449b23f6f728815baf"
+        },
+        {
+          "path": "include/AMF/components/FFMPEGAudioConverter.h",
+          "kind": "header",
+          "bytes": 3586,
+          "sha256": "9dde7e850c8bdecda82b0cee1b331294f6cc91b32b1d1504344a023cd4dda8af"
+        },
+        {
+          "path": "include/AMF/components/FFMPEGAudioDecoder.h",
+          "kind": "header",
+          "bytes": 4358,
+          "sha256": "92f50d789bc18d5ebd143b2925e124594a89110eef7efaa8189eb063bf2f3aa8"
+        },
+        {
+          "path": "include/AMF/components/FFMPEGAudioEncoder.h",
+          "kind": "header",
+          "bytes": 4131,
+          "sha256": "2493067de9b3f540ffaae8a6466e57ef75af4772f037a81785b11ee9511029f5"
+        },
+        {
+          "path": "include/AMF/components/FFMPEGComponents.h",
+          "kind": "header",
+          "bytes": 2374,
+          "sha256": "87a9ae9480c3af6210b1282d1768e36673fcc1ef4970afa6edaa74481cf0831b"
+        },
+        {
+          "path": "include/AMF/components/FFMPEGEncoderAV1.h",
+          "kind": "header",
+          "bytes": 2141,
+          "sha256": "5d64b7d2d50ca17ba601885dcdb51bb16ef4dccf88323437967e8524f26194bc"
+        },
+        {
+          "path": "include/AMF/components/FFMPEGEncoderH264.h",
+          "kind": "header",
+          "bytes": 2149,
+          "sha256": "3dae38db05bc55af525000c28559ff76625e0cddc2ad2c4c2af52eab69e915bc"
+        },
+        {
+          "path": "include/AMF/components/FFMPEGEncoderHEVC.h",
+          "kind": "header",
+          "bytes": 2149,
+          "sha256": "3ad5cc5d3284b253a671499efa29c7a46b83a6e6373aad7142c7adcbfae31875"
+        },
+        {
+          "path": "include/AMF/components/FFMPEGFileDemuxer.h",
+          "kind": "header",
+          "bytes": 3631,
+          "sha256": "be992e14086b04e2a7b5503471a6c262c58fda163c45ad6d00f8e425d9f4a820"
+        },
+        {
+          "path": "include/AMF/components/FFMPEGFileMuxer.h",
+          "kind": "header",
+          "bytes": 2948,
+          "sha256": "3fefbe1aa7aaa4c000a97efb2e5ba26dc87ec15d11b07ceb0f43c768a1d589a2"
+        },
+        {
+          "path": "include/AMF/components/FFMPEGVideoDecoder.h",
+          "kind": "header",
+          "bytes": 3036,
+          "sha256": "297b0ab2291baeb44f30f03ffbf791a5603289ab34f625d60a33150f2be1f7b6"
+        },
+        {
+          "path": "include/AMF/components/FRC.h",
+          "kind": "header",
+          "bytes": 3756,
+          "sha256": "5779e08444fa55c2cf91ccc655a012d17110f1b8336f197eabf0b8fef755b0ea"
+        },
+        {
+          "path": "include/AMF/components/HQScaler.h",
+          "kind": "header",
+          "bytes": 3699,
+          "sha256": "714bd1aff002d4df5f2d468efdd487a5aeb46437b7b036abaaa286d953c55d13"
+        },
+        {
+          "path": "include/AMF/components/MediaSource.h",
+          "kind": "header",
+          "bytes": 3680,
+          "sha256": "c4e168d29e3f7d9318435958c3c784ad4c497159a617bd7a5598a2951b1b15f6"
+        },
+        {
+          "path": "include/AMF/components/PreAnalysis.h",
+          "kind": "header",
+          "bytes": 7959,
+          "sha256": "801a197f578104c4481d21f68c3dd6ea8fbe2f9774424277499c5de70d213662"
+        },
+        {
+          "path": "include/AMF/components/PreProcessing.h",
+          "kind": "header",
+          "bytes": 3736,
+          "sha256": "5a01d71e128cf8bcaa4945fe76d9aad0156c409df3b25616a75645ef15972dc3"
+        },
+        {
+          "path": "include/AMF/components/SupportedCodecs.h",
+          "kind": "header",
+          "bytes": 2895,
+          "sha256": "550900e56c8254bf9c42d1b1d6538a390f7f7d3bf4826ee385b019585cb6cd22"
+        },
+        {
+          "path": "include/AMF/components/VideoCapture.h",
+          "kind": "header",
+          "bytes": 2863,
+          "sha256": "08f0162a631833f847d1b4b751e41e28b147a79ed19545b43631222d22e74507"
+        },
+        {
+          "path": "include/AMF/components/VideoConverter.h",
+          "kind": "header",
+          "bytes": 10853,
+          "sha256": "86267b7d5d40f482c1a0468e1be6786df21096274be710cea1f88c960a40441d"
+        },
+        {
+          "path": "include/AMF/components/VideoDecoderUVD.h",
+          "kind": "header",
+          "bytes": 10377,
+          "sha256": "ca4ef379b6026c81189cc5a78ae90ca2055ac3a5cde2d7b4981908a058907ae4"
+        },
+        {
+          "path": "include/AMF/components/VideoEncoderAV1.h",
+          "kind": "header",
+          "bytes": 36069,
+          "sha256": "f30779504b71f4e093c12f810c42f334b2fa4531515dda8c5f1aa70998ff8aba"
+        },
+        {
+          "path": "include/AMF/components/VideoEncoderHEVC.h",
+          "kind": "header",
+          "bytes": 29423,
+          "sha256": "a7f0463d583c442ee305840e324d74f8228accb82142f134a1f80cbf34a2e49c"
+        },
+        {
+          "path": "include/AMF/components/VideoEncoderVCE.h",
+          "kind": "header",
+          "bytes": 31430,
+          "sha256": "142c76911e8870a0bddd30cb568a7c8bafa9887f0c81bbda0439ce3a07357e9c"
+        },
+        {
+          "path": "include/AMF/components/VideoStitch.h",
+          "kind": "header",
+          "bytes": 7082,
+          "sha256": "9bc2d8477d67693b0cd4d433fbc6a5812277190f67be5f188f0206b463f256ec"
+        },
+        {
+          "path": "include/AMF/components/VQEnhancer.h",
+          "kind": "header",
+          "bytes": 2633,
+          "sha256": "146e7cd35acc846f6b75b696bbe13a5d790f885bc23d9913e7de66f515da789b"
+        },
+        {
+          "path": "include/AMF/components/ZCamLiveStream.h",
+          "kind": "header",
+          "bytes": 4803,
+          "sha256": "3c6e6515a8fec111eb1847e349124a8c66c1e78be2d148bc0b8f85b9d9994e2d"
+        },
+        {
+          "path": "include/AMF/core/AudioBuffer.h",
+          "kind": "header",
+          "bytes": 11816,
+          "sha256": "74b4bbc22c66520c233f258dba0642c3f4de66ae02d16201c3e224f9238b5d5d"
+        },
+        {
+          "path": "include/AMF/core/Buffer.h",
+          "kind": "header",
+          "bytes": 14987,
+          "sha256": "3e52733b46e168f1b0118381df1ce17eed17353ca89b39c77394f59e254aef67"
+        },
+        {
+          "path": "include/AMF/core/Compute.h",
+          "kind": "header",
+          "bytes": 20160,
+          "sha256": "2d8c675431ab1697303b492c8ac94921aaa8fb6e1dae24166b4b9dca0874fbc3"
+        },
+        {
+          "path": "include/AMF/core/ComputeFactory.h",
+          "kind": "header",
+          "bytes": 8147,
+          "sha256": "50acf69fb670bc6cf093384d1b698bf9e44cda8dd49e02ef24eacfb86ad8ccae"
+        },
+        {
+          "path": "include/AMF/core/Context.h",
+          "kind": "header",
+          "bytes": 49021,
+          "sha256": "3fea2ed1b3ea85146757f156124e4fbc48dbe51a1f08b13e67cf667a60d98f90"
+        },
+        {
+          "path": "include/AMF/core/CurrentTime.h",
+          "kind": "header",
+          "bytes": 2165,
+          "sha256": "76d16ba57d48ae9e457f3d904698a1e7c625007ac8887db9bcecdb90fd36d835"
+        },
+        {
+          "path": "include/AMF/core/D3D12AMF.h",
+          "kind": "header",
+          "bytes": 3512,
+          "sha256": "f05771305598b534e1efa0dd28825267ea87418c477b198e373f6764d060c666"
+        },
+        {
+          "path": "include/AMF/core/Data.h",
+          "kind": "header",
+          "bytes": 9350,
+          "sha256": "eaac4d80dd3215638c70f8a4ca01791d26d9df77586f665a772bb51907a8035b"
+        },
+        {
+          "path": "include/AMF/core/Debug.h",
+          "kind": "header",
+          "bytes": 3317,
+          "sha256": "56666589bf6ad20c6286a048da751c2d7722f70c73d962ee3c205a6d709b6aff"
+        },
+        {
+          "path": "include/AMF/core/Dump.h",
+          "kind": "header",
+          "bytes": 5524,
+          "sha256": "ad84b703ef040e2073031f14dcc40b5de7872de882c412df3543b69dbc38ae13"
+        },
+        {
+          "path": "include/AMF/core/Factory.h",
+          "kind": "header",
+          "bytes": 6139,
+          "sha256": "644814e97dd359f08d66a73748b60262149b106d28423c31b573cecb4be57979"
+        },
+        {
+          "path": "include/AMF/core/Interface.h",
+          "kind": "header",
+          "bytes": 8345,
+          "sha256": "304f6d6077e9b0733859d44a5e43a343ae374c8fe72c7d79741c0aca89c21162"
+        },
+        {
+          "path": "include/AMF/core/Plane.h",
+          "kind": "header",
+          "bytes": 5260,
+          "sha256": "5ad5165e9de2afcfc2da828e8704c838b1f82e8ead7422fbcfc32c758672e1f3"
+        },
+        {
+          "path": "include/AMF/core/Platform.h",
+          "kind": "header",
+          "bytes": 16398,
+          "sha256": "c060dc2466d0d886d1a09e5fea891aa3bc2efd08dc8d5ef59faa4d0a7f42abd4"
+        },
+        {
+          "path": "include/AMF/core/PropertyStorage.h",
+          "kind": "header",
+          "bytes": 12981,
+          "sha256": "0059b787e78cd7c4e57212ccaab56ad7e17e9474a31337da0eac5b2d056a5dd8"
+        },
+        {
+          "path": "include/AMF/core/PropertyStorageEx.h",
+          "kind": "header",
+          "bytes": 12364,
+          "sha256": "8e2f86af773360c2a7572eb157e7ebf017b7c87db9f4b672ef7644567bf6b890"
+        },
+        {
+          "path": "include/AMF/core/Result.h",
+          "kind": "header",
+          "bytes": 5655,
+          "sha256": "a469ff33875484b5762199da757819056ff4a7535bfdcec1f4cf2ffc403b98f2"
+        },
+        {
+          "path": "include/AMF/core/Surface.h",
+          "kind": "header",
+          "bytes": 23859,
+          "sha256": "262cfecd26ac501e12251e7cd6131e40d312f57f49c1b19aed797440da007f63"
+        },
+        {
+          "path": "include/AMF/core/Trace.h",
+          "kind": "header",
+          "bytes": 9835,
+          "sha256": "ae8c5fee671f02b90d3ccab312cfa6f74424351f070a7dd4ed7aba437fd55c30"
+        },
+        {
+          "path": "include/AMF/core/Variant.h",
+          "kind": "header",
+          "bytes": 94499,
+          "sha256": "be4e3db8f1c11b737e22367b8d16b170bfd9a178fdcd912d63f4a1b18e5f7ae1"
+        },
+        {
+          "path": "include/AMF/core/Version.h",
+          "kind": "header",
+          "bytes": 2878,
+          "sha256": "6af458e256d2af9a9eee4c9930d55d28d1cacf6e0f4102f1ccc03720f697ea48"
+        },
+        {
+          "path": "include/AMF/core/VulkanAMF.h",
+          "kind": "header",
+          "bytes": 6319,
+          "sha256": "a7cd8455fb5dd1b7a09bb4a770235d4cde7cf9549a0c6604dc5300e0c5e6ba4e"
+        },
+        {
+          "path": "include/libyuv/basic_types.h",
+          "kind": "header",
+          "bytes": 2038,
+          "sha256": "1a8ada3aaa7bf6b955c9f7b9af7177c530b3e3c92384e4a249648c8d04988a40"
+        },
+        {
+          "path": "include/libyuv/compare.h",
+          "kind": "header",
+          "bytes": 3407,
+          "sha256": "30bb64438486a3f4e65e3fa68802affb48c44a1fd9cb338475ea55433e30d6ae"
+        },
+        {
+          "path": "include/libyuv/convert.h",
+          "kind": "header",
+          "bytes": 12629,
+          "sha256": "454d69b85967e69dc06a18e595baca3e8b23e70b560e46edf900a0829035092f"
+        },
+        {
+          "path": "include/libyuv/convert_argb.h",
+          "kind": "header",
+          "bytes": 20603,
+          "sha256": "3fbd995fbb5340cdaeb7d951a4ff0c8d435c1320424e7bc019f81cee8dc5f2da"
+        },
+        {
+          "path": "include/libyuv/convert_from.h",
+          "kind": "header",
+          "bytes": 10296,
+          "sha256": "73ab187cc228da2f28e56634ac12107620e24ff75e07d036ef36899cb191ab55"
+        },
+        {
+          "path": "include/libyuv/convert_from_argb.h",
+          "kind": "header",
+          "bytes": 8030,
+          "sha256": "6a5d0bc8c7c44606008331709ee4e32f60e3a7f1869f0564857a49f0cd9d96e7"
+        },
+        {
+          "path": "include/libyuv/cpu_id.h",
+          "kind": "header",
+          "bytes": 4199,
+          "sha256": "0b5b809ceacee21c8fc0b5b3be0985fdaf5074fea1725c89fe12144f8b3663f0"
+        },
+        {
+          "path": "include/libyuv/macros_msa.h",
+          "kind": "header",
+          "bytes": 10719,
+          "sha256": "36238bc654b87e74b00be191933e010e982ebae6e26713589fbedb5cbc707215"
+        },
+        {
+          "path": "include/libyuv/mjpeg_decoder.h",
+          "kind": "header",
+          "bytes": 5955,
+          "sha256": "0d6696bd5b383c56b7237c550260de500bdeeaa19b29f060325c1d618aa267b2"
+        },
+        {
+          "path": "include/libyuv/planar_functions.h",
+          "kind": "header",
+          "bytes": 26834,
+          "sha256": "83ebec272a1afc6b8a66472d706f285441a3dfcdee394af7ff0be9b5fa9c1f2a"
+        },
+        {
+          "path": "include/libyuv/rotate.h",
+          "kind": "header",
+          "bytes": 4751,
+          "sha256": "eb033c71fd9c0fb56bc12a99f1107abf6a7c8fa1f74100201ea96a95425c6ef2"
+        },
+        {
+          "path": "include/libyuv/rotate_argb.h",
+          "kind": "header",
+          "bytes": 1015,
+          "sha256": "f9de2116782f8f4730771ac4d27bd6d55bf1440d2b381ef6b283356e20bd9e55"
+        },
+        {
+          "path": "include/libyuv/rotate_row.h",
+          "kind": "header",
+          "bytes": 6978,
+          "sha256": "65b27ebcbcdb3e17fc541c79ad37d80c103fc8aa700d8f4ab7b232fa396e0364"
+        },
+        {
+          "path": "include/libyuv/row.h",
+          "kind": "header",
+          "bytes": 152220,
+          "sha256": "e5d3c867f381a4dfa19abeb9d18da6dddd408bf8d989d001beb92d4031178d8f"
+        },
+        {
+          "path": "include/libyuv/scale.h",
+          "kind": "header",
+          "bytes": 3987,
+          "sha256": "72913675a6ac16bd204c279b37025a5b50b56845a5f5d191e5e56a565e77a0fe"
+        },
+        {
+          "path": "include/libyuv/scale_argb.h",
+          "kind": "header",
+          "bytes": 2444,
+          "sha256": "dcdcfc5e6de4dd46ee8b66e2299be49b4e58e9f3e612e33ff46ae20370f5daf8"
+        },
+        {
+          "path": "include/libyuv/scale_row.h",
+          "kind": "header",
+          "bytes": 41444,
+          "sha256": "bc1efb46d8f5d8fceeba96a364ccbe68409e6d4fd38ca775dcc74dd319fc20d8"
+        },
+        {
+          "path": "include/libyuv/version.h",
+          "kind": "header",
+          "bytes": 544,
+          "sha256": "8eee003db0a9813984cc484ff20790b1d7d628e5fa7b7a062e1de4153ec3cb53"
+        },
+        {
+          "path": "include/libyuv/video_common.h",
+          "kind": "header",
+          "bytes": 6969,
+          "sha256": "728e6b8f26f0e1748bfda1c26044aa8eb4e755c8f5490d19e4fc50d027415e69"
+        },
+        {
+          "path": "include/opus/opus.h",
+          "kind": "header",
+          "bytes": 59505,
+          "sha256": "036f6a6e83a20e943505743e113e90d6278cbe8240f7d5bb90b3f86261e783e3"
+        },
+        {
+          "path": "include/opus/opus_defines.h",
+          "kind": "header",
+          "bytes": 38558,
+          "sha256": "bbd4d4e3ba99f6982b1c8d8f5541814ad77d8e8babf3cc788cf23d517b2ca9d6"
+        },
+        {
+          "path": "include/opus/opus_multistream.h",
+          "kind": "header",
+          "bytes": 38267,
+          "sha256": "fd99c4594b4b57e406e9cab45a777895dd1b4c8de067088aa54ed7ae100b13f0"
+        },
+        {
+          "path": "include/opus/opus_projection.h",
+          "kind": "header",
+          "bytes": 32998,
+          "sha256": "11b3427e9ca342308a93adc9a081e2479685e5b7811a3a53540609f1bbc488ad"
+        },
+        {
+          "path": "include/opus/opus_types.h",
+          "kind": "header",
+          "bytes": 5157,
+          "sha256": "19cb301ea1eedbcbdbb5049363de061893bf11c20e505a657b69ce6ffa5b11fa"
+        },
+        {
+          "path": "include/vpx/vp8.h",
+          "kind": "header",
+          "bytes": 4248,
+          "sha256": "8bd4f03ef5771d7f08b103733f09bd5fdb665c0b1a0f039a5ca1b9c4fbd0bdb8"
+        },
+        {
+          "path": "include/vpx/vp8cx.h",
+          "kind": "header",
+          "bytes": 37763,
+          "sha256": "2e33be574f2c76b0cd0f3b1e6353b0cce4aa135104e14a5d99fd2e14cd693ed6"
+        },
+        {
+          "path": "include/vpx/vp8dx.h",
+          "kind": "header",
+          "bytes": 7398,
+          "sha256": "f3d98bda5d043879b8e37f01ee2fcfe9419461367a277c34eaef7811680f4021"
+        },
+        {
+          "path": "include/vpx/vpx_codec.h",
+          "kind": "header",
+          "bytes": 16104,
+          "sha256": "713a1a1a82968c084f5aab4e7026891001e67b98af420ca3896c7fbdcb0c1890"
+        },
+        {
+          "path": "include/vpx/vpx_decoder.h",
+          "kind": "header",
+          "bytes": 15160,
+          "sha256": "f92cf0500090bb0f2752e5b35464d1b285dcbaf5acd79ee0cffa9f501552c37e"
+        },
+        {
+          "path": "include/vpx/vpx_encoder.h",
+          "kind": "header",
+          "bytes": 44995,
+          "sha256": "e41a3ff46fef90cffded0206736bee4e30d5d1582ef52e56093c438d0cea8a1d"
+        },
+        {
+          "path": "include/vpx/vpx_ext_ratectrl.h",
+          "kind": "header",
+          "bytes": 19333,
+          "sha256": "9e76374c929ff0d93820af19944934a0539feaaad8a779c8d91dd199bf1fe854"
+        },
+        {
+          "path": "include/vpx/vpx_frame_buffer.h",
+          "kind": "header",
+          "bytes": 3206,
+          "sha256": "edc0bc4626e4c93e668a9d1ed6c58316df905c2187384480d58f47c44acfcb22"
+        },
+        {
+          "path": "include/vpx/vpx_image.h",
+          "kind": "header",
+          "bytes": 10482,
+          "sha256": "8a108f130517cb8c294a0b5ba75e70b32e9487e5cc062d50bbc3f328de04174c"
+        },
+        {
+          "path": "include/vpx/vpx_integer.h",
+          "kind": "header",
+          "bytes": 1203,
+          "sha256": "531c1ea958f1ad7e29cc95dd7bb1dc7ee4b2cde00c099883f05924e2e5930eb1"
+        },
+        {
+          "path": "include/vpx/vpx_tpl.h",
+          "kind": "header",
+          "bytes": 2551,
+          "sha256": "171e470f7118595b1467a9181edbae879a5a1ac48cdc3b2d01edd84ccf699243"
+        },
+        {
+          "path": "lib/cmake/Opus/OpusConfig.cmake",
+          "kind": "metadata",
+          "bytes": 1444,
+          "sha256": "8480e74b526e8c1c15c431e8024451a12dc9e6e3eb004fb3bee278ae1631c837"
+        },
+        {
+          "path": "lib/cmake/Opus/OpusConfigVersion.cmake",
+          "kind": "metadata",
+          "bytes": 2827,
+          "sha256": "4e10d17025da93e1a2e34e9a671b94f43f28cf79d13ce4fd1d123270086f9780"
+        },
+        {
+          "path": "lib/cmake/Opus/OpusTargets-release.cmake",
+          "kind": "metadata",
+          "bytes": 834,
+          "sha256": "d1ee87a15e795e0eccb21b8374c30a23d303a8fd0ff9730cff43f96146cf60b9"
+        },
+        {
+          "path": "lib/cmake/Opus/OpusTargets.cmake",
+          "kind": "metadata",
+          "bytes": 4234,
+          "sha256": "f5a7746a6ba4d04060e4ee5c82e9792a358e01582f850df65fe1fcebfcf6f5f5"
+        },
+        {
+          "path": "lib/opus.lib",
+          "kind": "library",
+          "bytes": 1221278,
+          "sha256": "c5a6bd9cdcd2f2c4b374a00ef61c440f3f5fc6cf4bf0bc34573987fe672b4413"
+        },
+        {
+          "path": "lib/pkgconfig/opus.pc",
+          "kind": "metadata",
+          "bytes": 622,
+          "sha256": "f920519b5dba73ab83852f52bce77d301850661faa64af6fb588a5265217d1b8"
+        },
+        {
+          "path": "lib/vpx.lib",
+          "kind": "library",
+          "bytes": 9891680,
+          "sha256": "adb1526ce8eace724385ea5af5b8f111855d7f9ac1b70c993ca4410ca7f18e2d"
+        },
+        {
+          "path": "lib/yuv.lib",
+          "kind": "library",
+          "bytes": 425930,
+          "sha256": "7faf4cbdcb2189265fc1ff9f0f778c602b70b0a99fe6ac98bee022c5d3908eca"
+        },
+        {
+          "path": "share/licenses/amf/AMF/core/Factory.h",
+          "kind": "metadata",
+          "bytes": 6139,
+          "sha256": "644814e97dd359f08d66a73748b60262149b106d28423c31b573cecb4be57979"
+        },
+        {
+          "path": "share/licenses/libvpx/LICENSE",
+          "kind": "metadata",
+          "bytes": 1537,
+          "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615"
+        },
+        {
+          "path": "share/licenses/libvpx/PATENTS",
+          "kind": "metadata",
+          "bytes": 1436,
+          "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+        },
+        {
+          "path": "share/licenses/libvpx/third_party/libyuv/LICENSE",
+          "kind": "metadata",
+          "bytes": 1506,
+          "sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f"
+        },
+        {
+          "path": "share/licenses/libvpx/third_party/libyuv/README.libvpx",
+          "kind": "metadata",
+          "bytes": 727,
+          "sha256": "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814"
+        },
+        {
+          "path": "share/licenses/libvpx/third_party/x86inc/LICENSE",
+          "kind": "metadata",
+          "bytes": 936,
+          "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8"
+        },
+        {
+          "path": "share/licenses/opus/COPYING",
+          "kind": "metadata",
+          "bytes": 1945,
+          "sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551"
+        },
+        {
+          "path": "share/licenses/opus/LICENSE_PLEASE_READ.txt",
+          "kind": "metadata",
+          "bytes": 703,
+          "sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d"
+        },
+        {
+          "path": "share/nestlink/native-config/checked-configuration.json",
+          "kind": "metadata",
+          "bytes": 1404,
+          "sha256": "721c591ac80a23fc36100ba5807240f1d2a72b7bae7853c979d1f2f8e88cc6b2"
+        },
+        {
+          "path": "share/nestlink/native-config/opus_config.h",
+          "kind": "metadata",
+          "bytes": 33,
+          "sha256": "1ebca447148d052c4c30c733a87e5f8245848f807a575cf66c43497ff5a8827e"
+        },
+        {
+          "path": "share/nestlink/native-config/vpx_config.h",
+          "kind": "metadata",
+          "bytes": 3159,
+          "sha256": "b5253968b188f516f3933be336210d6088df1a3f89ef9a451acb6607fa230101"
+        }
+      ]
+    },
+    "native_license_verifications": [
+      {
+        "bundle_path": "native-licenses/amf/AMF/core/Factory.h",
+        "native_manifest_path": "share/licenses/amf/AMF/core/Factory.h",
+        "bytes": 6139,
+        "sha256": "644814e97dd359f08d66a73748b60262149b106d28423c31b573cecb4be57979",
+        "matches": true
+      },
+      {
+        "bundle_path": "native-licenses/libvpx/LICENSE",
+        "native_manifest_path": "share/licenses/libvpx/LICENSE",
+        "bytes": 1537,
+        "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+        "matches": true
+      },
+      {
+        "bundle_path": "native-licenses/libvpx/PATENTS",
+        "native_manifest_path": "share/licenses/libvpx/PATENTS",
+        "bytes": 1436,
+        "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+        "matches": true
+      },
+      {
+        "bundle_path": "native-licenses/libvpx/third_party/libyuv/LICENSE",
+        "native_manifest_path": "share/licenses/libvpx/third_party/libyuv/LICENSE",
+        "bytes": 1506,
+        "sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f",
+        "matches": true
+      },
+      {
+        "bundle_path": "native-licenses/libvpx/third_party/libyuv/README.libvpx",
+        "native_manifest_path": "share/licenses/libvpx/third_party/libyuv/README.libvpx",
+        "bytes": 727,
+        "sha256": "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814",
+        "matches": true
+      },
+      {
+        "bundle_path": "native-licenses/libvpx/third_party/x86inc/LICENSE",
+        "native_manifest_path": "share/licenses/libvpx/third_party/x86inc/LICENSE",
+        "bytes": 936,
+        "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8",
+        "matches": true
+      },
+      {
+        "bundle_path": "native-licenses/opus/COPYING",
+        "native_manifest_path": "share/licenses/opus/COPYING",
+        "bytes": 1945,
+        "sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551",
+        "matches": true
+      },
+      {
+        "bundle_path": "native-licenses/opus/LICENSE_PLEASE_READ.txt",
+        "native_manifest_path": "share/licenses/opus/LICENSE_PLEASE_READ.txt",
+        "bytes": 703,
+        "sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d",
+        "matches": true
+      }
+    ],
+    "native_prefix_inventory_limitation": "The target-tools ZIP includes the static-linked executables and native supplier manifest, but does not include the complete native install prefix or source archives. Every copied payload is independently verified; source archive/tree and absent prefix file hashes remain producer assertions checked against the historical lock and GitHub-hosted supplier step, not a new local rebuild or independent archive/prefix revalidation.",
+    "build_and_lint_logs": [
+      {
+        "file": {
+          "path": "build.log",
+          "bytes": 5259,
+          "sha256": "437ad1e06e4ae868277421995214ac0b94880292d0d7f15ec8be28aeeed8d208"
+        },
+        "text": "info: syncing channel updates for 1.96.0-x86_64-pc-windows-msvc\ninfo: latest update on 2026-05-28 for version 1.96.0 (ac68faa20 2026-05-25)\ninfo: component clippy is up to date\ninfo: downloading component rustfmt\n\u001b[1m\u001b[92m    Updating\u001b[0m git repository `https://github.com/ZHanry/NestLink-dependencies.git`\n\u001b[1m\u001b[92m    Updating\u001b[0m crates.io index\n\u001b[1m\u001b[92m Downloading\u001b[0m crates ...\n\u001b[1m\u001b[92m  Downloaded\u001b[0m block-buffer v0.10.4\n\u001b[1m\u001b[92m  Downloaded\u001b[0m autocfg v1.5.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m bytes v1.12.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m cfg-if v1.0.5\n\u001b[1m\u001b[92m  Downloaded\u001b[0m cc v1.8.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m crypto-common v0.1.7\n\u001b[1m\u001b[92m  Downloaded\u001b[0m cpufeatures v0.2.17\n\u001b[1m\u001b[92m  Downloaded\u001b[0m document-features v0.2.12\n\u001b[1m\u001b[92m  Downloaded\u001b[0m digest v0.10.7\n\u001b[1m\u001b[92m  Downloaded\u001b[0m fast_image_resize v6.1.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m find-msvc-tools v0.1.14\n\u001b[1m\u001b[92m  Downloaded\u001b[0m fastrand v2.5.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m futures-sink v0.3.34\n\u001b[1m\u001b[92m  Downloaded\u001b[0m futures-core v0.3.34\n\u001b[1m\u001b[92m  Downloaded\u001b[0m getrandom v0.4.3\n\u001b[1m\u001b[92m  Downloaded\u001b[0m itoa v1.0.18\n\u001b[1m\u001b[92m  Downloaded\u001b[0m generic-array v0.14.7\n\u001b[1m\u001b[92m  Downloaded\u001b[0m memchr v2.8.3\n\u001b[1m\u001b[92m  Downloaded\u001b[0m mio v1.2.4\n\u001b[1m\u001b[92m  Downloaded\u001b[0m once_cell v1.21.4\n\u001b[1m\u001b[92m  Downloaded\u001b[0m proc-macro2 v1.0.107\n\u001b[1m\u001b[92m  Downloaded\u001b[0m serde v1.0.229\n\u001b[1m\u001b[92m  Downloaded\u001b[0m serde_derive v1.0.229\n\u001b[1m\u001b[92m  Downloaded\u001b[0m sha2 v0.10.9\n\u001b[1m\u001b[92m  Downloaded\u001b[0m socket2 v0.6.5\n\u001b[1m\u001b[92m  Downloaded\u001b[0m shlex v2.0.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m syn v3.0.8\n\u001b[1m\u001b[92m  Downloaded\u001b[0m thiserror v2.0.21\n\u001b[1m\u001b[92m  Downloaded\u001b[0m thiserror-impl v2.0.21\n\u001b[1m\u001b[92m  Downloaded\u001b[0m tokio-macros v2.7.2\n\u001b[1m\u001b[92m  Downloaded\u001b[0m tokio-util v0.7.20\n\u001b[1m\u001b[92m  Downloaded\u001b[0m typenum v1.20.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m unicode-ident v1.0.27\n\u001b[1m\u001b[92m  Downloaded\u001b[0m uuid v1.28.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m windows-link v0.2.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m version_check v0.9.5\n\u001b[1m\u001b[92m  Downloaded\u001b[0m tokio v1.53.3\n\u001b[1m\u001b[92m  Downloaded\u001b[0m tempfile v3.27.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m syn v2.0.119\n\u001b[1m\u001b[92m  Downloaded\u001b[0m serde_json v1.0.154\n\u001b[1m\u001b[92m  Downloaded\u001b[0m serde_core v1.0.229\n\u001b[1m\u001b[92m  Downloaded\u001b[0m quote v1.0.47\n\u001b[1m\u001b[92m  Downloaded\u001b[0m pin-project-lite v0.2.17\n\u001b[1m\u001b[92m  Downloaded\u001b[0m num-traits v0.2.19\n\u001b[1m\u001b[92m  Downloaded\u001b[0m litrs v1.0.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m windows-sys v0.61.2\n\u001b[1m\u001b[92m  Downloaded\u001b[0m windows-targets v0.52.6\n\u001b[1m\u001b[92m  Downloaded\u001b[0m windows-sys v0.59.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m zeroize v1.9.1\n\u001b[1m\u001b[92m  Downloaded\u001b[0m windows_x86_64_msvc v0.52.6\n\u001b[1m\u001b[92m  Downloaded\u001b[0m zeroize_derive v1.5.0\n\u001b[1m\u001b[92m  Downloaded\u001b[0m zmij v1.0.23\n\u001b[1m\u001b[92m   Compiling\u001b[0m proc-macro2 v1.0.107\n\u001b[1m\u001b[92m   Compiling\u001b[0m unicode-ident v1.0.27\n\u001b[1m\u001b[92m   Compiling\u001b[0m quote v1.0.47\n\u001b[1m\u001b[92m   Compiling\u001b[0m version_check v0.9.5\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde_core v1.0.229\n\u001b[1m\u001b[92m   Compiling\u001b[0m generic-array v0.14.7\n\u001b[1m\u001b[92m   Compiling\u001b[0m zmij v1.0.23\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde_json v1.0.154\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde v1.0.229\n\u001b[1m\u001b[92m   Compiling\u001b[0m typenum v1.20.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m windows-link v0.2.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m windows-sys v0.61.2\n\u001b[1m\u001b[92m   Compiling\u001b[0m syn v3.0.8\n\u001b[1m\u001b[92m   Compiling\u001b[0m cfg-if v1.0.5\n\u001b[1m\u001b[92m   Compiling\u001b[0m crypto-common v0.1.7\n\u001b[1m\u001b[92m   Compiling\u001b[0m block-buffer v0.10.4\n\u001b[1m\u001b[92m   Compiling\u001b[0m autocfg v1.5.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m getrandom v0.4.3\n\u001b[1m\u001b[92m   Compiling\u001b[0m windows_x86_64_msvc v0.52.6\n\u001b[1m\u001b[92m   Compiling\u001b[0m num-traits v0.2.19\n\u001b[1m\u001b[92m   Compiling\u001b[0m digest v0.10.7\n\u001b[1m\u001b[92m   Compiling\u001b[0m syn v2.0.119\n\u001b[1m\u001b[92m   Compiling\u001b[0m serde_derive v1.0.229\n\u001b[1m\u001b[92m   Compiling\u001b[0m mio v1.2.4\n\u001b[1m\u001b[92m   Compiling\u001b[0m socket2 v0.6.5\n\u001b[1m\u001b[92m   Compiling\u001b[0m tokio-macros v2.7.2\n\u001b[1m\u001b[92m   Compiling\u001b[0m bytes v1.12.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m pin-project-lite v0.2.17\n\u001b[1m\u001b[92m   Compiling\u001b[0m cpufeatures v0.2.17\n\u001b[1m\u001b[92m   Compiling\u001b[0m memchr v2.8.3\n\u001b[1m\u001b[92m   Compiling\u001b[0m find-msvc-tools v0.1.14\n\u001b[1m\u001b[92m   Compiling\u001b[0m shlex v2.0.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m thiserror v2.0.21\n\u001b[1m\u001b[92m   Compiling\u001b[0m itoa v1.0.18\n\u001b[1m\u001b[92m   Compiling\u001b[0m cc v1.8.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m sha2 v0.10.9\n\u001b[1m\u001b[92m   Compiling\u001b[0m zeroize_derive v1.5.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m tokio v1.53.3\n\u001b[1m\u001b[92m   Compiling\u001b[0m thiserror-impl v2.0.21\n\u001b[1m\u001b[92m   Compiling\u001b[0m futures-core v0.3.34\n\u001b[1m\u001b[92m   Compiling\u001b[0m litrs v1.0.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m futures-sink v0.3.34\n\u001b[1m\u001b[92m   Compiling\u001b[0m document-features v0.2.12\n\u001b[1m\u001b[92m   Compiling\u001b[0m nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)\n\u001b[1m\u001b[92m   Compiling\u001b[0m windows-targets v0.52.6\n\u001b[1m\u001b[92m   Compiling\u001b[0m zeroize v1.9.1\n\u001b[1m\u001b[92m   Compiling\u001b[0m fast_image_resize v6.1.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m tokio-util v0.7.20\n\u001b[1m\u001b[92m   Compiling\u001b[0m nestlink-platform-security v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\platform-security)\n\u001b[1m\u001b[92m   Compiling\u001b[0m windows-sys v0.59.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m uuid v1.28.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m once_cell v1.21.4\n\u001b[1m\u001b[92m   Compiling\u001b[0m fastrand v2.5.0\n\u001b[1m\u001b[92m   Compiling\u001b[0m tempfile v3.27.0\n\u001b[1m\u001b[92m    Finished\u001b[0m `release` profile [optimized] target(s) in 1m 21s\n"
+      },
+      {
+        "file": {
+          "path": "strict.log",
+          "bytes": 1876,
+          "sha256": "e906cf3fb8a191b1118167617dc7fcd709bef4953544007ea675c47bd1a9501d"
+        },
+        "text": "\u001b[1m\u001b[92m    Checking\u001b[0m windows-link v0.2.1\n\u001b[1m\u001b[92m    Checking\u001b[0m cfg-if v1.0.5\n\u001b[1m\u001b[92m    Checking\u001b[0m typenum v1.20.1\n\u001b[1m\u001b[92m    Checking\u001b[0m serde_core v1.0.229\n\u001b[1m\u001b[92m    Checking\u001b[0m windows-sys v0.61.2\n\u001b[1m\u001b[92m    Checking\u001b[0m bytes v1.12.1\n\u001b[1m\u001b[92m    Checking\u001b[0m pin-project-lite v0.2.17\n\u001b[1m\u001b[92m    Checking\u001b[0m zmij v1.0.23\n\u001b[1m\u001b[92m    Checking\u001b[0m getrandom v0.4.3\n\u001b[1m\u001b[92m    Checking\u001b[0m generic-array v0.14.7\n\u001b[1m\u001b[92m    Checking\u001b[0m windows_x86_64_msvc v0.52.6\n\u001b[1m\u001b[92m    Checking\u001b[0m futures-core v0.3.34\n\u001b[1m\u001b[92m    Checking\u001b[0m memchr v2.8.3\n\u001b[1m\u001b[92m    Checking\u001b[0m block-buffer v0.10.4\n\u001b[1m\u001b[92m    Checking\u001b[0m crypto-common v0.1.7\n\u001b[1m\u001b[92m    Checking\u001b[0m futures-sink v0.3.34\n\u001b[1m\u001b[92m    Checking\u001b[0m itoa v1.0.18\n\u001b[1m\u001b[92m    Checking\u001b[0m digest v0.10.7\n\u001b[1m\u001b[92m    Checking\u001b[0m thiserror v2.0.21\n\u001b[1m\u001b[92m    Checking\u001b[0m num-traits v0.2.19\n\u001b[1m\u001b[92m    Checking\u001b[0m windows-targets v0.52.6\n\u001b[1m\u001b[92m   Compiling\u001b[0m nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)\n\u001b[1m\u001b[92m    Checking\u001b[0m serde v1.0.229\n\u001b[1m\u001b[92m    Checking\u001b[0m serde_json v1.0.154\n\u001b[1m\u001b[92m    Checking\u001b[0m zeroize v1.9.1\n\u001b[1m\u001b[92m    Checking\u001b[0m cpufeatures v0.2.17\n\u001b[1m\u001b[92m    Checking\u001b[0m sha2 v0.10.9\n\u001b[1m\u001b[92m    Checking\u001b[0m fast_image_resize v6.1.0\n\u001b[1m\u001b[92m    Checking\u001b[0m windows-sys v0.59.0\n\u001b[1m\u001b[92m    Checking\u001b[0m uuid v1.28.0\n\u001b[1m\u001b[92m    Checking\u001b[0m fastrand v2.5.0\n\u001b[1m\u001b[92m    Checking\u001b[0m once_cell v1.21.4\n\u001b[1m\u001b[92m    Checking\u001b[0m tempfile v3.27.0\n\u001b[1m\u001b[92m    Checking\u001b[0m socket2 v0.6.5\n\u001b[1m\u001b[92m    Checking\u001b[0m mio v1.2.4\n\u001b[1m\u001b[92m    Checking\u001b[0m tokio v1.53.3\n\u001b[1m\u001b[92m    Checking\u001b[0m tokio-util v0.7.20\n\u001b[1m\u001b[92m    Checking\u001b[0m nestlink-platform-security v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\platform-security)\n\u001b[1m\u001b[92m    Finished\u001b[0m `release` profile [optimized] target(s) in 9.62s\n"
+      }
+    ],
+    "target_execution_performed_during_build": false
+  },
+  "execution": {
+    "authorized_scope": "Only the exact encode and decode 1920 1080 60 8000 commands, one invocation per direction, on this existing Windows 11 ordinary interactive target.",
+    "build_execution_provenance_separated": true,
+    "locally_built": false,
+    "dependencies_installed_locally": false,
+    "runner_registered": false,
+    "assertions_or_thresholds_changed": false,
+    "target_os": {
+      "Caption": "Microsoft Windows 11 专业版",
+      "Version": "10.0.26300",
+      "BuildNumber": "26300",
+      "OSArchitecture": "64 位"
+    },
+    "target_gpus": [
+      {
+        "Name": "GameViewer Virtual Display Adapter",
+        "DriverVersion": "15.6.5.199",
+        "DriverDate": "2026-02-28T08:00:00+08:00",
+        "AdapterCompatibility": "GameViewer",
+        "PNPDeviceID": "ROOT\\DISPLAY\\0000"
+      },
+      {
+        "Name": "AMD Radeon(TM) Graphics",
+        "DriverVersion": "30.0.13040.13",
+        "DriverDate": "2021-11-30T08:00:00+08:00",
+        "AdapterCompatibility": "Advanced Micro Devices, Inc.",
+        "PNPDeviceID": "PCI\\VEN_1002&DEV_1638&SUBSYS_20241EE7&REV_C5\\4&20C24D55&0&0041"
+      },
+      {
+        "Name": "NVIDIA GeForce GTX 1650",
+        "DriverVersion": "32.0.16.2101",
+        "DriverDate": "2026-10-19T08:00:00+08:00",
+        "AdapterCompatibility": "NVIDIA",
+        "PNPDeviceID": "PCI\\VEN_10DE&DEV_1F9D&SUBSYS_20241EE7&REV_A1\\4&C337064&0&0009"
+      }
+    ],
+    "token_before": {
+      "recorded_at_utc": "2026-11-03T09:26:34.1714778Z",
+      "user_interactive": true,
+      "session_id": 1,
+      "administrator_token": false,
+      "medium_mandatory_sid_present": true,
+      "interactive_sid_present": true,
+      "integrity_label_sids": [
+        "S-1-16-8192"
+      ],
+      "whoami_groups_csv": "\"Group Name\",\"Type\",\"SID\",\"Attributes\"\n\"Everyone\",\"Well-known group\",\"S-1-1-0\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\本地帐户和管理员组成员\",\"Well-known group\",\"S-1-5-114\",\"Group used for deny only\"\n\"BUILTIN\\Administrators\",\"Alias\",\"S-1-5-32-544\",\"Group used for deny only\"\n\"BUILTIN\\Users\",\"Alias\",\"S-1-5-32-545\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\INTERACTIVE\",\"Well-known group\",\"S-1-5-4\",\"Mandatory group, Enabled by default, Enabled group\"\n\"CONSOLE LOGON\",\"Well-known group\",\"S-1-2-1\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\Authenticated Users\",\"Well-known group\",\"S-1-5-11\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\This Organization\",\"Well-known group\",\"S-1-5-15\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\本地帐户\",\"Well-known group\",\"S-1-5-113\",\"Mandatory group, Enabled by default, Enabled group\"\n\"LOCAL\",\"Well-known group\",\"S-1-2-0\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\NTLM Authentication\",\"Well-known group\",\"S-1-5-64-10\",\"Mandatory group, Enabled by default, Enabled group\"\n\"Mandatory Label\\Medium Mandatory Level\",\"Label\",\"S-1-16-8192\",\"\"\n",
+      "ordinary_interactive_confirmed": true
+    },
+    "wrapper": {
+      "path": "seal-vp9-target-308e221.ps1",
+      "bytes": 20756,
+      "sha256": "10fed719bea15f5d06a6db426098f5da350c71097aa57da8fd4b1335ba5bc2ec"
+    },
+    "executable": {
+      "path": "vp9-rgb444-direction-probe.exe",
+      "bytes": 1224192,
+      "sha256": "a377b579392d2e43ee579a06d996ec4580f6fedfe229403e1b0181135898a44f"
+    },
+    "working_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\vp9-tools-308e221-verified",
+    "required_outputs_per_direction": 32,
+    "required_internal_budget_seconds": 10,
+    "required_geometry": "1920x1080",
+    "required_fps_parameter": 60,
+    "required_bitrate_kbps_parameter": 8000,
+    "required_pts": "frame * 90000 / fps",
+    "required_keyframe": true,
+    "required_alpha": 255,
+    "required_maximum_component_error": 48,
+    "required_original_resource_identity_stable": true,
+    "required_encoder_and_decoder_resource_ids_distinct": true,
+    "required_checked_encoder_and_decoder_close": true,
+    "each_direction_is_an_independent_encoder_decoder_roundtrip": true,
+    "external_hang_guard_seconds": 45,
+    "external_hang_guard_is_not_the_internal_pass_budget": true,
+    "invocations": [
+      {
+        "direction": "encode",
+        "attempt": 1,
+        "executable_sha256": "a377b579392d2e43ee579a06d996ec4580f6fedfe229403e1b0181135898a44f",
+        "executable_bytes": 1224192,
+        "argv": [
+          "vp9-rgb444-direction-probe.exe",
+          "encode",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "arguments": [
+          "encode",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "command": "vp9-rgb444-direction-probe.exe encode 1920 1080 60 8000",
+        "token": {
+          "recorded_at_utc": "2026-11-03T09:26:34.4391835Z",
+          "user_interactive": true,
+          "session_id": 1,
+          "administrator_token": false,
+          "medium_mandatory_sid_present": true,
+          "interactive_sid_present": true,
+          "integrity_label_sids": [
+            "S-1-16-8192"
+          ],
+          "whoami_groups_csv": "\"Group Name\",\"Type\",\"SID\",\"Attributes\"\n\"Everyone\",\"Well-known group\",\"S-1-1-0\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\本地帐户和管理员组成员\",\"Well-known group\",\"S-1-5-114\",\"Group used for deny only\"\n\"BUILTIN\\Administrators\",\"Alias\",\"S-1-5-32-544\",\"Group used for deny only\"\n\"BUILTIN\\Users\",\"Alias\",\"S-1-5-32-545\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\INTERACTIVE\",\"Well-known group\",\"S-1-5-4\",\"Mandatory group, Enabled by default, Enabled group\"\n\"CONSOLE LOGON\",\"Well-known group\",\"S-1-2-1\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\Authenticated Users\",\"Well-known group\",\"S-1-5-11\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\This Organization\",\"Well-known group\",\"S-1-5-15\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\本地帐户\",\"Well-known group\",\"S-1-5-113\",\"Mandatory group, Enabled by default, Enabled group\"\n\"LOCAL\",\"Well-known group\",\"S-1-2-0\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\NTLM Authentication\",\"Well-known group\",\"S-1-5-64-10\",\"Mandatory group, Enabled by default, Enabled group\"\n\"Mandatory Label\\Medium Mandatory Level\",\"Label\",\"S-1-16-8192\",\"\"\n",
+          "ordinary_interactive_confirmed": true
+        },
+        "started_at_utc": "2026-11-03T09:26:34.4480130Z",
+        "finished_at_utc": "2026-11-03T09:26:41.9633344Z",
+        "duration_ms": 7499.4511,
+        "process_started": true,
+        "process_id": 39152,
+        "exit_code": 0,
+        "external_hang_guard_triggered": false,
+        "launch_error": null,
+        "stdout": "codec=vp9 profile=1 bit_depth=8 chroma=444 color=srgb range=full backend=cpu-software direction=Encode width=1920 height=1080 fps=60 kbps=8000 output_frames=32 elapsed_us=4368295 checked_close=true sustainable_fps_proven=false\n",
+        "stderr": "",
+        "stdout_file": {
+          "path": "encode.stdout.log",
+          "bytes": 227,
+          "sha256": "af13e015a0288345944db369aa41c3bab70de7a2de0240c42eefc2f6e22483a6"
+        },
+        "stderr_file": {
+          "path": "encode.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "success_line_exactly_matched": true,
+        "reported_output_frames": 32,
+        "reported_elapsed_us": 4368295,
+        "reported_checked_close": true,
+        "reported_sustainable_fps_proven": false,
+        "passed": true,
+        "executable_unchanged_after_execution": true
+      },
+      {
+        "direction": "decode",
+        "attempt": 1,
+        "executable_sha256": "a377b579392d2e43ee579a06d996ec4580f6fedfe229403e1b0181135898a44f",
+        "executable_bytes": 1224192,
+        "argv": [
+          "vp9-rgb444-direction-probe.exe",
+          "decode",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "arguments": [
+          "decode",
+          "1920",
+          "1080",
+          "60",
+          "8000"
+        ],
+        "command": "vp9-rgb444-direction-probe.exe decode 1920 1080 60 8000",
+        "token": {
+          "recorded_at_utc": "2026-11-03T09:26:42.0425694Z",
+          "user_interactive": true,
+          "session_id": 1,
+          "administrator_token": false,
+          "medium_mandatory_sid_present": true,
+          "interactive_sid_present": true,
+          "integrity_label_sids": [
+            "S-1-16-8192"
+          ],
+          "whoami_groups_csv": "\"Group Name\",\"Type\",\"SID\",\"Attributes\"\n\"Everyone\",\"Well-known group\",\"S-1-1-0\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\本地帐户和管理员组成员\",\"Well-known group\",\"S-1-5-114\",\"Group used for deny only\"\n\"BUILTIN\\Administrators\",\"Alias\",\"S-1-5-32-544\",\"Group used for deny only\"\n\"BUILTIN\\Users\",\"Alias\",\"S-1-5-32-545\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\INTERACTIVE\",\"Well-known group\",\"S-1-5-4\",\"Mandatory group, Enabled by default, Enabled group\"\n\"CONSOLE LOGON\",\"Well-known group\",\"S-1-2-1\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\Authenticated Users\",\"Well-known group\",\"S-1-5-11\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\This Organization\",\"Well-known group\",\"S-1-5-15\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\本地帐户\",\"Well-known group\",\"S-1-5-113\",\"Mandatory group, Enabled by default, Enabled group\"\n\"LOCAL\",\"Well-known group\",\"S-1-2-0\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\NTLM Authentication\",\"Well-known group\",\"S-1-5-64-10\",\"Mandatory group, Enabled by default, Enabled group\"\n\"Mandatory Label\\Medium Mandatory Level\",\"Label\",\"S-1-16-8192\",\"\"\n",
+          "ordinary_interactive_confirmed": true
+        },
+        "started_at_utc": "2026-11-03T09:26:42.0502636Z",
+        "finished_at_utc": "2026-11-03T09:26:46.4784394Z",
+        "duration_ms": 4415.7242,
+        "process_started": true,
+        "process_id": 33428,
+        "exit_code": 0,
+        "external_hang_guard_triggered": false,
+        "launch_error": null,
+        "stdout": "codec=vp9 profile=1 bit_depth=8 chroma=444 color=srgb range=full backend=cpu-software direction=Decode width=1920 height=1080 fps=60 kbps=8000 output_frames=32 elapsed_us=4385985 checked_close=true sustainable_fps_proven=false\n",
+        "stderr": "",
+        "stdout_file": {
+          "path": "decode.stdout.log",
+          "bytes": 227,
+          "sha256": "91ab3bb73e2d0cc86f6eab49921c0fbd7b55d875582d1c03d8e583078cae7cb2"
+        },
+        "stderr_file": {
+          "path": "decode.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "success_line_exactly_matched": true,
+        "reported_output_frames": 32,
+        "reported_elapsed_us": 4385985,
+        "reported_checked_close": true,
+        "reported_sustainable_fps_proven": false,
+        "passed": true,
+        "executable_unchanged_after_execution": true
+      }
+    ],
+    "bundle_unchanged_after_execution": true,
+    "token_after": {
+      "recorded_at_utc": "2026-11-03T09:26:46.7149389Z",
+      "user_interactive": true,
+      "session_id": 1,
+      "administrator_token": false,
+      "medium_mandatory_sid_present": true,
+      "interactive_sid_present": true,
+      "integrity_label_sids": [
+        "S-1-16-8192"
+      ],
+      "whoami_groups_csv": "\"Group Name\",\"Type\",\"SID\",\"Attributes\"\n\"Everyone\",\"Well-known group\",\"S-1-1-0\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\本地帐户和管理员组成员\",\"Well-known group\",\"S-1-5-114\",\"Group used for deny only\"\n\"BUILTIN\\Administrators\",\"Alias\",\"S-1-5-32-544\",\"Group used for deny only\"\n\"BUILTIN\\Users\",\"Alias\",\"S-1-5-32-545\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\INTERACTIVE\",\"Well-known group\",\"S-1-5-4\",\"Mandatory group, Enabled by default, Enabled group\"\n\"CONSOLE LOGON\",\"Well-known group\",\"S-1-2-1\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\Authenticated Users\",\"Well-known group\",\"S-1-5-11\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\This Organization\",\"Well-known group\",\"S-1-5-15\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\本地帐户\",\"Well-known group\",\"S-1-5-113\",\"Mandatory group, Enabled by default, Enabled group\"\n\"LOCAL\",\"Well-known group\",\"S-1-2-0\",\"Mandatory group, Enabled by default, Enabled group\"\n\"NT AUTHORITY\\NTLM Authentication\",\"Well-known group\",\"S-1-5-64-10\",\"Mandatory group, Enabled by default, Enabled group\"\n\"Mandatory Label\\Medium Mandatory Level\",\"Label\",\"S-1-16-8192\",\"\"\n",
+      "ordinary_interactive_confirmed": true
+    },
+    "executed_at_utc": "2026-11-03T09:26:46.7206825Z"
+  },
+  "assessment": {
+    "scope": "Finite synthetic VP9 profile 1, 8-bit RGB444 sRGB full-range CPU software directions using pinned libvpx/libyuv. Each direction creates independent actual encoder and decoder contexts.",
+    "sustained_60fps_proven": false,
+    "desktop_capture_proven": false,
+    "transport_or_tls_ipc_proven": false,
+    "presentation_or_scanout_proven": false,
+    "hardware_codec_proven": false,
+    "hdr_or_ten_bit_capture_proven": false,
+    "full_w29_acceptance_proven": false,
+    "old_hevc_hdr_failure_cases_rerun": false,
+    "both_exact_direction_workloads_passed": true,
+    "result": "Both exact finite synthetic VP9 RGB444 directions passed their original gates on this target."
+  }
+}

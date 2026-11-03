@@ -163,7 +163,10 @@ fn pending_migration_requires_both_authorities_and_only_joined_release_can_narro
             )
         })
     };
-    assert!(matches(&reset()), "canonical wire members remain admissible");
+    assert!(
+        matches(&reset()),
+        "canonical wire members remain admissible"
+    );
     let mut malformed = reset();
     malformed.members.clear();
     assert!(
