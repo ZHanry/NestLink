@@ -1,0 +1,309 @@
+{
+  "schema_version": 1,
+  "source_revision": "3b91a37875c742a1d46ccecb35c03dfced8b8918",
+  "workflow": ".github/workflows/network-migration-diagnostics.yml",
+  "run_id": 41605119008,
+  "run_attempt": 1,
+  "url": "https://github.com/ZHanry/NestLink/actions/runs/41605119008",
+  "conclusion": "failure",
+  "artifact": {
+    "id": 13217105351,
+    "name": "original-sdk-migration-3b91a37875c742a1d46ccecb35c03dfced8b8918-1",
+    "size_in_bytes": 25849,
+    "digest": "sha256:ddfece66b36b4ee94b804e02c8ef48238402a79061a58d82bc2d237a6206cec8"
+  },
+  "archive_digest_verified": true,
+  "downloaded_files": [
+    {
+      "path": "build.log",
+      "bytes": 60184,
+      "sha256": "7f2031ddd512513426c228d6eabb12380004c6e377cfa5dd0afd7ad5604333dc"
+    },
+    {
+      "path": "case-1.log",
+      "bytes": 20819,
+      "sha256": "b9fb01ae647ce3976c59ba90c4876ef496c160aa131e96992ace6777b77bd683"
+    },
+    {
+      "path": "case-2.log",
+      "bytes": 20186,
+      "sha256": "f553ec229846968675a3edb4d0e6790bf0061cd1b842726c742b941b64d2dc88"
+    },
+    {
+      "path": "case-3.log",
+      "bytes": 20466,
+      "sha256": "d4e03d4e1a7657406bc983b59b45221931c237f367ea0ac9b7a7189ff83d3bb3"
+    },
+    {
+      "path": "case-4.log",
+      "bytes": 20450,
+      "sha256": "d22d2472bd5b891c11de3145290e648003ec591456cb49df98013a250b8dc383"
+    },
+    {
+      "path": "case-5.log",
+      "bytes": 20460,
+      "sha256": "193707ff256e2807c4c1e26e81fe4a601bf674eea94457c30496b4fa34f14fc3"
+    },
+    {
+      "path": "case-6.log",
+      "bytes": 20720,
+      "sha256": "b43c04f207b4d47815292eb97c41780ac40f328de8ef70628152e86450e71be4"
+    },
+    {
+      "path": "receipt.json",
+      "bytes": 6013,
+      "sha256": "5c707d14c49c5437a49d5bd82a219f00d8251848cb38b67b40632ded885191c2"
+    }
+  ],
+  "producer_files_independently_verified": 7,
+  "producer": {
+    "source_revision": "3b91a37875c742a1d46ccecb35c03dfced8b8918",
+    "run_id": "41605119008",
+    "run_attempt": "1",
+    "workflow_revision": "3b91a37875c742a1d46ccecb35c03dfced8b8918",
+    "runner_environment": "github-hosted",
+    "runner_os": "Linux",
+    "cargo_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+    "stack_override": false,
+    "commands": [
+      {
+        "name": "build",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "--no-run"
+        ],
+        "return_code": 0,
+        "timed_out": false
+      },
+      {
+        "name": "case-1",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration",
+          "--",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 101,
+        "timed_out": false,
+        "original_case": "route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration",
+        "exact_one_pass_zero_ignored": false
+      },
+      {
+        "name": "case-2",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery",
+          "--",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 0,
+        "timed_out": false,
+        "original_case": "route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery",
+        "exact_one_pass_zero_ignored": true
+      },
+      {
+        "name": "case-3",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer",
+          "--",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 101,
+        "timed_out": false,
+        "original_case": "route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer",
+        "exact_one_pass_zero_ignored": false
+      },
+      {
+        "name": "case-4",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release",
+          "--",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 101,
+        "timed_out": false,
+        "original_case": "route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release",
+        "exact_one_pass_zero_ignored": false
+      },
+      {
+        "name": "case-5",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup",
+          "--",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 101,
+        "timed_out": false,
+        "original_case": "route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup",
+        "exact_one_pass_zero_ignored": false
+      },
+      {
+        "name": "case-6",
+        "argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-sdk",
+          "--test",
+          "network_relay",
+          "route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay",
+          "--",
+          "--exact",
+          "--nocapture",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 101,
+        "timed_out": false,
+        "original_case": "route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay",
+        "exact_one_pass_zero_ignored": false
+      }
+    ],
+    "passed": false,
+    "whole_acceptance_claimed": false,
+    "scope": "Independent original SDK cases with unchanged assertions, deadlines and ordinary stack. Each log is streamed so a later abort cannot hide an earlier failure. This does not replace the complete network suite.",
+    "files": [
+      {
+        "path": "build.log",
+        "bytes": 60184,
+        "sha256": "7f2031ddd512513426c228d6eabb12380004c6e377cfa5dd0afd7ad5604333dc"
+      },
+      {
+        "path": "case-1.log",
+        "bytes": 20819,
+        "sha256": "b9fb01ae647ce3976c59ba90c4876ef496c160aa131e96992ace6777b77bd683"
+      },
+      {
+        "path": "case-2.log",
+        "bytes": 20186,
+        "sha256": "f553ec229846968675a3edb4d0e6790bf0061cd1b842726c742b941b64d2dc88"
+      },
+      {
+        "path": "case-3.log",
+        "bytes": 20466,
+        "sha256": "d4e03d4e1a7657406bc983b59b45221931c237f367ea0ac9b7a7189ff83d3bb3"
+      },
+      {
+        "path": "case-4.log",
+        "bytes": 20450,
+        "sha256": "d22d2472bd5b891c11de3145290e648003ec591456cb49df98013a250b8dc383"
+      },
+      {
+        "path": "case-5.log",
+        "bytes": 20460,
+        "sha256": "193707ff256e2807c4c1e26e81fe4a601bf674eea94457c30496b4fa34f14fc3"
+      },
+      {
+        "path": "case-6.log",
+        "bytes": 20720,
+        "sha256": "b43c04f207b4d47815292eb97c41780ac40f328de8ef70628152e86450e71be4"
+      }
+    ]
+  },
+  "original_case_log_observations": [
+    {
+      "original_case": "route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration",
+      "return_code": 101,
+      "tail": "e_daemon.rs:5080:35\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5080\u001b[0m \u001b[1m\u001b[94m|\u001b[0m fn unicast_on_intf(packet: &[u8], if_name: &str, dest: SocketAddr, socket: &PktInfoUdpSocket) {\n     \u001b[1m\u001b[94m|\u001b[0m                                   \u001b[1m\u001b[33m^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_if_name`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `sz`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5089:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5089\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Ok(sz) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_sz`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5095:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5095\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Err(e) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `if_name`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5107:5\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5107\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     if_name: &str,\n     \u001b[1m\u001b[94m|\u001b[0m     \u001b[1m\u001b[33m^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_if_name`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `sz`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5131:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5131\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Ok(sz) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_sz`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5138:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5138\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Err(e) => trace!(\"Failed to send to {} via {:?}: {}\", addr, &if_name, e),\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:729:35\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m729\u001b[0m \u001b[1m\u001b[94m|\u001b[0m                         .map_err(|e| {\n    \u001b[1m\u001b[94m|\u001b[0m                                   \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:996:17\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m996\u001b[0m \u001b[1m\u001b[94m|\u001b[0m             Err(e) => debug!(\"failed to convert to String from key: {}\", e),\n    \u001b[1m\u001b[94m|\u001b[0m                 \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `ordering`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:1146:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1146\u001b[0m \u001b[1m\u001b[94m|\u001b[0m             ordering => {\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_ordering`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: method `authorities` is never used\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/dns_parser.rs:1852:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1825\u001b[0m \u001b[1m\u001b[94m|\u001b[0m impl DnsOutgoing {\n     \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[94m----------------\u001b[0m \u001b[1m\u001b[94mmethod in this implementation\u001b[0m\n\u001b[1m\u001b[94m...\u001b[0m\n\u001b[1m\u001b[94m1852\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     pub fn authorities(&self) -> &[DnsRecordBox] {\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^^^^^^^^^^\u001b[0m\n     \u001b[1m\u001b[94m|\u001b[0m\n     \u001b[1m\u001b[94m= \u001b[0m\u001b[1mnote\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\u001b[1m\u001b[33mwarning\u001b[0m: `mdns-sd` (lib) generated 51 warnings (run `cargo fix --lib -p mdns-sd` to apply 48 suggestions)\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: associated function `from_u8` is never used\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/fast-socks5/src/lib.rs:138:8\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m125\u001b[0m \u001b[1m\u001b[94m|\u001b[0m impl AuthenticationMethod {\n    \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[94m-------------------------\u001b[0m \u001b[1m\u001b[94massociated function in this implementation\u001b[0m\n\u001b[1m\u001b[94m...\u001b[0m\n\u001b[1m\u001b[94m138\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     fn from_u8(code: u8) -> Option<AuthenticationMethod> {\n    \u001b[1m\u001b[94m|\u001b[0m        \u001b[1m\u001b[33m^^^^^^^\u001b[0m\n    \u001b[1m\u001b[94m|\u001b[0m\n    \u001b[1m\u001b[94m= \u001b[0m\u001b[1mnote\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\u001b[1m\u001b[33mwarning\u001b[0m: `fast-socks5` (lib) generated 1 warning\n\u001b[1m\u001b[92m    Finished\u001b[0m `test` profile [unoptimized] target(s) in 0.38s\n\u001b[1m\u001b[92m     Running\u001b[0m tests/network_relay.rs (target/debug/deps/network_relay-e83786fa1eee6e52)\n\nrunning 1 test\ntest route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration ... network-relay management rejection: POST /api/v3/nodes/13d9e9e3-e9c0-44b4-97ae-704c568714f6/turn-resources status=403 Forbidden elapsed_us=665\nnetwork-relay management rejection: POST /api/v3/nodes/13d9e9e3-e9c0-44b4-97ae-704c568714f6/resources status=403 Forbidden elapsed_us=433\nError: Custom { kind: PermissionDenied, error: \"fixture B node listener shutdown: node QUIC relay stopped or refused\" }\nFAILED\n\nfailures:\n\nfailures:\n    route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 2.72s\n\n\u001b[1m\u001b[91merror\u001b[0m: test failed, to rerun pass `-p nestlink-sdk --test network_relay`\n"
+    },
+    {
+      "original_case": "route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery",
+      "return_code": 0,
+      "tail": "m\u001b[94m|\u001b[0m     let qtype = if out.is_query() {\n     \u001b[1m\u001b[94m|\u001b[0m         \u001b[1m\u001b[33m^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_qtype`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `ipv6`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5044:20\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5044\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         IpAddr::V6(ipv6) => {\n     \u001b[1m\u001b[94m|\u001b[0m                    \u001b[1m\u001b[33m^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_ipv6`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `if_name`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5080:35\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5080\u001b[0m \u001b[1m\u001b[94m|\u001b[0m fn unicast_on_intf(packet: &[u8], if_name: &str, dest: SocketAddr, socket: &PktInfoUdpSocket) {\n     \u001b[1m\u001b[94m|\u001b[0m                                   \u001b[1m\u001b[33m^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_if_name`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `sz`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5089:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5089\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Ok(sz) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_sz`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5095:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5095\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Err(e) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `if_name`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5107:5\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5107\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     if_name: &str,\n     \u001b[1m\u001b[94m|\u001b[0m     \u001b[1m\u001b[33m^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_if_name`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `sz`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5131:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5131\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Ok(sz) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_sz`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5138:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5138\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Err(e) => trace!(\"Failed to send to {} via {:?}: {}\", addr, &if_name, e),\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:729:35\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m729\u001b[0m \u001b[1m\u001b[94m|\u001b[0m                         .map_err(|e| {\n    \u001b[1m\u001b[94m|\u001b[0m                                   \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:996:17\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m996\u001b[0m \u001b[1m\u001b[94m|\u001b[0m             Err(e) => debug!(\"failed to convert to String from key: {}\", e),\n    \u001b[1m\u001b[94m|\u001b[0m                 \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `ordering`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:1146:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1146\u001b[0m \u001b[1m\u001b[94m|\u001b[0m             ordering => {\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_ordering`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: method `authorities` is never used\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/dns_parser.rs:1852:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1825\u001b[0m \u001b[1m\u001b[94m|\u001b[0m impl DnsOutgoing {\n     \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[94m----------------\u001b[0m \u001b[1m\u001b[94mmethod in this implementation\u001b[0m\n\u001b[1m\u001b[94m...\u001b[0m\n\u001b[1m\u001b[94m1852\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     pub fn authorities(&self) -> &[DnsRecordBox] {\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^^^^^^^^^^\u001b[0m\n     \u001b[1m\u001b[94m|\u001b[0m\n     \u001b[1m\u001b[94m= \u001b[0m\u001b[1mnote\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\u001b[1m\u001b[33mwarning\u001b[0m: `mdns-sd` (lib) generated 51 warnings (run `cargo fix --lib -p mdns-sd` to apply 48 suggestions)\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: associated function `from_u8` is never used\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/fast-socks5/src/lib.rs:138:8\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m125\u001b[0m \u001b[1m\u001b[94m|\u001b[0m impl AuthenticationMethod {\n    \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[94m-------------------------\u001b[0m \u001b[1m\u001b[94massociated function in this implementation\u001b[0m\n\u001b[1m\u001b[94m...\u001b[0m\n\u001b[1m\u001b[94m138\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     fn from_u8(code: u8) -> Option<AuthenticationMethod> {\n    \u001b[1m\u001b[94m|\u001b[0m        \u001b[1m\u001b[33m^^^^^^^\u001b[0m\n    \u001b[1m\u001b[94m|\u001b[0m\n    \u001b[1m\u001b[94m= \u001b[0m\u001b[1mnote\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\u001b[1m\u001b[33mwarning\u001b[0m: `fast-socks5` (lib) generated 1 warning\n\u001b[1m\u001b[92m    Finished\u001b[0m `test` profile [unoptimized] target(s) in 0.35s\n\u001b[1m\u001b[92m     Running\u001b[0m tests/network_relay.rs (target/debug/deps/network_relay-e83786fa1eee6e52)\n\nrunning 1 test\ntest route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 2.62s\n\n"
+    },
+    {
+      "original_case": "route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer",
+      "return_code": 101,
+      "tail": "vice_daemon.rs:5044:20\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5044\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         IpAddr::V6(ipv6) => {\n     \u001b[1m\u001b[94m|\u001b[0m                    \u001b[1m\u001b[33m^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_ipv6`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `if_name`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5080:35\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5080\u001b[0m \u001b[1m\u001b[94m|\u001b[0m fn unicast_on_intf(packet: &[u8], if_name: &str, dest: SocketAddr, socket: &PktInfoUdpSocket) {\n     \u001b[1m\u001b[94m|\u001b[0m                                   \u001b[1m\u001b[33m^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_if_name`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `sz`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5089:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5089\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Ok(sz) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_sz`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5095:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5095\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Err(e) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `if_name`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5107:5\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5107\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     if_name: &str,\n     \u001b[1m\u001b[94m|\u001b[0m     \u001b[1m\u001b[33m^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_if_name`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `sz`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5131:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5131\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Ok(sz) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_sz`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5138:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5138\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Err(e) => trace!(\"Failed to send to {} via {:?}: {}\", addr, &if_name, e),\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:729:35\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m729\u001b[0m \u001b[1m\u001b[94m|\u001b[0m                         .map_err(|e| {\n    \u001b[1m\u001b[94m|\u001b[0m                                   \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:996:17\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m996\u001b[0m \u001b[1m\u001b[94m|\u001b[0m             Err(e) => debug!(\"failed to convert to String from key: {}\", e),\n    \u001b[1m\u001b[94m|\u001b[0m                 \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `ordering`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:1146:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1146\u001b[0m \u001b[1m\u001b[94m|\u001b[0m             ordering => {\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_ordering`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: method `authorities` is never used\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/dns_parser.rs:1852:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1825\u001b[0m \u001b[1m\u001b[94m|\u001b[0m impl DnsOutgoing {\n     \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[94m----------------\u001b[0m \u001b[1m\u001b[94mmethod in this implementation\u001b[0m\n\u001b[1m\u001b[94m...\u001b[0m\n\u001b[1m\u001b[94m1852\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     pub fn authorities(&self) -> &[DnsRecordBox] {\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^^^^^^^^^^\u001b[0m\n     \u001b[1m\u001b[94m|\u001b[0m\n     \u001b[1m\u001b[94m= \u001b[0m\u001b[1mnote\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\u001b[1m\u001b[33mwarning\u001b[0m: `mdns-sd` (lib) generated 51 warnings (run `cargo fix --lib -p mdns-sd` to apply 48 suggestions)\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: associated function `from_u8` is never used\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/fast-socks5/src/lib.rs:138:8\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m125\u001b[0m \u001b[1m\u001b[94m|\u001b[0m impl AuthenticationMethod {\n    \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[94m-------------------------\u001b[0m \u001b[1m\u001b[94massociated function in this implementation\u001b[0m\n\u001b[1m\u001b[94m...\u001b[0m\n\u001b[1m\u001b[94m138\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     fn from_u8(code: u8) -> Option<AuthenticationMethod> {\n    \u001b[1m\u001b[94m|\u001b[0m        \u001b[1m\u001b[33m^^^^^^^\u001b[0m\n    \u001b[1m\u001b[94m|\u001b[0m\n    \u001b[1m\u001b[94m= \u001b[0m\u001b[1mnote\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\u001b[1m\u001b[33mwarning\u001b[0m: `fast-socks5` (lib) generated 1 warning\n\u001b[1m\u001b[92m    Finished\u001b[0m `test` profile [unoptimized] target(s) in 0.38s\n\u001b[1m\u001b[92m     Running\u001b[0m tests/network_relay.rs (target/debug/deps/network_relay-e83786fa1eee6e52)\n\nrunning 1 test\ntest route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer ... Error: Sdk(ServiceIo(Kind(TimedOut)))\nFAILED\n\nfailures:\n\nfailures:\n    route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 4.45s\n\n\u001b[1m\u001b[91merror\u001b[0m: test failed, to rerun pass `-p nestlink-sdk --test network_relay`\n"
+    },
+    {
+      "original_case": "route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release",
+      "return_code": 101,
+      "tail": "/mdns-sd/src/service_daemon.rs:5044:20\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5044\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         IpAddr::V6(ipv6) => {\n     \u001b[1m\u001b[94m|\u001b[0m                    \u001b[1m\u001b[33m^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_ipv6`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `if_name`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5080:35\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5080\u001b[0m \u001b[1m\u001b[94m|\u001b[0m fn unicast_on_intf(packet: &[u8], if_name: &str, dest: SocketAddr, socket: &PktInfoUdpSocket) {\n     \u001b[1m\u001b[94m|\u001b[0m                                   \u001b[1m\u001b[33m^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_if_name`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `sz`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5089:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5089\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Ok(sz) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_sz`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5095:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5095\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Err(e) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `if_name`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5107:5\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5107\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     if_name: &str,\n     \u001b[1m\u001b[94m|\u001b[0m     \u001b[1m\u001b[33m^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_if_name`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `sz`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5131:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5131\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Ok(sz) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_sz`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5138:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5138\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Err(e) => trace!(\"Failed to send to {} via {:?}: {}\", addr, &if_name, e),\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:729:35\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m729\u001b[0m \u001b[1m\u001b[94m|\u001b[0m                         .map_err(|e| {\n    \u001b[1m\u001b[94m|\u001b[0m                                   \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:996:17\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m996\u001b[0m \u001b[1m\u001b[94m|\u001b[0m             Err(e) => debug!(\"failed to convert to String from key: {}\", e),\n    \u001b[1m\u001b[94m|\u001b[0m                 \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `ordering`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:1146:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1146\u001b[0m \u001b[1m\u001b[94m|\u001b[0m             ordering => {\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_ordering`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: method `authorities` is never used\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/dns_parser.rs:1852:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1825\u001b[0m \u001b[1m\u001b[94m|\u001b[0m impl DnsOutgoing {\n     \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[94m----------------\u001b[0m \u001b[1m\u001b[94mmethod in this implementation\u001b[0m\n\u001b[1m\u001b[94m...\u001b[0m\n\u001b[1m\u001b[94m1852\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     pub fn authorities(&self) -> &[DnsRecordBox] {\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^^^^^^^^^^\u001b[0m\n     \u001b[1m\u001b[94m|\u001b[0m\n     \u001b[1m\u001b[94m= \u001b[0m\u001b[1mnote\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\u001b[1m\u001b[33mwarning\u001b[0m: `mdns-sd` (lib) generated 51 warnings (run `cargo fix --lib -p mdns-sd` to apply 48 suggestions)\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: associated function `from_u8` is never used\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/fast-socks5/src/lib.rs:138:8\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m125\u001b[0m \u001b[1m\u001b[94m|\u001b[0m impl AuthenticationMethod {\n    \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[94m-------------------------\u001b[0m \u001b[1m\u001b[94massociated function in this implementation\u001b[0m\n\u001b[1m\u001b[94m...\u001b[0m\n\u001b[1m\u001b[94m138\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     fn from_u8(code: u8) -> Option<AuthenticationMethod> {\n    \u001b[1m\u001b[94m|\u001b[0m        \u001b[1m\u001b[33m^^^^^^^\u001b[0m\n    \u001b[1m\u001b[94m|\u001b[0m\n    \u001b[1m\u001b[94m= \u001b[0m\u001b[1mnote\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\u001b[1m\u001b[33mwarning\u001b[0m: `fast-socks5` (lib) generated 1 warning\n\u001b[1m\u001b[92m    Finished\u001b[0m `test` profile [unoptimized] target(s) in 0.36s\n\u001b[1m\u001b[92m     Running\u001b[0m tests/network_relay.rs (target/debug/deps/network_relay-e83786fa1eee6e52)\n\nrunning 1 test\ntest route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release ... Error: Sdk(ServiceIo(Kind(TimedOut)))\nFAILED\n\nfailures:\n\nfailures:\n    route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 4.61s\n\n\u001b[1m\u001b[91merror\u001b[0m: test failed, to rerun pass `-p nestlink-sdk --test network_relay`\n"
+    },
+    {
+      "original_case": "route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup",
+      "return_code": 101,
+      "tail": "rc/service_daemon.rs:5044:20\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5044\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         IpAddr::V6(ipv6) => {\n     \u001b[1m\u001b[94m|\u001b[0m                    \u001b[1m\u001b[33m^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_ipv6`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `if_name`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5080:35\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5080\u001b[0m \u001b[1m\u001b[94m|\u001b[0m fn unicast_on_intf(packet: &[u8], if_name: &str, dest: SocketAddr, socket: &PktInfoUdpSocket) {\n     \u001b[1m\u001b[94m|\u001b[0m                                   \u001b[1m\u001b[33m^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_if_name`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `sz`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5089:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5089\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Ok(sz) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_sz`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5095:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5095\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Err(e) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `if_name`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5107:5\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5107\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     if_name: &str,\n     \u001b[1m\u001b[94m|\u001b[0m     \u001b[1m\u001b[33m^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_if_name`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `sz`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5131:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5131\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Ok(sz) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_sz`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5138:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5138\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Err(e) => trace!(\"Failed to send to {} via {:?}: {}\", addr, &if_name, e),\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:729:35\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m729\u001b[0m \u001b[1m\u001b[94m|\u001b[0m                         .map_err(|e| {\n    \u001b[1m\u001b[94m|\u001b[0m                                   \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:996:17\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m996\u001b[0m \u001b[1m\u001b[94m|\u001b[0m             Err(e) => debug!(\"failed to convert to String from key: {}\", e),\n    \u001b[1m\u001b[94m|\u001b[0m                 \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `ordering`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:1146:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1146\u001b[0m \u001b[1m\u001b[94m|\u001b[0m             ordering => {\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_ordering`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: method `authorities` is never used\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/dns_parser.rs:1852:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1825\u001b[0m \u001b[1m\u001b[94m|\u001b[0m impl DnsOutgoing {\n     \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[94m----------------\u001b[0m \u001b[1m\u001b[94mmethod in this implementation\u001b[0m\n\u001b[1m\u001b[94m...\u001b[0m\n\u001b[1m\u001b[94m1852\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     pub fn authorities(&self) -> &[DnsRecordBox] {\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^^^^^^^^^^\u001b[0m\n     \u001b[1m\u001b[94m|\u001b[0m\n     \u001b[1m\u001b[94m= \u001b[0m\u001b[1mnote\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\u001b[1m\u001b[33mwarning\u001b[0m: `mdns-sd` (lib) generated 51 warnings (run `cargo fix --lib -p mdns-sd` to apply 48 suggestions)\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: associated function `from_u8` is never used\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/fast-socks5/src/lib.rs:138:8\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m125\u001b[0m \u001b[1m\u001b[94m|\u001b[0m impl AuthenticationMethod {\n    \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[94m-------------------------\u001b[0m \u001b[1m\u001b[94massociated function in this implementation\u001b[0m\n\u001b[1m\u001b[94m...\u001b[0m\n\u001b[1m\u001b[94m138\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     fn from_u8(code: u8) -> Option<AuthenticationMethod> {\n    \u001b[1m\u001b[94m|\u001b[0m        \u001b[1m\u001b[33m^^^^^^^\u001b[0m\n    \u001b[1m\u001b[94m|\u001b[0m\n    \u001b[1m\u001b[94m= \u001b[0m\u001b[1mnote\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\u001b[1m\u001b[33mwarning\u001b[0m: `fast-socks5` (lib) generated 1 warning\n\u001b[1m\u001b[92m    Finished\u001b[0m `test` profile [unoptimized] target(s) in 0.34s\n\u001b[1m\u001b[92m     Running\u001b[0m tests/network_relay.rs (target/debug/deps/network_relay-e83786fa1eee6e52)\n\nrunning 1 test\ntest route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup ... Error: Sdk(ServiceIo(Kind(TimedOut)))\nFAILED\n\nfailures:\n\nfailures:\n    route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 4.63s\n\n\u001b[1m\u001b[91merror\u001b[0m: test failed, to rerun pass `-p nestlink-sdk --test network_relay`\n"
+    },
+    {
+      "original_case": "route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay",
+      "return_code": 101,
+      "tail": "warning\u001b[0m\u001b[1m: unused variable: `if_name`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5080:35\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5080\u001b[0m \u001b[1m\u001b[94m|\u001b[0m fn unicast_on_intf(packet: &[u8], if_name: &str, dest: SocketAddr, socket: &PktInfoUdpSocket) {\n     \u001b[1m\u001b[94m|\u001b[0m                                   \u001b[1m\u001b[33m^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_if_name`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `sz`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5089:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5089\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Ok(sz) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_sz`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5095:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5095\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Err(e) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `if_name`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5107:5\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5107\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     if_name: &str,\n     \u001b[1m\u001b[94m|\u001b[0m     \u001b[1m\u001b[33m^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_if_name`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `sz`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5131:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5131\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Ok(sz) => trace!(\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_sz`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_daemon.rs:5138:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m5138\u001b[0m \u001b[1m\u001b[94m|\u001b[0m         Err(e) => trace!(\"Failed to send to {} via {:?}: {}\", addr, &if_name, e),\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:729:35\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m729\u001b[0m \u001b[1m\u001b[94m|\u001b[0m                         .map_err(|e| {\n    \u001b[1m\u001b[94m|\u001b[0m                                   \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `e`\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:996:17\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m996\u001b[0m \u001b[1m\u001b[94m|\u001b[0m             Err(e) => debug!(\"failed to convert to String from key: {}\", e),\n    \u001b[1m\u001b[94m|\u001b[0m                 \u001b[1m\u001b[33m^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_e`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: unused variable: `ordering`\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/service_info.rs:1146:13\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1146\u001b[0m \u001b[1m\u001b[94m|\u001b[0m             ordering => {\n     \u001b[1m\u001b[94m|\u001b[0m             \u001b[1m\u001b[33m^^^^^^^^\u001b[0m \u001b[1m\u001b[33mhelp: if this is intentional, prefix it with an underscore: `_ordering`\u001b[0m\n\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: method `authorities` is never used\u001b[0m\n    \u001b[1m\u001b[94m--> \u001b[0mthird-party/mdns-sd/src/dns_parser.rs:1852:12\n     \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m1825\u001b[0m \u001b[1m\u001b[94m|\u001b[0m impl DnsOutgoing {\n     \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[94m----------------\u001b[0m \u001b[1m\u001b[94mmethod in this implementation\u001b[0m\n\u001b[1m\u001b[94m...\u001b[0m\n\u001b[1m\u001b[94m1852\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     pub fn authorities(&self) -> &[DnsRecordBox] {\n     \u001b[1m\u001b[94m|\u001b[0m            \u001b[1m\u001b[33m^^^^^^^^^^^\u001b[0m\n     \u001b[1m\u001b[94m|\u001b[0m\n     \u001b[1m\u001b[94m= \u001b[0m\u001b[1mnote\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\u001b[1m\u001b[33mwarning\u001b[0m: `mdns-sd` (lib) generated 51 warnings (run `cargo fix --lib -p mdns-sd` to apply 48 suggestions)\n\u001b[1m\u001b[33mwarning\u001b[0m\u001b[1m: associated function `from_u8` is never used\u001b[0m\n   \u001b[1m\u001b[94m--> \u001b[0mthird-party/fast-socks5/src/lib.rs:138:8\n    \u001b[1m\u001b[94m|\u001b[0m\n\u001b[1m\u001b[94m125\u001b[0m \u001b[1m\u001b[94m|\u001b[0m impl AuthenticationMethod {\n    \u001b[1m\u001b[94m|\u001b[0m \u001b[1m\u001b[94m-------------------------\u001b[0m \u001b[1m\u001b[94massociated function in this implementation\u001b[0m\n\u001b[1m\u001b[94m...\u001b[0m\n\u001b[1m\u001b[94m138\u001b[0m \u001b[1m\u001b[94m|\u001b[0m     fn from_u8(code: u8) -> Option<AuthenticationMethod> {\n    \u001b[1m\u001b[94m|\u001b[0m        \u001b[1m\u001b[33m^^^^^^^\u001b[0m\n    \u001b[1m\u001b[94m|\u001b[0m\n    \u001b[1m\u001b[94m= \u001b[0m\u001b[1mnote\u001b[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\n\u001b[1m\u001b[33mwarning\u001b[0m: `fast-socks5` (lib) generated 1 warning\n\u001b[1m\u001b[92m    Finished\u001b[0m `test` profile [unoptimized] target(s) in 0.34s\n\u001b[1m\u001b[92m     Running\u001b[0m tests/network_relay.rs (target/debug/deps/network_relay-e83786fa1eee6e52)\n\nrunning 1 test\ntest route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay ... \nthread 'route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay' (15725) has overflowed its stack\nfatal runtime error: stack overflow, aborting\n\u001b[1m\u001b[91merror\u001b[0m: test failed, to rerun pass `-p nestlink-sdk --test network_relay`\n\nCaused by:\n  process didn't exit successfully: `/home/runner/work/NestLink/NestLink/target/debug/deps/network_relay-e83786fa1eee6e52 'route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay' --exact --nocapture --test-threads=1 --color never` (signal: 6, SIGABRT: process abort signal)\n"
+    }
+  ],
+  "raw_jobs": [
+    {
+      "job_id": 125812920504,
+      "name": "original-cases",
+      "conclusion": "failure",
+      "bytes": 56480,
+      "sha256": "28e1b27e4d8966353581bbf26f98fb3b664520687637e0fbd398b02ea2010b91"
+    }
+  ],
+  "scope": "Independent ordinary-stack original production SDK migration failures; 1 case passed, 4 failed, 1 aborted with SIGABRT.",
+  "historical_failures_retained": true,
+  "whole_task_passed": false,
+  "release_eligibility_claimed": false
+}

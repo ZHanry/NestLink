@@ -102,7 +102,11 @@ async fn current_node_or_original_path_revocation_stops_both_prepared_owners_wit
         );
         drop(rebind(&addresses)?);
         drop(rebind(&standby)?);
-        second.finish().await?;
+        if revoke_node {
+            second.finish_revoked().await?;
+        } else {
+            second.finish().await?;
+        }
         f.finish().await?;
     }
     Ok(())

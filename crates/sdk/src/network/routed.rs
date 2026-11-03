@@ -340,17 +340,19 @@ async fn authorize_remote_observed<'a>(
                 )
             });
         if file_only {
-            nestlink_remote::quic::authorize_file_only_path_migration(
+            Box::pin(nestlink_remote::quic::authorize_file_only_path_migration(
                 connection,
                 None,
                 setup,
                 &local.identity,
                 peer_key,
-            )
+            ))
             .await
         } else {
-            nestlink_remote::quic::authorize(connection, None, setup, &local.identity, peer_key)
-                .await
+            Box::pin(nestlink_remote::quic::authorize(
+                connection, None, setup, &local.identity, peer_key,
+            ))
+            .await
         }
     };
     let proved = tokio::select! { biased;

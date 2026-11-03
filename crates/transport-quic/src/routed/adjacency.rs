@@ -78,26 +78,43 @@ impl AdjacencyEndpoint {
         identity: &InstallationIdentity,
         remote: PeerId,
     ) -> Result<Self> {
-        Self::bind_node_version(address, identity, remote, super::DatagramVersion::One)
+        Self::bind_node_version(address, identity, remote, super::DatagramVersion::One, false)
+    }
+    /// Explicit opt-in for an original migration route-set member. Quinn's
+    /// own idle detection must finish within the original ten-second node
+    /// authority; no application ACK heuristic or deadline renewal is used.
+    /// The inner migration ALPN and bilateral capability proof are still
+    /// mandatory before the SDK can hand this carrier to business channels.
+    pub fn bind_migratable_node(
+        address: SocketAddr,
+        identity: &InstallationIdentity,
+        remote: PeerId,
+    ) -> Result<Self> {
+        Self::bind_node_version(address, identity, remote, super::DatagramVersion::One, true)
     }
     pub fn bind_chain_node(
         address: SocketAddr,
         identity: &InstallationIdentity,
         remote: PeerId,
     ) -> Result<Self> {
-        Self::bind_node_version(address, identity, remote, super::DatagramVersion::Two)
+        Self::bind_node_version(address, identity, remote, super::DatagramVersion::Two, false)
     }
     fn bind_node_version(
         address: SocketAddr,
         identity: &InstallationIdentity,
         remote: PeerId,
         version: super::DatagramVersion,
+        migratable: bool,
     ) -> Result<Self> {
         let mut owner = Self::bind_version(address, identity, remote, version)?;
         let mut client_tls = tls::client_config(identity, remote.0)?;
         client_tls.alpn_protocols = vec![version.alpn().to_vec()];
         let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(client_tls)?));
         let mut transport = transport_config();
+        if migratable {
+            transport.max_idle_timeout(Some(quinn::VarInt::from_u32(900).into()));
+            transport.keep_alive_interval(Some(Duration::from_millis(200)));
+        }
         transport.max_concurrent_bidi_streams(1u8.into());
         client.transport_config(Arc::new(transport));
         let endpoint = owner

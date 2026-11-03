@@ -1102,7 +1102,8 @@
         "docs/network-rewrite/evidence/network-59abafc.json",
         "docs/network-rewrite/evidence/web-production-a1afd8b.json",
         "docs/network-rewrite/evidence/windows-media-owner-59abafc.json",
-        "docs/network-rewrite/evidence/full-rust-core-59abafc.json"
+        "docs/network-rewrite/evidence/full-rust-core-59abafc.json",
+        "docs/network-rewrite/evidence/network-804c117.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
@@ -1393,7 +1394,8 @@
         "docs/network-rewrite/evidence/development-run-1249075.json",
         "docs/network-rewrite/evidence/production-carriers-e2e3657.json",
         "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "docs/network-rewrite/evidence/network-run-c589362.json"
+        "docs/network-rewrite/evidence/network-run-c589362.json",
+        "docs/network-rewrite/evidence/network-804c117.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
@@ -1543,7 +1545,8 @@
         "docs/network-rewrite/evidence/development-run-bd1f298.json",
         "docs/network-rewrite/evidence/production-carriers-e2e3657.json",
         "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "docs/network-rewrite/evidence/network-run-c589362.json"
+        "docs/network-rewrite/evidence/network-run-c589362.json",
+        "docs/network-rewrite/evidence/network-804c117.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
@@ -1875,7 +1878,8 @@
         "docs/adr/network/0026-original-connection-quality-observation.md",
         "docs/network-rewrite/evidence/development-run-eab863b.json",
         "docs/network-rewrite/evidence/development-run-99f647b.json",
-        "docs/network-rewrite/evidence/network-run-c589362.json"
+        "docs/network-rewrite/evidence/network-run-c589362.json",
+        "docs/network-rewrite/evidence/network-804c117.json"
       ],
       "blockers": [],
       "implementation_notes": [
@@ -1957,7 +1961,8 @@
         "docs/network-rewrite/evidence/production-carriers-745c05a.json",
         "docs/network-rewrite/evidence/network-run-c589362.json",
         "docs/network-rewrite/NATIVE-RECOVERY-VIEWPORT.md",
-        "docs/adr/network/0082-authenticated-path-migration-control.md"
+        "docs/adr/network/0082-authenticated-path-migration-control.md",
+        "docs/network-rewrite/evidence/migration-original-3b91a37.json"
       ],
       "blockers": [],
       "implementation_notes": [
@@ -1968,7 +1973,8 @@
         "Read-only productionaudit onb491 confirms missing authenticated bilateral path-epoch migration/Commit/finite-drain; existing recovery incrementsbusinessgeneration and cannot closeAC21-23. This is sourcework, separately from externalWindows/NAT evidence.",
         "944880f fixes the original desktop recovery window and cancellation using a Core-proved continuous lineage, preserving runtime/login/request ownership and close cleanup. Pending exact hosted checks; safe application recovery does not complete W14 in-place path migration.",
         "895614e adds real original-owner standby bilateral signed proposal/accept/commit/committed control with two-second bounded lifetime and pinned identity/TLS/authority scope. Exact hosted formatting imported in f8b8a2b; full hosted compilation pending. Unique raw socket transfer, original inner connection continuity, dynamic path epochs and bounded drain are still source work; no whole W14/AC22 qualification.",
-        "Next integration adds original Quinn inner connection handoff and live authenticated path epoch, bilateral poll-driven prepared migration, resource retirement and selected-node authorization separated from physical availability. File-only retained channels follow the committed member; input/media use fresh business admission. Hosted compilation, process/socket failure matrix and full target evidence remain required."
+        "Next integration adds original Quinn inner connection handoff and live authenticated path epoch, bilateral poll-driven prepared migration, resource retirement and selected-node authorization separated from physical availability. File-only retained channels follow the committed member; input/media use fresh business admission. Hosted compilation, process/socket failure matrix and full target evidence remain required.",
+        "3b91a37 independent diagnostic41605119008 retains1pass,4failures,1ordinary-stackSIGABRT. New source drops the extra old_gate Arc before physical release wait, boxes proof futures, observes exact revoked-node denial and adds a production SDK20-trial actual nft DROP harness with unchanged3s threshold and original authority deadlines. Exact hosted validation is pending; full W14/AC21-23 remains open."
       ],
       "additional_scoped_validation": {
         "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",

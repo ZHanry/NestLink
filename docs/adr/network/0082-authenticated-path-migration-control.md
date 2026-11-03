@@ -75,6 +75,18 @@ being relabeled as new-path facts. Fresh counters require a new baseline and
 subsequent real ACK. The initial inner MTU is conservatively fixed at 1200;
 production adaptive PMTU convergence is not claimed by this slice.
 
+The explicit migratable SDK node constructor uses Quinn's existing 900 ms
+outer idle timeout and 200 ms keepalive. The locked Quinn API installs these
+transport parameters at outer TLS setup; it cannot change them after the inner
+capability exchange. This profile is therefore opt-in only for the new original
+migration owner, whose inner ALPN and bilateral capability proof remain required
+before business handoff. Legacy node and chain constructors retain their
+10-second idle / two-second keepalive profile. No application ACK heuristic,
+longer node lease, grant extension or deadline renewal substitutes for physical
+loss detection. The ordinary profile's ten-second idle timeout would otherwise
+expire at the original ten-second node authority, leaving no authorized DROP
+migration window.
+
 The existing general remote runtime requires View to create its lifecycle.
 The new migration ALPN therefore has one explicit file-only admission adapter:
 the signed original permit must contain only FileRead/FileWrite, and at least
@@ -144,3 +156,21 @@ revocation during drain and target evidence. The existing carrier-rebind
 prototype is separate feasibility evidence. Windows interactive recovery,
 real input/media presentation, fresh keyframe and p95 recovery targets retain
 their original L3/L4 requirements; this source slice does not close them.
+
+The dedicated `network-sdk-migration.yml` dispatch defines a separate production
+SDK DROP slice. An ordinary-user integration test runs management HTTP, two
+registered production node listeners, original endpoint proof and approved OS
+FileRead workers inside one owned loopback namespace. An external controller
+only installs nftables UDP DROP for the signed active relay port; it never
+calls NodeControl.stop or injects an authenticated close. Twenty fresh original
+authorities use ordinary one-second SDK polls and no manual migration request.
+Each trial requires both epochs to advance, unchanged original exporter,
+generation, group and exact lease deadlines, all fresh file bytes verified on
+the new route, and real old/standby UDP and file-worker cleanup. Timing starts
+before requesting DROP installation and ends after complete source verification,
+so dispatch overhead is included conservatively. The original network p95
+threshold remains three seconds. Exact-source hosted execution, nft counters,
+complete pcap, process identity and namespace cleanup receipts determine its
+result; adding this harness alone establishes no passing evidence. This does
+not close public NAT, external relay-process crash, native interactive recovery
+or the remaining detach/rebind/drain/external-poller matrix.

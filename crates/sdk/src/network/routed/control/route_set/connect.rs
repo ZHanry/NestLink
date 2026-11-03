@@ -103,9 +103,12 @@ impl Sdk {
             .into_iter()
             .find(|address| address.is_ipv4() == bind.is_ipv4())
             .ok_or(SdkError::Invalid)?;
-        let mut pending =
+        let mut pending = if migratable {
+            routed::AdjacencyEndpoint::bind_migratable_node(bind, &local.identity, candidate.relay())
+        } else {
             routed::AdjacencyEndpoint::bind_node(bind, &local.identity, candidate.relay())
-                .map_err(SdkError::NodeQuic)?;
+        }
+        .map_err(SdkError::NodeQuic)?;
         let connected = tokio::select! { biased;
             _ = super::super::super::wait_setup_stop(&mut stop) => Err(SessionEstablishError::Remote(RemoteError::Stopped)),
             _ = cancelled(&mut cancel) => Err(SessionEstablishError::Cancelled),

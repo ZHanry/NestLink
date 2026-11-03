@@ -163,6 +163,30 @@ impl ChainNode {
             })?;
         Ok(())
     }
+    /// Explicit current-authority withdrawal terminates the production server
+    /// with PermissionDenied. Observe that exact denial rather than treating
+    /// it as a successful normal shutdown or a recoverable transport fault.
+    pub(super) async fn finish_revoked(&mut self) -> Result {
+        let address = self.listener.local_addr()?;
+        let task = self.task.as_mut().ok_or("missing revoked listener task")?;
+        let result = tokio::time::timeout(Duration::from_secs(5), task).await??;
+        let error = result.expect_err("revoked production node must refuse authority");
+        assert_eq!(error.kind(), io::ErrorKind::PermissionDenied);
+        assert_eq!(error.to_string(), "node QUIC relay stopped or refused");
+        self.task = None;
+        self.shutdown.send_replace(true);
+        let mut stopped = self.control.stopped();
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while !*stopped.borrow_and_update() {
+                stopped.changed().await?;
+            }
+            Ok::<_, tokio::sync::watch::error::RecvError>(())
+        }).await??;
+        assert!(self.control.authorize(NodeRole::NodeRelay, false).is_err());
+        self.listener.close_and_wait(Instant::now() + Duration::from_secs(5)).await?;
+        drop(UdpSocket::bind(address)?);
+        Ok(())
+    }
 }
 async fn reserve(f: &Fixture, second: &ChainNode) -> Result<String> {
     let nodes = [

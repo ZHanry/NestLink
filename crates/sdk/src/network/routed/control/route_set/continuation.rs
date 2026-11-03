@@ -742,7 +742,7 @@ impl ContinuousRouteSetSession {
             {
                 return Err(SdkError::Trust.into());
             }
-            let node = AdjacencyEndpoint::bind_node(
+            let node = AdjacencyEndpoint::bind_migratable_node(
                 SocketAddr::new(self.bind.ip(), 0),
                 &local.identity,
                 candidate.relay(),

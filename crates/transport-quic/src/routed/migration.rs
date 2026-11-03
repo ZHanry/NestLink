@@ -138,7 +138,9 @@ impl RoutedTransport {
         pending.endpoint = None;
         // This receipt belongs only to the control endpoint and its writable
         // pollers. The original raw carrier and both demux queues remain owned.
-        wait_socket_released(&mut pending.released, deadline).await?;
+        wait_socket_released(&mut pending.released, deadline)
+            .await
+            .map_err(|error| io::Error::new(error.kind(), format!("migration candidate endpoint release: {error}")))?;
         pending
             .raw
             .as_ref()
@@ -169,6 +171,11 @@ impl RoutedTransport {
         let (isolated, _) = tokio::sync::watch::channel(None);
         old_gate.set_failure_sender(isolated)?;
         let drain_until = old_gate.drain()?;
+        // The draining owner and Quinn's previous socket now retain the gate.
+        // A local clone also retains Hub -> raw -> outer Connection, so keeping
+        // it across old.close_and_wait would prevent its physical UDP receipt
+        // from completing until this very function returned.
+        drop(old_gate);
         let began = Instant::now();
         std::mem::swap(&mut self.raw, &mut pending.raw);
         std::mem::swap(&mut self.packet_hub, &mut pending.packet_hub);
@@ -182,7 +189,9 @@ impl RoutedTransport {
         // No timer restart on cancellation: the deadline remains in old_gate.
         tokio::time::sleep_until(drain_until).await;
         if let Some(old) = &mut self.draining {
-            old.close_and_wait_boxed(deadline).await?;
+            old.close_and_wait_boxed(deadline)
+                .await
+                .map_err(|error| io::Error::new(error.kind(), format!("migration old carrier cleanup: {error}")))?;
         }
         self.draining = None;
         let connection = self.connection()?;

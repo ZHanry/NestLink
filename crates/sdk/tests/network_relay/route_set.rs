@@ -8,6 +8,9 @@ mod authorization;
 mod continuation;
 #[path = "route_set/recovery.rs"]
 mod recovery;
+#[cfg(target_os = "linux")]
+#[path = "route_set/physical_loss.rs"]
+mod physical_loss;
 use nestlink_protocol::{
     api::{NetworkRemoteRouteSetMemberRequest, NetworkRemoteRouteSetRequest},
     network::GrantClaims,
