@@ -175,6 +175,14 @@ jobs:
           set -o pipefail
           cargo test --locked -p nestlink-transport-quic --lib capability:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-capability-tests.log"
           cargo test --locked -p nestlink-transport-quic --lib packet_codec:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-packet-capability-tests.log"
+      - name: Exercise exact migration envelopes, signed phases and pinned candidate QUIC control
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-protocol --lib network_migration:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-migration-protocol-tests.log"
+          cargo test --locked -p nestlink-identity --lib network_migration:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-migration-signature-tests.log"
+          cargo test --locked -p nestlink-transport-quic --lib migration:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-migration-control-tests.log"
       - name: Exercise node report authority, cancellation and original deadlines
         if: ${{ !cancelled() }}
         shell: bash
@@ -208,6 +216,9 @@ jobs:
             ${{ runner.temp }}/network-service-carrier-tests.log
             ${{ runner.temp }}/network-capability-tests.log
             ${{ runner.temp }}/network-packet-capability-tests.log
+            ${{ runner.temp }}/network-migration-protocol-tests.log
+            ${{ runner.temp }}/network-migration-signature-tests.log
+            ${{ runner.temp }}/network-migration-control-tests.log
             ${{ runner.temp }}/network-path-observation-policy-tests.log
             ${{ runner.temp }}/network-continuation-policy-tests.log
             ${{ runner.temp }}/network-path-observation-quic-tests.log

@@ -399,6 +399,7 @@ HRESULT configure_processor(Presenter& p,UINT fps) {
         if(hr!=S_OK || !supported)return FAILED(hr)?hr:DXGI_ERROR_UNSUPPORTED;
         context1->VideoProcessorSetStreamColorSpace1(processor.Get(),0,DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020);
         context1->VideoProcessorSetOutputColorSpace1(processor.Get(),DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709);
+        p.video_context->VideoProcessorSetStreamAutoProcessingMode(processor.Get(),0,FALSE);
         DXGI_COLOR_SPACE_TYPE input=DXGI_COLOR_SPACE_RESERVED,output=DXGI_COLOR_SPACE_RESERVED;
         context1->VideoProcessorGetStreamColorSpace1(processor.Get(),0,&input);context1->VideoProcessorGetOutputColorSpace1(processor.Get(),&output);
         if(input!=DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020 || output!=DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709)return DXGI_ERROR_UNSUPPORTED;
