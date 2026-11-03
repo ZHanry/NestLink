@@ -17,6 +17,40 @@ build provenance; it records no target execution. See the complete owner/tools
 receipts, file inventory and retained failures in
 [`windows-media-owner-tools-4a4496b.json`](evidence/windows-media-owner-tools-4a4496b.json).
 
+The newer exact source `8f1ac1d65ed53218087bf17b55f1d279bf772c9e` has successful
+hosted tools build/strict run
+[`41566900475`](https://github.com/ZHanry/NestLink/actions/runs/41566900475),
+attempt 1. Official artifact `13200002031` is 1,041,146 bytes with SHA256
+`716c7ac9d628dcf91ce9260da3fd57cfc36aa5153a33b7729db548559be939a7`.
+The ZIP was independently downloaded and checked against its official digest;
+all 167 producer payload sizes/hashes matched before and after execution.
+Build and hosted owner evidence is recorded separately in
+[`windows-media-owner-tools-8f1ac1d.json`](evidence/windows-media-owner-tools-8f1ac1d.json).
+Owner run `41566896922`, attempt 1, completed with failure: the Windows 2025
+owner and both original native-peer jobs passed, while Windows 2022 first hit
+a crates.io index connection reset before its protocol tests ran. Its original
+native supplier prerequisite was consequently skipped, and subsequent forced
+native checks failed for the missing verified codec prefix. Those failed and
+skipped results remain recorded; Windows 2025 success does not replace them.
+
+The original eight HEVC MF/AMF commands below were then executed once each
+on the authorized ordinary Windows 11 build 26300 target. All eight returned
+exit 1. The exact arguments, executable digests, wall times, OS/GPU/driver
+inventory, wrapper and complete stdout/stderr are retained in
+[`windows-hevc-target-8f1ac1d.json`](evidence/windows-hevc-target-8f1ac1d.json).
+MF Main8 still rejects actual SPS colour primaries 0 where 1 is required;
+MF Main10 has no exact-adapter encoder and returns `0xc00d5212`. AMF Main8 now
+passes actual canonical-alias descriptor identity and typed property readback,
+then encode fails processing with `0x800705b4` while decode reaches an actual
+output before the original SPS level boundary rejects level 186. The original
+incomplete diagnostic path deliberately retains its `level >= 156` rejection;
+the full valid-level list in the message does not override that condition.
+AMF Main10 still reports unsupported native P010 format and fails `0x887a0004`.
+Decode commands include their matching encoder preparation; a failure there
+does not establish an independent decoder result. All original workload
+counts, SPS/color/uncropped-geometry checks, deadlines and cleanup gates remain.
+Earlier 4a4496b and f0c65e1 failures are preserved as separate evidence.
+
 These tools call the existing production direction-probe implementations.
 They use bounded synthetic input and original deadlines, exact output checks
 and checked native owner cleanup. Each command is independent and its failure
