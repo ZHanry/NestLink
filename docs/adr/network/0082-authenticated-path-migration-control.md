@@ -198,3 +198,13 @@ complete pcap, process identity and namespace cleanup receipts determine its
 result; adding this harness alone establishes no passing evidence. This does
 not close public NAT, external relay-process crash, native interactive recovery
 or the remaining detach/rebind/drain/external-poller matrix.
+
+The product recovery diagnostic at source `12e0a50` retained a second race:
+after the scheduler poll returned, physical carrier loss stopped the lease
+before the migration driver checked it. The driver combined that stopped
+lease with cancel/stale-authority failures and called `stop(Revoked)` again,
+permanently forbidding otherwise valid recovery. The driver now checks actual
+cancel/stale authority separately, then propagates the original lease check.
+The original stop handler and physical cleanup still run, and independent
+fresh-generation authority is still mandatory. The existing six product
+cases, time bounds and terminal-revocation assertions remain unchanged.

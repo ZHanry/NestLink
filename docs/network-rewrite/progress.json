@@ -6,40 +6,20 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "d72df053c11ca1e7c5790333502c63cd7b19d3d7",
-  "checkpoint_kind": "user_authorized_post_release_target_acceptance_and_product_recovery_diagnostics",
+  "source_revision": "13ce2383a7b1fa8d54e21163ef185d6c60c839b9",
+  "checkpoint_kind": "rc_preview_recovery_race_fix_awaiting_exact_source_checks",
   "current_followup": {
-    "source_parent": "9882046561aff8973cbb34638862c5c8f1701c05",
+    "source_parent": "13ce2383a7b1fa8d54e21163ef185d6c60c839b9",
     "new_source_verified": false,
-    "scope": "Finish authenticated standby control drivers in signed writer/reader order before raw carrier teardown for fresh-generation recovery; preserve the original two-second and authority deadlines. Increase tcpdump capture buffer to 4096 KiB, preserving zero-drop and every original trial threshold; do not stop an already reaped failed capture twice.",
-    "observed_prior_runs": [
-      {
-        "run_id": 41609675014,
-        "source": "77cfc4e228e1a9ee24156b0e9b85d148e8651b5d",
-        "result": "five original cases passed; safe-generation recovery failed at final control completion"
-      },
-      {
-        "run_id": 41609706646,
-        "source": "77cfc4e228e1a9ee24156b0e9b85d148e8651b5d",
-        "result": "all twenty DROP trials and strict Clippy passed; entire experiment failed because capture dropped eight kernel packets",
-        "p95_us": 2733457,
-        "max_us": 2737308,
-        "whole_acceptance_passed": false
-      },
-      {
-        "run_id": 41608290304,
-        "source": "308e221007abe4369b44630f88acf13a46412bbb",
-        "result": "verified Windows tools executed once per software VP9 RGB444 direction under ordinary interactive token; encode and decode passed finite workload",
-        "whole_acceptance_passed": false
-      },
-      {
-        "run_id": 41610312935,
-        "source": "9882046561aff8973cbb34638862c5c8f1701c05",
-        "result": "original contract formatting failed on both OS; native product successor-generation recovery timed out; other completed carrier/NAT/topology jobs passed",
-        "whole_acceptance_passed": false
-      }
-    ],
-    "preserved_failures": "Luanti 25-second check, original hardware/HDR, fixed public HTTPS and remaining mandatory target and 24-hour evidence stay open. No public Release is qualified."
+    "scope": "Preserve original stopped carrier reason when physical loss occurs between scheduler poll and migration driver. Explicit cancel and stale authority remain Revoked. Original six product cases and six SDK cases rerunning without assertion or deadline changes.",
+    "diagnostic_run_id": 41619008330,
+    "diagnostic_artifact_id": 13223575533,
+    "diagnostic_archive_sha256": "1e944d81cf7451b280acb1c21c32deed2f2879b7791eb1c88456fe907805d0bb",
+    "observed_failure": "5 passed / 1 failed; migration.rs:89 called stop(Revoked) on an already Stopped(TransportLost) lease. One actor retained recovery, the other lost eligibility. Original 25-second connection wait failed.",
+    "pending_product_run": 41619817628,
+    "pending_sdk_run": 41619890733,
+    "pending_offline_resident_run": 41619293689,
+    "preserved_failures": "Luanti 25-second, hardware/HDR/public HTTPS and all unrun target evidence stay open; user defers target acceptance until after prerelease."
   },
   "active_tasks": [
     "W00",
@@ -119,12 +99,13 @@
     }
   ],
   "next_steps": [
-    "Resolve product actor successor timeout with both sanitized actor snapshots; preserve original deadlines.",
-    "Verify explicit user-deferred RC disclosure and publication protocol on hosted Actions.",
-    "Finish exact-source required checks and full same-source candidate; publish prerelease with actual acceptance status.",
-    "Read back all published assets and verify only main remains."
+    "Finish original product and SDK recovery and resident checks; fix remaining product failures without weakening assertions.",
+    "Freeze a clean final source and execute all seven required hosted workflows on that exact SHA.",
+    "Build all sixteen same-source artifact roles, disclose actual pending/failed acceptance, publish 0.8.0RC as a prerelease.",
+    "Read back all assets, verify their digests, confirm only main locally and remotely."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/product-recovery-12e0a50-failure.json",
     "docs/network-rewrite/evidence/sdk-relay-drop-586c229.json",
     "docs/network-rewrite/evidence/sdk-migration-diagnostics-586c229.json",
     "docs/network-rewrite/evidence/network-9882046.json",
@@ -667,7 +648,7 @@
     },
     "qualification": "Scoped implementation and validation only; complete release conditions remain unsatisfied."
   },
-  "release_state": "not_ready",
+  "release_state": "preparing_user_authorized_unqualified_prerelease",
   "branch_cleanup": {
     "local_heads": [
       "main"
@@ -869,57 +850,23 @@
     }
   },
   "continuation_checkpoint": {
-    "recorded_at": "2026-11-03T17:14:12.811372+08:00",
-    "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+    "recorded_at": "2026-11-03T18:31:32.9015205+08:00",
+    "source_revision": "13ce2383a7b1fa8d54e21163ef185d6c60c839b9",
     "source_is_pre_commit_parent": true,
-    "release_state": "not_ready",
     "new_tag_or_release_created": false,
-    "user_decisions": [
-      "Retain original Luanti25s check and failure.",
-      "Only two new incorrect None expectations may become exact Unauthorized.",
-      "Tampering input may use VP9=false and additionally reject disabled VP9 encoder/RGB444 conversion."
-    ],
-    "current_work": {
-      "root": "Reviewed complete original cleanup/hold fixes, new same-source integrated checks and actual direction target tools.",
-      "core_audit": "Shared revoked-node fixture branch and real held-loss recovery admission repaired; awaiting exact hosted validation.",
-      "baseline_ci": "Independently verify308e221 twenty-trial nft/pcap/physical source evidence and original six-case failure records.",
-      "mechanism_research": "1c851e1 full Windows/Linux media source evidence complete and frozen."
-    },
     "pending_runs": {
-      "network": 41607845137,
-      "web": 41607849879,
-      "rust": 41607995461,
-      "linux_package": 41608003071,
-      "upgrade": 41608031912,
-      "windows_target_tools": 41608290304
+      "product": 41619817628,
+      "sdk": 41619890733,
+      "format": 41619884563,
+      "offline_resident": 41619293689
     },
-    "completed_scoped_runs": {
-      "media_1c851e1": {
-        "run_id": 41604572853,
-        "conclusion": "success",
-        "whole_task_passed": false
-      },
-      "sdk_drop_308e221": {
-        "run_id": 41607840510,
-        "conclusion": "failure",
-        "experiment_step": "success",
-        "whole_task_passed": false
-      },
-      "migration_original_308e221": {
-        "run_id": 41607835980,
-        "conclusion": "failure",
-        "whole_task_passed": false
-      },
-      "secret_scan_308e221": {
-        "run_id": 41608053751,
-        "conclusion": "success"
-      },
-      "codeql_308e221": {
-        "run_id": 41608059750,
-        "conclusion": "success"
-      }
-    },
-    "qualification": "Scoped production paths and laboratory trials only; exact final-source and mandatory target/release conditions remain unmet."
+    "user_decisions": [
+      "Public prerelease authorized before user target acceptance; actual failed/unrun status retained.",
+      "Keep original Luanti25s failure.",
+      "Only two incorrect None assertions may become exact Unauthorized.",
+      "VP9 supplier tamper input may become false and reject disabled VP9 encoder/RGB444."
+    ],
+    "qualification": "No whole-task or target pass claimed; required exact final source checks and candidate remain outstanding."
   },
   "dispatch_corrections": [
     {
@@ -973,6 +920,42 @@
           "W36 independent security/lifecycle review, W37 fullE2E, W38 paired original network/media measurements, W39 capacity and cross-day24h target soak, W40 same-source release qualification remain open."
         ],
         "historical_run_entries": "Older in_progress entries are historical observations; current checkpoint and exact evidence files take precedence."
+      }
+    },
+    {
+      "kind": "prior_recovery_followup_superseded_not_current",
+      "snapshot": {
+        "source_parent": "9882046561aff8973cbb34638862c5c8f1701c05",
+        "new_source_verified": false,
+        "scope": "Finish authenticated standby control drivers in signed writer/reader order before raw carrier teardown for fresh-generation recovery; preserve the original two-second and authority deadlines. Increase tcpdump capture buffer to 4096 KiB, preserving zero-drop and every original trial threshold; do not stop an already reaped failed capture twice.",
+        "observed_prior_runs": [
+          {
+            "run_id": 41609675014,
+            "source": "77cfc4e228e1a9ee24156b0e9b85d148e8651b5d",
+            "result": "five original cases passed; safe-generation recovery failed at final control completion"
+          },
+          {
+            "run_id": 41609706646,
+            "source": "77cfc4e228e1a9ee24156b0e9b85d148e8651b5d",
+            "result": "all twenty DROP trials and strict Clippy passed; entire experiment failed because capture dropped eight kernel packets",
+            "p95_us": 2733457,
+            "max_us": 2737308,
+            "whole_acceptance_passed": false
+          },
+          {
+            "run_id": 41608290304,
+            "source": "308e221007abe4369b44630f88acf13a46412bbb",
+            "result": "verified Windows tools executed once per software VP9 RGB444 direction under ordinary interactive token; encode and decode passed finite workload",
+            "whole_acceptance_passed": false
+          },
+          {
+            "run_id": 41610312935,
+            "source": "9882046561aff8973cbb34638862c5c8f1701c05",
+            "result": "original contract formatting failed on both OS; native product successor-generation recovery timed out; other completed carrier/NAT/topology jobs passed",
+            "whole_acceptance_passed": false
+          }
+        ],
+        "preserved_failures": "Luanti 25-second check, original hardware/HDR, fixed public HTTPS and remaining mandatory target and 24-hour evidence stay open. No public Release is qualified."
       }
     }
   ],
@@ -1052,6 +1035,6 @@
     "status": "prepare_same_source_candidate_after_required_hosted_checks",
     "disclosure": "rc-acceptance-status.json",
     "preserved_failure": "Luanti 25-second failure and hardware/HDR/public-HTTPS failure evidence unchanged",
-    "diagnostic_run_id": 41615434260
+    "diagnostic_run_id": 41619008330
   }
 }
