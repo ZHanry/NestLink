@@ -720,6 +720,28 @@ mod tests {
     use super::*;
 
     #[test]
+    fn scoped_space_wire_keeps_outer_action_separate_from_nested_operation()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let context = nestlink_auth::random_id();
+        let space_id = nestlink_auth::random_id();
+        let wire = serde_json::json!({
+            "action": "space", "context": context,
+            "space_action": {"operation": "read", "space_id": space_id,
+                "cursor": {"after_member": null, "after_device": null, "after_invitation": null}}
+        });
+        let decoded: Action = serde_json::from_value(wire.clone())?;
+        assert!(decoded.valid_input());
+        assert_eq!(serde_json::to_value(&decoded)?, wire);
+        let mut unknown = wire.clone();
+        unknown["space_action"]["unexpected_authority"] = serde_json::json!(true);
+        assert!(serde_json::from_value::<Action>(unknown).is_err());
+        let mut missing = wire;
+        missing.as_object_mut().ok_or("expected action object")?.remove("space_action");
+        assert!(serde_json::from_value::<Action>(missing).is_err());
+        Ok(())
+    }
+
+    #[test]
     fn native_relay_selection_keeps_legacy_json_default_and_rejects_invalid_local_ids()
     -> Result<(), Box<dyn std::error::Error>> {
         let request_id = nestlink_auth::random_id();

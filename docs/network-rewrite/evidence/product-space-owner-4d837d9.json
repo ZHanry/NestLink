@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+  "status": "failed",
+  "run_id": 41575329582,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41575329582",
+  "artifact_metadata": {
+    "id": 13202749215,
+    "node_id": "MDg6QXJ0aWZhY3QxMzIwMjc0OTIxNQ==",
+    "name": "private-service-owner-4d837d9ed27fe472c97c01363ac688e22ce7cb2c-1",
+    "size_in_bytes": 158458,
+    "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13202749215",
+    "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13202749215/zip",
+    "expired": false,
+    "digest": "sha256:d5578ba8fd4abdeb2317bbccad1a11a51394ed86d09afe6db14155cf1ae9e14f",
+    "created_at": "2026-11-03T04:05:37Z",
+    "updated_at": "2026-11-03T04:05:37Z",
+    "expires_at": "2026-12-03T04:05:36Z",
+    "workflow_run": {
+      "id": 41575329582,
+      "repository_id": 1423035582,
+      "head_repository_id": 1423035582,
+      "head_branch": "main",
+      "head_sha": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c"
+    }
+  },
+  "official_zip_digest_and_bytes_verified": true,
+  "all_producer_payload_hashes_and_bytes_verified": true,
+  "source_input_audit": {
+    "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+    "source_file_count": 2168,
+    "all_source_hashes_match": true,
+    "checkout_crlf_paths": [
+      "apps/daemon/src/space_dns_system/nrpt.ps1",
+      "packaging/candidate/windows.iss",
+      "packaging/windows/Manage-NestLink.ps1",
+      "packaging/windows/Manage-NestLinkPrivileged.ps1",
+      "packaging/windows/languages/ChineseSimplified.isl",
+      "packaging/windows/nestlink-v15-privileged.iss",
+      "packaging/windows/nestlink-v15.iss",
+      "scripts/Sign-NestLinkRelease.ps1"
+    ],
+    "method": "Exact raw git blobs; only mismatched files explicitly marked eol=crlf use Git checkout bytes"
+  },
+  "producer_receipt": {
+    "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103/owner-4d-13202749215-verified/private-service-owner-receipt.json",
+    "bytes": 263509,
+    "sha256": "d7a653d85f6ab88396d8fe07e2a0582db3976c974ecf15138d19469b75403887"
+  },
+  "build_provenance": {
+    "workflow": "ZHanry/NestLink/.github/workflows/private-service-owner.yml@refs/heads/main",
+    "run_id": "41575329582",
+    "run_attempt": "1",
+    "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+    "dependency_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+    "runner_environment": "github-hosted",
+    "runner_os": "Linux"
+  },
+  "execution_provenance": {
+    "environment": "github-hosted",
+    "os": "Linux",
+    "private_services": {
+      "ignored": 5,
+      "failed": 0,
+      "passed": 32
+    },
+    "spaces": {
+      "ignored": 0,
+      "failed": 3,
+      "passed": 5
+    },
+    "strict_clippy": "failed",
+    "openapi_generation": "passed"
+  },
+  "producer_files": [
+    {
+      "path": "private-service-owner-tests.log",
+      "bytes": 69843,
+      "sha256": "5337f09959ba2351f243dca5126e25bcb23cea8d010d9e2303535b575a4985fb"
+    },
+    {
+      "path": "product-space-owner-tests.log",
+      "bytes": 29049,
+      "sha256": "19e49add222446d8d98a963d6fc9ed9e5c1a20de92b478af0eeb70b3c9f72949"
+    },
+    {
+      "path": "private-service-owner-clippy.log",
+      "bytes": 46859,
+      "sha256": "b8dcee362abbfcf91488cd5f2436f94f2737eec071fd213d968cc8352a8083ba"
+    },
+    {
+      "path": "product-owner-openapi.log",
+      "bytes": 2453,
+      "sha256": "e2c3ade72d2ec880a22f87aeea30e8a7724f5b5042f0ab8bcfab80a49b6c1954"
+    },
+    {
+      "path": "product-owner-openapi.json",
+      "bytes": 784282,
+      "sha256": "6d2f4a81ca72148cb0316686d236ce17465130aadc716bbb94f0e0437a1c6ea0"
+    }
+  ],
+  "failures": [
+    "Invitation pagination: operation 13 rejected with HTTP429 CapacityExceeded while rapidly creating the fixture under the original server rate budget.",
+    "Cross-account native preparation: original success helper reports ManageSpace operation11 Trust failure; host preview reused the controller-account permit verifier.",
+    "Confirmation after logout/sign-in: expected Failed, observed Superseded; an already-cleared preview was dispatched with its old context.",
+    "Strict lint: six expect_used diagnostics in SDK preparation fault middleware, collapsible_if in native_network validation, and large_enum_variant in account Job."
+  ],
+  "followup_source_changes": "Role-specific existing host_permit; direct local Failed rejection for cleared confirmations; pace fixture creation within original rate limit; propagate fault middleware errors; box Job response; collapse validation condition. These changes require a new hosted run. No original assertion or deadline changed.",
+  "openapi_import": "Imported the byte-verified product-owner-openapi.json as protocol-spec/openapi.json. The producer compiled xtask -- contract --write from this exact source.",
+  "limitations": [
+    "Original dedicated-role ignores remain independent.",
+    "This scoped success does not replace the a6 private UDP timeout or qualify all product services.",
+    "The run is failed despite the passing private-service and generation scopes."
+  ]
+}

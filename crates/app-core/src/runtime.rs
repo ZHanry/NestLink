@@ -2158,7 +2158,7 @@ enum Job {
             Failure,
         >,
     },
-    Operation(sdk_call::Response),
+    Operation(Box<sdk_call::Response>),
     Connected(Result<Sdk, Failure>),
     NativeEstablished {
         client: Box<Client>,
@@ -3718,6 +3718,19 @@ impl Actor {
         } else {
             None
         };
+        if matches!(&action, Action::ConfirmNativeSpace { .. }) && pending_space.is_none() {
+            // A consumed or cleared nonce is a local rejection, including after
+            // login changes. Do not dispatch an old context to the new SDK.
+            self.deliver(
+                envelope,
+                OperationStatus::Failed,
+                RemoteEffect::None,
+                Some(Failure::local(FailureKind::Superseded)),
+                PublicOutput::None,
+                None,
+            );
+            return;
+        }
         let space_request = match &action {
             Action::PreviewNativeSpace { request } => Some((
                 request.context.as_str(),
@@ -3884,7 +3897,7 @@ impl Actor {
             native_connection_generation: None,
             service_host_runtime_id: None,
             future: Box::pin(async move {
-                Job::Operation(
+                Job::Operation(Box::new(
                     sdk_call::run_with_native_config(
                         client.sdk,
                         identity,
@@ -3894,7 +3907,7 @@ impl Actor {
                         pending_space,
                     )
                     .await,
-                )
+                ))
             }),
         });
         self.publish();
@@ -5030,7 +5043,8 @@ impl Actor {
                     None,
                 );
             }
-            Job::Operation(mut response) => {
+            Job::Operation(response) => {
+                let mut response = *response;
                 let sign_in = envelope.kind == OperationKind::SignIn;
                 if let Some(server) = active.server.take() {
                     self.sdk = Some(Client {

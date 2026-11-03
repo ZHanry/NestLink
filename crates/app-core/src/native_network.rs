@@ -153,17 +153,16 @@ impl NativeNetworkSettings {
     /// destinations need no exception; metadata, loopback, mapped IPv6 and
     /// link-local destinations remain forbidden by the SDK AddressPolicy.
     pub fn validate(&self) -> Result<(), NativeNetworkError> {
-        if let Some(preparation) = &self.preparation {
-            if !nestlink_protocol::valid_id(&preparation.request_id)
+        if let Some(preparation) = &self.preparation
+            && (!nestlink_protocol::valid_id(&preparation.request_id)
                 || preparation.connection_generation == 0
                 || preparation.permit_sha256 == [0; 32]
                 || preparation.space_revision == 0
                 || preparation.policy_epoch == 0
                 || preparation.expires_at_unix_ms == 0
-                || (self.space_path.is_none() && self.route_set.is_none())
-            {
-                return Err(NativeNetworkError::Invalid);
-            }
+                || (self.space_path.is_none() && self.route_set.is_none()))
+        {
+            return Err(NativeNetworkError::Invalid);
         }
         if let Some(path) = &self.space_path {
             path.validate()?;

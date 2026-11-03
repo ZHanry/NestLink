@@ -350,7 +350,13 @@ async fn invitation_projection_pages_remain_bounded_inside_the_original_ipc_budg
     let mut core = AppCore::start(Limits::default())?;
     let handle = connect(&core, &server).await?;
     let space_id = create(&handle, "bounded invitations").await?;
-    for _ in 0..=SPACE_PAGE_SIZE {
+    for index in 0..=SPACE_PAGE_SIZE {
+        // Each real actor mutation also reads the resulting space projection.
+        // Pace fixture creation within the unchanged 30/minute server budget;
+        // a 429 is not retried and every original operation must still succeed.
+        if index > 0 && index % 8 == 0 {
+            tokio::time::sleep(Duration::from_millis(60_100)).await;
+        }
         success(handle.submit(invite(&handle, None, SpaceRole::Member))?).await?;
     }
     let first = selected(&handle);

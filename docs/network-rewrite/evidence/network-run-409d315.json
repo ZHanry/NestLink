@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "source_revision": "409d3154b885e4c7347bac441596bd3e3b4df7fb",
+  "run_id": 41574194797,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41574194797",
+  "status": "failed",
+  "jobs_passed": 8,
+  "jobs_failed": 1,
+  "successful_jobs": [
+    "topology-carrier",
+    "routed-kernel-nat-slice",
+    "production-socket-slice",
+    "independent-vectors",
+    "topology-journal",
+    "contract Windows",
+    "contract Linux",
+    "quinn-carrier-replacement-feasibility"
+  ],
+  "failed_job": "native-ice-kernel-nat-slice: product app-core compilation blocked at outer action serde tag collision and three std/tokio Instant mismatches; earlier SDK business scopes actually executed.",
+  "contracts": [
+    {
+      "harnesses": 53,
+      "ignored": 16,
+      "artifact_id": 13203611605,
+      "failed": 0,
+      "os": "Linux",
+      "passed": 763
+    },
+    {
+      "harnesses": 53,
+      "ignored": 3,
+      "artifact_id": 13203272570,
+      "failed": 0,
+      "os": "Windows",
+      "passed": 763
+    }
+  ],
+  "artifact_metadata": {
+    "total_count": 11,
+    "artifacts": [
+      {
+        "id": 13203611605,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMzYxMTYwNQ==",
+        "name": "network-rewrite-ubuntu-24.04-409d3154b885e4c7347bac441596bd3e3b4df7fb-1",
+        "size_in_bytes": 35486,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203611605",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203611605/zip",
+        "expired": false,
+        "digest": "sha256:3bb1731f4bad687c32cc011a668a66f18294274c3f4a3c8be660a035c06f3507",
+        "created_at": "2026-11-03T04:00:25Z",
+        "updated_at": "2026-11-03T04:00:25Z",
+        "expires_at": "2026-12-03T04:00:24Z",
+        "workflow_run": {
+          "id": 41574194797,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "409d3154b885e4c7347bac441596bd3e3b4df7fb"
+        }
+      },
+      {
+        "id": 13203430285,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMzQzMDI4NQ==",
+        "name": "network-migration-feasibility-409d3154b885e4c7347bac441596bd3e3b4df7fb-1",
+        "size_in_bytes": 4262150,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203430285",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203430285/zip",
+        "expired": false,
+        "digest": "sha256:043306bc8e920b8d595cb6fa9e7f65f674f1bc126a02023bab04a563efc37d31",
+        "created_at": "2026-11-03T03:48:25Z",
+        "updated_at": "2026-11-03T03:48:25Z",
+        "expires_at": "2026-12-03T03:48:24Z",
+        "workflow_run": {
+          "id": 41574194797,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "409d3154b885e4c7347bac441596bd3e3b4df7fb"
+        }
+      },
+      {
+        "id": 13203272570,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMzI3MjU3MA==",
+        "name": "network-rewrite-windows-2022-409d3154b885e4c7347bac441596bd3e3b4df7fb-1",
+        "size_in_bytes": 36271,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203272570",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203272570/zip",
+        "expired": false,
+        "digest": "sha256:4e0a7145002ba8336466265e30238a5868babe619a358bc62bc2c728cb15320d",
+        "created_at": "2026-11-03T04:00:19Z",
+        "updated_at": "2026-11-03T04:00:19Z",
+        "expires_at": "2026-12-03T04:00:18Z",
+        "workflow_run": {
+          "id": 41574194797,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "409d3154b885e4c7347bac441596bd3e3b4df7fb"
+        }
+      },
+      {
+        "id": 13203205428,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMzIwNTQyOA==",
+        "name": "network-reference-409d3154b885e4c7347bac441596bd3e3b4df7fb-1",
+        "size_in_bytes": 4320,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203205428",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203205428/zip",
+        "expired": false,
+        "digest": "sha256:f7b01360e476a5284dd7a54bb09db9a20dcfa564f7ddf9fbcef0841011572031",
+        "created_at": "2026-11-03T03:46:44Z",
+        "updated_at": "2026-11-03T03:46:44Z",
+        "expires_at": "2026-12-03T03:46:44Z",
+        "workflow_run": {
+          "id": 41574194797,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "409d3154b885e4c7347bac441596bd3e3b4df7fb"
+        }
+      },
+      {
+        "id": 13203165892,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMzE2NTg5Mg==",
+        "name": "network-socket-409d3154b885e4c7347bac441596bd3e3b4df7fb-1",
+        "size_in_bytes": 1280831,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203165892",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203165892/zip",
+        "expired": false,
+        "digest": "sha256:c42d56429058d602d7af42c1d165a7f95c2fcfec211ec6a60acd25143503d3b7",
+        "created_at": "2026-11-03T03:48:48Z",
+        "updated_at": "2026-11-03T03:48:48Z",
+        "expires_at": "2026-12-03T03:48:47Z",
+        "workflow_run": {
+          "id": 41574194797,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "409d3154b885e4c7347bac441596bd3e3b4df7fb"
+        }
+      },
+      {
+        "id": 13203141212,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMzE0MTIxMg==",
+        "name": "network-route-set-directory-409d3154b885e4c7347bac441596bd3e3b4df7fb-1",
+        "size_in_bytes": 2814,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203141212",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203141212/zip",
+        "expired": false,
+        "digest": "sha256:2e47d7d2f96bc48e65b4c0ab1ff63540b460f02f1658c0d19c210fbb99b29785",
+        "created_at": "2026-11-03T03:50:51Z",
+        "updated_at": "2026-11-03T03:50:51Z",
+        "expires_at": "2026-12-03T03:50:50Z",
+        "workflow_run": {
+          "id": 41574194797,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "409d3154b885e4c7347bac441596bd3e3b4df7fb"
+        }
+      },
+      {
+        "id": 13203121149,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMzEyMTE0OQ==",
+        "name": "network-topology-409d3154b885e4c7347bac441596bd3e3b4df7fb-1",
+        "size_in_bytes": 11259,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203121149",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203121149/zip",
+        "expired": false,
+        "digest": "sha256:a86fb63926c71dc8b1393a4fe8d9ba85d3a5d8513564a43560d8aeef0dacd002",
+        "created_at": "2026-11-03T03:50:14Z",
+        "updated_at": "2026-11-03T03:50:14Z",
+        "expires_at": "2026-12-03T03:50:14Z",
+        "workflow_run": {
+          "id": 41574194797,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "409d3154b885e4c7347bac441596bd3e3b4df7fb"
+        }
+      },
+      {
+        "id": 13203066289,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMzA2NjI4OQ==",
+        "name": "network-topology-carrier-409d3154b885e4c7347bac441596bd3e3b4df7fb-1",
+        "size_in_bytes": 16413,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203066289",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13203066289/zip",
+        "expired": false,
+        "digest": "sha256:85dc21b22ffca0f566b311debd1a3054ff12c21a41e38ecd39242822444a4475",
+        "created_at": "2026-11-03T03:50:26Z",
+        "updated_at": "2026-11-03T03:50:26Z",
+        "expires_at": "2026-12-03T03:50:25Z",
+        "workflow_run": {
+          "id": 41574194797,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "409d3154b885e4c7347bac441596bd3e3b4df7fb"
+        }
+      },
+      {
+        "id": 13202923110,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMjkyMzExMA==",
+        "name": "network-native-ice-409d3154b885e4c7347bac441596bd3e3b4df7fb-1",
+        "size_in_bytes": 4818192,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13202923110",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13202923110/zip",
+        "expired": false,
+        "digest": "sha256:75603777e5e8069ab7b1c26683a2c04fa44e0c3f4ef1870b550dc55ad630d5ed",
+        "created_at": "2026-11-03T03:59:03Z",
+        "updated_at": "2026-11-03T03:59:03Z",
+        "expires_at": "2026-12-03T03:59:02Z",
+        "workflow_run": {
+          "id": 41574194797,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "409d3154b885e4c7347bac441596bd3e3b4df7fb"
+        }
+      },
+      {
+        "id": 13202783225,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMjc4MzIyNQ==",
+        "name": "network-chain-business-409d3154b885e4c7347bac441596bd3e3b4df7fb-1",
+        "size_in_bytes": 44448,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13202783225",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13202783225/zip",
+        "expired": false,
+        "digest": "sha256:bd6a636ddce30a0e07f9b820ce3ceff1fd30969840a844a20659d3b406b43dab",
+        "created_at": "2026-11-03T03:59:01Z",
+        "updated_at": "2026-11-03T03:59:01Z",
+        "expires_at": "2026-12-03T03:59:01Z",
+        "workflow_run": {
+          "id": 41574194797,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "409d3154b885e4c7347bac441596bd3e3b4df7fb"
+        }
+      },
+      {
+        "id": 13202647065,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMjY0NzA2NQ==",
+        "name": "network-routed-409d3154b885e4c7347bac441596bd3e3b4df7fb-1",
+        "size_in_bytes": 1648414,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13202647065",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13202647065/zip",
+        "expired": false,
+        "digest": "sha256:d17bb4682abb89bdc92c8fa729b256951a97f4954e0201dedf39e3dcb0dc1d7d",
+        "created_at": "2026-11-03T03:48:46Z",
+        "updated_at": "2026-11-03T03:48:46Z",
+        "expires_at": "2026-12-03T03:48:45Z",
+        "workflow_run": {
+          "id": 41574194797,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "409d3154b885e4c7347bac441596bd3e3b4df7fb"
+        }
+      }
+    ]
+  },
+  "verified_archives": {
+    "linux_contract": "3bb1731f4bad687c32cc011a668a66f18294274c3f4a3c8be660a035c06f3507",
+    "windows_contract": "4e0a7145002ba8336466265e30238a5868babe619a358bc62bc2c728cb15320d",
+    "sdk_business": "bd6a636ddce30a0e07f9b820ce3ceff1fd30969840a844a20659d3b406b43dab"
+  },
+  "verification": "Official ZIP digests, sizes and source verified for these three archives; both contract reports also matched every producer command-log digest and byte count. Business artifact retained raw logs without a uniform producer receipt.",
+  "business_results": {
+    "signed_direct_sdk": "3 passed",
+    "private_services": "32 passed, 0 failed, 5 original role ignores",
+    "preparation_http": "3 passed, 1 filtered",
+    "product_route_set": "compile blocked"
+  },
+  "limitations": [
+    "These results do not prove production path migration; production path_migration remains false.",
+    "The 409 original private UDP successes precede the explicit inner-connection close fix and do not prove that fix.",
+    "Previous failures and original ignores remain retained; all work-package groups remain open unless fully qualified."
+  ]
+}

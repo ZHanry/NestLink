@@ -913,7 +913,11 @@
       ],
       "evidence_refs": [
         "docs/network-rewrite/BASELINE.md",
-        "docs/network-rewrite/evidence/baseline-github-2026-10-30.json"
+        "docs/network-rewrite/evidence/baseline-github-2026-10-30.json",
+        "docs/network-rewrite/evidence/schema-upgrade-4d837d9.json",
+        "docs/network-rewrite/evidence/product-space-owner-4d837d9.json",
+        "docs/network-rewrite/evidence/format-4d837d9.json",
+        "docs/network-rewrite/evidence/network-run-409d315.json"
       ],
       "blockers": []
     },
@@ -1080,7 +1084,11 @@
         "docs/network-rewrite/evidence/development-run-1249075.json",
         "docs/network-rewrite/evidence/development-run-bd1f298.json",
         "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "docs/network-rewrite/evidence/network-run-c589362.json"
+        "docs/network-rewrite/evidence/network-run-c589362.json",
+        "docs/network-rewrite/evidence/schema-upgrade-4d837d9.json",
+        "docs/network-rewrite/evidence/product-space-owner-4d837d9.json",
+        "docs/network-rewrite/evidence/format-4d837d9.json",
+        "docs/network-rewrite/evidence/network-run-409d315.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
@@ -1155,7 +1163,9 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/network-rewrite/evidence/network-run-c589362.json"
+        "docs/network-rewrite/evidence/network-run-c589362.json",
+        "docs/network-rewrite/evidence/product-space-owner-4d837d9.json",
+        "docs/network-rewrite/evidence/network-run-409d315.json"
       ],
       "blockers": [],
       "scoped_validation_history": [],
@@ -1660,7 +1670,9 @@
         "docs/network-rewrite/evidence/development-run-bd1f298.json",
         "docs/network-rewrite/evidence/production-carriers-745c05a.json",
         "docs/network-rewrite/evidence/network-run-4a4496b.json",
-        "docs/network-rewrite/evidence/network-run-c589362.json"
+        "docs/network-rewrite/evidence/network-run-c589362.json",
+        "docs/network-rewrite/evidence/product-space-owner-4d837d9.json",
+        "docs/network-rewrite/evidence/network-run-409d315.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
@@ -2088,7 +2100,9 @@
       ],
       "evidence_refs": [
         "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "docs/network-rewrite/evidence/network-run-c589362.json"
+        "docs/network-rewrite/evidence/network-run-c589362.json",
+        "docs/network-rewrite/evidence/product-space-owner-4d837d9.json",
+        "docs/network-rewrite/evidence/network-run-409d315.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
@@ -2222,7 +2236,9 @@
         "docs/network-rewrite/IMPLEMENTATION-2026-10-30.md",
         "docs/network-rewrite/SPACE-PRODUCT-SLICE.md",
         "docs/network-rewrite/evidence/development-run-1249075.json",
-        "docs/network-rewrite/evidence/development-run-4492f59.json"
+        "docs/network-rewrite/evidence/development-run-4492f59.json",
+        "docs/network-rewrite/evidence/product-space-owner-4d837d9.json",
+        "docs/network-rewrite/evidence/network-run-409d315.json"
       ],
       "blockers": [],
       "implementation_notes": [
@@ -3544,7 +3560,11 @@
         "docs/network-rewrite/evidence/linux-package-upgrade-index.json",
         "docs/adr/network/0061-bound-production-capability-exchange.md",
         "docs/network-rewrite/evidence/production-carriers-745c05a.json",
-        "docs/network-rewrite/evidence/linux-package-4a4496b.json"
+        "docs/network-rewrite/evidence/linux-package-4a4496b.json",
+        "docs/network-rewrite/evidence/schema-upgrade-4d837d9.json",
+        "docs/network-rewrite/evidence/product-space-owner-4d837d9.json",
+        "docs/network-rewrite/evidence/format-4d837d9.json",
+        "docs/network-rewrite/evidence/network-run-409d315.json"
       ],
       "blockers": [],
       "implementation_notes": "Exact2871a02 run41236371694 x64+ARM64 actual retainedv0.7.0-rc.1 old/native server and new server schema admission/encrypted migration/rollback/fence experiment success. Old source82f1c8d actual schema25 frozen (historical release-body24 was inaccurate). Production bounded authenticated capability exchange now wired into explicit packet/2 and network-remote/1 routed remote, original permit/group/peer binding, legacy explicit protocol, no silent downgrade; sourceefec full network41369688849 pending. Complete mixed client/server/node and target rollback matrix remains mandatory.",
@@ -3813,7 +3833,11 @@
       "evidence_refs": [
         "docs/network-rewrite/evidence/capacity-attempts-20261102.json",
         "docs/network-rewrite/evidence/perf-e226eec.json",
-        "docs/network-rewrite/evidence/capacity-none-4ec2c3c.json"
+        "docs/network-rewrite/evidence/capacity-none-4ec2c3c.json",
+        "docs/network-rewrite/evidence/schema-upgrade-4d837d9.json",
+        "docs/network-rewrite/evidence/product-space-owner-4d837d9.json",
+        "docs/network-rewrite/evidence/format-4d837d9.json",
+        "docs/network-rewrite/evidence/network-run-409d315.json"
       ],
       "blockers": [],
       "implementation_notes": "Original100enrolled-installation/20pair/1000realTCPflow/3wave capacity implemented. All failed attempts retained, including private-parent, originalPOSTrate, originaldatabase429 and debug8c6 immutableleaseexpiry. Run41431119457 passed7nativeHTTP+6multiplex+negotiation, established20control owners, butzero flow_ready. Explicitproductionrelease-profile41434724934runs unchangedassertions/deadlines/rates/quotas/currentness checks; no success inferred. Real24hourtargetsoak remainsunrun. Sourceb971 run41437445247 now executed release load: original7HTTP/1negotiation/6multiplex pass,20controlready,61flowready, original3s management timeout before1000live. Failure and11receipt hashes plus officialZIP verified. Separate named eight-open shared-origin ramp observation added without altering original pair-window execution or full-load/lease/assertion requirements; neither passed nor fullW39 qualification claimed. Explicit8a35c4e origin-window release41441918578 reached598flowready thenoriginalauthorityexpiry; stillfailed before1000live. ADR0066 removesrepeatedsame-requestverificationwithoutcache,originaldeadlinesunchanged;newexact-sourcevalidationpending. d7e735d原release pair-window在751flow_ready后原权限期限拒绝；f3的1000readiness随后原2秒保持检查存活数为0，仍失败。ADR0069复用单次调用内同一sealed lease，9df4140/41454242981原100/20/1000/3wave pair-window在跑，所有原期限、实时管理校验、配额和断言保持。 9df4140/41454242981已失败：798 flow_ready后原403权限拒绝，未完成1000同时存活流。ADR0070同事务路径复用ddadc328/41459674511与ADR0071原usage verifier typed projection复用a233500/41460136078按原负载验证中；不改期限、预算、配额或实时授权。",

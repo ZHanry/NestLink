@@ -52,13 +52,15 @@ pub(super) async fn preview(
     {
         return Err(Failure::local(FailureKind::Trust));
     }
-    let permit = read(
-        response
-            .sdk
-            .current_native_permit(identity, &request.request_id),
-        fence,
-    )
-    .await?;
+    let permit = if remote.host_device_id == identity.device_id {
+        read(response.sdk.host_permit(identity, &request.request_id), fence).await?
+    } else {
+        read(
+            response.sdk.current_native_permit(identity, &request.request_id),
+            fence,
+        )
+        .await?
+    };
     if permit.claims().connection_generation != request.expected_connection_generation {
         return Err(Failure::local(FailureKind::Trust));
     }
@@ -170,13 +172,19 @@ pub(super) async fn confirm(
     {
         return Err(Failure::local(FailureKind::Superseded));
     }
-    let permit = read(
-        response
-            .sdk
-            .current_native_permit(identity, &pending.public.request_id),
-        fence,
-    )
-    .await?;
+    let permit = if pending.permit.claims().host_device_id == identity.device_id {
+        read(
+            response.sdk.host_permit(identity, &pending.public.request_id),
+            fence,
+        )
+        .await?
+    } else {
+        read(
+            response.sdk.current_native_permit(identity, &pending.public.request_id),
+            fence,
+        )
+        .await?
+    };
     if permit.digest() != pending.permit.digest()
         || permit.claims().expires_at_unix_ms <= unix_ms()?
     {

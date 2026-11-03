@@ -1,0 +1,1629 @@
+{
+  "schema_version": 1,
+  "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+  "status": "passed_scoped_lab",
+  "run_id": 41575332666,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41575332666",
+  "platforms": [
+    {
+      "artifact_metadata": {
+        "id": 13202643826,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMjY0MzgyNg==",
+        "name": "network-upgrade-x64-4d837d9ed27fe472c97c01363ac688e22ce7cb2c-1",
+        "size_in_bytes": 38104,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13202643826",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13202643826/zip",
+        "expired": false,
+        "digest": "sha256:fb3feb60871f76a6ea3e8163b57a58a2cd7834ecab173dd5e4f9f71109d08db6",
+        "created_at": "2026-11-03T04:02:22Z",
+        "updated_at": "2026-11-03T04:02:22Z",
+        "expires_at": "2026-12-03T04:02:21Z",
+        "workflow_run": {
+          "id": 41575332666,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c"
+        }
+      },
+      "official_zip_digest_and_bytes_verified": true,
+      "all_command_log_hashes_verified": true,
+      "direct_command_log_bytes_verified": true,
+      "retained_release_report": {
+        "schema_version": 1,
+        "status": "passed",
+        "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+        "build_provenance": {
+          "workflow": "ZHanry/NestLink/.github/workflows/network-upgrade.yml@refs/heads/main",
+          "run_id": "41575332666",
+          "run_attempt": "1",
+          "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+          "current_server_sha256": "78312c7c302809b29793b17ec2e7e3497898ef315cd6849b213f3f9c9d5095d2"
+        },
+        "execution_provenance": {
+          "runner_environment": "github-hosted",
+          "machine": "x86_64",
+          "ordinary_uid": 1001
+        },
+        "old_release": {
+          "tag": "v0.7.0-rc.1",
+          "source_revision": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+          "manifest_sha256": "2d5a7768424f6cc2ea8875ba2b8cb8fb21ff360911b084ed4a95e2bc07fd793c",
+          "package_sha256": "517818a8ad3fbd737d9e4d01529229887465c050b5afe5317929cc776e789e5a",
+          "server_sha256": "76faf5ea48623e1acc40f2b14759ab4943a6110793817ac1bf229dcb59b2ec06"
+        },
+        "old_schema": 25,
+        "current_schema": 51,
+        "commands": [
+          {
+            "name": "extract-pinned-old-package",
+            "return_code": 0,
+            "log": "extract-pinned-old-package.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "old-version",
+            "return_code": 0,
+            "log": "old-version.log",
+            "sha256": "9d8c21e2c980082ce3b189483791fbc3fa32c5effbab6688b762f126e1098899"
+          },
+          {
+            "name": "current-version",
+            "return_code": 0,
+            "log": "current-version.log",
+            "sha256": "d4283ac8e5965a515b7ad76eb6ae4f12354f695e1b611bbbf808650b2c45421d"
+          },
+          {
+            "name": "old-init",
+            "return_code": 0,
+            "log": "old-init.log",
+            "sha256": "5f448bb1cd26ac9bea1dda7f23203ed9e3398da9eccf720f13ed2c814d338ab3"
+          },
+          {
+            "name": "old-check-old-schema",
+            "return_code": 0,
+            "log": "old-check-old-schema.log",
+            "sha256": "436d26220b58a0a608bca3574de18134801cce057d5074376f97bc3d27c72d25"
+          },
+          {
+            "name": "new-refuses-old-schema",
+            "return_code": 1,
+            "log": "new-refuses-old-schema.log",
+            "sha256": "8b0630bca47aadceb85080397d6221370bf492b18a4f7d1493d9f5adcadb3550"
+          },
+          {
+            "name": "fenced-forward-migration",
+            "return_code": 0,
+            "log": "fenced-forward-migration.log",
+            "sha256": "350a29b02f6b56b61661771752369a2d9b9b3f44ead731a46ca94d6c6a367ef4"
+          },
+          {
+            "name": "new-business-refuses-fenced-transaction",
+            "return_code": 1,
+            "log": "new-business-refuses-fenced-transaction.log",
+            "sha256": "6368395b142d70740bcd76e244a7b3b060bb810561f4aa8d0b5575e23265461e"
+          },
+          {
+            "name": "explicit-pre-admission-rollback",
+            "return_code": 0,
+            "log": "explicit-pre-admission-rollback.log",
+            "sha256": "350a29b02f6b56b61661771752369a2d9b9b3f44ead731a46ca94d6c6a367ef4"
+          },
+          {
+            "name": "old-works-after-exact-rollback",
+            "return_code": 0,
+            "log": "old-works-after-exact-rollback.log",
+            "sha256": "436d26220b58a0a608bca3574de18134801cce057d5074376f97bc3d27c72d25"
+          },
+          {
+            "name": "admitted-forward-migration",
+            "return_code": 0,
+            "log": "admitted-forward-migration.log",
+            "sha256": "1a8e800ce7a80f73be38e01c5b62ca07d5da637e5dfd6bb832b8eeaff5ab1ba6"
+          },
+          {
+            "name": "new-check-new-schema",
+            "return_code": 0,
+            "log": "new-check-new-schema.log",
+            "sha256": "436d26220b58a0a608bca3574de18134801cce057d5074376f97bc3d27c72d25"
+          },
+          {
+            "name": "new-accepts-old-config-new-schema",
+            "return_code": 0,
+            "log": "new-accepts-old-config-new-schema.log",
+            "sha256": "436d26220b58a0a608bca3574de18134801cce057d5074376f97bc3d27c72d25"
+          },
+          {
+            "name": "old-refuses-new-schema",
+            "return_code": 1,
+            "log": "old-refuses-new-schema.log",
+            "sha256": "d8f6e3de96c0bd41530e736a7544e14bdc00a0325aa7d4f907477ad87e122996"
+          },
+          {
+            "name": "post-admission-rollback-refused",
+            "return_code": 1,
+            "log": "post-admission-rollback-refused.log",
+            "sha256": "2337f219fe15e834fd8def80a57d1154e028fc997b31f9de7acfb07f645366cf"
+          },
+          {
+            "name": "restore-old-backup-new-directory",
+            "return_code": 0,
+            "log": "restore-old-backup-new-directory.log",
+            "sha256": "3ceb13a14c07c2cecdcb8ab8556e304a3a648d3ac4727cba278d5f0ca64da5ef"
+          }
+        ],
+        "limitations": [
+          "Real retained Linux server executables and CLI schema transactions only; no mixed-client or node transport negotiation claim",
+          "Quota/revocation rows are owned SQLite fixtures; live authorization and accounting use their separate regression suites",
+          "Unsigned old/new development bytes; certificate-backed installed upgrades and physical targets remain pending"
+        ],
+        "facts": {
+          "original": {
+            "schema": 25,
+            "epoch": 2660889998918009217,
+            "revoked": 1,
+            "later_revoked": 0,
+            "spent": 4173,
+            "quota_fenced": 0
+          },
+          "migrated": {
+            "schema": 51,
+            "epoch": 2660889998918009217,
+            "revoked": 1,
+            "later_revoked": 0,
+            "spent": 4173,
+            "quota_fenced": 0
+          },
+          "post_admission": {
+            "schema": 51,
+            "epoch": 2660889998918009217,
+            "revoked": 1,
+            "later_revoked": 1,
+            "spent": 9111,
+            "quota_fenced": 0
+          },
+          "restored": {
+            "schema": 51,
+            "epoch": 3406290798905636480,
+            "revoked": 1,
+            "later_revoked": 0,
+            "spent": 4173,
+            "quota_fenced": 1
+          }
+        },
+        "files": [
+          {
+            "path": "admitted-forward-migration.log",
+            "bytes": 618,
+            "sha256": "1a8e800ce7a80f73be38e01c5b62ca07d5da637e5dfd6bb832b8eeaff5ab1ba6"
+          },
+          {
+            "path": "current-version.log",
+            "bytes": 27,
+            "sha256": "d4283ac8e5965a515b7ad76eb6ae4f12354f695e1b611bbbf808650b2c45421d"
+          },
+          {
+            "path": "explicit-pre-admission-rollback.log",
+            "bytes": 618,
+            "sha256": "350a29b02f6b56b61661771752369a2d9b9b3f44ead731a46ca94d6c6a367ef4"
+          },
+          {
+            "path": "extract-pinned-old-package.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "fenced-forward-migration.log",
+            "bytes": 618,
+            "sha256": "350a29b02f6b56b61661771752369a2d9b9b3f44ead731a46ca94d6c6a367ef4"
+          },
+          {
+            "path": "new-accepts-old-config-new-schema.log",
+            "bytes": 123,
+            "sha256": "436d26220b58a0a608bca3574de18134801cce057d5074376f97bc3d27c72d25"
+          },
+          {
+            "path": "new-business-refuses-fenced-transaction.log",
+            "bytes": 70,
+            "sha256": "6368395b142d70740bcd76e244a7b3b060bb810561f4aa8d0b5575e23265461e"
+          },
+          {
+            "path": "new-check-new-schema.log",
+            "bytes": 123,
+            "sha256": "436d26220b58a0a608bca3574de18134801cce057d5074376f97bc3d27c72d25"
+          },
+          {
+            "path": "new-refuses-old-schema.log",
+            "bytes": 101,
+            "sha256": "8b0630bca47aadceb85080397d6221370bf492b18a4f7d1493d9f5adcadb3550"
+          },
+          {
+            "path": "old-candidate-build-manifest.json",
+            "bytes": 7237,
+            "sha256": "2d5a7768424f6cc2ea8875ba2b8cb8fb21ff360911b084ed4a95e2bc07fd793c"
+          },
+          {
+            "path": "old-check-old-schema.log",
+            "bytes": 123,
+            "sha256": "436d26220b58a0a608bca3574de18134801cce057d5074376f97bc3d27c72d25"
+          },
+          {
+            "path": "old-init.log",
+            "bytes": 174,
+            "sha256": "5f448bb1cd26ac9bea1dda7f23203ed9e3398da9eccf720f13ed2c814d338ab3"
+          },
+          {
+            "path": "old-refuses-new-schema.log",
+            "bytes": 63,
+            "sha256": "d8f6e3de96c0bd41530e736a7544e14bdc00a0325aa7d4f907477ad87e122996"
+          },
+          {
+            "path": "old-version.log",
+            "bytes": 27,
+            "sha256": "9d8c21e2c980082ce3b189483791fbc3fa32c5effbab6688b762f126e1098899"
+          },
+          {
+            "path": "old-works-after-exact-rollback.log",
+            "bytes": 123,
+            "sha256": "436d26220b58a0a608bca3574de18134801cce057d5074376f97bc3d27c72d25"
+          },
+          {
+            "path": "post-admission-rollback-refused.log",
+            "bytes": 71,
+            "sha256": "2337f219fe15e834fd8def80a57d1154e028fc997b31f9de7acfb07f645366cf"
+          },
+          {
+            "path": "restore-old-backup-new-directory.log",
+            "bytes": 213,
+            "sha256": "3ceb13a14c07c2cecdcb8ab8556e304a3a648d3ac4727cba278d5f0ca64da5ef"
+          }
+        ]
+      },
+      "direct_schema_report": {
+        "schema_version": 1,
+        "passed": true,
+        "failure": null,
+        "build_provenance": {
+          "repository": "ZHanry/NestLink",
+          "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+          "workflow": "Retained server compatibility and schema rollback",
+          "workflow_path": ".github/workflows/network-upgrade.yml",
+          "workflow_ref": "ZHanry/NestLink/.github/workflows/network-upgrade.yml@refs/heads/main",
+          "workflow_sha": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+          "job": "retained-server",
+          "run_id": "41575332666",
+          "run_attempt": "1",
+          "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41575332666",
+          "runner": {
+            "environment": "github-hosted",
+            "name": "GitHub Actions 1000012118",
+            "os": "Linux",
+            "architecture": "X64"
+          }
+        },
+        "source_before": {
+          "expected_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+          "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+          "exact_source": true,
+          "clean": true,
+          "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "status_raw_bytes": 0,
+          "status": [],
+          "dependency_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        "commands": [
+          {
+            "name": "build-current-storage-fixture",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-storage",
+              "--test",
+              "control",
+              "--no-run",
+              "--message-format=json"
+            ],
+            "started_at": "2026-11-03T04:00:58Z",
+            "timeout_seconds": 1200,
+            "log": "build-current-storage-fixture.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:01:34Z",
+            "elapsed_seconds": 35.312,
+            "log_bytes": 151137,
+            "log_sha256": "be3712107a8b1ac2328acd2a008a66a7477c5c7dff36cebbcbcad1bd56ea7a3d"
+          },
+          {
+            "name": "create-real-current-lineage",
+            "argv": [
+              "env",
+              "NESTLINK_DIRECT_SCHEMA_DIRECTORY=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/fixture",
+              "NESTLINK_DIRECT_SCHEMA_DEPLOYMENT=10000000-0000-4000-8000-d9692a300031",
+              "NESTLINK_DIRECT_SCHEMA_MODE=create",
+              "/home/runner/work/NestLink/NestLink/../upgrade-build/debug/deps/control-99a68f02ed84d88a",
+              "--ignored",
+              "--exact",
+              "network_paths::direct_recovery::schema_fixture_role",
+              "--nocapture"
+            ],
+            "started_at": "2026-11-03T04:01:34Z",
+            "timeout_seconds": 1200,
+            "log": "create-real-current-lineage.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:01:36Z",
+            "elapsed_seconds": 2.722,
+            "log_bytes": 632,
+            "log_sha256": "fb185179388dcfb6685dbbef9b3e9022f2a18ea13d2ba3d93c37ad07cb7fea8c"
+          },
+          {
+            "name": "checkout-exact-schema50",
+            "argv": [
+              "git",
+              "worktree",
+              "add",
+              "--detach",
+              "/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-source",
+              "c5893625ebbe3b50406810bd7eb34c60cbbea849"
+            ],
+            "started_at": "2026-11-03T04:01:36Z",
+            "timeout_seconds": 120,
+            "log": "checkout-exact-schema50.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:01:37Z",
+            "elapsed_seconds": 0.265,
+            "log_bytes": 331,
+            "log_sha256": "f043e3251dc040717003b98efa10f662722caad0979810ee33e3d1c26e790657"
+          },
+          {
+            "name": "build-unchanged-old-storage",
+            "argv": [
+              "env",
+              "CARGO_TARGET_DIR=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build",
+              "cargo",
+              "build",
+              "--locked",
+              "-p",
+              "nestlink-storage",
+              "--lib",
+              "--message-format=json"
+            ],
+            "started_at": "2026-11-03T04:01:37Z",
+            "timeout_seconds": 1200,
+            "log": "build-unchanged-old-storage.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:02:19Z",
+            "elapsed_seconds": 41.925,
+            "log_bytes": 159578,
+            "log_sha256": "3cbf3806d8090ea60b663cb5f0109d7f87430fc82c71732e614b752e193e1999"
+          },
+          {
+            "name": "link-current-probe-to-unchanged-old-library",
+            "argv": [
+              "rustc",
+              "--edition=2024",
+              "--crate-name",
+              "nestlink_direct_schema_probe",
+              "/home/runner/work/NestLink/NestLink/scripts/fixtures/direct-store-schema-probe.rs",
+              "--extern",
+              "nestlink_storage=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/libnestlink_storage.rlib",
+              "-L",
+              "dependency=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/deps",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/anyhow-29bc88e78700ffed/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/curve25519-dalek-27991c91ed168a98/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/generic-array-9718c54850bef962/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/getrandom-e2e0cf2811f020b9/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/icu_normalizer_data-54ca85e01b784aae/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/icu_properties_data-a38caacba35d678e/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/libc-f7f21927231a1e37/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/libsqlite3-sys-4efb5586591b9dd7/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/nestlink-protocol-1e7c9a81a11c705b/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/prettyplease-37eef9fcf26d9f98/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/proc-macro2-22e65ffe39ebf458/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/quote-f9bb3bfe4646141d/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/ref-cast-58203819236b3c60/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/rustix-5a3dd06aa50c3c58/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/serde-02f5b65cabf8710a/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/serde_core-6bc1ffb86be8d857/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/serde_core-7ab718607bf709ca/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/serde_json-43e226fb327d3f7f/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/serde_json-d3a2e50f227187c8/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/thiserror-448300f42377c74f/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-build/debug/build/zmij-3ce93a19c1bb3252/out",
+              "-o",
+              "/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-store-probe"
+            ],
+            "started_at": "2026-11-03T04:02:19Z",
+            "timeout_seconds": 1200,
+            "log": "link-current-probe-to-unchanged-old-library.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:02:19Z",
+            "elapsed_seconds": 0.215,
+            "log_bytes": 3169,
+            "log_sha256": "b2c7b8923289b15cde77dace5f4c9545a067edd618a5163041cdf2a23df3c4e8"
+          },
+          {
+            "name": "old-store-existing-refuses-real-lineage",
+            "argv": [
+              "/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-store-probe",
+              "existing",
+              "/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/fixture/control.sqlite3",
+              "10000000-0000-4000-8000-d9692a300031"
+            ],
+            "started_at": "2026-11-03T04:02:19Z",
+            "timeout_seconds": 60,
+            "log": "old-store-existing-refuses-real-lineage.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:02:19Z",
+            "elapsed_seconds": 0.008,
+            "log_bytes": 298,
+            "log_sha256": "7691317245862f8e9dc9ac438be7a0bc0e56847635e313ce0670d95b0406e093"
+          },
+          {
+            "name": "old-store-open-refuses-real-lineage",
+            "argv": [
+              "/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-store-probe",
+              "open",
+              "/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/fixture/control.sqlite3",
+              "10000000-0000-4000-8000-d9692a300031"
+            ],
+            "started_at": "2026-11-03T04:02:19Z",
+            "timeout_seconds": 60,
+            "log": "old-store-open-refuses-real-lineage.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:02:19Z",
+            "elapsed_seconds": 0.008,
+            "log_bytes": 294,
+            "log_sha256": "92e58d9c795278b09d3680940c0b6fade19907ce4d14ba43ea0e69aea0f3298e"
+          },
+          {
+            "name": "current-reopens-and-enforces-ancestor-revocation",
+            "argv": [
+              "env",
+              "NESTLINK_DIRECT_SCHEMA_DIRECTORY=/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/fixture",
+              "NESTLINK_DIRECT_SCHEMA_DEPLOYMENT=10000000-0000-4000-8000-d9692a300031",
+              "NESTLINK_DIRECT_SCHEMA_MODE=verify",
+              "/home/runner/work/NestLink/NestLink/../upgrade-build/debug/deps/control-99a68f02ed84d88a",
+              "--ignored",
+              "--exact",
+              "network_paths::direct_recovery::schema_fixture_role",
+              "--nocapture"
+            ],
+            "started_at": "2026-11-03T04:02:19Z",
+            "timeout_seconds": 1200,
+            "log": "current-reopens-and-enforces-ancestor-revocation.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:02:20Z",
+            "elapsed_seconds": 1.067,
+            "log_bytes": 632,
+            "log_sha256": "bd9aa9087bf15fac3bcb5ccaf17ab407fdbb085fe7335f691617721d9ef00594"
+          },
+          {
+            "name": "remove-owned-old-source",
+            "argv": [
+              "git",
+              "worktree",
+              "remove",
+              "/home/runner/work/_temp/nestlink-direct-schema-z4512g8_/old-source"
+            ],
+            "started_at": "2026-11-03T04:02:20Z",
+            "timeout_seconds": 120,
+            "log": "remove-owned-old-source.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:02:20Z",
+            "elapsed_seconds": 0.215,
+            "log_bytes": 148,
+            "log_sha256": "97f06bae20f14c14fa00891ca26471fa0808dffe27378bd078f096d661f2fbd4"
+          }
+        ],
+        "old_source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "old_store_source_modified": false,
+        "acceptance_claims": [],
+        "limitations": [
+          "Real schema-50 Store library and schema-51 direct lineage only; no installed upgrade or complete acceptance claim"
+        ],
+        "inspection_fixture_before": {
+          ".": {
+            "mode": 448,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "directory"
+          },
+          "control.sqlite3": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 1318912,
+            "sha256": "de0f64118f0266285dc40d23e1865f777de3c653a3e9b034dd4b1737904d659a"
+          },
+          "private-fixture.json": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 141,
+            "sha256": "f76493c89b951b111f428d65e1bae3f81016091da0ae5b324d37710d220840b7"
+          }
+        },
+        "inspection_fixture_after": {
+          ".": {
+            "mode": 448,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "directory"
+          },
+          "control.sqlite3": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 1318912,
+            "sha256": "de0f64118f0266285dc40d23e1865f777de3c653a3e9b034dd4b1737904d659a"
+          },
+          "private-fixture.json": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 141,
+            "sha256": "f76493c89b951b111f428d65e1bae3f81016091da0ae5b324d37710d220840b7"
+          }
+        },
+        "old_source_before": {
+          "expected_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+          "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+          "exact_source": true,
+          "clean": true,
+          "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "status_raw_bytes": 0,
+          "status": [],
+          "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+        },
+        "old_library_sha256": "02198dd7a43f5b5ac9cb5877e4509c04def5af55924a457e7a54624f2d81703a",
+        "old_probe_sha256": "782469b9a137f429100fe766649055053908a7a17ab22538ccbcdd414be165ca",
+        "refusal_fixture_before": {
+          ".": {
+            "mode": 448,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "directory"
+          },
+          "control.sqlite3": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 1318912,
+            "sha256": "de0f64118f0266285dc40d23e1865f777de3c653a3e9b034dd4b1737904d659a"
+          },
+          "private-fixture.json": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 141,
+            "sha256": "f76493c89b951b111f428d65e1bae3f81016091da0ae5b324d37710d220840b7"
+          },
+          "server.toml": {
+            "mode": 384,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 40,
+            "sha256": "98d2b5a3214cd3b692484525741ed21a53d8cc34efb0a0bfeec347600d747e85"
+          }
+        },
+        "refusal_fixture_after_each_entry": {
+          "existing": {
+            ".": {
+              "mode": 448,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "directory"
+            },
+            "control.sqlite3": {
+              "mode": 420,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "file",
+              "bytes": 1318912,
+              "sha256": "de0f64118f0266285dc40d23e1865f777de3c653a3e9b034dd4b1737904d659a"
+            },
+            "private-fixture.json": {
+              "mode": 420,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "file",
+              "bytes": 141,
+              "sha256": "f76493c89b951b111f428d65e1bae3f81016091da0ae5b324d37710d220840b7"
+            },
+            "server.toml": {
+              "mode": 384,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "file",
+              "bytes": 40,
+              "sha256": "98d2b5a3214cd3b692484525741ed21a53d8cc34efb0a0bfeec347600d747e85"
+            }
+          },
+          "open": {
+            ".": {
+              "mode": 448,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "directory"
+            },
+            "control.sqlite3": {
+              "mode": 420,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "file",
+              "bytes": 1318912,
+              "sha256": "de0f64118f0266285dc40d23e1865f777de3c653a3e9b034dd4b1737904d659a"
+            },
+            "private-fixture.json": {
+              "mode": 420,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "file",
+              "bytes": 141,
+              "sha256": "f76493c89b951b111f428d65e1bae3f81016091da0ae5b324d37710d220840b7"
+            },
+            "server.toml": {
+              "mode": 384,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "file",
+              "bytes": 40,
+              "sha256": "98d2b5a3214cd3b692484525741ed21a53d8cc34efb0a0bfeec347600d747e85"
+            }
+          }
+        },
+        "both_old_store_entries_refused_without_writes": true,
+        "refusal_fixture_file_hashes_and_permissions": {
+          ".": {
+            "mode": 448,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "directory"
+          },
+          "control.sqlite3": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 1318912,
+            "sha256": "de0f64118f0266285dc40d23e1865f777de3c653a3e9b034dd4b1737904d659a"
+          },
+          "private-fixture.json": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 141,
+            "sha256": "f76493c89b951b111f428d65e1bae3f81016091da0ae5b324d37710d220840b7"
+          },
+          "server.toml": {
+            "mode": 384,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 40,
+            "sha256": "98d2b5a3214cd3b692484525741ed21a53d8cc34efb0a0bfeec347600d747e85"
+          }
+        },
+        "old_source_after": {
+          "expected_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+          "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+          "exact_source": true,
+          "clean": true,
+          "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "status_raw_bytes": 0,
+          "status": [],
+          "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+        },
+        "source_after": {
+          "expected_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+          "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+          "exact_source": true,
+          "clean": true,
+          "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "status_raw_bytes": 0,
+          "status": [],
+          "dependency_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        "artifact_files": [
+          {
+            "path": "build-current-storage-fixture.log",
+            "bytes": 151137,
+            "sha256": "be3712107a8b1ac2328acd2a008a66a7477c5c7dff36cebbcbcad1bd56ea7a3d"
+          },
+          {
+            "path": "build-unchanged-old-storage.log",
+            "bytes": 159578,
+            "sha256": "3cbf3806d8090ea60b663cb5f0109d7f87430fc82c71732e614b752e193e1999"
+          },
+          {
+            "path": "checkout-exact-schema50.log",
+            "bytes": 331,
+            "sha256": "f043e3251dc040717003b98efa10f662722caad0979810ee33e3d1c26e790657"
+          },
+          {
+            "path": "create-real-current-lineage.log",
+            "bytes": 632,
+            "sha256": "fb185179388dcfb6685dbbef9b3e9022f2a18ea13d2ba3d93c37ad07cb7fea8c"
+          },
+          {
+            "path": "current-reopens-and-enforces-ancestor-revocation.log",
+            "bytes": 632,
+            "sha256": "bd9aa9087bf15fac3bcb5ccaf17ab407fdbb085fe7335f691617721d9ef00594"
+          },
+          {
+            "path": "link-current-probe-to-unchanged-old-library.log",
+            "bytes": 3169,
+            "sha256": "b2c7b8923289b15cde77dace5f4c9545a067edd618a5163041cdf2a23df3c4e8"
+          },
+          {
+            "path": "old-store-existing-refuses-real-lineage.log",
+            "bytes": 298,
+            "sha256": "7691317245862f8e9dc9ac438be7a0bc0e56847635e313ce0670d95b0406e093"
+          },
+          {
+            "path": "old-store-open-refuses-real-lineage.log",
+            "bytes": 294,
+            "sha256": "92e58d9c795278b09d3680940c0b6fade19907ce4d14ba43ea0e69aea0f3298e"
+          },
+          {
+            "path": "remove-owned-old-source.log",
+            "bytes": 148,
+            "sha256": "97f06bae20f14c14fa00891ca26471fa0808dffe27378bd078f096d661f2fbd4"
+          }
+        ]
+      }
+    },
+    {
+      "artifact_metadata": {
+        "id": 13202639010,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwMjYzOTAxMA==",
+        "name": "network-upgrade-arm64-4d837d9ed27fe472c97c01363ac688e22ce7cb2c-1",
+        "size_in_bytes": 37975,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13202639010",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13202639010/zip",
+        "expired": false,
+        "digest": "sha256:7e137eb8f1b11a20bf1fd88bb974d04d81ed759ed42f178a1907b79cc4052677",
+        "created_at": "2026-11-03T04:01:21Z",
+        "updated_at": "2026-11-03T04:01:21Z",
+        "expires_at": "2026-12-03T04:01:21Z",
+        "workflow_run": {
+          "id": 41575332666,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c"
+        }
+      },
+      "official_zip_digest_and_bytes_verified": true,
+      "all_command_log_hashes_verified": true,
+      "direct_command_log_bytes_verified": true,
+      "retained_release_report": {
+        "schema_version": 1,
+        "status": "passed",
+        "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+        "build_provenance": {
+          "workflow": "ZHanry/NestLink/.github/workflows/network-upgrade.yml@refs/heads/main",
+          "run_id": "41575332666",
+          "run_attempt": "1",
+          "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+          "current_server_sha256": "c0d3bdbf5067956d8be49a72a555451f031d2ce5037732a50724d04d04b7f2d5"
+        },
+        "execution_provenance": {
+          "runner_environment": "github-hosted",
+          "machine": "aarch64",
+          "ordinary_uid": 1001
+        },
+        "old_release": {
+          "tag": "v0.7.0-rc.1",
+          "source_revision": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+          "manifest_sha256": "2d5a7768424f6cc2ea8875ba2b8cb8fb21ff360911b084ed4a95e2bc07fd793c",
+          "package_sha256": "91ef3c6ab8e3a00e98a21ecfe8bcdff500e0a785c75ac15cc6d81c0aaf39514a",
+          "server_sha256": "e8a6fec29b04b7d84d9c8ce25bd71d7d99e003a7ff624836c6ea5157a0143a49"
+        },
+        "old_schema": 25,
+        "current_schema": 51,
+        "commands": [
+          {
+            "name": "extract-pinned-old-package",
+            "return_code": 0,
+            "log": "extract-pinned-old-package.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "old-version",
+            "return_code": 0,
+            "log": "old-version.log",
+            "sha256": "9d8c21e2c980082ce3b189483791fbc3fa32c5effbab6688b762f126e1098899"
+          },
+          {
+            "name": "current-version",
+            "return_code": 0,
+            "log": "current-version.log",
+            "sha256": "d4283ac8e5965a515b7ad76eb6ae4f12354f695e1b611bbbf808650b2c45421d"
+          },
+          {
+            "name": "old-init",
+            "return_code": 0,
+            "log": "old-init.log",
+            "sha256": "7952c68ee3777980a496587dcc3b60ff383e8d11be19fc54892f5368261c03fb"
+          },
+          {
+            "name": "old-check-old-schema",
+            "return_code": 0,
+            "log": "old-check-old-schema.log",
+            "sha256": "1155bdc684e52faa226a2107c829494dac8444432ee26835b6f81d3549f46fa0"
+          },
+          {
+            "name": "new-refuses-old-schema",
+            "return_code": 1,
+            "log": "new-refuses-old-schema.log",
+            "sha256": "8b0630bca47aadceb85080397d6221370bf492b18a4f7d1493d9f5adcadb3550"
+          },
+          {
+            "name": "fenced-forward-migration",
+            "return_code": 0,
+            "log": "fenced-forward-migration.log",
+            "sha256": "3975a6026cc4dd435777bb0cbc7c3af60e9e7c7377d74af5807efe53bcd6e625"
+          },
+          {
+            "name": "new-business-refuses-fenced-transaction",
+            "return_code": 1,
+            "log": "new-business-refuses-fenced-transaction.log",
+            "sha256": "6368395b142d70740bcd76e244a7b3b060bb810561f4aa8d0b5575e23265461e"
+          },
+          {
+            "name": "explicit-pre-admission-rollback",
+            "return_code": 0,
+            "log": "explicit-pre-admission-rollback.log",
+            "sha256": "3975a6026cc4dd435777bb0cbc7c3af60e9e7c7377d74af5807efe53bcd6e625"
+          },
+          {
+            "name": "old-works-after-exact-rollback",
+            "return_code": 0,
+            "log": "old-works-after-exact-rollback.log",
+            "sha256": "1155bdc684e52faa226a2107c829494dac8444432ee26835b6f81d3549f46fa0"
+          },
+          {
+            "name": "admitted-forward-migration",
+            "return_code": 0,
+            "log": "admitted-forward-migration.log",
+            "sha256": "d1c688ffb382f27ab61ff642a1f38e07e6865df8682d8d1a803d7b11aa4e8292"
+          },
+          {
+            "name": "new-check-new-schema",
+            "return_code": 0,
+            "log": "new-check-new-schema.log",
+            "sha256": "1155bdc684e52faa226a2107c829494dac8444432ee26835b6f81d3549f46fa0"
+          },
+          {
+            "name": "new-accepts-old-config-new-schema",
+            "return_code": 0,
+            "log": "new-accepts-old-config-new-schema.log",
+            "sha256": "1155bdc684e52faa226a2107c829494dac8444432ee26835b6f81d3549f46fa0"
+          },
+          {
+            "name": "old-refuses-new-schema",
+            "return_code": 1,
+            "log": "old-refuses-new-schema.log",
+            "sha256": "d8f6e3de96c0bd41530e736a7544e14bdc00a0325aa7d4f907477ad87e122996"
+          },
+          {
+            "name": "post-admission-rollback-refused",
+            "return_code": 1,
+            "log": "post-admission-rollback-refused.log",
+            "sha256": "2337f219fe15e834fd8def80a57d1154e028fc997b31f9de7acfb07f645366cf"
+          },
+          {
+            "name": "restore-old-backup-new-directory",
+            "return_code": 0,
+            "log": "restore-old-backup-new-directory.log",
+            "sha256": "038a12749645e6219538f29c58b7caa5d8c3fd91d7fb0b74371bcddaee0ec170"
+          }
+        ],
+        "limitations": [
+          "Real retained Linux server executables and CLI schema transactions only; no mixed-client or node transport negotiation claim",
+          "Quota/revocation rows are owned SQLite fixtures; live authorization and accounting use their separate regression suites",
+          "Unsigned old/new development bytes; certificate-backed installed upgrades and physical targets remain pending"
+        ],
+        "facts": {
+          "original": {
+            "schema": 25,
+            "epoch": 8736557779771499780,
+            "revoked": 1,
+            "later_revoked": 0,
+            "spent": 4173,
+            "quota_fenced": 0
+          },
+          "migrated": {
+            "schema": 51,
+            "epoch": 8736557779771499780,
+            "revoked": 1,
+            "later_revoked": 0,
+            "spent": 4173,
+            "quota_fenced": 0
+          },
+          "post_admission": {
+            "schema": 51,
+            "epoch": 8736557779771499780,
+            "revoked": 1,
+            "later_revoked": 1,
+            "spent": 9111,
+            "quota_fenced": 0
+          },
+          "restored": {
+            "schema": 51,
+            "epoch": 677318255262982817,
+            "revoked": 1,
+            "later_revoked": 0,
+            "spent": 4173,
+            "quota_fenced": 1
+          }
+        },
+        "files": [
+          {
+            "path": "admitted-forward-migration.log",
+            "bytes": 618,
+            "sha256": "d1c688ffb382f27ab61ff642a1f38e07e6865df8682d8d1a803d7b11aa4e8292"
+          },
+          {
+            "path": "current-version.log",
+            "bytes": 27,
+            "sha256": "d4283ac8e5965a515b7ad76eb6ae4f12354f695e1b611bbbf808650b2c45421d"
+          },
+          {
+            "path": "explicit-pre-admission-rollback.log",
+            "bytes": 618,
+            "sha256": "3975a6026cc4dd435777bb0cbc7c3af60e9e7c7377d74af5807efe53bcd6e625"
+          },
+          {
+            "path": "extract-pinned-old-package.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": "fenced-forward-migration.log",
+            "bytes": 618,
+            "sha256": "3975a6026cc4dd435777bb0cbc7c3af60e9e7c7377d74af5807efe53bcd6e625"
+          },
+          {
+            "path": "new-accepts-old-config-new-schema.log",
+            "bytes": 123,
+            "sha256": "1155bdc684e52faa226a2107c829494dac8444432ee26835b6f81d3549f46fa0"
+          },
+          {
+            "path": "new-business-refuses-fenced-transaction.log",
+            "bytes": 70,
+            "sha256": "6368395b142d70740bcd76e244a7b3b060bb810561f4aa8d0b5575e23265461e"
+          },
+          {
+            "path": "new-check-new-schema.log",
+            "bytes": 123,
+            "sha256": "1155bdc684e52faa226a2107c829494dac8444432ee26835b6f81d3549f46fa0"
+          },
+          {
+            "path": "new-refuses-old-schema.log",
+            "bytes": 101,
+            "sha256": "8b0630bca47aadceb85080397d6221370bf492b18a4f7d1493d9f5adcadb3550"
+          },
+          {
+            "path": "old-candidate-build-manifest.json",
+            "bytes": 7237,
+            "sha256": "2d5a7768424f6cc2ea8875ba2b8cb8fb21ff360911b084ed4a95e2bc07fd793c"
+          },
+          {
+            "path": "old-check-old-schema.log",
+            "bytes": 123,
+            "sha256": "1155bdc684e52faa226a2107c829494dac8444432ee26835b6f81d3549f46fa0"
+          },
+          {
+            "path": "old-init.log",
+            "bytes": 174,
+            "sha256": "7952c68ee3777980a496587dcc3b60ff383e8d11be19fc54892f5368261c03fb"
+          },
+          {
+            "path": "old-refuses-new-schema.log",
+            "bytes": 63,
+            "sha256": "d8f6e3de96c0bd41530e736a7544e14bdc00a0325aa7d4f907477ad87e122996"
+          },
+          {
+            "path": "old-version.log",
+            "bytes": 27,
+            "sha256": "9d8c21e2c980082ce3b189483791fbc3fa32c5effbab6688b762f126e1098899"
+          },
+          {
+            "path": "old-works-after-exact-rollback.log",
+            "bytes": 123,
+            "sha256": "1155bdc684e52faa226a2107c829494dac8444432ee26835b6f81d3549f46fa0"
+          },
+          {
+            "path": "post-admission-rollback-refused.log",
+            "bytes": 71,
+            "sha256": "2337f219fe15e834fd8def80a57d1154e028fc997b31f9de7acfb07f645366cf"
+          },
+          {
+            "path": "restore-old-backup-new-directory.log",
+            "bytes": 213,
+            "sha256": "038a12749645e6219538f29c58b7caa5d8c3fd91d7fb0b74371bcddaee0ec170"
+          }
+        ]
+      },
+      "direct_schema_report": {
+        "schema_version": 1,
+        "passed": true,
+        "failure": null,
+        "build_provenance": {
+          "repository": "ZHanry/NestLink",
+          "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+          "workflow": "Retained server compatibility and schema rollback",
+          "workflow_path": ".github/workflows/network-upgrade.yml",
+          "workflow_ref": "ZHanry/NestLink/.github/workflows/network-upgrade.yml@refs/heads/main",
+          "workflow_sha": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+          "job": "retained-server",
+          "run_id": "41575332666",
+          "run_attempt": "1",
+          "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41575332666",
+          "runner": {
+            "environment": "github-hosted",
+            "name": "GitHub Actions 1000012119",
+            "os": "Linux",
+            "architecture": "ARM64"
+          }
+        },
+        "source_before": {
+          "expected_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+          "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+          "exact_source": true,
+          "clean": true,
+          "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "status_raw_bytes": 0,
+          "status": [],
+          "dependency_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        "commands": [
+          {
+            "name": "build-current-storage-fixture",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-storage",
+              "--test",
+              "control",
+              "--no-run",
+              "--message-format=json"
+            ],
+            "started_at": "2026-11-03T04:00:14Z",
+            "timeout_seconds": 1200,
+            "log": "build-current-storage-fixture.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:00:44Z",
+            "elapsed_seconds": 29.804,
+            "log_bytes": 150329,
+            "log_sha256": "dddd0406e18deb5f12b2ff143a0a1702d278f13807d648e0c59329ab00dc9137"
+          },
+          {
+            "name": "create-real-current-lineage",
+            "argv": [
+              "env",
+              "NESTLINK_DIRECT_SCHEMA_DIRECTORY=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/fixture",
+              "NESTLINK_DIRECT_SCHEMA_DEPLOYMENT=10000000-0000-4000-8000-5a188f376fdc",
+              "NESTLINK_DIRECT_SCHEMA_MODE=create",
+              "/home/runner/work/NestLink/NestLink/../upgrade-build/debug/deps/control-e089d660df058afb",
+              "--ignored",
+              "--exact",
+              "network_paths::direct_recovery::schema_fixture_role",
+              "--nocapture"
+            ],
+            "started_at": "2026-11-03T04:00:44Z",
+            "timeout_seconds": 1200,
+            "log": "create-real-current-lineage.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:00:46Z",
+            "elapsed_seconds": 2.022,
+            "log_bytes": 632,
+            "log_sha256": "c5417d90e8653d404050bb89fc9c5f20a101f1688ffdce5ff71341829c6624b8"
+          },
+          {
+            "name": "checkout-exact-schema50",
+            "argv": [
+              "git",
+              "worktree",
+              "add",
+              "--detach",
+              "/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-source",
+              "c5893625ebbe3b50406810bd7eb34c60cbbea849"
+            ],
+            "started_at": "2026-11-03T04:00:46Z",
+            "timeout_seconds": 120,
+            "log": "checkout-exact-schema50.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:00:46Z",
+            "elapsed_seconds": 0.164,
+            "log_bytes": 331,
+            "log_sha256": "60b19daee0e3efd34a5ec2190153cc0ae2688cd3c1e77b7e8cf6d16de4068f57"
+          },
+          {
+            "name": "build-unchanged-old-storage",
+            "argv": [
+              "env",
+              "CARGO_TARGET_DIR=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build",
+              "cargo",
+              "build",
+              "--locked",
+              "-p",
+              "nestlink-storage",
+              "--lib",
+              "--message-format=json"
+            ],
+            "started_at": "2026-11-03T04:00:46Z",
+            "timeout_seconds": 1200,
+            "log": "build-unchanged-old-storage.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:01:18Z",
+            "elapsed_seconds": 32.031,
+            "log_bytes": 158710,
+            "log_sha256": "ca9c7da56b0b1f14d9182cbcdb77b58973c37a847e196eaab72e04826e78b6c0"
+          },
+          {
+            "name": "link-current-probe-to-unchanged-old-library",
+            "argv": [
+              "rustc",
+              "--edition=2024",
+              "--crate-name",
+              "nestlink_direct_schema_probe",
+              "/home/runner/work/NestLink/NestLink/scripts/fixtures/direct-store-schema-probe.rs",
+              "--extern",
+              "nestlink_storage=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/libnestlink_storage.rlib",
+              "-L",
+              "dependency=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/deps",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/anyhow-4a38666aead85cdf/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/curve25519-dalek-1504e6ee87a69a1b/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/generic-array-0429b3ea1d795aed/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/getrandom-716900cb14d070e1/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/icu_normalizer_data-0a8c876a5b15f9ac/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/icu_properties_data-eea7abde8f05d80b/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/libc-de4936c7e800c989/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/libsqlite3-sys-1ce02d835963b045/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/nestlink-protocol-5e841558235aa0a6/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/prettyplease-1a3207339e0fd795/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/proc-macro2-188d7c19dcf214c8/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/quote-8f4163bf1f0ea4e3/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/ref-cast-33dbe9823bc0939c/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/rustix-b8827abf85882378/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/serde-1141114dea266595/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/serde_core-359f799c79300c12/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/serde_core-5f51a0748e08ac98/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/serde_json-db2b4055b20d07a5/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/serde_json-f4561cd48921fb68/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/thiserror-5b94118b17403286/out",
+              "-L",
+              "native=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-build/debug/build/zmij-22f1cc8304bfe298/out",
+              "-o",
+              "/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-store-probe"
+            ],
+            "started_at": "2026-11-03T04:01:18Z",
+            "timeout_seconds": 1200,
+            "log": "link-current-probe-to-unchanged-old-library.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:01:19Z",
+            "elapsed_seconds": 0.716,
+            "log_bytes": 3169,
+            "log_sha256": "066d09af05d37424260d4678c6dcc68dda2c7f7bb575141ea2c95659923ea159"
+          },
+          {
+            "name": "old-store-existing-refuses-real-lineage",
+            "argv": [
+              "/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-store-probe",
+              "existing",
+              "/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/fixture/control.sqlite3",
+              "10000000-0000-4000-8000-5a188f376fdc"
+            ],
+            "started_at": "2026-11-03T04:01:19Z",
+            "timeout_seconds": 60,
+            "log": "old-store-existing-refuses-real-lineage.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:01:19Z",
+            "elapsed_seconds": 0.008,
+            "log_bytes": 298,
+            "log_sha256": "bcaef4617c1730a96a316ee1ec53f5e76962f0cbd6d1a79f3007fa156a8f33c7"
+          },
+          {
+            "name": "old-store-open-refuses-real-lineage",
+            "argv": [
+              "/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-store-probe",
+              "open",
+              "/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/fixture/control.sqlite3",
+              "10000000-0000-4000-8000-5a188f376fdc"
+            ],
+            "started_at": "2026-11-03T04:01:19Z",
+            "timeout_seconds": 60,
+            "log": "old-store-open-refuses-real-lineage.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:01:19Z",
+            "elapsed_seconds": 0.008,
+            "log_bytes": 294,
+            "log_sha256": "6fd7518cb4c7c9733e3189502b83502da82724fe92a82dbe35576f87969d0d84"
+          },
+          {
+            "name": "current-reopens-and-enforces-ancestor-revocation",
+            "argv": [
+              "env",
+              "NESTLINK_DIRECT_SCHEMA_DIRECTORY=/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/fixture",
+              "NESTLINK_DIRECT_SCHEMA_DEPLOYMENT=10000000-0000-4000-8000-5a188f376fdc",
+              "NESTLINK_DIRECT_SCHEMA_MODE=verify",
+              "/home/runner/work/NestLink/NestLink/../upgrade-build/debug/deps/control-e089d660df058afb",
+              "--ignored",
+              "--exact",
+              "network_paths::direct_recovery::schema_fixture_role",
+              "--nocapture"
+            ],
+            "started_at": "2026-11-03T04:01:19Z",
+            "timeout_seconds": 1200,
+            "log": "current-reopens-and-enforces-ancestor-revocation.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:01:20Z",
+            "elapsed_seconds": 0.767,
+            "log_bytes": 632,
+            "log_sha256": "668c863ec03c7d603717a03da595eaeb53f5b05656ee5e69b4dcc380d83ad6ec"
+          },
+          {
+            "name": "remove-owned-old-source",
+            "argv": [
+              "git",
+              "worktree",
+              "remove",
+              "/home/runner/work/_temp/nestlink-direct-schema-ugdjn7z2/old-source"
+            ],
+            "started_at": "2026-11-03T04:01:20Z",
+            "timeout_seconds": 120,
+            "log": "remove-owned-old-source.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T04:01:20Z",
+            "elapsed_seconds": 0.165,
+            "log_bytes": 148,
+            "log_sha256": "036c4541abaabe1e9b550110fe1014ba3e187b14b3d7ccfff1edbb813baa7517"
+          }
+        ],
+        "old_source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+        "old_store_source_modified": false,
+        "acceptance_claims": [],
+        "limitations": [
+          "Real schema-50 Store library and schema-51 direct lineage only; no installed upgrade or complete acceptance claim"
+        ],
+        "inspection_fixture_before": {
+          ".": {
+            "mode": 448,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "directory"
+          },
+          "control.sqlite3": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 1318912,
+            "sha256": "6bbf43e0cd732dd6de0f3272cd236c20c4dc034f6ee1a59d78522f1fee48e139"
+          },
+          "private-fixture.json": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 141,
+            "sha256": "f1cc1b49adf4c1c054289fa1dfafde1831d52458de8c275f7a7fbe6e8c047801"
+          }
+        },
+        "inspection_fixture_after": {
+          ".": {
+            "mode": 448,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "directory"
+          },
+          "control.sqlite3": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 1318912,
+            "sha256": "6bbf43e0cd732dd6de0f3272cd236c20c4dc034f6ee1a59d78522f1fee48e139"
+          },
+          "private-fixture.json": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 141,
+            "sha256": "f1cc1b49adf4c1c054289fa1dfafde1831d52458de8c275f7a7fbe6e8c047801"
+          }
+        },
+        "old_source_before": {
+          "expected_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+          "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+          "exact_source": true,
+          "clean": true,
+          "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "status_raw_bytes": 0,
+          "status": [],
+          "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+        },
+        "old_library_sha256": "9968dd413b1210695d57d460bbd3795f52efb2f3afb7f73ee5200f6aaf1a4d1f",
+        "old_probe_sha256": "48c03fc2d81f460f86f48d65533bdc094f06a20bcc31cb1a7e6106fc14c09c1d",
+        "refusal_fixture_before": {
+          ".": {
+            "mode": 448,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "directory"
+          },
+          "control.sqlite3": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 1318912,
+            "sha256": "6bbf43e0cd732dd6de0f3272cd236c20c4dc034f6ee1a59d78522f1fee48e139"
+          },
+          "private-fixture.json": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 141,
+            "sha256": "f1cc1b49adf4c1c054289fa1dfafde1831d52458de8c275f7a7fbe6e8c047801"
+          },
+          "server.toml": {
+            "mode": 384,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 40,
+            "sha256": "98d2b5a3214cd3b692484525741ed21a53d8cc34efb0a0bfeec347600d747e85"
+          }
+        },
+        "refusal_fixture_after_each_entry": {
+          "existing": {
+            ".": {
+              "mode": 448,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "directory"
+            },
+            "control.sqlite3": {
+              "mode": 420,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "file",
+              "bytes": 1318912,
+              "sha256": "6bbf43e0cd732dd6de0f3272cd236c20c4dc034f6ee1a59d78522f1fee48e139"
+            },
+            "private-fixture.json": {
+              "mode": 420,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "file",
+              "bytes": 141,
+              "sha256": "f1cc1b49adf4c1c054289fa1dfafde1831d52458de8c275f7a7fbe6e8c047801"
+            },
+            "server.toml": {
+              "mode": 384,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "file",
+              "bytes": 40,
+              "sha256": "98d2b5a3214cd3b692484525741ed21a53d8cc34efb0a0bfeec347600d747e85"
+            }
+          },
+          "open": {
+            ".": {
+              "mode": 448,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "directory"
+            },
+            "control.sqlite3": {
+              "mode": 420,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "file",
+              "bytes": 1318912,
+              "sha256": "6bbf43e0cd732dd6de0f3272cd236c20c4dc034f6ee1a59d78522f1fee48e139"
+            },
+            "private-fixture.json": {
+              "mode": 420,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "file",
+              "bytes": 141,
+              "sha256": "f1cc1b49adf4c1c054289fa1dfafde1831d52458de8c275f7a7fbe6e8c047801"
+            },
+            "server.toml": {
+              "mode": 384,
+              "uid": 1001,
+              "gid": 1001,
+              "kind": "file",
+              "bytes": 40,
+              "sha256": "98d2b5a3214cd3b692484525741ed21a53d8cc34efb0a0bfeec347600d747e85"
+            }
+          }
+        },
+        "both_old_store_entries_refused_without_writes": true,
+        "refusal_fixture_file_hashes_and_permissions": {
+          ".": {
+            "mode": 448,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "directory"
+          },
+          "control.sqlite3": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 1318912,
+            "sha256": "6bbf43e0cd732dd6de0f3272cd236c20c4dc034f6ee1a59d78522f1fee48e139"
+          },
+          "private-fixture.json": {
+            "mode": 420,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 141,
+            "sha256": "f1cc1b49adf4c1c054289fa1dfafde1831d52458de8c275f7a7fbe6e8c047801"
+          },
+          "server.toml": {
+            "mode": 384,
+            "uid": 1001,
+            "gid": 1001,
+            "kind": "file",
+            "bytes": 40,
+            "sha256": "98d2b5a3214cd3b692484525741ed21a53d8cc34efb0a0bfeec347600d747e85"
+          }
+        },
+        "old_source_after": {
+          "expected_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+          "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
+          "exact_source": true,
+          "clean": true,
+          "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "status_raw_bytes": 0,
+          "status": [],
+          "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+        },
+        "source_after": {
+          "expected_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+          "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
+          "exact_source": true,
+          "clean": true,
+          "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "status_raw_bytes": 0,
+          "status": [],
+          "dependency_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        "artifact_files": [
+          {
+            "path": "build-current-storage-fixture.log",
+            "bytes": 150329,
+            "sha256": "dddd0406e18deb5f12b2ff143a0a1702d278f13807d648e0c59329ab00dc9137"
+          },
+          {
+            "path": "build-unchanged-old-storage.log",
+            "bytes": 158710,
+            "sha256": "ca9c7da56b0b1f14d9182cbcdb77b58973c37a847e196eaab72e04826e78b6c0"
+          },
+          {
+            "path": "checkout-exact-schema50.log",
+            "bytes": 331,
+            "sha256": "60b19daee0e3efd34a5ec2190153cc0ae2688cd3c1e77b7e8cf6d16de4068f57"
+          },
+          {
+            "path": "create-real-current-lineage.log",
+            "bytes": 632,
+            "sha256": "c5417d90e8653d404050bb89fc9c5f20a101f1688ffdce5ff71341829c6624b8"
+          },
+          {
+            "path": "current-reopens-and-enforces-ancestor-revocation.log",
+            "bytes": 632,
+            "sha256": "668c863ec03c7d603717a03da595eaeb53f5b05656ee5e69b4dcc380d83ad6ec"
+          },
+          {
+            "path": "link-current-probe-to-unchanged-old-library.log",
+            "bytes": 3169,
+            "sha256": "066d09af05d37424260d4678c6dcc68dda2c7f7bb575141ea2c95659923ea159"
+          },
+          {
+            "path": "old-store-existing-refuses-real-lineage.log",
+            "bytes": 298,
+            "sha256": "bcaef4617c1730a96a316ee1ec53f5e76962f0cbd6d1a79f3007fa156a8f33c7"
+          },
+          {
+            "path": "old-store-open-refuses-real-lineage.log",
+            "bytes": 294,
+            "sha256": "6fd7518cb4c7c9733e3189502b83502da82724fe92a82dbe35576f87969d0d84"
+          },
+          {
+            "path": "remove-owned-old-source.log",
+            "bytes": 148,
+            "sha256": "036c4541abaabe1e9b550110fe1014ba3e187b14b3d7ccfff1edbb813baa7517"
+          }
+        ]
+      }
+    }
+  ],
+  "checksum_audit_note": "The initial local archive audit used log_sha256/log_bytes for both report formats and stopped. The retained-release report instead uses sha256 and has no length field. Auditing each format by its documented fields matched every digest on both platforms; no payload was changed. The direct-schema report also matched every declared length.",
+  "limitations": [
+    "Scope is the retained server/schema experiment on hosted Linux x64 and ARM64, not complete mixed-version product acceptance.",
+    "Previous 409d315 and a6 schema experiment failures remain retained.",
+    "No local project build, formatter or test was executed."
+  ]
+}
