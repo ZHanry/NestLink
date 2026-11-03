@@ -74,12 +74,12 @@ fn native_recovery_without_a_public_operation_exposes_an_exact_stop_action() {
     let snapshot = native_recovery_snapshot();
     assert!(snapshot.native_session.loading.is_none());
     let mut workspace = Workspace::new(snapshot);
-    workspace.app.remote.tab = remote::RemoteTab::Sessions;
     workspace.app.bridge.layout_enable_commands();
     let size = egui::vec2(1280., 1000.);
     for _ in 0..3 {
         workspace.frame(size, vec![]);
     }
+    workspace.click(size, "会话记录");
     assert_eq!(workspace.label_bounds("正在恢复连接").len(), 1);
     assert_eq!(workspace.bounds("停止恢复").len(), 1);
     assert!(workspace.bounds("取消连接").is_empty());
