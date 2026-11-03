@@ -115,7 +115,12 @@ impl ContinuousRouteSetSession {
             space: digest(self.route.pin.space_id.as_bytes()),
             session: digest(self.permit.claims().session_id.as_bytes()),
             permit: self.permit.digest(),
-            path_grant: digest(&nestlink_protocol::network::GrantClaims::Path(self.route.grants.path.claims().clone()).signing_message()?),
+            path_grant: digest(
+                &nestlink_protocol::network::GrantClaims::Path(
+                    self.route.grants.path.claims().clone(),
+                )
+                .signing_message()?,
+            ),
             transport_group: self.route.transport_group(),
             peers: self.route.grants.path.peers(),
             original_route: self.keys[self.selected].route_binding,

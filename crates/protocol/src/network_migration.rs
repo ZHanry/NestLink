@@ -84,7 +84,7 @@ impl Binding {
 
     pub fn validate(&self) -> Result<(), ContractError> {
         self.peers.validate()?;
-        if self.digests().iter().any(|digest| *digest == [0; 32])
+        if self.digests().contains(&[0; 32])
             || self.original_route == self.candidate_route
             || self.business_generation == 0
             || self.previous_path_epoch == 0
