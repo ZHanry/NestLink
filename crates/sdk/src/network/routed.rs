@@ -266,9 +266,9 @@ async fn authorize_remote_observed<'a>(
         transport,
         revocation,
         additional_revocations,
-        observed_member: observer
+        required_members: observer
             .as_ref()
-            .and_then(control::RemoteRouteObserver::selected_member),
+            .and_then(control::RemoteRouteObserver::required_members),
         observer: None,
         guardians: Vec::new(),
     };
@@ -507,7 +507,7 @@ struct RemoteRouteOwner {
     transport: RoutedTransport,
     revocation: Arc<RouteRevocation>,
     additional_revocations: Arc<std::sync::Mutex<Vec<Arc<RouteRevocation>>>>,
-    observed_member: Option<Arc<std::sync::atomic::AtomicUsize>>,
+    required_members: Option<Arc<std::sync::atomic::AtomicUsize>>,
     observer: Option<TaskOwner>,
     guardians: Vec<TaskOwner>,
 }

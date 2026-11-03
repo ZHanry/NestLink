@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
-  "checkpoint_kind": "hosted_format_import_and_typed_migration_request_repair",
+  "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+  "checkpoint_kind": "guardian_recovery_and_dual_authority_cancellation_matrix_queued_for_hosted_validation",
   "active_tasks": [
     "W00",
     "W02",
@@ -53,12 +53,10 @@
     "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
   ],
   "unverified_assumptions": [
-    "Source3446604 run41599542120 passed both actual software VP9 owner jobs. Both official ZIPs,18 producer files,10 exact input hashes verified. No physical display/GPU/HDR/sustained fps claim.",
-    "New complete v6 ordinary signed Session/NLMF/ACK/sealed decode export and v3-v6 local explicit selection are integrated but not yet compiled in hosted Actions.",
-    "New unique original inner transport handoff, bilateral automatic path migration and current-node authorization separation are integrated but need real SDK fault matrices and exact-source Actions.",
-    "Full ca1e36a run41596020510 failed: desktop close submitted new background file/clipboard queries; app-ipc strict manual_range_patterns; Linux resident public-PKI HTTPS fixture DNS timeouts. Product close guard and lint repair now written; all original failures retained.",
-    "Mandatory paired targets, independent NAT/overlap, Android/iOS WireGuard, fixed public ingress, signing, mixed-version and cross-day24h evidence remain pending.",
-    "User decisions: Luanti25s and failure retained; only two incorrect None expectations corrected to exact Unauthorized; allowed VP9=false and disabled encoder/RGB444 supply rejection while retaining original rejection assertions."
+    "804c117 hosted Linux workspace found product uuid dependency absent. Fixed by reusing existing format_uuid helper on all native platforms, without dependency changes.",
+    "Hosted OpenAPI output804c117 exact ZIP/output hash verified and imported; only the five authorized-field schema lines changed. Original804c117 drift failure remains.",
+    "Next source adds real candidate detach/rebind/drain cancellation and current-node revocation regression, guardian recoverable-retirement preservation, exact original reconnection budget test and two-authority mask while owner migration is pending. These new tests require hosted execution.",
+    "Original media target failures, Luanti25s failure, external public HTTPS DNS fixture failure, full target/NAT/mobile/signing/24h acceptance remain open."
   ],
   "external_prerequisites": [
     {
@@ -94,6 +92,8 @@
     "Complete remaining production fault matrix and all required target qualification before creating the 0.8.0RC release; preserve only main."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/windows-media-owner-da61be4.json",
+    "docs/network-rewrite/evidence/openapi-804c117.json",
     "docs/network-rewrite/evidence/full-rust-core-ca1e36a.json",
     "docs/network-rewrite/evidence/format-da61be4.json",
     "docs/network-rewrite/evidence/vp9-software-owner-3446604.json",
@@ -757,15 +757,15 @@
   ],
   "current_hosted_runs": {
     "rust": {
-      "run_id": 41596020510,
-      "source_revision": "ca1e36a0773e9c5e253ed040a68f488b8a7353ad",
-      "state": "failure",
+      "run_id": 41602483359,
+      "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+      "state": "in_progress_with_original_compile_and_openapi_drift_failures",
       "whole_task_passed": false
     },
     "network": {
-      "run_id": 41601488609,
-      "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
-      "state": "in_progress_with_original_compile_failures",
+      "run_id": 41602670513,
+      "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+      "state": "in_progress",
       "whole_task_passed": false
     },
     "web": {
@@ -775,21 +775,21 @@
       "whole_task_passed": false
     },
     "media_owner": {
-      "run_id": 41601479672,
-      "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
-      "state": "in_progress_with_original_compile_failures",
+      "run_id": 41602641860,
+      "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+      "state": "in_progress",
       "whole_task_passed": false
     }
   },
   "branch_inventory": {
-    "observed_at": "2026-11-03T12:56:39.6933761+08:00",
+    "observed_at": "2026-11-03T16:30:48.3457002+08:00",
     "local": [
       "main"
     ],
     "remote": [
       "main"
     ],
-    "remote_main_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+    "remote_main_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
     "default_branch": "main",
     "deletion_required": false
   },
@@ -820,8 +820,8 @@
     }
   },
   "continuation_checkpoint": {
-    "recorded_at": "2026-11-03T16:18:16.7588307+08:00",
-    "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+    "recorded_at": "2026-11-03T16:30:48.3401824+08:00",
+    "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
     "user_decisions": [
@@ -856,6 +856,11 @@
     {
       "run_id": 41463153023,
       "reason": "Cancelled: dispatch preceded completed main update and selected 1dd4efd duplicate; corrected exact source confirmed in 41463305754.",
+      "qualification_claimed": false
+    },
+    {
+      "run_id": 41602514321,
+      "reason": "Cancelled immediately: source_revision parameter was mistyped instead of using actual git rev-parse HEAD. Correct exact-source replacement run41602641860 uses804c117da15dd7666c2919ee36757e8045bcb4b0.",
       "qualification_claimed": false
     }
   ],

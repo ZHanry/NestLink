@@ -285,7 +285,11 @@ async fn original_owner_authenticates_bilateral_standby_control_then_joins_safe_
     Ok(())
 }
 
-async fn original_inner_migration(single_request: bool, transient: bool) -> Result {
+async fn original_inner_migration(
+    single_request: bool,
+    transient: bool,
+    recoverable_teardown: bool,
+) -> Result {
     let mut f = if transient {
         Fixture::with_permissions(
             None,
@@ -340,6 +344,10 @@ async fn original_inner_migration(single_request: bool, transient: bool) -> Resu
     )?;
     let original_controller = controller.channels().network_connection_binding()?;
     let original_host = host.channels().network_connection_binding()?;
+    let original_lease_deadlines = [
+        controller.channels().lease_control().current_deadline()?,
+        host.channels().lease_control().current_deadline()?,
+    ];
     assert_eq!(original_controller, original_host);
     let controller_observation = controller
         .channels()
@@ -585,13 +593,39 @@ async fn original_inner_migration(single_request: bool, transient: bool) -> Resu
         sent?;
         assert_eq!(received?.payload, chunk);
     }
-    f.sdk
-        .revoke_network_remote_route_set(f.pin.space_id(), &set)
-        .await?;
-    tokio::try_join!(
-        controller.shutdown(StopReason::Revoked),
-        host.shutdown(StopReason::Revoked)
-    )?;
+    if recoverable_teardown {
+        let (controller_report, host_report) = tokio::try_join!(
+            controller.shutdown(StopReason::TransportLost),
+            host.shutdown(StopReason::TransportLost),
+        )?;
+        assert_eq!(controller_report.reason, StopReason::TransportLost);
+        assert_eq!(host_report.reason, StopReason::TransportLost);
+        // These budgets follow actual current/old carrier and guardian joins.
+        // A late guardian Drop must not turn their recoverable retirement
+        // into PermissionDenied or extend the original signed deadline.
+        for (budget, original_deadline) in [
+            controller.channels().lease_control().reconnection_budget()?,
+            host.channels().lease_control().reconnection_budget()?,
+        ]
+        .into_iter()
+        .zip(original_lease_deadlines)
+        {
+            assert_eq!(budget.permit().digest(), f.permit.digest());
+            assert_eq!(budget.deadline(), original_deadline);
+            assert!(budget.deadline() > Instant::now().into_std());
+        }
+        f.sdk
+            .revoke_network_remote_route_set(f.pin.space_id(), &set)
+            .await?;
+    } else {
+        f.sdk
+            .revoke_network_remote_route_set(f.pin.space_id(), &set)
+            .await?;
+        tokio::try_join!(
+            controller.shutdown(StopReason::Revoked),
+            host.shutdown(StopReason::Revoked)
+        )?;
+    }
     drop(rebind(&standby)?);
     assert!(controller_observation.snapshot().stopped);
     assert!(host_observation.snapshot().stopped);
@@ -603,17 +637,23 @@ async fn original_inner_migration(single_request: bool, transient: bool) -> Resu
 #[tokio::test]
 async fn signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release()
 -> Result {
-    original_inner_migration(false, false).await
+    original_inner_migration(false, false, false).await
 }
 
 #[tokio::test]
 async fn one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer()
 -> Result {
-    original_inner_migration(true, false).await
+    original_inner_migration(true, false, false).await
 }
 
 #[tokio::test]
 async fn input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery()
 -> Result {
-    original_inner_migration(true, true).await
+    original_inner_migration(true, true, false).await
+}
+
+#[tokio::test]
+async fn migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup()
+-> Result {
+    original_inner_migration(false, false, true).await
 }

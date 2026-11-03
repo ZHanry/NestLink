@@ -490,14 +490,27 @@ enum ReadbackKind {
     Relay,
     Chain,
     RouteSet {
-        selected: Arc<std::sync::atomic::AtomicUsize>,
+        required_members: Arc<std::sync::atomic::AtomicUsize>,
         migratable: bool,
     },
 }
+pub(super) fn route_set_members_current(
+    view: &nestlink_protocol::api::NetworkRemoteRouteSetView,
+    required_members: usize,
+    migratable: bool,
+) -> bool {
+    view.members.len() == 2
+        && required_members != 0
+        && required_members & !0b11 == 0
+        && view.members.iter().enumerate().all(|(index, member)| {
+            required_members & (1usize << index) == 0
+                || (member.authorized && (migratable || member.available))
+        })
+}
 impl RemoteRouteObserver {
-    pub(super) fn selected_member(&self) -> Option<Arc<std::sync::atomic::AtomicUsize>> {
+    pub(super) fn required_members(&self) -> Option<Arc<std::sync::atomic::AtomicUsize>> {
         match &self.kind {
-            ReadbackKind::RouteSet { selected, .. } => Some(selected.clone()),
+            ReadbackKind::RouteSet { required_members, .. } => Some(required_members.clone()),
             _ => None,
         }
     }
@@ -539,7 +552,7 @@ impl RemoteRouteObserver {
             ReadbackKind::Relay => self.matches_view::<NetworkRemoteRelayView>().await,
             ReadbackKind::Chain => self.matches_view::<NetworkRemoteRelayChainView>().await,
             ReadbackKind::RouteSet {
-                selected,
+                required_members,
                 migratable,
             } => {
                 matches!(
@@ -547,11 +560,11 @@ impl RemoteRouteObserver {
                         &self.client, &self.origin, reqwest::Method::GET, &self.path,
                         None, Some(self.token.expose()),
                     ).await,
-                    // The actual owner updates this index only after its
-                    // committed rebind. Physical loss may be held, while
-                    // explicit withdrawal of the current member may not.
-                    Ok(Some(view)) if view.members.get(selected.load(std::sync::atomic::Ordering::Acquire))
-                        .is_some_and(|member| member.authorized && (*migratable || member.available))
+                    // Detach/rebind/drain requires both original authorities;
+                    // only a joined old owner permits narrowing to the new
+                    // member. Physical loss never hides explicit withdrawal.
+                    Ok(Some(view)) if route_set_members_current(&view,
+                        required_members.load(std::sync::atomic::Ordering::Acquire), *migratable)
                         && route_set::original_fingerprint(&view).ok() == Some(self.fingerprint)
                 )
             }

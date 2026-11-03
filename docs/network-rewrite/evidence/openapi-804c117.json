@@ -1,0 +1,15 @@
+{
+  "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+  "run_id": "41602483359",
+  "run_attempt": "1",
+  "artifact_id": 13214628478,
+  "official_archive_sha256": "d585d85fcb62cbf58359af018458f9672cd0d0425529c491a0943301fd10e352",
+  "official_archive_bytes": 139448,
+  "official_digest_verified": true,
+  "output_sha256": "5c4559bf2fd7943d04bb35f39b658a188c4424b71ea54be2caf79f86032f0c62",
+  "output_bytes": 784542,
+  "output_digest_and_bytes_verified": true,
+  "generator": "cargo run --locked -p xtask -- contract --write",
+  "runner_environment": "github-hosted",
+  "quality_acceptance": "generation-only; checked-in drift validation remains independent"
+}

@@ -1,0 +1,2379 @@
+{
+  "schema_version": 1,
+  "kind": "windows-media-owner-exact-source-independent-failure-verification",
+  "recorded_at_utc": "2026-11-03T08:27:19.0698205Z",
+  "repository": "ZHanry/NestLink",
+  "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+  "run_id": 41601479672,
+  "run_attempt": 1,
+  "workflow": "Windows actual media owner diagnostics and strict boundaries",
+  "workflow_path": ".github/workflows/windows-media-owner.yml",
+  "workflow_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41601479672",
+  "status": "completed",
+  "conclusion": "failure",
+  "local_audit_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-da61be4-independent",
+  "metadata_files": [
+    {
+      "path": "run.json",
+      "bytes": 11801,
+      "sha256": "2ac68cc9ae54abe0f2416b3c7eb907eaff9ec7e12796c46f9d5c4c07736a12cb"
+    },
+    {
+      "path": "jobs.json",
+      "bytes": 15695,
+      "sha256": "5daac4681c69c654786a9009199a9a26b12c9efae1836ad42b0360852306868b"
+    },
+    {
+      "path": "artifacts.json",
+      "bytes": 2962,
+      "sha256": "ae998efd7c9547c8d93982069fc2da572f937e0939181c850294e30bc966d593"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 125801016892,
+      "name": "owner-boundaries (windows-2025)",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41601479672/job/125801016892",
+      "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T08:11:49Z",
+      "completed_at": "2026-11-03T08:18:19Z",
+      "runner_name": "GitHub Actions 1000012285",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "windows-2025"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T08:11:50Z",
+          "completed_at": "2026-11-03T08:11:51Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T08:11:51Z",
+          "completed_at": "2026-11-03T08:12:04Z"
+        },
+        {
+          "name": "Verify exact hosted source and preserve input provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T08:12:04Z",
+          "completed_at": "2026-11-03T08:12:05Z"
+        },
+        {
+          "name": "Verify diagnostic analyzer negatives on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T08:12:05Z",
+          "completed_at": "2026-11-03T08:12:06Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T08:12:06Z",
+          "completed_at": "2026-11-03T08:12:20Z"
+        },
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 6,
+          "started_at": "2026-11-03T08:12:20Z",
+          "completed_at": "2026-11-03T08:13:21Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7,
+          "started_at": "2026-11-03T08:13:21Z",
+          "completed_at": "2026-11-03T08:13:21Z"
+        },
+        {
+          "name": "Select native codec prefix",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8,
+          "started_at": "2026-11-03T08:13:21Z",
+          "completed_at": "2026-11-03T08:13:21Z"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-03T08:13:21Z",
+          "completed_at": "2026-11-03T08:13:21Z"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2026-11-03T08:13:21Z",
+          "completed_at": "2026-11-03T08:13:21Z"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 11,
+          "started_at": "2026-11-03T08:13:21Z",
+          "completed_at": "2026-11-03T08:14:52Z"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T08:14:52Z",
+          "completed_at": "2026-11-03T08:14:52Z"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 13,
+          "started_at": "2026-11-03T08:14:52Z",
+          "completed_at": "2026-11-03T08:15:50Z"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 14,
+          "started_at": "2026-11-03T08:15:50Z",
+          "completed_at": "2026-11-03T08:16:04Z"
+        },
+        {
+          "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 15,
+          "started_at": "2026-11-03T08:16:04Z",
+          "completed_at": "2026-11-03T08:16:24Z"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 16,
+          "started_at": "2026-11-03T08:16:24Z",
+          "completed_at": "2026-11-03T08:16:52Z"
+        },
+        {
+          "name": "Verify ordinary RGB444 pacing with the actual original sealed encoder owner",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 17,
+          "started_at": "2026-11-03T08:16:52Z",
+          "completed_at": "2026-11-03T08:17:20Z"
+        },
+        {
+          "name": "Verify exact production opt-in and actual RGB444 Core ACK AU decoded export",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 18,
+          "started_at": "2026-11-03T08:17:20Z",
+          "completed_at": "2026-11-03T08:17:37Z"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 19,
+          "started_at": "2026-11-03T08:17:37Z",
+          "completed_at": "2026-11-03T08:17:55Z"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 20,
+          "started_at": "2026-11-03T08:17:55Z",
+          "completed_at": "2026-11-03T08:18:15Z"
+        },
+        {
+          "name": "Retain exact-source evidence including failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-03T08:18:15Z",
+          "completed_at": "2026-11-03T08:18:16Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 42,
+          "started_at": "2026-11-03T08:18:16Z",
+          "completed_at": "2026-11-03T08:18:18Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 43,
+          "started_at": "2026-11-03T08:18:18Z",
+          "completed_at": "2026-11-03T08:18:18Z"
+        }
+      ],
+      "failed_steps": [
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "number": 6,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "number": 11,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "number": 13,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "number": 14,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+          "number": 15,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "number": 16,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify ordinary RGB444 pacing with the actual original sealed encoder owner",
+          "number": 17,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact production opt-in and actual RGB444 Core ACK AU decoded export",
+          "number": 18,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "number": 19,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "number": 20,
+          "conclusion": "failure"
+        }
+      ],
+      "skipped_steps": [
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "number": 7,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Select native codec prefix",
+          "number": 8,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "number": 9,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "number": 10,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "number": 12,
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": 125801016959,
+      "name": "native-peer-process (windows-2025)",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41601479672/job/125801016959",
+      "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T08:11:49Z",
+      "completed_at": "2026-11-03T08:13:54Z",
+      "runner_name": "GitHub Actions 1000012283",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "windows-2025"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T08:11:50Z",
+          "completed_at": "2026-11-03T08:11:51Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T08:11:51Z",
+          "completed_at": "2026-11-03T08:12:01Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T08:12:01Z",
+          "completed_at": "2026-11-03T08:12:13Z"
+        },
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 4,
+          "started_at": "2026-11-03T08:12:13Z",
+          "completed_at": "2026-11-03T08:13:49Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T08:13:49Z",
+          "completed_at": "2026-11-03T08:13:50Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T08:13:50Z",
+          "completed_at": "2026-11-03T08:13:52Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T08:13:52Z",
+          "completed_at": "2026-11-03T08:13:52Z"
+        }
+      ],
+      "failed_steps": [
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "number": 4,
+          "conclusion": "failure"
+        }
+      ],
+      "skipped_steps": []
+    },
+    {
+      "id": 125801017052,
+      "name": "native-peer-process (ubuntu-24.04)",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41601479672/job/125801017052",
+      "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T08:11:49Z",
+      "completed_at": "2026-11-03T08:12:52Z",
+      "runner_name": "GitHub Actions 1000012284",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T08:11:50Z",
+          "completed_at": "2026-11-03T08:11:51Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T08:11:51Z",
+          "completed_at": "2026-11-03T08:11:54Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T08:11:54Z",
+          "completed_at": "2026-11-03T08:12:03Z"
+        },
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 4,
+          "started_at": "2026-11-03T08:12:03Z",
+          "completed_at": "2026-11-03T08:12:49Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T08:12:49Z",
+          "completed_at": "2026-11-03T08:12:50Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T08:12:50Z",
+          "completed_at": "2026-11-03T08:12:50Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T08:12:50Z",
+          "completed_at": "2026-11-03T08:12:50Z"
+        }
+      ],
+      "failed_steps": [
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "number": 4,
+          "conclusion": "failure"
+        }
+      ],
+      "skipped_steps": []
+    },
+    {
+      "id": 125801017066,
+      "name": "owner-boundaries (windows-2022)",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41601479672/job/125801017066",
+      "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T08:11:50Z",
+      "completed_at": "2026-11-03T08:18:42Z",
+      "runner_name": "GitHub Actions 1000012286",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "windows-2022"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T08:11:51Z",
+          "completed_at": "2026-11-03T08:11:52Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T08:11:52Z",
+          "completed_at": "2026-11-03T08:12:03Z"
+        },
+        {
+          "name": "Verify exact hosted source and preserve input provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T08:12:03Z",
+          "completed_at": "2026-11-03T08:12:04Z"
+        },
+        {
+          "name": "Verify diagnostic analyzer negatives on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T08:12:04Z",
+          "completed_at": "2026-11-03T08:12:05Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T08:12:05Z",
+          "completed_at": "2026-11-03T08:12:17Z"
+        },
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 6,
+          "started_at": "2026-11-03T08:12:17Z",
+          "completed_at": "2026-11-03T08:13:19Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7,
+          "started_at": "2026-11-03T08:13:19Z",
+          "completed_at": "2026-11-03T08:13:19Z"
+        },
+        {
+          "name": "Select native codec prefix",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8,
+          "started_at": "2026-11-03T08:13:19Z",
+          "completed_at": "2026-11-03T08:13:19Z"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-03T08:13:19Z",
+          "completed_at": "2026-11-03T08:13:19Z"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2026-11-03T08:13:19Z",
+          "completed_at": "2026-11-03T08:13:19Z"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 11,
+          "started_at": "2026-11-03T08:13:19Z",
+          "completed_at": "2026-11-03T08:15:04Z"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T08:15:04Z",
+          "completed_at": "2026-11-03T08:15:04Z"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 13,
+          "started_at": "2026-11-03T08:15:04Z",
+          "completed_at": "2026-11-03T08:16:02Z"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 14,
+          "started_at": "2026-11-03T08:16:02Z",
+          "completed_at": "2026-11-03T08:16:18Z"
+        },
+        {
+          "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 15,
+          "started_at": "2026-11-03T08:16:18Z",
+          "completed_at": "2026-11-03T08:16:40Z"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 16,
+          "started_at": "2026-11-03T08:16:40Z",
+          "completed_at": "2026-11-03T08:17:09Z"
+        },
+        {
+          "name": "Verify ordinary RGB444 pacing with the actual original sealed encoder owner",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 17,
+          "started_at": "2026-11-03T08:17:09Z",
+          "completed_at": "2026-11-03T08:17:36Z"
+        },
+        {
+          "name": "Verify exact production opt-in and actual RGB444 Core ACK AU decoded export",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 18,
+          "started_at": "2026-11-03T08:17:36Z",
+          "completed_at": "2026-11-03T08:17:55Z"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 19,
+          "started_at": "2026-11-03T08:17:55Z",
+          "completed_at": "2026-11-03T08:18:13Z"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 20,
+          "started_at": "2026-11-03T08:18:13Z",
+          "completed_at": "2026-11-03T08:18:35Z"
+        },
+        {
+          "name": "Retain exact-source evidence including failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-03T08:18:35Z",
+          "completed_at": "2026-11-03T08:18:37Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 42,
+          "started_at": "2026-11-03T08:18:37Z",
+          "completed_at": "2026-11-03T08:18:39Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 43,
+          "started_at": "2026-11-03T08:18:39Z",
+          "completed_at": "2026-11-03T08:18:39Z"
+        }
+      ],
+      "failed_steps": [
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "number": 6,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "number": 11,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "number": 13,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "number": 14,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+          "number": 15,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "number": 16,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify ordinary RGB444 pacing with the actual original sealed encoder owner",
+          "number": 17,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact production opt-in and actual RGB444 Core ACK AU decoded export",
+          "number": 18,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "number": 19,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "number": 20,
+          "conclusion": "failure"
+        }
+      ],
+      "skipped_steps": [
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "number": 7,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Select native codec prefix",
+          "number": 8,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "number": 9,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "number": 10,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "number": 12,
+          "conclusion": "skipped"
+        }
+      ]
+    }
+  ],
+  "artifact_count": 4,
+  "official_zip_verification_count": 4,
+  "independent_downloaded_file_count": 24,
+  "producer_input_hash_verification_count": 8,
+  "producer_output_hash_verification_count": 2,
+  "artifacts": [
+    {
+      "id": 13215610807,
+      "name": "windows-media-owner-windows-2025-da61be4261994b62e15e6828bbe7f81dc79a0e58-1",
+      "job_id": 125801016892,
+      "api_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13215610807",
+      "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13215610807/zip",
+      "official_digest": "sha256:89b7d404dc618cb56a0c8319367f22255705b130bf69c98820057046e6572395",
+      "official_size_in_bytes": 16068,
+      "zip_sha256": "89b7d404dc618cb56a0c8319367f22255705b130bf69c98820057046e6572395",
+      "zip_bytes": 16068,
+      "official_digest_size_run_source_matches": true,
+      "local_verified_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-da61be4-independent\\owner-windows-2025",
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "compressed-native-tests.log",
+          "bytes": 17266,
+          "sha256": "7d2db0acb583349914bb1ab084b2486910038746bfc86f9da8109a5d6bf2cd11"
+        },
+        {
+          "path": "daemon-hevc-selection-tests.log",
+          "bytes": 2884,
+          "sha256": "e410a75e37fc3e5bcf4de9be9b02d2ba84bfcf57709a27382faf37a7697f9241"
+        },
+        {
+          "path": "desktop-clippy.log",
+          "bytes": 12642,
+          "sha256": "18bff7e17bd59128eb2c6e1bee8c547b599bf190c39d949589afbccfc12a75dd"
+        },
+        {
+          "path": "explicit-selection.log",
+          "bytes": 1503,
+          "sha256": "3d7a9a11e3f686b4b74ead19dde02cbcae8680f634d7b08bb9af527fbc532e63"
+        },
+        {
+          "path": "h264-output-geometry-tests.log",
+          "bytes": 1578,
+          "sha256": "3c261b23a2fad7cdf20e6bff6dc05867a51f6a557954c884ecbcf45805a82c9f"
+        },
+        {
+          "path": "media-opt-in-config-tests.log",
+          "bytes": 2165,
+          "sha256": "bcc64a5c5b50e4b9b74103be87e96f34b37456bd40d4e52b7c7e267521261106"
+        },
+        {
+          "path": "media-provider-tests.log",
+          "bytes": 2926,
+          "sha256": "6afad708bd502773b4a38bdfaf6547809a793997ea85637544dd98dc480e95f3"
+        },
+        {
+          "path": "signed-store-media-tests.log",
+          "bytes": 2017,
+          "sha256": "97d976390b60d2d742d635cbdd979278dfecc31e58a65d0039abe93d452741bd"
+        },
+        {
+          "path": "source-receipt.json",
+          "bytes": 689,
+          "sha256": "475910f38d36900a972bcc3d72b39de13e01b7a0173a1b865ccec9e60c4f6a6f"
+        },
+        {
+          "path": "vp9-ordinary-pacing-owner.log",
+          "bytes": 5258,
+          "sha256": "2d07450231ed75f499ca678b901f7243fb898338251cc7055a786bc0f2797bb8"
+        }
+      ],
+      "producer_receipt_file": "source-receipt.json",
+      "producer_receipt": {
+        "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+        "workflow_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+        "run_id": "41601479672",
+        "attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Windows",
+        "runner_label": "windows-2025",
+        "dependency_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+        "hardware_or_target_acceptance_claimed": false,
+        "tool_sources": {
+          "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+        }
+      },
+      "producer_source_and_run_verified": true,
+      "producer_input_verifications": [
+        {
+          "path": "Cargo.lock",
+          "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+          "producer_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_bytes": 209815,
+          "matches": true
+        },
+        {
+          "path": "scripts/network-rewrite-gpu-cadence.py",
+          "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+          "producer_sha256": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "actual_sha256": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "actual_bytes": 5664,
+          "matches": true
+        },
+        {
+          "path": "tests/network/test_gpu_cadence.py",
+          "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+          "producer_sha256": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35",
+          "actual_sha256": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35",
+          "actual_bytes": 3543,
+          "matches": true
+        }
+      ],
+      "producer_payload_verifications": [],
+      "producer_output_inventory_available": false,
+      "producer_output_inventory_limitation": "This owner artifact supplies source-receipt.json but no producer output-file inventory. Official ZIP digest/size and an independent hash of every extracted file were verified; producer-declared output hashes are unavailable and are not claimed.",
+      "command_log_analysis": [
+        {
+          "file": "compressed-native-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "daemon-hevc-selection-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());"
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "desktop-clippy.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "explicit-selection.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "h264-output-geometry-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-cd14c2948a42f9db\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "media-opt-in-config-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());"
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "media-provider-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "signed-store-media-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "vp9-ordinary-pacing-owner.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                "For more information about this error, try `rustc --explain E0271`.",
+                "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 13214821865,
+      "name": "native-peer-process-ubuntu-24.04-da61be4261994b62e15e6828bbe7f81dc79a0e58-1",
+      "job_id": 125801017052,
+      "api_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13214821865",
+      "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13214821865/zip",
+      "official_digest": "sha256:4d678b89b3268fe48781f2a85f95789ebecfa4845dbcb73894a8e5bacffa5b20",
+      "official_size_in_bytes": 3814,
+      "zip_sha256": "4d678b89b3268fe48781f2a85f95789ebecfa4845dbcb73894a8e5bacffa5b20",
+      "zip_bytes": 3814,
+      "official_digest_size_run_source_matches": true,
+      "local_verified_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-da61be4-independent\\peer-ubuntu-24.04",
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "ipc-tests.log",
+          "bytes": 17141,
+          "sha256": "a9deabae988c799227a786a9d5f604392aab7508e5c161f75a57dbaedbcd6547"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 920,
+          "sha256": "621cb5906a31b83d5f72f34362de347caa863db326159a7787a46118d3f2cedb"
+        }
+      ],
+      "producer_receipt_file": "receipt.json",
+      "producer_receipt": {
+        "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+        "run_id": "41601479672",
+        "attempt": "1",
+        "runner_os": "Linux",
+        "runner_environment": "github-hosted",
+        "cargo_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+        "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+        "passed": false,
+        "commands": [
+          {
+            "name": "ipc-tests",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-local-ipc",
+              "--lib",
+              "--",
+              "--show-output"
+            ],
+            "return_code": 101
+          }
+        ],
+        "failure": "AssertionError('ipc-tests failed; original diagnostic retained')",
+        "files": [
+          {
+            "path": "ipc-tests.log",
+            "bytes": 17141,
+            "sha256": "a9deabae988c799227a786a9d5f604392aab7508e5c161f75a57dbaedbcd6547"
+          }
+        ]
+      },
+      "producer_source_and_run_verified": true,
+      "producer_input_verifications": [
+        {
+          "path": "Cargo.lock",
+          "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+          "producer_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_bytes": 209815,
+          "matches": true
+        }
+      ],
+      "producer_payload_verifications": [
+        {
+          "path": "ipc-tests.log",
+          "producer_bytes": 17141,
+          "producer_sha256": "a9deabae988c799227a786a9d5f604392aab7508e5c161f75a57dbaedbcd6547",
+          "actual_bytes": 17141,
+          "actual_sha256": "a9deabae988c799227a786a9d5f604392aab7508e5c161f75a57dbaedbcd6547",
+          "matches": true
+        }
+      ],
+      "producer_output_inventory_available": true,
+      "producer_output_inventory_limitation": null,
+      "command_log_analysis": [
+        {
+          "file": "ipc-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates/protocol/src/network_migration/request.rs:36:37",
+              "  --> crates/protocol/src/network_migration/request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates/protocol/src/network_migration/request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates/protocol/src/network_migration/request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 13214518345,
+      "name": "windows-media-owner-windows-2022-da61be4261994b62e15e6828bbe7f81dc79a0e58-1",
+      "job_id": 125801017066,
+      "api_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13214518345",
+      "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13214518345/zip",
+      "official_digest": "sha256:8c2f7877023f58f9e182af54d6bfc73e9f41dde220d80ed8f65b8689e89d3b5d",
+      "official_size_in_bytes": 16073,
+      "zip_sha256": "8c2f7877023f58f9e182af54d6bfc73e9f41dde220d80ed8f65b8689e89d3b5d",
+      "zip_bytes": 16073,
+      "official_digest_size_run_source_matches": true,
+      "local_verified_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-da61be4-independent\\owner-windows-2022",
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "compressed-native-tests.log",
+          "bytes": 17266,
+          "sha256": "d1b40c27872277afe0e281dfd12eef348c0a38401e1831e6fea364f33de9e918"
+        },
+        {
+          "path": "daemon-hevc-selection-tests.log",
+          "bytes": 2884,
+          "sha256": "1e49752f2995e758a5fca5c79d61edadd809238bdbeea17f81dba43427b7cf73"
+        },
+        {
+          "path": "desktop-clippy.log",
+          "bytes": 12739,
+          "sha256": "e78a033b5c34950ef11adf907befeecd142a0bb4c53d067bf112b424217db304"
+        },
+        {
+          "path": "explicit-selection.log",
+          "bytes": 1503,
+          "sha256": "3d7a9a11e3f686b4b74ead19dde02cbcae8680f634d7b08bb9af527fbc532e63"
+        },
+        {
+          "path": "h264-output-geometry-tests.log",
+          "bytes": 1578,
+          "sha256": "d98f0669d5e92a4e51f1137f4734cea2a42f143355751cb052b69be0350017f5"
+        },
+        {
+          "path": "media-opt-in-config-tests.log",
+          "bytes": 2158,
+          "sha256": "3392deca1a1e8f190193e6cdfda387dba1641f95b49ea19c33fd1c692b5e0978"
+        },
+        {
+          "path": "media-provider-tests.log",
+          "bytes": 3022,
+          "sha256": "a014efc7dc1ae942f869edb439b0a5e01e7914fa432ac8f3adf430533a45118f"
+        },
+        {
+          "path": "signed-store-media-tests.log",
+          "bytes": 2017,
+          "sha256": "93a337417e1901b43cd6be262b629fa4944ad417839244f53fb1cb87aedf3626"
+        },
+        {
+          "path": "source-receipt.json",
+          "bytes": 689,
+          "sha256": "f01f225621f260ba084c100e5d19c2c6762cf84895f039ffa0e087862ba95521"
+        },
+        {
+          "path": "vp9-ordinary-pacing-owner.log",
+          "bytes": 5034,
+          "sha256": "2aed53632aa43f39bcffabd028594a00a71682359ad18b395b932ccab8a4840b"
+        }
+      ],
+      "producer_receipt_file": "source-receipt.json",
+      "producer_receipt": {
+        "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+        "workflow_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+        "run_id": "41601479672",
+        "attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Windows",
+        "runner_label": "windows-2022",
+        "dependency_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+        "hardware_or_target_acceptance_claimed": false,
+        "tool_sources": {
+          "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+        }
+      },
+      "producer_source_and_run_verified": true,
+      "producer_input_verifications": [
+        {
+          "path": "Cargo.lock",
+          "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+          "producer_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_bytes": 209815,
+          "matches": true
+        },
+        {
+          "path": "scripts/network-rewrite-gpu-cadence.py",
+          "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+          "producer_sha256": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "actual_sha256": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "actual_bytes": 5664,
+          "matches": true
+        },
+        {
+          "path": "tests/network/test_gpu_cadence.py",
+          "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+          "producer_sha256": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35",
+          "actual_sha256": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35",
+          "actual_bytes": 3543,
+          "matches": true
+        }
+      ],
+      "producer_payload_verifications": [],
+      "producer_output_inventory_available": false,
+      "producer_output_inventory_limitation": "This owner artifact supplies source-receipt.json but no producer output-file inventory. Official ZIP digest/size and an independent hash of every extracted file were verified; producer-declared output hashes are unavailable and are not claimed.",
+      "command_log_analysis": [
+        {
+          "file": "compressed-native-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "daemon-hevc-selection-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());"
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "desktop-clippy.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "explicit-selection.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "h264-output-geometry-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-cd14c2948a42f9db\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "media-opt-in-config-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());"
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "media-provider-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "signed-store-media-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "vp9-ordinary-pacing-owner.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                "For more information about this error, try `rustc --explain E0271`.",
+                "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 13214229666,
+      "name": "native-peer-process-windows-2025-da61be4261994b62e15e6828bbe7f81dc79a0e58-1",
+      "job_id": 125801016959,
+      "api_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13214229666",
+      "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13214229666/zip",
+      "official_digest": "sha256:bbc52ce88fe01846eb6409837d776ec3701d5e2f5a34e2306583301dadbc6ed6",
+      "official_size_in_bytes": 4001,
+      "zip_sha256": "bbc52ce88fe01846eb6409837d776ec3701d5e2f5a34e2306583301dadbc6ed6",
+      "zip_bytes": 4001,
+      "official_digest_size_run_source_matches": true,
+      "local_verified_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-da61be4-independent\\peer-windows-2025",
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "ipc-tests.log",
+          "bytes": 17434,
+          "sha256": "0ac0fe74f82fb4576b5be69825e0ae2488b6378d348d758de9cb9d024632d2b2"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 1083,
+          "sha256": "f3d6e689a5cd07085e28571bb1062e155f379ea2f119c1660fd08a296b8f2c05"
+        }
+      ],
+      "producer_receipt_file": "receipt.json",
+      "producer_receipt": {
+        "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+        "run_id": "41601479672",
+        "attempt": "1",
+        "runner_os": "Windows",
+        "runner_environment": "github-hosted",
+        "cargo_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+        "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+        "passed": false,
+        "commands": [
+          {
+            "name": "ipc-tests",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+              "scripts/refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-local-ipc",
+              "--lib",
+              "--",
+              "--show-output"
+            ],
+            "return_code": 101
+          }
+        ],
+        "failure": "AssertionError('ipc-tests failed; original diagnostic retained')",
+        "files": [
+          {
+            "path": "ipc-tests.log",
+            "bytes": 17434,
+            "sha256": "0ac0fe74f82fb4576b5be69825e0ae2488b6378d348d758de9cb9d024632d2b2"
+          }
+        ]
+      },
+      "producer_source_and_run_verified": true,
+      "producer_input_verifications": [
+        {
+          "path": "Cargo.lock",
+          "source_revision": "da61be4261994b62e15e6828bbe7f81dc79a0e58",
+          "producer_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_bytes": 209815,
+          "matches": true
+        }
+      ],
+      "producer_payload_verifications": [
+        {
+          "path": "ipc-tests.log",
+          "producer_bytes": 17434,
+          "producer_sha256": "0ac0fe74f82fb4576b5be69825e0ae2488b6378d348d758de9cb9d024632d2b2",
+          "actual_bytes": 17434,
+          "actual_sha256": "0ac0fe74f82fb4576b5be69825e0ae2488b6378d348d758de9cb9d024632d2b2",
+          "matches": true
+        }
+      ],
+      "producer_output_inventory_available": true,
+      "producer_output_inventory_limitation": null,
+      "command_log_analysis": [
+        {
+          "file": "ipc-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+              "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+              "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors"
+            ],
+            "diagnostic_contexts": [
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                     ^ expected `usize`, found `i32`",
+                ""
+              ],
+              [
+                "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+                "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+                "   |",
+                "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+                "   |                                                     ^ expected `usize`, found `i32`",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_pass_fail_ignored_counts": null,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        }
+      ]
+    }
+  ],
+  "original_job_logs": [
+    {
+      "job_id": 125801016892,
+      "job_name": "owner-boundaries (windows-2025)",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125801016892/logs",
+      "path": "job-125801016892.log",
+      "local_path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-da61be4-independent\\job-125801016892.log",
+      "bytes": 195138,
+      "sha256": "9e8b2831883133c1734d470ec9c82c64250c05bf28d651ee5209307a3a429b5c",
+      "analysis": {
+        "diagnostics": [
+          "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+          "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+          "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+          "error: could not compile `nestlink-protocol` (lib test) due to 2 previous errors",
+          "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors",
+          "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+          "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-cd14c2948a42f9db\\build-script-build` (exit code: 1)",
+          "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+          "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)"
+        ],
+        "diagnostic_contexts": [
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+            "exit $LASTEXITCODE"
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "For more information about this error, try `rustc --explain E0271`.",
+            "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors",
+            "",
+            "    assert result.returncode == 0, 'actual RGB444 pacing owner failed; original diagnostic retained'"
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "    assert result.returncode == 0, label+' failed; original diagnostic retained'",
+            "           ^^^^^^^^^^^^^^^^^^^^^^",
+            "AssertionError: explicit-selection failed; original diagnostic retained"
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());"
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());"
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ]
+        ],
+        "actual_rust_test_result_lines": [],
+        "actual_rust_test_case_lines": [],
+        "test_execution": "not_reached_due_to_compilation_or_build_failure",
+        "rust_pass_fail_ignored_counts": null,
+        "absence_of_harness_is_not_a_zero_test_success": true
+      },
+      "note": "The Python cadence analyzer ran three negative unit cases before the protocol compile failure. Echoed workflow assertions containing test-result strings are not executed Rust harness results."
+    },
+    {
+      "job_id": 125801016959,
+      "job_name": "native-peer-process (windows-2025)",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125801016959/logs",
+      "path": "job-125801016959.log",
+      "local_path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-da61be4-independent\\job-125801016959.log",
+      "bytes": 43089,
+      "sha256": "93c6e1d4ff486cf72935fe396fb2c685610f0e5b60941210a5f9b0d503cab417",
+      "analysis": {
+        "diagnostics": [],
+        "diagnostic_contexts": [],
+        "actual_rust_test_result_lines": [],
+        "actual_rust_test_case_lines": [],
+        "test_execution": "not_reached_due_to_compilation_or_build_failure",
+        "rust_pass_fail_ignored_counts": null,
+        "absence_of_harness_is_not_a_zero_test_success": true
+      },
+      "note": "Compiler output is redirected into ipc-tests.log in the official artifact; the original job log records the command failure and receipt upload."
+    },
+    {
+      "job_id": 125801017052,
+      "job_name": "native-peer-process (ubuntu-24.04)",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125801017052/logs",
+      "path": "job-125801017052.log",
+      "local_path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-da61be4-independent\\job-125801017052.log",
+      "bytes": 42315,
+      "sha256": "0afe1eb650984ae44de33d31ad4387f90b577143d20efb0f912f2325e32aacd3",
+      "analysis": {
+        "diagnostics": [],
+        "diagnostic_contexts": [],
+        "actual_rust_test_result_lines": [],
+        "actual_rust_test_case_lines": [],
+        "test_execution": "not_reached_due_to_compilation_or_build_failure",
+        "rust_pass_fail_ignored_counts": null,
+        "absence_of_harness_is_not_a_zero_test_success": true
+      },
+      "note": "Compiler output is redirected into ipc-tests.log in the official artifact; the original job log records the command failure and receipt upload."
+    },
+    {
+      "job_id": 125801017066,
+      "job_name": "owner-boundaries (windows-2022)",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125801017066/logs",
+      "path": "job-125801017066.log",
+      "local_path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-da61be4-independent\\job-125801017066.log",
+      "bytes": 195238,
+      "sha256": "ea93ff17f028434e8b4607a7642c1c7d9c49e4cefae1fe1407a758f8b784165a",
+      "analysis": {
+        "diagnostics": [
+          "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+          "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+          "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+          "error: could not compile `nestlink-protocol` (lib test) due to 2 previous errors",
+          "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors",
+          "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+          "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-cd14c2948a42f9db\\build-script-build` (exit code: 1)",
+          "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+          "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)"
+        ],
+        "diagnostic_contexts": [
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+            "exit $LASTEXITCODE"
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "For more information about this error, try `rustc --explain E0271`.",
+            "error: could not compile `nestlink-protocol` (lib) due to 2 previous errors",
+            "",
+            "           ^^^^^^^^^^^^^^^^^^^^^^"
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());"
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());"
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:37",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                     ^ expected `usize`, found `i32`",
+            ""
+          ],
+          [
+            "error[E0271]: type mismatch resolving `<i32 as Add>::Output == usize`",
+            "  --> crates\\protocol\\src\\network_migration\\request.rs:36:53",
+            "   |",
+            "36 |         let field = |index| bytes[8 + index * 32..8 + (index + 1) * 32].try_into().map_err(|_| invalid());",
+            "   |                                                     ^ expected `usize`, found `i32`",
+            ""
+          ]
+        ],
+        "actual_rust_test_result_lines": [],
+        "actual_rust_test_case_lines": [],
+        "test_execution": "not_reached_due_to_compilation_or_build_failure",
+        "rust_pass_fail_ignored_counts": null,
+        "absence_of_harness_is_not_a_zero_test_success": true
+      },
+      "note": "The Python cadence analyzer ran three negative unit cases before the protocol compile failure. Echoed workflow assertions containing test-result strings are not executed Rust harness results."
+    }
+  ],
+  "failure_summary": {
+    "primary": "All four jobs failed. Rust commands were blocked by E0271 in crates/protocol/src/network_migration/request.rs:36:37 and :36:53: the untyped Request::decode index closure inferred i32 where slice indexing requires usize.",
+    "secondary": "After the initial protocol-contract failure on each Windows owner job, MSYS2 setup, native-codec prefix selection, pinned-codec build and codec provenance steps were skipped. Subsequent !cancelled() commands also retained native-codec build-script NotFound failures asking for NESTLINK_CODEC_PREFIX. No successful native supplier build is claimed for this run.",
+    "new_tests": {
+      "ordinary_rgb444_pacing": "invoked_but_compilation_failed_before_test_execution",
+      "explicit_v3_v6_selection": "invoked_but_compilation_failed_before_test_execution",
+      "rgb444_core_ack_au_export": "not_invoked_because_prior_explicit_selection_command_failed"
+    },
+    "rust_test_counts": null,
+    "missing_harness_does_not_mean_zero_test_pass": true,
+    "followup_source": "804c117",
+    "followup_note": "The later source adds an explicit usize closure index. Its validation is separate and cannot overwrite this failed run."
+  },
+  "limitations": [
+    "Two owner artifacts contain no producer output inventory; only source input digests, official ZIP digest/size and independent downloaded-file hashes are available for those artifacts.",
+    "No runtime media execution, original TLS IPC acceptance, actual decoder/presenter output, GPU/HDR qualification or sustained target performance is established by this failed run.",
+    "Skipped steps and commands blocked before test execution remain unverified. No Rust passing/failed/ignored count is inferred from the absence of a harness.",
+    "Only run 41601479672 is included; no cancelled or differently sourced dispatch is collected."
+  ],
+  "acceptance_claims": {
+    "compiled_successfully": false,
+    "actual_rgb444_owner_test_passed": false,
+    "v3_v6_production_activation_test_passed": false,
+    "rgb444_core_ack_au_export_test_passed": false,
+    "original_tls_ipc_passed": false,
+    "gpu_or_hdr_passed": false,
+    "whole_W29_passed": false,
+    "release_eligible": false
+  },
+  "release_eligibility_claimed": false,
+  "independent_audit_execution": {
+    "kind": "local_artifact_bytes_and_historical_source_hashes_only",
+    "source_builds_or_project_tests_run_locally": false,
+    "operations": [
+      "GitHub API metadata/ZIP/job-log downloads",
+      "Official ZIP SHA256/size/run/source comparison",
+      "Artifact extraction and independent file SHA256/size inventory",
+      "Producer-declared payload comparison and historical Git blob input hash comparison",
+      "Read-only parsing of original Actions receipts and diagnostics"
+    ]
+  }
+}

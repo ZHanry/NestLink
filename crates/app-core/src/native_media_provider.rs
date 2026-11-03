@@ -860,7 +860,7 @@ fn run_vp9_rgb444_probe(
     Ok(ProbeResult {
         format,
         additional_formats: Vec::new(),
-        resource_id: uuid::Uuid::from_bytes(receipt.resource_id()).to_string(),
+        resource_id: format_uuid(receipt.resource_id()),
         backend: "cpu-software",
         adapter_luid: None,
         driver_version: None,
@@ -951,7 +951,6 @@ fn run_probe(
         sample_encoder: None,
     })
 }
-#[cfg(windows)]
 fn format_uuid(b: [u8; 16]) -> String {
     let h = b.iter().map(|v| format!("{v:02x}")).collect::<String>();
     format!(

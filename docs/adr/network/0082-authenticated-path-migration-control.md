@@ -100,8 +100,10 @@ only affect availability. Path, business, membership and transit revocation
 still reject the complete authenticated GET through the original policy
 snapshot and signed-grant checks. The retained business observer requires its
 actual current member to remain authorized even during a physical-loss hold.
-Its shared selected-member index changes only after successful owner migration,
-so revoking a released old node cannot revoke the healthy current member.
+Its shared required-member mask includes both original and candidate authority
+before detach/rebind/drain begins, and cancellation preserves both requirements.
+Only successful migration with actual old-owner release narrows it to the new
+member, so revoking a released old node cannot revoke the healthy current one.
 Independent standby withdrawal retains the existing healthy-member behavior.
 
 The current input/media/clipboard business formats have no per-frame path

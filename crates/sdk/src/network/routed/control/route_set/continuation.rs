@@ -87,7 +87,10 @@ struct PendingRetirement {
 struct RevokeOnDrop(Arc<RouteRevocation>);
 impl Drop for RevokeOnDrop {
     fn drop(&mut self) {
-        self.0.revoke();
+        // A committed standby becomes the current business carrier. Its
+        // guardian's teardown must preserve an already recorded recoverable
+        // retirement; live or explicitly revoked authority stays fail-closed.
+        self.0.stop_if_live();
     }
 }
 fn standby_guardian(

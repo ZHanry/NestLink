@@ -563,6 +563,12 @@ impl ContinuousRouteSetSession {
             owner.guardians.push(guardian);
         }
         self.migration_interrupted = true;
+        // Both authorities remain required throughout actual detach/rebind
+        // and old-path drain. Cancellation leaves this requirement in place
+        // until the fenced original owner finishes complete cleanup.
+        if let Some(required) = &owner.required_members {
+            required.fetch_or(1usize << receipt.candidate_index, std::sync::atomic::Ordering::AcqRel);
+        }
         let result = owner
             .transport
             .migrate(
@@ -584,9 +590,9 @@ impl ContinuousRouteSetSession {
                 return Err(SdkError::ServiceIo(error).into());
             }
         };
-        if let Some(selected) = &owner.observed_member {
-            selected.store(
-                receipt.candidate_index,
+        if let Some(required) = &owner.required_members {
+            required.store(
+                1usize << receipt.candidate_index,
                 std::sync::atomic::Ordering::Release,
             );
         }

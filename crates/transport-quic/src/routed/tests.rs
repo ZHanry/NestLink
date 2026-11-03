@@ -203,6 +203,7 @@ impl Fixture {
 
 mod chain;
 mod cleanup;
+mod migration_cleanup;
 mod migration_gate;
 mod node_admission;
 

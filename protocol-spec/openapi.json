@@ -1853,6 +1853,10 @@
           "allocation_id": {
             "type": "string"
           },
+          "authorized": {
+            "description": "Current authorization of the original node identity and relay role.\nUnlike availability, explicit withdrawal must stop a retained path.",
+            "type": "boolean"
+          },
           "available": {
             "description": "Current management observation of this original node binding. An\nunavailable member does not revoke another member's original authority.",
             "type": "boolean"
@@ -1868,6 +1872,7 @@
           "allocation_id",
           "transit",
           "node",
+          "authorized",
           "available"
         ],
         "title": "NetworkRemoteRouteSetMemberView",

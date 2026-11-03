@@ -139,7 +139,7 @@ impl Sdk {
             fingerprint: route.fingerprint,
             deadline: route.deadline,
             kind: ReadbackKind::RouteSet {
-                selected: Arc::new(std::sync::atomic::AtomicUsize::new(selected)),
+                required_members: Arc::new(std::sync::atomic::AtomicUsize::new(1usize << selected)),
                 migratable,
             },
             cancel: Some(cancel.clone()),

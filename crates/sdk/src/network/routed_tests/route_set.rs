@@ -84,6 +84,46 @@ fn view(base: &Fixture) -> Result<NetworkRemoteRouteSetView> {
 }
 
 #[test]
+fn pending_migration_requires_both_authorities_and_only_joined_release_can_narrow_the_readback()
+-> Result {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    let f = Fixture::new(true)?;
+    let mut current = view(&f)?;
+    let required = AtomicUsize::new(0b01);
+    let matches = |view: &NetworkRemoteRouteSetView| {
+        super::super::control::route_set_members_current(view, required.load(Ordering::Acquire), true)
+    };
+    assert!(matches(&current));
+    current.members[1].authorized = false;
+    current.members[1].available = false;
+    assert!(matches(&current), "idle standby withdrawal must preserve healthy active authority");
+    required.fetch_or(0b10, Ordering::AcqRel);
+    assert!(!matches(&current), "candidate withdrawal must reject detach/rebind/drain");
+    assert_eq!(required.load(Ordering::Acquire), 0b11,
+        "cancelling a borrowed wait must retain both authorization requirements");
+    current.members[1].authorized = true;
+    current.members[0].available = false;
+    assert!(matches(&current), "physical loss must not be confused with explicit withdrawal");
+    current.members[0].authorized = false;
+    assert!(!matches(&current), "old authority remains required until its actual release");
+    required.store(0b10, Ordering::Release);
+    assert!(matches(&current), "a released old member cannot revoke healthy current authority");
+    assert!(!super::super::control::route_set_members_current(&current, 0b10, false));
+    assert!(!super::super::control::route_set_members_current(&current, 0, true));
+    assert!(!super::super::control::route_set_members_current(&current, 0b100, true));
+    let mut malformed = current.clone();
+    malformed.members.clear();
+    assert!(!matches(&malformed), "empty readback cannot satisfy required authority");
+    malformed = current.clone();
+    malformed.members.truncate(1);
+    assert!(!matches(&malformed), "missing candidate cannot satisfy its required bit");
+    malformed = current.clone();
+    malformed.members.resize(usize::BITS as usize + 1, current.members[0].clone());
+    assert!(!matches(&malformed), "untrusted extra members must be rejected before shifting");
+    Ok(())
+}
+
+#[test]
 fn original_route_set_readback_preserves_distinct_routes_at_the_same_address_and_gates_availability()
 -> Result {
     let f = Fixture::new(true)?;
