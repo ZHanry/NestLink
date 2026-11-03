@@ -510,7 +510,10 @@ impl IdentityChange {
                 );
                 assert_ne!(&*original, changed.as_bytes());
                 assert_eq!(original.len(), changed.len());
-                nestlink_platform_security::replace_private_metadata(&manifest, changed.as_bytes())?;
+                nestlink_platform_security::replace_private_metadata(
+                    &manifest,
+                    changed.as_bytes(),
+                )?;
             }
             Self::MissingRecord => std::fs::remove_file(manifest)?,
             Self::MissingKey => std::fs::remove_file(key)?,
@@ -734,11 +737,19 @@ async fn host_identity_restoring_original_record_does_not_revive_guard() -> Resu
     nestlink_platform_security::replace_private_metadata(&manifest, &original)?;
     assert!(!guard.running()?, "original authorization remains terminal");
     assert!(
-        start(&f.args("127.0.0.1:8080".parse()?, 60)?, &f.sdk, f.host.clone(), &guard)
-            .await?
-            .is_none()
+        start(
+            &f.args("127.0.0.1:8080".parse()?, 60)?,
+            &f.sdk,
+            f.host.clone(),
+            &guard
+        )
+        .await?
+        .is_none()
     );
-    assert_eq!(f.sdk.service(&f.service.id).await?.revision, f.service.revision);
+    assert_eq!(
+        f.sdk.service(&f.service.id).await?.revision,
+        f.service.revision
+    );
     assert!(f.sdk.service_exposure(&f.service.id).await?.is_none());
     Ok(())
 }
@@ -768,12 +779,20 @@ async fn host_identity_different_signer_cannot_approve_original_target() -> Resu
         60,
     )?;
     assert!(
-        start(&f.args("127.0.0.1:8080".parse()?, 60)?, &f.sdk, wrong, &guard)
-            .await
-            .is_err()
+        start(
+            &f.args("127.0.0.1:8080".parse()?, 60)?,
+            &f.sdk,
+            wrong,
+            &guard
+        )
+        .await
+        .is_err()
     );
     assert!(!guard.running()?);
-    assert_eq!(f.sdk.service(&f.service.id).await?.revision, f.service.revision);
+    assert_eq!(
+        f.sdk.service(&f.service.id).await?.revision,
+        f.service.revision
+    );
     assert!(f.sdk.service_exposure(&f.service.id).await?.is_none());
     Ok(())
 }
@@ -814,7 +833,10 @@ async fn host_identity_different_account_cannot_approve_original_target() -> Res
         .is_err()
     );
     assert!(!guard.running()?);
-    assert_eq!(f.sdk.service(&f.service.id).await?.revision, f.service.revision);
+    assert_eq!(
+        f.sdk.service(&f.service.id).await?.revision,
+        f.service.revision
+    );
     assert!(f.sdk.service_exposure(&f.service.id).await?.is_none());
     Ok(())
 }

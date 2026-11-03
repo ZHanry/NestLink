@@ -55,7 +55,13 @@ fn independent_offline_snapshot() -> Snapshot {
 fn native_recovery_snapshot() -> Snapshot {
     let mut snapshot = enrolled_snapshot();
     snapshot.native_session = independent_offline_snapshot().native_session;
-    let session = Arc::make_mut(snapshot.native_session.data.as_mut().expect("native session"));
+    let session = Arc::make_mut(
+        snapshot
+            .native_session
+            .data
+            .as_mut()
+            .expect("native session"),
+    );
     session.connection_generation = 9;
     session.status = NativeSessionStatus::Establishing;
     session.stop_reason = Some(nestlink_app_core::NativeSessionStopReason::NetworkChanged);
@@ -81,7 +87,14 @@ fn native_recovery_without_a_public_operation_exposes_an_exact_stop_action() {
     let mut stopped = 0;
     while let Some((_, command)) = workspace.app.bridge.layout_submission() {
         assert!(!matches!(command, Command::Cancel { .. }));
-        if let Command::Submit { action: Action::StopNativeSession { request_id, connection_generation } } = command {
+        if let Command::Submit {
+            action:
+                Action::StopNativeSession {
+                    request_id,
+                    connection_generation,
+                },
+        } = command
+        {
             assert_eq!(request_id, "00000000-0000-4000-8000-000000000030");
             assert_eq!(connection_generation, 9);
             stopped += 1;
@@ -99,12 +112,17 @@ fn native_recovery_window_releases_old_state_follows_only_receipt_and_closes_the
     session.cleanup = None;
     let mut workspace = Workspace::new(initial.clone());
     workspace.app.bridge.layout_enable_commands();
-    workspace.app.bridge.layout_runtime_id(Some("original-runtime".into()));
+    workspace
+        .app
+        .bridge
+        .layout_runtime_id(Some("original-runtime".into()));
     let original = RemoteViewportTarget {
         request_id: "00000000-0000-4000-8000-000000000030".into(),
         connection_generation: 9,
     };
-    workspace.app.open_remote_viewport(&initial, original.clone());
+    workspace
+        .app
+        .open_remote_viewport(&initial, original.clone());
     workspace.app.native_control_enabled = true;
     workspace.app.native_pressed_keys.insert(4);
     workspace.app.native_pressed_buttons.insert(1);
@@ -113,10 +131,27 @@ fn native_recovery_window_releases_old_state_follows_only_receipt_and_closes_the
     let session = Arc::make_mut(successor.native_session.data.as_mut().expect("session"));
     session.connection_generation = 10;
     workspace.app.follow_recovered_viewport(&successor);
-    assert_eq!(workspace.app.remote_viewport_target.as_ref().expect("target").connection_generation, 9);
-    Arc::make_mut(successor.native_session.data.as_mut().expect("session")).recovery_chain_origin_generation = Some(9);
+    assert_eq!(
+        workspace
+            .app
+            .remote_viewport_target
+            .as_ref()
+            .expect("target")
+            .connection_generation,
+        9
+    );
+    Arc::make_mut(successor.native_session.data.as_mut().expect("session"))
+        .recovery_chain_origin_generation = Some(9);
     workspace.app.follow_recovered_viewport(&successor);
-    assert_eq!(workspace.app.remote_viewport_target.as_ref().expect("target").connection_generation, 10);
+    assert_eq!(
+        workspace
+            .app
+            .remote_viewport_target
+            .as_ref()
+            .expect("target")
+            .connection_generation,
+        10
+    );
     assert!(!workspace.app.native_control_enabled);
     assert!(workspace.app.native_pressed_keys.is_empty());
     assert!(workspace.app.native_pressed_buttons.is_empty());
@@ -125,7 +160,15 @@ fn native_recovery_window_releases_old_state_follows_only_receipt_and_closes_the
     assert_eq!(workspace.app.video_sequence, 0);
     assert!(workspace.app.remote_tools_open);
     workspace.app.follow_recovered_viewport(&initial);
-    assert_eq!(workspace.app.remote_viewport_target.as_ref().expect("target").connection_generation, 10);
+    assert_eq!(
+        workspace
+            .app
+            .remote_viewport_target
+            .as_ref()
+            .expect("target")
+            .connection_generation,
+        10
+    );
     while workspace.app.bridge.layout_submission().is_some() {}
     let mut recovering = successor.clone();
     let session = Arc::make_mut(recovering.native_session.data.as_mut().expect("session"));
@@ -133,24 +176,71 @@ fn native_recovery_window_releases_old_state_follows_only_receipt_and_closes_the
     session.stop_reason = Some(nestlink_app_core::NativeSessionStopReason::NetworkChanged);
     session.cleanup = Some(NativeSessionCleanup::Succeeded);
     workspace.app.begin_remote_viewport_close(&recovering);
-    assert_eq!(workspace.app.remote_window_cleanup.as_ref().expect("close owner").target.connection_generation, 10);
-    let (old_stop, command) = workspace.app.bridge.layout_submission().expect("old generation stop");
-    assert!(matches!(command, Command::Submit {
-        action: Action::StopNativeSession { connection_generation: 10, .. }
-    }));
+    assert_eq!(
+        workspace
+            .app
+            .remote_window_cleanup
+            .as_ref()
+            .expect("close owner")
+            .target
+            .connection_generation,
+        10
+    );
+    let (old_stop, command) = workspace
+        .app
+        .bridge
+        .layout_submission()
+        .expect("old generation stop");
+    assert!(matches!(
+        command,
+        Command::Submit {
+            action: Action::StopNativeSession {
+                connection_generation: 10,
+                ..
+            }
+        }
+    ));
     let mut late = successor;
     let session = Arc::make_mut(late.native_session.data.as_mut().expect("session"));
     session.connection_generation = 11;
     session.recovery_chain_origin_generation = Some(10);
     workspace.app.follow_recovered_viewport(&late);
-    assert_eq!(workspace.app.remote_viewport_target.as_ref().expect("closing target").connection_generation, 10);
-    Arc::make_mut(late.native_session.data.as_mut().expect("session")).recovery_chain_origin_generation = Some(9);
+    assert_eq!(
+        workspace
+            .app
+            .remote_viewport_target
+            .as_ref()
+            .expect("closing target")
+            .connection_generation,
+        10
+    );
+    Arc::make_mut(late.native_session.data.as_mut().expect("session"))
+        .recovery_chain_origin_generation = Some(9);
     workspace.app.follow_recovered_viewport(&late);
-    assert_eq!(workspace.app.remote_window_cleanup.as_ref().expect("proved closing successor").target.connection_generation, 11);
-    let (current_stop, command) = workspace.app.bridge.layout_submission().expect("successor stop");
-    assert!(matches!(command, Command::Submit {
-        action: Action::StopNativeSession { connection_generation: 11, .. }
-    }));
+    assert_eq!(
+        workspace
+            .app
+            .remote_window_cleanup
+            .as_ref()
+            .expect("proved closing successor")
+            .target
+            .connection_generation,
+        11
+    );
+    let (current_stop, command) = workspace
+        .app
+        .bridge
+        .layout_submission()
+        .expect("successor stop");
+    assert!(matches!(
+        command,
+        Command::Submit {
+            action: Action::StopNativeSession {
+                connection_generation: 11,
+                ..
+            }
+        }
+    ));
     assert!(!workspace.app.native_control_enabled);
     assert!(workspace.app.video_binding.is_none());
     assert!(workspace.app.video_texture.is_none());
@@ -169,16 +259,36 @@ fn native_recovery_window_releases_old_state_follows_only_receipt_and_closes_the
         },
     };
     workspace.app.bridge.layout_snapshot(late.clone());
-    workspace.app.bridge.layout_notice(completion(old_stop, OperationKind::StopNativeSession, OperationStatus::Failed));
+    workspace.app.bridge.layout_notice(completion(
+        old_stop,
+        OperationKind::StopNativeSession,
+        OperationStatus::Failed,
+    ));
     workspace.app.notices(&workspace.context);
-    let cleanup = workspace.app.remote_window_cleanup.as_ref().expect("current cleanup");
+    let cleanup = workspace
+        .app
+        .remote_window_cleanup
+        .as_ref()
+        .expect("current cleanup");
     assert_eq!(cleanup.stop_submission, Some(current_stop));
     assert!(cleanup.stop_status.is_none());
-    assert!(cleanup.error.is_none(), "an old stop reply must not fail the successor cleanup");
-    workspace.app.bridge.layout_notice(completion(current_stop, OperationKind::StopNativeSession, OperationStatus::Succeeded));
+    assert!(
+        cleanup.error.is_none(),
+        "an old stop reply must not fail the successor cleanup"
+    );
+    workspace.app.bridge.layout_notice(completion(
+        current_stop,
+        OperationKind::StopNativeSession,
+        OperationStatus::Succeeded,
+    ));
     workspace.app.notices(&workspace.context);
-    workspace.app.update_remote_viewport_cleanup(&late, &workspace.context);
-    assert!(workspace.app.remote_viewport_open, "a stop reply is not a resource cleanup receipt");
+    workspace
+        .app
+        .update_remote_viewport_cleanup(&late, &workspace.context);
+    assert!(
+        workspace.app.remote_viewport_open,
+        "a stop reply is not a resource cleanup receipt"
+    );
     let session = Arc::make_mut(late.native_session.data.as_mut().expect("session"));
     session.status = NativeSessionStatus::Stopped;
     session.cleanup = Some(NativeSessionCleanup::Succeeded);
@@ -190,25 +300,59 @@ fn native_recovery_window_releases_old_state_follows_only_receipt_and_closes_the
         close_allocations: true,
     });
     workspace.app.bridge.layout_snapshot(late.clone());
-    workspace.app.update_remote_viewport_cleanup(&late, &workspace.context);
-    assert!(workspace.app.remote_viewport_open, "local cleanup cannot replace request revocation");
-    let inspection = workspace.app.remote_inspection_submission.expect("current inspection");
-    workspace.app.bridge.layout_notice(completion(inspection, OperationKind::Load, OperationStatus::Succeeded));
+    workspace
+        .app
+        .update_remote_viewport_cleanup(&late, &workspace.context);
+    assert!(
+        workspace.app.remote_viewport_open,
+        "local cleanup cannot replace request revocation"
+    );
+    let inspection = workspace
+        .app
+        .remote_inspection_submission
+        .expect("current inspection");
+    workspace.app.bridge.layout_notice(completion(
+        inspection,
+        OperationKind::Load,
+        OperationStatus::Succeeded,
+    ));
     workspace.app.notices(&workspace.context);
-    workspace.app.update_remote_viewport_cleanup(&late, &workspace.context);
-    let (revoke, command) = workspace.app.bridge.layout_submission().expect("original request revocation");
+    workspace
+        .app
+        .update_remote_viewport_cleanup(&late, &workspace.context);
+    let (revoke, command) = workspace
+        .app
+        .bridge
+        .layout_submission()
+        .expect("original request revocation");
     assert!(matches!(command, Command::Submit {
         action: Action::RevokeRemote { request_id }
     } if request_id == original.request_id));
-    workspace.app.bridge.layout_notice(completion(revoke, OperationKind::RevokeRemote, OperationStatus::Succeeded));
+    workspace.app.bridge.layout_notice(completion(
+        revoke,
+        OperationKind::RevokeRemote,
+        OperationStatus::Succeeded,
+    ));
     workspace.app.notices(&workspace.context);
-    workspace.app.update_remote_viewport_cleanup(&late, &workspace.context);
-    assert!(workspace.app.remote_viewport_open, "the request also needs its terminal snapshot");
+    workspace
+        .app
+        .update_remote_viewport_cleanup(&late, &workspace.context);
+    assert!(
+        workspace.app.remote_viewport_open,
+        "the request also needs its terminal snapshot"
+    );
     late.selected_request = request_task_snapshot("revoked").selected_request;
-    let request = Arc::make_mut(late.selected_request.data.as_mut().expect("terminal request"));
+    let request = Arc::make_mut(
+        late.selected_request
+            .data
+            .as_mut()
+            .expect("terminal request"),
+    );
     request.id = original.request_id;
     request.connection_generation = 11;
-    workspace.app.update_remote_viewport_cleanup(&late, &workspace.context);
+    workspace
+        .app
+        .update_remote_viewport_cleanup(&late, &workspace.context);
     assert!(!workspace.app.remote_viewport_open);
     assert!(workspace.app.remote_window_cleanup.is_none());
     assert!(workspace.app.remote_viewport_owner.is_none());

@@ -1001,15 +1001,20 @@ impl CoreHandle {
         let _order = route.order.lock().await;
         let video = route.video()?;
         let _send_order = video.ordered_send().await.map_err(io::Error::other)?;
-        let registered = video.execution.lock()
+        let registered = video
+            .execution
+            .lock()
             .map_err(|_| io::Error::other("execution registry poisoned"))?;
-        let previous = registered.as_ref()
+        let previous = registered
+            .as_ref()
             .ok_or_else(|| denied("pause lacks the original registered owner"))?;
         if previous.identity()? != execution.identity()? {
             return Err(denied("pause differs from the original registered owner"));
         }
         previous.check_current()?;
-        let mut state = route.state.lock()
+        let mut state = route
+            .state
+            .lock()
             .map_err(|_| io::Error::other("display state poisoned"))?;
         if !state.view.is_host || state.formats.pending().is_some() {
             return Err(denied("execution pause during pending confirmation"));

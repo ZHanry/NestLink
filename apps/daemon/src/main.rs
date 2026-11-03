@@ -943,21 +943,49 @@ mod media_cli_tests {
     -> std::io::Result<()> {
         use clap::Parser;
         for args in [
-            vec!["nestlink-daemon", "--native-gpu-hevc-fallback-target", "1920x1080@30:4000"],
-            vec!["nestlink-daemon", "--native-media-target", "1920x1080@60:8000", "--native-gpu-hevc-fallback-target", "1920x1080@30:4000"],
+            vec![
+                "nestlink-daemon",
+                "--native-gpu-hevc-fallback-target",
+                "1920x1080@30:4000",
+            ],
+            vec![
+                "nestlink-daemon",
+                "--native-media-target",
+                "1920x1080@60:8000",
+                "--native-gpu-hevc-fallback-target",
+                "1920x1080@30:4000",
+            ],
         ] {
             assert!(super::Args::try_parse_from(args).is_err());
         }
         let args = super::Args::try_parse_from([
-            "nestlink-daemon", "--native-gpu-hevc-main10-target", "1920x1080@60:8000",
-            "--native-gpu-hevc-fallback-target", "1920x1080@30:4000", "--native-gpu-hevc-encoder", "amd-amf",
-        ]).map_err(std::io::Error::other)?;
+            "nestlink-daemon",
+            "--native-gpu-hevc-main10-target",
+            "1920x1080@60:8000",
+            "--native-gpu-hevc-fallback-target",
+            "1920x1080@30:4000",
+            "--native-gpu-hevc-encoder",
+            "amd-amf",
+        ])
+        .map_err(std::io::Error::other)?;
         assert!(args.native_gpu_hevc_fallback_target.is_some());
         let parsed = super::Args::try_parse_from([
-            "nestlink-daemon", "media-capabilities", "--mode", "hevc-main10", "--direction", "decode",
-            "--target", "1920x1080@60:8000", "--encoder", "amd-amf",
-        ]).map_err(std::io::Error::other)?;
-        assert!(matches!(parsed.command, Some(super::Command::MediaCapabilities(_))));
+            "nestlink-daemon",
+            "media-capabilities",
+            "--mode",
+            "hevc-main10",
+            "--direction",
+            "decode",
+            "--target",
+            "1920x1080@60:8000",
+            "--encoder",
+            "amd-amf",
+        ])
+        .map_err(std::io::Error::other)?;
+        assert!(matches!(
+            parsed.command,
+            Some(super::Command::MediaCapabilities(_))
+        ));
         Ok(())
     }
     use super::*;

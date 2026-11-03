@@ -302,9 +302,15 @@ impl DesktopApp {
         let stage = flow.stage;
         let active = flow.active();
         let error = flow.error.clone();
-        let recovering = stage == Stage::Connected && snapshot.native_session.data.as_ref()
-            .is_some_and(|session| Some(session.request_id.as_str()) == flow.request.as_deref()
-                && session.is_recovering());
+        let recovering = stage == Stage::Connected
+            && snapshot
+                .native_session
+                .data
+                .as_ref()
+                .is_some_and(|session| {
+                    Some(session.request_id.as_str()) == flow.request.as_deref()
+                        && session.is_recovering()
+                });
         ui.add_space(12.);
         egui::Frame::group(ui.style()).inner_margin(18).show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {

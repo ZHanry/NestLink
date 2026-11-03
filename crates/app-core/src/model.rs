@@ -270,7 +270,10 @@ impl NativeSessionView {
         self.status == NativeSessionStatus::Establishing
             && matches!(
                 self.stop_reason,
-                Some(NativeSessionStopReason::TransportLost | NativeSessionStopReason::NetworkChanged)
+                Some(
+                    NativeSessionStopReason::TransportLost
+                        | NativeSessionStopReason::NetworkChanged
+                )
             )
             && matches!(
                 self.cleanup,

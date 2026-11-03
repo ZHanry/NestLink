@@ -433,7 +433,13 @@ pub(super) async fn run(
     original_login: [u8; 32],
 ) -> Result<()> {
     args.validate()?;
-    let guard = SessionGuard::new(directory, original_login, &sdk, &host, args.approval_seconds)?;
+    let guard = SessionGuard::new(
+        directory,
+        original_login,
+        &sdk,
+        &host,
+        args.approval_seconds,
+    )?;
     let signal = crate::space_dns_system::termination();
     tokio::pin!(signal);
     let mut tick = tokio::time::interval(Duration::from_millis(250));

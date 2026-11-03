@@ -258,7 +258,10 @@ impl Bridge {
     }
     #[cfg(test)]
     pub(crate) fn layout_runtime_id(&mut self, runtime_id: Option<String>) {
-        *self.runtime_id.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = runtime_id;
+        *self
+            .runtime_id
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = runtime_id;
     }
     #[cfg(test)]
     pub(crate) fn layout_enable_commands(&mut self) {

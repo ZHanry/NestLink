@@ -227,11 +227,14 @@ pub(super) fn stream<D: CaptureDevice>(
             if selected.is_none_or(|(source, _)| source != binding) {
                 let ceiling = select_target(&formats, binding)?;
                 quality = Some(VideoQuality::new(
-                    ceiling.frame_rate.numerator, ceiling.max_kbps, Instant::now(),
+                    ceiling.frame_rate.numerator,
+                    ceiling.max_kbps,
+                    Instant::now(),
                 ));
                 selected = Some((binding, ceiling));
             }
-            let format = selected.map(|(_, format)| format)
+            let format = selected
+                .map(|(_, format)| format)
                 .filter(|format| formats.contains(format))
                 .ok_or_else(|| io::Error::other("selected HEVC budget left its signed scope"))?;
             if core.native_video_encoder_backend(identity)?.as_deref() != Some("gpu-hevc-encoder") {
@@ -294,19 +297,30 @@ pub(super) fn stream<D: CaptureDevice>(
                     // exists only when both explicitly selected budgets survived
                     // the two peers' real probes and signed scope intersection.
                     if formats.formats().len() > 1 {
-                        let quality = quality.as_mut()
+                        let quality = quality
+                            .as_mut()
                             .ok_or_else(|| io::Error::other("HEVC feedback ceiling absent"))?;
-                        observe_quality(core, identity, binding, quality,
-                            encoding, enqueue_started.elapsed())?;
+                        observe_quality(
+                            core,
+                            identity,
+                            binding,
+                            quality,
+                            encoding,
+                            enqueue_started.elapsed(),
+                        )?;
                         let next = nestlink_media_session::select_hevc_budget(
-                            &formats, format, quality.fps(), quality.bitrate_kbps(),
+                            &formats,
+                            format,
+                            quality.fps(),
+                            quality.bitrate_kbps(),
                         )?;
                         if next != format {
                             // Pause/discard while the old receipt is still current.
                             // configure() then checked-stops/joins the single old
                             // owner before creating the replacement. Its first AU
                             // must register and obtain a fresh exact ACK above.
-                            runtime.block_on(core.pause_native_video_execution(identity, original))?;
+                            runtime
+                                .block_on(core.pause_native_video_execution(identity, original))?;
                             selected = Some((binding, next));
                             continue;
                         }

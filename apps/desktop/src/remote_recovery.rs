@@ -17,7 +17,8 @@ impl ViewportOwner {
         runtime_id: Option<String>,
     ) -> Option<Self> {
         let session = snapshot.native_session.data.as_ref()?;
-        let origin = session.recovery_chain_origin_generation
+        let origin = session
+            .recovery_chain_origin_generation
             .unwrap_or(session.connection_generation);
         if snapshot.authentication != Authentication::SignedIn
             || snapshot.lifecycle != Lifecycle::Running
@@ -82,7 +83,8 @@ impl ViewportOwner {
         let session = snapshot.native_session.data.as_ref()?;
         (session.status == NativeSessionStatus::Connected
             && session.failure.is_none()
-            && session.stop_reason.is_none()).then_some(successor)
+            && session.stop_reason.is_none())
+        .then_some(successor)
     }
 }
 
@@ -127,7 +129,8 @@ impl DesktopApp {
             return;
         };
         let runtime = self.bridge.runtime_id();
-        let Some(successor) = owner.proved_successor(&cleanup.target, snapshot, runtime.as_deref()) else {
+        let Some(successor) = owner.proved_successor(&cleanup.target, snapshot, runtime.as_deref())
+        else {
             return;
         };
         let Some(mut cleanup) = self.remote_window_cleanup.take() else {
@@ -189,15 +192,24 @@ mod tests {
         let session = Arc::make_mut(initial.native_session.data.as_mut().expect("session"));
         session.connection_generation = 9;
         session.recovery_chain_origin_generation = None;
-        let owner = ViewportOwner::new(&initial, &target, Some("original-runtime".into())).expect("owner");
+        let owner =
+            ViewportOwner::new(&initial, &target, Some("original-runtime".into())).expect("owner");
         let snapshot = connected();
         let next = owner
             .successor(&target, &snapshot, Some("original-runtime"))
             .expect("exact successor");
         assert_eq!(next.connection_generation, 10);
-        assert!(owner.successor(&next, &snapshot, Some("original-runtime")).is_none());
+        assert!(
+            owner
+                .successor(&next, &snapshot, Some("original-runtime"))
+                .is_none()
+        );
         assert!(owner.successor(&target, &snapshot, None).is_none());
-        assert!(owner.successor(&target, &snapshot, Some("new-runtime")).is_none());
+        assert!(
+            owner
+                .successor(&target, &snapshot, Some("new-runtime"))
+                .is_none()
+        );
         for mode in 0..12 {
             let mut altered = snapshot.clone();
             let session = Arc::make_mut(altered.native_session.data.as_mut().expect("session"));
@@ -213,30 +225,75 @@ mod tests {
                 8 => altered.generation += 1,
                 9 => altered.authentication = Authentication::SignedOut,
                 10 => altered.lifecycle = Lifecycle::Stopping,
-                _ => session.failure = Some(nestlink_app_core::Failure {
-                    kind: nestlink_app_core::FailureKind::NativeSessionUnavailable,
-                    code: None,
-                    status: None,
-                }),
+                _ => {
+                    session.failure = Some(nestlink_app_core::Failure {
+                        kind: nestlink_app_core::FailureKind::NativeSessionUnavailable,
+                        code: None,
+                        status: None,
+                    })
+                }
             }
-            assert!(owner.successor(&target, &altered, Some("original-runtime")).is_none());
+            assert!(
+                owner
+                    .successor(&target, &altered, Some("original-runtime"))
+                    .is_none()
+            );
         }
         let mut backwards = connected();
-        Arc::make_mut(backwards.native_session.data.as_mut().expect("session")).connection_generation = 9;
-        assert!(owner.successor(&next, &backwards, Some("original-runtime")).is_none());
+        Arc::make_mut(backwards.native_session.data.as_mut().expect("session"))
+            .connection_generation = 9;
+        assert!(
+            owner
+                .successor(&next, &backwards, Some("original-runtime"))
+                .is_none()
+        );
         let mut second = connected();
-        Arc::make_mut(second.native_session.data.as_mut().expect("session")).connection_generation = 11;
+        Arc::make_mut(second.native_session.data.as_mut().expect("session"))
+            .connection_generation = 11;
         // Both sequential observation and a coalesced snapshot retain the
         // window's original owner. A counter increase without its root cannot.
-        assert_eq!(owner.successor(&next, &second, Some("original-runtime")).expect("second").connection_generation, 11);
-        assert_eq!(owner.successor(&target, &second, Some("original-runtime")).expect("skipped intermediate snapshot").connection_generation, 11);
-        let reopened_owner = ViewportOwner::new(&snapshot, &next, Some("original-runtime".into())).expect("owner opened after recovery");
-        assert!(reopened_owner.successor(&next, &second, Some("original-runtime")).is_some());
-        assert!(reopened_owner.successor(&target, &second, Some("original-runtime")).is_none());
-        let other = RemoteViewportTarget { request_id: "another-request".into(), ..target };
-        assert!(owner.successor(&other, &second, Some("original-runtime")).is_none());
-        Arc::make_mut(second.native_session.data.as_mut().expect("session")).recovery_chain_origin_generation = Some(10);
-        assert!(owner.successor(&next, &second, Some("original-runtime")).is_none());
+        assert_eq!(
+            owner
+                .successor(&next, &second, Some("original-runtime"))
+                .expect("second")
+                .connection_generation,
+            11
+        );
+        assert_eq!(
+            owner
+                .successor(&target, &second, Some("original-runtime"))
+                .expect("skipped intermediate snapshot")
+                .connection_generation,
+            11
+        );
+        let reopened_owner = ViewportOwner::new(&snapshot, &next, Some("original-runtime".into()))
+            .expect("owner opened after recovery");
+        assert!(
+            reopened_owner
+                .successor(&next, &second, Some("original-runtime"))
+                .is_some()
+        );
+        assert!(
+            reopened_owner
+                .successor(&target, &second, Some("original-runtime"))
+                .is_none()
+        );
+        let other = RemoteViewportTarget {
+            request_id: "another-request".into(),
+            ..target
+        };
+        assert!(
+            owner
+                .successor(&other, &second, Some("original-runtime"))
+                .is_none()
+        );
+        Arc::make_mut(second.native_session.data.as_mut().expect("session"))
+            .recovery_chain_origin_generation = Some(10);
+        assert!(
+            owner
+                .successor(&next, &second, Some("original-runtime"))
+                .is_none()
+        );
     }
 
     #[test]

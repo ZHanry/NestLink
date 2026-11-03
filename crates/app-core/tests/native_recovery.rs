@@ -266,8 +266,13 @@ async fn pair_with_gate(gate: Option<Arc<Gate>>) -> Result<Pair> {
     )?;
     for handle in [&controller_handle, &host_handle] {
         assert_eq!(
-            handle.snapshot().native_session.data.as_ref()
-                .ok_or("initial session snapshot missing")?.recovery_chain_origin_generation,
+            handle
+                .snapshot()
+                .native_session
+                .data
+                .as_ref()
+                .ok_or("initial session snapshot missing")?
+                .recovery_chain_origin_generation,
             None,
             "explicit starts must not inherit a recovery lineage"
         );
@@ -630,8 +635,13 @@ async fn recovery_waits_for_held_input_and_media_cleanup_then_proves_a_fresh_gen
     assert_eq!(replacement.connection_generation, old + 1);
     for handle in [&pair.controller_handle, &pair.host_handle] {
         assert_eq!(
-            handle.snapshot().native_session.data.as_ref()
-                .ok_or("proved successor snapshot missing")?.recovery_chain_origin_generation,
+            handle
+                .snapshot()
+                .native_session
+                .data
+                .as_ref()
+                .ok_or("proved successor snapshot missing")?
+                .recovery_chain_origin_generation,
             Some(old)
         );
     }
@@ -660,8 +670,13 @@ async fn recovery_waits_for_held_input_and_media_cleanup_then_proves_a_fresh_gen
     .await?;
     for handle in [&pair.controller_handle, &pair.host_handle] {
         assert_eq!(
-            handle.snapshot().native_session.data.as_ref()
-                .ok_or("second proved successor snapshot missing")?.recovery_chain_origin_generation,
+            handle
+                .snapshot()
+                .native_session
+                .data
+                .as_ref()
+                .ok_or("second proved successor snapshot missing")?
+                .recovery_chain_origin_generation,
             Some(old)
         );
     }

@@ -176,7 +176,8 @@ pub(crate) async fn run(args: InspectArgs) -> io::Result<()> {
             });
         }
         Err(error) => {
-            report["error"] = json!({"kind": format!("{:?}", error.kind()), "message": error.to_string()});
+            report["error"] =
+                json!({"kind": format!("{:?}", error.kind()), "message": error.to_string()});
         }
     }
     {
@@ -200,15 +201,25 @@ mod tests {
     }
     fn parse(extra: &[&str]) -> Result<InspectArgs, clap::Error> {
         let mut args = vec![
-            "media-capabilities", "--mode", "hevc-main10", "--direction", "decode",
-            "--target", "1920x1080@60:8000",
+            "media-capabilities",
+            "--mode",
+            "hevc-main10",
+            "--direction",
+            "decode",
+            "--target",
+            "1920x1080@60:8000",
         ];
         args.extend_from_slice(extra);
         Cli::try_parse_from(args).map(|cli| cli.args)
     }
     #[test]
-    fn explicit_unsupported_color_requests_never_construct_a_different_provider() -> io::Result<()> {
-        for extra in [vec!["--chroma", "444"], vec!["--dynamic-range", "hdr10"], vec!["--dynamic-range", "hlg"]] {
+    fn explicit_unsupported_color_requests_never_construct_a_different_provider() -> io::Result<()>
+    {
+        for extra in [
+            vec!["--chroma", "444"],
+            vec!["--dynamic-range", "hdr10"],
+            vec!["--dynamic-range", "hlg"],
+        ] {
             let args = parse(&extra).map_err(io::Error::other)?;
             let error = match args.provider() {
                 Ok(_) => return Err(io::Error::other("unsupported mode constructed a provider")),
@@ -224,7 +235,10 @@ mod tests {
     fn main10_sdr_and_sample_encoder_are_explicit_but_not_observed_capability() -> io::Result<()> {
         let args = parse(&["--encoder", "amd-amf"]).map_err(io::Error::other)?;
         let provider = args.provider()?;
-        assert_eq!(provider.hevc_encoder_backend(), nestlink_media_codec::HevcEncoderBackend::AmdAmf);
+        assert_eq!(
+            provider.hevc_encoder_backend(),
+            nestlink_media_codec::HevcEncoderBackend::AmdAmf
+        );
         let report = args.report();
         assert_eq!(report["requested"]["mode"], "hevc-main10");
         assert_eq!(report["requested"]["dynamic_range"], "sdr");
@@ -236,22 +250,45 @@ mod tests {
     }
     #[test]
     fn malformed_missing_and_over_budget_requests_do_not_run_a_probe() -> io::Result<()> {
-        for missing in [vec!["media-capabilities"], vec!["media-capabilities", "--mode", "hevc-main8"]] {
+        for missing in [
+            vec!["media-capabilities"],
+            vec!["media-capabilities", "--mode", "hevc-main8"],
+        ] {
             assert!(Cli::try_parse_from(missing).is_err());
         }
         assert!(parse(&["--encoder", "automatic"]).is_err());
         assert!(parse(&["--chroma", "422"]).is_err());
-        for target in ["1920x1080", "1920x1080@60:0", "1920x1080@145:8000", "8192x2160@60:8000"] {
+        for target in [
+            "1920x1080",
+            "1920x1080@60:0",
+            "1920x1080@145:8000",
+            "8192x2160@60:8000",
+        ] {
             let args = Cli::try_parse_from([
-                "media-capabilities", "--mode", "hevc-main10", "--direction", "encode", "--target", target,
+                "media-capabilities",
+                "--mode",
+                "hevc-main10",
+                "--direction",
+                "encode",
+                "--target",
+                target,
             ]);
             if let Ok(args) = args {
                 assert!(args.args.provider().is_err());
             }
         }
         let args = Cli::try_parse_from([
-            "media-capabilities", "--mode", "cpu-h264", "--direction", "encode", "--target", "320x240@30:1000", "--encoder", "amd-amf",
-        ]).map_err(io::Error::other)?;
+            "media-capabilities",
+            "--mode",
+            "cpu-h264",
+            "--direction",
+            "encode",
+            "--target",
+            "320x240@30:1000",
+            "--encoder",
+            "amd-amf",
+        ])
+        .map_err(io::Error::other)?;
         assert!(args.args.provider().is_err());
         Ok(())
     }

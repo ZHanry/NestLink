@@ -298,7 +298,9 @@ impl NativeMediaProvider {
     /// It does not authorize retrying a failed probe or changing codec/depth.
     pub(crate) fn with_hevc_fallback(mut self, fallback: VideoConfig) -> io::Result<Self> {
         if self.backend == ProviderBackend::CpuH264 || self.targets.len() != 1 {
-            return Err(io::Error::other("HEVC fallback requires one original GPU target"));
+            return Err(io::Error::other(
+                "HEVC fallback requires one original GPU target",
+            ));
         }
         if self.backend == ProviderBackend::GpuHevcMain10 {
             nestlink_media_codec::HevcMain8Contract::validate_main10_config(fallback)?;
@@ -782,7 +784,10 @@ fn run_probes(
     }
     merge_probe_results(receipts, backend)
 }
-fn merge_probe_results(receipts: Vec<ProbeResult>, backend: ProviderBackend) -> io::Result<ProbeResult> {
+fn merge_probe_results(
+    receipts: Vec<ProbeResult>,
+    backend: ProviderBackend,
+) -> io::Result<ProbeResult> {
     let mut receipts = receipts.into_iter();
     let mut primary = receipts
         .next()
@@ -938,7 +943,8 @@ fn run_hevc_probe(
         adapter_luid: owner.adapter_luid,
         driver_version: owner.driver_version,
         sample_encoder: Some(HevcEncoderSelection::new(
-            receipt.encoder_backend(), receipt.encoder_runtime_version(),
+            receipt.encoder_backend(),
+            receipt.encoder_runtime_version(),
         )?),
         encoder: if direction == MediaDirection::Encode {
             Some(HevcEncoderSelection::new(
@@ -980,43 +986,94 @@ mod tests {
     use super::*;
     #[test]
     fn hevc_second_budget_is_explicit_bounded_and_keeps_the_original_backend() -> io::Result<()> {
-        let high = VideoConfig { width: 1920, height: 1080, fps: 60, bitrate_kbps: 8000 };
-        let low = VideoConfig { fps: 30, bitrate_kbps: 4000, ..high };
-        let provider = NativeMediaProvider::gpu_hevc_main10_with_encoder(high, HevcEncoderBackend::AmdAmf)?;
+        let high = VideoConfig {
+            width: 1920,
+            height: 1080,
+            fps: 60,
+            bitrate_kbps: 8000,
+        };
+        let low = VideoConfig {
+            fps: 30,
+            bitrate_kbps: 4000,
+            ..high
+        };
+        let provider =
+            NativeMediaProvider::gpu_hevc_main10_with_encoder(high, HevcEncoderBackend::AmdAmf)?;
         let pair = provider.clone().with_hevc_fallback(low)?;
         assert!(pair.matches_gpu_hevc_targets(high, Some(low), 4));
         assert!(!pair.matches_gpu_hevc_targets(high, None, 4));
         assert!(!pair.matches_gpu_hevc_targets(high, Some(low), 3));
         assert_eq!(pair.hevc_encoder_backend(), HevcEncoderBackend::AmdAmf);
         assert!(pair.with_hevc_fallback(low).is_err());
-        for bad in [high, VideoConfig { width: 1280, ..low },
-            VideoConfig { fps: 61, ..low }, VideoConfig { bitrate_kbps: 8001, ..low }] {
+        for bad in [
+            high,
+            VideoConfig { width: 1280, ..low },
+            VideoConfig { fps: 61, ..low },
+            VideoConfig {
+                bitrate_kbps: 8001,
+                ..low
+            },
+        ] {
             assert!(provider.clone().with_hevc_fallback(bad).is_err());
         }
-        assert!(NativeMediaProvider::cpu_software(high)?.with_hevc_fallback(low).is_err());
+        assert!(
+            NativeMediaProvider::cpu_software(high)?
+                .with_hevc_fallback(low)
+                .is_err()
+        );
         let fast = VideoConfig { fps: 144, ..high };
-        assert!(NativeMediaProvider::gpu_hevc_main8(fast)?.with_hevc_fallback(low).is_err());
+        assert!(
+            NativeMediaProvider::gpu_hevc_main8(fast)?
+                .with_hevc_fallback(low)
+                .is_err()
+        );
         Ok(())
     }
     #[test]
     fn merged_hevc_probe_evidence_rejects_a_changed_driver_or_encoder_runtime() -> io::Result<()> {
         let receipt = |fps: u32, driver, runtime| -> io::Result<ProbeResult> {
-            let mut ptl = [0; 12]; ptl[0] = 1; ptl[11] = 123;
+            let mut ptl = [0; 12];
+            ptl[0] = 1;
+            ptl[11] = 123;
             Ok(ProbeResult {
-                format: VideoFormat::hevc_main8_observed(ptl, 1920, 1080,
-                    nestlink_protocol::media_format::FrameRate::new(fps, 1).map_err(io::Error::other)?, 8000)
-                    .map_err(io::Error::other)?,
-                additional_formats: Vec::new(), resource_id: nestlink_auth::random_id(),
-                backend: "gpu-hevc-encoder", adapter_luid: Some(7), driver_version: Some(driver),
-                encoder: Some(HevcEncoderSelection::new(HevcEncoderBackend::AmdAmf, Some(runtime))?),
-                sample_encoder: Some(HevcEncoderSelection::new(HevcEncoderBackend::AmdAmf, Some(runtime))?),
+                format: VideoFormat::hevc_main8_observed(
+                    ptl,
+                    1920,
+                    1080,
+                    nestlink_protocol::media_format::FrameRate::new(fps, 1)
+                        .map_err(io::Error::other)?,
+                    8000,
+                )
+                .map_err(io::Error::other)?,
+                additional_formats: Vec::new(),
+                resource_id: nestlink_auth::random_id(),
+                backend: "gpu-hevc-encoder",
+                adapter_luid: Some(7),
+                driver_version: Some(driver),
+                encoder: Some(HevcEncoderSelection::new(
+                    HevcEncoderBackend::AmdAmf,
+                    Some(runtime),
+                )?),
+                sample_encoder: Some(HevcEncoderSelection::new(
+                    HevcEncoderBackend::AmdAmf,
+                    Some(runtime),
+                )?),
             })
         };
         let original = 1 << 48;
-        let accepted = merge_probe_results(vec![receipt(60, 8, original)?, receipt(30, 8, original)?], ProviderBackend::GpuHevcMain8)?;
+        let accepted = merge_probe_results(
+            vec![receipt(60, 8, original)?, receipt(30, 8, original)?],
+            ProviderBackend::GpuHevcMain8,
+        )?;
         assert_eq!(accepted.additional_formats.len(), 1);
         for (driver, runtime) in [(9, original), (8, original | 1)] {
-            assert!(merge_probe_results(vec![receipt(60, 8, original)?, receipt(30, driver, runtime)?], ProviderBackend::GpuHevcMain8).is_err());
+            assert!(
+                merge_probe_results(
+                    vec![receipt(60, 8, original)?, receipt(30, driver, runtime)?],
+                    ProviderBackend::GpuHevcMain8
+                )
+                .is_err()
+            );
         }
         let mut decode_high = receipt(60, 8, original)?;
         let mut decode_low = receipt(30, 8, original | 1)?;
@@ -1024,7 +1081,10 @@ mod tests {
             value.backend = "gpu-hevc-decoder";
             value.encoder = None;
         }
-        assert!(merge_probe_results(vec![decode_high, decode_low], ProviderBackend::GpuHevcMain8).is_err());
+        assert!(
+            merge_probe_results(vec![decode_high, decode_low], ProviderBackend::GpuHevcMain8)
+                .is_err()
+        );
         Ok(())
     }
     // Local registry fixtures only; no hardware or driver execution claim.

@@ -1110,11 +1110,8 @@ impl DesktopApp {
             return;
         }
         self.remote_viewport_target = Some(target.clone());
-        self.remote_viewport_owner = remote_recovery::ViewportOwner::new(
-            snapshot,
-            &target,
-            self.bridge.runtime_id(),
-        );
+        self.remote_viewport_owner =
+            remote_recovery::ViewportOwner::new(snapshot, &target, self.bridge.runtime_id());
         self.remote_window_cleanup = None;
         self.remote_viewport_open = true;
         self.clear_video();
