@@ -1,0 +1,41 @@
+name: Product original route recovery
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  product-recovery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - name: Prepare pinned product native inputs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev
+          echo "NESTLINK_CODEC_PREFIX=$RUNNER_TEMP/recovery-codecs/x86_64-unknown-linux-gnu" >> "$GITHUB_ENV"
+          python scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/recovery-sources" --work-dir "$RUNNER_TEMP/recovery-codecs"
+      - name: Execute unchanged product assertions and retain both actors on failure
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p "$RUNNER_TEMP/product-recovery"
+          git rev-parse HEAD > "$RUNNER_TEMP/product-recovery/source.txt"
+          sha256sum Cargo.lock > "$RUNNER_TEMP/product-recovery/lock.sha256"
+          cargo test --locked -p nestlink-app-core --test native_session route_set:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/product-recovery/tests.log"
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: product-recovery-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/product-recovery
+          if-no-files-found: warn

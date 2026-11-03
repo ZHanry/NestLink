@@ -929,7 +929,16 @@ async fn product_route_set_recovers_after_total_old_node_loss_releases_pressed_i
                 })
         })
         .await
-        .map_err(|error| phase("successor generation connected", error))?;
+        .map_err(|error| {
+            phase(
+                "successor generation connected",
+                (
+                    error,
+                    controller.snapshot().native_session.clone(),
+                    host.snapshot().native_session.clone(),
+                ),
+            )
+        })?;
         assert_eq!(
             handle
                 .snapshot()
