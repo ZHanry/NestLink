@@ -132,3 +132,25 @@ hashed; all38 producer entries match, with clean identical source facts.
 See [source4a evidence](../../network-rewrite/evidence/native-offline-resident-4a4496b.json).
 Full Rust quality/sanitizer/notice, ARM64 and physical device results remain
 separate. This VP8 resident run does not establish actual AMF hardware acceptance.
+
+Full-workspace follow-up: source `745c05a8016c1d33c193706171714fa8b72c30cf`,
+run41479911345, actually passed the original Linux media-codec suite 45/45 in
+0.63s, including all eight VP8 cases. These retain the original BT.601/color,
+odd geometry/PSNR, key/delta/reference, live bitrate, PTS and corrupt/truncated
+frame assertions and the added mature-conversion vectors. The independent
+Rust native-prefix integration passed 3/3 in 0.01s. Both OS built and verified
+the native supplier and passed workspace type-checking. The Opus native-bridge
+ASan/UBSan unit test passed; it is distinct from the original separate VP8
+boundary sanitizer, which was skipped after the Linux workspace resident
+failure. Python supplier/notice regressions and cargo xtask check were likewise
+skipped, so sanitizer and complete notice qualification remain pending.
+Windows workspace did not reach media-codec or Rust prefix before its own
+original 60-minute job timeout. The early serial resident passed 4/4 on both
+OS, but Linux's later parallel workspace resident failed 1/4, and Windows's
+later workspace resident has no final summary. None of these facts replaces
+the original failed/incomplete workflow with a passing release gate. See
+[source745 evidence](../../network-rewrite/evidence/full-rust-core-745c05a.json)
+for both independently hashed complete logs, metadata and independently
+downloaded artifact ZIPs matching GitHub's official digests. Original timing,
+authority and cleanup assertions remain unchanged; newer platform ownership
+changes require newer exact-source hosted execution.

@@ -460,3 +460,73 @@ VP8 quality/sanitizer/notice, ARM64, original25-second Luanti, actual AMF
 hardware, physical-target and public-NAT/advanced-media acceptance require
 their own evidence. No local build/formatter/lint/test/Python execution or
 packaging occurred, and this evidence work did not dispatch another workflow.
+
+## Source745 complete full-workspace failure and independent skipped gates
+
+Full Rust run [41479911345](https://github.com/ZHanry/NestLink/actions/runs/41479911345),
+exact source `745c05a8016c1d33c193706171714fa8b72c30cf`, completed with a
+failed Linux core job and a Windows core job cancelled by its own original
+60-minute job limit. Matrix fail-fast was false. GitHub's Windows annotation
+explicitly reports the maximum execution time of 1h0m0s; the cancellation was
+not caused by the Linux failure. Its workspace step began at 17:06:05Z after
+approximately 47m50s of earlier work and was interrupted at 17:18:18Z. The
+normal-token wrapper received KeyboardInterrupt. There is no completed
+Windows workspace exit status.
+
+The same source and jobs first passed the early serial original resident
+suite on both OS: Linux 4/4 in 250.52s and Windows 4/4 in 290.35s. Later,
+Linux's original default-parallel workspace resident suite returned 1/4 in
+101.49s. TLS completed. QUIC produced its initial real pixels, then its initial
+actual file task disappeared; original host stderr reported PlatformChanged
+and controller stderr Revoked while both processes were still running and
+approximately 76 seconds of finite authority remained, with attempts=1.
+Management completed cases 0/1 before case 2 setup hit the unchanged independent
+public-PKI HTTPS DNS deadline. Pending completed case 0 EOF and case 1 Stop
+before case 2/logout setup hit that same DNS deadline; case 3 did not complete.
+The logs establish the common platform terminal boundary, not the exact first
+OS fact, historical random input or cross-session cause. They do not establish
+a decoder or late-threshold failure.
+
+Linux continued through all remaining workspace binaries and doc-tests under
+the original --no-fail-fast command, then returned 101 for exactly one failed
+target, `-p nestlink-daemon --test offline_remote_resident`. All 183 harness
+records have actual final summaries, totalling 2066 passed, 3 failed and 48
+ignored. Cargo's stderr can print the next Running/Doc-tests header before
+the previous stdout summary; evidence queues those headers and associates
+cases/summaries with the harness actually started by its lowercase running
+N tests line. Windows completed 22 harness records totalling 258 passed and
+2 ignored. Its 23rd, original resident, printed actual ok results for QUIC,
+TLS and pending, while management remained running when the job timed out.
+No final four-case result or failed management assertion is inferred.
+
+Linux's original media-codec unit suite passed 45/45 in 0.63s, including all
+eight VP8 cases for color/BT.601, mature I420/BGRA conversion, odd geometry and
+PSNR, worker movement, references/live bitrate, PTS and corrupt/truncated
+frames. The separate Rust prefix_validation integration passed 3/3 in 0.01s
+for linked components, tampered library and wrong target/source/features or
+untracked bytes. The Opus native bridge ASan/UBSan unit case also passed.
+That Opus result does not execute the separate VP8 boundary sanitizer.
+Both OS built and verified the original native supplier and passed workspace
+type-checking. The later original VP8 sanitizer, Python native-supplier/notice
+regressions and cargo xtask check were skipped after the Linux workspace
+failure or Windows job timeout. Windows workspace did not reach the VP8 or
+Rust prefix targets. No complete notice inventory is qualified by this run.
+
+Complete metadata, original case names/results and gate statuses are in
+[full-rust-core-745c05a.json](evidence/full-rust-core-745c05a.json). Seventeen
+downloaded files, including both complete core logs, were independently
+byte-counted and SHA256-hashed. Both independently downloaded early lifecycle
+ZIP hashes match GitHub's official artifact digests; all eight extracted files
+are hashed separately. Other seven jobs' successful conclusions are recorded
+as GitHub metadata, without claiming their logs were independently audited.
+
+The newer original-platform owner changes in 5bb8bf5 and 0a1b789, including
+actual child exit/reap before Drop releases ownership, postdate this run and
+still require their own hosted qualification. See
+[ADR0077](../adr/network/0077-original-resident-platform-owner.md). The four
+original resident names/counts/assertions, all deadlines, 60ms immutable
+ingress anchor, 40ms late threshold, PTS/capture clocks, ordinary OS tokens,
+independent public-PKI owner and cumulative authority budget remain unchanged.
+The original 25-second Luanti gate and historical failure remain separate and
+unchanged. No local project build, formatter, lint, test, Python execution or
+packaging occurred; this evidence work did not dispatch another workflow.
