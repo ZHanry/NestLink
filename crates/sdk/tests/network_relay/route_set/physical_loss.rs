@@ -78,7 +78,7 @@ async fn read_file(
 
 async fn trial(root: &std::path::Path, index: usize) -> Result<serde_json::Value> {
     let mut f = Fixture::file_only().await?;
-    let mut second = super::super::super::chain::ChainNode::new(&f).await?;
+    let mut second = crate::chain::ChainNode::new(&f).await?;
     let (set, _, controller_route) = reserve(&f, &second).await?;
     let original_expiry = second.control.current_lease()?.expires_at_unix_ms;
     let group = controller_route.transport_group();
