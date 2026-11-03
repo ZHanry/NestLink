@@ -45,6 +45,7 @@ nestlink-server = { path = "../../apps/server", version = "=0.8.0-rc.1" }
 nestlink-storage.workspace = true
 nestlink-identity.workspace = true
 axum.workspace = true
+futures-util.workspace = true
 tower.workspace = true
 tokio = { workspace = true, features = ["test-util"] }
 

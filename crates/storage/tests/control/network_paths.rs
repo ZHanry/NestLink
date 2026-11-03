@@ -14,6 +14,8 @@ mod chains;
 mod relays;
 #[path = "network_paths/route_sets.rs"]
 mod route_sets;
+#[path = "network_paths/direct_recovery.rs"]
+mod direct_recovery;
 struct Setup {
     store: Store,
     controller: Principal,
@@ -31,7 +33,10 @@ impl Setup {
         Self::with_path(approve, true)
     }
     fn with_path(approve: bool, direct: bool) -> Result<Self> {
-        let (mut store, _, _, controller, host) = fixture()?;
+        let (store, _, _, controller, host) = fixture()?;
+        Self::with_actors(store, controller, host, approve, direct)
+    }
+    fn with_actors(mut store: Store, controller: Principal, host: Principal, approve: bool, direct: bool) -> Result<Self> {
         if !direct {
             store.apply_policy(
                 1,

@@ -79,6 +79,10 @@ jobs:
           assert security['dependencies']['serde_json'] == {'workspace': True}
           media = tomllib.loads(pathlib.Path('crates/media-session/Cargo.toml').read_text())
           assert media['target']['cfg(any(target_os = "windows", target_os = "linux"))']['dev-dependencies']['tokio-rustls'] == {'workspace': True}
+          app_core = tomllib.loads(pathlib.Path('crates/app-core/Cargo.toml').read_text())
+          assert app_core['target']['cfg(not(target_arch = "wasm32"))']['dev-dependencies']['futures-util'] == {'workspace': True}
+          assert tomllib.loads(pathlib.Path('Cargo.toml').read_text())['workspace']['dependencies']['futures-util'] == {
+              'version': '0.3.31', 'features': ['sink']}
           assert security['target']['cfg(unix)']['dependencies']['rustix'] == {
               'version': '1.1.2', 'features': ['process', 'fs']}
           assert security['target']['cfg(windows)']['dependencies']['tokio-util'] == {
@@ -193,6 +197,17 @@ jobs:
                   assert result.returncode == 0, 'Lock command failed; review retained log'
               after = tomllib.loads(lock.read_text())['package']
               derived = {identity(item): item.get('checksum') for item in after}
+              # Only the product test fixture adds one edge to the existing
+              # app-core package. Its already locked stream implementation,
+              # including every external dependency edge, remains unchanged.
+              old_core = [item for item in before if item['name'] == 'nestlink-app-core']
+              assert len(old_core) == 1
+              expected_core = dict(old_core[0])
+              if scope == 'product':
+                  expected_core['dependencies'] = sorted(set(expected_core['dependencies']) | {'futures-util'})
+              old_stream = [item for item in before if item['name'] == 'futures-util']
+              assert len(old_stream) == 1 and old_stream[0]['version'] == '0.3.34'
+              assert old_stream[0]['checksum'] == '0d50a92467f8ba5dd6e3ee5d4bd04d73ab2e4e1c44474a0674821dfce14b79bc'
               crab = [item for item in after if item['name'] == 'crab_nat']
               petgraph = [item for item in after if item['name'] == 'petgraph']
               dns = [item for item in after if item['name'] == 'hickory-server']
@@ -268,6 +283,10 @@ jobs:
                       tomllib.loads('[[package]]' + dict(blocks(lock.read_text())[1])[key])['package'][0]
                       for key, part in retained.items()),
                   'only_exact_reviewed_component_feature_edges_added': {key[:2] for key in feature_keys} == set(reviewed_feature_edges),
+                  'app_core_only_reviewed_test_stream_edge_added':
+                      [item for item in after if item['name'] == 'nestlink-app-core'] == [expected_core],
+                  'app_core_test_stream_reuses_exact_locked_external_package_and_edges':
+                      [item for item in after if item['name'] == 'futures-util'] == old_stream,
                   'reviewed_crab_nat_exact_version_and_checksum': len(crab) == 1 and crab[0]['version'] == '0.8.1' and crab[0].get('checksum') == 'b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c',
                   'reviewed_petgraph_exact_version_and_checksum': len(petgraph) == 1 and petgraph[0]['version'] == '0.8.3' and petgraph[0].get('checksum') == '8701b58ea97060d5e5b155d383a69952a60943f0e6dfe30b04c287beb0b27455',
                   'reviewed_authoritative_dns_exact_version': len(dns) == 1 and dns[0]['version'] == '0.26.3' and bool(dns[0].get('checksum')),

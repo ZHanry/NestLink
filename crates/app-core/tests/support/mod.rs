@@ -231,6 +231,11 @@ pub struct Gate {
     pub release: Semaphore,
     pub logout_responses: AtomicUsize,
     pub shorten_lifetime: bool,
+    pub matching_requests: AtomicUsize,
+    pub discarded_responses: AtomicUsize,
+    discard_once: AtomicBool,
+    before_once: AtomicBool,
+    held_json: std::sync::Mutex<Option<serde_json::Value>>,
 }
 impl Gate {
     pub fn new(path: impl Into<String>, method: &'static str) -> Arc<Self> {
@@ -248,6 +253,11 @@ impl Gate {
             release: Semaphore::new(0),
             logout_responses: AtomicUsize::new(0),
             shorten_lifetime: false,
+            matching_requests: AtomicUsize::new(0),
+            discarded_responses: AtomicUsize::new(0),
+            discard_once: AtomicBool::new(false),
+            before_once: AtomicBool::new(false),
+            held_json: std::sync::Mutex::new(None),
         })
     }
     pub fn expiring() -> Arc<Self> {
@@ -259,10 +269,29 @@ impl Gate {
             release: Semaphore::new(0),
             logout_responses: AtomicUsize::new(0),
             shorten_lifetime: true,
+            matching_requests: AtomicUsize::new(0),
+            discarded_responses: AtomicUsize::new(0),
+            discard_once: AtomicBool::new(false),
+            before_once: AtomicBool::new(false),
+            held_json: std::sync::Mutex::new(None),
         })
     }
     pub fn arm(&self) {
         self.enabled.store(true, Ordering::Release);
+    }
+    /// Hold the next real committed response, then sever its HTTP body once.
+    pub fn arm_discard(&self) {
+        self.discard_once.store(true, Ordering::Release);
+        self.arm();
+    }
+    /// Hold the next matching request before its actual server transaction.
+    pub fn arm_before(&self) {
+        self.before_once.store(true, Ordering::Release);
+        self.arm();
+    }
+    pub fn held_json(&self) -> Result<serde_json::Value> {
+        self.held_json.lock().map_err(|_| "held response poisoned")?
+            .clone().ok_or_else(|| "held response missing".into())
     }
     pub async fn entered(&self) -> Result {
         tokio::time::timeout(Duration::from_secs(5), self.arrived.acquire())
@@ -283,9 +312,20 @@ async fn intercept(State(gate): State<Arc<Gate>>, request: Request, next: Next) 
         GatePath::Exact(path) => request.uri().path() == path.as_str(),
         GatePath::Suffix(path) => request.uri().path().ends_with(path.as_str()),
     };
-    let hold = matches_path
-        && request.method() == gate.method
+    let matches = matches_path && request.method() == gate.method;
+    if matches {
+        gate.matching_requests.fetch_add(1, Ordering::AcqRel);
+    }
+    let hold = matches
         && gate.enabled.swap(false, Ordering::AcqRel);
+    let discard = hold && gate.discard_once.swap(false, Ordering::AcqRel);
+    let before = hold && gate.before_once.swap(false, Ordering::AcqRel);
+    if before {
+        gate.arrived.add_permits(1);
+        if let Ok(permit) = gate.release.acquire().await {
+            permit.forget();
+        }
+    }
     let mut response = next.run(request).await;
     if logout && response.status().is_success() {
         gate.logout_responses.fetch_add(1, Ordering::AcqRel);
@@ -298,10 +338,30 @@ async fn intercept(State(gate): State<Arc<Gate>>, request: Request, next: Next) 
             }
         };
     }
-    if hold {
+    if hold && !before {
+        if discard {
+            assert!(response.status().is_success(), "only committed successful responses can be discarded");
+            let (mut parts, body) = response.into_parts();
+            let bytes = to_bytes(body, nestlink_protocol::CONTROL_BYTES as usize).await
+                .unwrap_or_else(|error| panic!("actual held response body: {error}"));
+            *gate.held_json.lock().unwrap_or_else(|_| panic!("held response mutex")) = Some(
+                serde_json::from_slice(&bytes).unwrap_or_else(|error| panic!("actual held JSON response: {error}")),
+            );
+            parts.headers.remove(axum::http::header::CONTENT_LENGTH);
+            // Hyper aborts this actual response stream. The SDK must observe a
+            // transport/body-read error, rather than a fabricated API status.
+            response = Response::from_parts(parts, Body::from_stream(futures_util::stream::once(async {
+                Err::<axum::body::Bytes, _>(std::io::Error::new(
+                    std::io::ErrorKind::ConnectionReset, "committed test response discarded once",
+                ))
+            })));
+        }
         gate.arrived.add_permits(1);
         if let Ok(permit) = gate.release.acquire().await {
             permit.forget();
+        }
+        if discard {
+            gate.discarded_responses.fetch_add(1, Ordering::AcqRel);
         }
     }
     response

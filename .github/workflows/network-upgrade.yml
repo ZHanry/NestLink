@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'crates/operations/**', 'crates/storage/**', 'apps/server/**', 'packaging/linux/lifecycle.py', 'scripts/network-rewrite-upgrade.py', '.github/workflows/network-upgrade.yml']
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'crates/operations/**', 'crates/storage/**', 'apps/server/**', 'packaging/linux/lifecycle.py', 'scripts/network-rewrite-upgrade.py', 'scripts/network-rewrite-direct-schema.py', 'scripts/fixtures/direct-store-schema-probe.rs', '.github/workflows/network-upgrade.yml']
   pull_request:
-    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'crates/operations/**', 'crates/storage/**', 'apps/server/**', 'packaging/linux/lifecycle.py', 'scripts/network-rewrite-upgrade.py', '.github/workflows/network-upgrade.yml']
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'crates/operations/**', 'crates/storage/**', 'apps/server/**', 'packaging/linux/lifecycle.py', 'scripts/network-rewrite-upgrade.py', 'scripts/network-rewrite-direct-schema.py', 'scripts/fixtures/direct-store-schema-probe.rs', '.github/workflows/network-upgrade.yml']
 
 permissions:
   contents: read
@@ -36,6 +36,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
         with:
           toolchain: "1.96.0"
@@ -43,6 +44,8 @@ jobs:
         run: cargo build --locked -p nestlink-server
       - name: Execute retained old packages and real encrypted migration transactions
         run: python3 -B scripts/network-rewrite-upgrade.py --current "$CARGO_TARGET_DIR/debug/nestlink-server" --output "${{ runner.temp }}/network-upgrade"
+      - name: Prove unchanged schema-50 Store rejects actual direct lineage without writes
+        run: python3 -B scripts/network-rewrite-direct-schema.py --output "${{ runner.temp }}/network-upgrade/direct-schema"
       - name: Retain old manifest, native identities and exact refusal and recovery logs
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
