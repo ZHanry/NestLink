@@ -34,6 +34,7 @@ pub struct NativeSessionConfig {
     pub media_provider: Option<crate::NativeMediaProvider>,
     // Explicit local selection intent, never a probe or capture permission.
     gpu_hevc_main8_target: Option<nestlink_media_codec::VideoConfig>,
+    gpu_hevc_fallback_target: Option<nestlink_media_codec::VideoConfig>,
     gpu_hevc_version: u32,
     gpu_hevc_encoder: nestlink_media_codec::HevcEncoderBackend,
     pub internal_software_media_candidate: Option<
@@ -106,6 +107,7 @@ impl NativeSessionConfig {
             browser_host: None,
             media_provider: None,
             gpu_hevc_main8_target: None,
+            gpu_hevc_fallback_target: None,
             gpu_hevc_version: 0,
             gpu_hevc_encoder: nestlink_media_codec::HevcEncoderBackend::SystemMf,
             internal_software_media_candidate: None,
@@ -215,6 +217,23 @@ impl NativeSessionConfig {
         Ok(self)
     }
     /// Explicit operator configuration; never exposed by the ordinary remote UI.
+    /// A second HEVC budget is independently probed and signed by both peers.
+    /// It retains codec, depth, color, geometry and the selected local encoder.
+    pub fn with_gpu_hevc_fallback_target(
+        mut self,
+        fallback: nestlink_media_codec::VideoConfig,
+    ) -> io::Result<Self> {
+        self.gpu_media_provider()?;
+        if self.gpu_hevc_fallback_target.is_some() {
+            return Err(io::Error::other("HEVC fallback target already configured"));
+        }
+        let provider = self.media_provider.take()
+            .ok_or_else(|| io::Error::other("original HEVC provider unavailable"))?;
+        self.media_provider = Some(provider.with_hevc_fallback(fallback)?);
+        self.gpu_hevc_fallback_target = Some(fallback);
+        Ok(self)
+    }
+    /// Explicit operator configuration; never exposed by the ordinary remote UI.
     pub fn with_internal_software_media_candidate(
         mut self,
         policy: nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate,
@@ -295,7 +314,7 @@ impl NativeSessionConfig {
             .filter(|provider| {
                 self.internal_software_media_candidate.is_none()
                     && provider.hevc_encoder_backend() == self.gpu_hevc_encoder
-                    && provider.matches_gpu_hevc_target(target, self.gpu_hevc_version)
+                    && provider.matches_gpu_hevc_targets(target, self.gpu_hevc_fallback_target, self.gpu_hevc_version)
             })
             .ok_or_else(|| io::Error::other("configured GPU media provider changed"))
     }
@@ -321,7 +340,7 @@ impl NativeSessionConfig {
                     "GPU approval version differs from explicit profile",
                 ));
             }
-            validate_gpu_formats(scope.version, &formats, target)?;
+            validate_gpu_formats(scope.version, &formats, target, self.gpu_hevc_fallback_target)?;
             return self.gpu_media_provider();
         }
         let policy = self
@@ -362,7 +381,10 @@ impl NativeSessionConfig {
                 ));
             }
             self.gpu_media_provider()?;
-            validate_gpu_formats(publication.version, &formats, target)
+            if formats.formats().len() != 1 + usize::from(self.gpu_hevc_fallback_target.is_some()) {
+                return Err(io::Error::other("GPU publication omits an explicitly configured target"));
+            }
+            validate_gpu_formats(publication.version, &formats, target, self.gpu_hevc_fallback_target)
         } else {
             self.internal_software_media_candidate
                 .as_ref()
@@ -509,24 +531,28 @@ fn validate_gpu_formats(
     version: u32,
     formats: &nestlink_protocol::media_format::FormatSet,
     target: nestlink_media_codec::VideoConfig,
+    fallback: Option<nestlink_media_codec::VideoConfig>,
 ) -> io::Result<()> {
     if !matches!(
         version,
         HEVC_FORMAT_VERSION | nestlink_protocol::media_authority::HEVC_MAIN10_FORMAT_VERSION
-    ) || formats.formats().len() != 1
+    ) || formats.formats().is_empty()
+        || formats.formats().len() > 1 + usize::from(fallback.is_some())
         || u32::from(formats.canonical_version()) != version
     {
         return Err(io::Error::other(
-            "GPU media requires one exact v3 Main8 format",
+            "GPU media requires explicitly configured exact HEVC formats",
         ));
     }
-    let config = nestlink_media_session::hevc_contract(formats.formats()[0])?.config();
-    if (config.width, config.height, config.fps, config.bitrate_kbps)
-        != (target.width, target.height, target.fps, target.bitrate_kbps)
-    {
-        return Err(io::Error::other(
-            "GPU media format differs from explicit target",
-        ));
+    for format in formats.formats() {
+        let config = nestlink_media_session::hevc_contract(*format)?.config();
+        let matches = |value: nestlink_media_codec::VideoConfig| {
+            (config.width, config.height, config.fps, config.bitrate_kbps)
+                == (value.width, value.height, value.fps, value.bitrate_kbps)
+        };
+        if !matches(target) && !fallback.is_some_and(matches) {
+            return Err(io::Error::other("GPU media format differs from explicit targets"));
+        }
     }
     Ok(())
 }
@@ -750,6 +776,39 @@ mod tests {
         Ok(())
     }
 
+    #[tokio::test]
+    async fn hevc_fallback_approval_accepts_only_the_two_explicit_signed_budgets() -> Result {
+        let ids: Vec<_> = (0..4).map(|_| nestlink_auth::random_id()).collect();
+        let high = target();
+        let low = nestlink_media_codec::VideoConfig { fps: 15, bitrate_kbps: 2000, ..high };
+        let gpu = config()?.with_gpu_hevc_main8_target(high)?.with_gpu_hevc_fallback_target(low)?;
+        assert!(gpu.validate());
+        let approve = |formats| -> Result {
+            gpu.media_provider_for_approval(&ids[0], &ids[1], &ids[3], &ids[2], &ids[3], &scope(formats)?)?;
+            Ok(())
+        };
+        approve(vec![hevc_format(high)?, hevc_format(low)?])?;
+        // A peer intersecting only one signed target has no adaptive second target.
+        approve(vec![hevc_format(low)?])?;
+        let middle = nestlink_media_codec::VideoConfig { fps: 20, bitrate_kbps: 3000, ..high };
+        assert!(approve(vec![hevc_format(high)?, hevc_format(middle)?]).is_err());
+        assert!(approve(vec![hevc_format(middle)?]).is_err());
+        assert!(config()?.with_cpu_media_target(high)?.with_gpu_hevc_fallback_target(low).is_err());
+        let device = nestlink_auth::random_id();
+        let mut publication = MediaAnnouncement {
+            version: HEVC_FORMAT_VERSION, device_id: device.clone(), direction: MediaDirection::Decode,
+            revision: 1, expires_at_unix_ms: 2000,
+            probe: nestlink_protocol::media_authority::ProbeIdentity {
+                generation: 1, resource_id: nestlink_auth::random_id(), backend: "gpu-hevc-decoder".into(),
+                adapter_luid: Some(7), driver_version: Some(8),
+            },
+            formats: scope(vec![hevc_format(high)?, hevc_format(low)?])?.formats,
+        };
+        gpu.validate_media_publication(&publication, &device, MediaDirection::Decode, 1000)?;
+        publication.formats = scope(vec![hevc_format(high)?])?.formats;
+        assert!(gpu.validate_media_publication(&publication, &device, MediaDirection::Decode, 1000).is_err());
+        Ok(())
+    }
     #[tokio::test]
     async fn gpu_approval_requires_local_host_and_one_exact_main8_target() -> Result {
         let ids: Vec<_> = (0..4).map(|_| nestlink_auth::random_id()).collect();

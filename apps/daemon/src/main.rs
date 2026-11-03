@@ -5,6 +5,7 @@ mod diagnostics;
 #[cfg(any(target_os = "linux", windows))]
 mod local_port_gate;
 mod maintenance;
+mod media_capabilities;
 mod native_audio;
 mod native_clipboard;
 mod native_files;
@@ -96,6 +97,12 @@ struct Args {
     #[arg(long, value_enum, requires = "native_gpu_hevc_targets",
         conflicts_with_all = ["native_media_target", "internal_software_media_candidate"])]
     native_gpu_hevc_encoder: Option<NativeHevcEncoder>,
+    /// One explicit lower HEVC rate/bitrate target with unchanged geometry.
+    /// Both targets require real probes and signed approval; switches may pause video.
+    #[arg(long, value_parser = parse_native_gpu_hevc_target,
+        requires = "native_gpu_hevc_targets",
+        conflicts_with_all = ["native_media_target", "internal_software_media_candidate"])]
+    native_gpu_hevc_fallback_target: Option<nestlink_media_codec::VideoConfig>,
     /// Private JSON policy for one internal software candidate; absent keeps rollout closed.
     #[arg(long, requires = "native_media_target")]
     internal_software_media_candidate: Option<PathBuf>,
@@ -117,6 +124,8 @@ impl From<NativeHevcEncoder> for nestlink_media_codec::HevcEncoderBackend {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Inspect one explicit local media direction using the actual product provider.
+    MediaCapabilities(media_capabilities::InspectArgs),
     /// Keep a consumed finite offline remote authority in its original process.
     /// Local desktop data uses the existing authenticated user IPC endpoint.
     OfflineRemote(offline_remote::OfflineRemoteArgs),
@@ -513,6 +522,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Their inline union can overflow the Windows main stack before the
     // selected command (including a synchronous quota inspection) even starts.
     match args.command.take() {
+        Some(Command::MediaCapabilities(command)) => {
+            return Ok(Box::pin(media_capabilities::run(command)).await?);
+        }
         Some(Command::OfflineRemote(command)) => {
             return Box::pin(offline_remote::run(command)).await;
         }
@@ -625,6 +637,9 @@ async fn serve(args: Args) -> Result<(), Box<dyn std::error::Error + Send + Sync
         args.native_gpu_hevc_encoder,
         args.internal_software_media_candidate.is_some(),
     )?;
+    if let Some(fallback) = args.native_gpu_hevc_fallback_target {
+        native = native.with_gpu_hevc_fallback_target(fallback)?;
+    }
     if let Some(path) = args.internal_software_media_candidate {
         let bytes = nestlink_platform_security::read_private(&path, 16 * 1024)?;
         let policy = serde_json::from_slice(&bytes)?;
@@ -923,6 +938,28 @@ fn parse_native_gpu_hevc_main10_target(
 
 #[cfg(test)]
 mod media_cli_tests {
+    #[test]
+    fn hevc_fallback_cli_requires_an_explicit_hevc_mode_and_rejects_foreign_budgets()
+    -> std::io::Result<()> {
+        use clap::Parser;
+        for args in [
+            vec!["nestlink-daemon", "--native-gpu-hevc-fallback-target", "1920x1080@30:4000"],
+            vec!["nestlink-daemon", "--native-media-target", "1920x1080@60:8000", "--native-gpu-hevc-fallback-target", "1920x1080@30:4000"],
+        ] {
+            assert!(super::Args::try_parse_from(args).is_err());
+        }
+        let args = super::Args::try_parse_from([
+            "nestlink-daemon", "--native-gpu-hevc-main10-target", "1920x1080@60:8000",
+            "--native-gpu-hevc-fallback-target", "1920x1080@30:4000", "--native-gpu-hevc-encoder", "amd-amf",
+        ]).map_err(std::io::Error::other)?;
+        assert!(args.native_gpu_hevc_fallback_target.is_some());
+        let parsed = super::Args::try_parse_from([
+            "nestlink-daemon", "media-capabilities", "--mode", "hevc-main10", "--direction", "decode",
+            "--target", "1920x1080@60:8000", "--encoder", "amd-amf",
+        ]).map_err(std::io::Error::other)?;
+        assert!(matches!(parsed.command, Some(super::Command::MediaCapabilities(_))));
+        Ok(())
+    }
     use super::*;
 
     #[tokio::test]

@@ -187,6 +187,8 @@ pub(super) fn stream<D: CaptureDevice>(
 ) -> (VideoController<D>, StreamExit) {
     let result = (|| -> io::Result<StreamExit> {
         let mut active = None;
+        let mut selected: Option<(NativeVideoBinding, VideoFormat)> = None;
+        let mut quality = None;
         let mut first_deadline = Instant::now() + FIRST_FRAME_TIMEOUT;
         let mut output_seen = false;
         let mut previous_pts = 0;
@@ -222,7 +224,16 @@ pub(super) fn stream<D: CaptureDevice>(
             let formats = core
                 .native_video_formats(identity)?
                 .ok_or_else(|| io::Error::other("HEVC has no exact signed scope"))?;
-            let format = select_target(&formats, binding)?;
+            if selected.is_none_or(|(source, _)| source != binding) {
+                let ceiling = select_target(&formats, binding)?;
+                quality = Some(VideoQuality::new(
+                    ceiling.frame_rate.numerator, ceiling.max_kbps, Instant::now(),
+                ));
+                selected = Some((binding, ceiling));
+            }
+            let format = selected.map(|(_, format)| format)
+                .filter(|format| formats.contains(format))
+                .ok_or_else(|| io::Error::other("selected HEVC budget left its signed scope"))?;
             if core.native_video_encoder_backend(identity)?.as_deref() != Some("gpu-hevc-encoder") {
                 return Err(io::Error::other(
                     "HEVC lacks its independently proved encoder backend",
@@ -261,10 +272,13 @@ pub(super) fn stream<D: CaptureDevice>(
                 }
                 receipt.check_encoded(packet.pts_90khz, &packet.data)?;
                 nestlink_media_session::hevc_execution_receipt_matches(&receipt, format)?;
+                let original = receipt.clone();
                 runtime
                     .block_on(core.register_native_video_execution(identity, receipt.clone()))?;
                 output_seen = true;
                 if runtime.block_on(core.propose_native_video_format(identity, format))? {
+                    let encoding = started.elapsed();
+                    let enqueue_started = Instant::now();
                     runtime
                         .block_on(core.send_native_hevc_execution_frame(
                             identity,
@@ -275,6 +289,28 @@ pub(super) fn stream<D: CaptureDevice>(
                             receipt,
                         ))
                         .map_err(io::Error::other)?;
+                    // A single signed format keeps the original exact path,
+                    // including its independent 144fps ceiling. Adaptive intent
+                    // exists only when both explicitly selected budgets survived
+                    // the two peers' real probes and signed scope intersection.
+                    if formats.formats().len() > 1 {
+                        let quality = quality.as_mut()
+                            .ok_or_else(|| io::Error::other("HEVC feedback ceiling absent"))?;
+                        observe_quality(core, identity, binding, quality,
+                            encoding, enqueue_started.elapsed())?;
+                        let next = nestlink_media_session::select_hevc_budget(
+                            &formats, format, quality.fps(), quality.bitrate_kbps(),
+                        )?;
+                        if next != format {
+                            // Pause/discard while the old receipt is still current.
+                            // configure() then checked-stops/joins the single old
+                            // owner before creating the replacement. Its first AU
+                            // must register and obtain a fresh exact ACK above.
+                            runtime.block_on(core.pause_native_video_execution(identity, original))?;
+                            selected = Some((binding, next));
+                            continue;
+                        }
+                    }
                 }
             } else if !output_seen && Instant::now() >= first_deadline {
                 return Err(io::Error::other(

@@ -987,6 +987,41 @@ impl CoreHandle {
             self.native_media_execution(binding, direction)?,
         )))
     }
+    /// Pause the old exact format before a deliberately selected replacement.
+    /// The caller must then checked-stop/join the original owner. Failure is
+    /// terminal; no old receipt or implicit rollback can reopen this gate.
+    pub async fn pause_native_video_execution(
+        &self,
+        binding: &NativeSessionBinding,
+        execution: impl Into<nestlink_media_session::LiveExecutionReceipt>,
+    ) -> io::Result<()> {
+        let execution = execution.into();
+        execution.check_current()?;
+        let route = self.display_route(binding)?;
+        let _order = route.order.lock().await;
+        let video = route.video()?;
+        let _send_order = video.ordered_send().await.map_err(io::Error::other)?;
+        let registered = video.execution.lock()
+            .map_err(|_| io::Error::other("execution registry poisoned"))?;
+        let previous = registered.as_ref()
+            .ok_or_else(|| denied("pause lacks the original registered owner"))?;
+        if previous.identity()? != execution.identity()? {
+            return Err(denied("pause differs from the original registered owner"));
+        }
+        previous.check_current()?;
+        let mut state = route.state.lock()
+            .map_err(|_| io::Error::other("display state poisoned"))?;
+        if !state.view.is_host || state.formats.pending().is_some() {
+            return Err(denied("execution pause during pending confirmation"));
+        }
+        state.formats.cancel();
+        state.execution_generation = 0;
+        state.view.format_epoch = 0;
+        state.view.format_sha256 = [0; 32];
+        video.format_gate.pause();
+        video.sender.discard_video().map_err(io::Error::other)?;
+        Ok(())
+    }
     pub async fn register_native_video_execution(
         &self,
         binding: &NativeSessionBinding,

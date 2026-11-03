@@ -87,6 +87,8 @@ struct ProbeResult {
     adapter_luid: Option<u64>,
     driver_version: Option<u64>,
     encoder: Option<HevcEncoderSelection>,
+    // Decode observations also retain the exact sample producer for pair checks.
+    sample_encoder: Option<HevcEncoderSelection>,
 }
 struct ProbeJob {
     id: u64,
@@ -292,6 +294,32 @@ impl NativeMediaProvider {
     pub fn hevc_encoder_backend(&self) -> HevcEncoderBackend {
         self.hevc_encoder
     }
+    /// One user-selected lower budget, independently probed on the same backend.
+    /// It does not authorize retrying a failed probe or changing codec/depth.
+    pub(crate) fn with_hevc_fallback(mut self, fallback: VideoConfig) -> io::Result<Self> {
+        if self.backend == ProviderBackend::CpuH264 || self.targets.len() != 1 {
+            return Err(io::Error::other("HEVC fallback requires one original GPU target"));
+        }
+        if self.backend == ProviderBackend::GpuHevcMain10 {
+            nestlink_media_codec::HevcMain8Contract::validate_main10_config(fallback)?;
+        } else {
+            nestlink_media_codec::HevcMain8Contract::validate_config(fallback)?;
+        }
+        if (fallback.width, fallback.height) != (self.target.width, self.target.height)
+            || fallback.fps > self.target.fps
+            || fallback.bitrate_kbps > self.target.bitrate_kbps
+            || (fallback.fps, fallback.bitrate_kbps) == (self.target.fps, self.target.bitrate_kbps)
+            // Preserve the existing feedback controller's independent ceiling.
+            // A single exact 144fps target remains supported by its original path.
+            || self.target.fps > 120
+        {
+            return Err(io::Error::other(
+                "HEVC fallback requires unchanged geometry, a strictly lower rate/bitrate budget and an original feedback ceiling at most 120fps",
+            ));
+        }
+        self.targets = Arc::from([self.target, fallback]);
+        Ok(self)
+    }
     pub(crate) fn encoder_for_probe(
         &self,
         probe: &ProbeIdentity,
@@ -314,14 +342,24 @@ impl NativeMediaProvider {
                 )
             })
     }
+    #[cfg(test)]
     pub(crate) fn matches_gpu_hevc_target(&self, target: VideoConfig, version: u32) -> bool {
+        self.matches_gpu_hevc_targets(target, None, version)
+    }
+    pub(crate) fn matches_gpu_hevc_targets(
+        &self,
+        target: VideoConfig,
+        fallback: Option<VideoConfig>,
+        version: u32,
+    ) -> bool {
         let expected = match version {
             3 => ProviderBackend::GpuHevcMain8,
             4 => ProviderBackend::GpuHevcMain10,
             _ => return false,
         };
         self.backend == expected
-            && self.targets.len() == 1
+            && self.targets.len() == 1 + usize::from(fallback.is_some())
+            && fallback.is_none_or(|value| same_config(self.targets[1], value))
             && (
                 self.target.width,
                 self.target.height,
@@ -418,6 +456,18 @@ impl NativeMediaProvider {
             .lock()
             .ok()
             .and_then(|s| s.fallback_reason.clone())
+    }
+    /// Run the original product direction probe with a fresh, ephemeral label.
+    /// The returned local observation is unsigned and grants no remote authority.
+    /// It is available only after the original checked close and worker join;
+    /// the same cancellation, deadlines and quarantined-owner rules apply.
+    pub async fn inspect_local_direction(
+        &self,
+        direction: MediaDirection,
+        cancelled: &AtomicBool,
+    ) -> io::Result<MediaAnnouncement> {
+        self.announcement(&nestlink_auth::random_id(), direction, cancelled)
+            .await
     }
     /// Called only from an asynchronous app-core operation. Never holds a UI
     /// lock or waits synchronously for a native driver call.
@@ -667,6 +717,10 @@ impl NativeMediaProvider {
         Ok(local)
     }
 }
+fn same_config(left: VideoConfig, right: VideoConfig) -> bool {
+    (left.width, left.height, left.fps, left.bitrate_kbps)
+        == (right.width, right.height, right.fps, right.bitrate_kbps)
+}
 fn prewarm_needed(value: Option<&MediaAnnouncement>, wall: u64) -> bool {
     value.is_none_or(|a| a.expires_at_unix_ms <= wall.saturating_add(60_000))
 }
@@ -726,11 +780,33 @@ fn run_probes(
             }
         });
     }
+    merge_probe_results(receipts, backend)
+}
+fn merge_probe_results(receipts: Vec<ProbeResult>, backend: ProviderBackend) -> io::Result<ProbeResult> {
     let mut receipts = receipts.into_iter();
     let mut primary = receipts
         .next()
         .ok_or_else(|| io::Error::other("empty CPU probe set"))?;
-    primary.additional_formats = receipts.map(|receipt| receipt.format).collect();
+    for receipt in receipts {
+        if backend != ProviderBackend::CpuH264
+            && (receipt.backend != primary.backend
+                || receipt.adapter_luid != primary.adapter_luid
+                || receipt.driver_version != primary.driver_version
+                || receipt.encoder != primary.encoder
+                || receipt.sample_encoder != primary.sample_encoder
+                || receipt.format.codec != primary.format.codec
+                || receipt.format.profile != primary.format.profile
+                || receipt.format.chroma != primary.format.chroma
+                || receipt.format.bit_depth != primary.format.bit_depth
+                || receipt.format.color != primary.format.color
+                || receipt.format.geometry != primary.format.geometry)
+        {
+            return Err(io::Error::other(
+                "HEVC fallback probes differ in original platform/backend/runtime or exact color/depth/geometry",
+            ));
+        }
+        primary.additional_formats.push(receipt.format);
+    }
     Ok(primary)
 }
 #[cfg(windows)]
@@ -783,6 +859,7 @@ fn run_probe(
         adapter_luid: None,
         driver_version: None,
         encoder: None,
+        sample_encoder: None,
     })
 }
 #[cfg(windows)]
@@ -860,6 +937,9 @@ fn run_hevc_probe(
         },
         adapter_luid: owner.adapter_luid,
         driver_version: owner.driver_version,
+        sample_encoder: Some(HevcEncoderSelection::new(
+            receipt.encoder_backend(), receipt.encoder_runtime_version(),
+        )?),
         encoder: if direction == MediaDirection::Encode {
             Some(HevcEncoderSelection::new(
                 receipt.encoder_backend(),
@@ -898,6 +978,55 @@ fn run_probe(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn hevc_second_budget_is_explicit_bounded_and_keeps_the_original_backend() -> io::Result<()> {
+        let high = VideoConfig { width: 1920, height: 1080, fps: 60, bitrate_kbps: 8000 };
+        let low = VideoConfig { fps: 30, bitrate_kbps: 4000, ..high };
+        let provider = NativeMediaProvider::gpu_hevc_main10_with_encoder(high, HevcEncoderBackend::AmdAmf)?;
+        let pair = provider.clone().with_hevc_fallback(low)?;
+        assert!(pair.matches_gpu_hevc_targets(high, Some(low), 4));
+        assert!(!pair.matches_gpu_hevc_targets(high, None, 4));
+        assert!(!pair.matches_gpu_hevc_targets(high, Some(low), 3));
+        assert_eq!(pair.hevc_encoder_backend(), HevcEncoderBackend::AmdAmf);
+        assert!(pair.with_hevc_fallback(low).is_err());
+        for bad in [high, VideoConfig { width: 1280, ..low },
+            VideoConfig { fps: 61, ..low }, VideoConfig { bitrate_kbps: 8001, ..low }] {
+            assert!(provider.clone().with_hevc_fallback(bad).is_err());
+        }
+        assert!(NativeMediaProvider::cpu_software(high)?.with_hevc_fallback(low).is_err());
+        let fast = VideoConfig { fps: 144, ..high };
+        assert!(NativeMediaProvider::gpu_hevc_main8(fast)?.with_hevc_fallback(low).is_err());
+        Ok(())
+    }
+    #[test]
+    fn merged_hevc_probe_evidence_rejects_a_changed_driver_or_encoder_runtime() -> io::Result<()> {
+        let receipt = |fps: u32, driver, runtime| -> io::Result<ProbeResult> {
+            let mut ptl = [0; 12]; ptl[0] = 1; ptl[11] = 123;
+            Ok(ProbeResult {
+                format: VideoFormat::hevc_main8_observed(ptl, 1920, 1080,
+                    nestlink_protocol::media_format::FrameRate::new(fps, 1).map_err(io::Error::other)?, 8000)
+                    .map_err(io::Error::other)?,
+                additional_formats: Vec::new(), resource_id: nestlink_auth::random_id(),
+                backend: "gpu-hevc-encoder", adapter_luid: Some(7), driver_version: Some(driver),
+                encoder: Some(HevcEncoderSelection::new(HevcEncoderBackend::AmdAmf, Some(runtime))?),
+                sample_encoder: Some(HevcEncoderSelection::new(HevcEncoderBackend::AmdAmf, Some(runtime))?),
+            })
+        };
+        let original = 1 << 48;
+        let accepted = merge_probe_results(vec![receipt(60, 8, original)?, receipt(30, 8, original)?], ProviderBackend::GpuHevcMain8)?;
+        assert_eq!(accepted.additional_formats.len(), 1);
+        for (driver, runtime) in [(9, original), (8, original | 1)] {
+            assert!(merge_probe_results(vec![receipt(60, 8, original)?, receipt(30, driver, runtime)?], ProviderBackend::GpuHevcMain8).is_err());
+        }
+        let mut decode_high = receipt(60, 8, original)?;
+        let mut decode_low = receipt(30, 8, original | 1)?;
+        for value in [&mut decode_high, &mut decode_low] {
+            value.backend = "gpu-hevc-decoder";
+            value.encoder = None;
+        }
+        assert!(merge_probe_results(vec![decode_high, decode_low], ProviderBackend::GpuHevcMain8).is_err());
+        Ok(())
+    }
     // Local registry fixtures only; no hardware or driver execution claim.
     fn hevc_announcement(
         id: u64,
@@ -926,6 +1055,7 @@ mod tests {
                 adapter_luid: Some(7),
                 driver_version: Some(8),
                 encoder: Some(selection),
+                sample_encoder: Some(selection),
             },
         )
     }
@@ -1232,6 +1362,7 @@ mod tests {
             adapter_luid: None,
             driver_version: None,
             encoder: None,
+            sample_encoder: None,
         })
     }
     fn wait_finished(slot: &ProbeSlot) -> io::Result<()> {

@@ -979,6 +979,15 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     let decoder_before =
         controller.native_media_execution(&session_binding, MediaDirection::Decode)?;
     let encoder_before = host.native_media_execution(&session_binding, MediaDirection::Encode)?;
+    let (paused_packet, _, paused_execution) = encoder.next(&video).await?;
+    assert!(host.pause_native_video_execution(&session_binding, decoder_before.clone()).await.is_err());
+    host.pause_native_video_execution(&session_binding, encoder_before.clone()).await?;
+    assert!(host.native_confirmed_video_format(&session_binding)?.is_none());
+    assert!(encoder_before.check_current().is_ok());
+    assert!(host.send_native_video_execution_frame(
+        &session_binding, source, paused_packet.pts_90khz, paused_packet.keyframe,
+        false, paused_packet.data, paused_execution,
+    ).await.is_err(), "pausing must close delivery while the old owner is still current");
     encoder.close()?;
     assert!(encoder_before.retired_joined());
     assert!(encoder_before.check_current().is_err());
@@ -1027,6 +1036,10 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         host.native_confirmed_video_format(&session_binding)?
             .is_none()
     );
+    assert!(host.send_native_video_execution_frame(
+        &session_binding, source, fresh.pts_90khz, fresh.keyframe,
+        false, fresh.data.clone(), fresh_execution.clone(),
+    ).await.is_err(), "a replacement owner must not deliver before its exact ACK");
     barrier.release.add_permits(1);
     until(|| {
         Ok(host
