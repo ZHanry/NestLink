@@ -1,5 +1,13 @@
 # 0.8.0RC 发布证据绑定
 
+2026-11-03用户明确安排“这些发布后我再自己验收”。本次可显式选择
+`--deferred-target-acceptance`先发布尚未取得完整资格的预览版；授权策略见
+`config/rc-deferred-acceptance.json`。该模式发布 `rc-acceptance-status.json`，
+逐字保留源任务中的41工作包/70用例与失败状态，并绑定实际候选清单、规格、任务和
+授权策略摘要。此文件不会冒充以下两份通过审阅包，发布回执明确为 `not-qualified`。
+同源构建、required checks、完整平台角色和上传前后完整性检查继续执行。
+默认完整资格模式保持下述原检查。正式发布与生产更新资格没有改变。
+
 开发候选由原 `v15-candidate-build.yml` 在 GitHub 托管 runner 构建，产品 SemVer 为
 `0.8.0-rc.1`。同一干净源码、required checks、完整平台角色、原安装核验和 freeze
 继续适用。`v15` 协议、本机状态、安装 AppId 与发布历史不随产品版本重命名。

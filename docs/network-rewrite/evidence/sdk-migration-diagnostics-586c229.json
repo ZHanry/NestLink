@@ -1,0 +1,552 @@
+{
+  "schema_version": 1,
+  "kind": "independent-actions-artifact-audit",
+  "recorded_at_utc": "2026-11-03T09:44:49.0903267Z",
+  "repository": "ZHanry/NestLink",
+  "source_revision": "586c22938643d332a0f8a558fb04529f4cbbe031",
+  "run_id": 41612762220,
+  "run_attempt": 1,
+  "workflow": "Original SDK migration failure diagnostics",
+  "workflow_path": ".github/workflows/network-migration-diagnostics.yml",
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41612762220",
+  "status": "completed",
+  "conclusion": "success",
+  "metadata_files": [
+    {
+      "path": "run.json",
+      "bytes": 11766,
+      "sha256": "0fc75952bd5b092283ef37bec2330c687fc06f5064a44ec759f4ed78c1f54f44"
+    },
+    {
+      "path": "jobs.json",
+      "bytes": 2475,
+      "sha256": "f89d050654f43eb97bc944ae3c12037779c4535bf877f0e5042288b2b2e35565"
+    },
+    {
+      "path": "artifacts.json",
+      "bytes": 754,
+      "sha256": "f812d8f7a30fe33355de0ddf256c9bd0acb71a62c5509f1bba2f15ab295a2bd6"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 125838545802,
+      "name": "original-cases",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-03T09:39:23Z",
+      "completed_at": "2026-11-03T09:43:41Z",
+      "runner_name": "GitHub Actions 1000012399",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T09:39:24Z",
+          "completed_at": "2026-11-03T09:39:25Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T09:39:25Z",
+          "completed_at": "2026-11-03T09:39:28Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T09:39:28Z",
+          "completed_at": "2026-11-03T09:39:37Z"
+        },
+        {
+          "name": "Prepare the original pinned native build on the hosted runner",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T09:39:37Z",
+          "completed_at": "2026-11-03T09:40:43Z"
+        },
+        {
+          "name": "Retain every original case independently, including abort diagnostics",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T09:40:43Z",
+          "completed_at": "2026-11-03T09:43:38Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T09:43:38Z",
+          "completed_at": "2026-11-03T09:43:39Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-03T09:43:39Z",
+          "completed_at": "2026-11-03T09:43:40Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-03T09:43:40Z",
+          "completed_at": "2026-11-03T09:43:40Z"
+        }
+      ]
+    }
+  ],
+  "artifact_count": 1,
+  "official_zip_verification_count": 1,
+  "independent_downloaded_file_count": 8.0,
+  "producer_payload_verification_count": 7.0,
+  "producer_command_log_verification_count": 0.0,
+  "artifacts": [
+    {
+      "id": 13220440659,
+      "name": "original-sdk-migration-586c22938643d332a0f8a558fb04529f4cbbe031-1",
+      "official_digest": "sha256:dd74d42fd10550c8cd4b70ce8335a834fd22d9156c0ca8285a5de8e728f63ade",
+      "zip_sha256": "dd74d42fd10550c8cd4b70ce8335a834fd22d9156c0ca8285a5de8e728f63ade",
+      "zip_bytes": 25778,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 8,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "build.log",
+          "bytes": 60184,
+          "sha256": "ad828af43bcca46b39db0d9257375a95f0e277767439580b12c2586487e06c63"
+        },
+        {
+          "path": "case-1.log",
+          "bytes": 20466,
+          "sha256": "94fd6809e254376def3953a5107b7e99ed58bfad7494b60ac715c3df70071841"
+        },
+        {
+          "path": "case-2.log",
+          "bytes": 20186,
+          "sha256": "ad1f0cdb19dab95d26d7d83744312b6bdf35c34b50515cec9b032c2e3fcc7b90"
+        },
+        {
+          "path": "case-3.log",
+          "bytes": 20471,
+          "sha256": "7059d4a262f3f082f91352763acfdea9aa4eb6748c85a639f14cd42e21df3a0d"
+        },
+        {
+          "path": "case-4.log",
+          "bytes": 20463,
+          "sha256": "37d32f73f1a9b33e57151c036ea7a0666b71e0a6dcfa2e636d3c6f2c8656f335"
+        },
+        {
+          "path": "case-5.log",
+          "bytes": 20468,
+          "sha256": "1738c9deae6f3a8bb7a3ecab080cfe231441ee6136e59a0706f8841d9d9341b9"
+        },
+        {
+          "path": "case-6.log",
+          "bytes": 20552,
+          "sha256": "a2134e35ae0ef0a9aa9d0436aa84be1947cbc4a52ecb7899be82b9020d2a0c3e"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 5997,
+          "sha256": "e26a25b186cb71dd0a7b22c267aacaad402053a946538642fb8e173725a80d70"
+        }
+      ],
+      "producer_payload_inventory_count": 7,
+      "producer_payload_verifications": [
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "build.log",
+          "bytes": 60184,
+          "sha256": "ad828af43bcca46b39db0d9257375a95f0e277767439580b12c2586487e06c63",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "case-1.log",
+          "bytes": 20466,
+          "sha256": "94fd6809e254376def3953a5107b7e99ed58bfad7494b60ac715c3df70071841",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "case-2.log",
+          "bytes": 20186,
+          "sha256": "ad1f0cdb19dab95d26d7d83744312b6bdf35c34b50515cec9b032c2e3fcc7b90",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "case-3.log",
+          "bytes": 20471,
+          "sha256": "7059d4a262f3f082f91352763acfdea9aa4eb6748c85a639f14cd42e21df3a0d",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "case-4.log",
+          "bytes": 20463,
+          "sha256": "37d32f73f1a9b33e57151c036ea7a0666b71e0a6dcfa2e636d3c6f2c8656f335",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "case-5.log",
+          "bytes": 20468,
+          "sha256": "1738c9deae6f3a8bb7a3ecab080cfe231441ee6136e59a0706f8841d9d9341b9",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "case-6.log",
+          "bytes": 20552,
+          "sha256": "a2134e35ae0ef0a9aa9d0436aa84be1947cbc4a52ecb7899be82b9020d2a0c3e",
+          "producer_matches": true
+        }
+      ],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": true,
+      "producer_inventory_limitation": null,
+      "reports": [
+        {
+          "file": "receipt.json",
+          "source_claims": [
+            {
+              "field": "source_revision",
+              "value": "586c22938643d332a0f8a558fb04529f4cbbe031",
+              "matches": true
+            },
+            {
+              "field": "workflow_revision",
+              "value": "586c22938643d332a0f8a558fb04529f4cbbe031",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": true,
+          "status": null,
+          "scope": "Independent original SDK cases with unchanged assertions, deadlines and ordinary stack. Each log is streamed so a later abort cannot hide an earlier failure. This does not replace the complete network suite.",
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [
+            {
+              "name": "build",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "--no-run"
+              ],
+              "return_code": 0,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            },
+            {
+              "name": "case-1",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration",
+                "--",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "--color",
+                "never"
+              ],
+              "return_code": 0,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            },
+            {
+              "name": "case-2",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery",
+                "--",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "--color",
+                "never"
+              ],
+              "return_code": 0,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            },
+            {
+              "name": "case-3",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer",
+                "--",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "--color",
+                "never"
+              ],
+              "return_code": 0,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            },
+            {
+              "name": "case-4",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release",
+                "--",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "--color",
+                "never"
+              ],
+              "return_code": 0,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            },
+            {
+              "name": "case-5",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup",
+                "--",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "--color",
+                "never"
+              ],
+              "return_code": 0,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            },
+            {
+              "name": "case-6",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-sdk",
+                "--test",
+                "network_relay",
+                "route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay",
+                "--",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "--color",
+                "never"
+              ],
+              "return_code": 0,
+              "expected_return_codes": null,
+              "timed_out": false,
+              "timeout_seconds": null,
+              "elapsed_seconds": null,
+              "log": null,
+              "log_bytes": null,
+              "log_sha256": null
+            }
+          ],
+          "cases": [],
+          "acceptance_flags": {},
+          "runner_os": "Linux",
+          "runner_environment": "github-hosted",
+          "cargo_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839"
+        }
+      ],
+      "test_logs": [
+        {
+          "file": "case-1.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 21,
+              "elapsed_seconds": 5.16
+            }
+          ],
+          "case_lines": []
+        },
+        {
+          "file": "case-2.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 21,
+              "elapsed_seconds": 2.78
+            }
+          ],
+          "case_lines": [
+            "test route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery ... ok"
+          ]
+        },
+        {
+          "file": "case-3.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 21,
+              "elapsed_seconds": 4.19
+            }
+          ],
+          "case_lines": []
+        },
+        {
+          "file": "case-4.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 21,
+              "elapsed_seconds": 4.22
+            }
+          ],
+          "case_lines": []
+        },
+        {
+          "file": "case-5.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 21,
+              "elapsed_seconds": 4.36
+            }
+          ],
+          "case_lines": []
+        },
+        {
+          "file": "case-6.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 21,
+              "elapsed_seconds": 3.3
+            }
+          ],
+          "case_lines": []
+        }
+      ],
+      "retained_log_diagnostics": []
+    }
+  ],
+  "limitations": [
+    "Actions results apply only to this exact source SHA. Historical failures remain unchanged.",
+    "Producer executable/native-library inventories whose bytes are absent from the ZIP are supplier receipts, not independent verification of those binaries.",
+    "Hosted browser/media/network success does not establish physical GPU, real device, public NAT/HA, cross-day or release eligibility."
+  ]
+}

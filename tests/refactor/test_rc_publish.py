@@ -738,6 +738,76 @@ class RCPublicationTests(unittest.TestCase):
             P.clean_source(source, revision)
 
 
+class DeferredRCPublicationTests(RCPublicationTests):
+    """Explicit user deferral preserves failed cases and immutable publication."""
+
+    def enable_deferred(self):
+        self.args.deferred_target_acceptance = True
+        policy = self.args.source_root / P.DEFERRED_POLICY
+        policy.parent.mkdir(parents=True, exist_ok=True)
+        policy.write_bytes((ROOT / P.DEFERRED_POLICY).read_bytes())
+        self.write_disclosure()
+        (self.args.bundle / P.NETWORK_NAME).unlink()
+        (self.args.bundle / P.REMEDIATION_NAME).unlink()
+
+    def write_disclosure(self):
+        value = P.deferred_status(self.args.source_root, REVISION, checksum(self.args.manifest.read_bytes()))
+        (self.args.bundle / P.DEFERRED_NAME).write_text(json.dumps(value), encoding='utf-8')
+
+    def test_user_deferred_rc_discloses_actual_failed_and_unrun_cases(self):
+        self.enable_deferred()
+        result = P.promote(self.args, self.github)
+        self.assertEqual(result['status'], 'published-prerelease')
+        self.assertEqual(result['report_remediation_acceptance'], 'not-qualified')
+        self.assertEqual(result['network_rewrite_acceptance'], 'not-qualified')
+        self.assertFalse(result['production_update_eligible'])
+        disclosure = json.loads(self.github.assets[P.DEFERRED_NAME]['raw'])
+        source = json.loads((self.args.source_root / 'docs/network-rewrite/NESTLINK-TASKS.json').read_bytes())
+        self.assertEqual(disclosure['cases'], source['acceptance_cases'])
+        self.assertEqual(disclosure['work_packages'], source['tasks'])
+        self.assertIn('25秒', self.github.release['body'])
+        self.assertNotIn('passed with reviewed evidence', self.github.release['body'])
+
+    def test_deferral_requires_explicit_flag(self):
+        self.enable_deferred()
+        self.args.deferred_target_acceptance = False
+        with self.assertRaises(ValueError):
+            P.promote(self.args, self.github)
+        self.assertEqual(self.github.writes, [])
+
+    def test_missing_user_policy_refuses_remote_writes(self):
+        self.enable_deferred()
+        (self.args.source_root / P.DEFERRED_POLICY).unlink()
+        with self.assertRaises((ValueError, OSError)):
+            P.promote(self.args, self.github)
+        self.assertEqual(self.github.writes, [])
+
+    def test_forged_pass_or_different_manifest_refuses_remote_writes(self):
+        self.enable_deferred()
+        path = self.args.bundle / P.DEFERRED_NAME
+        original = path.read_bytes()
+        for mutation in ('case', 'manifest'):
+            value = json.loads(original)
+            if mutation == 'case':
+                value['cases'][0]['status'] = 'invented-pass'
+            else:
+                value['manifest_sha256'] = '0' * 64
+            path.write_text(json.dumps(value), encoding='utf-8')
+            with self.assertRaises(ValueError):
+                P.promote(self.args, self.github)
+            self.assertEqual(self.github.writes, [])
+
+    def test_disclosure_change_during_upload_keeps_release_draft(self):
+        self.enable_deferred()
+        def change_disclosure(github, asset):
+            if asset['name'] == P.DEFERRED_NAME:
+                (self.args.bundle / P.DEFERRED_NAME).write_bytes(b'{}')
+        self.github.upload_hook = change_disclosure
+        with self.assertRaises(ValueError):
+            P.promote(self.args, self.github)
+        self.assertTrue(self.github.release['draft'])
+
+
 class ClientTests(unittest.TestCase):
     def test_http_404_uses_the_exact_publication_missing_class(self):
         github = P.GitHub("fixture-token")

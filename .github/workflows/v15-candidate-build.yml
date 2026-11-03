@@ -359,6 +359,21 @@ jobs:
         run: python3 scripts/refactor-required-checks.py --source "$CANDIDATE_SOURCE" --output "$RUNNER_TEMP/quality-evidence/required-checks.json"
       - name: Freeze every required platform and retain pending user acceptance
         run: python3 -B scripts/refactor-candidate-producer.py freeze --cohort "$RUNNER_TEMP/candidate-cohort/candidate-cohort.json" --bundle "$RUNNER_TEMP/bundle" --output "$RUNNER_TEMP/development-candidate" --acceptance-evidence "$RUNNER_TEMP/quality-evidence"
+      - name: Bind actual incomplete acceptance and explicit user deferral to these frozen bytes
+        shell: python
+        run: |
+          import hashlib, importlib.util, json, os, pathlib
+          root = pathlib.Path.cwd()
+          spec = importlib.util.spec_from_file_location('rc_disclosure', root/'scripts/refactor-rc-publish.py')
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          bundle = pathlib.Path(os.environ['RUNNER_TEMP'])/'development-candidate'
+          manifest = bundle/module.MANIFEST_NAME
+          value = json.loads(manifest.read_bytes())
+          checksum = hashlib.sha256(manifest.read_bytes()).hexdigest()
+          disclosure = module.deferred_status(root, value['source_revision'], checksum)
+          (bundle/module.DEFERRED_NAME).write_text(json.dumps(disclosure, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+          module.deferred_acceptance(bundle, value['source_revision'], checksum, root)
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: rc-development-candidate-${{ github.run_attempt }}

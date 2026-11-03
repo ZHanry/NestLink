@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "version": "0.8.0-rc.1",
+  "authorization": "这些发布后我再自己验收",
+  "authorization_context": "用户要求公开发布0.8.0RC，并明确把第二台Windows、手机、公网/NAT、固定入口和跨日现场验收安排到发布后。此授权不将失败、未执行或未完成功能改成通过。",
+  "prerelease_only": true,
+  "production_update_eligible": false,
+  "deferred_to_user": [
+    "第二台Windows与完整GPU/显示/输入/媒体及VPN共存验收",
+    "Android与iOS标准WireGuard客户端",
+    "两处独立公网/NAT、重叠子网、固定公网入口与双edge HA",
+    "原网络与UU配对性能实测",
+    "多轮跨日24小时真机长稳",
+    "正式代码签名与生产更新资格"
+  ],
+  "preserved_failures": [
+    "Luanti断线显示25秒检查保持失败；不变更门槛、不删除原失败记录。",
+    "原硬件媒体/HDR与公网HTTPS现场失败记录保留。"
+  ],
+  "required_hosted_checks": "scripts/refactor-required-checks.py；精确源码检查与同源全平台制品要求继续适用。"
+}
