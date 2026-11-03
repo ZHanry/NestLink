@@ -6,6 +6,17 @@ the downloaded executable under an ordinary interactive Windows account. No
 local compilation, dependency installation or development runtime is required.
 Do not run a failed or incomplete build artifact.
 
+The verified source `4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00` has successful
+hosted build/strict run
+[`41488400735`](https://github.com/ZHanry/NestLink/actions/runs/41488400735),
+attempt 1. Its official artifact `13164255472` is 1,036,113 bytes with SHA256
+`397557734a6830cc2f8eb0719fc054b4742b2b16aadeab5929f706bb9e17eb60`.
+The official ZIP digest and all 167 producer payload sizes/hashes were checked,
+including the four executables and original AMF notice. This record establishes
+build provenance; it records no target execution. See the complete owner/tools
+receipts, file inventory and retained failures in
+[`windows-media-owner-tools-4a4496b.json`](evidence/windows-media-owner-tools-4a4496b.json).
+
 These tools call the existing production direction-probe implementations.
 They use bounded synthetic input and original deadlines, exact output checks
 and checked native owner cleanup. Each command is independent and its failure

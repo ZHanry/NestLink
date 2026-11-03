@@ -1,7 +1,8 @@
 # ADR 0075: Explicit AMF encoder with the original HEVC owner contract
 
 Date: 2026-11-03. Status: adapter and explicit provider/live selection implemented;
-hosted build, real target output and complete product qualification pending.
+exact-source hosted owner/strict checks and diagnostic builds passed. Real
+target output and complete product qualification remain pending.
 
 The existing System MF path can activate a Main8 encoder on the current AMD
 device, but its original SPS declares primaries 0 where the signed BT.709
@@ -121,10 +122,33 @@ source does not prove native ten-bit capture, HDR, sustained cadence, input
 latency, scanout or W27/AC44 completion.
 
 R02 applies to every build, dependency installation, formatter, automated
-check/test and artifact. Local work was source reads/edits/manual review and
-Git only. Pending assumptions include actual installed ABI/property support,
-strict output color/geometry, pool/drain/cleanup behavior, hosted verification
-of the production freeze
-and actual target performance. The driver may expose the same underlying
-encoder as MF and still fail the original contract; this ADR makes no promise
-that another API repairs its output.
+check/test and artifact. Local work was source reads/edits/manual review, Git,
+Actions log reads and downloaded artifact verification only. Exact source
+`4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00` passed owner run
+[`41488394638`](https://github.com/ZHanry/NestLink/actions/runs/41488394638):
+both Windows 2022/2025 owner jobs and the Windows/Linux actual native peer
+process jobs succeeded. Both Windows owner jobs retain the original `511` and
+`255` MF assertions and pass the AMF boundary, frozen provider identity,
+backend/runtime, actual CLI/configuration and strict-check suites. These
+hosted tests do not execute the physical AMF workload.
+
+The same source and workflow revision passed diagnostic build/strict run
+[`41488400735`](https://github.com/ZHanry/NestLink/actions/runs/41488400735).
+Official tools artifact `13164255472` is 1,036,113 bytes with SHA256
+`397557734a6830cc2f8eb0719fc054b4742b2b16aadeab5929f706bb9e17eb60`.
+All five official owner/peer/tools ZIP sizes and digests, all 234 uncompressed
+file hashes, all 171 producer payload records and the original 1,747-byte AMF
+notice were independently verified. The owner producer has no payload hash
+manifest; its 30 filenames per runner match the reviewed workflow output
+inventory, with independent file hashes recorded separately. Full logs,
+receipts, exact job identity and inventory are retained in
+[`windows-media-owner-tools-4a4496b.json`](../../network-rewrite/evidence/windows-media-owner-tools-4a4496b.json).
+
+Pending assumptions include actual installed ABI/property support, strict
+output color/geometry, physical pool/drain/copy/cleanup behavior and target
+performance. The original four MF failures remain independent evidence; the
+four AMF commands require separate actual target execution. The driver may
+expose the same underlying encoder as MF and still fail the original contract;
+this ADR makes no promise that another API repairs its output. This evidence
+does not complete W27, W33, AC44 or the release gate, and preserves the original
+Luanti 25-second failure.
