@@ -10,6 +10,7 @@ pub use offline::ConsumedOfflineBundle;
 mod route_sets;
 mod subnet;
 mod wireguard;
+mod preparation;
 
 fn base(space: &str) -> Result<String, SdkError> {
     if !valid_id(space) {

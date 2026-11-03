@@ -50,7 +50,7 @@ fn clock(now: u64) -> Result<(), StorageError> {
     Ok(())
 }
 
-fn read_space(
+pub(crate) fn read_space(
     connection: &Connection,
     actor: &Principal,
     id: &str,

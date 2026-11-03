@@ -17,6 +17,8 @@ use std::collections::{BTreeMap, BTreeSet};
 pub mod network_access;
 mod remote_paths;
 pub use remote_paths::{NetworkRemotePathBundle, NetworkRemotePathIssuance};
+mod preparation;
+pub use preparation::NetworkRemotePreparationBundle;
 pub(crate) mod remote_relays;
 pub use remote_relays::{NetworkRemoteRelayBundle, NetworkRemoteRelayIssuance};
 pub(crate) mod remote_chains;
@@ -399,7 +401,27 @@ impl Store {
             now_ms,
         )?;
         let snapshot = read_snapshot(&tx, &request.space_id, now_ms)?;
-        remote_paths::grant_id_available(&tx, &request.space_id, &request.grant_id)?;
+        let signed = self.issue_network_membership_in_transaction(
+            &tx, actor, signer, request, &snapshot, product_space, now_ms,
+        )?;
+        tx.commit()?;
+        Ok(signed)
+    }
+
+    // Both entry points first establish their distinct scoped authority. This
+    // helper retains the original issuer, quota, expiry and stored digest gates.
+    #[allow(clippy::too_many_arguments)]
+    fn issue_network_membership_in_transaction(
+        &self,
+        tx: &Transaction<'_>,
+        actor: &Principal,
+        signer: &NetworkAuthoritySigner,
+        request: NetworkMembershipRequest,
+        snapshot: &TrustedNetworkPolicySnapshot,
+        product_space: bool,
+        now_ms: u64,
+    ) -> Result<SignedNetworkGrant, StorageError> {
+        remote_paths::grant_id_available(tx, &request.space_id, &request.grant_id)?;
         let member = snapshot
             .members
             .get(&request.installation_id)
@@ -454,10 +476,10 @@ impl Store {
             VALUES(?1,?2,'membership',?3,?4,?5,?6,?7,?8,?9,?10)",
             params![request.space_id,request.grant_id,request.installation_id,member.membership_epoch,snapshot.policy_epoch,
                 bound.digest().as_slice(),signed.claims,signed.signature,now_ms,request.expires_at_ms])?;
-        observe(&tx, &request.space_id, now_ms)?;
+        observe(tx, &request.space_id, now_ms)?;
         if product_space {
             crate::spaces::event(
-                &tx,
+                tx,
                 actor,
                 &request.space_id,
                 "network_membership_issued",
@@ -466,13 +488,12 @@ impl Store {
             )?;
         } else {
             audit(
-                &tx,
+                tx,
                 "network_membership_issued",
                 &request.grant_id,
                 auditing::management(actor),
             )?;
         }
-        tx.commit()?;
         Ok(signed)
     }
 

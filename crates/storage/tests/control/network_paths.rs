@@ -12,6 +12,8 @@ const NOW: u64 = 1_002_000;
 mod chains;
 #[path = "network_paths/direct_recovery.rs"]
 mod direct_recovery;
+#[path = "network_paths/preparation.rs"]
+mod preparation;
 #[path = "network_paths/relays.rs"]
 mod relays;
 #[path = "network_paths/route_sets.rs"]

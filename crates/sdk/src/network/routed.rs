@@ -18,7 +18,7 @@ mod control;
 pub use control::{
     ContinuousRouteSetSession, PinnedNetworkSpace, RouteSetContinuationStatus,
     RouteSetRecoveryProposal, VerifiedRemoteChain, VerifiedRemoteDirect, VerifiedRemoteRelay,
-    VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet,
+    VerifiedRemotePreparation, VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet,
 };
 pub use control::{RecoveredNetworkSession, RouteSetRecoveryConfig, RouteSetRecoverySource};
 use nestlink_transport_stream::owner::TaskOwner;

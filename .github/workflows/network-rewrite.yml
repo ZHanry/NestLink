@@ -112,6 +112,12 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-storage --test spaces addressing:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-space-address-storage-tests.log"
+      - name: Exercise ordinary-member fixed business pair preparation and revocation
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-storage --test control network_paths::preparation:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-space-preparation-storage-tests.log"
       - name: Retain exact-source route-set and address directory admission logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -121,6 +127,7 @@ jobs:
             ${{ runner.temp }}/network-route-set-storage-tests.log
             ${{ runner.temp }}/network-route-set-http-tests.log
             ${{ runner.temp }}/network-space-address-storage-tests.log
+            ${{ runner.temp }}/network-space-preparation-storage-tests.log
           if-no-files-found: error
           retention-days: 30
   topology-carrier:
@@ -258,6 +265,12 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-sdk --test space_addressing -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-space-address-sdk-tests.log"
+      - name: Exercise pinned ordinary-member preparation through actual HTTP body loss
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-sdk --test spaces preparation:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-space-preparation-sdk-tests.log"
       - name: Exercise signed direct authority and independent physical owner deadlines
         if: ${{ !cancelled() }}
         shell: bash
@@ -307,6 +320,7 @@ jobs:
             ${{ runner.temp }}/network-chain-registered-tests.log
             ${{ runner.temp }}/network-route-set-sdk-tests.log
             ${{ runner.temp }}/network-space-address-sdk-tests.log
+            ${{ runner.temp }}/network-space-preparation-sdk-tests.log
             ${{ runner.temp }}/network-signed-direct-sdk-tests.log
             ${{ runner.temp }}/network-private-service-sdk-tests.log
             ${{ runner.temp }}/network-route-set-product-tests.log

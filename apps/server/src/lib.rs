@@ -458,6 +458,10 @@ pub fn router(state: AppState) -> Router {
             get(network_policy::read_grant).delete(network_policy::revoke_grant),
         )
         .route(
+            "/api/v3/network/spaces/{space}/remote/{request}/preparation",
+            post(network_policy::preparation::prepare).get(network_policy::preparation::read),
+        )
+        .route(
             "/api/v3/network/spaces/{space}/remote/{request}/paths",
             post(network_policy::issue_path),
         )

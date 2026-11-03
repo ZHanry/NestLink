@@ -1,4 +1,6 @@
 //! Real typed SDK -> HTTP security middleware -> durable authorization entrypoints.
+#[path = "spaces/preparation.rs"]
+mod preparation;
 use nestlink_auth::{Secret, VaultKey, random_id};
 use nestlink_identity::PermitSigner;
 use nestlink_protocol::{

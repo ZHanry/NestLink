@@ -41,6 +41,26 @@ pub struct NetworkPolicyView {
     pub policy_epoch: u64,
     pub observed_at_unix_ms: u64,
 }
+/// A fixed approved business pair. The caller cannot select peers, keys,
+/// roles, grant IDs or a replacement lifetime.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRemotePreparationRequest {
+    pub expected_space_revision: u64,
+    pub expected_policy_epoch: u64,
+    pub connection_generation: u64,
+    pub permit_sha256: String,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRemotePreparationView {
+    pub request_id: String,
+    pub connection_generation: u64,
+    pub permit_sha256: String,
+    pub policy: NetworkPolicyView,
+    pub controller_membership: NetworkGrantView,
+    pub host_membership: NetworkGrantView,
+}
 /// Deployment-admin compare-and-swap. Keys are derived on the server; a remote
 /// response never authorizes changing an operator's locally pinned key.
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]

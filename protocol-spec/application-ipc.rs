@@ -320,4 +320,22 @@ pub enum Reply {
 /// Serializing it is permitted only into the authenticated transient IPC frame.
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
-pub enum SensitiveReply {}
+pub enum SensitiveReply {
+    SpaceInvitation {
+        space_id: String,
+        invitation_id: String,
+        #[serde(with = "sensitive_secret")]
+        token: nestlink_auth::Secret,
+    },
+}
+mod sensitive_secret {
+    use nestlink_auth::Secret;
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S: Serializer>(secret: &Secret, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(secret.expose())
+    }
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Secret, D::Error> {
+        String::deserialize(deserializer).map(Secret::from_text)
+    }
+}

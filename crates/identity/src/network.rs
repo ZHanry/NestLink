@@ -10,6 +10,8 @@ use zeroize::Zeroizing;
 #[cfg(test)]
 mod canonical_view_tests;
 mod private_service;
+mod preparation;
+pub use preparation::remote_preparation_grant_ids;
 mod remote;
 pub use private_service::{
     PrivateServiceChainBinding, PrivateServiceNodeBinding, PrivateServiceRouteBinding,

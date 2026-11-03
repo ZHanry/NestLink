@@ -23,6 +23,8 @@ mod chain;
 pub use chain::VerifiedRemoteChain;
 mod direct;
 pub use direct::VerifiedRemoteDirect;
+mod preparation;
+pub use preparation::VerifiedRemotePreparation;
 mod route_set;
 pub use route_set::{
     ContinuousRouteSetSession, RouteSetContinuationStatus, RouteSetRecoveryProposal,
