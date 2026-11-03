@@ -582,9 +582,10 @@ def verify_tag(github, revision):
 
 
 def validate_release(release, plan):
+    name = "NestLink 0.8.0RC" if plan.get("deferred_target_acceptance") else "NestLink " + VERSION
     require(isinstance(release, dict) and type(release.get("id")) is int and release["id"] > 0
             and release.get("tag_name") == TAG and type(release.get("draft")) is bool
-            and release.get("prerelease") is True and release.get("name") == "NestLink " + VERSION
+            and release.get("prerelease") is True and release.get("name") == name
             and release.get("body") == plan["body"], "Existing RC release identity or pending acceptance declaration differs")
 
 
@@ -698,7 +699,8 @@ def promote(args, github=None):
         require(verify_tag(github, plan["source_revision"]), "Created RC tag failed readback")
     if release is None:
         release = github.request("POST", base + "/releases", value={"tag_name": TAG, "target_commitish": plan["source_revision"],
-            "name": "NestLink " + VERSION, "body": plan["body"], "draft": True, "prerelease": True, "make_latest": "false"})
+            "name": "NestLink 0.8.0RC" if plan["deferred_target_acceptance"] else "NestLink " + VERSION,
+            "body": plan["body"], "draft": True, "prerelease": True, "make_latest": "false"})
         mutated = True
         validate_release(release, plan)
         require(release["draft"] is True, "GitHub did not create the intended RC draft")
