@@ -1,16 +1,20 @@
 //! Finite actual software RGB444 work. This is functional capability evidence,
 //! with no claim about capture, sustainable frame rate, GPU or HEVC 4:4:4.
 use crate::{ExecutionDirection, VideoConfig, Vp9Rgb444Decoder, Vp9Rgb444Encoder};
-use std::{io, time::{Duration, Instant}};
+use std::{io, sync::atomic::{AtomicBool, Ordering}, time::{Duration, Instant}};
 use zeroize::Zeroizing;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Vp9Rgb444DirectionProbe {
+    resource_id: [u8; 16],
     pub direction: ExecutionDirection,
     pub config: VideoConfig,
     pub output_frames: u32,
     pub elapsed: Duration,
     pub checked_close: bool,
+}
+impl Vp9Rgb444DirectionProbe {
+    pub fn resource_id(self) -> [u8; 16] { self.resource_id }
 }
 fn pattern(config: VideoConfig) -> io::Result<Zeroizing<Vec<u8>>> {
     let bytes = crate::vp9::validate_config(config)?;
@@ -46,6 +50,10 @@ fn verify(pixels: &[u8], expected: &[u8]) -> io::Result<()> {
 /// opposite direction. Success requires 32 immediate outputs, exact geometry,
 /// full-resolution RGB samples and checked close, inside the 10-second budget.
 pub fn probe_vp9_rgb444_direction(direction: ExecutionDirection, config: VideoConfig) -> io::Result<Vp9Rgb444DirectionProbe> {
+    probe_vp9_rgb444_direction_with_cancel(direction, config, &AtomicBool::new(false))
+}
+pub fn probe_vp9_rgb444_direction_with_cancel(direction: ExecutionDirection, config: VideoConfig, cancel: &AtomicBool) -> io::Result<Vp9Rgb444DirectionProbe> {
+    if cancel.load(Ordering::Acquire) { return Err(io::Error::new(io::ErrorKind::Interrupted, "VP9 direction probe cancelled")); }
     let pixels = pattern(config)?;
     let started = Instant::now();
     let mut encoder = Vp9Rgb444Encoder::new(config)?;
@@ -58,6 +66,7 @@ pub fn probe_vp9_rgb444_direction(direction: ExecutionDirection, config: VideoCo
         let decoded_owner = decoder.resource_id()?;
         if encoded_owner == decoded_owner { return Err(io::Error::other("VP9 probe owners are not independent")); }
         for frame in 0..32u64 {
+            if cancel.load(Ordering::Acquire) { return Err(io::Error::new(io::ErrorKind::Interrupted, "VP9 direction probe cancelled")); }
             if started.elapsed() >= Duration::from_secs(10) { return Err(io::Error::new(io::ErrorKind::TimedOut, "VP9 direction probe deadline")); }
             let pts = frame * 90_000 / u64::from(config.fps);
             let mut packet = encoder.encode(&pixels, pts)?;
@@ -71,15 +80,15 @@ pub fn probe_vp9_rgb444_direction(direction: ExecutionDirection, config: VideoCo
             }
         }
         if started.elapsed() >= Duration::from_secs(10) { return Err(io::Error::new(io::ErrorKind::TimedOut, "VP9 direction probe deadline")); }
-        Ok(())
+        Ok(match direction { ExecutionDirection::Encode => encoded_owner, ExecutionDirection::Decode => decoded_owner })
     })();
     let encoder_close = encoder.close();
     let decoder_close = decoder.close();
     encoder_close?;
     decoder_close?;
-    work?;
+    let resource_id = work?;
     if started.elapsed() >= Duration::from_secs(10) { return Err(io::Error::new(io::ErrorKind::TimedOut, "VP9 checked close exceeded probe deadline")); }
-    Ok(Vp9Rgb444DirectionProbe { direction, config, output_frames: 32, elapsed: started.elapsed(), checked_close: true })
+    Ok(Vp9Rgb444DirectionProbe { resource_id, direction, config, output_frames: 32, elapsed: started.elapsed(), checked_close: true })
 }
 
 #[cfg(test)]
@@ -103,5 +112,72 @@ mod tests {
         assert!(crate::validate_vp9_rgb444_keyframe(&packet.data[..1], 65, 33).is_err());
         assert!(crate::validate_vp9_rgb444_keyframe(&packet.data, 64, 33).is_err());
         encoder.close()
+    }
+    #[test]
+    fn actual_decoder_rejects_other_codec_and_resized_output() -> io::Result<()> {
+        let config = VideoConfig { width: 64, height: 32, fps: 60, bitrate_kbps: 10_000 };
+        let pixels = pattern(config)?;
+        let mut vp8 = crate::Vp8Encoder::new(config)?;
+        let foreign = vp8.encode(&pixels, 0, true)?;
+        let mut decoder = Vp9Rgb444Decoder::new(64, 32)?;
+        assert!(decoder.decode(&foreign.data).is_err());
+        let mut encoder = Vp9Rgb444Encoder::new(config)?;
+        let packet = encoder.encode(&pixels, 0)?;
+        let mut resized = Vp9Rgb444Decoder::new(65, 33)?;
+        assert!(resized.decode(&packet.data).is_err());
+        // Rejected admission must not emit substituted or stale pixels.
+        assert!(decoder.decode(&[]).is_err());
+        let decoded = Zeroizing::new(decoder.decode(&packet.data)?);
+        verify(&decoded, &pixels)?;
+        decoder.close()?;
+        resized.close()?;
+        encoder.close()
+    }
+    #[test]
+    fn actual_software_owner_seals_output_and_retires_receipts() -> io::Result<()> {
+        use crate::{ExecutionOutput, SoftwareExecution, Vp9Rgb444ExecutionTarget};
+        let config = VideoConfig { width: 65, height: 33, fps: 60, bitrate_kbps: 10_000 };
+        let target = Vp9Rgb444ExecutionTarget::new(config, [9; 32])?;
+        let mut encode = SoftwareExecution::start(ExecutionDirection::Encode, target)?;
+        let mut decode = SoftwareExecution::start(ExecutionDirection::Decode, target)?;
+        let encode_registration = encode.current()?;
+        let decode_registration = decode.current()?;
+        assert_ne!(encode_registration.identity()?.resource_id(), decode_registration.identity()?.resource_id());
+        assert!(SoftwareExecution::start(ExecutionDirection::Encode, target).is_err());
+        let pixels = pattern(config)?;
+        let output = encode.submit_encode(pixels.to_vec(), 1500, true)?.wait()?;
+        let ExecutionOutput::Encoded(step, Some(encoded_receipt)) = output else {
+            return Err(io::Error::other("real VP9 owner produced no encoded receipt"));
+        };
+        let packet = step.output.ok_or_else(|| io::Error::other("real VP9 owner produced no access unit"))?;
+        encoded_receipt.check_encoded(1500, true, &packet.data)?;
+        assert!(encoded_receipt.check_encoded(1501, true, &packet.data).is_err());
+        assert!(encoded_receipt.check_encoded(1500, false, &packet.data).is_err());
+        assert!(encoded_receipt.check_encoded(1500, true, b"changed").is_err());
+        let output = decode.submit_decode(packet.data, 1500)?.wait()?;
+        let ExecutionOutput::Decoded(Some((decoded, pts, decoded_receipt))) = output else {
+            return Err(io::Error::other("real VP9 owner produced no decoded receipt"));
+        };
+        let decoded = Zeroizing::new(decoded);
+        assert_eq!(pts, 1500);
+        decoded_receipt.check_decoded(pts, &decoded)?;
+        verify(&decoded, &pixels)?;
+        assert!(decoded_receipt.check_decoded(pts + 1, &decoded).is_err());
+        encode.shutdown()?;
+        decode.shutdown()?;
+        assert!(encode_registration.retired_joined());
+        assert!(decode_registration.retired_joined());
+        assert!(encoded_receipt.check_current().is_err());
+        assert!(decoded_receipt.check_current().is_err());
+        let mut replacement = SoftwareExecution::start(ExecutionDirection::Encode, target)?;
+        assert!(replacement.current()?.identity()?.generation() > encode_registration.identity()?.generation());
+        assert_ne!(replacement.current()?.identity()?.resource_id(), encode_registration.identity()?.resource_id());
+        replacement.shutdown()
+    }
+    #[test]
+    fn cancelled_probe_does_not_report_capability() {
+        let config = VideoConfig { width: 65, height: 33, fps: 60, bitrate_kbps: 10_000 };
+        let result = probe_vp9_rgb444_direction_with_cancel(ExecutionDirection::Encode, config, &AtomicBool::new(true));
+        assert!(matches!(result, Err(error) if error.kind() == io::ErrorKind::Interrupted));
     }
 }

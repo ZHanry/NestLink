@@ -1,0 +1,163 @@
+name: Actual cross-platform software RGB444 owner
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Exact main source; finite software evidence, not target qualification
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  software-owner:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    env:
+      CARGO_INCREMENTAL: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      EXPECTED_SOURCE: ${{ inputs.source_revision }}
+      CODEC_TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind exact clean source and locked inputs before building
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, re, subprocess
+          source = os.environ['EXPECTED_SOURCE']
+          assert re.fullmatch('[0-9a-f]{40}', source)
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip() == source
+          subprocess.run(['git','merge-base','--is-ancestor',source,'origin/main'],check=True)
+          assert subprocess.check_output(['git','status','--porcelain=v1','--untracked-files=all']) == b''
+          output = pathlib.Path(os.environ['RUNNER_TEMP'])/'vp9-software-owner'
+          output.mkdir()
+          receipt = {'source_revision':source,'workflow':os.environ['GITHUB_WORKFLOW_REF'],
+            'workflow_revision':os.environ['GITHUB_WORKFLOW_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
+            'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'runner_environment':os.environ['RUNNER_ENVIRONMENT'],
+            'runner_os':os.environ['RUNNER_OS'],'target':os.environ['CODEC_TARGET'],
+            'inputs':{p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in
+              ['Cargo.lock','docs/refactor/native-codecs.lock.json','crates/media-codec/src/vp9.c',
+               'crates/media-codec/src/vp9.rs','crates/media-codec/src/vp9_direction_probe.rs']},
+            'target_device_or_sustained_performance_claimed':False}
+          (output/'source.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          prefix = pathlib.Path(os.environ['RUNNER_TEMP'])/'vp9-codecs'/os.environ['CODEC_TARGET']
+          with open(os.environ['GITHUB_ENV'],'a',encoding='utf-8') as stream:
+              stream.write('NESTLINK_CODEC_PREFIX='+str(prefix)+'\n')
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Install original native build tools on hosted Linux
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config
+      - id: msys
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
+        with:
+          msystem: MSYS
+          install: make perl diffutils gawk sed grep coreutils nasm
+          cache: false
+      - name: Build and verify original pinned native components on Actions
+        shell: python
+        env:
+          MSYS_ROOT: ${{ steps.msys.outputs.msys2-location }}
+        run: |
+          import os, pathlib, subprocess, sys
+          command = [sys.executable,'scripts/refactor-native-codecs.py','build','--target',os.environ['CODEC_TARGET'],
+            '--cache-dir',str(pathlib.Path(os.environ['RUNNER_TEMP'])/'vp9-sources'),
+            '--work-dir',str(pathlib.Path(os.environ['RUNNER_TEMP'])/'vp9-codecs')]
+          if os.name == 'nt':
+              tools = pathlib.Path(os.environ['MSYS_ROOT'])/'usr/bin'
+              command += ['--msys-bin',str(tools),'--nasm',str(tools/'nasm.exe')]
+          output = pathlib.Path(os.environ['RUNNER_TEMP'])/'vp9-software-owner'
+          with (output/'native-build.log').open('wb') as log:
+              result = subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,timeout=900)
+          assert result.returncode == 0, 'Original native build failed; log retained'
+          subprocess.run([sys.executable,'scripts/refactor-native-codecs.py','verify','--target',os.environ['CODEC_TARGET'],
+            '--prefix',os.environ['NESTLINK_CODEC_PREFIX']],check=True)
+      - name: Prepare ordinary Windows token access to original build inputs
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $testUserSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+          $testTemp = Join-Path $env:RUNNER_TEMP 'vp9-normal-user-temp'
+          New-Item -ItemType Directory -Path $testTemp -Force | Out-Null
+          foreach ($entry in @(
+            @{ Path = (Join-Path $env:USERPROFILE '.rustup'); Access = 'RX' },
+            @{ Path = (Join-Path $env:USERPROFILE '.cargo'); Access = 'M' },
+            @{ Path = $env:GITHUB_WORKSPACE; Access = 'M' },
+            @{ Path = $env:NESTLINK_CODEC_PREFIX; Access = 'RX' },
+            @{ Path = $testTemp; Access = 'M' }
+          )) {
+            icacls $entry.Path /grant "*${testUserSid}:(OI)(CI)$($entry.Access)" /T /Q
+            if ($LASTEXITCODE -ne 0) { throw 'Original CI input permissions failed' }
+          }
+          "TEMP=$testTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TMP=$testTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Exercise actual RGB444, malicious inputs, sealed outputs and joined cleanup
+        if: ${{ !cancelled() }}
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, re, subprocess, sys
+          output = pathlib.Path(os.environ['RUNNER_TEMP'])/'vp9-software-owner'
+          receipt = json.loads((output/'source.json').read_text())
+          receipt.update({'passed':False,'commands':[],'scope':'Actual pinned software VP9 profile1/sRGB/full/I444 codec output, finite 32-frame/10-second direction probes, odd dimensions, original bounded execution owner and negative inputs. No desktop capture, network, display, GPU or sustainable frame-rate qualification.'})
+          wrapper = [sys.executable,'scripts/refactor-windows-normal-user.py'] if os.name == 'nt' else []
+          def execute(name, command):
+              with (output/(name+'.log')).open('wb') as log:
+                  result = subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,timeout=900)
+              receipt['commands'].append({'name':name,'argv':command,'return_code':result.returncode})
+              return result.returncode == 0
+          try:
+              results = [execute('supply-negatives',[sys.executable,'-B','-m','unittest','discover','-s','tests/refactor','-p','test_native_codecs.py','-v'])]
+              for name,args in [
+                ('vp9-tests',['test','--release','--locked','-p','nestlink-media-codec','--lib','vp9_direction_probe::tests::','--','--show-output','--test-threads=1','--color','never']),
+                ('owner-fence-tests',['test','--release','--locked','-p','nestlink-media-codec','--lib','execution::tests::','--','--show-output','--test-threads=1','--color','never']),
+                ('strict',['clippy','--release','--locked','-p','nestlink-media-codec','--all-targets','--','-D','warnings']),
+                ('direction-build',['build','--release','--locked','-p','nestlink-media-codec','--example','vp9-rgb444-direction-probe'])]:
+                  results.append(execute(name,wrapper+['cargo']+args))
+              log = (output/'vp9-tests.log').read_text(errors='replace')
+              expected = ['actual_libvpx_rgb444_preserves_adjacent_colors_and_odd_geometry',
+                'public_libvpx_parser_rejects_truncation_and_wrong_geometry',
+                'actual_decoder_rejects_other_codec_and_resized_output',
+                'actual_software_owner_seals_output_and_retires_receipts',
+                'cancelled_probe_does_not_report_capability']
+              receipt['expected_tests'] = expected
+              receipt['every_expected_test_passed'] = all(re.search(r'(?m)^test vp9_direction_probe::tests::'+name+r' \.\.\. ok\s*$',log) for name in expected)
+              receipt['no_ignored_cases'] = bool(re.search(r'test result: ok\. 5 passed; 0 failed; 0 ignored;',log))
+              executable = pathlib.Path('target/release/examples/vp9-rgb444-direction-probe'+('.exe' if os.name == 'nt' else ''))
+              if executable.is_file():
+                  receipt['executable_sha256'] = hashlib.sha256(executable.read_bytes()).hexdigest()
+                  for direction in ['encode','decode']:
+                      results.append(execute(direction+'-direction',wrapper+[str(executable),'65','33','60','10000']))
+              else:
+                  results.append(False)
+              receipt['passed'] = all(results) and receipt['every_expected_test_passed'] and receipt['no_ignored_cases']
+          finally:
+              receipt['files'] = [{'path':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+                for p in sorted(output.iterdir()) if p.is_file()]
+              (output/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          assert receipt['passed'], 'Original software owner failed; retain every log without target qualification'
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: vp9-software-owner-${{ matrix.os }}-${{ inputs.source_revision }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/vp9-software-owner/
+          if-no-files-found: error
+          retention-days: 30
