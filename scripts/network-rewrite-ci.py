@@ -329,7 +329,10 @@ def main() -> int:
             ("ci-evidence-tests", prefix + [sys.executable, "-B", "-m", "unittest", "discover", "-s", "tests/network", "-p", "test_*.py", "-v"]),
         ]
         for name, command in commands:
-            run_command(name, command, source, output, records)
+            # Case isolation preserves timing fixtures; budget the entire serial
+            # suite separately without changing any deadline inside its tests.
+            timeout = 3600 if name == "contract-tests" else COMMAND_TIMEOUT_SECONDS
+            run_command(name, command, source, output, records, timeout)
             require_unchanged_source(before, source_snapshot(source, identity["source_revision"]))
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         failure = type(error).__name__ + ": " + str(error)

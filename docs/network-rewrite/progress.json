@@ -6,8 +6,19 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "abcbabb049317e61a74a05414596868b6b633de0",
-  "checkpoint_kind": "rc_preview_contract_case_isolation_awaiting_exact_source_checks",
+  "source_revision": "354de25cedf1e04a2318d7f13c4474f43e3b0fd2",
+  "checkpoint_kind": "rc_preview_serial_contract_aggregate_budget_awaiting_exact_source_checks",
+  "contract_suite_budget_followup": {
+    "source_is_pre_commit_parent": true,
+    "prior_run_id": 41637342044,
+    "failed_job_id": 125921757540,
+    "result": "Windows contract suite exceeded its aggregate 1200s command budget at 1200.094s; return_code124, timed_out=true. No FAILED or panic occurred in the retained full contract log. The original simultaneous SQLite admission case passed. Linux contracts and all seven other network jobs passed.",
+    "official_artifact_id": 13232237403,
+    "official_archive_sha256": "dbb37127763fa5df9ca63064b5fe96e45c660fb865223b19aa0c70dc23ced099",
+    "contract_log_sha256": "cd80655838486854a1102522dfa6f6810ddb910277c3e33a1c71572548659174",
+    "change": "Allocate 3600s to the complete serial contract-tests command and 75 minutes to its aggregate runner job. All other command budgets, production source, per-case deadlines, clock margins, concurrency inside cases and assertions remain unchanged. This is scheduling capacity for executing the entire existing suite, not an acceptance threshold change.",
+    "next": "Run all seven required workflows at the new exact source, then build the full sixteen-role cohort and publish the user-authorized prerelease with actual pending acceptance and preserved failure records."
+  },
   "contract_isolation_followup": {
     "source_is_pre_commit_parent": true,
     "prior_run_id": 41634575939,
