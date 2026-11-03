@@ -82,3 +82,16 @@ construction defect is not attributed as the cause of any historical resident
 failure. These newer changes still require exact-source hosted lifecycle,
 strict lint and original parallel-workspace execution. No original four-case
 assertion/count, real OS service or timeout is replaced.
+
+The completed exact-source c589 focused run passes the older separate owner
+regression on both OS (Linux 1/1 in 0.39s, Windows 1/1 in 0.10s) and its strict
+commands. Both original resident suites pass 4/4. The same-source complete
+workspace also executes the older owner regression successfully (Linux 0.36s,
+Windows 0.11s), while other original targets fail. These outcomes are retained
+separately in [focused evidence](../../network-rewrite/evidence/native-offline-resident-c589362.json)
+and [complete Rust evidence](../../network-rewrite/evidence/full-rust-core-c589362.json).
+They qualify only the earlier source present in those runs; neither executes
+the newer immediate constructor adoption or six-stage cancellation/error
+coverage. The two original five-second startup reads and every original
+resident deadline remain unchanged. The original 25-second Luanti failure
+and its unchanged check remain separate.

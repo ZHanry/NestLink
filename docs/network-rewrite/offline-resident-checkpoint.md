@@ -530,3 +530,104 @@ independent public-PKI owner and cumulative authority budget remain unchanged.
 The original 25-second Luanti gate and historical failure remain separate and
 unchanged. No local project build, formatter, lint, test, Python execution or
 packaging occurred; this evidence work did not dispatch another workflow.
+
+## Sourcec589 focused success and complete full Rust failures
+
+The focused original resident run
+[41562179075](https://github.com/ZHanry/NestLink/actions/runs/41562179075),
+exact source `c5893625ebbe3b50406810bd7eb34c60cbbea849`, completed successfully
+on both hosted OS. All four original cases passed: Linux in 221.58s and
+Windows in 275.24s. This includes all eight management fences, all four
+pending terminal cases, and both complete QUIC/TLS initial/rebuilt real
+pixel and two 262144-byte file paths with original EOF/IPC Exit and physical
+listener cleanup assertions. The separate original platform-owner regression
+passed 1/1 in 0.39s on Linux and 0.10s on Windows, with its additional strict
+clippy command. Linux's real leading-hyphen Secret Service regression passed
+1/1 in 0.12s, including its additional strict command. All original focused
+AppCore/daemon/desktop commands and original three strict commands passed.
+
+The complete receipt and every case-labelled fixed decode-stage observation
+are in [native-offline-resident-c589362.json](evidence/native-offline-resident-c589362.json).
+Both source-before/after facts are clean and byte-identical. All 57 downloaded
+files were independently byte-counted and SHA256-hashed: 50 extracted files,
+two complete job logs, two ZIPs and three final API metadata files. All 42
+producer inventory entries match downloaded bytes. Both ZIP hashes match
+GitHub's official digests. Native archive/library hashes are explicitly
+producer receipt inventory; those library binaries were not in the downloaded
+focused artifact. Both original native suppliers built and verified the fixed
+17-file bundled libyuv closure and the original Rust consumers linked and ran.
+
+The same-source full Rust run
+[41562145692](https://github.com/ZHanry/NestLink/actions/runs/41562145692)
+completed with failure. All 13 jobs completed; seven peripheral jobs succeeded
+and both core, both complete-workspace and both boundary-tools jobs failed.
+No job timed out or was cancelled. This focused success does not replace any
+full-workflow failure.
+
+Early core execution returned Linux 3/4 in 128.13s: pending and both complete
+carriers passed, while management failed before its first case diagnostic with
+only `Error: Elapsed(())`. The exact original startup await/OS cause was not
+logged. Windows returned 0/4 in 51.84s, each error at the original peer helper's
+second operation: UDP bind of the TCP-selected numeric port, with
+`PermissionDenied` / `Os10013`. The logs prove the operation; an excluded-range,
+security or live-port-owner explanation is not established. No original
+timeout or failure was swallowed or retried.
+
+Both complete workspaces ran all 185 harnesses through their final doc-tests
+under the original `--workspace --locked --no-fail-fast` command. Linux totals
+2072 passed, 5 failed and 48 ignored; Windows totals 2074 passed, 5 failed and
+16 ignored. Every declared case count matches the actual case lines and final
+summary. Cargo stderr headings can arrive before the previous stdout summary
+or after the next lowercase `running N tests` line. Evidence associates these
+two independently ordered streams by original Cargo harness order, excluding
+native supplier bootstrap messages, and retains all raw line references.
+
+Four failures on each OS are the original resident cases: the fresh independent
+workspace job lacked the original frozen public-PKI HTTPS fixture tool, so
+each failed setup before resident business assertions. Linux returned 0/4 in
+5.15s; Windows 0/4 in 1.84s. The separate older owner regression still passed
+1/1 in 0.36s and 0.11s respectively. The remaining Linux failure is
+`member_removal_and_session_logout_close_both_transports` in SDK `space_dns`
+(10/11 in 13.30s), with `AddrInUse` / `Os98`; the specific bind/cleanup cause
+is not logged. Windows SDK `space_dns` passed 11/11 in 12.91s. The remaining
+Windows failure is AppCore
+`proved_file_access_tracks_dynamic_roots_and_keeps_failed_tasks_session_scoped`
+(native_session 5/6 in 16.70s): the original assertion at line 540 expected
+Succeeded and received StartNativeSession Failed/Transport/DirectUnavailable.
+Linux AppCore native_session passed 6/6 in 7.97s. No unobserved port, timeout,
+media or owner cause is inferred from that Windows operation failure.
+
+Both workspaces actually reached and passed the original eight VP8 Rust cases.
+Media-codec totals were Linux 46/46 in 0.52s and Windows 70/70 in 6.92s;
+prefix_validation passed 3/3 and 2/2 respectively, both in 0.01s. The separate
+Linux boundary-tools job also actually passed the original first-party VP8
+ASan/UBSan corpus (96 real frames, 3072 mutated packets and every encoded-prefix
+truncation) and the original 100000-case PipeWire PCM sanitizer. Upstream static
+libvpx/libyuv were not sanitizer-instrumented. The original Python discovery
+ran 292 tests on each OS and failed with 35 notice setup errors, all reporting
+the missing `cargo fetch --locked` prerequisite. Later UI-token and xtask
+steps were skipped. See the independently committed
+[boundary-tools evidence](evidence/boundary-tools-c589362.json) for the precise
+execution, error and skip distinction.
+
+[full-rust-core-c589362.json](evidence/full-rust-core-c589362.json) retains all
+13 final job records, both complete core/workspace step inventories, all 370
+workspace harness/case records and exact original errors. All 21 downloaded
+files, including six complete job logs and eight early artifact files, were
+independently byte-counted and SHA256-hashed; both early ZIP hashes match their
+official GitHub digests. The seven peripheral successes are GitHub metadata,
+without claiming their complete logs were independently audited.
+
+The newer constructor adoption and six-stage cancellation/error regression
+in `62a0668`, workspace HTTPS prerequisite in `dd8c39d`, and carrier-specific
+standard port-zero selection in `00f5e7a` postdate both sourcec589 runs. They
+remain pending their own exact-source hosted qualification; the newer owner
+fix is scoped to constructor and original long-lived children. See
+[ADR0077](../adr/network/0077-original-resident-platform-owner.md) and
+[ADR0079](../adr/network/0079-original-resident-carrier-port.md). The four
+original resident names/counts/assertions, immutable 60ms ingress anchor,
+40ms late threshold, PTS/capture clocks, ordinary OS tokens, independent
+public-PKI owner, cumulative authority and all original deadlines remain.
+The original 25-second Luanti check and its failed history remain unchanged.
+No local project build, formatter, lint, test, Python execution or packaging
+occurred; this evidence work did not push or dispatch.

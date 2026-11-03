@@ -43,3 +43,16 @@ independent public-PKI HTTPS owner, ordinary Windows token, cumulative authority
 and all timing gates remain. This source adjustment needs a newer complete
 hosted matrix; a prior focused success does not qualify it. No local project
 build, formatter, lint, test, Python execution or packaging was performed.
+
+The final [sourcec589 complete Rust evidence](../../network-rewrite/evidence/full-rust-core-c589362.json)
+preserves all four original Windows early `peer_udp_bind` Os10013 diagnostics,
+the original failed result and independent artifact ZIP/digests. The same
+source's [focused resident run](../../network-rewrite/evidence/native-offline-resident-c589362.json)
+passes both original four-case suites and emits no socket-failure diagnostic.
+These are separate observed results; the focused success does not reconstruct
+the earlier OS cause or qualify the later carrier-selection fix in `00f5e7a`.
+Both complete workspaces independently fail the four original resident setups
+because their fresh job omitted the pinned original HTTPS fixture tool;
+`dd8c39d` restores that prerequisite without changing the cases. A newer exact
+source must execute the original complete matrix before claiming either
+adjustment validated. The original 25-second Luanti failure stays unchanged.
