@@ -37,12 +37,10 @@ async fn original_platform_owner_is_exclusive_cancel_safe_and_released_after_shu
     #[cfg(target_os = "linux")]
     assert!(
         !first_children.is_empty()
-            && first_children
-                .iter()
-                .all(|pid| {
-                    std::fs::symlink_metadata(format!("/proc/{pid}"))
-                        .is_err_and(|error| error.kind() == std::io::ErrorKind::NotFound)
-                }),
+            && first_children.iter().all(|pid| {
+                std::fs::symlink_metadata(format!("/proc/{pid}"))
+                    .is_err_and(|error| error.kind() == std::io::ErrorKind::NotFound)
+            }),
         "explicit shutdown left an original platform process alive or unreaped"
     );
 
@@ -61,12 +59,10 @@ async fn original_platform_owner_is_exclusive_cancel_safe_and_released_after_shu
     #[cfg(target_os = "linux")]
     assert!(
         !dropped_children.is_empty()
-            && dropped_children
-                .iter()
-                .all(|pid| {
-                    std::fs::symlink_metadata(format!("/proc/{pid}"))
-                        .is_err_and(|error| error.kind() == std::io::ErrorKind::NotFound)
-                }),
+            && dropped_children.iter().all(|pid| {
+                std::fs::symlink_metadata(format!("/proc/{pid}"))
+                    .is_err_and(|error| error.kind() == std::io::ErrorKind::NotFound)
+            }),
         "Drop left an original platform process alive or unreaped"
     );
     let after_drop = tokio::time::timeout(
