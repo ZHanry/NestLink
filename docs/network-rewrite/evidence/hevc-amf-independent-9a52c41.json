@@ -1,0 +1,408 @@
+{
+  "schema_version": 1,
+  "source_revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+  "run_id": 41583603301,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41583603301",
+  "scope": "Independent mature FFmpeg trace of original4de AMFMain8 parameter bytes, verified against both original encode/decode command logs; parameter-only diagnosis, no picture, decode, GPU performance or acceptance qualification.",
+  "artifact": {
+    "id": 13207420319,
+    "node_id": "MDg6QXJ0aWZhY3QxMzIwNzQyMDMxOQ==",
+    "name": "hevc-parameter-diagnostic-9a52c41439016ec37f98a0c1ee45b2cfc53912eb-1",
+    "size_in_bytes": 14953,
+    "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13207420319",
+    "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13207420319/zip",
+    "expired": false,
+    "digest": "sha256:60a5dec0bd1bdd408233d651f7d8d762fee7d4c875d21c77ef6ca0e8f2d7e1cb",
+    "created_at": "2026-11-03T05:23:34Z",
+    "updated_at": "2026-11-03T05:23:34Z",
+    "expires_at": "2026-12-03T05:23:33Z",
+    "workflow_run": {
+      "id": 41583603301,
+      "repository_id": 1423035582,
+      "head_repository_id": 1423035582,
+      "head_branch": "main",
+      "head_sha": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb"
+    }
+  },
+  "official_archive_digest_and_size_verified": true,
+  "all13producer_payload_hashes_and_sizes_verified": true,
+  "receipt": {
+    "schema_version": 1,
+    "diagnostic_completed": true,
+    "acceptance_passed": false,
+    "scope": "Parameter-only independent FFmpeg trace. No picture, decode, GPU, performance or product acceptance claim.",
+    "source_revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+    "workflow_revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+    "run_id": "41583603301",
+    "attempt": "1",
+    "runner_environment": "github-hosted",
+    "runner_os": "Linux",
+    "commands": [
+      {
+        "name": "ffmpeg-version",
+        "argv": [
+          "/usr/bin/ffmpeg",
+          "-version"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "ffprobe-version",
+        "argv": [
+          "/usr/bin/ffprobe",
+          "-version"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "ubuntu-package",
+        "argv": [
+          "dpkg-query",
+          "-W",
+          "ffmpeg"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "ffprobe",
+        "argv": [
+          "/usr/bin/ffprobe",
+          "-v",
+          "trace",
+          "-f",
+          "hevc",
+          "-show_streams",
+          "-show_format",
+          "-of",
+          "json",
+          "/home/runner/work/_temp/hevc-parameter-diagnostic/original-parameters.hevc"
+        ],
+        "return_code": 0
+      },
+      {
+        "name": "ffmpeg-trace",
+        "argv": [
+          "/usr/bin/ffmpeg",
+          "-hide_banner",
+          "-loglevel",
+          "trace",
+          "-f",
+          "hevc",
+          "-i",
+          "/home/runner/work/_temp/hevc-parameter-diagnostic/original-parameters.hevc",
+          "-map",
+          "0:v:0",
+          "-c:v",
+          "copy",
+          "-bsf:v",
+          "trace_headers",
+          "-f",
+          "null",
+          "-"
+        ],
+        "return_code": 234
+      }
+    ],
+    "tools": {
+      "ffmpeg": {
+        "path": "/usr/bin/ffmpeg",
+        "sha256": "ed16af623947494a72e284b6eb8ff225f2da22b38b5d5069c2fd4b4ba3384e41",
+        "version": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers\nbuilt with gcc 13 (Ubuntu 13.2.0-23ubuntu3)\nconfiguration: --prefix=/usr --extra-version=3ubuntu5 --toolchain=hardened --libdir=/usr/lib/x86_64-linux-gnu --incdir=/usr/include/x86_64-linux-gnu --arch=amd64 --enable-gpl --disable-stripping --disable-omx --enable-gnutls --enable-libaom --enable-libass --enable-libbs2b --enable-libcaca --enable-libcdio --enable-libcodec2 --enable-libdav1d --enable-libflite --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libglslang --enable-libgme --enable-libgsm --enable-libharfbuzz --enable-libmp3lame --enable-libmysofa --enable-libopenjpeg --enable-libopenmpt --enable-libopus --enable-librubberband --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libspeex --enable-libtheora --enable-libtwolame --enable-libvidstab --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-openal --enable-opencl --enable-opengl --disable-sndio --enable-libvpl --disable-libmfx --enable-libdc1394 --enable-libdrm --enable-libiec61883 --enable-chromaprint --enable-frei0r --enable-ladspa --enable-libbluray --enable-libjack --enable-libpulse --enable-librabbitmq --enable-librist --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libx264 --enable-libzmq --enable-libzvbi --enable-lv2 --enable-sdl2 --enable-libplacebo --enable-librav1e --enable-pocketsphinx --enable-librsvg --enable-libjxl --enable-shared\nlibavutil      58. 29.100 / 58. 29.100\nlibavcodec     60. 31.102 / 60. 31.102\nlibavformat    60. 16.100 / 60. 16.100\nlibavdevice    60.  3.100 / 60.  3.100\nlibavfilter     9. 12.100 /  9. 12.100\nlibswscale      7.  5.100 /  7.  5.100\nlibswresample   4. 12.100 /  4. 12.100\nlibpostproc    57.  3.100 / 57.  3.100\n"
+      },
+      "ffprobe": {
+        "path": "/usr/bin/ffprobe",
+        "sha256": "272f6ebc634a63d9c8b4ca68e964119d980f25154e5aa2c35e5487da48e9a58f",
+        "version": "ffprobe version 6.1.1-3ubuntu5 Copyright (c) 2007-2023 the FFmpeg developers\nbuilt with gcc 13 (Ubuntu 13.2.0-23ubuntu3)\nconfiguration: --prefix=/usr --extra-version=3ubuntu5 --toolchain=hardened --libdir=/usr/lib/x86_64-linux-gnu --incdir=/usr/include/x86_64-linux-gnu --arch=amd64 --enable-gpl --disable-stripping --disable-omx --enable-gnutls --enable-libaom --enable-libass --enable-libbs2b --enable-libcaca --enable-libcdio --enable-libcodec2 --enable-libdav1d --enable-libflite --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libglslang --enable-libgme --enable-libgsm --enable-libharfbuzz --enable-libmp3lame --enable-libmysofa --enable-libopenjpeg --enable-libopenmpt --enable-libopus --enable-librubberband --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libspeex --enable-libtheora --enable-libtwolame --enable-libvidstab --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-openal --enable-opencl --enable-opengl --disable-sndio --enable-libvpl --disable-libmfx --enable-libdc1394 --enable-libdrm --enable-libiec61883 --enable-chromaprint --enable-frei0r --enable-ladspa --enable-libbluray --enable-libjack --enable-libpulse --enable-librabbitmq --enable-librist --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libx264 --enable-libzmq --enable-libzvbi --enable-lv2 --enable-sdl2 --enable-libplacebo --enable-librav1e --enable-pocketsphinx --enable-librsvg --enable-libjxl --enable-shared\nlibavutil      58. 29.100 / 58. 29.100\nlibavcodec     60. 31.102 / 60. 31.102\nlibavformat    60. 16.100 / 60. 16.100\nlibavdevice    60.  3.100 / 60.  3.100\nlibavfilter     9. 12.100 /  9. 12.100\nlibswscale      7.  5.100 /  7.  5.100\nlibswresample   4. 12.100 /  4. 12.100\nlibpostproc    57.  3.100 / 57.  3.100\n"
+      }
+    },
+    "fixture_sha256": "2ea1c44e7c96b5f207d2e657f2bfe8e207f9325ca21307ba835b8eabbf8fde18",
+    "original_build_provenance": {
+      "source_revision": "4de4b9bef86113217f5e4572a436b426fbd427f9",
+      "run_id": 41581302927,
+      "artifact_id": 13206262633,
+      "official_artifact_digest": "sha256:c176f5217b4ca6fae543d129c55f830b9eabdcbbe864dac8b722618d28a99d59",
+      "executable_sha256": "82f32cf6d6244eaff0f61d4fb6216e7436329bfebcd330096bbcb96c224309fa"
+    },
+    "original_rejection": {
+      "code": "sps.poc_timing",
+      "field": "vui_poc_proportional_to_timing_flag",
+      "actual": 1,
+      "required": 0
+    },
+    "original_evidence_sha256": "1a0c4ec98d546f3350ccacfbd2ccd454cddf45e4ab2fdbf3d1d5ac5b2b779152",
+    "fixture_verified_against_both_original_commands": true,
+    "annex_b_sha256": "96e2063effcd59672c6750cc35c34858b00f134592b21645538c8de2bdecca42",
+    "independent_sps_fields": {
+      "pic_width_in_luma_samples": [
+        {
+          "section": "Sequence Parameter Set",
+          "bit_position": 124,
+          "field": "pic_width_in_luma_samples",
+          "value": 1920
+        }
+      ],
+      "pic_height_in_luma_samples": [
+        {
+          "section": "Sequence Parameter Set",
+          "bit_position": 145,
+          "field": "pic_height_in_luma_samples",
+          "value": 1088
+        }
+      ],
+      "video_full_range_flag": [
+        {
+          "section": "Sequence Parameter Set",
+          "bit_position": 269,
+          "field": "video_full_range_flag",
+          "value": 0
+        }
+      ],
+      "colour_primaries": [
+        {
+          "section": "Sequence Parameter Set",
+          "bit_position": 271,
+          "field": "colour_primaries",
+          "value": 1
+        }
+      ],
+      "transfer_characteristics": [
+        {
+          "section": "Sequence Parameter Set",
+          "bit_position": 279,
+          "field": "transfer_characteristics",
+          "value": 1
+        }
+      ],
+      "matrix_coefficients": [
+        {
+          "section": "Sequence Parameter Set",
+          "bit_position": 287,
+          "field": "matrix_coefficients",
+          "value": 1
+        }
+      ],
+      "vui_num_units_in_tick": [
+        {
+          "section": "Sequence Parameter Set",
+          "bit_position": 301,
+          "field": "vui_num_units_in_tick",
+          "value": 1
+        }
+      ],
+      "vui_time_scale": [
+        {
+          "section": "Sequence Parameter Set",
+          "bit_position": 333,
+          "field": "vui_time_scale",
+          "value": 60
+        }
+      ],
+      "vui_poc_proportional_to_timing_flag": [
+        {
+          "section": "Sequence Parameter Set",
+          "bit_position": 365,
+          "field": "vui_poc_proportional_to_timing_flag",
+          "value": 1
+        }
+      ],
+      "vui_num_ticks_poc_diff_one_minus1": [
+        {
+          "section": "Sequence Parameter Set",
+          "bit_position": 366,
+          "field": "vui_num_ticks_poc_diff_one_minus1",
+          "value": 0
+        }
+      ],
+      "vui_hrd_parameters_present_flag": [
+        {
+          "section": "Sequence Parameter Set",
+          "bit_position": 367,
+          "field": "vui_hrd_parameters_present_flag",
+          "value": 0
+        }
+      ]
+    },
+    "ffprobe_return_code": 0,
+    "trace_return_code": 234,
+    "parameter_only_exit_codes_are_not_acceptance": true,
+    "original_rejection_agrees_with_independent_trace": true,
+    "files": [
+      {
+        "path": "ffmpeg-trace.stderr",
+        "bytes": 30090,
+        "sha256": "26be51b03647413f62511bbf862ce8a36451111031adc046515368ca68bb7da4"
+      },
+      {
+        "path": "ffmpeg-trace.stdout",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "ffmpeg-version.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "ffmpeg-version.stdout",
+        "bytes": 1838,
+        "sha256": "5b320c97f515e79171f10a2147d875ffb6b14bd2b25681047b73c46fe0a527ee"
+      },
+      {
+        "path": "ffprobe-version.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "ffprobe-version.stdout",
+        "bytes": 1839,
+        "sha256": "1b6410f756d8b5ef5308d712b51d2543bf8c8e6bc5796b7ede9570d099131e0b"
+      },
+      {
+        "path": "ffprobe.stderr",
+        "bytes": 4725,
+        "sha256": "078d088a7185daca46298a24ee1dfba39d9dd89be08d7f2482f116cf247392c3"
+      },
+      {
+        "path": "ffprobe.stdout",
+        "bytes": 1639,
+        "sha256": "cd166eb430091f3314f76d0a51c1c0c8d5e07ab407f1a1f03397ea659b9d5ea6"
+      },
+      {
+        "path": "fixture.json",
+        "bytes": 1314,
+        "sha256": "2ea1c44e7c96b5f207d2e657f2bfe8e207f9325ca21307ba835b8eabbf8fde18"
+      },
+      {
+        "path": "independent-fields.json",
+        "bytes": 30217,
+        "sha256": "208d0c352b380e268381c233308869b5398dc12d4dfa23926d510f6813da67ff"
+      },
+      {
+        "path": "original-parameters.hevc",
+        "bytes": 94,
+        "sha256": "96e2063effcd59672c6750cc35c34858b00f134592b21645538c8de2bdecca42"
+      },
+      {
+        "path": "ubuntu-package.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "ubuntu-package.stdout",
+        "bytes": 24,
+        "sha256": "9827afa17d01c977c23ff7a81ed6b766d85b426d84c9cd560081f02ff0d4c0fa"
+      }
+    ]
+  },
+  "additional_original_sps_fields": [
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 121,
+      "field": "chroma_format_idc",
+      "value": 1
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 124,
+      "field": "pic_width_in_luma_samples",
+      "value": 1920
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 145,
+      "field": "pic_height_in_luma_samples",
+      "value": 1088
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 166,
+      "field": "conformance_window_flag",
+      "value": 1
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 167,
+      "field": "conf_win_left_offset",
+      "value": 0
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 168,
+      "field": "conf_win_right_offset",
+      "value": 0
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 169,
+      "field": "conf_win_top_offset",
+      "value": 0
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 170,
+      "field": "conf_win_bottom_offset",
+      "value": 4
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 269,
+      "field": "video_full_range_flag",
+      "value": 0
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 271,
+      "field": "colour_primaries",
+      "value": 1
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 279,
+      "field": "transfer_characteristics",
+      "value": 1
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 287,
+      "field": "matrix_coefficients",
+      "value": 1
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 301,
+      "field": "vui_num_units_in_tick",
+      "value": 1
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 333,
+      "field": "vui_time_scale",
+      "value": 60
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 365,
+      "field": "vui_poc_proportional_to_timing_flag",
+      "value": 1
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 366,
+      "field": "vui_num_ticks_poc_diff_one_minus1",
+      "value": 0
+    },
+    {
+      "section": "Sequence Parameter Set",
+      "bit_position": 367,
+      "field": "vui_hrd_parameters_present_flag",
+      "value": 0
+    }
+  ],
+  "findings": [
+    "Independent FFmpeg confirms originalPOCflag1, num_ticks_poc_diff_one_minus1=0, clock1/60, HRDflag0 andBT709limitedcolor. The existing restricted parser refusesPOCsyntax; this record doesnotclaimthebitstreamisnonconformingHEVC.",
+    "Coded1920x1088, 4:2:0, conformance_window_flag1, bottom_offset4 means8lumarowscropped for1920x1080display. IndependentlyofthefirstPOCrejection, theoriginalexactuncropped1080contract would rejectthisoutput. No parser orgeometryassertionwaschanged.",
+    "ffprobe returns0; trace_headers returns234 because parameter-only input containsnopicture. Rawdiagnosticfailure retained and acceptance_passed=false.",
+    "No rewrite ofparameterNALs, noVCL/pixelrecord, nofallback, nohardwarequalification. Originaleighttargetfailuresretained."
+  ],
+  "raw_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\hevc-amf-independent-verified"
+}

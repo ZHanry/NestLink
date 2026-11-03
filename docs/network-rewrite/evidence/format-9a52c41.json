@@ -1,0 +1,431 @@
+{
+  "schema_version": 1,
+  "source_revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+  "scope": "Hosted formatting only; zero-byte patch independently verified. No compilation or acceptance qualification.",
+  "run_id": 41583603361,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41583603361",
+  "job": {
+    "id": 125743829909,
+    "run_id": 41583603361,
+    "workflow_name": "Review network source formatting",
+    "head_branch": "main",
+    "run_url": "https://api.github.com/repos/ZHanry/NestLink/actions/runs/41583603361",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOVNHMvs8AAAAdRuqTlQ",
+    "head_sha": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+    "url": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125743829909",
+    "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41583603361/job/125743829909",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-03T05:23:08Z",
+    "started_at": "2026-11-03T05:23:09Z",
+    "completed_at": "2026-11-03T05:23:32Z",
+    "name": "format",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-03T05:23:10Z",
+        "completed_at": "2026-11-03T05:23:11Z"
+      },
+      {
+        "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-03T05:23:11Z",
+        "completed_at": "2026-11-03T05:23:14Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-03T05:23:14Z",
+        "completed_at": "2026-11-03T05:23:23Z"
+      },
+      {
+        "name": "Generate formatting patch with exact source receipts",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-03T05:23:23Z",
+        "completed_at": "2026-11-03T05:23:30Z"
+      },
+      {
+        "name": "Retain hosted formatting output for local review",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-03T05:23:30Z",
+        "completed_at": "2026-11-03T05:23:31Z"
+      },
+      {
+        "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-11-03T05:23:31Z",
+        "completed_at": "2026-11-03T05:23:31Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 11,
+        "started_at": "2026-11-03T05:23:31Z",
+        "completed_at": "2026-11-03T05:23:31Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/ZHanry/NestLink/check-runs/125743829909",
+    "labels": [
+      "ubuntu-24.04"
+    ],
+    "runner_id": 1000012183,
+    "runner_name": "GitHub Actions 1000012183",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact_metadata": {
+    "id": 13205894919,
+    "node_id": "MDg6QXJ0aWZhY3QxMzIwNTg5NDkxOQ==",
+    "name": "network-source-format-9a52c41439016ec37f98a0c1ee45b2cfc53912eb-1",
+    "size_in_bytes": 3378,
+    "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13205894919",
+    "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13205894919/zip",
+    "expired": false,
+    "digest": "sha256:4587213ee81d818e45a9e6136d9fc7b2ba5f8e5b91cf7982d7c7ed499d1d9f6a",
+    "created_at": "2026-11-03T05:23:30Z",
+    "updated_at": "2026-11-03T05:23:30Z",
+    "expires_at": "2026-12-03T05:23:30Z",
+    "workflow_run": {
+      "id": 41583603361,
+      "repository_id": 1423035582,
+      "head_repository_id": 1423035582,
+      "head_branch": "main",
+      "head_sha": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb"
+    }
+  },
+  "official_zip_digest_and_size_verified": true,
+  "all_producer_payload_bytes_and_sha256_verified": true,
+  "producer_payload_files": [
+    {
+      "path": "formatter-commands.json",
+      "bytes": 5764,
+      "sha256": "7e5380bdaba55b3263e59d5ca7ecd68200d41f0f842a4d59e6d251b39890d665"
+    },
+    {
+      "path": "rustfmt.log",
+      "bytes": 5873,
+      "sha256": "211335551512383ba106e554ea94a4209f5c9711839588d21d52b97eb7a805ca"
+    },
+    {
+      "path": "rustfmt.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "receipt": {
+    "source_revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+    "workflow": "ZHanry/NestLink/.github/workflows/network-source-format.yml@refs/heads/main",
+    "workflow_dispatch_revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+    "workflow_revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+    "run_id": "41583603361",
+    "run_attempt": "1",
+    "runner_environment": "github-hosted",
+    "runner_os": "Linux",
+    "command": [
+      "python",
+      "-B",
+      "scripts/format-first-party.py",
+      "--receipt",
+      "/home/runner/work/_temp/network-source-format/formatter-commands.json"
+    ],
+    "return_code": 0,
+    "formatter_commands": {
+      "commands": [
+        {
+          "command": [
+            "cargo",
+            "metadata",
+            "--no-deps",
+            "--format-version",
+            "1",
+            "--locked"
+          ],
+          "return_code": 0
+        },
+        {
+          "command": [
+            "cargo",
+            "fmt",
+            "--package",
+            "nestlink-app-core",
+            "--package",
+            "nestlink-app-ipc",
+            "--package",
+            "nestlink-auth",
+            "--package",
+            "nestlink-connectivity",
+            "--package",
+            "nestlink-daemon",
+            "--package",
+            "nestlink-desktop",
+            "--package",
+            "nestlink-identity",
+            "--package",
+            "nestlink-local-ipc",
+            "--package",
+            "nestlink-media-codec",
+            "--package",
+            "nestlink-media-session",
+            "--package",
+            "nestlink-node",
+            "--package",
+            "nestlink-operations",
+            "--package",
+            "nestlink-platform-audio",
+            "--package",
+            "nestlink-platform-capture",
+            "--package",
+            "nestlink-platform-clipboard",
+            "--package",
+            "nestlink-platform-files",
+            "--package",
+            "nestlink-platform-input",
+            "--package",
+            "nestlink-platform-network",
+            "--package",
+            "nestlink-platform-security",
+            "--package",
+            "nestlink-platform-session",
+            "--package",
+            "nestlink-platform-tray",
+            "--package",
+            "nestlink-policy",
+            "--package",
+            "nestlink-privileged",
+            "--package",
+            "nestlink-protocol",
+            "--package",
+            "nestlink-remote",
+            "--package",
+            "nestlink-sdk",
+            "--package",
+            "nestlink-server",
+            "--package",
+            "nestlink-session",
+            "--package",
+            "nestlink-storage",
+            "--package",
+            "nestlink-transport-quic",
+            "--package",
+            "nestlink-transport-stream",
+            "--package",
+            "nestlink-transport-wss",
+            "--package",
+            "nestlink-traversal",
+            "--package",
+            "nestlink-turn-service",
+            "--package",
+            "nestlink-web",
+            "--package",
+            "xtask"
+          ],
+          "return_code": 0
+        }
+      ],
+      "packages": [
+        {
+          "name": "nestlink-protocol",
+          "manifest": "crates/protocol/Cargo.toml"
+        },
+        {
+          "name": "nestlink-identity",
+          "manifest": "crates/identity/Cargo.toml"
+        },
+        {
+          "name": "nestlink-auth",
+          "manifest": "crates/auth/Cargo.toml"
+        },
+        {
+          "name": "nestlink-policy",
+          "manifest": "crates/policy/Cargo.toml"
+        },
+        {
+          "name": "nestlink-session",
+          "manifest": "crates/session/Cargo.toml"
+        },
+        {
+          "name": "nestlink-storage",
+          "manifest": "crates/storage/Cargo.toml"
+        },
+        {
+          "name": "nestlink-operations",
+          "manifest": "crates/operations/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-security",
+          "manifest": "crates/platform-security/Cargo.toml"
+        },
+        {
+          "name": "nestlink-node",
+          "manifest": "crates/node/Cargo.toml"
+        },
+        {
+          "name": "nestlink-transport-stream",
+          "manifest": "crates/transport-stream/Cargo.toml"
+        },
+        {
+          "name": "nestlink-traversal",
+          "manifest": "crates/traversal/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-files",
+          "manifest": "crates/platform-files/Cargo.toml"
+        },
+        {
+          "name": "nestlink-remote",
+          "manifest": "crates/remote/Cargo.toml"
+        },
+        {
+          "name": "nestlink-connectivity",
+          "manifest": "crates/connectivity/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-network",
+          "manifest": "crates/platform-network/Cargo.toml"
+        },
+        {
+          "name": "nestlink-transport-quic",
+          "manifest": "crates/transport-quic/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-clipboard",
+          "manifest": "crates/platform-clipboard/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-session",
+          "manifest": "crates/platform-session/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-tray",
+          "manifest": "crates/platform-tray/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-input",
+          "manifest": "crates/platform-input/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-capture",
+          "manifest": "crates/platform-capture/Cargo.toml"
+        },
+        {
+          "name": "nestlink-media-codec",
+          "manifest": "crates/media-codec/Cargo.toml"
+        },
+        {
+          "name": "nestlink-platform-audio",
+          "manifest": "crates/platform-audio/Cargo.toml"
+        },
+        {
+          "name": "nestlink-media-session",
+          "manifest": "crates/media-session/Cargo.toml"
+        },
+        {
+          "name": "nestlink-transport-wss",
+          "manifest": "crates/transport-wss/Cargo.toml"
+        },
+        {
+          "name": "nestlink-turn-service",
+          "manifest": "crates/turn-service/Cargo.toml"
+        },
+        {
+          "name": "nestlink-sdk",
+          "manifest": "crates/sdk/Cargo.toml"
+        },
+        {
+          "name": "nestlink-server",
+          "manifest": "apps/server/Cargo.toml"
+        },
+        {
+          "name": "nestlink-local-ipc",
+          "manifest": "crates/local-ipc/Cargo.toml"
+        },
+        {
+          "name": "nestlink-privileged",
+          "manifest": "apps/privileged/Cargo.toml"
+        },
+        {
+          "name": "nestlink-app-core",
+          "manifest": "crates/app-core/Cargo.toml"
+        },
+        {
+          "name": "nestlink-app-ipc",
+          "manifest": "crates/app-ipc/Cargo.toml"
+        },
+        {
+          "name": "nestlink-web",
+          "manifest": "apps/web/Cargo.toml"
+        },
+        {
+          "name": "nestlink-daemon",
+          "manifest": "apps/daemon/Cargo.toml"
+        },
+        {
+          "name": "nestlink-desktop",
+          "manifest": "apps/desktop/Cargo.toml"
+        },
+        {
+          "name": "xtask",
+          "manifest": "xtask/Cargo.toml"
+        }
+      ],
+      "return_code": 0,
+      "error": null
+    },
+    "changed_paths": [],
+    "quality_or_acceptance_claimed": false,
+    "files": [
+      {
+        "path": "formatter-commands.json",
+        "sha256": "7e5380bdaba55b3263e59d5ca7ecd68200d41f0f842a4d59e6d251b39890d665",
+        "bytes": 5764
+      },
+      {
+        "path": "rustfmt.log",
+        "sha256": "211335551512383ba106e554ea94a4209f5c9711839588d21d52b97eb7a805ca",
+        "bytes": 5873
+      },
+      {
+        "path": "rustfmt.patch",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    ]
+  },
+  "independent_files": [
+    {
+      "path": "formatter-commands.json",
+      "bytes": 5764,
+      "sha256": "7e5380bdaba55b3263e59d5ca7ecd68200d41f0f842a4d59e6d251b39890d665"
+    },
+    {
+      "path": "receipt.json",
+      "bytes": 7414,
+      "sha256": "6117387df479940d7a65881e7d8b02c7476c5ca8b71a442855095e6764ed32fd"
+    },
+    {
+      "path": "rustfmt.log",
+      "bytes": 5873,
+      "sha256": "211335551512383ba106e554ea94a4209f5c9711839588d21d52b97eb7a805ca"
+    },
+    {
+      "path": "rustfmt.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

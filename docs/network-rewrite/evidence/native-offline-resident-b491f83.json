@@ -1,0 +1,1556 @@
+{
+  "schema_version": 1,
+  "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+  "run_id": 41580245060,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41580245060",
+  "scope": "Exact original Windows/Linux focused resident workflow and stream collection regressions only; no wholeworkpackage, fullworkspace, physicaltarget orreleasequalification.",
+  "conclusion": "failure",
+  "records": [
+    {
+      "artifact": {
+        "id": 13206471918,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwNjQ3MTkxOA==",
+        "name": "original-offline-resident-ubuntu-24.04-b491f83908d5919b43c9ed4696a7dcf5ebc14547-1",
+        "size_in_bytes": 97287,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13206471918",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13206471918/zip",
+        "expired": false,
+        "digest": "sha256:461fd47cc52f52ec064ee4544d447c75587f1fa29c008582a81b06af1bfc82c2",
+        "created_at": "2026-11-03T05:04:51Z",
+        "updated_at": "2026-11-03T05:04:51Z",
+        "expires_at": "2026-12-03T05:04:50Z",
+        "workflow_run": {
+          "id": 41580245060,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "b491f83908d5919b43c9ed4696a7dcf5ebc14547"
+        }
+      },
+      "official_archive_and_all_producer_payloads_verified": true,
+      "receipt": {
+        "schema_version": 1,
+        "scope": "Focused original offline AppCore/daemon/desktop and complete resident integration only; not full Rust core, physical target, public NAT or advanced-media acceptance",
+        "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+        "run_id": "41580245060",
+        "run_attempt": "1",
+        "workflow": "ZHanry/NestLink/.github/workflows/offline-resident.yml@refs/heads/main",
+        "workflow_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+        "runner_os": "Linux",
+        "runner_environment": "github-hosted",
+        "image_os": "ubuntu24",
+        "image_version": "20261026.354.1",
+        "execution_identity": "original non-root hosted runner and original PAM desktop session",
+        "commands": [
+          {
+            "name": "rustc-version",
+            "command": [
+              "rustc",
+              "--version",
+              "--verbose"
+            ],
+            "log": "rustc-version.log",
+            "stderr_log": "rustc-version-stderr.log",
+            "started_unix": 1793681386.7130241,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793681395.400879
+          },
+          {
+            "name": "cargo-version",
+            "command": [
+              "cargo",
+              "--version"
+            ],
+            "log": "cargo-version.log",
+            "stderr_log": "cargo-version-stderr.log",
+            "started_unix": 1793681395.4009974,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793681395.433168
+          },
+          {
+            "name": "app-core",
+            "command": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-app-core",
+              "--test",
+              "native_offline",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "app-core.log",
+            "stderr_log": "app-core-stderr.log",
+            "started_unix": 1793681395.463065,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+                "ok"
+              ],
+              [
+                "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "2",
+                "0",
+                "0"
+              ]
+            ],
+            "expected_tests": [
+              "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+              "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry"
+            ],
+            "finished_unix": 1793681590.5251625
+          },
+          {
+            "name": "app-core-capture-terminal-unit",
+            "command": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-app-core",
+              "--lib",
+              "runtime::native_capture_failure_tests::",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "app-core-capture-terminal-unit.log",
+            "stderr_log": "app-core-capture-terminal-unit-stderr.log",
+            "started_unix": 1793681590.525267,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "runtime::native_capture_failure_tests::old_capture_failure_preserves_transport_recovery_and_live_capture_failure_is_terminal",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "1",
+                "0",
+                "0"
+              ]
+            ],
+            "finished_unix": 1793681601.0761347
+          },
+          {
+            "name": "daemon-remote-unit",
+            "command": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--bin",
+              "nestlink-daemon",
+              "offline_remote::tests::",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "daemon-remote-unit.log",
+            "stderr_log": "daemon-remote-unit-stderr.log",
+            "started_unix": 1793681601.0762668,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "offline_remote::tests::original_resident_entry_requires_an_explicit_direct_carrier_and_controller_peer",
+                "ok"
+              ],
+              [
+                "offline_remote::tests::original_resident_json_cannot_import_authority_or_enable_carrier_fallback",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "2",
+                "0",
+                "0"
+              ]
+            ],
+            "finished_unix": 1793681676.4402618
+          },
+          {
+            "name": "daemon-private-unit",
+            "command": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--bin",
+              "nestlink-daemon",
+              "private_service_proxy::offline::tests::",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "daemon-private-unit.log",
+            "stderr_log": "daemon-private-unit-stderr.log",
+            "started_unix": 1793681676.440409,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "private_service_proxy::offline::tests::original_private_resident_empty_actions_reject_injected_authority_fields",
+                "ok"
+              ],
+              [
+                "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "2",
+                "0",
+                "0"
+              ]
+            ],
+            "finished_unix": 1793681678.9609776
+          },
+          {
+            "name": "daemon-download-consent-unit",
+            "command": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--bin",
+              "nestlink-daemon",
+              "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "daemon-download-consent-unit.log",
+            "stderr_log": "daemon-download-consent-unit-stderr.log",
+            "started_unix": 1793681678.9611042,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "1",
+                "0",
+                "0"
+              ]
+            ],
+            "finished_unix": 1793681679.4265702
+          },
+          {
+            "name": "daemon-entry-unit",
+            "command": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--bin",
+              "nestlink-daemon",
+              "entry_tests::",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "daemon-entry-unit.log",
+            "stderr_log": "daemon-entry-unit-stderr.log",
+            "started_unix": 1793681679.4266908,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "entry_tests::command_dispatch_keeps_the_windows_main_future_bounded",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "1",
+                "0",
+                "0"
+              ]
+            ],
+            "finished_unix": 1793681679.8921382
+          },
+          {
+            "name": "desktop-layout",
+            "command": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-desktop",
+              "--lib",
+              "layout_tests::independent_offline_",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "desktop-layout.log",
+            "stderr_log": "desktop-layout-stderr.log",
+            "started_unix": 1793681679.8922603,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "layout_tests::independent_offline_viewport_close_requires_exact_local_receipts_without_online_inspect_or_revoke",
+                "ok"
+              ],
+              [
+                "layout_tests::independent_offline_workspace_displays_finite_scope_without_management_login",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "2",
+                "0",
+                "0"
+              ]
+            ],
+            "finished_unix": 1793681794.9272392
+          },
+          {
+            "name": "resident",
+            "command": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--test",
+              "offline_remote_resident",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "resident.log",
+            "stderr_log": "resident-stderr.log",
+            "started_unix": 1793681794.9273977,
+            "passed": false,
+            "exit_code": 101,
+            "cases": [
+              [
+                "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                "FAILED"
+              ],
+              [
+                "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                "ok"
+              ],
+              [
+                "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                "FAILED"
+              ],
+              [
+                "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "2",
+                "2",
+                "0"
+              ]
+            ],
+            "expected_tests": [
+              "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+              "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+              "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+              "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit"
+            ],
+            "finished_unix": 1793682110.628091
+          },
+          {
+            "name": "resident-platform-owner",
+            "command": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--test",
+              "offline_resident_platform_owner",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "resident-platform-owner.log",
+            "stderr_log": "resident-platform-owner-stderr.log",
+            "started_unix": 1793682110.6282063,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "original_platform_owner_is_exclusive_cancel_safe_and_released_after_shutdown_or_drop",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "1",
+                "0",
+                "0"
+              ]
+            ],
+            "expected_tests": [
+              "original_platform_owner_is_exclusive_cancel_safe_and_released_after_shutdown_or_drop"
+            ],
+            "finished_unix": 1793682116.7100253
+          },
+          {
+            "name": "secret-service-literal-attributes",
+            "command": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--test",
+              "secret_service_literal_attributes",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "secret-service-literal-attributes.log",
+            "stderr_log": "secret-service-literal-attributes-stderr.log",
+            "started_unix": 1793682116.7101355,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "original_secret_service_stores_and_reads_a_leading_hyphen_attribute",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "1",
+                "0",
+                "0"
+              ]
+            ],
+            "expected_tests": [
+              "original_secret_service_stores_and_reads_a_leading_hyphen_attribute"
+            ],
+            "finished_unix": 1793682119.7858036
+          },
+          {
+            "name": "app-core-clippy",
+            "command": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-app-core",
+              "--test",
+              "native_offline",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "log": "app-core-clippy.log",
+            "stderr_log": "app-core-clippy-stderr.log",
+            "started_unix": 1793682119.7859113,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793682196.5695012
+          },
+          {
+            "name": "daemon-clippy",
+            "command": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--bin",
+              "nestlink-daemon",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "log": "daemon-clippy.log",
+            "stderr_log": "daemon-clippy-stderr.log",
+            "started_unix": 1793682196.5696232,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793682245.5885127
+          },
+          {
+            "name": "resident-clippy",
+            "command": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--test",
+              "offline_remote_resident",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "log": "resident-clippy.log",
+            "stderr_log": "resident-clippy-stderr.log",
+            "started_unix": 1793682245.5886178,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793682287.5401092
+          },
+          {
+            "name": "resident-platform-owner-clippy",
+            "command": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--test",
+              "offline_resident_platform_owner",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "log": "resident-platform-owner-clippy.log",
+            "stderr_log": "resident-platform-owner-clippy-stderr.log",
+            "started_unix": 1793682287.5402184,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793682288.7076142
+          },
+          {
+            "name": "secret-service-literal-attributes-clippy",
+            "command": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--test",
+              "secret_service_literal_attributes",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "log": "secret-service-literal-attributes-clippy.log",
+            "stderr_log": "secret-service-literal-attributes-clippy-stderr.log",
+            "started_unix": 1793682288.7077272,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793682289.8247728
+          }
+        ],
+        "passed": false,
+        "source_before": {
+          "revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+          "tree": "038263dad3bfffd34b97e2a141c8e097cee3b0ea",
+          "status": "",
+          "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        "https_tool_sha256_before": "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872",
+        "https_tool_matches_frozen_receipt": true,
+        "https_tool_sha256_after": "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872",
+        "source_after": {
+          "revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+          "tree": "038263dad3bfffd34b97e2a141c8e097cee3b0ea",
+          "status": "",
+          "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        "source_unchanged": true,
+        "files": [
+          {
+            "name": "app-core-capture-terminal-unit-stderr.log",
+            "bytes": 13905,
+            "sha256": "2160b032e472a9d3c1e8d12183bcada7fd6778f5dd2b5675c811d1a8ae50ff39"
+          },
+          {
+            "name": "app-core-capture-terminal-unit.log",
+            "bytes": 403,
+            "sha256": "c26c56d0abee8f8898e676662cf3d669ea4b1bfc03581e68eb53e47f4c951ba7"
+          },
+          {
+            "name": "app-core-clippy-stderr.log",
+            "bytes": 27573,
+            "sha256": "91a56060b9c02f345ac9f301fdfe9ef9d3e9a9ea5794d021828af03d0664bf5e"
+          },
+          {
+            "name": "app-core-clippy.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "app-core-stderr.log",
+            "bytes": 43012,
+            "sha256": "a5b8637f0f2c933bc125b345b16a317f66fab015b89a3a830c37a93704d7b8d7"
+          },
+          {
+            "name": "app-core.log",
+            "bytes": 2007,
+            "sha256": "c02c7ab5496e7942258d56489867b4073c4b796288451acb4f35b18b864b1ea2"
+          },
+          {
+            "name": "cargo-version-stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "cargo-version.log",
+            "bytes": 36,
+            "sha256": "b6ef6807dd96d18b833474ad68e7a23a29e562a29c67afa71a59fb9a73df0068"
+          },
+          {
+            "name": "daemon-clippy-stderr.log",
+            "bytes": 17722,
+            "sha256": "cbc93a6e773ad7658972a0a8e99489bf6d71aa1408a7f56b77027ae46e1fd92f"
+          },
+          {
+            "name": "daemon-clippy.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "daemon-download-consent-unit-stderr.log",
+            "bytes": 13806,
+            "sha256": "e223584123072e3c9b3776b4464ba2b8bfd86926d27d203369eecbd1d7622de2"
+          },
+          {
+            "name": "daemon-download-consent-unit.log",
+            "bytes": 351,
+            "sha256": "db8930a2db1c212ae8685029b3fcd86b582f45a4f743886ce77070dfb01e560c"
+          },
+          {
+            "name": "daemon-entry-unit-stderr.log",
+            "bytes": 13806,
+            "sha256": "2932f40316372e4384d9d16f6c79c974ba883cf88760a4aed114b53bf0262096"
+          },
+          {
+            "name": "daemon-entry-unit.log",
+            "bytes": 422,
+            "sha256": "18d1af7f20650187f09d83d88ad98e590f702879d02111b6162102f8274fb843"
+          },
+          {
+            "name": "daemon-private-unit-stderr.log",
+            "bytes": 13806,
+            "sha256": "e223584123072e3c9b3776b4464ba2b8bfd86926d27d203369eecbd1d7622de2"
+          },
+          {
+            "name": "daemon-private-unit.log",
+            "bytes": 1980,
+            "sha256": "cef636ea6b112f695738ecacc9276e1cb5cb1d8eb958e301a918fc5fd4677ff2"
+          },
+          {
+            "name": "daemon-remote-unit-stderr.log",
+            "bytes": 17986,
+            "sha256": "4fae3f97fab5e434d7886cecbc09a89f3aed8b24b5be9f656c3faf8b567af17e"
+          },
+          {
+            "name": "daemon-remote-unit.log",
+            "bytes": 570,
+            "sha256": "4439100dfe2dea97161528d8dee08abbbda00481fbb8bf72093a1962de497e18"
+          },
+          {
+            "name": "desktop-layout-stderr.log",
+            "bytes": 26962,
+            "sha256": "f72231acb1e97b7cc63ee5c6784b6068f285d855fa853e4786449c171f192a1a"
+          },
+          {
+            "name": "desktop-layout.log",
+            "bytes": 1123,
+            "sha256": "b13bbd363a130e17a11a29008bf3160a1842b75f7f8a780811489a724583c31a"
+          },
+          {
+            "name": "nestlink-codecs.json",
+            "bytes": 41094,
+            "sha256": "a64b95b8b6076f75ab48755c0b19c329d6871131c6f519c6fb95d5fe5a86e089"
+          },
+          {
+            "name": "nestlink-native-offline-https-license.txt",
+            "bytes": 11357,
+            "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+          },
+          {
+            "name": "nestlink-native-offline-https-tool.json",
+            "bytes": 871,
+            "sha256": "ec16151303c86eaa5c330afedd4b54c69761989d89542c99c746a0ec38948b1b"
+          },
+          {
+            "name": "resident-clippy-stderr.log",
+            "bytes": 17605,
+            "sha256": "1b7b0a56ac9435c8777e82c2b17c54917a1c3aa087a2c5cb61eb93bbe4149176"
+          },
+          {
+            "name": "resident-clippy.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "resident-platform-owner-clippy-stderr.log",
+            "bytes": 13832,
+            "sha256": "0578c179713398f22f33df5387daef3c090a36defa637faf5bed4c9349a2eda6"
+          },
+          {
+            "name": "resident-platform-owner-clippy.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "resident-platform-owner-stderr.log",
+            "bytes": 40934,
+            "sha256": "c8e65f37d500c2557eb7d9349239330422fb88a6d3b20baae1569649e3ee5b2e"
+          },
+          {
+            "name": "resident-platform-owner.log",
+            "bytes": 322,
+            "sha256": "6c0c4feb73f0318aabcb0a46e97acd2d7c41405f47ce149cb835fdea3bfdc4f0"
+          },
+          {
+            "name": "resident-stderr.log",
+            "bytes": 18699,
+            "sha256": "a9c413906e44a6ae3e5cf942a3da568dd32ed94e2cd0c14b7d8cb34ad5e9d573"
+          },
+          {
+            "name": "resident.log",
+            "bytes": 21879,
+            "sha256": "71b36cb1a3ced6261eec7e3f289ea9ad24a9baf29060558a1d9d16f15e82efc4"
+          },
+          {
+            "name": "rustc-version-stderr.log",
+            "bytes": 437,
+            "sha256": "10705b5dd72a6b7270d87b4e4d8ec7996bb6312957f85e9a75664f140604a81a"
+          },
+          {
+            "name": "rustc-version.log",
+            "bytes": 196,
+            "sha256": "f64c55ed9f210d80a9b248206104a47175faf5ec94a093e4ad132549209089fc"
+          },
+          {
+            "name": "secret-service-literal-attributes-clippy-stderr.log",
+            "bytes": 13832,
+            "sha256": "153472b3039dc229a5313a179fcfcccbe67add399d276fd327dc966c59b108f5"
+          },
+          {
+            "name": "secret-service-literal-attributes-clippy.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "secret-service-literal-attributes-stderr.log",
+            "bytes": 15110,
+            "sha256": "2212e7eb56cf04067104d6cbc9efb8536b488058b132c4fc5aceeee4b113f0e0"
+          },
+          {
+            "name": "secret-service-literal-attributes.log",
+            "bytes": 288,
+            "sha256": "988777f538543511d0f30c09e80ec4024100e8d963495f9e8e4a9c0f32767eb8"
+          },
+          {
+            "name": "source-after.json",
+            "bytes": 222,
+            "sha256": "fa54d7d0b65886d567ba348ff257ed27bf9601b1cda34d170dd594e48d3e092d"
+          },
+          {
+            "name": "source-before.json",
+            "bytes": 222,
+            "sha256": "fa54d7d0b65886d567ba348ff257ed27bf9601b1cda34d170dd594e48d3e092d"
+          }
+        ]
+      },
+      "original_resident_stdout": "\nrunning 4 tests\ntest management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm ... FAILED\ntest pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket ... ok\ntest resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof ... FAILED\ntest resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit ... ok\n\nsuccesses:\n\n---- pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket stdout ----\noriginal pending listener case=0 transport=quic termination=eof\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"connection_stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"host\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"18\\\"}\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"command_failed\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"controller\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"17\\\"}\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\n\",\"transport\":\"quic\"}\noriginal pending listener case=1 transport=tls termination=stop\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"connection_stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"host\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"20\\\"}\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\n\",\"transport\":\"tls\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"command_failed\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"controller\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"19\\\"}\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\n\",\"transport\":\"tls\"}\noriginal pending listener case=2 transport=quic termination=logout\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"connection_stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(256))))\",\"role\":\"host\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"22\\\"}\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:96\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\nNestLink user daemon stopped: local logout, identity change, maintenance or inspection failure stopped this original process\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"command_failed\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"controller\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"21\\\"}\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\n\",\"transport\":\"quic\"}\noriginal pending listener case=3 transport=tls termination=identity\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"connection_stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(256))))\",\"role\":\"host\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"24\\\"}\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:96\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\nNestLink user daemon stopped: local logout, identity change, maintenance or inspection failure stopped this original process\\n\",\"transport\":\"tls\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"command_failed\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"controller\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"23\\\"}\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\n\",\"transport\":\"tls\"}\n\n---- resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit stdout ----\noriginal download terminal: phase=completed, confirmed_bytes=262144, error=None\noriginal download terminal: phase=completed, confirmed_bytes=262144, error=None\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"transport_lost\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"host\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"26\\\"}\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(TransportLost) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(TransportLost) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\n\",\"transport\":\"tls\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"controller\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"25\\\"}\\nvp8_decode_stage frame=1 first=true geometry_us=0 allocation_us=4491 ffi_us=946 total_us=5438 status=0\\nvideo decoded: pts=7318 ingress_to_output_us=5541\\nvideo playout queued: pts=7318 ahead_us=54451 late_us=0\\nvp8_decode_stage frame=2 first=false geometry_us=0 allocation_us=8240 ffi_us=781 total_us=9022 status=0\\nvideo decoded: pts=11280 ingress_to_output_us=9101\\nvideo playout queued: pts=11280 ahead_us=40011 late_us=0\\nvideo playout late: stage=presentation-poll pts=7318 late_us=43087\\nvp8_decode_stage frame=3 first=false geometry_us=0 allocation_us=9183 ffi_us=620 total_us=9804 status=0\\nvideo decoded: pts=15290 ingress_to_output_us=9870\\nvideo playout queued: pts=15290 ahead_us=0 late_us=19014\\nvideo decoded: pts=19310 ingress_to_output_us=10785\\nvideo playout queued: pts=19310 ahead_us=6069 late_us=0\\nvideo decoded: pts=24554 ingress_to_output_us=8649\\nvideo playout queued: pts=24554 ahead_us=0 late_us=27085\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(NetworkChanged) cleanup=Some(Succeeded) failure=None stop_owner=false\\nvp8_decode_stage frame=1 first=true geometry_us=0 allocation_us=5443 ffi_us=1044 total_us=6489 status=0\\nvideo decoded: pts=23515 ingress_to_output_us=6587\\nvideo playout queued: pts=23515 ahead_us=53404 late_us=0\\nvp8_decode_stage frame=2 first=false geometry_us=0 allocation_us=8222 ffi_us=751 total_us=8974 status=0\\nvideo decoded: pts=27393 ingress_to_output_us=9044\\nvideo playout queued: pts=27393 ahead_us=37766 late_us=0\\nvp8_decode_stage frame=3 first=false geometry_us=1 allocation_us=8264 ffi_us=2133 total_us=10399 status=0\\nvideo decoded: pts=31356 ingress_to_output_us=11046\\nvideo playout queued: pts=31356 ahead_us=2440 late_us=0\\nvideo decoded: pts=35276 ingress_to_output_us=6903\\nvideo playout queued: pts=35276 ahead_us=0 late_us=7087\\nvideo decoded: pts=41710 ingress_to_output_us=8644\\nvideo playout queued: pts=41710 ahead_us=0 late_us=2223\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\n\",\"transport\":\"tls\"}\n\n\nsuccesses:\n    pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket\n    resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit\n\nfailures:\n\n---- management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm stdout ----\noriginal management fence case=0 response=policy restore=true\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"status\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"host\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"4\\\"}\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(TransportLost) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"controller\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"3\\\"}\\noffline_remote_authority_stop category=explicit source=crates/sdk/src/offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=1 response=policy restore=true\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"revoked\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"host\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"6\\\"}\\noffline_session_stop reason=Revoked previous_state=Active\\noffline_remote_authority_stop category=explicit source=crates/session/src/lib.rs:766\\noffline_admission_stop category=terminal source=crates/session/src/lib.rs:766\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: PolicyRevoked: session is terminal\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(Revoked) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"controller\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"5\\\"}\\noffline_remote_authority_stop category=explicit source=crates/sdk/src/offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=2 response=command_failed restore=true\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"revoked\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"host\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"8\\\"}\\noffline_session_stop reason=Revoked previous_state=Active\\noffline_remote_authority_stop category=explicit source=crates/session/src/lib.rs:766\\noffline_admission_stop category=terminal source=crates/session/src/lib.rs:766\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: PolicyRevoked: session is terminal\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(Revoked) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"controller\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"7\\\"}\\noffline_remote_authority_stop category=explicit source=crates/sdk/src/offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=3 response=online_state restore=true\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"transport_lost\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"host\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"10\\\"}\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: LeaseExpired: session is terminal\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(TransportLost) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"controller\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"9\\\"}\\noffline_remote_authority_stop category=explicit source=crates/sdk/src/offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=4 response=command_failed restore=true\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"revoked\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"host\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"12\\\"}\\noffline_session_stop reason=Revoked previous_state=Active\\noffline_remote_authority_stop category=explicit source=crates/session/src/lib.rs:766\\noffline_admission_stop category=terminal source=crates/session/src/lib.rs:766\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: PolicyRevoked: session is terminal\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(Revoked) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"controller\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"11\\\"}\\noffline_remote_authority_stop category=explicit source=crates/sdk/src/offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=5 response=revoked restore=true\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"transport_lost\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"host\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"14\\\"}\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(TransportLost) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"controller\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"13\\\"}\\noffline_remote_authority_stop category=explicit source=crates/sdk/src/offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=6 response=command_failed restore=false\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"revoked\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"host\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"16\\\"}\\noffline_session_stop reason=Revoked previous_state=Active\\noffline_remote_authority_stop category=explicit source=crates/session/src/lib.rs:766\\noffline_admission_stop category=terminal source=crates/session/src/lib.rs:766\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: PolicyRevoked: session is terminal\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(Revoked) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(unix_wait_status(0))))\",\"role\":\"controller\",\"stderr\":\"{\\\"fixture\\\": \\\"original_pam_xdisplay\\\", \\\"uid\\\": 1001, \\\"pam_xdisplay\\\": \\\":0\\\", \\\"pam_session_id\\\": \\\"15\\\"}\\noffline_remote_authority_stop category=explicit source=crates/sdk/src/offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates/sdk/src/offline_remote.rs:272\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps/daemon/src/offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=7 response=command_failed restore=false\nError: Custom { kind: Other, error: \"original management fence case=7 setup: resident fixture public-PKI HTTPS startup: temporary public-PKI HTTPS fixture DNS was not ready: deadline has elapsed\" }\n\n---- resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof stdout ----\nError: Custom { kind: Other, error: \"resident fixture public-PKI HTTPS startup: temporary public-PKI HTTPS fixture DNS was not ready: deadline has elapsed\" }\n\n\nfailures:\n    management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm\n    resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof\n\ntest result: FAILED. 2 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 300.11s\n\n",
+      "raw_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\resident-b491-verified\\nestlink-offline-resident-focused"
+    },
+    {
+      "artifact": {
+        "id": 13205748345,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIwNTc0ODM0NQ==",
+        "name": "original-offline-resident-windows-2022-b491f83908d5919b43c9ed4696a7dcf5ebc14547-1",
+        "size_in_bytes": 93419,
+        "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13205748345",
+        "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13205748345/zip",
+        "expired": false,
+        "digest": "sha256:611142bfe69cc42269d2332f4ab8e3c50c6f969db47e7b7935b21e9a556129db",
+        "created_at": "2026-11-03T05:07:10Z",
+        "updated_at": "2026-11-03T05:07:10Z",
+        "expires_at": "2026-12-03T05:07:10Z",
+        "workflow_run": {
+          "id": 41580245060,
+          "repository_id": 1423035582,
+          "head_repository_id": 1423035582,
+          "head_branch": "main",
+          "head_sha": "b491f83908d5919b43c9ed4696a7dcf5ebc14547"
+        }
+      },
+      "official_archive_and_all_producer_payloads_verified": true,
+      "receipt": {
+        "schema_version": 1,
+        "scope": "Focused original offline AppCore/daemon/desktop and complete resident integration only; not full Rust core, physical target, public NAT or advanced-media acceptance",
+        "source_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+        "run_id": "41580245060",
+        "run_attempt": "1",
+        "workflow": "ZHanry/NestLink/.github/workflows/offline-resident.yml@refs/heads/main",
+        "workflow_revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+        "runner_os": "Windows",
+        "runner_environment": "github-hosted",
+        "image_os": "win22",
+        "image_version": "20261026.347.1",
+        "execution_identity": "verified original medium non-admin wrapper",
+        "commands": [
+          {
+            "name": "rustc-version",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "rustc",
+              "--version",
+              "--verbose"
+            ],
+            "log": "rustc-version.log",
+            "stderr_log": "rustc-version-stderr.log",
+            "started_unix": 1793681460.324034,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793681470.3309371
+          },
+          {
+            "name": "cargo-version",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "--version"
+            ],
+            "log": "cargo-version.log",
+            "stderr_log": "cargo-version-stderr.log",
+            "started_unix": 1793681470.3309371,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793681471.2849312
+          },
+          {
+            "name": "app-core",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-app-core",
+              "--test",
+              "native_offline",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "app-core.log",
+            "stderr_log": "app-core-stderr.log",
+            "started_unix": 1793681471.3318882,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+                "ok"
+              ],
+              [
+                "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "2",
+                "0",
+                "0"
+              ]
+            ],
+            "expected_tests": [
+              "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+              "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry"
+            ],
+            "finished_unix": 1793681725.5683424
+          },
+          {
+            "name": "app-core-capture-terminal-unit",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-app-core",
+              "--lib",
+              "runtime::native_capture_failure_tests::",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "app-core-capture-terminal-unit.log",
+            "stderr_log": "app-core-capture-terminal-unit-stderr.log",
+            "started_unix": 1793681725.5683424,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "runtime::native_capture_failure_tests::old_capture_failure_preserves_transport_recovery_and_live_capture_failure_is_terminal",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "1",
+                "0",
+                "0"
+              ]
+            ],
+            "finished_unix": 1793681739.6334577
+          },
+          {
+            "name": "daemon-remote-unit",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--bin",
+              "nestlink-daemon",
+              "offline_remote::tests::",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "daemon-remote-unit.log",
+            "stderr_log": "daemon-remote-unit-stderr.log",
+            "started_unix": 1793681739.6334577,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "offline_remote::tests::original_resident_entry_requires_an_explicit_direct_carrier_and_controller_peer",
+                "ok"
+              ],
+              [
+                "offline_remote::tests::original_resident_json_cannot_import_authority_or_enable_carrier_fallback",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "2",
+                "0",
+                "0"
+              ]
+            ],
+            "finished_unix": 1793681839.9007592
+          },
+          {
+            "name": "daemon-private-unit",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--bin",
+              "nestlink-daemon",
+              "private_service_proxy::offline::tests::",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "daemon-private-unit.log",
+            "stderr_log": "daemon-private-unit-stderr.log",
+            "started_unix": 1793681839.9007592,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "private_service_proxy::offline::tests::original_private_resident_empty_actions_reject_injected_authority_fields",
+                "ok"
+              ],
+              [
+                "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "2",
+                "0",
+                "0"
+              ]
+            ],
+            "finished_unix": 1793681842.8302596
+          },
+          {
+            "name": "daemon-download-consent-unit",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--bin",
+              "nestlink-daemon",
+              "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "daemon-download-consent-unit.log",
+            "stderr_log": "daemon-download-consent-unit-stderr.log",
+            "started_unix": 1793681842.8302596,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "1",
+                "0",
+                "0"
+              ]
+            ],
+            "finished_unix": 1793681843.5515082
+          },
+          {
+            "name": "daemon-entry-unit",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--bin",
+              "nestlink-daemon",
+              "entry_tests::",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "daemon-entry-unit.log",
+            "stderr_log": "daemon-entry-unit-stderr.log",
+            "started_unix": 1793681843.5515082,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "entry_tests::command_dispatch_keeps_the_windows_main_future_bounded",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "1",
+                "0",
+                "0"
+              ]
+            ],
+            "finished_unix": 1793681844.2860334
+          },
+          {
+            "name": "desktop-layout",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-desktop",
+              "--lib",
+              "layout_tests::independent_offline_",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "desktop-layout.log",
+            "stderr_log": "desktop-layout-stderr.log",
+            "started_unix": 1793681844.2860334,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "layout_tests::independent_offline_viewport_close_requires_exact_local_receipts_without_online_inspect_or_revoke",
+                "ok"
+              ],
+              [
+                "layout_tests::independent_offline_workspace_displays_finite_scope_without_management_login",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "2",
+                "0",
+                "0"
+              ]
+            ],
+            "finished_unix": 1793681960.8179724
+          },
+          {
+            "name": "resident",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--test",
+              "offline_remote_resident",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "resident.log",
+            "stderr_log": "resident-stderr.log",
+            "started_unix": 1793681960.8179724,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+                "ok"
+              ],
+              [
+                "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+                "ok"
+              ],
+              [
+                "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+                "ok"
+              ],
+              [
+                "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "4",
+                "0",
+                "0"
+              ]
+            ],
+            "expected_tests": [
+              "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+              "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+              "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+              "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit"
+            ],
+            "finished_unix": 1793682241.7720222
+          },
+          {
+            "name": "resident-platform-owner",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--test",
+              "offline_resident_platform_owner",
+              "--",
+              "--show-output",
+              "--test-threads=1",
+              "--color",
+              "never"
+            ],
+            "log": "resident-platform-owner.log",
+            "stderr_log": "resident-platform-owner-stderr.log",
+            "started_unix": 1793682241.7720222,
+            "passed": true,
+            "exit_code": 0,
+            "cases": [
+              [
+                "original_platform_owner_is_exclusive_cancel_safe_and_released_after_shutdown_or_drop",
+                "ok"
+              ]
+            ],
+            "summaries": [
+              [
+                "1",
+                "0",
+                "0"
+              ]
+            ],
+            "expected_tests": [
+              "original_platform_owner_is_exclusive_cancel_safe_and_released_after_shutdown_or_drop"
+            ],
+            "finished_unix": 1793682246.808502
+          },
+          {
+            "name": "app-core-clippy",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-app-core",
+              "--test",
+              "native_offline",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "log": "app-core-clippy.log",
+            "stderr_log": "app-core-clippy-stderr.log",
+            "started_unix": 1793682246.808502,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793682329.0489562
+          },
+          {
+            "name": "daemon-clippy",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--bin",
+              "nestlink-daemon",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "log": "daemon-clippy.log",
+            "stderr_log": "daemon-clippy-stderr.log",
+            "started_unix": 1793682329.0489562,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793682385.922825
+          },
+          {
+            "name": "resident-clippy",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--test",
+              "offline_remote_resident",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "log": "resident-clippy.log",
+            "stderr_log": "resident-clippy-stderr.log",
+            "started_unix": 1793682385.922825,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793682428.4161482
+          },
+          {
+            "name": "resident-platform-owner-clippy",
+            "command": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+              "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-daemon",
+              "--test",
+              "offline_resident_platform_owner",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "log": "resident-platform-owner-clippy.log",
+            "stderr_log": "resident-platform-owner-clippy-stderr.log",
+            "started_unix": 1793682428.4161482,
+            "passed": true,
+            "exit_code": 0,
+            "finished_unix": 1793682429.6665022
+          }
+        ],
+        "passed": true,
+        "source_before": {
+          "revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+          "tree": "038263dad3bfffd34b97e2a141c8e097cee3b0ea",
+          "status": "",
+          "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        "https_tool_sha256_before": "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343",
+        "https_tool_matches_frozen_receipt": true,
+        "https_tool_sha256_after": "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343",
+        "source_after": {
+          "revision": "b491f83908d5919b43c9ed4696a7dcf5ebc14547",
+          "tree": "038263dad3bfffd34b97e2a141c8e097cee3b0ea",
+          "status": "",
+          "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        "source_unchanged": true,
+        "files": [
+          {
+            "name": "app-core-capture-terminal-unit-stderr.log",
+            "bytes": 13663,
+            "sha256": "73a5d6ec72465c27b6c68469787f37ee61a1180e9a8dd0889bcd3ec392f16bc7"
+          },
+          {
+            "name": "app-core-capture-terminal-unit.log",
+            "bytes": 490,
+            "sha256": "7791f1636aa8ef8ffff89d3f1fe93a940ed4ae88583c0372ac9180a5bed28def"
+          },
+          {
+            "name": "app-core-clippy-stderr.log",
+            "bytes": 26891,
+            "sha256": "f2f9a057098fc821e1fe35c10dd576021ac314fe316761b883ee6fbb5e52c1d5"
+          },
+          {
+            "name": "app-core-clippy.log",
+            "bytes": 87,
+            "sha256": "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+          },
+          {
+            "name": "app-core-stderr.log",
+            "bytes": 42109,
+            "sha256": "6b19b890b7f63c5362cf6350517d6a5f6460f08e29f772dbf7536421a272bdac"
+          },
+          {
+            "name": "app-core.log",
+            "bytes": 2094,
+            "sha256": "bb11a977ed854fed93ba205b465f7fea9f1043b5a670a2b8844db3a2377a23be"
+          },
+          {
+            "name": "cargo-version-stderr.log",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "cargo-version.log",
+            "bytes": 123,
+            "sha256": "d23c4c65b8674a054de5e636a3a8a764f439ce1ebffd9dc967c550b1298f9ed1"
+          },
+          {
+            "name": "daemon-clippy-stderr.log",
+            "bytes": 18533,
+            "sha256": "2a122193ed7e4b32e6be2c7b48231adc7350b45b5feffb64d0b120181708e747"
+          },
+          {
+            "name": "daemon-clippy.log",
+            "bytes": 87,
+            "sha256": "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+          },
+          {
+            "name": "daemon-download-consent-unit-stderr.log",
+            "bytes": 13577,
+            "sha256": "a6bfd4b6cffb292989456c26e19af4a89014853e14212264eb473e6f464245d5"
+          },
+          {
+            "name": "daemon-download-consent-unit.log",
+            "bytes": 438,
+            "sha256": "aac36a691edbd787432e37b8a6811cadce113ddcf524a0425b498dc5fec8e9cb"
+          },
+          {
+            "name": "daemon-entry-unit-stderr.log",
+            "bytes": 13577,
+            "sha256": "4cf422156925c568d9234682863ddb9c58066f21206306860e94251ec8dc9e37"
+          },
+          {
+            "name": "daemon-entry-unit.log",
+            "bytes": 510,
+            "sha256": "b314b3f201247d1568645c059793f9229b3f2aab299fac41771a9c7797dc0347"
+          },
+          {
+            "name": "daemon-private-unit-stderr.log",
+            "bytes": 13577,
+            "sha256": "eb9208d2e67d646de7b83493a861382b09b62757e899361742fdf7f71bd39ac3"
+          },
+          {
+            "name": "daemon-private-unit.log",
+            "bytes": 2067,
+            "sha256": "0206fcebef9bc56e1f737f53c56fa22322031e064d2b937823e878a718c61fb2"
+          },
+          {
+            "name": "daemon-remote-unit-stderr.log",
+            "bytes": 19156,
+            "sha256": "067b2ede7f371cb1831586e9e0a6c2805d0d0f301fed32c9774dcb2454120ac6"
+          },
+          {
+            "name": "daemon-remote-unit.log",
+            "bytes": 657,
+            "sha256": "633f24de3593963ce0068eabb9b8c5f23ec6c53645eedffaa19e107b596cae4c"
+          },
+          {
+            "name": "desktop-layout-stderr.log",
+            "bytes": 22192,
+            "sha256": "5725a6cdcb07934a55782444e350687e8966f797acc95dc763ffff11172d7236"
+          },
+          {
+            "name": "desktop-layout.log",
+            "bytes": 1206,
+            "sha256": "c7b0b8b5cd5b5262be9fa8725c0fb7ed523c0741af49a6adb34d73bd4222c032"
+          },
+          {
+            "name": "nestlink-codecs.json",
+            "bytes": 44366,
+            "sha256": "7ab28ef5aae46e7c58cc9a1ae356f7d4cb959cd655ba8f8a93b50dc68e326f2f"
+          },
+          {
+            "name": "nestlink-native-offline-https-license.txt",
+            "bytes": 11357,
+            "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+          },
+          {
+            "name": "nestlink-native-offline-https-tool.json",
+            "bytes": 895,
+            "sha256": "5c2bb3b05770dae4b9cbc0b0eb5349d253b75fda08bf1fef1b3f72528b1fec72"
+          },
+          {
+            "name": "resident-clippy-stderr.log",
+            "bytes": 17229,
+            "sha256": "9996f0ba8e66fdf843bde2a7c2caa205a52bb5c9842506feaf8b550a1234a4c7"
+          },
+          {
+            "name": "resident-clippy.log",
+            "bytes": 87,
+            "sha256": "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+          },
+          {
+            "name": "resident-platform-owner-clippy-stderr.log",
+            "bytes": 13586,
+            "sha256": "d439399c2a127e745f289a445f1c1c6175cf9c7775a61e87c1952d74eca6ac1a"
+          },
+          {
+            "name": "resident-platform-owner-clippy.log",
+            "bytes": 87,
+            "sha256": "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+          },
+          {
+            "name": "resident-platform-owner-stderr.log",
+            "bytes": 13690,
+            "sha256": "fe24159f787496089c05ab218a0c928d9596ab7a3bfa696ab95e1edca5c8b7b8"
+          },
+          {
+            "name": "resident-platform-owner.log",
+            "bytes": 409,
+            "sha256": "6cf4123ff17f39110a113ecf2682db73a162ef1f74257e44a8d2dfd049a6733b"
+          },
+          {
+            "name": "resident-stderr.log",
+            "bytes": 13675,
+            "sha256": "4730bcc2a6445c145e689f535ee2453ec063b8a39efc5bf8cfcf01d1c95ee5ec"
+          },
+          {
+            "name": "resident.log",
+            "bytes": 22145,
+            "sha256": "7ade9c3a405887aef92f9eb0dbcfbca4ed2c90f78aaa54728a3ac76b3eea010f"
+          },
+          {
+            "name": "rustc-version-stderr.log",
+            "bytes": 433,
+            "sha256": "0e649d34ff0e0350e43b94626de2a1cf5b8259935985031320a57d1e7612e13d"
+          },
+          {
+            "name": "rustc-version.log",
+            "bytes": 281,
+            "sha256": "bbc72a4bdbeba74b0bb91d43842d0f27a6cbb9dec0a0f3512f1c498ea4975f8f"
+          },
+          {
+            "name": "source-after.json",
+            "bytes": 228,
+            "sha256": "0552e2a2d96d2f2249c8811c0596d042f64a4a7b967b06d41d28073771128741"
+          },
+          {
+            "name": "source-before.json",
+            "bytes": 228,
+            "sha256": "0552e2a2d96d2f2249c8811c0596d042f64a4a7b967b06d41d28073771128741"
+          }
+        ]
+      },
+      "original_resident_stdout": "Windows test token verified: medium integrity, non-elevated, interactive user session\r\n\nrunning 4 tests\ntest management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm ... ok\ntest pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket ... ok\ntest resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof ... ok\ntest resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit ... ok\n\nsuccesses:\n\n---- management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm stdout ----\noriginal management fence case=0 response=policy restore=true\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"revoked\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"host\",\"stderr\":\"capture_backend=dxgi source=1\\noffline_session_stop reason=Revoked previous_state=Active\\noffline_remote_authority_stop category=explicit source=crates\\\\session\\\\src\\\\lib.rs:766\\noffline_admission_stop category=terminal source=crates\\\\session\\\\src\\\\lib.rs:766\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(Revoked) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"offline_remote_authority_stop category=explicit source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=1 response=policy restore=true\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"revoked\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"host\",\"stderr\":\"capture_backend=dxgi source=1\\noffline_session_stop reason=Revoked previous_state=Active\\noffline_remote_authority_stop category=explicit source=crates\\\\session\\\\src\\\\lib.rs:766\\noffline_admission_stop category=terminal source=crates\\\\session\\\\src\\\\lib.rs:766\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: PolicyRevoked: session is terminal\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(Revoked) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"offline_remote_authority_stop category=explicit source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=2 response=command_failed restore=true\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"status\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"host\",\"stderr\":\"capture_backend=dxgi source=1\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: LeaseExpired: session is terminal\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(TransportLost) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"offline_remote_authority_stop category=explicit source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=3 response=online_state restore=true\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"revoked\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"host\",\"stderr\":\"capture_backend=dxgi source=1\\noffline_session_stop reason=Revoked previous_state=Active\\noffline_remote_authority_stop category=explicit source=crates\\\\session\\\\src\\\\lib.rs:766\\noffline_admission_stop category=terminal source=crates\\\\session\\\\src\\\\lib.rs:766\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: PolicyRevoked: session is terminal\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(Revoked) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"offline_remote_authority_stop category=explicit source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=4 response=command_failed restore=true\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"revoked\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"host\",\"stderr\":\"capture_backend=dxgi source=1\\noffline_session_stop reason=Revoked previous_state=Active\\noffline_remote_authority_stop category=explicit source=crates\\\\session\\\\src\\\\lib.rs:766\\noffline_admission_stop category=terminal source=crates\\\\session\\\\src\\\\lib.rs:766\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: PolicyRevoked: session is terminal\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(Revoked) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"offline_remote_authority_stop category=explicit source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=5 response=revoked restore=true\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"status\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"host\",\"stderr\":\"capture_backend=dxgi source=1\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: LeaseExpired: session is terminal\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(TransportLost) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"offline_remote_authority_stop category=explicit source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=6 response=command_failed restore=false\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"transport_lost\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"host\",\"stderr\":\"capture_backend=dxgi source=1\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: LeaseExpired: session is terminal\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(TransportLost) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"offline_remote_authority_stop category=explicit source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\noriginal management fence case=7 response=command_failed restore=false\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"revoked\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"host\",\"stderr\":\"capture_backend=dxgi source=1\\noffline_session_stop reason=Revoked previous_state=Active\\noffline_remote_authority_stop category=explicit source=crates\\\\session\\\\src\\\\lib.rs:766\\noffline_admission_stop category=terminal source=crates\\\\session\\\\src\\\\lib.rs:766\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: PolicyRevoked: session is terminal\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(Revoked) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"offline_remote_authority_stop category=explicit source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\n\n---- pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket stdout ----\noriginal pending listener case=0 transport=quic termination=eof\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"connection_stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"host\",\"stderr\":\"offline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"command_failed\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"offline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\n\",\"transport\":\"quic\"}\noriginal pending listener case=1 transport=tls termination=stop\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"connection_stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"host\",\"stderr\":\"offline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\n\",\"transport\":\"tls\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"command_failed\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"offline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\n\",\"transport\":\"tls\"}\noriginal pending listener case=2 transport=quic termination=logout\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"connection_stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(1))))\",\"role\":\"host\",\"stderr\":\"offline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:96\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\nNestLink user daemon stopped: local logout, identity change, maintenance or inspection failure stopped this original process\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"command_failed\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"offline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\n\",\"transport\":\"quic\"}\noriginal pending listener case=3 transport=tls termination=identity\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"connection_stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(1))))\",\"role\":\"host\",\"stderr\":\"offline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:96\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\nNestLink user daemon stopped: local logout, identity change, maintenance or inspection failure stopped this original process\\n\",\"transport\":\"tls\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"command_failed\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"offline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\n\",\"transport\":\"tls\"}\n\n---- resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof stdout ----\noriginal download terminal: phase=completed, confirmed_bytes=262144, error=None\noriginal download terminal: phase=completed, confirmed_bytes=262144, error=None\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"revoked\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"host\",\"stderr\":\"capture_backend=dxgi source=1\\nnative screen source unavailable: kind=Other, os=None, detail=remote authorization: LeaseExpired: session is terminal\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(TransportLost) cleanup=Some(Succeeded) failure=None stop_owner=false\\ncapture_backend=dxgi source=1\\noffline_session_stop reason=Revoked previous_state=Active\\noffline_remote_authority_stop category=explicit source=crates\\\\session\\\\src\\\\lib.rs:766\\noffline_admission_stop category=terminal source=crates\\\\session\\\\src\\\\lib.rs:766\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(Revoked) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\n\",\"transport\":\"quic\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"vp8_decode_stage frame=1 first=true geometry_us=7 allocation_us=6891 ffi_us=20241 total_us=27141 status=0\\nvideo decoded: pts=41768 ingress_to_output_us=29739\\nvideo playout queued: pts=41768 ahead_us=30227 late_us=0\\noffline_products_end actor=capture result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(NetworkChanged) cleanup=Some(Succeeded) failure=None stop_owner=false\\nvp8_decode_stage frame=1 first=true geometry_us=1 allocation_us=6715 ffi_us=19996 total_us=26712 status=0\\nvideo decoded: pts=15092 ingress_to_output_us=29302\\nvideo playout queued: pts=15092 ahead_us=30677 late_us=0\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\n\",\"transport\":\"quic\"}\n\n---- resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit stdout ----\noriginal download terminal: phase=completed, confirmed_bytes=262144, error=None\noriginal download terminal: phase=completed, confirmed_bytes=262144, error=None\nresident endpoint at teardown: {\"last_event\":{\"data\":{},\"event\":\"status\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"host\",\"stderr\":\"capture_backend=dxgi source=1\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(TransportLost) cleanup=Some(Succeeded) failure=None stop_owner=false\\ncapture_backend=dxgi source=1\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(TransportLost) cleanup=Some(Succeeded) failure=None stop_owner=false\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\n\",\"transport\":\"tls\"}\nresident endpoint at teardown: {\"last_event\":{\"data\":{\"cleanup\":\"succeeded\",\"failure\":null,\"reason\":\"explicit_exit\"},\"event\":\"stopped\"},\"process\":\"Ok(Some(ExitStatus(ExitStatus(0))))\",\"role\":\"controller\",\"stderr\":\"vp8_decode_stage frame=1 first=true geometry_us=2 allocation_us=7437 ffi_us=20238 total_us=27677 status=0\\nvideo decoded: pts=14017 ingress_to_output_us=30239\\nvideo playout queued: pts=14017 ahead_us=29738 late_us=0\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(NetworkChanged) cleanup=Some(Succeeded) failure=None stop_owner=false\\nvp8_decode_stage frame=1 first=true geometry_us=1 allocation_us=7391 ffi_us=20590 total_us=27983 status=0\\nvideo decoded: pts=25382 ingress_to_output_us=30506\\nvideo playout queued: pts=25382 ahead_us=29473 late_us=0\\nvp8_decode_stage frame=2 first=false geometry_us=1 allocation_us=7551 ffi_us=1190 total_us=8743 status=0\\nvideo decoded: pts=37941 ingress_to_output_us=8876\\nvideo playout queued: pts=37941 ahead_us=7464 late_us=0\\noffline_process_stop category=local_guard source=apps\\\\daemon\\\\src\\\\offline_resident.rs:130\\noffline_admission_stop category=terminal source=crates\\\\sdk\\\\src\\\\offline_remote.rs:272\\noffline_products_end actor=audio result=ok local_stop=false lifecycle=Stopped native_status=Some(Stopped) reason=Some(ExplicitExit) cleanup=Some(Succeeded) failure=None stop_owner=false\\n\",\"transport\":\"tls\"}\n\n\nsuccesses:\n    management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm\n    pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket\n    resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof\n    resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 261.97s\n\n",
+      "raw_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\resident-b491-windows-verified\\nestlink-offline-resident-focused"
+    }
+  ],
+  "findings": [
+    "Windowsoriginalresident4/4andallscopedcommands/lintspassed.",
+    "Linuxoriginalresident2/4failedattheoriginalpublicHTTPSDNS60secondgate: managementcase7setupandfullQUICfixture. PendinglistenerandfullTLSoriginalcasespassed; allotherscopedcommands/lintspassed.",
+    "The collector correctlyretainscompleteoriginalcase names/statusandsummary, withstderrseparate. ThisisactualDNSfailure, nottheolderf24mixedstreamfalse-negative.",
+    "Fiveoriginalprocess/parserregressionspassedbothOSinworkflowjoblogs. Noassertion,deadline,count,name,trust,originalLuanti25secondcheckorfailedhistorywasrelaxed."
+  ]
+}

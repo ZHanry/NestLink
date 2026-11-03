@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "dba4d4fbd5564f349da334979ccdba2660365bb0",
-  "checkpoint_kind": "full_rust_f24_final_preserved_amf4de_original8_failed_independent_parameters_and_dns_failure_diagnostics_pending",
+  "source_revision": "31fd981d05e93fb0eb990a1afbc1ac61deaa1890",
+  "checkpoint_kind": "ice_completion_race_fixed_pending_exact_hosted_browser_and_parallel_product_lifecycle_fixes",
   "active_tasks": [
     "W00",
     "W02",
@@ -53,12 +53,12 @@
     "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
   ],
   "unverified_assumptions": [
-    "Exact f24 full Rust workflow41577474757 ended10success/3failure. Original Windows completeworkspace2111pass/0fail/17originalignored; Linux2106pass/1realpublicHTTPSDNSfailure/49originalignored. Both full strictClippy succeeded. Originalformatfailure retained separately from newer hostedformat evidence.",
-    "Exact b491 focused Linux originalresident2passed/2failed due unchanged60secondpublicHTTPSDNSdeadline. Collector preserves both streams and original names correctly; no false-negative claim for this run.",
-    "Exact4de tools41581302927 independently verified167payloads and officialZIP before/after original8targetcommands. All8failed; explicitAMFHRD/fillerfalse removes41060Bfiller but original Main8sps.poc_timing remains. Independent FFmpeg timing trace pending; no parser/assertion/deadline change.",
-    "W14 production bilateral path migration with dynamic path epochs, authenticated commit and finite drain is still missing. Existing signed safe business-generation recovery and Quinn experiment do not close that source gap.",
-    "Full lifecycle/UI/security/advancedmedia and mandatory pairedWindows/mobile/publicNAT/signing/24hour target evidence remain. No full-work-package or release qualification.",
-    "Explicit user decisions retained: Luanti25second check remains failed; only two new incorrect recoveryNone expectations corrected to exact Unauthorized in f2987b3."
+    "Exact9a52c41 resident workflow41583603127 bothOS concludedsuccess; Linux original4/4 passed219.26seconds. Windows official payload verification is being completed. Earlierf24/b491 publicHTTPSDNSfailures remain retained; rootcause is not established by a later pass.",
+    "Independent9a52c41 FFmpeg41583603301 confirms AMF60/1clock,POCflag1/ticksMinus1=0 andcoded1920x1088cropped8rowsfor1080display. Parameter-onlyinput, traceexit234, acceptancefalse; original8GPUfailures remain. Originalexactuncroppedgeometrycontract unchanged.",
+    "Source760f232 corrects nativecompletion-before-SDPread and browserinitialtricklecompletion; addedrealfastgatheringregression plus fixed-labelpublishobservations. Exactoriginalfullbrowser41585962968 andnetwork37ca0ac41586142163 pending. Priorf24Firefox403 afterinitial204 preserved; exactcause not yetproven.",
+    "W14 actualbilateralpath-epochmigration, authenticatedcommit andfinitedrain remain mandatorysourcework. ParallelCore/desktop fix addsprovedrecoverylineage so originalwindow can follow/stop successors; this is safeapplicationrecovery, notinplacemigration.",
+    "Parallelprivatehost identity-fileterminalfence andexplicitboundedHEVCtwo-targetfallback are implementationwork pending reviewedsource andnewActions. MandatorypairedWindows/mobile/publicNAT/signing/24hourtargetevidence remains.",
+    "Explicituserdecisions retained:Luanti25secondcheck remains failed; onlytwo newincorrectNone terminalexpectations corrected to exactUnauthorized inf2987b3."
   ],
   "external_prerequisites": [
     {
@@ -88,9 +88,9 @@
     }
   ],
   "next_steps": [
-    "Commit/push retained original GPU failures and bounded HTTPS failure diagnostics. Execute independent mature FFmpeg parameter parsing and original resident checks on exact new source through GitHub-hosted Actions.",
-    "Read original Windows/Linux b491 final evidence and4de owner results with officialsource/digest/size and allproducer payload checks. Keep actual failures distinct from later fixes.",
-    "Use independent timing and DNS evidence to fix actual implementation/environment issues without relaxing original assertions or deadlines; continue mandatory productionmigration and lifecycle acceptance. Release remains not_ready."
+    "Finish and manuallyreview privatehostidentityterminalfence, proved desktoprecoverywindow lifecycle, actualsamecodecHEVCtwo-targetfallback; commit separately andvalidate exactcombinedsource throughGitHubhostedActions.",
+    "Read original760f232Web and37ca0acnetwork results. Retainall priorfailures anduse fixedtyped ICE observations to resolveanyremainingFirefox failure withoutrelaxing assertions/deadlines.",
+    "Continue mandatoryproductionmigration, completeproductlifecycle/security andtargetevidence. Produce/freeze same-sourcecandidate onlyafter requiredchecks. Publish0.8.0RC onlywith realoriginalreleasegates satisfied; onlymain remains."
   ],
   "evidence_index": [
     "docs/network-rewrite/evidence/format-b491.json",
@@ -295,7 +295,13 @@
     "docs/network-rewrite/evidence/full-rust-core-f24b79f.json",
     "docs/network-rewrite/evidence/windows-hevc-target-b491f83.json",
     "docs/network-rewrite/evidence/windows-hevc-target-4de4b9b.json",
-    "docs/network-rewrite/fixtures/hevc-amf-main8-4de4b9b-parameters.json"
+    "docs/network-rewrite/fixtures/hevc-amf-main8-4de4b9b-parameters.json",
+    "docs/network-rewrite/evidence/format-9a52c41.json",
+    "docs/network-rewrite/evidence/hevc-amf-independent-9a52c41.json",
+    "docs/network-rewrite/evidence/native-offline-resident-b491f83.json",
+    "docs/network-rewrite/evidence/web-firefox-f24b79f.json",
+    "docs/network-rewrite/evidence/format-760f232.json",
+    "docs/network-rewrite/WEBRTC-ICE-COMPLETION.md"
   ],
   "observed_actions": [
     {
@@ -821,24 +827,25 @@
     }
   },
   "continuation_checkpoint": {
-    "at": "2026-11-03T13:21:26.1996899+08:00",
-    "source_revision": "dba4d4fbd5564f349da334979ccdba2660365bb0",
+    "at": "2026-11-03T13:57:06.4176770+08:00",
+    "source_revision": "31fd981d05e93fb0eb990a1afbc1ac61deaa1890",
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
-    "branch_inventory": "Local and official remote API both show only main; no branch deletion needed.",
+    "current_work": {
+      "root": "WebRTC snapshot-completion race, hosted validation, source/evidence integration",
+      "mechanism_research": "Explicit originalprovider capability CLI and bounded samecodecHEVCfallback",
+      "baseline_ci": "Exact9a resident evidence and original privatehost localidentity fence",
+      "core_audit": "Proved recovery-chain viewport continuation and cancellation; W14 migration remains"
+    },
+    "pending_runs": {
+      "network": 41586142163,
+      "web": 41585962968
+    },
     "user_decisions": [
-      "Retain Luanti original25second check and failed status.",
+      "Retain original Luanti25second failure.",
       "Two new wrongNone terminalcounterexamples corrected to exactUnauthorized inf2987b3."
     ],
-    "verified_scopes": [
-      "f24 full Windowsworkspace and both fullstrictclippy passed; originalLinuxHTTPSDNS and oldformat failures retained.",
-      "4de tools officialZIP and167payloads verified, original8targetcommands allfailed; boundedoriginal logs andenvironment inventory retained."
-    ],
-    "pending_source": [
-      "Independent AMF SPS timing trace reuses original FFmpeg fixture workflow; parameter-only diagnosis, no qualification.",
-      "HTTPS startup diagnostic retains boundedoriginaltunnelstderr andresolverconfig before originalTempDir cleanup; originalDNS/trust/deadlines unchanged.",
-      "W14 productionmigration, completeproductUI/lifecycle/advancedmedia/security and mandatorytargetevidence remain."
-    ]
+    "qualification": "Scoped development only; required production and target work remains."
   },
   "dispatch_corrections": [
     {

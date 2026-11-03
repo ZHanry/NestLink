@@ -2181,8 +2181,15 @@
         "证据绑定本任务源码和制品，并区分构建来源和实际执行来源",
         "无未标明的外部验证缺口"
       ],
-      "evidence_refs": [],
-      "blockers": []
+      "evidence_refs": [
+        "docs/network-rewrite/WEBRTC-ICE-COMPLETION.md",
+        "docs/network-rewrite/evidence/web-firefox-f24b79f.json"
+      ],
+      "blockers": [],
+      "implementation_notes": [
+        "Originalf24fullWebChrome/Edgepassed, FirefoxfailedafterfirstnativeICEPOST204then403; officialFirefoxZIP verifiedandfailedrunner/native/rawrecords retained. NotwholeAC27/28qualification.",
+        "Source760f232fixes a real asynchronous completion/SDPreadrace withoutweakening originalcumulativecandidatecursor; browserinitialdescription remainsincompleteuntil currentSDPpump. Newrealpeer8iterationregression andstrictsanitizedobservations awaitexacthostedresults."
+      ]
     },
     {
       "id": "W18",
@@ -3165,7 +3172,10 @@
           "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json"
         ]
       },
-      "implementation_notes": "Native desktop setup guide projects actual server/account/device/session and local-consent facts, then navigates original devices/remote/services/diagnostics owners. Web setup guide explicitly reads real pinned SDK account, device, discovery, service publication and administrator policy per purpose; no write/probe or permission expansion. Old snapshots, partial read errors, expired account and unmounted/late replies do not become success. NewUI still awaits exact-source hosted compilation/browser execution and complete installed onboarding; W30/AC51/AC52 remain in_progress.",
+      "implementation_notes": [
+        "Native desktop setup guide projects actual server/account/device/session and local-consent facts, then navigates original devices/remote/services/diagnostics owners. Web setup guide explicitly reads real pinned SDK account, device, discovery, service publication and administrator policy per purpose; no write/probe or permission expansion. Old snapshots, partial read errors, expired account and unmounted/late replies do not become success. NewUI still awaits exact-source hosted compilation/browser execution and complete installed onboarding; W30/AC51/AC52 remain in_progress.",
+        "Source37ca0acconnects setup Networkmode to actualnativeaccountSpacesowner forall signed-inaccounts; originalpermissions andexplicitlocalapproval remain. Previously theguide incorrectlyofferedonlya deploymentadminWeblink. Newnativebuild/UIqualification pending."
+      ],
       "latest_scoped_verification": {
         "source_revision": "c5893625ebbe3b50406810bd7eb34c60cbbea849",
         "run_id": 41562179075,
