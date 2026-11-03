@@ -139,19 +139,44 @@ fn pending_migration_requires_both_authorities_and_only_joined_release_can_narro
     assert!(!super::super::control::route_set_members_current(
         &current, 0b100, true
     ));
-    let mut malformed = current.clone();
+    // The production view has exactly two members. Exercise malformed lengths
+    // at its untrusted JSON boundary rather than mutating a fixed-size array.
+    #[derive(Clone)]
+    struct UntrustedReadback {
+        members: Vec<NetworkRemoteRouteSetMemberView>,
+    }
+    let canonical = serde_json::to_value(&current)?;
+    let reset = || UntrustedReadback {
+        members: current.members.to_vec(),
+    };
+    let matches = |view: &UntrustedReadback| {
+        let mut wire = canonical.clone();
+        let Ok(members) = serde_json::to_value(&view.members) else {
+            return false;
+        };
+        wire["members"] = members;
+        serde_json::from_value::<NetworkRemoteRouteSetView>(wire).is_ok_and(|view| {
+            super::super::control::route_set_members_current(
+                &view,
+                required.load(Ordering::Acquire),
+                true,
+            )
+        })
+    };
+    assert!(matches(&reset()), "canonical wire members remain admissible");
+    let mut malformed = reset();
     malformed.members.clear();
     assert!(
         !matches(&malformed),
         "empty readback cannot satisfy required authority"
     );
-    malformed = current.clone();
+    malformed = reset();
     malformed.members.truncate(1);
     assert!(
         !matches(&malformed),
         "missing candidate cannot satisfy its required bit"
     );
-    malformed = current.clone();
+    malformed = reset();
     malformed
         .members
         .resize(usize::BITS as usize + 1, current.members[0].clone());
