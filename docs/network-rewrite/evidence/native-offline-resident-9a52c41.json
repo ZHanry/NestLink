@@ -1,0 +1,3739 @@
+{
+  "schema_version": 1,
+  "scope": "Completed original focused offline AppCore/daemon/desktop/resident, platform-owner and actual Secret Service execution only. Full Rust, release, physical-device and public-NAT acceptance are separate.",
+  "source_revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+  "workflow": ".github/workflows/offline-resident.yml",
+  "run_id": 41583603127,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41583603127",
+  "run_attempt": 1,
+  "run_status": "completed",
+  "run_conclusion": "success",
+  "recorded_completed_targets": 2,
+  "all_matrix_targets_recorded": true,
+  "build_provenance": {
+    "source_revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+    "workflow_revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+    "runner_environment": "github-hosted",
+    "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+  },
+  "execution_provenance": {
+    "environment": "Original hosted non-root Linux PAM/logind/private D-Bus/Xvfb/Secret Service and ordinary-token Windows fixtures",
+    "actual_device_or_public_nat_claimed": false
+  },
+  "targets": [
+    {
+      "platform": "linux",
+      "job_id": 125743829194,
+      "job_url": "https://github.com/ZHanry/NestLink/actions/runs/41583603127/job/125743829194",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T05:23:20Z",
+          "completed_at": "2026-11-03T05:23:21Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T05:23:21Z",
+          "completed_at": "2026-11-03T05:23:23Z"
+        },
+        {
+          "name": "Verify original stdout and stderr collection without losing failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T05:23:23Z",
+          "completed_at": "2026-11-03T05:23:25Z"
+        },
+        {
+          "name": "Verify original ordinary Windows test token",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 4,
+          "started_at": "2026-11-03T05:23:25Z",
+          "completed_at": "2026-11-03T05:23:25Z"
+        },
+        {
+          "name": "Set original pinned native codec location",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T05:23:25Z",
+          "completed_at": "2026-11-03T05:23:30Z"
+        },
+        {
+          "name": "Install original Linux build and platform fixture inputs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T05:23:30Z",
+          "completed_at": "2026-11-03T05:23:50Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7,
+          "started_at": "2026-11-03T05:23:50Z",
+          "completed_at": "2026-11-03T05:23:50Z"
+        },
+        {
+          "name": "Build original pinned native codecs on Linux",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T05:23:50Z",
+          "completed_at": "2026-11-03T05:24:23Z"
+        },
+        {
+          "name": "Build original pinned native codecs on Windows",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-03T05:24:23Z",
+          "completed_at": "2026-11-03T05:24:23Z"
+        },
+        {
+          "name": "Verify original pinned native codec installation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T05:24:23Z",
+          "completed_at": "2026-11-03T05:24:23Z"
+        },
+        {
+          "name": "Allow the original ordinary Windows token to use CI inputs",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-11-03T05:24:23Z",
+          "completed_at": "2026-11-03T05:24:23Z"
+        },
+        {
+          "name": "Freeze original public-PKI HTTPS fixture tool and license",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-03T05:24:23Z",
+          "completed_at": "2026-11-03T05:24:23Z"
+        },
+        {
+          "name": "Compile lint and execute all original offline native resident cases",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-03T05:24:23Z",
+          "completed_at": "2026-11-03T05:38:08Z"
+        },
+        {
+          "name": "Preserve focused exact-source successes and original failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T05:38:08Z",
+          "completed_at": "2026-11-03T05:38:09Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-11-03T05:38:09Z",
+          "completed_at": "2026-11-03T05:38:10Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-11-03T05:38:10Z",
+          "completed_at": "2026-11-03T05:38:10Z"
+        }
+      ],
+      "runner_os": "Linux",
+      "runner_environment": "github-hosted",
+      "image_os": "ubuntu24",
+      "image_version": "20261026.354.1",
+      "execution_identity": "original non-root hosted runner and original PAM desktop session",
+      "source_before": {
+        "revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+        "tree": "bd3cf430b5335c1ad02cd7c106b8789877fe5646",
+        "status": "",
+        "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+      },
+      "source_after": {
+        "revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+        "tree": "bd3cf430b5335c1ad02cd7c106b8789877fe5646",
+        "status": "",
+        "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+      },
+      "source_unchanged": true,
+      "independent_source_facts_bytes_equal": true,
+      "https_tool_sha256_before": "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872",
+      "https_tool_sha256_after": "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872",
+      "https_tool_matches_frozen_receipt": true,
+      "commands": [
+        {
+          "name": "rustc-version",
+          "command": [
+            "rustc",
+            "--version",
+            "--verbose"
+          ],
+          "log": "rustc-version.log",
+          "stderr_log": "rustc-version-stderr.log",
+          "started_unix": 1793683464.2643821,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793683473.0498931
+        },
+        {
+          "name": "cargo-version",
+          "command": [
+            "cargo",
+            "--version"
+          ],
+          "log": "cargo-version.log",
+          "stderr_log": "cargo-version-stderr.log",
+          "started_unix": 1793683473.0500093,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793683473.0821376
+        },
+        {
+          "name": "app-core",
+          "command": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-app-core",
+            "--test",
+            "native_offline",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "app-core.log",
+          "stderr_log": "app-core-stderr.log",
+          "started_unix": 1793683473.1119792,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+              "ok"
+            ],
+            [
+              "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "2",
+              "0",
+              "0"
+            ]
+          ],
+          "expected_tests": [
+            "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+            "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry"
+          ],
+          "finished_unix": 1793683666.495809
+        },
+        {
+          "name": "app-core-capture-terminal-unit",
+          "command": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-app-core",
+            "--lib",
+            "runtime::native_capture_failure_tests::",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "app-core-capture-terminal-unit.log",
+          "stderr_log": "app-core-capture-terminal-unit-stderr.log",
+          "started_unix": 1793683666.4959118,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "runtime::native_capture_failure_tests::old_capture_failure_preserves_transport_recovery_and_live_capture_failure_is_terminal",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "1",
+              "0",
+              "0"
+            ]
+          ],
+          "finished_unix": 1793683677.2416184
+        },
+        {
+          "name": "daemon-remote-unit",
+          "command": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--bin",
+            "nestlink-daemon",
+            "offline_remote::tests::",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "daemon-remote-unit.log",
+          "stderr_log": "daemon-remote-unit-stderr.log",
+          "started_unix": 1793683677.241747,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "offline_remote::tests::original_resident_entry_requires_an_explicit_direct_carrier_and_controller_peer",
+              "ok"
+            ],
+            [
+              "offline_remote::tests::original_resident_json_cannot_import_authority_or_enable_carrier_fallback",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "2",
+              "0",
+              "0"
+            ]
+          ],
+          "finished_unix": 1793683753.8643124
+        },
+        {
+          "name": "daemon-private-unit",
+          "command": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--bin",
+            "nestlink-daemon",
+            "private_service_proxy::offline::tests::",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "daemon-private-unit.log",
+          "stderr_log": "daemon-private-unit-stderr.log",
+          "started_unix": 1793683753.8644242,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "private_service_proxy::offline::tests::original_private_resident_empty_actions_reject_injected_authority_fields",
+              "ok"
+            ],
+            [
+              "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "2",
+              "0",
+              "0"
+            ]
+          ],
+          "finished_unix": 1793683756.3861892
+        },
+        {
+          "name": "daemon-download-consent-unit",
+          "command": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--bin",
+            "nestlink-daemon",
+            "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "daemon-download-consent-unit.log",
+          "stderr_log": "daemon-download-consent-unit-stderr.log",
+          "started_unix": 1793683756.3863153,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "1",
+              "0",
+              "0"
+            ]
+          ],
+          "finished_unix": 1793683756.851843
+        },
+        {
+          "name": "daemon-entry-unit",
+          "command": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--bin",
+            "nestlink-daemon",
+            "entry_tests::",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "daemon-entry-unit.log",
+          "stderr_log": "daemon-entry-unit-stderr.log",
+          "started_unix": 1793683756.85198,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "entry_tests::command_dispatch_keeps_the_windows_main_future_bounded",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "1",
+              "0",
+              "0"
+            ]
+          ],
+          "finished_unix": 1793683757.3175445
+        },
+        {
+          "name": "desktop-layout",
+          "command": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-desktop",
+            "--lib",
+            "layout_tests::independent_offline_",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "desktop-layout.log",
+          "stderr_log": "desktop-layout-stderr.log",
+          "started_unix": 1793683757.3177302,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "layout_tests::independent_offline_viewport_close_requires_exact_local_receipts_without_online_inspect_or_revoke",
+              "ok"
+            ],
+            [
+              "layout_tests::independent_offline_workspace_displays_finite_scope_without_management_login",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "2",
+              "0",
+              "0"
+            ]
+          ],
+          "finished_unix": 1793683873.6717882
+        },
+        {
+          "name": "resident",
+          "command": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--test",
+            "offline_remote_resident",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "resident.log",
+          "stderr_log": "resident-stderr.log",
+          "started_unix": 1793683873.6719093,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+              "ok"
+            ],
+            [
+              "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+              "ok"
+            ],
+            [
+              "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+              "ok"
+            ],
+            [
+              "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "4",
+              "0",
+              "0"
+            ]
+          ],
+          "expected_tests": [
+            "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+            "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+            "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+            "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit"
+          ],
+          "finished_unix": 1793684108.5605164
+        },
+        {
+          "name": "resident-platform-owner",
+          "command": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--test",
+            "offline_resident_platform_owner",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "resident-platform-owner.log",
+          "stderr_log": "resident-platform-owner-stderr.log",
+          "started_unix": 1793684108.5606565,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "original_platform_owner_is_exclusive_cancel_safe_and_released_after_shutdown_or_drop",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "1",
+              "0",
+              "0"
+            ]
+          ],
+          "expected_tests": [
+            "original_platform_owner_is_exclusive_cancel_safe_and_released_after_shutdown_or_drop"
+          ],
+          "finished_unix": 1793684114.840553
+        },
+        {
+          "name": "secret-service-literal-attributes",
+          "command": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--test",
+            "secret_service_literal_attributes",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "secret-service-literal-attributes.log",
+          "stderr_log": "secret-service-literal-attributes-stderr.log",
+          "started_unix": 1793684114.840683,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "original_secret_service_stores_and_reads_a_leading_hyphen_attribute",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "1",
+              "0",
+              "0"
+            ]
+          ],
+          "expected_tests": [
+            "original_secret_service_stores_and_reads_a_leading_hyphen_attribute"
+          ],
+          "finished_unix": 1793684118.0168848
+        },
+        {
+          "name": "app-core-clippy",
+          "command": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "-p",
+            "nestlink-app-core",
+            "--test",
+            "native_offline",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "log": "app-core-clippy.log",
+          "stderr_log": "app-core-clippy-stderr.log",
+          "started_unix": 1793684118.0170014,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793684196.2657335
+        },
+        {
+          "name": "daemon-clippy",
+          "command": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--bin",
+            "nestlink-daemon",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "log": "daemon-clippy.log",
+          "stderr_log": "daemon-clippy-stderr.log",
+          "started_unix": 1793684196.2658591,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793684245.5254536
+        },
+        {
+          "name": "resident-clippy",
+          "command": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--test",
+            "offline_remote_resident",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "log": "resident-clippy.log",
+          "stderr_log": "resident-clippy-stderr.log",
+          "started_unix": 1793684245.525552,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793684286.416996
+        },
+        {
+          "name": "resident-platform-owner-clippy",
+          "command": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--test",
+            "offline_resident_platform_owner",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "log": "resident-platform-owner-clippy.log",
+          "stderr_log": "resident-platform-owner-clippy-stderr.log",
+          "started_unix": 1793684286.4171221,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793684287.5338411
+        },
+        {
+          "name": "secret-service-literal-attributes-clippy",
+          "command": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--test",
+            "secret_service_literal_attributes",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "log": "secret-service-literal-attributes-clippy.log",
+          "stderr_log": "secret-service-literal-attributes-clippy-stderr.log",
+          "started_unix": 1793684287.533956,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793684288.6508198
+        }
+      ],
+      "actual_command_log_facts": [
+        {
+          "name": "rustc-version",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "cargo-version",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "app-core",
+          "actual_summary_lines": [
+            "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 44.58s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "app-core-capture-terminal-unit",
+          "actual_summary_lines": [
+            "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 82 filtered out; finished in 0.00s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "daemon-remote-unit",
+          "actual_summary_lines": [
+            "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.01s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "daemon-private-unit",
+          "actual_summary_lines": [
+            "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 2.04s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "daemon-download-consent-unit",
+          "actual_summary_lines": [
+            "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.00s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "daemon-entry-unit",
+          "actual_summary_lines": [
+            "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.00s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "desktop-layout",
+          "actual_summary_lines": [
+            "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 0.10s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "resident",
+          "actual_summary_lines": [
+            "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 219.26s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "resident-platform-owner",
+          "actual_summary_lines": [
+            "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.12s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "secret-service-literal-attributes",
+          "actual_summary_lines": [
+            "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "app-core-clippy",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "daemon-clippy",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "resident-clippy",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "resident-platform-owner-clippy",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "secret-service-literal-attributes-clippy",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        }
+      ],
+      "original_resident_summary": "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 219.26s",
+      "original_failure_lines": [],
+      "observed_https_startup_failure_diagnostics": [],
+      "actual_original_endpoint_cleanup": [
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=0 response=policy restore=true",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "status",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 12
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=0 response=policy restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 13
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=1 response=policy restore=true",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "revoked",
+          "failure": null,
+          "log_line": 15
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=1 response=policy restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 16
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=2 response=command_failed restore=true",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "revoked",
+          "failure": null,
+          "log_line": 18
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=2 response=command_failed restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 19
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=3 response=online_state restore=true",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "revoked",
+          "failure": null,
+          "log_line": 21
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=3 response=online_state restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 22
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=4 response=command_failed restore=true",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "status",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 24
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=4 response=command_failed restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 25
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=5 response=revoked restore=true",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "revoked",
+          "failure": null,
+          "log_line": 27
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=5 response=revoked restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 28
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=6 response=command_failed restore=false",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "revoked",
+          "failure": null,
+          "log_line": 30
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=6 response=command_failed restore=false",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 31
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=7 response=command_failed restore=false",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "transport_lost",
+          "failure": null,
+          "log_line": 33
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=7 response=command_failed restore=false",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 34
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=0 transport=quic termination=eof",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "connection_stopped",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 38
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=0 transport=quic termination=eof",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "command_failed",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 39
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=1 transport=tls termination=stop",
+          "role": "host",
+          "transport": "tls",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "connection_stopped",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 41
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=1 transport=tls termination=stop",
+          "role": "controller",
+          "transport": "tls",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "command_failed",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 42
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=2 transport=quic termination=logout",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(256))))",
+          "last_event": "connection_stopped",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 44
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=2 transport=quic termination=logout",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "command_failed",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 45
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=3 transport=tls termination=identity",
+          "role": "host",
+          "transport": "tls",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(256))))",
+          "last_event": "connection_stopped",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 47
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=3 transport=tls termination=identity",
+          "role": "controller",
+          "transport": "tls",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "command_failed",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 48
+        },
+        {
+          "case": "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+          "subcase": null,
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "revoked",
+          "failure": null,
+          "log_line": 53
+        },
+        {
+          "case": "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+          "subcase": null,
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 54
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "host",
+          "transport": "tls",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "transport_lost",
+          "failure": null,
+          "log_line": 59
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "controller",
+          "transport": "tls",
+          "process": "Ok(Some(ExitStatus(unix_wait_status(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 60
+        }
+      ],
+      "observed_vp8_rust_stages": [
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=0 response=policy restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "frame": 1,
+          "first": true,
+          "geometry_us": 0,
+          "allocation_us": 5495,
+          "ffi_us": 1202,
+          "total_us": 6699,
+          "status": 0,
+          "log_line": 13
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=1 response=policy restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "frame": 1,
+          "first": true,
+          "geometry_us": 1,
+          "allocation_us": 4598,
+          "ffi_us": 997,
+          "total_us": 5597,
+          "status": 0,
+          "log_line": 16
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=5 response=revoked restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "frame": 1,
+          "first": true,
+          "geometry_us": 0,
+          "allocation_us": 8170,
+          "ffi_us": 1151,
+          "total_us": 9322,
+          "status": 0,
+          "log_line": 28
+        },
+        {
+          "case": "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+          "subcase": null,
+          "role": "controller",
+          "transport": "quic",
+          "frame": 1,
+          "first": true,
+          "geometry_us": 5,
+          "allocation_us": 4655,
+          "ffi_us": 921,
+          "total_us": 5582,
+          "status": 0,
+          "log_line": 54
+        },
+        {
+          "case": "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+          "subcase": null,
+          "role": "controller",
+          "transport": "quic",
+          "frame": 2,
+          "first": false,
+          "geometry_us": 0,
+          "allocation_us": 29727,
+          "ffi_us": 799,
+          "total_us": 30527,
+          "status": 0,
+          "log_line": 54
+        },
+        {
+          "case": "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+          "subcase": null,
+          "role": "controller",
+          "transport": "quic",
+          "frame": 3,
+          "first": false,
+          "geometry_us": 0,
+          "allocation_us": 8165,
+          "ffi_us": 856,
+          "total_us": 9022,
+          "status": 0,
+          "log_line": 54
+        },
+        {
+          "case": "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+          "subcase": null,
+          "role": "controller",
+          "transport": "quic",
+          "frame": 1,
+          "first": true,
+          "geometry_us": 0,
+          "allocation_us": 6829,
+          "ffi_us": 828,
+          "total_us": 7659,
+          "status": 0,
+          "log_line": 54
+        },
+        {
+          "case": "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+          "subcase": null,
+          "role": "controller",
+          "transport": "quic",
+          "frame": 2,
+          "first": false,
+          "geometry_us": 0,
+          "allocation_us": 8132,
+          "ffi_us": 844,
+          "total_us": 8977,
+          "status": 0,
+          "log_line": 54
+        },
+        {
+          "case": "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+          "subcase": null,
+          "role": "controller",
+          "transport": "quic",
+          "frame": 3,
+          "first": false,
+          "geometry_us": 1,
+          "allocation_us": 7470,
+          "ffi_us": 830,
+          "total_us": 8302,
+          "status": 0,
+          "log_line": 54
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "controller",
+          "transport": "tls",
+          "frame": 1,
+          "first": true,
+          "geometry_us": 0,
+          "allocation_us": 5885,
+          "ffi_us": 1030,
+          "total_us": 6916,
+          "status": 0,
+          "log_line": 60
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "controller",
+          "transport": "tls",
+          "frame": 2,
+          "first": false,
+          "geometry_us": 0,
+          "allocation_us": 4653,
+          "ffi_us": 579,
+          "total_us": 5233,
+          "status": 0,
+          "log_line": 60
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "controller",
+          "transport": "tls",
+          "frame": 3,
+          "first": false,
+          "geometry_us": 1,
+          "allocation_us": 6730,
+          "ffi_us": 640,
+          "total_us": 7371,
+          "status": 0,
+          "log_line": 60
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "controller",
+          "transport": "tls",
+          "frame": 1,
+          "first": true,
+          "geometry_us": 1,
+          "allocation_us": 3997,
+          "ffi_us": 812,
+          "total_us": 4810,
+          "status": 0,
+          "log_line": 60
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "controller",
+          "transport": "tls",
+          "frame": 2,
+          "first": false,
+          "geometry_us": 0,
+          "allocation_us": 8190,
+          "ffi_us": 780,
+          "total_us": 8972,
+          "status": 0,
+          "log_line": 60
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "controller",
+          "transport": "tls",
+          "frame": 3,
+          "first": false,
+          "geometry_us": 0,
+          "allocation_us": 7797,
+          "ffi_us": 783,
+          "total_us": 8582,
+          "status": 0,
+          "log_line": 60
+        }
+      ],
+      "timing_scope": "Original teardown stderr observations only; debug allocation/whole-FFI times include lazy setup and are not pure libvpx or throughput benchmarks",
+      "native_receipt": {
+        "scope": "Original producer native receipt; library archives are inventory entries, not independently downloaded native bytes",
+        "target": "x86_64-unknown-linux-gnu",
+        "profile": "release",
+        "crt": "system",
+        "lock_sha256": "04ec56430e6a5ae24142c37187a0680f51e32d59975e20e87e7a313caa01315c",
+        "sources": [
+          {
+            "name": "amf",
+            "version": "1.5.3",
+            "commit": "57ee0cfb0e1a08d9041f77435653794c1b012be0",
+            "archive_sha256": "0f521ad98041f8001147cded4a660127f18b1c27a801a5cd691bda1fa48381be",
+            "archive_bytes": 88584,
+            "source_tree_sha256": "4f482968af8c8b46ecbaa8c6d8dff8be54e1c1fbde115e3631cfc41ff630accf",
+            "source_tree_format": "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+            "source_file_count": 57
+          },
+          {
+            "name": "libvpx",
+            "version": "1.16.0",
+            "commit": "1024874c5919305883187e2953de8fcb4c3d7fa6",
+            "archive_sha256": "274c00c0b21f03a9152e324b1989f73b74268aa8545b39ef5faccc50fdb56393",
+            "archive_bytes": 5637178,
+            "source_tree_sha256": "2e6333b99b544480c3bc6859c65d4814d5b1092f83ecb4381673d414b8fc92c5",
+            "source_tree_format": "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+            "source_file_count": 1250
+          },
+          {
+            "name": "opus",
+            "version": "1.6.1",
+            "commit": "22244de5a79bd1d6d623c32e72bf1954b56235be",
+            "archive_sha256": "3267aa969b2b26542417f57819a5bc25d5079355300307dd2dddc7c704aed418",
+            "archive_bytes": 4888967,
+            "source_tree_sha256": "32f8d26ab717f00dc94474b5fe17a88639f27fc972b58cea60e1ed67a34ef9f3",
+            "source_tree_format": "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+            "source_file_count": 752
+          }
+        ],
+        "bundled_components": [
+          {
+            "name": "libyuv",
+            "version": "1711",
+            "commit": "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1",
+            "repository": "https://chromium.googlesource.com/libyuv/libyuv",
+            "parent_source": "libvpx",
+            "path": "third_party/libyuv",
+            "license": "BSD-3-Clause",
+            "source_files": [
+              "convert_argb.cc",
+              "cpu_id.cc",
+              "planar_functions.cc",
+              "row_any.cc",
+              "row_common.cc",
+              "row_gcc.cc",
+              "row_win.cc",
+              "row_neon.cc",
+              "row_neon64.cc",
+              "row_msa.cc",
+              "scale_any.cc",
+              "scale_common.cc",
+              "scale_gcc.cc",
+              "scale_win.cc",
+              "scale_neon.cc",
+              "scale_neon64.cc",
+              "scale_msa.cc"
+            ]
+          }
+        ],
+        "features": {
+          "vp8": true,
+          "vp8_encoder": true,
+          "vp8_decoder": true,
+          "vp9": false,
+          "libyuv_i420_to_bgra": true,
+          "opus_float": true,
+          "opus_fixed_point": false,
+          "opus_dred": false,
+          "opus_deep_plc": false,
+          "opus_osce": false,
+          "opus_custom_modes": false,
+          "opus_nonthreadsafe_pseudostack": false
+        },
+        "libyuv_configuration": {
+          "options": [
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_INSTALL_PREFIX=/home/runner/work/_temp/nestlink-codecs/x86_64-unknown-linux-gnu",
+            "-DCMAKE_CXX_COMPILER=/usr/bin/x86_64-linux-gnu-g++-13",
+            "-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja",
+            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+            "-DLIBYUV_SOURCE=/home/runner/work/_temp/nestlink-codecs/sources/libvpx-1024874c5919305883187e2953de8fcb4c3d7fa6/third_party/libyuv"
+          ],
+          "source_files": [
+            "convert_argb.cc",
+            "cpu_id.cc",
+            "planar_functions.cc",
+            "row_any.cc",
+            "row_common.cc",
+            "row_gcc.cc",
+            "row_win.cc",
+            "row_neon.cc",
+            "row_neon64.cc",
+            "row_msa.cc",
+            "scale_any.cc",
+            "scale_common.cc",
+            "scale_gcc.cc",
+            "scale_win.cc",
+            "scale_neon.cc",
+            "scale_neon64.cc",
+            "scale_msa.cc"
+          ],
+          "compile_command_count": 17,
+          "cmake_project_sha256": "a0c689352c3bac45b147a84f8216e3eb5c4d44192dcc4450792f992f77efdcf7",
+          "compile_commands_sha256": "b36ce9cb60d3db2716da1aa7b4bbfeb2676db0043dbaef418a4c061f2742056a"
+        },
+        "yuv_library_inventory": [
+          {
+            "path": "lib/libyuv.a",
+            "kind": "library",
+            "bytes": 653098,
+            "sha256": "d998c987c37a33c70fe1d2b43b6e41f20b9f102d12279a063283f18b016dcc14"
+          }
+        ]
+      },
+      "artifact": {
+        "id": 13207332289,
+        "name": "original-offline-resident-ubuntu-24.04-9a52c41439016ec37f98a0c1ee45b2cfc53912eb-1",
+        "official_digest": "sha256:c5ec8a782a5b493f9a7aaa42a58ca2483bed43bd1dd7aed9ed0c977a9d95fb00",
+        "independent_zip_sha256": "c5ec8a782a5b493f9a7aaa42a58ca2483bed43bd1dd7aed9ed0c977a9d95fb00",
+        "independent_zip_bytes": 97508,
+        "official_digest_matches": true
+      },
+      "independently_hashed_extracted_files": [
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-codecs/x86_64-unknown-linux-gnu/nestlink-codecs.json",
+          "bytes": 41094,
+          "sha256": "b6b6d0fa7b7046316cfd4df0b6c306725e5c9d5ded32c68565040d800cc39d11"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-native-offline-https-license.txt",
+          "bytes": 11357,
+          "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-native-offline-https-tool.json",
+          "bytes": 871,
+          "sha256": "f9a8e6381c609a3d3b212e4dd62864d7984989e2616060923d9e9283e4c01b05"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/app-core-capture-terminal-unit-stderr.log",
+          "bytes": 13905,
+          "sha256": "b7c4692f54ee4529756bd5fa3c827775fb7d3248b8bfe0f3334c6266c3a4f6a0"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/app-core-capture-terminal-unit.log",
+          "bytes": 403,
+          "sha256": "c26c56d0abee8f8898e676662cf3d669ea4b1bfc03581e68eb53e47f4c951ba7"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/app-core-clippy-stderr.log",
+          "bytes": 27573,
+          "sha256": "5fc46417807ff4bb72cef67020af3d402c35d4d1297747171223c22694e85691"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/app-core-clippy.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/app-core-stderr.log",
+          "bytes": 43012,
+          "sha256": "8037b582399136eed2b2f9ad5cc491623fc308257b92d7aaac1b0aa0bac2c5fe"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/app-core.log",
+          "bytes": 2007,
+          "sha256": "d7d43b9f2ccbb53640dcfea9a56b1600eade2199e43b5a8d26db05908edf4645"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/cargo-version-stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/cargo-version.log",
+          "bytes": 36,
+          "sha256": "b6ef6807dd96d18b833474ad68e7a23a29e562a29c67afa71a59fb9a73df0068"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-clippy-stderr.log",
+          "bytes": 17722,
+          "sha256": "f7a284d999270b10b82dbad9863829ad632033f1e2f87a85510741691216ff4e"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-clippy.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-download-consent-unit-stderr.log",
+          "bytes": 13806,
+          "sha256": "2932f40316372e4384d9d16f6c79c974ba883cf88760a4aed114b53bf0262096"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-download-consent-unit.log",
+          "bytes": 351,
+          "sha256": "db8930a2db1c212ae8685029b3fcd86b582f45a4f743886ce77070dfb01e560c"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-entry-unit-stderr.log",
+          "bytes": 13806,
+          "sha256": "7905fc9952f188bca3f0b0aa1b7220d5152ddc70d13b7bfadb52505a4758ee90"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-entry-unit.log",
+          "bytes": 422,
+          "sha256": "18d1af7f20650187f09d83d88ad98e590f702879d02111b6162102f8274fb843"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-private-unit-stderr.log",
+          "bytes": 13806,
+          "sha256": "7905fc9952f188bca3f0b0aa1b7220d5152ddc70d13b7bfadb52505a4758ee90"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-private-unit.log",
+          "bytes": 1980,
+          "sha256": "cef636ea6b112f695738ecacc9276e1cb5cb1d8eb958e301a918fc5fd4677ff2"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-remote-unit-stderr.log",
+          "bytes": 17986,
+          "sha256": "d705a02f8fc97f5621366cfe9dbae1168207151c5c031a6aef511b83b778e854"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-remote-unit.log",
+          "bytes": 570,
+          "sha256": "4439100dfe2dea97161528d8dee08abbbda00481fbb8bf72093a1962de497e18"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/desktop-layout-stderr.log",
+          "bytes": 26962,
+          "sha256": "214614cf7b3de730e4ddbf325dcf5a3ed9606bed77689f26d39ef00c8e474091"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/desktop-layout.log",
+          "bytes": 1123,
+          "sha256": "fc69dff1e57086cf37a3789d4bc09885b8fe7b1434a0a319a7eca6022104370c"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/nestlink-codecs.json",
+          "bytes": 41094,
+          "sha256": "b6b6d0fa7b7046316cfd4df0b6c306725e5c9d5ded32c68565040d800cc39d11"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
+          "bytes": 11357,
+          "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
+          "bytes": 871,
+          "sha256": "f9a8e6381c609a3d3b212e4dd62864d7984989e2616060923d9e9283e4c01b05"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/receipt.json",
+          "bytes": 21198,
+          "sha256": "564f26027850b7986652a70ed57808caff1a833b216ca1ccf224d2ca80f316c2"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-clippy-stderr.log",
+          "bytes": 17605,
+          "sha256": "b7e5920e8e465c7155b779beecd5dfbfccd356c551b5cb75a6b269e268951fe4"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-clippy.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-platform-owner-clippy-stderr.log",
+          "bytes": 13832,
+          "sha256": "153472b3039dc229a5313a179fcfcccbe67add399d276fd327dc966c59b108f5"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-platform-owner-clippy.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-platform-owner-stderr.log",
+          "bytes": 40934,
+          "sha256": "64317b8cf548eb0ecb061714c77583da5e4d5604beff5601242b974664b3e975"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-platform-owner.log",
+          "bytes": 322,
+          "sha256": "f71d92b78adfba80cb13d75e026008c2d4d4ecb5a2fd45b84483274fd38a703b"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-stderr.log",
+          "bytes": 18613,
+          "sha256": "d2b7b6058d63265265cc65756d9c4d4a9c5349059706885133abf70cb549980d"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident.log",
+          "bytes": 27007,
+          "sha256": "ccdf13514d5374e1d8180f5471b86ddcd193f2f7ac1116b06ef57cfb351cc39e"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/rustc-version-stderr.log",
+          "bytes": 437,
+          "sha256": "10705b5dd72a6b7270d87b4e4d8ec7996bb6312957f85e9a75664f140604a81a"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/rustc-version.log",
+          "bytes": 196,
+          "sha256": "f64c55ed9f210d80a9b248206104a47175faf5ec94a093e4ad132549209089fc"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/secret-service-literal-attributes-clippy-stderr.log",
+          "bytes": 13832,
+          "sha256": "3a6b1e7ca3d943e5ccf861c5c60f2e8a58f663656429612156d90f17d4296751"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/secret-service-literal-attributes-clippy.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/secret-service-literal-attributes-stderr.log",
+          "bytes": 15110,
+          "sha256": "cae70e3c95e11850c90ad6f00ebfacf161213b366a9c0284132daf8848a00f75"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/secret-service-literal-attributes.log",
+          "bytes": 288,
+          "sha256": "988777f538543511d0f30c09e80ec4024100e8d963495f9e8e4a9c0f32767eb8"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/source-after.json",
+          "bytes": 222,
+          "sha256": "4b24237f6fc2ae4dfa1901962d58157ba94596bb605fdda2390d1525ef536ed3"
+        },
+        {
+          "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/source-before.json",
+          "bytes": 222,
+          "sha256": "4b24237f6fc2ae4dfa1901962d58157ba94596bb605fdda2390d1525ef536ed3"
+        }
+      ],
+      "producer_inventory_entries_verified": 39,
+      "complete_job_log": "linux-resident-job-125743829194.log"
+    },
+    {
+      "platform": "windows",
+      "job_id": 125743829176,
+      "job_url": "https://github.com/ZHanry/NestLink/actions/runs/41583603127/job/125743829176",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T05:23:11Z",
+          "completed_at": "2026-11-03T05:23:12Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T05:23:12Z",
+          "completed_at": "2026-11-03T05:23:21Z"
+        },
+        {
+          "name": "Verify original stdout and stderr collection without losing failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T05:23:21Z",
+          "completed_at": "2026-11-03T05:23:25Z"
+        },
+        {
+          "name": "Verify original ordinary Windows test token",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T05:23:25Z",
+          "completed_at": "2026-11-03T05:23:26Z"
+        },
+        {
+          "name": "Set original pinned native codec location",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T05:23:26Z",
+          "completed_at": "2026-11-03T05:23:26Z"
+        },
+        {
+          "name": "Install original Linux build and platform fixture inputs",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-11-03T05:23:26Z",
+          "completed_at": "2026-11-03T05:23:26Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T05:23:26Z",
+          "completed_at": "2026-11-03T05:23:42Z"
+        },
+        {
+          "name": "Build original pinned native codecs on Linux",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8,
+          "started_at": "2026-11-03T05:23:42Z",
+          "completed_at": "2026-11-03T05:23:42Z"
+        },
+        {
+          "name": "Build original pinned native codecs on Windows",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T05:23:42Z",
+          "completed_at": "2026-11-03T05:25:48Z"
+        },
+        {
+          "name": "Verify original pinned native codec installation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T05:25:48Z",
+          "completed_at": "2026-11-03T05:25:48Z"
+        },
+        {
+          "name": "Allow the original ordinary Windows token to use CI inputs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T05:25:48Z",
+          "completed_at": "2026-11-03T05:25:50Z"
+        },
+        {
+          "name": "Freeze original public-PKI HTTPS fixture tool and license",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-03T05:25:50Z",
+          "completed_at": "2026-11-03T05:25:52Z"
+        },
+        {
+          "name": "Compile lint and execute all original offline native resident cases",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-03T05:25:52Z",
+          "completed_at": "2026-11-03T05:45:03Z"
+        },
+        {
+          "name": "Preserve focused exact-source successes and original failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T05:45:03Z",
+          "completed_at": "2026-11-03T05:45:04Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-11-03T05:45:04Z",
+          "completed_at": "2026-11-03T05:45:06Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-11-03T05:45:06Z",
+          "completed_at": "2026-11-03T05:45:06Z"
+        }
+      ],
+      "runner_os": "Windows",
+      "runner_environment": "github-hosted",
+      "image_os": "win22",
+      "image_version": "20261026.347.1",
+      "execution_identity": "verified original medium non-admin wrapper",
+      "source_before": {
+        "revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+        "tree": "bd3cf430b5335c1ad02cd7c106b8789877fe5646",
+        "status": "",
+        "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+      },
+      "source_after": {
+        "revision": "9a52c41439016ec37f98a0c1ee45b2cfc53912eb",
+        "tree": "bd3cf430b5335c1ad02cd7c106b8789877fe5646",
+        "status": "",
+        "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+      },
+      "source_unchanged": true,
+      "independent_source_facts_bytes_equal": true,
+      "https_tool_sha256_before": "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343",
+      "https_tool_sha256_after": "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343",
+      "https_tool_matches_frozen_receipt": true,
+      "commands": [
+        {
+          "name": "rustc-version",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "rustc",
+            "--version",
+            "--verbose"
+          ],
+          "log": "rustc-version.log",
+          "stderr_log": "rustc-version-stderr.log",
+          "started_unix": 1793683552.5244603,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793683563.4634645
+        },
+        {
+          "name": "cargo-version",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "--version"
+          ],
+          "log": "cargo-version.log",
+          "stderr_log": "cargo-version-stderr.log",
+          "started_unix": 1793683563.4634645,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793683564.261782
+        },
+        {
+          "name": "app-core",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-app-core",
+            "--test",
+            "native_offline",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "app-core.log",
+          "stderr_log": "app-core-stderr.log",
+          "started_unix": 1793683564.3242097,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+              "ok"
+            ],
+            [
+              "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "2",
+              "0",
+              "0"
+            ]
+          ],
+          "expected_tests": [
+            "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
+            "independent_offline_app_core_tls_delivers_pixels_and_actual_file_after_online_expiry"
+          ],
+          "finished_unix": 1793683863.58343
+        },
+        {
+          "name": "app-core-capture-terminal-unit",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-app-core",
+            "--lib",
+            "runtime::native_capture_failure_tests::",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "app-core-capture-terminal-unit.log",
+          "stderr_log": "app-core-capture-terminal-unit-stderr.log",
+          "started_unix": 1793683863.58343,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "runtime::native_capture_failure_tests::old_capture_failure_preserves_transport_recovery_and_live_capture_failure_is_terminal",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "1",
+              "0",
+              "0"
+            ]
+          ],
+          "finished_unix": 1793683880.6372063
+        },
+        {
+          "name": "daemon-remote-unit",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--bin",
+            "nestlink-daemon",
+            "offline_remote::tests::",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "daemon-remote-unit.log",
+          "stderr_log": "daemon-remote-unit-stderr.log",
+          "started_unix": 1793683880.6372063,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "offline_remote::tests::original_resident_entry_requires_an_explicit_direct_carrier_and_controller_peer",
+              "ok"
+            ],
+            [
+              "offline_remote::tests::original_resident_json_cannot_import_authority_or_enable_carrier_fallback",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "2",
+              "0",
+              "0"
+            ]
+          ],
+          "finished_unix": 1793684013.8602343
+        },
+        {
+          "name": "daemon-private-unit",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--bin",
+            "nestlink-daemon",
+            "private_service_proxy::offline::tests::",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "daemon-private-unit.log",
+          "stderr_log": "daemon-private-unit-stderr.log",
+          "started_unix": 1793684013.8602343,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "private_service_proxy::offline::tests::original_private_resident_empty_actions_reject_injected_authority_fields",
+              "ok"
+            ],
+            [
+              "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "2",
+              "0",
+              "0"
+            ]
+          ],
+          "finished_unix": 1793684016.8655045
+        },
+        {
+          "name": "daemon-download-consent-unit",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--bin",
+            "nestlink-daemon",
+            "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "daemon-download-consent-unit.log",
+          "stderr_log": "daemon-download-consent-unit-stderr.log",
+          "started_unix": 1793684016.8655045,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "1",
+              "0",
+              "0"
+            ]
+          ],
+          "finished_unix": 1793684017.7262323
+        },
+        {
+          "name": "daemon-entry-unit",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--bin",
+            "nestlink-daemon",
+            "entry_tests::",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "daemon-entry-unit.log",
+          "stderr_log": "daemon-entry-unit-stderr.log",
+          "started_unix": 1793684017.7262323,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "entry_tests::command_dispatch_keeps_the_windows_main_future_bounded",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "1",
+              "0",
+              "0"
+            ]
+          ],
+          "finished_unix": 1793684018.6013553
+        },
+        {
+          "name": "desktop-layout",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-desktop",
+            "--lib",
+            "layout_tests::independent_offline_",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "desktop-layout.log",
+          "stderr_log": "desktop-layout-stderr.log",
+          "started_unix": 1793684018.6013553,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "layout_tests::independent_offline_viewport_close_requires_exact_local_receipts_without_online_inspect_or_revoke",
+              "ok"
+            ],
+            [
+              "layout_tests::independent_offline_workspace_displays_finite_scope_without_management_login",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "2",
+              "0",
+              "0"
+            ]
+          ],
+          "finished_unix": 1793684163.4215868
+        },
+        {
+          "name": "resident",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--test",
+            "offline_remote_resident",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "resident.log",
+          "stderr_log": "resident-stderr.log",
+          "started_unix": 1793684163.4215868,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+              "ok"
+            ],
+            [
+              "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+              "ok"
+            ],
+            [
+              "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+              "ok"
+            ],
+            [
+              "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "4",
+              "0",
+              "0"
+            ]
+          ],
+          "expected_tests": [
+            "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+            "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+            "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+            "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit"
+          ],
+          "finished_unix": 1793684462.2530699
+        },
+        {
+          "name": "resident-platform-owner",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--test",
+            "offline_resident_platform_owner",
+            "--",
+            "--show-output",
+            "--test-threads=1",
+            "--color",
+            "never"
+          ],
+          "log": "resident-platform-owner.log",
+          "stderr_log": "resident-platform-owner-stderr.log",
+          "started_unix": 1793684462.2530699,
+          "passed": true,
+          "exit_code": 0,
+          "cases": [
+            [
+              "original_platform_owner_is_exclusive_cancel_safe_and_released_after_shutdown_or_drop",
+              "ok"
+            ]
+          ],
+          "summaries": [
+            [
+              "1",
+              "0",
+              "0"
+            ]
+          ],
+          "expected_tests": [
+            "original_platform_owner_is_exclusive_cancel_safe_and_released_after_shutdown_or_drop"
+          ],
+          "finished_unix": 1793684468.5247393
+        },
+        {
+          "name": "app-core-clippy",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "clippy",
+            "--locked",
+            "-p",
+            "nestlink-app-core",
+            "--test",
+            "native_offline",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "log": "app-core-clippy.log",
+          "stderr_log": "app-core-clippy-stderr.log",
+          "started_unix": 1793684468.5247393,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793684573.752088
+        },
+        {
+          "name": "daemon-clippy",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "clippy",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--bin",
+            "nestlink-daemon",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "log": "daemon-clippy.log",
+          "stderr_log": "daemon-clippy-stderr.log",
+          "started_unix": 1793684573.752088,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793684647.3704498
+        },
+        {
+          "name": "resident-clippy",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "clippy",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--test",
+            "offline_remote_resident",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "log": "resident-clippy.log",
+          "stderr_log": "resident-clippy-stderr.log",
+          "started_unix": 1793684647.3704498,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793684701.304752
+        },
+        {
+          "name": "resident-platform-owner-clippy",
+          "command": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "D:\\a\\NestLink\\NestLink\\scripts\\refactor-windows-normal-user.py",
+            "cargo",
+            "clippy",
+            "--locked",
+            "-p",
+            "nestlink-daemon",
+            "--test",
+            "offline_resident_platform_owner",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "log": "resident-platform-owner-clippy.log",
+          "stderr_log": "resident-platform-owner-clippy-stderr.log",
+          "started_unix": 1793684701.304752,
+          "passed": true,
+          "exit_code": 0,
+          "finished_unix": 1793684702.93107
+        }
+      ],
+      "actual_command_log_facts": [
+        {
+          "name": "rustc-version",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "cargo-version",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "app-core",
+          "actual_summary_lines": [
+            "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 44.66s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "app-core-capture-terminal-unit",
+          "actual_summary_lines": [
+            "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 82 filtered out; finished in 0.00s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "daemon-remote-unit",
+          "actual_summary_lines": [
+            "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 52 filtered out; finished in 0.01s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "daemon-private-unit",
+          "actual_summary_lines": [
+            "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 52 filtered out; finished in 2.13s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "daemon-download-consent-unit",
+          "actual_summary_lines": [
+            "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 53 filtered out; finished in 0.01s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "daemon-entry-unit",
+          "actual_summary_lines": [
+            "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 53 filtered out; finished in 0.00s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "desktop-layout",
+          "actual_summary_lines": [
+            "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 84 filtered out; finished in 0.40s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "resident",
+          "actual_summary_lines": [
+            "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 275.57s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "resident-platform-owner",
+          "actual_summary_lines": [
+            "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s"
+          ],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "app-core-clippy",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "daemon-clippy",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "resident-clippy",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        },
+        {
+          "name": "resident-platform-owner-clippy",
+          "actual_summary_lines": [],
+          "actual_stdout_error_lines": [],
+          "actual_stderr_error_lines": []
+        }
+      ],
+      "original_resident_summary": "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 275.57s",
+      "original_failure_lines": [],
+      "observed_https_startup_failure_diagnostics": [],
+      "actual_original_endpoint_cleanup": [
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=0 response=policy restore=true",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "transport_lost",
+          "failure": null,
+          "log_line": 13
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=0 response=policy restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 14
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=1 response=policy restore=true",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "revoked",
+          "failure": null,
+          "log_line": 16
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=1 response=policy restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 17
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=2 response=command_failed restore=true",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "revoked",
+          "failure": null,
+          "log_line": 19
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=2 response=command_failed restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 20
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=3 response=online_state restore=true",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "transport_lost",
+          "failure": null,
+          "log_line": 22
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=3 response=online_state restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 23
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=4 response=command_failed restore=true",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "transport_lost",
+          "failure": null,
+          "log_line": 25
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=4 response=command_failed restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 26
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=5 response=revoked restore=true",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "revoked",
+          "failure": null,
+          "log_line": 28
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=5 response=revoked restore=true",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 29
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=6 response=command_failed restore=false",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "status",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 31
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=6 response=command_failed restore=false",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 32
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=7 response=command_failed restore=false",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "transport_lost",
+          "failure": null,
+          "log_line": 34
+        },
+        {
+          "case": "management_commands_fence_delivery_before_success_or_failed_http_and_never_rearm",
+          "subcase": "original management fence case=7 response=command_failed restore=false",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 35
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=0 transport=quic termination=eof",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "connection_stopped",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 39
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=0 transport=quic termination=eof",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "command_failed",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 40
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=1 transport=tls termination=stop",
+          "role": "host",
+          "transport": "tls",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "connection_stopped",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 42
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=1 transport=tls termination=stop",
+          "role": "controller",
+          "transport": "tls",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "command_failed",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 43
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=2 transport=quic termination=logout",
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(1))))",
+          "last_event": "connection_stopped",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 45
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=2 transport=quic termination=logout",
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "command_failed",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 46
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=3 transport=tls termination=identity",
+          "role": "host",
+          "transport": "tls",
+          "process": "Ok(Some(ExitStatus(ExitStatus(1))))",
+          "last_event": "connection_stopped",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 48
+        },
+        {
+          "case": "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
+          "subcase": "original pending listener case=3 transport=tls termination=identity",
+          "role": "controller",
+          "transport": "tls",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "command_failed",
+          "cleanup": null,
+          "reason": null,
+          "failure": null,
+          "log_line": 49
+        },
+        {
+          "case": "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+          "subcase": null,
+          "role": "host",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "revoked",
+          "failure": null,
+          "log_line": 54
+        },
+        {
+          "case": "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+          "subcase": null,
+          "role": "controller",
+          "transport": "quic",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 55
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "host",
+          "transport": "tls",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "transport_lost",
+          "failure": null,
+          "log_line": 60
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "controller",
+          "transport": "tls",
+          "process": "Ok(Some(ExitStatus(ExitStatus(0))))",
+          "last_event": "stopped",
+          "cleanup": "succeeded",
+          "reason": "explicit_exit",
+          "failure": null,
+          "log_line": 61
+        }
+      ],
+      "observed_vp8_rust_stages": [
+        {
+          "case": "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+          "subcase": null,
+          "role": "controller",
+          "transport": "quic",
+          "frame": 1,
+          "first": true,
+          "geometry_us": 6,
+          "allocation_us": 7773,
+          "ffi_us": 26309,
+          "total_us": 34089,
+          "status": 0,
+          "log_line": 55
+        },
+        {
+          "case": "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
+          "subcase": null,
+          "role": "controller",
+          "transport": "quic",
+          "frame": 1,
+          "first": true,
+          "geometry_us": 1,
+          "allocation_us": 8279,
+          "ffi_us": 27003,
+          "total_us": 35283,
+          "status": 0,
+          "log_line": 55
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "controller",
+          "transport": "tls",
+          "frame": 1,
+          "first": true,
+          "geometry_us": 2,
+          "allocation_us": 9271,
+          "ffi_us": 29318,
+          "total_us": 38591,
+          "status": 0,
+          "log_line": 61
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "controller",
+          "transport": "tls",
+          "frame": 2,
+          "first": false,
+          "geometry_us": 1,
+          "allocation_us": 10495,
+          "ffi_us": 1361,
+          "total_us": 11857,
+          "status": 0,
+          "log_line": 61
+        },
+        {
+          "case": "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+          "subcase": null,
+          "role": "controller",
+          "transport": "tls",
+          "frame": 1,
+          "first": true,
+          "geometry_us": 1,
+          "allocation_us": 9680,
+          "ffi_us": 26927,
+          "total_us": 36608,
+          "status": 0,
+          "log_line": 61
+        }
+      ],
+      "timing_scope": "Original teardown stderr observations only; debug allocation/whole-FFI times include lazy setup and are not pure libvpx or throughput benchmarks",
+      "native_receipt": {
+        "scope": "Original producer native receipt; library archives are inventory entries, not independently downloaded native bytes",
+        "target": "x86_64-pc-windows-msvc",
+        "profile": "release",
+        "crt": "dynamic",
+        "lock_sha256": "04ec56430e6a5ae24142c37187a0680f51e32d59975e20e87e7a313caa01315c",
+        "sources": [
+          {
+            "name": "amf",
+            "version": "1.5.3",
+            "commit": "57ee0cfb0e1a08d9041f77435653794c1b012be0",
+            "archive_sha256": "0f521ad98041f8001147cded4a660127f18b1c27a801a5cd691bda1fa48381be",
+            "archive_bytes": 88584,
+            "source_tree_sha256": "d3b861fe06688038e53b4f1ddf0c35dc41c9ab66c6fcca35ff67fe097d1f17df",
+            "source_tree_format": "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+            "source_file_count": 57
+          },
+          {
+            "name": "libvpx",
+            "version": "1.16.0",
+            "commit": "1024874c5919305883187e2953de8fcb4c3d7fa6",
+            "archive_sha256": "274c00c0b21f03a9152e324b1989f73b74268aa8545b39ef5faccc50fdb56393",
+            "archive_bytes": 5637178,
+            "source_tree_sha256": "5b81a0b7a847c3da45b8ccbad7f0bcd68b0c462849f2fc83a37ba2e46feedc43",
+            "source_tree_format": "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+            "source_file_count": 1250
+          },
+          {
+            "name": "opus",
+            "version": "1.6.1",
+            "commit": "22244de5a79bd1d6d623c32e72bf1954b56235be",
+            "archive_sha256": "3267aa969b2b26542417f57819a5bc25d5079355300307dd2dddc7c704aed418",
+            "archive_bytes": 4888967,
+            "source_tree_sha256": "b0d7439aa9aa8ddd60da5c76478cf8f1a845cb8231bf039ff47f0da5fb7ceed6",
+            "source_tree_format": "sha256 of UTF-8 canonical JSON sorted file records (path, bytes, sha256); permissions excluded",
+            "source_file_count": 752
+          }
+        ],
+        "bundled_components": [
+          {
+            "name": "libyuv",
+            "version": "1711",
+            "commit": "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1",
+            "repository": "https://chromium.googlesource.com/libyuv/libyuv",
+            "parent_source": "libvpx",
+            "path": "third_party/libyuv",
+            "license": "BSD-3-Clause",
+            "source_files": [
+              "convert_argb.cc",
+              "cpu_id.cc",
+              "planar_functions.cc",
+              "row_any.cc",
+              "row_common.cc",
+              "row_gcc.cc",
+              "row_win.cc",
+              "row_neon.cc",
+              "row_neon64.cc",
+              "row_msa.cc",
+              "scale_any.cc",
+              "scale_common.cc",
+              "scale_gcc.cc",
+              "scale_win.cc",
+              "scale_neon.cc",
+              "scale_neon64.cc",
+              "scale_msa.cc"
+            ]
+          }
+        ],
+        "features": {
+          "vp8": true,
+          "vp8_encoder": true,
+          "vp8_decoder": true,
+          "vp9": false,
+          "libyuv_i420_to_bgra": true,
+          "opus_float": true,
+          "opus_fixed_point": false,
+          "opus_dred": false,
+          "opus_deep_plc": false,
+          "opus_osce": false,
+          "opus_custom_modes": false,
+          "opus_nonthreadsafe_pseudostack": false
+        },
+        "libyuv_configuration": {
+          "options": [
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_INSTALL_PREFIX=D:\\a\\_temp\\nestlink-codecs\\x86_64-pc-windows-msvc",
+            "-DCMAKE_CXX_COMPILER=C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe",
+            "-DCMAKE_MAKE_PROGRAM=C:/ProgramData/chocolatey/bin/ninja.exe",
+            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+            "-DLIBYUV_SOURCE=D:/a/_temp/nestlink-codecs/sources/libvpx-1024874c5919305883187e2953de8fcb4c3d7fa6/third_party/libyuv",
+            "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL"
+          ],
+          "source_files": [
+            "convert_argb.cc",
+            "cpu_id.cc",
+            "planar_functions.cc",
+            "row_any.cc",
+            "row_common.cc",
+            "row_gcc.cc",
+            "row_win.cc",
+            "row_neon.cc",
+            "row_neon64.cc",
+            "row_msa.cc",
+            "scale_any.cc",
+            "scale_common.cc",
+            "scale_gcc.cc",
+            "scale_win.cc",
+            "scale_neon.cc",
+            "scale_neon64.cc",
+            "scale_msa.cc"
+          ],
+          "compile_command_count": 17,
+          "cmake_project_sha256": "a0c689352c3bac45b147a84f8216e3eb5c4d44192dcc4450792f992f77efdcf7",
+          "compile_commands_sha256": "e7bcecd59e5931e87d6567aebaf2a204dad599ecbe1647b69c9050f309f01f50"
+        },
+        "yuv_library_inventory": [
+          {
+            "path": "lib/yuv.lib",
+            "kind": "library",
+            "bytes": 406800,
+            "sha256": "887b1e40c9a5a011e4a0caa56c61f2daeb98e97f6d1476fe9cc51235b425eec8"
+          }
+        ]
+      },
+      "artifact": {
+        "id": 13206904907,
+        "name": "original-offline-resident-windows-2022-9a52c41439016ec37f98a0c1ee45b2cfc53912eb-1",
+        "official_digest": "sha256:9d2b79b34178e8c88f79a427d460c1304e2f8be4677c17dc8822469bd97e54fc",
+        "independent_zip_sha256": "9d2b79b34178e8c88f79a427d460c1304e2f8be4677c17dc8822469bd97e54fc",
+        "independent_zip_bytes": 93490,
+        "official_digest_matches": true
+      },
+      "independently_hashed_extracted_files": [
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-codecs/x86_64-pc-windows-msvc/nestlink-codecs.json",
+          "bytes": 44366,
+          "sha256": "4ebc862824abc1f915456cdb3a55171402b483e92ecb3a04b98c62cca673a810"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-native-offline-https-license.txt",
+          "bytes": 11357,
+          "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-native-offline-https-tool.json",
+          "bytes": 895,
+          "sha256": "2688faf90de825241f280e2836086ec88ab54a12f76a61a1ccf5350f2948f839"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/app-core-capture-terminal-unit-stderr.log",
+          "bytes": 13663,
+          "sha256": "b68f04c489985d26e277efa6834d04b5d76e9a825f60cd02a30f2815d0532b34"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/app-core-capture-terminal-unit.log",
+          "bytes": 490,
+          "sha256": "7791f1636aa8ef8ffff89d3f1fe93a940ed4ae88583c0372ac9180a5bed28def"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/app-core-clippy-stderr.log",
+          "bytes": 26891,
+          "sha256": "d743801ca55a3b8f80f092c6d702b1451ed593cd45cbdbece72dcc36548bad05"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/app-core-clippy.log",
+          "bytes": 87,
+          "sha256": "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/app-core-stderr.log",
+          "bytes": 42109,
+          "sha256": "10bb1153bd89fb7daf29ddb4fd9fe797b6d45f09c328475ca16f1587c9f50e54"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/app-core.log",
+          "bytes": 2094,
+          "sha256": "514134679e5929f1df06aaa19ed62fd904b1043338fffc202acd1b85286f9cb1"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/cargo-version-stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/cargo-version.log",
+          "bytes": 123,
+          "sha256": "d23c4c65b8674a054de5e636a3a8a764f439ce1ebffd9dc967c550b1298f9ed1"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-clippy-stderr.log",
+          "bytes": 18533,
+          "sha256": "bdefebe7aca78f03be48bc8ca2dbbcee0988074305aa57681f20cc18202acfb8"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-clippy.log",
+          "bytes": 87,
+          "sha256": "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-download-consent-unit-stderr.log",
+          "bytes": 13577,
+          "sha256": "4dd113b256bf3597fadb9e047ca710e1c5a8176ce15223c3632e91ac1c2e07d3"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-download-consent-unit.log",
+          "bytes": 438,
+          "sha256": "003e3901cb6e1b5a21a60e3a57d1d7b0441c50d3440848dba8d7f446c88c5579"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-entry-unit-stderr.log",
+          "bytes": 13577,
+          "sha256": "d4c26111bcae4beebd369b8ad9eda872dec4a830e494b0cf1afd059bad4d8649"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-entry-unit.log",
+          "bytes": 510,
+          "sha256": "b314b3f201247d1568645c059793f9229b3f2aab299fac41771a9c7797dc0347"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-private-unit-stderr.log",
+          "bytes": 13577,
+          "sha256": "f2e3f7509a6eebef23471c7dc716785486db3b519ec86c5b5619f4a04d81d04d"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-private-unit.log",
+          "bytes": 2067,
+          "sha256": "3365d5f292f6def50d69fb48f797f981def866190faca4a1a99f93ce386ad60d"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-remote-unit-stderr.log",
+          "bytes": 19156,
+          "sha256": "70c21da8b618756a5c04e955ced5dc048bee6c36fb32a56164d9680185960c43"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-remote-unit.log",
+          "bytes": 657,
+          "sha256": "633f24de3593963ce0068eabb9b8c5f23ec6c53645eedffaa19e107b596cae4c"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/desktop-layout-stderr.log",
+          "bytes": 22192,
+          "sha256": "d6b6cb31a8f06b76b701935df8b00a1eed8bf5e5ba46fbead2c8b57eb42b4268"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/desktop-layout.log",
+          "bytes": 1206,
+          "sha256": "f2b51b62a85823d5c0a0add3636d68642296cfe67634ce46d701d89bfb648993"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/nestlink-codecs.json",
+          "bytes": 44366,
+          "sha256": "4ebc862824abc1f915456cdb3a55171402b483e92ecb3a04b98c62cca673a810"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
+          "bytes": 11357,
+          "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
+          "bytes": 895,
+          "sha256": "2688faf90de825241f280e2836086ec88ab54a12f76a61a1ccf5350f2948f839"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/receipt.json",
+          "bytes": 21961,
+          "sha256": "751db8995de807b01790511a949b13b24618c440538a0d54b4aa8fb5fbbe7c37"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-clippy-stderr.log",
+          "bytes": 17229,
+          "sha256": "fd5e7744dbf674a9f3bc21a6a89a11e543011350c2c9c1a242eb2f34f8d560ae"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-clippy.log",
+          "bytes": 87,
+          "sha256": "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-platform-owner-clippy-stderr.log",
+          "bytes": 13586,
+          "sha256": "7fd514f8c996929c83d81fa927f47a03e53dbaf2c19dd41db3a42b6b442f06a6"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-platform-owner-clippy.log",
+          "bytes": 87,
+          "sha256": "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-platform-owner-stderr.log",
+          "bytes": 13690,
+          "sha256": "b03430c4036506715d079789ee10139e9ed2471df34ba4e16f79104db8defb5e"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-platform-owner.log",
+          "bytes": 409,
+          "sha256": "2c842626e8fd1148ad8bd2b448d1a84396c2d7fcd62758adbaad1b75e8978e7c"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-stderr.log",
+          "bytes": 13675,
+          "sha256": "68c15c3199ce75e96515b3b1fb7c98e2c09afa743deb486a5a9b6a2b751936cd"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident.log",
+          "bytes": 21966,
+          "sha256": "fc0b5e621ce4b07761b3b811a27f0f3ee05cd1c3b4da436ec2f60fbdf88526b5"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/rustc-version-stderr.log",
+          "bytes": 433,
+          "sha256": "0e649d34ff0e0350e43b94626de2a1cf5b8259935985031320a57d1e7612e13d"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/rustc-version.log",
+          "bytes": 281,
+          "sha256": "bbc72a4bdbeba74b0bb91d43842d0f27a6cbb9dec0a0f3512f1c498ea4975f8f"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/source-after.json",
+          "bytes": 228,
+          "sha256": "74519cd0a87d0e77d4bd9c83d40a429bf8248b31e886e0e814f294bf6c116f0c"
+        },
+        {
+          "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/source-before.json",
+          "bytes": 228,
+          "sha256": "74519cd0a87d0e77d4bd9c83d40a429bf8248b31e886e0e814f294bf6c116f0c"
+        }
+      ],
+      "producer_inventory_entries_verified": 35,
+      "complete_job_log": "windows-resident-job-125743829176.log"
+    }
+  ],
+  "observations": [
+    "Linux original resident passes 4/4 in 219.26s; Windows original resident passes 4/4 in 275.57s. Both include all eight management fences, four pending listener cases and both complete QUIC/TLS actual-pixel, two 262144-byte-file, rebuild and EOF/IPC Exit/physical-rebind assertions. No original case is replaced or ignored.",
+    "Every focused original command and strict command passes on both targets. Original stdout and stderr are independently preserved in distinct files; the producer collector self-test verifies an actual nonzero child remains failed.",
+    "No original HTTPS startup failure diagnostic is observed in these successful original cases. This does not establish or repair the DNS root cause of the distinct f24/b491 failures. Those exact-source historical failed outcomes remain failed and retained.",
+    "All 74 producer inventory entries and both official ZIP digest, byte count and exact-source identities are independently checked. Source-before and source-after bytes are identical and clean on both targets; the frozen public-PKI HTTPS tool hashes are unchanged and match its receipt.",
+    "Native library/archive hashes remain producer receipt inventory. Original endpoint terminal process/cleanup observations and VP8 Rust stage times are recorded without presenting hosted debug measurements as target benchmarks.",
+    "Original four names/counts/assertions, 60ms immutable ingress anchor, 40ms late threshold, PTS/capture clocks, public HTTPS trust, cumulative authority, OS identities and original deadlines remain unchanged. Original 25-second Luanti failed history remains failed. No local project execution, commit, push, dispatch, cancellation or rerun was performed for this evidence record."
+  ],
+  "independent_verification": {
+    "downloaded_files_hashed": 89,
+    "producer_inventory_entries_verified": 74,
+    "producer_inventory_mismatches": 0,
+    "official_artifact_zips_verified": 2,
+    "files": [
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-codecs/x86_64-unknown-linux-gnu/nestlink-codecs.json",
+        "bytes": 41094,
+        "sha256": "b6b6d0fa7b7046316cfd4df0b6c306725e5c9d5ded32c68565040d800cc39d11"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-native-offline-https-license.txt",
+        "bytes": 11357,
+        "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-native-offline-https-tool.json",
+        "bytes": 871,
+        "sha256": "f9a8e6381c609a3d3b212e4dd62864d7984989e2616060923d9e9283e4c01b05"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/app-core-capture-terminal-unit-stderr.log",
+        "bytes": 13905,
+        "sha256": "b7c4692f54ee4529756bd5fa3c827775fb7d3248b8bfe0f3334c6266c3a4f6a0"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/app-core-capture-terminal-unit.log",
+        "bytes": 403,
+        "sha256": "c26c56d0abee8f8898e676662cf3d669ea4b1bfc03581e68eb53e47f4c951ba7"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/app-core-clippy-stderr.log",
+        "bytes": 27573,
+        "sha256": "5fc46417807ff4bb72cef67020af3d402c35d4d1297747171223c22694e85691"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/app-core-clippy.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/app-core-stderr.log",
+        "bytes": 43012,
+        "sha256": "8037b582399136eed2b2f9ad5cc491623fc308257b92d7aaac1b0aa0bac2c5fe"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/app-core.log",
+        "bytes": 2007,
+        "sha256": "d7d43b9f2ccbb53640dcfea9a56b1600eade2199e43b5a8d26db05908edf4645"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/cargo-version-stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/cargo-version.log",
+        "bytes": 36,
+        "sha256": "b6ef6807dd96d18b833474ad68e7a23a29e562a29c67afa71a59fb9a73df0068"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-clippy-stderr.log",
+        "bytes": 17722,
+        "sha256": "f7a284d999270b10b82dbad9863829ad632033f1e2f87a85510741691216ff4e"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-clippy.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-download-consent-unit-stderr.log",
+        "bytes": 13806,
+        "sha256": "2932f40316372e4384d9d16f6c79c974ba883cf88760a4aed114b53bf0262096"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-download-consent-unit.log",
+        "bytes": 351,
+        "sha256": "db8930a2db1c212ae8685029b3fcd86b582f45a4f743886ce77070dfb01e560c"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-entry-unit-stderr.log",
+        "bytes": 13806,
+        "sha256": "7905fc9952f188bca3f0b0aa1b7220d5152ddc70d13b7bfadb52505a4758ee90"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-entry-unit.log",
+        "bytes": 422,
+        "sha256": "18d1af7f20650187f09d83d88ad98e590f702879d02111b6162102f8274fb843"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-private-unit-stderr.log",
+        "bytes": 13806,
+        "sha256": "7905fc9952f188bca3f0b0aa1b7220d5152ddc70d13b7bfadb52505a4758ee90"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-private-unit.log",
+        "bytes": 1980,
+        "sha256": "cef636ea6b112f695738ecacc9276e1cb5cb1d8eb958e301a918fc5fd4677ff2"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-remote-unit-stderr.log",
+        "bytes": 17986,
+        "sha256": "d705a02f8fc97f5621366cfe9dbae1168207151c5c031a6aef511b83b778e854"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/daemon-remote-unit.log",
+        "bytes": 570,
+        "sha256": "4439100dfe2dea97161528d8dee08abbbda00481fbb8bf72093a1962de497e18"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/desktop-layout-stderr.log",
+        "bytes": 26962,
+        "sha256": "214614cf7b3de730e4ddbf325dcf5a3ed9606bed77689f26d39ef00c8e474091"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/desktop-layout.log",
+        "bytes": 1123,
+        "sha256": "fc69dff1e57086cf37a3789d4bc09885b8fe7b1434a0a319a7eca6022104370c"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/nestlink-codecs.json",
+        "bytes": 41094,
+        "sha256": "b6b6d0fa7b7046316cfd4df0b6c306725e5c9d5ded32c68565040d800cc39d11"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
+        "bytes": 11357,
+        "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
+        "bytes": 871,
+        "sha256": "f9a8e6381c609a3d3b212e4dd62864d7984989e2616060923d9e9283e4c01b05"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/receipt.json",
+        "bytes": 21198,
+        "sha256": "564f26027850b7986652a70ed57808caff1a833b216ca1ccf224d2ca80f316c2"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-clippy-stderr.log",
+        "bytes": 17605,
+        "sha256": "b7e5920e8e465c7155b779beecd5dfbfccd356c551b5cb75a6b269e268951fe4"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-clippy.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-platform-owner-clippy-stderr.log",
+        "bytes": 13832,
+        "sha256": "153472b3039dc229a5313a179fcfcccbe67add399d276fd327dc966c59b108f5"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-platform-owner-clippy.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-platform-owner-stderr.log",
+        "bytes": 40934,
+        "sha256": "64317b8cf548eb0ecb061714c77583da5e4d5604beff5601242b974664b3e975"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-platform-owner.log",
+        "bytes": 322,
+        "sha256": "f71d92b78adfba80cb13d75e026008c2d4d4ecb5a2fd45b84483274fd38a703b"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident-stderr.log",
+        "bytes": 18613,
+        "sha256": "d2b7b6058d63265265cc65756d9c4d4a9c5349059706885133abf70cb549980d"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/resident.log",
+        "bytes": 27007,
+        "sha256": "ccdf13514d5374e1d8180f5471b86ddcd193f2f7ac1116b06ef57cfb351cc39e"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/rustc-version-stderr.log",
+        "bytes": 437,
+        "sha256": "10705b5dd72a6b7270d87b4e4d8ec7996bb6312957f85e9a75664f140604a81a"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/rustc-version.log",
+        "bytes": 196,
+        "sha256": "f64c55ed9f210d80a9b248206104a47175faf5ec94a093e4ad132549209089fc"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/secret-service-literal-attributes-clippy-stderr.log",
+        "bytes": 13832,
+        "sha256": "3a6b1e7ca3d943e5ccf861c5c60f2e8a58f663656429612156d90f17d4296751"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/secret-service-literal-attributes-clippy.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/secret-service-literal-attributes-stderr.log",
+        "bytes": 15110,
+        "sha256": "cae70e3c95e11850c90ad6f00ebfacf161213b366a9c0284132daf8848a00f75"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/secret-service-literal-attributes.log",
+        "bytes": 288,
+        "sha256": "988777f538543511d0f30c09e80ec4024100e8d963495f9e8e4a9c0f32767eb8"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/source-after.json",
+        "bytes": 222,
+        "sha256": "4b24237f6fc2ae4dfa1901962d58157ba94596bb605fdda2390d1525ef536ed3"
+      },
+      {
+        "path": "resident-linux-13207332289-verified/nestlink-offline-resident-focused/source-before.json",
+        "bytes": 222,
+        "sha256": "4b24237f6fc2ae4dfa1901962d58157ba94596bb605fdda2390d1525ef536ed3"
+      },
+      {
+        "path": "linux-resident-job-125743829194.log",
+        "bytes": 132116,
+        "sha256": "508bbd772a3913ec763a2d40e6ac5fc8d93421ce314647752069fed34bd293e7"
+      },
+      {
+        "path": "resident-linux-13207332289.zip",
+        "bytes": 97508,
+        "sha256": "c5ec8a782a5b493f9a7aaa42a58ca2483bed43bd1dd7aed9ed0c977a9d95fb00"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-codecs/x86_64-pc-windows-msvc/nestlink-codecs.json",
+        "bytes": 44366,
+        "sha256": "4ebc862824abc1f915456cdb3a55171402b483e92ecb3a04b98c62cca673a810"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-native-offline-https-license.txt",
+        "bytes": 11357,
+        "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-native-offline-https-tool.json",
+        "bytes": 895,
+        "sha256": "2688faf90de825241f280e2836086ec88ab54a12f76a61a1ccf5350f2948f839"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/app-core-capture-terminal-unit-stderr.log",
+        "bytes": 13663,
+        "sha256": "b68f04c489985d26e277efa6834d04b5d76e9a825f60cd02a30f2815d0532b34"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/app-core-capture-terminal-unit.log",
+        "bytes": 490,
+        "sha256": "7791f1636aa8ef8ffff89d3f1fe93a940ed4ae88583c0372ac9180a5bed28def"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/app-core-clippy-stderr.log",
+        "bytes": 26891,
+        "sha256": "d743801ca55a3b8f80f092c6d702b1451ed593cd45cbdbece72dcc36548bad05"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/app-core-clippy.log",
+        "bytes": 87,
+        "sha256": "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/app-core-stderr.log",
+        "bytes": 42109,
+        "sha256": "10bb1153bd89fb7daf29ddb4fd9fe797b6d45f09c328475ca16f1587c9f50e54"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/app-core.log",
+        "bytes": 2094,
+        "sha256": "514134679e5929f1df06aaa19ed62fd904b1043338fffc202acd1b85286f9cb1"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/cargo-version-stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/cargo-version.log",
+        "bytes": 123,
+        "sha256": "d23c4c65b8674a054de5e636a3a8a764f439ce1ebffd9dc967c550b1298f9ed1"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-clippy-stderr.log",
+        "bytes": 18533,
+        "sha256": "bdefebe7aca78f03be48bc8ca2dbbcee0988074305aa57681f20cc18202acfb8"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-clippy.log",
+        "bytes": 87,
+        "sha256": "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-download-consent-unit-stderr.log",
+        "bytes": 13577,
+        "sha256": "4dd113b256bf3597fadb9e047ca710e1c5a8176ce15223c3632e91ac1c2e07d3"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-download-consent-unit.log",
+        "bytes": 438,
+        "sha256": "003e3901cb6e1b5a21a60e3a57d1d7b0441c50d3440848dba8d7f446c88c5579"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-entry-unit-stderr.log",
+        "bytes": 13577,
+        "sha256": "d4c26111bcae4beebd369b8ad9eda872dec4a830e494b0cf1afd059bad4d8649"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-entry-unit.log",
+        "bytes": 510,
+        "sha256": "b314b3f201247d1568645c059793f9229b3f2aab299fac41771a9c7797dc0347"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-private-unit-stderr.log",
+        "bytes": 13577,
+        "sha256": "f2e3f7509a6eebef23471c7dc716785486db3b519ec86c5b5619f4a04d81d04d"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-private-unit.log",
+        "bytes": 2067,
+        "sha256": "3365d5f292f6def50d69fb48f797f981def866190faca4a1a99f93ce386ad60d"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-remote-unit-stderr.log",
+        "bytes": 19156,
+        "sha256": "70c21da8b618756a5c04e955ced5dc048bee6c36fb32a56164d9680185960c43"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/daemon-remote-unit.log",
+        "bytes": 657,
+        "sha256": "633f24de3593963ce0068eabb9b8c5f23ec6c53645eedffaa19e107b596cae4c"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/desktop-layout-stderr.log",
+        "bytes": 22192,
+        "sha256": "d6b6cb31a8f06b76b701935df8b00a1eed8bf5e5ba46fbead2c8b57eb42b4268"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/desktop-layout.log",
+        "bytes": 1206,
+        "sha256": "f2b51b62a85823d5c0a0add3636d68642296cfe67634ce46d701d89bfb648993"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/nestlink-codecs.json",
+        "bytes": 44366,
+        "sha256": "4ebc862824abc1f915456cdb3a55171402b483e92ecb3a04b98c62cca673a810"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/nestlink-native-offline-https-license.txt",
+        "bytes": 11357,
+        "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/nestlink-native-offline-https-tool.json",
+        "bytes": 895,
+        "sha256": "2688faf90de825241f280e2836086ec88ab54a12f76a61a1ccf5350f2948f839"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/receipt.json",
+        "bytes": 21961,
+        "sha256": "751db8995de807b01790511a949b13b24618c440538a0d54b4aa8fb5fbbe7c37"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-clippy-stderr.log",
+        "bytes": 17229,
+        "sha256": "fd5e7744dbf674a9f3bc21a6a89a11e543011350c2c9c1a242eb2f34f8d560ae"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-clippy.log",
+        "bytes": 87,
+        "sha256": "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-platform-owner-clippy-stderr.log",
+        "bytes": 13586,
+        "sha256": "7fd514f8c996929c83d81fa927f47a03e53dbaf2c19dd41db3a42b6b442f06a6"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-platform-owner-clippy.log",
+        "bytes": 87,
+        "sha256": "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-platform-owner-stderr.log",
+        "bytes": 13690,
+        "sha256": "b03430c4036506715d079789ee10139e9ed2471df34ba4e16f79104db8defb5e"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-platform-owner.log",
+        "bytes": 409,
+        "sha256": "2c842626e8fd1148ad8bd2b448d1a84396c2d7fcd62758adbaad1b75e8978e7c"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident-stderr.log",
+        "bytes": 13675,
+        "sha256": "68c15c3199ce75e96515b3b1fb7c98e2c09afa743deb486a5a9b6a2b751936cd"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/resident.log",
+        "bytes": 21966,
+        "sha256": "fc0b5e621ce4b07761b3b811a27f0f3ee05cd1c3b4da436ec2f60fbdf88526b5"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/rustc-version-stderr.log",
+        "bytes": 433,
+        "sha256": "0e649d34ff0e0350e43b94626de2a1cf5b8259935985031320a57d1e7612e13d"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/rustc-version.log",
+        "bytes": 281,
+        "sha256": "bbc72a4bdbeba74b0bb91d43842d0f27a6cbb9dec0a0f3512f1c498ea4975f8f"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/source-after.json",
+        "bytes": 228,
+        "sha256": "74519cd0a87d0e77d4bd9c83d40a429bf8248b31e886e0e814f294bf6c116f0c"
+      },
+      {
+        "path": "resident-windows-13206904907-verified/nestlink-offline-resident-focused/source-before.json",
+        "bytes": 228,
+        "sha256": "74519cd0a87d0e77d4bd9c83d40a429bf8248b31e886e0e814f294bf6c116f0c"
+      },
+      {
+        "path": "windows-resident-job-125743829176.log",
+        "bytes": 100993,
+        "sha256": "aa118118d91e29c122bb7a3fa9d975ec7a3acd7d1bb7cc4fdf2bf8fc7805ca3a"
+      },
+      {
+        "path": "resident-windows-13206904907.zip",
+        "bytes": 93490,
+        "sha256": "9d2b79b34178e8c88f79a427d460c1304e2f8be4677c17dc8822469bd97e54fc"
+      },
+      {
+        "path": "resident-run.json",
+        "bytes": 11790,
+        "sha256": "7bf5c6d58473b7345812f46c0ac0968a71063d98bc5cad855421d09a6f85e180"
+      },
+      {
+        "path": "resident-jobs.json",
+        "bytes": 8048,
+        "sha256": "5c6a1ee61630f430372bb662f1c6968b01d98fd53a96db0f8d16c8bb4c40bc23"
+      },
+      {
+        "path": "resident-artifacts.json",
+        "bytes": 1509,
+        "sha256": "cd0bd1768bdde5590e9972c7ac5631196468e93ce3c24edd5bb1f320599a946b"
+      }
+    ]
+  }
+}

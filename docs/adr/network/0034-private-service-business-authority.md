@@ -119,9 +119,22 @@ The host command passes explicit repeated `--relay-private-prefix` choices and
 `--allow-loopback-relay` into the SDK's existing local relay endpoint policy;
 these choices do not select or authorize a backend target.
 
-Termination, installation maintenance, changed/disabled protected login, original
-login expiry, target-approval expiry or wall-clock regression stops this same
-host. Setup retains its original resource-owning future after a stop request,
+Termination, installation maintenance, changed/disabled protected login, changed
+or unreadable installation identity, original login expiry, target-approval
+expiry or wall-clock regression stops this same host. The local guard records
+the exact protected installation-manifest bytes and original device ID, signing
+public key and management account. Each lifecycle poll reads the original
+manifest and OS-protected key through the existing bounded private-file checks,
+reconstructs and immediately clears the temporary seed, and compares the actual
+key with the original signer and manifest fingerprint. It also checks the
+private directory boundary. A same-length manifest rewrite, missing manifest or
+key, invalid private permissions or different valid key fails closed; the
+active guard never calls the installation loader that could create missing
+identity files. Any observed failure is terminal even after the original file
+is restored. Setup verifies its SDK account and signer against this same guard
+before issuing the first management operation.
+
+Setup retains its original resource-owning future after a stop request,
 checks the same session between approval/exposure/start effects and joins any
 host returned by an already in-progress start. Shutdown retains the original
 handle through pending waits and requires its actual worker/listener cleanup
@@ -130,6 +143,9 @@ result before reporting success. The stable installation-private directory
 invocations and is never cleared as runtime cleanup. Hosted tests exercise the
 production command function against the actual management router and local TCP
 backend, explicit consumer ACL, byte exchange, session-change/backend EOF,
-physical UDP listener release, approval expiry and retained usage state. These
+same-length manifest changes, missing identity/key, a valid replacement key,
+private-permission failures, physical UDP listener release, approval expiry and
+retained usage state. Separate cases reject a different signing identity or
+management account before approval and keep restored identity files terminal. These
 are implementation/test sources awaiting Actions evidence, not a laboratory or
 target verification claim.

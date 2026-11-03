@@ -192,17 +192,28 @@ fn wall_ms() -> io::Result<u64> {
 struct SessionGuard {
     directory: PathBuf,
     original_login: [u8; 32],
+    original_manifest: [u8; 32],
+    original_device: String,
+    original_public_key: [u8; 32],
+    original_account: String,
     until: AtomicU64,
     last_wall: AtomicU64,
     deadline: tokio::time::Instant,
     cancelled: AtomicBool,
 }
 impl SessionGuard {
-    fn new(directory: PathBuf, original_login: [u8; 32], sdk: &Sdk, seconds: u64) -> Result<Self> {
+    fn new(
+        directory: PathBuf,
+        original_login: [u8; 32],
+        sdk: &Sdk,
+        host: &DeviceIdentity,
+        seconds: u64,
+    ) -> Result<Self> {
         let now = wall_ms()?;
-        let login_end = sdk
-            .principal()
-            .ok_or(SdkError::SignIn)?
+        let principal = sdk.principal().ok_or(SdkError::SignIn)?;
+        let original_manifest =
+            installation_snapshot(&directory, &host.device_id, &host.identity.public_key())?;
+        let login_end = principal
             .access_expires
             .checked_mul(1000)
             .ok_or(SdkError::Invalid)?;
@@ -216,6 +227,10 @@ impl SessionGuard {
         Ok(Self {
             directory,
             original_login,
+            original_manifest,
+            original_device: host.device_id.clone(),
+            original_public_key: host.identity.public_key(),
+            original_account: principal.account_id.clone(),
             until: AtomicU64::new(until),
             last_wall: AtomicU64::new(now),
             deadline: tokio::time::Instant::now() + Duration::from_millis(until - now),
@@ -226,6 +241,27 @@ impl SessionGuard {
         if self.cancelled.load(Ordering::SeqCst) {
             return Ok(false);
         }
+        let result = self.check_running();
+        // The original authorization cannot revive after an observed failure,
+        // even if a changed/deleted file is restored before the next poll.
+        if !matches!(&result, Ok(true)) {
+            self.cancelled.store(true, Ordering::SeqCst);
+        }
+        result
+    }
+    fn check_owner(&self, sdk: &Sdk, host: &DeviceIdentity) -> io::Result<()> {
+        if sdk.principal().map(|principal| &principal.account_id) != Some(&self.original_account)
+            || host.device_id != self.original_device
+            || host.identity.public_key() != self.original_public_key
+        {
+            self.cancelled.store(true, Ordering::SeqCst);
+            return Err(io::Error::other(
+                "original account or signing installation changed; private service host stopped",
+            ));
+        }
+        Ok(())
+    }
+    fn check_running(&self) -> io::Result<bool> {
         let now = wall_ms()?;
         if now < self.last_wall.fetch_max(now, Ordering::SeqCst) {
             return Err(io::Error::other(
@@ -244,8 +280,47 @@ impl SessionGuard {
                 "protected management session changed; private service host stopped",
             ));
         }
+        if installation_snapshot(
+            &self.directory,
+            &self.original_device,
+            &self.original_public_key,
+        )? != self.original_manifest
+        {
+            return Err(io::Error::other(
+                "protected installation record changed; private service host stopped",
+            ));
+        }
         Ok(true)
     }
+}
+
+fn installation_snapshot(
+    directory: &std::path::Path,
+    device: &str,
+    public_key: &[u8; 32],
+) -> io::Result<[u8; 32]> {
+    // Read through the existing owner/permission/regular-file boundary. Never
+    // call the creating installation loader from an active host lifecycle.
+    nestlink_platform_security::check_private_directory(directory)?;
+    let bytes = nestlink_platform_security::read_private(
+        &directory.join("installation-device.json"),
+        1024,
+    )?;
+    let saved: crate::Installation = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+    let mut seed =
+        nestlink_platform_security::load_key(&directory.join("installation-device.key"))?;
+    let identity = nestlink_identity::InstallationIdentity::from_seed_zeroizing(&mut seed);
+    if saved.schema_version != 1
+        || !nestlink_protocol::valid_id(&saved.device_id)
+        || saved.device_id != device
+        || saved.public_key_sha256 != identity.fingerprint()
+        || identity.public_key() != *public_key
+    {
+        return Err(io::Error::other(
+            "protected installation differs from the original signing identity; private service host stopped",
+        ));
+    }
+    Ok(crate::sha256(&bytes))
 }
 
 async fn start(
@@ -254,6 +329,7 @@ async fn start(
     host: Arc<DeviceIdentity>,
     guard: &SessionGuard,
 ) -> Result<Option<PrivateServiceHost>> {
+    guard.check_owner(sdk, &host)?;
     if !guard.running()? {
         return Ok(None);
     }
@@ -357,7 +433,7 @@ pub(super) async fn run(
     original_login: [u8; 32],
 ) -> Result<()> {
     args.validate()?;
-    let guard = SessionGuard::new(directory, original_login, &sdk, args.approval_seconds)?;
+    let guard = SessionGuard::new(directory, original_login, &sdk, &host, args.approval_seconds)?;
     let signal = crate::space_dns_system::termination();
     tokio::pin!(signal);
     let mut tick = tokio::time::interval(Duration::from_millis(250));

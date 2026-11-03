@@ -37,6 +37,9 @@ struct Fixture {
     service: ServiceView,
     space: String,
     directory: PathBuf,
+    origin: String,
+    deployment: String,
+    issuer: [u8; 32],
     _temporary: tempfile::TempDir,
     _server: Task<io::Result<()>>,
 }
@@ -67,7 +70,7 @@ impl Fixture {
         let mut sdk = Sdk::connect(
             &origin,
             DeploymentTrust {
-                deployment_id: deployment,
+                deployment_id: deployment.clone(),
                 permit_issuer: issuer,
             },
             true,
@@ -75,7 +78,10 @@ impl Fixture {
         .await?;
         sdk.login("admin".into(), Secret::from_text(PASSWORD.into()), None)
             .await?;
-        let host = Arc::new(DeviceIdentity::generate());
+        let temporary = tempfile::tempdir()?;
+        let directory = temporary.path().join("private");
+        nestlink_platform_security::new_private_directory(&directory)?;
+        let host = Arc::new(crate::identity(&directory)?);
         let consumer = DeviceIdentity::generate();
         for (device, name) in [(&*host, "daemon-host"), (&consumer, "explicit-consumer")] {
             sdk.enroll(
@@ -122,9 +128,6 @@ impl Fixture {
                 },
             })
             .await?;
-        let temporary = tempfile::tempdir()?;
-        let directory = temporary.path().join("private");
-        nestlink_platform_security::new_private_directory(&directory)?;
         // Only the lifecycle witness is synthetic. All login/approval/ACL/grant
         // authorization above and below goes to the real management router.
         nestlink_platform_security::create_private(
@@ -142,6 +145,9 @@ impl Fixture {
             service,
             space: space.space_id,
             directory,
+            origin,
+            deployment,
+            issuer,
             _temporary: temporary,
             _server: server,
         })
@@ -263,6 +269,7 @@ async fn host_command_preserves_original_service_on_budget_and_tls_denial() -> R
         f.directory.clone(),
         session_snapshot(&f.directory)?,
         &f.sdk,
+        &f.host,
         60,
     )?;
     assert!(start(&args, &f.sdk, f.host.clone(), &guard).await.is_err());
@@ -383,6 +390,7 @@ async fn repeated_explicit_host_approval_revokes_old_consumer_acl_and_reopens_sa
         f.directory.clone(),
         session_snapshot(&f.directory)?,
         &f.sdk,
+        &f.host,
         60,
     )?;
     let mut first = start(&args, &f.sdk, f.host.clone(), &guard)
@@ -459,5 +467,354 @@ async fn host_command_approval_deadline_withdraws_presence_and_keeps_ledger() ->
             .join("service-usage.sqlite3")
             .is_file()
     );
+    Ok(())
+}
+
+#[derive(Clone, Copy, Debug)]
+enum IdentityChange {
+    SameLengthDevice,
+    SameLengthRecord,
+    MissingRecord,
+    MissingKey,
+    ReplacementKey,
+    UnsafeDirectory,
+    #[cfg(unix)]
+    UnsafeRecord,
+    #[cfg(unix)]
+    UnsafeKey,
+}
+impl IdentityChange {
+    fn apply(self, directory: &std::path::Path) -> Result<()> {
+        let manifest = directory.join("installation-device.json");
+        let key = directory.join("installation-device.key");
+        match self {
+            Self::SameLengthDevice => {
+                let original = nestlink_platform_security::read_private(&manifest, 1024)?;
+                let mut saved: crate::Installation = serde_json::from_slice(&original)?;
+                saved.device_id = random_id();
+                let changed = serde_json::to_vec(&saved)?;
+                assert_ne!(&*original, &changed);
+                assert_eq!(original.len(), changed.len());
+                nestlink_platform_security::replace_private_metadata(&manifest, &changed)?;
+            }
+            Self::SameLengthRecord => {
+                let original = nestlink_platform_security::read_private(&manifest, 1024)?;
+                let saved: crate::Installation = serde_json::from_slice(&original)?;
+                // Keep the same valid signing identity, but replace the exact
+                // protected record without changing its size or values.
+                let changed = format!(
+                    "{{\"device_id\":\"{}\",\"schema_version\":{},\"public_key_sha256\":{}}}",
+                    saved.device_id,
+                    saved.schema_version,
+                    serde_json::to_string(&saved.public_key_sha256)?
+                );
+                assert_ne!(&*original, changed.as_bytes());
+                assert_eq!(original.len(), changed.len());
+                nestlink_platform_security::replace_private_metadata(&manifest, changed.as_bytes())?;
+            }
+            Self::MissingRecord => std::fs::remove_file(manifest)?,
+            Self::MissingKey => std::fs::remove_file(key)?,
+            Self::ReplacementKey => {
+                // Exercise a valid new OS-protected key, not an invalid blob.
+                let seed = zeroize::Zeroizing::new(nestlink_auth::random_bytes::<32>());
+                std::fs::remove_file(&key)?;
+                nestlink_platform_security::create_key(&key, &seed)?;
+            }
+            Self::UnsafeDirectory => {
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    std::fs::set_permissions(directory, std::fs::Permissions::from_mode(0o755))?;
+                }
+                #[cfg(windows)]
+                {
+                    let system = std::env::var_os("SystemRoot").ok_or("SystemRoot missing")?;
+                    let status = std::process::Command::new(
+                        PathBuf::from(system).join("System32").join("icacls.exe"),
+                    )
+                    .arg(directory)
+                    .args(["/grant", "*S-1-1-0:(R)"])
+                    .status()?;
+                    assert!(status.success(), "widen the original directory ACL");
+                }
+            }
+            #[cfg(unix)]
+            Self::UnsafeRecord => {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(manifest, std::fs::Permissions::from_mode(0o644))?;
+            }
+            #[cfg(unix)]
+            Self::UnsafeKey => {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(key, std::fs::Permissions::from_mode(0o644))?;
+            }
+        }
+        Ok(())
+    }
+}
+
+async fn changed_identity_joins_original_target(change: IdentityChange) -> Result<()> {
+    let f = Fixture::new().await?;
+    let original_login = session_snapshot(&f.directory)?;
+    let backend = TcpListener::bind("127.0.0.1:0").await?;
+    let args = f.args(backend.local_addr()?, 60)?;
+    let mut target = Task::new(tokio::spawn(async move {
+        let (mut stream, _) = backend.accept().await?;
+        let mut request = [0; 4];
+        stream.read_exact(&mut request).await?;
+        assert_eq!(&request, b"ping");
+        stream.write_all(b"pong").await?;
+        let mut probe = [0; 1];
+        assert_eq!(stream.read(&mut probe).await?, 0, "{change:?}: backend EOF");
+        Ok::<_, io::Error>(())
+    }));
+    let mut command = Task::new(tokio::spawn(run(
+        args,
+        f.sdk.clone(),
+        f.host.clone(),
+        f.directory.clone(),
+        original_login,
+    )));
+    let exposure = f.exposure().await?;
+    f.grant(&exposure).await?;
+    f.ready().await?;
+    let lease = f
+        .sdk
+        .request_private_service(
+            &f.service.id,
+            PrivateServiceAccessRequest {
+                request_id: random_id(),
+                consumer_device_id: f.consumer.device_id.clone(),
+                expected_service_revision: exposure.service_revision,
+                expected_exposure_revision: exposure.revision,
+                maximum_bytes: 1024,
+                route: PrivateServiceRouteRequest::Direct,
+            },
+        )
+        .await?;
+    let address: SocketAddr = lease.lease().claims().edge_service_address.parse()?;
+    let mut connection = f.sdk.connect_private_service(&f.consumer, lease).await?;
+    connection.stream()?.write_all(b"ping").await?;
+    let mut reply = [0; 4];
+    tokio::time::timeout(
+        Duration::from_secs(3),
+        connection.stream()?.read_exact(&mut reply),
+    )
+    .await??;
+    assert_eq!(&reply, b"pong");
+    change.apply(&f.directory)?;
+    assert_eq!(
+        crate::sha256(&nestlink_platform_security::read_private(
+            &f.directory.join("management-login.enc"),
+            16424,
+        )?),
+        original_login,
+        "the login cipher remains unchanged even when the directory is deliberately widened"
+    );
+    let error = tokio::time::timeout(Duration::from_secs(10), command.join())
+        .await??
+        .expect_err("changed installation must stop after original physical cleanup");
+    println!("private host identity stop: {change:?}: {error}");
+    tokio::time::timeout(Duration::from_secs(3), target.join()).await???;
+    connection.close().await?;
+    let rebound = UdpSocket::bind(address).await?;
+    drop(rebound);
+    assert!(
+        f.directory
+            .join("private-service-usage")
+            .join("service-usage.sqlite3")
+            .is_file(),
+        "identity cleanup must retain the original cumulative ledger"
+    );
+    if matches!(change, IdentityChange::MissingRecord) {
+        assert!(!f.directory.join("installation-device.json").try_exists()?);
+    }
+    if matches!(change, IdentityChange::MissingKey) {
+        assert!(!f.directory.join("installation-device.key").try_exists()?);
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn host_identity_same_length_device_change_joins_backend_and_udp() -> Result<()> {
+    changed_identity_joins_original_target(IdentityChange::SameLengthDevice).await
+}
+
+#[tokio::test]
+async fn host_identity_same_length_record_change_joins_backend_and_udp() -> Result<()> {
+    changed_identity_joins_original_target(IdentityChange::SameLengthRecord).await
+}
+
+#[tokio::test]
+async fn host_identity_record_deletion_joins_backend_without_recreating_identity() -> Result<()> {
+    changed_identity_joins_original_target(IdentityChange::MissingRecord).await
+}
+
+#[tokio::test]
+async fn host_identity_key_deletion_joins_backend_without_recreating_identity() -> Result<()> {
+    changed_identity_joins_original_target(IdentityChange::MissingKey).await
+}
+
+#[tokio::test]
+async fn host_identity_real_key_replacement_joins_backend_and_udp() -> Result<()> {
+    changed_identity_joins_original_target(IdentityChange::ReplacementKey).await
+}
+
+#[tokio::test]
+async fn host_identity_unsafe_directory_joins_backend_and_udp() -> Result<()> {
+    changed_identity_joins_original_target(IdentityChange::UnsafeDirectory).await
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn host_identity_unsafe_record_permissions_join_backend_and_udp() -> Result<()> {
+    changed_identity_joins_original_target(IdentityChange::UnsafeRecord).await
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn host_identity_unsafe_key_permissions_join_backend_and_udp() -> Result<()> {
+    changed_identity_joins_original_target(IdentityChange::UnsafeKey).await
+}
+
+#[tokio::test]
+async fn host_identity_same_length_valid_key_change_is_terminal_after_original_key_restore()
+-> Result<()> {
+    let f = Fixture::new().await?;
+    let key = f.directory.join("installation-device.key");
+    let manifest = f.directory.join("installation-device.json");
+    let original_key = nestlink_platform_security::read_private(&key, 16384)?;
+    let original_manifest = nestlink_platform_security::read_private(&manifest, 1024)?;
+    let guard = SessionGuard::new(
+        f.directory.clone(),
+        session_snapshot(&f.directory)?,
+        &f.sdk,
+        &f.host,
+        60,
+    )?;
+    IdentityChange::ReplacementKey.apply(&f.directory)?;
+    assert_eq!(
+        original_key.len(),
+        nestlink_platform_security::read_private(&key, 16384)?.len(),
+        "valid replacement key keeps the original file length"
+    );
+    assert_eq!(
+        *original_manifest,
+        *nestlink_platform_security::read_private(&manifest, 1024)?,
+        "key replacement leaves the original manifest unchanged"
+    );
+    assert!(
+        guard
+            .running()
+            .expect_err("valid replacement key must be checked against the original signer")
+            .to_string()
+            .contains("original signing identity")
+    );
+    std::fs::remove_file(&key)?;
+    nestlink_platform_security::create_private(&key, &original_key)?;
+    assert!(!guard.running()?, "restored key cannot revive the host");
+    Ok(())
+}
+
+#[tokio::test]
+async fn host_identity_restoring_original_record_does_not_revive_guard() -> Result<()> {
+    let f = Fixture::new().await?;
+    let manifest = f.directory.join("installation-device.json");
+    let original = nestlink_platform_security::read_private(&manifest, 1024)?;
+    let guard = SessionGuard::new(
+        f.directory.clone(),
+        session_snapshot(&f.directory)?,
+        &f.sdk,
+        &f.host,
+        60,
+    )?;
+    assert!(guard.running()?);
+    IdentityChange::SameLengthRecord.apply(&f.directory)?;
+    assert!(guard.running().is_err());
+    nestlink_platform_security::replace_private_metadata(&manifest, &original)?;
+    assert!(!guard.running()?, "original authorization remains terminal");
+    assert!(
+        start(&f.args("127.0.0.1:8080".parse()?, 60)?, &f.sdk, f.host.clone(), &guard)
+            .await?
+            .is_none()
+    );
+    assert_eq!(f.sdk.service(&f.service.id).await?.revision, f.service.revision);
+    assert!(f.sdk.service_exposure(&f.service.id).await?.is_none());
+    Ok(())
+}
+
+#[tokio::test]
+async fn host_identity_different_signer_cannot_approve_original_target() -> Result<()> {
+    let f = Fixture::new().await?;
+    let wrong = Arc::new(DeviceIdentity {
+        device_id: f.host.device_id.clone(),
+        identity: nestlink_identity::InstallationIdentity::generate(),
+    });
+    assert!(
+        SessionGuard::new(
+            f.directory.clone(),
+            session_snapshot(&f.directory)?,
+            &f.sdk,
+            &wrong,
+            60,
+        )
+        .is_err()
+    );
+    let guard = SessionGuard::new(
+        f.directory.clone(),
+        session_snapshot(&f.directory)?,
+        &f.sdk,
+        &f.host,
+        60,
+    )?;
+    assert!(
+        start(&f.args("127.0.0.1:8080".parse()?, 60)?, &f.sdk, wrong, &guard)
+            .await
+            .is_err()
+    );
+    assert!(!guard.running()?);
+    assert_eq!(f.sdk.service(&f.service.id).await?.revision, f.service.revision);
+    assert!(f.sdk.service_exposure(&f.service.id).await?.is_none());
+    Ok(())
+}
+
+#[tokio::test]
+async fn host_identity_different_account_cannot_approve_original_target() -> Result<()> {
+    let f = Fixture::new().await?;
+    let password = "different-private-host-account-password";
+    f.sdk
+        .create_account("other".into(), Secret::from_text(password.into()))
+        .await?;
+    let mut sdk = Sdk::connect(
+        &f.origin,
+        DeploymentTrust {
+            deployment_id: f.deployment.clone(),
+            permit_issuer: f.issuer,
+        },
+        true,
+    )
+    .await?;
+    sdk.login("other".into(), Secret::from_text(password.into()), None)
+        .await?;
+    let guard = SessionGuard::new(
+        f.directory.clone(),
+        session_snapshot(&f.directory)?,
+        &f.sdk,
+        &f.host,
+        60,
+    )?;
+    assert!(
+        start(
+            &f.args("127.0.0.1:8080".parse()?, 60)?,
+            &Arc::new(sdk),
+            f.host.clone(),
+            &guard,
+        )
+        .await
+        .is_err()
+    );
+    assert!(!guard.running()?);
+    assert_eq!(f.sdk.service(&f.service.id).await?.revision, f.service.revision);
+    assert!(f.sdk.service_exposure(&f.service.id).await?.is_none());
     Ok(())
 }
