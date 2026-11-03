@@ -95,6 +95,15 @@ and original ten-second budget. The tool never rewrites a parameter set or
 retries another backend, device, depth or source after a failure. A successful
 finite probe does not enable the product's live encoder by itself.
 
+The diagnostic encoder now applies the same complete Main8 SPS validation as
+the exact direction workload before returning a packet, matching the existing
+Main10 behavior. A first failure records at most three original VPS/SPS/PPS NALs,
+at most 256 bytes each, through the existing bounded parameter logger. This
+captures AMF timing rejections at their original output boundary without logging
+VCL/pixel bytes or changing any acceptance assertion. The eight `aa1f5f0` target
+failures remain retained; this source change requires new hosted construction
+and target execution and makes no hardware-pass claim.
+
 The existing production `NativeSessionConfig` also has explicit local
 `with_gpu_hevc_main8_encoder(target, HevcEncoderBackend::AmdAmf)` and Main10
 builders. They run the same original provider probe before publication, then

@@ -24,10 +24,7 @@ async fn lose_committed_response(
     axum::extract::State(fault): axum::extract::State<Arc<ResponseFault>>,
     mut request: axum::http::Request<axum::body::Body>,
     next: axum::middleware::Next,
-) -> std::result::Result<
-    axum::response::Response,
-    (axum::http::StatusCode, &'static str),
-> {
+) -> std::result::Result<axum::response::Response, (axum::http::StatusCode, &'static str)> {
     let preparation = request.uri().path().ends_with("/preparation");
     let post = preparation && request.method() == axum::http::Method::POST;
     if post {
@@ -58,14 +55,25 @@ async fn lose_committed_response(
         // A fallback GET using the original query would succeed for the pair
         // already committed by the test, incorrectly hiding this denial.
         let body = std::mem::take(request.body_mut());
-        let bytes = axum::body::to_bytes(body, 16_384)
-            .await
-            .map_err(|_| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "bounded test request"))?;
-        let mut value: serde_json::Value =
-            serde_json::from_slice(&bytes).map_err(|_| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "valid test request"))?;
+        let bytes = axum::body::to_bytes(body, 16_384).await.map_err(|_| {
+            (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                "bounded test request",
+            )
+        })?;
+        let mut value: serde_json::Value = serde_json::from_slice(&bytes).map_err(|_| {
+            (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                "valid test request",
+            )
+        })?;
         value["permit_sha256"] = serde_json::json!(URL_SAFE_NO_PAD.encode([77; 32]));
-        *request.body_mut() =
-            axum::body::Body::from(serde_json::to_vec(&value).map_err(|_| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "test request encoding"))?);
+        *request.body_mut() = axum::body::Body::from(serde_json::to_vec(&value).map_err(|_| {
+            (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                "test request encoding",
+            )
+        })?);
         request
             .headers_mut()
             .remove(axum::http::header::CONTENT_LENGTH);
@@ -75,14 +83,26 @@ async fn lose_committed_response(
         // Keep the real handler and valid signatures, but return a mismatched
         // response binding. SDK validation must fail without any replacement GET.
         let body = std::mem::take(response.body_mut());
-        let bytes = axum::body::to_bytes(body, 16_384)
-            .await
-            .map_err(|_| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "bounded test response"))?;
-        let mut value: serde_json::Value =
-            serde_json::from_slice(&bytes).map_err(|_| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "valid test response"))?;
+        let bytes = axum::body::to_bytes(body, 16_384).await.map_err(|_| {
+            (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                "bounded test response",
+            )
+        })?;
+        let mut value: serde_json::Value = serde_json::from_slice(&bytes).map_err(|_| {
+            (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                "valid test response",
+            )
+        })?;
         value["request_id"] = serde_json::json!(random_id());
         *response.body_mut() =
-            axum::body::Body::from(serde_json::to_vec(&value).map_err(|_| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "test response encoding"))?);
+            axum::body::Body::from(serde_json::to_vec(&value).map_err(|_| {
+                (
+                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                    "test response encoding",
+                )
+            })?);
         response
             .headers_mut()
             .remove(axum::http::header::CONTENT_LENGTH);

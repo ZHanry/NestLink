@@ -1,7 +1,11 @@
 # Private Quinn carrier replacement feasibility experiment
 
-Status: implemented source, not yet executed or verified. W14 and AC22 remain
-incomplete. The experiment is absent from production builds and introduces no
+Status: the private feasibility experiment passed both `switch` and `cancel`
+on hosted Linux at source `409d3154b885e4c7347bac441596bd3e3b4df7fb`,
+[run 41574194797](https://github.com/ZHanry/NestLink/actions/runs/41574194797).
+The official archive and every declared producer payload were byte/hash verified;
+see [the scoped receipt](../../network-rewrite/evidence/quinn-carrier-feasibility-409d315.json).
+W14 and AC22 remain incomplete. The experiment is absent from production builds and introduces no
 negotiated migration capability or unchecked public route constructor.
 
 ## Existing component and necessary adaptation

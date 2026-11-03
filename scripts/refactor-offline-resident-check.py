@@ -54,6 +54,30 @@ def write(path, value):
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
+def run_logged(command, path, stderr_path, *, cwd=ROOT, timeout=1800):
+    # Platform grandchildren inherit stderr. Combining it with libtest stdout
+    # can split `test name ... ok` in the middle (actual Xvfb/xkbcomp output).
+    # Keep both original byte streams, and parse only the harness stdout.
+    with path.open("wb") as stream, stderr_path.open("wb") as errors:
+        return subprocess.run(command, cwd=cwd, stdout=stream, stderr=errors,
+                              timeout=timeout, check=False).returncode
+
+
+def test_results(text, exit_code, expected_count, expected_names=None):
+    cases = re.findall(r"^test ([^\r\n]+) \.\.\. (ok|FAILED|ignored)\s*$", text, re.MULTILINE)
+    summaries = re.findall(r"test result: (?:ok|FAILED)\. (\d+) passed; (\d+) failed; (\d+) ignored;", text)
+    result = {"cases": cases, "summaries": summaries}
+    result["passed"] = (exit_code == 0
+                        and len(cases) == expected_count
+                        and len({name for name, _ in cases}) == expected_count
+                        and all(status == "ok" for _, status in cases)
+                        and summaries == [(str(expected_count), "0", "0")])
+    if expected_names is not None:
+        result["expected_tests"] = sorted(expected_names)
+        result["passed"] &= {name for name, _ in cases} == expected_names
+    return result
+
+
 def main():
     if (os.environ.get("GITHUB_ACTIONS") != "true"
             or os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted"):
@@ -81,26 +105,18 @@ def main():
     def execute(name, arguments, *, expected_count=None, expected_names=None, timeout=1800):
         command = [*wrapper, *arguments]
         path = output / f"{name}.log"
-        entry = {"name": name, "command": command, "log": path.name, "started_unix": time.time(), "passed": False}
+        stderr_path = output / f"{name}-stderr.log"
+        entry = {"name": name, "command": command, "log": path.name,
+                 "stderr_log": stderr_path.name, "started_unix": time.time(), "passed": False}
         receipt["commands"].append(entry)
         print(json.dumps({"starting": name, "command": command}), flush=True)
         try:
-            with path.open("wb") as stream:
-                result = subprocess.run(command, cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT, timeout=timeout, check=False)
-            entry["exit_code"] = result.returncode
+            code = run_logged(command, path, stderr_path, timeout=timeout)
+            entry["exit_code"] = code
             text = path.read_text(encoding="utf-8", errors="replace")
-            entry["passed"] = result.returncode == 0
+            entry["passed"] = code == 0
             if expected_count is not None:
-                cases = re.findall(r"^test ([^\r\n]+) \.\.\. (ok|FAILED|ignored)\s*$", text, re.MULTILINE)
-                summaries = re.findall(r"test result: (?:ok|FAILED)\. (\d+) passed; (\d+) failed; (\d+) ignored;", text)
-                entry.update(cases=cases, summaries=summaries)
-                entry["passed"] &= (len(cases) == expected_count
-                                    and len({name for name, _ in cases}) == expected_count
-                                    and all(result == "ok" for _, result in cases)
-                                    and summaries == [(str(expected_count), "0", "0")])
-                if expected_names is not None:
-                    entry["expected_tests"] = sorted(expected_names)
-                    entry["passed"] &= {name for name, _ in cases} == expected_names
+                entry.update(test_results(text, code, expected_count, expected_names))
         except Exception as error:
             entry["error"] = str(error)
         entry["finished_unix"] = time.time()

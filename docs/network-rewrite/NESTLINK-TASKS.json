@@ -1088,7 +1088,9 @@
         "docs/network-rewrite/evidence/schema-upgrade-4d837d9.json",
         "docs/network-rewrite/evidence/product-space-owner-4d837d9.json",
         "docs/network-rewrite/evidence/format-4d837d9.json",
-        "docs/network-rewrite/evidence/network-run-409d315.json"
+        "docs/network-rewrite/evidence/network-run-409d315.json",
+        "docs/network-rewrite/evidence/native-offline-resident-f24b79f-linux.json",
+        "docs/network-rewrite/evidence/product-space-owner-f24b79f.json"
       ],
       "blockers": [],
       "additional_scoped_validation": {
@@ -2933,7 +2935,9 @@
         "docs/network-rewrite/evidence/media-libyuv-fa52387.json",
         "docs/adr/network/0073-reuse-bundled-libyuv-vp8-conversion.md",
         "docs/network-rewrite/evidence/native-offline-resident-4a4496b.json",
-        "docs/network-rewrite/evidence/native-offline-resident-c589362.json"
+        "docs/network-rewrite/evidence/native-offline-resident-c589362.json",
+        "docs/network-rewrite/evidence/native-offline-resident-f24b79f-linux.json",
+        "docs/network-rewrite/evidence/product-space-owner-f24b79f.json"
       ],
       "blockers": [],
       "partial_verification": {
@@ -3140,7 +3144,9 @@
       "evidence_refs": [
         "docs/network-rewrite/evidence/subnet-browser-623d55a.json",
         "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json",
-        "docs/network-rewrite/evidence/native-offline-resident-c589362.json"
+        "docs/network-rewrite/evidence/native-offline-resident-c589362.json",
+        "docs/network-rewrite/evidence/native-offline-resident-f24b79f-linux.json",
+        "docs/network-rewrite/evidence/product-space-owner-f24b79f.json"
       ],
       "blockers": [],
       "partial_verification": {

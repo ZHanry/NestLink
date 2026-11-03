@@ -161,7 +161,10 @@ impl HevcProbeEncoder {
             validator: if source.bit_depth == 10 {
                 Validator::exact_main10()
             } else {
-                Validator::default()
+                // Apply the same exact contract used by the direction workload
+                // before returning a packet. This also retains the bounded
+                // original parameter NALs when native timing syntax is rejected.
+                Validator::exact_main8()
             },
             scratch: vec![0; 8 * 1024 * 1024],
             rejection_logged: false,

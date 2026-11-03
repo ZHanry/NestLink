@@ -26,6 +26,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - name: Verify original stdout and stderr collection without losing failures
+        run: python -B -m unittest discover -s tests/network -p test_offline_resident_evidence.py -v
       - name: Verify original ordinary Windows test token
         if: runner.os == 'Windows'
         run: python scripts/refactor-windows-normal-user.py python scripts/refactor-windows-normal-user.py --check

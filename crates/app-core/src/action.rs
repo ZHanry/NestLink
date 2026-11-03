@@ -736,7 +736,10 @@ mod tests {
         unknown["space_action"]["unexpected_authority"] = serde_json::json!(true);
         assert!(serde_json::from_value::<Action>(unknown).is_err());
         let mut missing = wire;
-        missing.as_object_mut().ok_or("expected action object")?.remove("space_action");
+        missing
+            .as_object_mut()
+            .ok_or("expected action object")?
+            .remove("space_action");
         assert!(serde_json::from_value::<Action>(missing).is_err());
         Ok(())
     }

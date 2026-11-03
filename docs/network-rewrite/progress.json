@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "4d837d9ed27fe472c97c01363ac688e22ce7cb2c",
-  "checkpoint_kind": "exact_4d_schema_both_architectures_passed_private_services_passed_product_spaces_and_lint_failed_followup_fixes_pending_hosted_validation",
+  "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
+  "checkpoint_kind": "f24_product_spaces_and_private_services_passed_original_linux_resident_passed_but_collector_failed_new_separate_stream_fix_pending",
   "active_tasks": [
     "W00",
     "W02",
@@ -53,18 +53,13 @@
     "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
   ],
   "unverified_assumptions": [
-    "Sourcea6 full Rust41568697422 finished failure:8/13 jobs passed. Linux complete workspace2074passed/14failed/49originalignored; Windows workspace stopped at missing test futures-util, wasm download failed before compilation. Original failures retained in exact evidence.",
-    "Sourcea6 focused resident41568724100 failed:Linux original3/4 due original5secondXvfb startup deadline; Windows4/4. Same-source early/full Rust resident successes are independent results and do not replace this failure. Both boundary-tools scopes succeeded.",
-    "Sourceaa1 media owner41570308930 failed both Windows owner jobs at missing SDK preparation URL_SAFE_NO_PAD import; separate tools41570304734 built and passed strict clippy. All8original targetMF/AMFcommands still failed; new AMFMain8failure=sps.poc_timing and originalMain10unavailable.",
-    "Commits51d3632/e275161/2106ecf/01b1a5f/f2987b3 contain migration fixture, exact existing stream dependency, strict preparation readback, explicit base64 import, original signed successor fixture, actual SQLite reader closure and explicit user-authorized exact Unauthorized assertion repairs. These require new hosted qualification.",
-    "Commits987d0e9/d5d1435 implement desktop/account-actor delegated spaces and one-use pinned native Preview/Confirm with8realHTTPspaces cases, fixed saved preparation readback, original authority deadlines and stale context/runtime/nonce/CAS refusal. Source implementation is unverified.",
-    "Mandatory remaining implementation includes full unified production path migration, advanced GPUformat/fallback and complete productlifecycle/security/systemacceptance; finite probes or scopedlabpassescannotclose them.",
-    "Mandatory targetevidence still includes pairedWindows desktop/input/audio/concurrentfiles,Android+iOSstandardWireGuard,independentNAT/overlappingsites/publicfixedentryDNS,fullmixedversions/signingandcrossday24hoursoaks. Internalimplementationgapsare notexternalblockers.",
-    "W28Luanti original25second disconnectdisplay check remains failed byexplicituserdecision; official30secondbehaviorrecordandoriginalNestLink5secondcleanupgateare retained withoutdeadlinechange.",
-    "Exact409 network41574194797 completed8success/1failure; both original contracts53harnesses763passed0failed with dedicated ignores retained. App-core native product scope was compile-blocked; dd51b86 repairs require new source evidence.",
-    "Exact4d upgrade41575332666 passed on hosted x64 and ARM64, including unchanged schema50 two-entry refusal without snapshot writes, current51 lineage reopen/revocation, retained-release migration/rollback and immutable inspector self-noninterference. All official archive and command payload digests verified.",
-    "Exact4d owner41575329582 failed overall: private_services32passed0failed5ignored; product spaces5passed3failed; strict lint failed; exact OpenAPI generation passed and byte-verified output imported. Followup source fixes retain all test assertions, rate budgets and deadlines and remain unverified.",
-    "Exact4d format41575335583 passed with empty patch. Subsequent source edits including new serde wire test require a new hosted formatter. Full409 Rust and focused409 resident remain distinct failures/pending results, not superseded pass evidence."
+    "Exactf24 product owner41577547546 passed spaces8/8 and private_services32/32 with5originalroleignores, strictlint and exactOpenAPI; officialZIP, payloads and2172sourceinputsverified.",
+    "Exactf24 focusedresident41577568244 Linux job failed; actual originalresident4/4, platformowner1/1 andSecretCLI1/1 plus all other scopes/lints passed. Merged childstderr split exactcase lines, producer records empty lists and passed=false; original false-negative retained. Windows still pending.",
+    "Separate originalstdout/stderr collector fix and five real process/strict-parser regressions require hosted validation. Exact-count/name/summary/exit rules and all product assertions/deadlines remain.",
+    "Hostedf24 rustfmt patch applied unmodified to threeRustpaths; current additional Main8parameterdiagnostic requires exactsourcebuildandtargetexecution.",
+    "Exact409 fullRust and focusedresident compilefailures retained separately; dd51b86/f24 fixes are newer source and cannot rewrite those results.",
+    "Fullunifiedproductionmigration,advancedGPUformat/fallback,fullproductlifecycle/security/systemacceptance and physical/mobile/publicNAT/soak/signing gates remain mandatory.",
+    "OriginalLuanti25secondcheck and failedhistory remain byexplicituserdecision. ExactUnauthorized repair in the shared two-counterexample branch was authorized and committedinf2987b3; other assertions remain."
   ],
   "external_prerequisites": [
     {
@@ -94,11 +89,17 @@
     }
   ],
   "next_steps": [
-    "Commit reviewed product fixes and original4d/409 evidence; dispatch hosted formatting for the exact new SHA, inspect its patch, and execute focused product/private, full Rust, network and resident qualification.",
-    "Read final409 full core and resident failures; retain exact logs and separate new-source outcomes from history.",
-    "Continue required production migration, advanced media/fallback, productlifecycle/security/systemacceptance and same-source candidate delivery. Keep release not_ready until required implementation and evidence gates are met."
+    "Commit hosted formatting, exact evidence and separate stdout/stderr fix, then run focusedresident and network contract regressions on exactnewsource without cancelling active f24 fullworkspace.",
+    "Read final f24 fullworkspace/core and Windowsfocusedresident outcomes, retain exact metadata/logs/artifacts and fix remaining actual failures.",
+    "Continue mandatory productionmigration, advancedmedia and lifecycle/security acceptance. Release remains not_ready; no new tag or public release until original required gates are met."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/native-offline-resident-f24b79f-linux.json",
+    "docs/network-rewrite/evidence/product-space-owner-f24b79f.json",
+    "docs/network-rewrite/evidence/format-f24b79f.json",
+    "docs/network-rewrite/evidence/full-rust-core-409d315.json",
+    "docs/network-rewrite/evidence/native-offline-resident-409d315.json",
+    "docs/network-rewrite/evidence/quinn-carrier-feasibility-409d315.json",
     "docs/network-rewrite/evidence/format-d5d1435.json",
     "docs/network-rewrite/NATIVE-SPACE-CONSENT.md",
     "docs/network-rewrite/evidence/windows-media-owner-aa1f5f0.json",

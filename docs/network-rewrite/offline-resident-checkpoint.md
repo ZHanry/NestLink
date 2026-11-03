@@ -631,3 +631,31 @@ public-PKI owner, cumulative authority and all original deadlines remain.
 The original 25-second Luanti check and its failed history remain unchanged.
 No local project build, formatter, lint, test, Python execution or packaging
 occurred; this evidence work did not push or dispatch.
+
+## Source f24 original Linux results and separate collector failure
+
+Focused run [41577568244](https://github.com/ZHanry/NestLink/actions/runs/41577568244),
+source `f24b79f0c8baa00ad398636868c513624b0707cc`, has a failed Linux job.
+The actual original resident command returned zero with four passed, zero failed
+and zero ignored in 211.84s. The original platform owner and actual leading-hyphen
+Secret Service command also returned zero, with one pass each in 2.75s and 0.10s.
+All scoped AppCore/daemon/desktop tests and all five original strict lint commands
+returned zero. This does not turn the failed workflow into successful evidence.
+
+The collector merged child stderr with libtest stdout. Actual Xvfb/xkbcomp stderr
+was inserted after each `test name ... ` prefix, so the strict one-line parser
+retained empty case lists for those three commands and marked `passed: false`.
+The original receipt, actual final summaries and official archive/payload hash
+verification are retained in
+[native-offline-resident-f24b79f-linux.json](evidence/native-offline-resident-f24b79f-linux.json).
+Windows and the complete Rust workspace remain separate pending outcomes here.
+
+New source collects stdout and stderr into separate original byte streams,
+retains and hashes both, and applies the same exact case/name/count/summary/exit
+checks to harness stdout. It does not parse a successful summary as proof of
+missing cases. New real subprocess regressions cover a grandchild writing
+stderr between the harness prefix and result, nonzero exit and timeout, plus
+strict rejection of the original merged log, missing/wrong/duplicate/failed or
+ignored cases. They execute only through hosted Actions and require their own
+new-source result. No original assertion, deadline, ingress clock, offline budget
+or Luanti 25-second check is changed.

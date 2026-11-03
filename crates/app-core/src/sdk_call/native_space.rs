@@ -53,10 +53,16 @@ pub(super) async fn preview(
         return Err(Failure::local(FailureKind::Trust));
     }
     let permit = if remote.host_device_id == identity.device_id {
-        read(response.sdk.host_permit(identity, &request.request_id), fence).await?
+        read(
+            response.sdk.host_permit(identity, &request.request_id),
+            fence,
+        )
+        .await?
     } else {
         read(
-            response.sdk.current_native_permit(identity, &request.request_id),
+            response
+                .sdk
+                .current_native_permit(identity, &request.request_id),
             fence,
         )
         .await?
@@ -174,13 +180,17 @@ pub(super) async fn confirm(
     }
     let permit = if pending.permit.claims().host_device_id == identity.device_id {
         read(
-            response.sdk.host_permit(identity, &pending.public.request_id),
+            response
+                .sdk
+                .host_permit(identity, &pending.public.request_id),
             fence,
         )
         .await?
     } else {
         read(
-            response.sdk.current_native_permit(identity, &pending.public.request_id),
+            response
+                .sdk
+                .current_native_permit(identity, &pending.public.request_id),
             fence,
         )
         .await?

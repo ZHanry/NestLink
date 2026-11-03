@@ -18,4 +18,20 @@ Invitation management reuses the existing bounded sensitive slot, zeroizing `Sec
 
 `crates/app-core/tests/spaces.rs` and `tests/spaces/native_path.rs` use the real HTTP server, database, SDK, account actor and private file store. They cover invitation one-use/target-account/role restrictions, minimal guest visibility, stale revisions, context reuse and late responses, slot clearing, bounded pagination, wrong keys/runtimes, one-use confirmation, local CAS interference, membership revocation before exact readback, account changes, persisted exact settings and an actual native direct connection involving an ordinary non-admin member. The existing native recovery and settings tests remain applicable to compatibility, persistence failure and idle cleanup.
 
-No build, formatter, automated source check, test or native connection has been run in the local workspace. Under R02 these new cases must execute in GitHub Actions against the committed source. This document records implementation and intended checks, not passed evidence. Relay deployment, hardware, public-NAT and mobile target acceptance remain separate original gates.
+At exact source `f24b79f0c8baa00ad398636868c513624b0707cc`, hosted Linux
+[run 41577547546](https://github.com/ZHanry/NestLink/actions/runs/41577547546)
+passed all eight space cases, all 32 original private-service cases (five original
+dedicated-role ignores remain), strict lint for both target sets and exact
+OpenAPI generation. The official archive, producer payloads and all 2,172 input
+file digests were checked against the committed source; see the
+[scoped evidence](evidence/product-space-owner-f24b79f.json). This includes the
+actual cross-account native direct connection. The three original `4d837d9`
+failures remain in their separate evidence record. Fixture invitation creation
+is paced within the unchanged server rate budget; each original operation and
+assertion must still succeed.
+
+No build, formatter, automated project check or test was run in the local
+workspace. Full Rust and focused resident checks for this source remain
+independent gates; the later formatter patch and media diagnostic edit also
+require their own exact-source qualification. Relay deployment, hardware,
+public-NAT, mobile and full release acceptance remain separate original gates.

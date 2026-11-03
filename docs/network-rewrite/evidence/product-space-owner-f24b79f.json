@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
+  "status": "passed_scoped_lab",
+  "run_id": 41577547546,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41577547546",
+  "artifact_metadata": {
+    "id": 13204982352,
+    "node_id": "MDg6QXJ0aWZhY3QxMzIwNDk4MjM1Mg==",
+    "name": "private-service-owner-f24b79f0c8baa00ad398636868c513624b0707cc-1",
+    "size_in_bytes": 156907,
+    "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13204982352",
+    "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13204982352/zip",
+    "expired": false,
+    "digest": "sha256:4ae0833f9ec668bdd6f07c101abd7b7f0b0130e856705e8fa19343f2a8dd69d1",
+    "created_at": "2026-11-03T04:33:55Z",
+    "updated_at": "2026-11-03T04:33:55Z",
+    "expires_at": "2026-12-03T04:33:54Z",
+    "workflow_run": {
+      "id": 41577547546,
+      "repository_id": 1423035582,
+      "head_repository_id": 1423035582,
+      "head_branch": "main",
+      "head_sha": "f24b79f0c8baa00ad398636868c513624b0707cc"
+    }
+  },
+  "official_zip_digest_and_bytes_verified": true,
+  "all_producer_payload_hashes_and_bytes_verified": true,
+  "source_input_audit": {
+    "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
+    "source_file_count": 2172,
+    "all_source_hashes_match": true,
+    "checkout_crlf_paths": [
+      "apps/daemon/src/space_dns_system/nrpt.ps1",
+      "packaging/candidate/windows.iss",
+      "packaging/windows/Manage-NestLink.ps1",
+      "packaging/windows/Manage-NestLinkPrivileged.ps1",
+      "packaging/windows/languages/ChineseSimplified.isl",
+      "packaging/windows/nestlink-v15-privileged.iss",
+      "packaging/windows/nestlink-v15.iss",
+      "scripts/Sign-NestLinkRelease.ps1"
+    ],
+    "method": "Exact raw git blobs; only mismatched files explicitly marked eol=crlf use Git checkout bytes"
+  },
+  "producer_receipt_sha256": "2a7b56a9e17e1d63ece2a87d7e330fe68ec90084d74d7117dd93955b0b7b9d42",
+  "build_provenance": {
+    "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
+    "workflow": "ZHanry/NestLink/.github/workflows/private-service-owner.yml@refs/heads/main",
+    "run_id": "41577547546",
+    "run_attempt": "1",
+    "dependency_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+    "runner_environment": "github-hosted",
+    "runner_os": "Linux"
+  },
+  "execution_provenance": {
+    "environment": "github-hosted",
+    "os": "Linux",
+    "private_services": {
+      "ignored": 5,
+      "failed": 0,
+      "elapsed_seconds": 103.94,
+      "passed": 32
+    },
+    "spaces": {
+      "ignored": 0,
+      "failed": 0,
+      "elapsed_seconds": 257.78,
+      "passed": 8
+    },
+    "strict_clippy": "passed",
+    "openapi_generation": "passed",
+    "generated_openapi_matches_committed_file": true
+  },
+  "producer_files": [
+    {
+      "path": "private-service-owner-tests.log",
+      "bytes": 69844,
+      "sha256": "33572cf8d056023b602c352b433e7cd9480c043d4eca1bb6a5b8f3d1330e78ed"
+    },
+    {
+      "path": "product-space-owner-tests.log",
+      "bytes": 27461,
+      "sha256": "a56face233898081c6bd0ae500953327837147251d967ed8a3faea539bc2cb20"
+    },
+    {
+      "path": "private-service-owner-clippy.log",
+      "bytes": 38646,
+      "sha256": "c44138dce4306da3c8bb8b7ccd850268d71d78eb74da57e29ee51a6f5d4f6037"
+    },
+    {
+      "path": "product-owner-openapi.log",
+      "bytes": 2453,
+      "sha256": "11d93cd40129dd8a06d87e1e4c7e58072d76aa94fc5d8625c0ee8e6ab83bed77"
+    },
+    {
+      "path": "product-owner-openapi.json",
+      "bytes": 784282,
+      "sha256": "6d2f4a81ca72148cb0316686d236ce17465130aadc716bbb94f0e0437a1c6ea0"
+    }
+  ],
+  "scope": "All original private_services plus all new product spaces integration cases and their original strict clippy. Spaces include ordinary cross-account native direct connection, exact one-use permit/preparation binding, wrong trust/runtime, stale selection, account changes, membership revocation and original bounded pagination.",
+  "unchanged_gates": "No test assertions, production rate budgets, 3/5/25-second deadlines, old failures or dedicated external-role ignores were relaxed. Invitation fixture explicitly paces creation within original 30/minute rate budget.",
+  "limitations": [
+    "This scoped Linux result does not qualify full Rust, Windows product lifecycle, public-NAT/mobile/soak, full migration or full release.",
+    "The new outer-action serde wire unit test is outside these integration targets and needs the full workspace run.",
+    "All previous 4d/409/a6 failures remain retained as their own source records."
+  ]
+}
