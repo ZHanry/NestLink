@@ -27,7 +27,10 @@ fn read_only_entry_requires_existing_identity_while_initial_install_can_create()
     assert_eq!(loaded.identity.public_key(), created.identity.public_key());
     let reloaded = crate::identity(&directory)?;
     assert_eq!(reloaded.device_id, created.device_id);
-    assert_eq!(reloaded.identity.public_key(), created.identity.public_key());
+    assert_eq!(
+        reloaded.identity.public_key(),
+        created.identity.public_key()
+    );
     Ok(())
 }
 
@@ -46,7 +49,9 @@ fn read_only_entry_does_not_recreate_record_deleted_after_original_existence_obs
         .err()
         .ok_or("deleted original manifest was accepted")?;
     assert_eq!(
-        error.downcast_ref::<std::io::Error>().map(|error| error.kind()),
+        error
+            .downcast_ref::<std::io::Error>()
+            .map(|error| error.kind()),
         Some(std::io::ErrorKind::NotFound)
     );
     assert!(!manifest.try_exists()?);
@@ -55,8 +60,8 @@ fn read_only_entry_does_not_recreate_record_deleted_after_original_existence_obs
 }
 
 #[test]
-fn read_only_entry_does_not_recreate_key_deleted_after_original_existence_observation()
--> Result<()> {
+fn read_only_entry_does_not_recreate_key_deleted_after_original_existence_observation() -> Result<()>
+{
     let temporary = tempfile::tempdir()?;
     let directory = private(&temporary, "installation")?;
     let _original = crate::identity(&directory)?;
@@ -69,7 +74,9 @@ fn read_only_entry_does_not_recreate_key_deleted_after_original_existence_observ
         .err()
         .ok_or("deleted original key was accepted")?;
     assert_eq!(
-        error.downcast_ref::<std::io::Error>().map(|error| error.kind()),
+        error
+            .downcast_ref::<std::io::Error>()
+            .map(|error| error.kind()),
         Some(std::io::ErrorKind::NotFound)
     );
     assert!(!key.try_exists()?);
@@ -96,7 +103,8 @@ fn read_only_entry_rejects_replaced_manifest_without_rewriting_original_key() ->
 }
 
 #[test]
-fn read_only_entry_rejects_valid_replacement_key_without_rewriting_original_manifest() -> Result<()> {
+fn read_only_entry_rejects_valid_replacement_key_without_rewriting_original_manifest() -> Result<()>
+{
     let temporary = tempfile::tempdir()?;
     let original = private(&temporary, "original")?;
     let replacement = private(&temporary, "replacement")?;
