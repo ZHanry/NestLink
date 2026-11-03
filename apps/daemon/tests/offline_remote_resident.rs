@@ -23,17 +23,30 @@ use std::{
 };
 use support::{Fixture, Platform, Resident, Result, activate, socket_diagnostic, start, wall};
 
-fn peer() -> Result<std::net::SocketAddr> {
-    let tcp = std::net::TcpListener::bind("127.0.0.1:0")
-        .inspect_err(|error| socket_diagnostic("peer_tcp_bind", error))?;
-    let address = tcp
-        .local_addr()
-        .inspect_err(|error| socket_diagnostic("peer_tcp_local_addr", error))?;
-    let udp = std::net::UdpSocket::bind(address)
-        .inspect_err(|error| socket_diagnostic("peer_udp_bind", error))?;
-    drop(udp);
-    drop(tcp);
-    Ok(address)
+fn peer(transport: &str) -> Result<std::net::SocketAddr> {
+    // Let the OS select a port for the actual original carrier. TCP port
+    // availability does not establish UDP availability at the same number.
+    match transport {
+        "quic" => {
+            let udp = std::net::UdpSocket::bind("127.0.0.1:0")
+                .inspect_err(|error| socket_diagnostic("peer_udp_bind", error))?;
+            let address = udp
+                .local_addr()
+                .inspect_err(|error| socket_diagnostic("peer_udp_local_addr", error))?;
+            drop(udp);
+            Ok(address)
+        }
+        "tls" => {
+            let tcp = std::net::TcpListener::bind("127.0.0.1:0")
+                .inspect_err(|error| socket_diagnostic("peer_tcp_bind", error))?;
+            let address = tcp
+                .local_addr()
+                .inspect_err(|error| socket_diagnostic("peer_tcp_local_addr", error))?;
+            drop(tcp);
+            Ok(address)
+        }
+        _ => Err(io::Error::new(io::ErrorKind::InvalidInput, "original resident carrier").into()),
+    }
 }
 fn binding(snapshot: &Snapshot) -> Result<NativeSessionBinding> {
     let view = snapshot
@@ -348,7 +361,7 @@ async fn data_and_rebuild(transport: &str) -> Result {
     let temporary = tempfile::tempdir()?;
     let platform = Platform::new(temporary.path()).await?;
     let mut fixture = Fixture::new(temporary.path(), &platform).await?;
-    let peer = peer()?;
+    let peer = peer(transport)?;
     let mut source = Resident::spawn(&platform, &fixture, false, transport, peer).await?;
     let mut host = Resident::spawn(&platform, &fixture, true, transport, peer).await?;
     macro_rules! phase {
@@ -574,7 +587,7 @@ async fn management_commands_fence_delivery_before_success_or_failed_http_and_ne
                 "original management fence case={index} setup: {error}"
             ))
         })?;
-        let peer = peer()?;
+        let peer = peer("quic")?;
         let mut source = Resident::spawn(&platform, &fixture, false, "quic", peer).await?;
         let mut host = Resident::spawn(&platform, &fixture, true, "quic", peer).await?;
         let bundle = activate(&mut source, &mut host, &fixture).await?;
@@ -646,7 +659,7 @@ async fn pending_original_listener_eof_stop_logout_and_identity_change_join_actu
                 "original pending listener case={index} {termination} setup: {error}"
             ))
         })?;
-        let peer = peer()?;
+        let peer = peer(transport)?;
         let mut source = Resident::spawn(&platform, &fixture, false, transport, peer).await?;
         let mut host = Resident::spawn(&platform, &fixture, true, transport, peer).await?;
         activate(&mut source, &mut host, &fixture).await?;
