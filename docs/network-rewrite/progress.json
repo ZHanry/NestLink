@@ -6,8 +6,18 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "ca71ad7087d272fceb6133781f2fec759f3edf56",
-  "checkpoint_kind": "rc_preview_full_workspace_case_isolation_awaiting_exact_source_checks",
+  "source_revision": "abcbabb049317e61a74a05414596868b6b633de0",
+  "checkpoint_kind": "rc_preview_contract_case_isolation_awaiting_exact_source_checks",
+  "contract_isolation_followup": {
+    "source_is_pre_commit_parent": true,
+    "prior_run_id": 41634575939,
+    "failed_job_id": 125912406931,
+    "failed_case": "network_paths::relays::simultaneous_sqlite_admission_cannot_overbook_the_shared_global_limit",
+    "observed_failure": "Original Windows contract control target retained 109 passed / 1 failed / 1 ignored. The simultaneous admission case returned Conflict; its RelayLifecycle checks a fixed fixture NOW against real elapsed time with an unchanged 1000ms clock margin. Contract cases were still running concurrently, unlike the isolated full workspace. Full log SHA256 414f106762ed975bb556f5bfffa15aace071f24afa287f64e9f43c52f9c2a5c4 retained in the official run artifact.",
+    "change": "Run the complete contract suite with --test-threads=1 on both operating systems, matching full workspace isolation. Preserve the case's real two-worker Barrier concurrency, all assertions, the 1000ms clock margin, production source and existing 1200s command timeout.",
+    "prior_successes": "Eight other exact abcbabb network jobs passed, including Linux contracts, all kernel NAT slices and six sequential product recovery cases. Current Rust and Web runs are still pending and do not qualify the new source.",
+    "next": "Run all seven required workflows at the new exact source before building the complete sixteen-role candidate and publishing the user-authorized prerelease with deferred acceptance and retained failures."
+  },
   "workspace_isolation_followup": {
     "source_is_pre_commit_parent": true,
     "prior_run_id": 41628147819,

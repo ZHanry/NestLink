@@ -325,7 +325,7 @@ def main() -> int:
         package_arguments = [argument for package in PACKAGES for argument in ("-p", package)]
         commands = [
             ("contract-clippy", ["cargo", "clippy", "--all-targets", "--locked", "--keep-going", *package_arguments, "--", "-D", "warnings"]),
-            ("contract-tests", prefix + ["cargo", "test", "--locked", "--lib", "--tests", "--no-fail-fast", *package_arguments]),
+            ("contract-tests", prefix + ["cargo", "test", "--locked", "--lib", "--tests", "--no-fail-fast", *package_arguments, "--", "--test-threads=1"]),
             ("ci-evidence-tests", prefix + [sys.executable, "-B", "-m", "unittest", "discover", "-s", "tests/network", "-p", "test_*.py", "-v"]),
         ]
         for name, command in commands:
