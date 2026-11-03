@@ -76,6 +76,7 @@ struct Encoder {
     std::array<std::unique_ptr<Released>, 4> observers;
     std::deque<uint64_t> pending;
     std::array<std::pair<const wchar_t*, amf::AMFVariant>, 32> configured;
+    std::array<const wchar_t*, 32> configured_aliases{};
     size_t configured_count = 0;
     bool has_input = false;
     uint64_t last_input = 0;
@@ -211,6 +212,19 @@ bool legacy_optional_property(const wchar_t* name) noexcept {
     return false;
 }
 
+const wchar_t* base_layer_alias(const wchar_t* name, amf::AMF_VARIANT_TYPE type) noexcept {
+    // Official HEVC SVC table: TL<temporal>.QL<quality>.<parameter>.
+    // Only the exact base-layer aliases of the three controls used here are
+    // accepted, with their exact declared types. No prefix stripping occurs.
+    if (type == amf::AMF_VARIANT_RATE && std::wcscmp(name, AMF_VIDEO_ENCODER_HEVC_FRAMERATE) == 0)
+        return L"TL0.QL0.HevcFrameRate";
+    if (type == amf::AMF_VARIANT_INT64 && std::wcscmp(name, AMF_VIDEO_ENCODER_HEVC_TARGET_BITRATE) == 0)
+        return L"TL0.QL0.HevcTargetBitrate";
+    if (type == amf::AMF_VARIANT_BOOL && std::wcscmp(name, AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_SKIP_FRAME_ENABLE) == 0)
+        return L"TL0.QL0.HevcRateControlSkipFrameEnable";
+    return nullptr;
+}
+
 void log_property_descriptor(const wchar_t* requested, const char* stage, long long index,
     AMF_RESULT result, const amf::AMFPropertyInfo* info) noexcept {
     const wchar_t* actual = info && info->name ? info->name : L"<null>";
@@ -236,6 +250,59 @@ void log_property_inventory(Storage* storage, const wchar_t* requested) noexcept
 }
 
 template<class Storage>
+HRESULT verify_base_layer_alias(Storage* storage, const wchar_t* name,
+    const amf::AMFPropertyInfo* info) noexcept {
+    if (!info || !valid_property_name(info->name)) return E_UNEXPECTED;
+    const wchar_t* alias = base_layer_alias(name, info->type);
+    if (!alias || std::wcscmp(alias, info->name) != 0) return E_UNEXPECTED;
+    const amf_size count = storage->GetPropertiesInfoCount();
+    if (count == 0 || count > 512) return E_UNEXPECTED;
+    std::array<const wchar_t*, 512> names{};
+    unsigned matches = 0;
+    for (amf_size index = 0; index < count; ++index) {
+        const amf::AMFPropertyInfo* entry = nullptr;
+        const AMF_RESULT result = storage->GetPropertyInfo(index, &entry);
+        log_property_descriptor(name, "base-layer-alias-inventory", static_cast<long long>(index), result, entry);
+        if (result != AMF_OK || !entry || !valid_property_name(entry->name)) return E_UNEXPECTED;
+        if (std::wcscmp(entry->name, name) == 0) return E_UNEXPECTED;
+        for (amf_size previous = 0; previous < index; ++previous) {
+            if (std::wcscmp(names[previous], entry->name) == 0) return E_UNEXPECTED;
+        }
+        names[index] = entry->name;
+        if (std::wcscmp(entry->name, alias) == 0) {
+            if (entry != info || entry->type != info->type) return E_UNEXPECTED;
+            ++matches;
+        }
+    }
+    const amf::AMFPropertyInfo *canonical = nullptr, *repeated = nullptr;
+    const AMF_RESULT canonical_result = storage->GetPropertyInfo(alias, &canonical);
+    const AMF_RESULT repeated_result = storage->GetPropertyInfo(name, &repeated);
+    log_property_descriptor(name, "base-layer-alias-canonical", -1, canonical_result, canonical);
+    log_property_descriptor(name, "base-layer-alias-repeated", -1, repeated_result, repeated);
+    if (matches != 1 || canonical_result != AMF_OK || repeated_result != AMF_OK
+        || canonical != info || repeated != info || storage->GetPropertiesInfoCount() != count
+        || !storage->HasProperty(name) || !storage->HasProperty(alias)
+        || !valid_property_name(info->name) || std::wcscmp(info->name, alias) != 0
+        || base_layer_alias(name, info->type) != alias) return E_UNEXPECTED;
+    std::fprintf(stderr, "amf property=\"%ls\" canonical_alias=\"%ls\" same_descriptor_named_canonical_index=1 declared_type=%d\n",
+        name, alias, static_cast<int>(info->type));
+    std::fflush(stderr);
+    return S_OK;
+}
+
+template<class Storage>
+AMF_RESULT verify_alias_value(Storage* storage, const wchar_t* alias,
+    const amf::AMFVariant& expected) noexcept {
+    amf::AMFVariant actual;
+    AMF_RESULT result = storage->GetProperty(alias, &actual);
+    if (result == AMF_OK && !equivalent(expected, actual)) result = AMF_INVALID_ARG;
+    std::fprintf(stderr, "amf canonical_alias=\"%ls\" stage=alias-value-readback expected_type=%d actual_type=%d result=%d\n",
+        alias, static_cast<int>(expected.type), static_cast<int>(actual.type), static_cast<int>(result));
+    std::fflush(stderr);
+    return result;
+}
+
+template<class Storage>
 HRESULT describe_property(Storage* storage, const wchar_t* name, bool optional_equivalent,
     const amf::AMFPropertyInfo** info) noexcept {
     if (!storage || !info || !valid_property_name(name)) return E_INVALIDARG;
@@ -247,6 +314,7 @@ HRESULT describe_property(Storage* storage, const wchar_t* name, bool optional_e
     log_property_descriptor(name, "property-info-descriptor", -1, described, *info);
     if (described == AMF_OK) {
         if (*info && valid_property_name((*info)->name) && std::wcscmp((*info)->name, name) == 0) return S_OK;
+        if (verify_base_layer_alias(storage, name, *info) == S_OK) return S_OK;
         log_property_inventory(storage, name);
         return E_UNEXPECTED;
     }
@@ -288,6 +356,7 @@ HRESULT property(Encoder& state, const wchar_t* name, const amf::AMFVariant& req
     const HRESULT described = describe_property(static_cast<amf::AMFComponent*>(state.component), name, optional_equivalent, &info);
     if (described == S_FALSE) return S_OK;
     if (FAILED(described)) return described;
+    const wchar_t* alias = std::wcscmp(info->name, name) == 0 ? nullptr : base_layer_alias(name, info->type);
     amf::AMFVariant validated;
     AMF_RESULT result = state.component->ValidateProperty(name, requested, &validated);
     // Validation must not clamp/coerce a different semantic value into success.
@@ -296,6 +365,7 @@ HRESULT property(Encoder& state, const wchar_t* name, const amf::AMFVariant& req
     amf::AMFVariant actual;
     if (result == AMF_OK) result = state.component->GetProperty(name, &actual);
     if (result == AMF_OK && !equivalent(validated, actual)) result = AMF_INVALID_ARG;
+    if (result == AMF_OK && alias) result = verify_alias_value(static_cast<amf::AMFComponent*>(state.component), alias, actual);
     std::fprintf(stderr, "amf property=\"%ls\" declared_type=%d requested_type=%d requested_scalar=%lld read_type=%d read_scalar=%lld result=%d\n",
         name, static_cast<int>(info->type), static_cast<int>(requested.type),
         static_cast<long long>(requested.type == amf::AMF_VARIANT_INT64 ? requested.int64Value : requested.type == amf::AMF_VARIANT_BOOL ? requested.boolValue : -1),
@@ -303,6 +373,7 @@ HRESULT property(Encoder& state, const wchar_t* name, const amf::AMFVariant& req
     std::fflush(stderr);
     if (result == AMF_OK) {
         if (state.configured_count >= state.configured.size()) return E_UNEXPECTED;
+        state.configured_aliases[state.configured_count] = alias;
         state.configured[state.configured_count++] = {name, actual};
     }
     return checked(result, "property-set-readback");
@@ -314,6 +385,9 @@ HRESULT verify_initialized_configuration(Encoder& state) noexcept {
         amf::AMFVariant actual;
         AMF_RESULT result = state.component->GetProperty(entry.first, &actual);
         if (result == AMF_OK && !equivalent(entry.second, actual)) result = AMF_INVALID_ARG;
+        if (result == AMF_OK && state.configured_aliases[i]) {
+            result = verify_alias_value(static_cast<amf::AMFComponent*>(state.component), state.configured_aliases[i], entry.second);
+        }
         std::fprintf(stderr, "amf initialized_property=\"%ls\" result=%d\n", entry.first, static_cast<int>(result));
         const HRESULT hr = checked(result, "post-init-property-readback");
         if (FAILED(hr)) return hr;
@@ -758,6 +832,128 @@ extern "C" uint32_t nl_amf_optional_property_contract() noexcept {
         if (FAILED(inspect(valid, optional, true))) passed |= 131072;
         valid.named = AMF_NOT_FOUND;
         if (FAILED(inspect(valid, optional, true))) passed |= 262144;
+        return passed;
+    } catch (...) { return 0; }
+}
+
+extern "C" uint32_t nl_amf_base_layer_alias_contract() noexcept {
+    struct Inventory {
+        amf::AMFPropertyInfo entries[2], different;
+        const wchar_t* requested = AMF_VIDEO_ENCODER_HEVC_FRAMERATE;
+        amf_size count = 2;
+        unsigned count_reads = 0, named_reads = 0;
+        bool canonical_error = false, canonical_different = false, index_different = false;
+        bool has_property = true, changing_count = false, repeat_different = false, index_error = false;
+        bool value_wrong_type = false, value_wrong = false, value_error = false;
+        Inventory() noexcept {
+            entries[0].name = L"TL0.QL0.HevcFrameRate";
+            entries[0].type = amf::AMF_VARIANT_RATE;
+            entries[1].name = AMF_VIDEO_ENCODER_HEVC_USAGE;
+            different.name = entries[0].name;
+            different.type = entries[0].type;
+        }
+        AMF_RESULT GetPropertyInfo(const wchar_t* name, const amf::AMFPropertyInfo** info) noexcept {
+            if (std::wcscmp(name, requested) == 0) {
+                *info = repeat_different && named_reads++ != 0 ? &different : &entries[0];
+                return AMF_OK;
+            }
+            if (std::wcscmp(name, entries[0].name) != 0 || canonical_error) return AMF_NOT_FOUND;
+            *info = canonical_different ? &different : &entries[0];
+            return AMF_OK;
+        }
+        AMF_RESULT GetPropertyInfo(amf_size index, const amf::AMFPropertyInfo** info) noexcept {
+            if (index >= 2 || index_error) return AMF_FAIL;
+            *info = index == 0 && index_different ? &different : &entries[index];
+            return AMF_OK;
+        }
+        amf_size GetPropertiesInfoCount() noexcept {
+            return count + ((changing_count && count_reads++ != 0) ? 1 : 0);
+        }
+        bool HasProperty(const wchar_t*) const noexcept { return has_property; }
+        AMF_RESULT GetProperty(const wchar_t*, amf::AMFVariant* value) const noexcept {
+            if (value_error) return AMF_FAIL;
+            *value = value_wrong_type ? amf::AMFVariant(amf_int64(60))
+                : amf::AMFVariant(AMFConstructRate(value_wrong ? 59u : 60u, 1));
+            return AMF_OK;
+        }
+    };
+    try {
+        uint32_t passed = 0;
+        auto inspect = [](Inventory& inventory) noexcept {
+            const amf::AMFPropertyInfo* info = nullptr;
+            return describe_property(&inventory, inventory.requested, false, &info);
+        };
+        Inventory frame;
+        if (inspect(frame) == S_OK) passed |= 1;
+        Inventory bitrate;
+        bitrate.requested = AMF_VIDEO_ENCODER_HEVC_TARGET_BITRATE;
+        bitrate.entries[0].name = L"TL0.QL0.HevcTargetBitrate";
+        bitrate.entries[0].type = amf::AMF_VARIANT_INT64;
+        if (inspect(bitrate) == S_OK) passed |= 2;
+        Inventory skip;
+        skip.requested = AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_SKIP_FRAME_ENABLE;
+        skip.entries[0].name = L"TL0.QL0.HevcRateControlSkipFrameEnable";
+        skip.entries[0].type = amf::AMF_VARIANT_BOOL;
+        if (inspect(skip) == S_OK) passed |= 4;
+        Inventory unknown_prefix;
+        unknown_prefix.entries[0].name = L"Unknown.HevcFrameRate";
+        if (FAILED(inspect(unknown_prefix))) passed |= 8;
+        Inventory temporal;
+        temporal.entries[0].name = L"TL1.QL0.HevcFrameRate";
+        if (FAILED(inspect(temporal))) passed |= 16;
+        Inventory quality;
+        quality.entries[0].name = L"TL0.QL1.HevcFrameRate";
+        if (FAILED(inspect(quality))) passed |= 32;
+        Inventory wrong_type;
+        wrong_type.entries[0].type = amf::AMF_VARIANT_INT64;
+        if (FAILED(inspect(wrong_type))) passed |= 64;
+        Inventory canonical_different;
+        canonical_different.canonical_different = true;
+        if (FAILED(inspect(canonical_different))) passed |= 128;
+        Inventory index_different;
+        index_different.index_different = true;
+        if (FAILED(inspect(index_different))) passed |= 256;
+        Inventory canonical_error;
+        canonical_error.canonical_error = true;
+        if (FAILED(inspect(canonical_error))) passed |= 512;
+        Inventory no_property;
+        no_property.has_property = false;
+        if (FAILED(inspect(no_property))) passed |= 1024;
+        Inventory duplicate;
+        duplicate.entries[1].name = duplicate.entries[0].name;
+        if (FAILED(inspect(duplicate))) passed |= 2048;
+        Inventory changing;
+        changing.changing_count = true;
+        if (FAILED(inspect(changing))) passed |= 4096;
+        Inventory repeat;
+        repeat.repeat_different = true;
+        if (FAILED(inspect(repeat))) passed |= 8192;
+        Inventory conflicting;
+        conflicting.entries[1].name = conflicting.requested;
+        if (FAILED(inspect(conflicting))) passed |= 16384;
+        const amf::AMFVariant rate(AMFConstructRate(60, 1));
+        Inventory value_type;
+        value_type.value_wrong_type = true;
+        if (verify_alias_value(&value_type, value_type.entries[0].name, rate) != AMF_OK) passed |= 32768;
+        Inventory value_changed;
+        value_changed.value_wrong = true;
+        if (verify_alias_value(&value_changed, value_changed.entries[0].name, rate) != AMF_OK) passed |= 65536;
+        Inventory value_error;
+        value_error.value_error = true;
+        if (verify_alias_value(&value_error, value_error.entries[0].name, rate) != AMF_OK) passed |= 131072;
+        Inventory value_exact;
+        if (verify_alias_value(&value_exact, value_exact.entries[0].name, rate) == AMF_OK) passed |= 262144;
+        Inventory unknown_property;
+        unknown_property.requested = AMF_VIDEO_ENCODER_HEVC_PROFILE;
+        unknown_property.entries[0].name = L"TL0.QL0.HevcProfile";
+        unknown_property.entries[0].type = amf::AMF_VARIANT_INT64;
+        if (FAILED(inspect(unknown_property))) passed |= 524288;
+        Inventory empty, excessive;
+        empty.count = 0; excessive.count = 513;
+        if (FAILED(inspect(empty)) && FAILED(inspect(excessive))) passed |= 1048576;
+        Inventory index_error;
+        index_error.index_error = true;
+        if (FAILED(inspect(index_error))) passed |= 2097152;
         return passed;
     } catch (...) { return 0; }
 }

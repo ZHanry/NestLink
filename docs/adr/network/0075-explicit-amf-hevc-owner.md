@@ -131,6 +131,46 @@ output gate changes. The optional-absence proof still requires the complete
 consistent inventory described above. This diagnostic addition requires its
 own exact-source build and target result.
 
+Source `f0c65e1` completed both Windows owner jobs and both native peer process
+jobs in run `41561895385`, including the original AMF regression and separate
+nineteen-case optional-absence regression; its tools build/strict run
+`41561899380` also passed. Exact run/job receipts, all five official ZIP
+digests, 234 file hashes and 171 producer payload records are in
+[`windows-media-owner-tools-f0c65e1.json`](../../network-rewrite/evidence/windows-media-owner-tools-f0c65e1.json).
+The diagnostic-only source `46bc44d` passed tools build/strict run
+`41563437605`; its complete 167-payload verification is separate in
+[`windows-media-tools-46bc44d.json`](../../network-rewrite/evidence/windows-media-tools-46bc44d.json).
+
+All eight actual `46bc44d` directions still exited 1, preserved in
+[`windows-hevc-target-46bc44d.json`](../../network-rewrite/evidence/windows-hevc-target-46bc44d.json).
+The Main8 diagnostic now records the exact returned rate descriptor
+`TL0.QL0.HevcFrameRate`, type `AMF_VARIANT_RATE`, at index 71 of the complete
+126-entry inventory. The pinned official
+[`HEVC API SVC table 11`](https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/57ee0cfb0e1a08d9041f77435653794c1b012be0/amf/doc/AMF_Video_Encode_HEVC_API.md)
+documents `TL<temporal>.QL<quality>.<parameter>`, specifically including
+`HevcFrameRate`, `HevcTargetBitrate` and `HevcRateControlSkipFrameEnable`, and
+requires quality layer `QL0`. This is a documented rate-control namespace,
+not an unknown spelling that can be accepted by removing arbitrary prefixes.
+
+The production correction permits only those three complete `TL0.QL0` aliases
+for the existing three controls, with exact rate/int64/bool descriptor types.
+The original named lookup, canonical named lookup, repeated original lookup
+and one indexed entry must return the same descriptor pointer. The entire
+nonempty, bounded, uniquely named inventory must remain stable, contain that
+canonical descriptor exactly once and have no conflicting flat descriptor;
+both names must report `HasProperty`. Unknown controls, prefixes, temporal
+layers and quality layers fail. Validation/set/readback still use the original
+flat name; an additional typed canonical value read must agree exactly. Both
+names are read again after Init against the same stored value. Canonical names
+retained by the owner are fixed static strings, not borrowed driver memory.
+No second encoder, source, depth, format, parameter set, deadline or threshold
+is selected. A new independent native regression checks the three exact
+aliases, identity contradictions, unknown namespaces, malformed inventories
+and typed readback failures. Original `127`, `511`, `255` and `524287` assertions
+remain unchanged. This correction still needs new exact-source hosted owner,
+strict/build and actual target evidence. Earlier failures and the original
+Luanti 25-second failure remain failed.
+
 Four same-device GPU textures retain each accepted input until the runtime's
 release observer marks its atomic flag free. The callback touches no owner or
 D3D state. Copy completion retains the original 16ms bound; an incomplete copy

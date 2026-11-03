@@ -271,4 +271,14 @@ mod boundary_tests {
         // no installed runtime, device, pixel submission or hardware claim.
         assert_eq!(unsafe { nl_amf_optional_property_contract() }, 524287);
     }
+
+    #[test]
+    fn exact_base_layer_alias_requires_same_typed_descriptor_and_value() {
+        unsafe extern "C" {
+            fn nl_amf_base_layer_alias_contract() -> u32;
+        }
+        // SAFETY: bounded production descriptor/value checks with scalar API
+        // responses; no installed runtime, device or pixel submission.
+        assert_eq!(unsafe { nl_amf_base_layer_alias_contract() }, 4194303);
+    }
 }
