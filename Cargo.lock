@@ -3677,6 +3677,7 @@ version = "0.8.0-rc.1"
 dependencies = [
  "axum",
  "base64 0.22.1",
+ "futures-util",
  "if-addrs 0.14.0",
  "nestlink-auth",
  "nestlink-identity",

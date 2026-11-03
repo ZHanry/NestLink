@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "purpose": "reviewed_existing_test_dependency_lock_edge",
+  "repository": "ZHanry/NestLink",
+  "source_revision": "bf364e0b19f896b614df857312b02f64734015e4",
+  "run_id": 41567629082,
+  "run_attempt": 1,
+  "workflow": ".github/workflows/network-lock-refresh.yml",
+  "runner_environment": "github-hosted",
+  "conclusion": "success",
+  "scopes": [
+    {
+      "downloaded_files": [
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-product\\artifact.zip",
+          "sha256": "8e21f59d5c755c6ec64a0c1128a5d80e870923d8c869615b324c3e1bcde6969c",
+          "bytes": 504927
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-product\\files\\before.lock",
+          "sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+          "bytes": 209772
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-product\\files\\cargo-generated.lock",
+          "sha256": "34aa0cfc83ff1566eadcffbbce9f5e9da639b9f174b03e0a72d01c5a751ca065",
+          "bytes": 209789
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-product\\files\\Cargo.lock",
+          "sha256": "34aa0cfc83ff1566eadcffbbce9f5e9da639b9f174b03e0a72d01c5a751ca065",
+          "bytes": 209789
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-product\\files\\command-0.log",
+          "sha256": "085a54d22e678f8765d8e7985df06c838e8a07a25c3d738e1beec4c6e3132c1b",
+          "bytes": 470
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-product\\files\\command-1.log",
+          "sha256": "b3b37e1cde8bd6a78fb798f2569e2c079127a41e865d66a546b81f8dea85f5fd",
+          "bytes": 125
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-product\\files\\command-2.log",
+          "sha256": "ac936de39d94a587804fa81cd093746309dc456c659dee3717a39d0e0a08070e",
+          "bytes": 4275159
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-product\\files\\derivation-receipt.json",
+          "sha256": "25d66a9694db283f7d8c0965c2b64aa27eb78c195d54e69683cc0b001ad39555",
+          "bytes": 3406
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-product\\files\\derivation.diff",
+          "sha256": "bf055d9ce954220043072184a994b2576f5f8c24e585aaccf9a57f0013428006",
+          "bytes": 274
+        }
+      ],
+      "artifact_id": 13198889147,
+      "producer_receipt": {
+        "schema_version": 1,
+        "purpose": "reviewed-network-components-lock-derivation-only",
+        "repository": "ZHanry/NestLink",
+        "source_revision": "bf364e0b19f896b614df857312b02f64734015e4",
+        "run_id": "41567629082",
+        "run_attempt": "1",
+        "scope": "product",
+        "manifest_path": "Cargo.toml",
+        "before_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+        "commands": [
+          {
+            "argv": [
+              "cargo",
+              "update",
+              "--workspace",
+              "--manifest-path",
+              "Cargo.toml"
+            ],
+            "return_code": 0
+          },
+          {
+            "argv": [
+              "cargo",
+              "update",
+              "-p",
+              "encoding_rs",
+              "--precise",
+              "0.8.35",
+              "--manifest-path",
+              "Cargo.toml"
+            ],
+            "return_code": 0
+          },
+          {
+            "argv": [
+              "cargo",
+              "metadata",
+              "--manifest-path",
+              "Cargo.toml",
+              "--locked",
+              "--format-version",
+              "1"
+            ],
+            "return_code": 0
+          }
+        ],
+        "assertions": {
+          "only_selected_lock_changed": true,
+          "all_existing_package_identities_and_checksums_preserved_except_reviewed_mdns_source": true,
+          "only_mdns_source_changed_to_reviewed_local_fork": true,
+          "all_unrelated_external_package_edges_preserved": true,
+          "only_exact_reviewed_component_feature_edges_added": true,
+          "app_core_only_reviewed_test_stream_edge_added": true,
+          "app_core_test_stream_reuses_exact_locked_external_package_and_edges": true,
+          "reviewed_crab_nat_exact_version_and_checksum": true,
+          "reviewed_petgraph_exact_version_and_checksum": true,
+          "reviewed_authoritative_dns_exact_version": true,
+          "locked_metadata_succeeded": true,
+          "lan_and_scaler_exact_reviewed_package_closure": true,
+          "protected_native_stream_reuses_existing_tokio_identity": true,
+          "native_stdio_reuses_locked_tokio_util_identity": true,
+          "media_actual_mtls_fixture_reuses_locked_tokio_rustls_identity": true,
+          "packet_parser_exact_identity_checksum_and_only_locked_arrayvec_edge": true,
+          "managed_tun_exact_reviewed_provider_closure": true,
+          "tun_native_fixture_reuses_exact_locked_packet_parser": true,
+          "only_reviewed_cookie_packet_components_or_exact_product_reuse_added": true
+        },
+        "failure": null,
+        "product_compilation_performed": false,
+        "quality_or_acceptance_claimed": false,
+        "files": [
+          {
+            "path": "Cargo.lock",
+            "bytes": 209789,
+            "sha256": "34aa0cfc83ff1566eadcffbbce9f5e9da639b9f174b03e0a72d01c5a751ca065"
+          },
+          {
+            "path": "before.lock",
+            "bytes": 209772,
+            "sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+          },
+          {
+            "path": "cargo-generated.lock",
+            "bytes": 209789,
+            "sha256": "34aa0cfc83ff1566eadcffbbce9f5e9da639b9f174b03e0a72d01c5a751ca065"
+          },
+          {
+            "path": "command-0.log",
+            "bytes": 470,
+            "sha256": "085a54d22e678f8765d8e7985df06c838e8a07a25c3d738e1beec4c6e3132c1b"
+          },
+          {
+            "path": "command-1.log",
+            "bytes": 125,
+            "sha256": "b3b37e1cde8bd6a78fb798f2569e2c079127a41e865d66a546b81f8dea85f5fd"
+          },
+          {
+            "path": "command-2.log",
+            "bytes": 4275159,
+            "sha256": "ac936de39d94a587804fa81cd093746309dc456c659dee3717a39d0e0a08070e"
+          },
+          {
+            "path": "derivation.diff",
+            "bytes": 274,
+            "sha256": "bf055d9ce954220043072184a994b2576f5f8c24e585aaccf9a57f0013428006"
+          }
+        ]
+      },
+      "official_archive_sha256": "8e21f59d5c755c6ec64a0c1128a5d80e870923d8c869615b324c3e1bcde6969c",
+      "scope": "product"
+    },
+    {
+      "downloaded_files": [
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-fixture\\artifact.zip",
+          "sha256": "95e96a597ea82b26e36b2272c9a1d0ca39a7c13b11d1a6587f1f96edbceb93c9",
+          "bytes": 306777
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-fixture\\files\\before.lock",
+          "sha256": "f71882fd1e755e3ef3bed3a295be1c107faeb0e91e04b932cbabb6b674df2292",
+          "bytes": 130647
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-fixture\\files\\cargo-generated.lock",
+          "sha256": "f71882fd1e755e3ef3bed3a295be1c107faeb0e91e04b932cbabb6b674df2292",
+          "bytes": 130647
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-fixture\\files\\Cargo.lock",
+          "sha256": "f71882fd1e755e3ef3bed3a295be1c107faeb0e91e04b932cbabb6b674df2292",
+          "bytes": 130647
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-fixture\\files\\command-0.log",
+          "sha256": "b9310578382e2c24c0e025151b07c43b1cb5b4f0d953cfdb6080c6386a19fe62",
+          "bytes": 1111
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-fixture\\files\\command-1.log",
+          "sha256": "cf1c0b5592020ec40ed8c7932acbcac67e6e0904b7c4c822ba6bb9a9d4f22987",
+          "bytes": 2619568
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-fixture\\files\\derivation-receipt.json",
+          "sha256": "5f956d605e2468dd99bc35abcccf1c5f6a5cdd3cf5e61881397f7180bd5c1142",
+          "bytes": 3164
+        },
+        {
+          "path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-tools\\direct-lock-bf364-fixture\\files\\derivation.diff",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ],
+      "artifact_id": 13198809475,
+      "producer_receipt": {
+        "schema_version": 1,
+        "purpose": "reviewed-network-components-lock-derivation-only",
+        "repository": "ZHanry/NestLink",
+        "source_revision": "bf364e0b19f896b614df857312b02f64734015e4",
+        "run_id": "41567629082",
+        "run_attempt": "1",
+        "scope": "browser-native-fixture",
+        "manifest_path": "scripts/fixtures/browser-native-host/Cargo.toml",
+        "before_lock_sha256": "f71882fd1e755e3ef3bed3a295be1c107faeb0e91e04b932cbabb6b674df2292",
+        "commands": [
+          {
+            "argv": [
+              "cargo",
+              "update",
+              "--workspace",
+              "--manifest-path",
+              "scripts/fixtures/browser-native-host/Cargo.toml"
+            ],
+            "return_code": 0
+          },
+          {
+            "argv": [
+              "cargo",
+              "metadata",
+              "--manifest-path",
+              "scripts/fixtures/browser-native-host/Cargo.toml",
+              "--locked",
+              "--format-version",
+              "1"
+            ],
+            "return_code": 0
+          }
+        ],
+        "assertions": {
+          "only_selected_lock_changed": true,
+          "all_existing_package_identities_and_checksums_preserved_except_reviewed_mdns_source": true,
+          "only_mdns_source_changed_to_reviewed_local_fork": true,
+          "all_unrelated_external_package_edges_preserved": true,
+          "only_exact_reviewed_component_feature_edges_added": true,
+          "app_core_only_reviewed_test_stream_edge_added": true,
+          "app_core_test_stream_reuses_exact_locked_external_package_and_edges": true,
+          "reviewed_crab_nat_exact_version_and_checksum": true,
+          "reviewed_petgraph_exact_version_and_checksum": true,
+          "reviewed_authoritative_dns_exact_version": true,
+          "locked_metadata_succeeded": true,
+          "lan_and_scaler_exact_reviewed_package_closure": true,
+          "protected_native_stream_reuses_existing_tokio_identity": true,
+          "native_stdio_reuses_locked_tokio_util_identity": true,
+          "media_actual_mtls_fixture_reuses_locked_tokio_rustls_identity": true,
+          "packet_parser_exact_identity_checksum_and_only_locked_arrayvec_edge": true,
+          "managed_tun_exact_reviewed_provider_closure": true,
+          "tun_native_fixture_reuses_exact_locked_packet_parser": true,
+          "only_reviewed_cookie_packet_components_or_exact_product_reuse_added": true
+        },
+        "failure": null,
+        "product_compilation_performed": false,
+        "quality_or_acceptance_claimed": false,
+        "files": [
+          {
+            "path": "Cargo.lock",
+            "bytes": 130647,
+            "sha256": "f71882fd1e755e3ef3bed3a295be1c107faeb0e91e04b932cbabb6b674df2292"
+          },
+          {
+            "path": "before.lock",
+            "bytes": 130647,
+            "sha256": "f71882fd1e755e3ef3bed3a295be1c107faeb0e91e04b932cbabb6b674df2292"
+          },
+          {
+            "path": "cargo-generated.lock",
+            "bytes": 130647,
+            "sha256": "f71882fd1e755e3ef3bed3a295be1c107faeb0e91e04b932cbabb6b674df2292"
+          },
+          {
+            "path": "command-0.log",
+            "bytes": 1111,
+            "sha256": "b9310578382e2c24c0e025151b07c43b1cb5b4f0d953cfdb6080c6386a19fe62"
+          },
+          {
+            "path": "command-1.log",
+            "bytes": 2619568,
+            "sha256": "cf1c0b5592020ec40ed8c7932acbcac67e6e0904b7c4c822ba6bb9a9d4f22987"
+          },
+          {
+            "path": "derivation.diff",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      "official_archive_sha256": "95e96a597ea82b26e36b2272c9a1d0ca39a7c13b11d1a6587f1f96edbceb93c9",
+      "scope": "browser-native-fixture"
+    }
+  ],
+  "review": "Product diff adds only existing futures-util edge to nestlink-app-core. No external identity, checksum or edge changes. Browser fixture byte-identical. All producer payloads independently hashed; both ZIPs match official GitHub digests.",
+  "earlier_failure": {
+    "qualification_claimed": false,
+    "conclusion": "failure",
+    "run_id": 41567535963
+  },
+  "quality_or_acceptance_claimed": false,
+  "local_project_toolchain_executed": false
+}
