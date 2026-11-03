@@ -116,6 +116,21 @@ a runtime/device; the original `127`, `511` and `255` assertions remain. This
 repair requires new exact-source hosted verification and fresh target execution;
 the earlier successful `4a4496b` build does not verify the repair.
 
+The subsequent eight actual commands on source `f0c65e1` also exited 1, retained
+separately in
+[`windows-hevc-target-f0c65e1.json`](../../network-rewrite/evidence/windows-hevc-target-f0c65e1.json).
+AMF Main8 reached a successful `HevcFrameRate` descriptor query, then the new
+descriptor-name consistency guard rejected it before validation/set/readback.
+Its actual descriptor name was not logged, so neither an alias nor an absent
+property has been established. Both reviewed official header versions use
+the exact `HevcFrameRate` spelling. The next diagnostic change records each
+bounded actual descriptor name/type and index and, on a name mismatch, the
+bounded descriptor inventory as diagnostic data only. It preserves the failure
+and all original conditions; no unknown alias is accepted and no quality or
+output gate changes. The optional-absence proof still requires the complete
+consistent inventory described above. This diagnostic addition requires its
+own exact-source build and target result.
+
 Four same-device GPU textures retain each accepted input until the runtime's
 release observer marks its atomic flag free. The callback touches no owner or
 D3D state. Copy completion retains the original 16ms bound; an incomplete copy

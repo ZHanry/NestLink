@@ -211,6 +211,30 @@ bool legacy_optional_property(const wchar_t* name) noexcept {
     return false;
 }
 
+void log_property_descriptor(const wchar_t* requested, const char* stage, long long index,
+    AMF_RESULT result, const amf::AMFPropertyInfo* info) noexcept {
+    const wchar_t* actual = info && info->name ? info->name : L"<null>";
+    std::fprintf(stderr, "amf property=\"%ls\" stage=%s index=%lld result=%d descriptor_present=%u descriptor_name=\"%.*ls\" descriptor_name_valid=%u declared_type=%d\n",
+        requested, stage, index, static_cast<int>(result), info ? 1u : 0u, 256, actual,
+        info && valid_property_name(info->name) ? 1u : 0u, info ? static_cast<int>(info->type) : -1);
+    std::fflush(stderr);
+}
+
+template<class Storage>
+void log_property_inventory(Storage* storage, const wchar_t* requested) noexcept {
+    const amf_size count = storage->GetPropertiesInfoCount();
+    std::fprintf(stderr, "amf property=\"%ls\" stage=descriptor-mismatch-inventory count=%zu diagnostic_only=1\n",
+        requested, static_cast<size_t>(count));
+    std::fflush(stderr);
+    if (count == 0 || count > 512) return;
+    for (amf_size index = 0; index < count; ++index) {
+        const amf::AMFPropertyInfo* entry = nullptr;
+        const AMF_RESULT result = storage->GetPropertyInfo(index, &entry);
+        log_property_descriptor(requested, "descriptor-mismatch-inventory", static_cast<long long>(index), result, entry);
+        if (result != AMF_OK || !entry || !valid_property_name(entry->name)) return;
+    }
+}
+
 template<class Storage>
 HRESULT describe_property(Storage* storage, const wchar_t* name, bool optional_equivalent,
     const amf::AMFPropertyInfo** info) noexcept {
@@ -220,9 +244,11 @@ HRESULT describe_property(Storage* storage, const wchar_t* name, bool optional_e
     const AMF_RESULT described = storage->GetPropertyInfo(name, info);
     std::fprintf(stderr, "amf property=\"%ls\" stage=property-info result=%d optional_equivalent=%u descriptor_present=%u\n",
         name, static_cast<int>(described), optional_equivalent ? 1u : 0u, *info ? 1u : 0u);
-    std::fflush(stderr);
+    log_property_descriptor(name, "property-info-descriptor", -1, described, *info);
     if (described == AMF_OK) {
-        return *info && valid_property_name((*info)->name) && std::wcscmp((*info)->name, name) == 0 ? S_OK : E_UNEXPECTED;
+        if (*info && valid_property_name((*info)->name) && std::wcscmp((*info)->name, name) == 0) return S_OK;
+        log_property_inventory(storage, name);
+        return E_UNEXPECTED;
     }
     if (!optional_equivalent || *info || (described != AMF_NOT_FOUND && described != AMF_INVALID_ARG)) {
         return checked(described, "property-info");
@@ -238,6 +264,7 @@ HRESULT describe_property(Storage* storage, const wchar_t* name, bool optional_e
     for (amf_size index = 0; index < count; ++index) {
         const amf::AMFPropertyInfo* entry = nullptr;
         const AMF_RESULT result = storage->GetPropertyInfo(index, &entry);
+        log_property_descriptor(name, "property-inventory", static_cast<long long>(index), result, entry);
         if (result != AMF_OK || !entry || !valid_property_name(entry->name)) {
             std::fprintf(stderr, "amf property=\"%ls\" stage=property-inventory index=%zu result=%d descriptor_valid=0\n",
                 name, static_cast<size_t>(index), static_cast<int>(result));
