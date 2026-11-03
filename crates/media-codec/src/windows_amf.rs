@@ -261,4 +261,14 @@ mod boundary_tests {
         // SAFETY: bounded scalar/callback test; no runtime/device or pixels.
         assert_eq!(unsafe { nl_amf_boundary_contract() }, 127);
     }
+
+    #[test]
+    fn optional_legacy_properties_require_complete_consistent_absence() {
+        unsafe extern "C" {
+            fn nl_amf_optional_property_contract() -> u32;
+        }
+        // SAFETY: production descriptor decisions with scalar API responses;
+        // no installed runtime, device, pixel submission or hardware claim.
+        assert_eq!(unsafe { nl_amf_optional_property_contract() }, 524287);
+    }
 }

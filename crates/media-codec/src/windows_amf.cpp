@@ -192,15 +192,75 @@ bool equivalent(const amf::AMFVariant& a, const amf::AMFVariant& b) noexcept {
     }
 }
 
+bool valid_property_name(const wchar_t* name) noexcept {
+    if (!name) return false;
+    size_t length = 0;
+    while (length < 256 && name[length]) ++length;
+    return length > 0 && length < 256;
+}
+
+bool legacy_optional_property(const wchar_t* name) noexcept {
+    // The earlier explicit input/output 709 profile is required before the
+    // separate matrix/range controls. Only these absent extensions or disabled
+    // optional features may be omitted; no core format/rate/color property may.
+    for (const wchar_t* optional : {AMF_VIDEO_ENCODER_HEVC_INPUT_MATRIX_COEFF,
+        AMF_VIDEO_ENCODER_HEVC_OUTPUT_MATRIX_COEFF, AMF_VIDEO_ENCODER_HEVC_INPUT_FULL_RANGE_COLOR,
+        AMF_VIDEO_ENCODER_HEVC_ENABLE_SMART_ACCESS_VIDEO, AMF_VIDEO_ENCODER_HEVC_QUERY_TIMEOUT}) {
+        if (std::wcscmp(name, optional) == 0) return true;
+    }
+    return false;
+}
+
+template<class Storage>
+HRESULT describe_property(Storage* storage, const wchar_t* name, bool optional_equivalent,
+    const amf::AMFPropertyInfo** info) noexcept {
+    if (!storage || !info || !valid_property_name(name)) return E_INVALIDARG;
+    *info = nullptr;
+    if (optional_equivalent && !legacy_optional_property(name)) return E_INVALIDARG;
+    const AMF_RESULT described = storage->GetPropertyInfo(name, info);
+    std::fprintf(stderr, "amf property=\"%ls\" stage=property-info result=%d optional_equivalent=%u descriptor_present=%u\n",
+        name, static_cast<int>(described), optional_equivalent ? 1u : 0u, *info ? 1u : 0u);
+    std::fflush(stderr);
+    if (described == AMF_OK) {
+        return *info && valid_property_name((*info)->name) && std::wcscmp((*info)->name, name) == 0 ? S_OK : E_UNEXPECTED;
+    }
+    if (!optional_equivalent || *info || (described != AMF_NOT_FOUND && described != AMF_INVALID_ARG)) {
+        return checked(described, "property-info");
+    }
+    // The observed older runtime returned INVALID_ARG at the first newer
+    // optional descriptor lookup; the reference specifies NOT_FOUND for an
+    // absent name. Neither result alone proves absence. Require the entire
+    // stable registered descriptor inventory to omit this exact optional name.
+    const amf_size count = storage->GetPropertiesInfoCount();
+    std::fprintf(stderr, "amf property=\"%ls\" stage=property-inventory count=%zu\n", name, static_cast<size_t>(count));
+    if (count == 0 || count > 512) return E_UNEXPECTED;
+    std::array<const wchar_t*, 512> names{};
+    for (amf_size index = 0; index < count; ++index) {
+        const amf::AMFPropertyInfo* entry = nullptr;
+        const AMF_RESULT result = storage->GetPropertyInfo(index, &entry);
+        if (result != AMF_OK || !entry || !valid_property_name(entry->name)) {
+            std::fprintf(stderr, "amf property=\"%ls\" stage=property-inventory index=%zu result=%d descriptor_valid=0\n",
+                name, static_cast<size_t>(index), static_cast<int>(result));
+            return result == AMF_OK ? E_UNEXPECTED : checked(result, "property-inventory");
+        }
+        if (std::wcscmp(entry->name, name) == 0) return E_UNEXPECTED;
+        for (amf_size previous = 0; previous < index; ++previous) {
+            if (std::wcscmp(names[previous], entry->name) == 0) return E_UNEXPECTED;
+        }
+        names[index] = entry->name;
+    }
+    if (storage->GetPropertiesInfoCount() != count || storage->HasProperty(name)) return E_UNEXPECTED;
+    std::fprintf(stderr, "amf property=\"%ls\" unavailable_in_installed_runtime=1 complete_inventory_absence_verified=1 original_sps_validation_required=1\n", name);
+    std::fflush(stderr);
+    return S_FALSE;
+}
+
 HRESULT property(Encoder& state, const wchar_t* name, const amf::AMFVariant& requested,
     bool optional_equivalent = false) noexcept {
     const amf::AMFPropertyInfo* info = nullptr;
-    const AMF_RESULT described = state.component->GetPropertyInfo(name, &info);
-    if (described == AMF_NOT_FOUND && optional_equivalent) {
-        std::fprintf(stderr, "amf property=\"%ls\" result=%d unavailable_in_installed_runtime=1 original_sps_validation_required=1\n", name, static_cast<int>(described));
-        return S_OK;
-    }
-    if (described != AMF_OK || !info) return checked(described == AMF_OK ? AMF_FAIL : described, "property-info");
+    const HRESULT described = describe_property(static_cast<amf::AMFComponent*>(state.component), name, optional_equivalent, &info);
+    if (described == S_FALSE) return S_OK;
+    if (FAILED(described)) return described;
     amf::AMFVariant validated;
     AMF_RESULT result = state.component->ValidateProperty(name, requested, &validated);
     // Validation must not clamp/coerce a different semantic value into success.
@@ -248,8 +308,9 @@ HRESULT range_value(const amf::AMFPropertyInfo& info, amf::AMFVariant& value) no
 
 HRESULT limited_range(Encoder& state) noexcept {
     const amf::AMFPropertyInfo* info = nullptr;
-    HRESULT hr = checked(state.component->GetPropertyInfo(AMF_VIDEO_ENCODER_HEVC_OUTPUT_FULL_RANGE_COLOR, &info), "range-info");
-    if (FAILED(hr) || !info) return FAILED(hr) ? hr : E_UNEXPECTED;
+    HRESULT hr = describe_property(static_cast<amf::AMFComponent*>(state.component),
+        AMF_VIDEO_ENCODER_HEVC_OUTPUT_FULL_RANGE_COLOR, false, &info);
+    if (FAILED(hr)) return hr;
     amf::AMFVariant value;
     hr = range_value(*info, value);
     return FAILED(hr) ? hr : property(state, AMF_VIDEO_ENCODER_HEVC_OUTPUT_FULL_RANGE_COLOR, value);
@@ -583,6 +644,93 @@ extern "C" uint32_t nl_amf_boundary_contract() noexcept {
         if (release->busy[0].load() && !release->busy[1].load()) passed |= 32;
         void* handle = reinterpret_cast<void*>(uintptr_t(1));
         if (FAILED(nl_amf_open(nullptr, 1920, 1080, 60, 8000, 8, &handle)) && handle == nullptr) passed |= 64;
+        return passed;
+    } catch (...) { return 0; }
+}
+
+// Exercise the same descriptor decision as production without loading a
+// runtime/device. A named lookup error must not hide an existing or unknown
+// required property, malformed inventory or contradictory HasProperty result.
+extern "C" uint32_t nl_amf_optional_property_contract() noexcept {
+    struct Inventory {
+        amf::AMFPropertyInfo entries[2];
+        AMF_RESULT named = AMF_INVALID_ARG;
+        amf_size count = 2;
+        unsigned count_reads = 0;
+        bool changing_count = false, named_pointer = false, index_error = false;
+        bool null_entry = false, has_property = false;
+        Inventory() noexcept {
+            entries[0].name = AMF_VIDEO_ENCODER_HEVC_INPUT_COLOR_PROFILE;
+            entries[1].name = AMF_VIDEO_ENCODER_HEVC_OUTPUT_COLOR_PROFILE;
+        }
+        AMF_RESULT GetPropertyInfo(const wchar_t*, const amf::AMFPropertyInfo** info) noexcept {
+            *info = named_pointer ? &entries[0] : nullptr;
+            return named;
+        }
+        AMF_RESULT GetPropertyInfo(amf_size index, const amf::AMFPropertyInfo** info) noexcept {
+            if (index_error || index >= 2) return AMF_FAIL;
+            *info = null_entry ? nullptr : &entries[index];
+            return AMF_OK;
+        }
+        amf_size GetPropertiesInfoCount() noexcept {
+            return count + ((changing_count && count_reads++ != 0) ? 1 : 0);
+        }
+        bool HasProperty(const wchar_t*) const noexcept { return has_property; }
+    };
+    try {
+        uint32_t passed = 0;
+        const wchar_t* optional = AMF_VIDEO_ENCODER_HEVC_INPUT_MATRIX_COEFF;
+        auto inspect = [](Inventory& inventory, const wchar_t* name, bool allowed) noexcept {
+            const amf::AMFPropertyInfo* info = nullptr;
+            return describe_property(&inventory, name, allowed, &info);
+        };
+        Inventory invalid_arg;
+        if (inspect(invalid_arg, optional, true) == S_FALSE) passed |= 1;
+        Inventory not_found;
+        not_found.named = AMF_NOT_FOUND;
+        if (inspect(not_found, optional, true) == S_FALSE) passed |= 2;
+        if (FAILED(inspect(invalid_arg, AMF_VIDEO_ENCODER_HEVC_PROFILE, false))) passed |= 4;
+        if (FAILED(inspect(not_found, AMF_VIDEO_ENCODER_HEVC_PROFILE, false))) passed |= 8;
+        if (FAILED(inspect(invalid_arg, AMF_VIDEO_ENCODER_HEVC_PROFILE, true))) passed |= 16;
+        Inventory present;
+        present.entries[1].name = optional;
+        if (FAILED(inspect(present, optional, true))) passed |= 32;
+        Inventory index_error;
+        index_error.index_error = true;
+        if (FAILED(inspect(index_error, optional, true))) passed |= 64;
+        Inventory null_entry;
+        null_entry.null_entry = true;
+        if (FAILED(inspect(null_entry, optional, true))) passed |= 128;
+        Inventory no_name;
+        no_name.entries[1].name = nullptr;
+        if (FAILED(inspect(no_name, optional, true))) passed |= 256;
+        Inventory duplicate;
+        duplicate.entries[1].name = duplicate.entries[0].name;
+        if (FAILED(inspect(duplicate, optional, true))) passed |= 512;
+        Inventory empty;
+        empty.count = 0;
+        if (FAILED(inspect(empty, optional, true))) passed |= 1024;
+        Inventory excessive;
+        excessive.count = 513;
+        if (FAILED(inspect(excessive, optional, true))) passed |= 2048;
+        Inventory changing;
+        changing.changing_count = true;
+        if (FAILED(inspect(changing, optional, true))) passed |= 4096;
+        Inventory contradictory;
+        contradictory.has_property = true;
+        if (FAILED(inspect(contradictory, optional, true))) passed |= 8192;
+        Inventory unknown_error;
+        unknown_error.named = AMF_FAIL;
+        if (FAILED(inspect(unknown_error, optional, true))) passed |= 16384;
+        Inventory valid;
+        valid.named = AMF_OK; valid.named_pointer = true;
+        if (inspect(valid, valid.entries[0].name, false) == S_OK) passed |= 32768;
+        Inventory missing_descriptor;
+        missing_descriptor.named = AMF_OK;
+        if (FAILED(inspect(missing_descriptor, optional, true))) passed |= 65536;
+        if (FAILED(inspect(valid, optional, true))) passed |= 131072;
+        valid.named = AMF_NOT_FOUND;
+        if (FAILED(inspect(valid, optional, true))) passed |= 262144;
         return passed;
     } catch (...) { return 0; }
 }

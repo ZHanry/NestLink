@@ -79,6 +79,43 @@ independent color verification. Missing SmartAccess/timeout means that feature
 is absent; an exposed property must be disabled and read back. Other failures
 are fatal. No property compatibility branch is a codec or device fallback.
 
+The original eight direction commands on source `4a4496b` all exited 1; see
+[`windows-hevc-target-4a4496b.json`](../../network-rewrite/evidence/windows-hevc-target-4a4496b.json).
+The actual AMD runtime was 1.4.22, while the supplied interface headers are
+1.5.3. Main10 rejected its actual non-native P010 capability. Main8 successfully
+set/read all first sixteen required properties, then returned result 4 at
+`property-info` before encoder Init. The old diagnostic omitted the name;
+source order locates the next lookup at `HevcInMatrixCoeff`, without proving
+that absence caused this runtime error. The original logs and failure remain.
+
+The pinned official
+[`Result.h`](https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/57ee0cfb0e1a08d9041f77435653794c1b012be0/amf/public/include/core/Result.h)
+defines 4 as `AMF_INVALID_ARG`. The official API reference and
+[`public property storage implementation`](https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/57ee0cfb0e1a08d9041f77435653794c1b012be0/amf/public/common/PropertyStorageExImpl.h)
+specify `AMF_NOT_FOUND` for an absent named descriptor.
+The older official
+[`VideoEncoderHEVC.h` at 1.4.23](https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/55e4d844b77885cc3f7832bdb3cf41a1f16950ef/amf/public/include/components/VideoEncoderHEVC.h)
+already exposes explicit input/output 709 profiles and required nominal range,
+but lacks the separate matrix/input-range and SmartAccess properties. This
+establishes the API compatibility boundary, not the installed driver's output.
+
+The corrected descriptor helper records the exact name/result on every lookup.
+Only the existing five explicitly optional extension properties may be absent:
+input/output matrix, input full-range, disabled SmartAccess and zero query
+timeout. Neither `AMF_INVALID_ARG` nor `AMF_NOT_FOUND` alone authorizes omission.
+With a null returned descriptor, the helper enumerates the entire nonempty
+registered descriptor inventory, capped at 512 entries with bounded valid
+unique names, requires the requested name absent, checks the count unchanged
+and requires `HasProperty` false. Any indexed-query failure, malformed or
+contradictory descriptor, unknown error or required property still fails.
+Present properties still pass unchanged validation/set/readback and repeated
+post-Init readback. Output limited range remains required. No original SPS,
+dual-decoder accounting, color/geometry or workload gate is changed. A separate
+nineteen-case native regression exercises these actual helper decisions without
+a runtime/device; the original `127`, `511` and `255` assertions remain. This
+repair requires new exact-source hosted verification and fresh target execution;
+the earlier successful `4a4496b` build does not verify the repair.
+
 Four same-device GPU textures retain each accepted input until the runtime's
 release observer marks its atomic flag free. The callback touches no owner or
 D3D state. Copy completion retains the original 16ms bound; an incomplete copy
