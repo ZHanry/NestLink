@@ -614,9 +614,10 @@ async fn changed_identity_joins_original_target(change: IdentityChange) -> Resul
         original_login,
         "the login cipher remains unchanged even when the directory is deliberately widened"
     );
-    let error = tokio::time::timeout(Duration::from_secs(10), command.join())
-        .await??
-        .expect_err("changed installation must stop after original physical cleanup");
+    let error = match tokio::time::timeout(Duration::from_secs(10), command.join()).await?? {
+        Err(error) => error,
+        Ok(()) => return Err("changed installation must stop after original physical cleanup".into()),
+    };
     println!("private host identity stop: {change:?}: {error}");
     tokio::time::timeout(Duration::from_secs(3), target.join()).await???;
     connection.close().await?;
@@ -706,13 +707,11 @@ async fn host_identity_same_length_valid_key_change_is_terminal_after_original_k
         *nestlink_platform_security::read_private(&manifest, 1024)?,
         "key replacement leaves the original manifest unchanged"
     );
-    assert!(
-        guard
-            .running()
-            .expect_err("valid replacement key must be checked against the original signer")
-            .to_string()
-            .contains("original signing identity")
-    );
+    let error = match guard.running() {
+        Err(error) => error,
+        Ok(_) => return Err("valid replacement key must be checked against the original signer".into()),
+    };
+    assert!(error.to_string().contains("original signing identity"));
     std::fs::remove_file(&key)?;
     nestlink_platform_security::create_private(&key, &original_key)?;
     assert!(!guard.running()?, "restored key cannot revive the host");
