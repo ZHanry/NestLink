@@ -763,7 +763,8 @@ jobs:
           - os: windows-2022
             target: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    # Aggregate runner budget for sequential cases; per-case deadlines remain unchanged.
+    timeout-minutes: 90
     env:
       CARGO_INCREMENTAL: "0"
       # Large native/media test binaries exhausted the hosted Linux disk in
@@ -825,10 +826,12 @@ jobs:
         if: ${{ !cancelled() }}
         run: python scripts/refactor-offline-resident-https.py
       - if: ${{ !cancelled() && runner.os == 'Linux' }}
-        run: cargo test --workspace --locked --no-fail-fast
+        # Real socket, single-frame and OS owner fixtures must not compete across
+        # unrelated cases. Concurrency exercised inside each case is unchanged.
+        run: cargo test --workspace --locked --no-fail-fast -- --test-threads=1
       - name: Test Windows with the ordinary business-process token
         if: ${{ !cancelled() && runner.os == 'Windows' }}
-        run: python scripts/refactor-windows-normal-user.py cargo test --workspace --locked --no-fail-fast
+        run: python scripts/refactor-windows-normal-user.py cargo test --workspace --locked --no-fail-fast -- --test-threads=1
       - name: Debug scoped native renewal regressions on Linux
         if: runner.os == 'Linux'
         run: |

@@ -6,8 +6,18 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "6af910f529a01fd4266f7fd535ef5270f82f1bb3",
-  "checkpoint_kind": "rc_preview_serialize_shared_media_probe_fixture_awaiting_exact_source_checks",
+  "source_revision": "ca71ad7087d272fceb6133781f2fec759f3edf56",
+  "checkpoint_kind": "rc_preview_full_workspace_case_isolation_awaiting_exact_source_checks",
+  "workspace_isolation_followup": {
+    "source_is_pre_commit_parent": true,
+    "prior_run_id": 41628147819,
+    "failed_job_id": 125890638982,
+    "failed_case": "route_set::signed_direct_recovery_failed_allocation_does_not_retry_a_new_id_or_attach_business",
+    "observed_failure": "Windows workspace ran ten native_session cases concurrently. The sole prepared video frame decoded successfully, but presentation polling was 49488us late and the original policy discarded it. The original 3s frame observer then returned Elapsed before reaching the withdrawal branch. Nine other native_session cases passed; the original six-case dedicated exact-source product recovery experiment passed.",
+    "preserved_successes": "Exact ca71ad7 network, Web including Chrome/Edge/Firefox, secret scan, CodeQL, Linux x64/ARM64 packages and upgrade/rollback workflows succeeded. Linux core and full workspace succeeded, including strict lint and original offline resident cases.",
+    "change": "Run every complete-workspace case with --test-threads=1 on both OSes. Test-internal concurrency, product code, assertions, admission/expiry, frame lateness policy and every per-case deadline remain unchanged. Only the aggregate workspace runner allocation becomes 90 minutes to accommodate sequential execution.",
+    "next": "Execute all seven required workflows at the new clean source; then build the complete sixteen-role cohort and publish the explicitly authorized unqualified prerelease. Preserve previous failures and all deferred target cases."
+  },
   "publication_followup": {
     "source_is_pre_commit_parent": true,
     "prior_required_run": 41620251754,
