@@ -1,0 +1,2649 @@
+{
+  "schema_version": 1,
+  "scope": "Exact-source hosted media owner regression, original native peer processes and finite diagnostic tool build",
+  "checked_on_utc": "2026-11-03T02:14:36.6496195Z",
+  "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+  "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+  "qualification": "hosted_owner_regression_and_diagnostic_build_only",
+  "whole_task_qualified": false,
+  "hardware_or_target_acceptance_claimed": false,
+  "target_execution_performed_by_this_record": false,
+  "build_provenance": [
+    {
+      "run_id": "41561895385",
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41561895385",
+      "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+      "workflow_path": ".github/workflows/windows-media-owner.yml",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 125674205580,
+          "name": "owner-boundaries (windows-2025)",
+          "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41561895385/job/125674205580",
+          "status": "completed",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000012011",
+          "runner_group_name": "GitHub Actions",
+          "labels": [
+            "windows-2025"
+          ],
+          "started_at": "2026-11-03T01:46:25Z",
+          "completed_at": "2026-11-03T02:10:22Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Verify exact hosted source and preserve input provenance",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Verify diagnostic analyzer negatives on Actions",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 6
+            },
+            {
+              "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 7
+            },
+            {
+              "name": "Select native codec prefix",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 8
+            },
+            {
+              "name": "Build the original pinned native codecs on Actions",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9
+            },
+            {
+              "name": "Verify native codec provenance",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10
+            },
+            {
+              "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 11
+            },
+            {
+              "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 12
+            },
+            {
+              "name": "Check the complete desktop owner code strictly",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 13
+            },
+            {
+              "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 14
+            },
+            {
+              "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 15
+            },
+            {
+              "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 16
+            },
+            {
+              "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 17
+            },
+            {
+              "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 18
+            },
+            {
+              "name": "Retain exact-source evidence including failures",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 19
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 38
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 39
+            }
+          ]
+        },
+        {
+          "id": 125674205767,
+          "name": "native-peer-process (ubuntu-24.04)",
+          "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41561895385/job/125674205767",
+          "status": "completed",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000012013",
+          "runner_group_name": "GitHub Actions",
+          "labels": [
+            "ubuntu-24.04"
+          ],
+          "started_at": "2026-11-03T01:46:25Z",
+          "completed_at": "2026-11-03T01:48:06Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Exercise the actual local TLS process owner and portable compatibility",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 11
+            }
+          ]
+        },
+        {
+          "id": 125674205796,
+          "name": "native-peer-process (windows-2025)",
+          "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41561895385/job/125674205796",
+          "status": "completed",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000012012",
+          "runner_group_name": "GitHub Actions",
+          "labels": [
+            "windows-2025"
+          ],
+          "started_at": "2026-11-03T01:46:24Z",
+          "completed_at": "2026-11-03T01:49:26Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Exercise the actual local TLS process owner and portable compatibility",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 11
+            }
+          ]
+        },
+        {
+          "id": 125674205879,
+          "name": "owner-boundaries (windows-2022)",
+          "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41561895385/job/125674205879",
+          "status": "completed",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000012014",
+          "runner_group_name": "GitHub Actions",
+          "labels": [
+            "windows-2022"
+          ],
+          "started_at": "2026-11-03T01:46:24Z",
+          "completed_at": "2026-11-03T02:07:55Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Verify exact hosted source and preserve input provenance",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Verify diagnostic analyzer negatives on Actions",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 6
+            },
+            {
+              "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 7
+            },
+            {
+              "name": "Select native codec prefix",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 8
+            },
+            {
+              "name": "Build the original pinned native codecs on Actions",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9
+            },
+            {
+              "name": "Verify native codec provenance",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10
+            },
+            {
+              "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 11
+            },
+            {
+              "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 12
+            },
+            {
+              "name": "Check the complete desktop owner code strictly",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 13
+            },
+            {
+              "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 14
+            },
+            {
+              "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 15
+            },
+            {
+              "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 16
+            },
+            {
+              "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 17
+            },
+            {
+              "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 18
+            },
+            {
+              "name": "Retain exact-source evidence including failures",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 19
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 38
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 39
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "41561899380",
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41561899380",
+      "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+      "workflow_path": ".github/workflows/windows-media-target-tools.yml",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 125674216445,
+          "name": "tools",
+          "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41561899380/job/125674216445",
+          "status": "completed",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000012015",
+          "runner_group_name": "GitHub Actions",
+          "labels": [
+            "windows-2025"
+          ],
+          "started_at": "2026-11-03T01:46:26Z",
+          "completed_at": "2026-11-03T01:51:45Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Select original locked codec prefix",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Build and verify original native components on GitHub",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 6
+            },
+            {
+              "name": "Build bounded original direction tools and retain exact executable hashes",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 7
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 8
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 16
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 17
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "artifact_verification": {
+    "method": "Official API ZIP size/digest; every original entry independently hashed; exact tools/peer producer manifests; each owner expected 30-file workflow output set (owner producer emits no payload hash manifest)",
+    "official_artifacts_verified": 5,
+    "total_archive_files_hashed": 234,
+    "producer_payload_records_matched": 171,
+    "artifacts": [
+      {
+        "artifact_id": "13198200768",
+        "run_id": "41561899380",
+        "artifact_name": "windows-media-target-tools-f0c65e1ae04bf481a69d7a3151800a73ded17d2e-1",
+        "official_digest": "sha256:1dae62d85ec2611b452bb5de5eaea60efc1adbf002747093a286d641b00a0256",
+        "archive_file": "tools-13198200768.zip",
+        "archive_bytes": 1038388,
+        "computed_archive_sha256": "1dae62d85ec2611b452bb5de5eaea60efc1adbf002747093a286d641b00a0256",
+        "official_archive_size_and_digest_matched": true,
+        "file_count": 168,
+        "producer_payload_manifest_count": 167,
+        "producer_payload_manifest_fully_matched": true,
+        "receipt": {
+          "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+          "workflow_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+          "workflow": "ZHanry/NestLink/.github/workflows/windows-media-target-tools.yml@refs/heads/main",
+          "run_id": "41561899380",
+          "run_attempt": "1",
+          "runner_environment": "github-hosted",
+          "runner_os": "Windows",
+          "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+          "scope": "Finite original native direction workloads with synthetic input. No desktop capture, transport, scanout, sustained performance, HDR or native ten-bit capture qualification.",
+          "target_execution_performed": false,
+          "commands": [
+            {
+              "name": "build",
+              "argv": [
+                "cargo",
+                "build",
+                "--release",
+                "--locked",
+                "-p",
+                "nestlink-media-codec",
+                "--examples"
+              ],
+              "return_code": 0
+            },
+            {
+              "name": "strict",
+              "argv": [
+                "cargo",
+                "clippy",
+                "--release",
+                "--locked",
+                "-p",
+                "nestlink-media-codec",
+                "--examples",
+                "--",
+                "-D",
+                "warnings"
+              ],
+              "return_code": 0
+            }
+          ],
+          "passed": true
+        },
+        "files": [
+          {
+            "path": "build.log",
+            "bytes": 5181,
+            "sha256": "74252767a4139952a027c4ad42f5d7c755a00298eecc1eff79a8283e7fac4e9d"
+          },
+          {
+            "path": "Cargo.lock",
+            "bytes": 209772,
+            "sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+          },
+          {
+            "path": "LICENSE",
+            "bytes": 11354,
+            "sha256": "06a4d0421042d3d1e428040475b124cde7f4f25c39a68a1898fa66a9c1fbf7cc"
+          },
+          {
+            "path": "native-codecs.lock.json",
+            "bytes": 4574,
+            "sha256": "04ec56430e6a5ae24142c37187a0680f51e32d59975e20e87e7a313caa01315c"
+          },
+          {
+            "path": "native-licenses/amf/AMF/core/Factory.h",
+            "bytes": 6139,
+            "sha256": "644814e97dd359f08d66a73748b60262149b106d28423c31b573cecb4be57979"
+          },
+          {
+            "path": "native-licenses/libvpx/LICENSE",
+            "bytes": 1537,
+            "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615"
+          },
+          {
+            "path": "native-licenses/libvpx/PATENTS",
+            "bytes": 1436,
+            "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+          },
+          {
+            "path": "native-licenses/libvpx/third_party/libyuv/LICENSE",
+            "bytes": 1506,
+            "sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f"
+          },
+          {
+            "path": "native-licenses/libvpx/third_party/libyuv/README.libvpx",
+            "bytes": 727,
+            "sha256": "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814"
+          },
+          {
+            "path": "native-licenses/libvpx/third_party/x86inc/LICENSE",
+            "bytes": 936,
+            "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8"
+          },
+          {
+            "path": "native-licenses/opus/COPYING",
+            "bytes": 1945,
+            "sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551"
+          },
+          {
+            "path": "native-licenses/opus/LICENSE_PLEASE_READ.txt",
+            "bytes": 703,
+            "sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d"
+          },
+          {
+            "path": "nestlink-codecs.json",
+            "bytes": 44478,
+            "sha256": "b5830d75493ef643b3fbe41a87974e99050821b5b679d0d387494a3fc39a7b45"
+          },
+          {
+            "path": "notices/amf-1.5.3-LICENSE.txt",
+            "bytes": 1747,
+            "sha256": "eb297397aaa455b5668ab67d216b83828466152dab123fa92384c6ec16b74170"
+          },
+          {
+            "path": "notices/async-broadcast-0.7.2-MIT.txt",
+            "bytes": 1079,
+            "sha256": "24e5860bf589d8501643e6ea51ffb3df66db2867492b09033d486183efbfa970"
+          },
+          {
+            "path": "notices/async-recursion-1.2.0-MIT.txt",
+            "bytes": 1022,
+            "sha256": "30fefc3a7d6a0041541858293bcbea2dde4caa4c0a5802f996a7f7e8c0085652"
+          },
+          {
+            "path": "notices/async-trait-0.1.92-MIT.txt",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/base16-0.2.1-LICENSE-CC0.txt",
+            "bytes": 7048,
+            "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+          },
+          {
+            "path": "notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+            "bytes": 9723,
+            "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+          },
+          {
+            "path": "notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+            "bytes": 1559,
+            "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+          },
+          {
+            "path": "notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-APACHE",
+            "bytes": 9723,
+            "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+          },
+          {
+            "path": "notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-MIT",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE.chromium",
+            "bytes": 1559,
+            "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+          },
+          {
+            "path": "notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-APACHE",
+            "bytes": 9723,
+            "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+          },
+          {
+            "path": "notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-MIT",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE.chromium",
+            "bytes": 1559,
+            "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+          },
+          {
+            "path": "notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-APACHE",
+            "bytes": 9723,
+            "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+          },
+          {
+            "path": "notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-MIT",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE.chromium",
+            "bytes": 1559,
+            "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308"
+          },
+          {
+            "path": "notices/cargo-upstream/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-APACHE",
+            "bytes": 10818,
+            "sha256": "10d30a673cd5e9349bdc02aeb48f14b3386d27d0da32df8f0a555d4aa16aa551"
+          },
+          {
+            "path": "notices/cargo-upstream/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-MIT",
+            "bytes": 1093,
+            "sha256": "c8167fdeeed46d3f244d3f85c5bf998ce889343691c32be2c61a8bc4b5c08333"
+          },
+          {
+            "path": "notices/cargo-upstream/brendanzab/gl-rs/ea503e8d5fb6d73c6030e6191ce738cd3bf3433e/LICENSE",
+            "bytes": 11358,
+            "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+          },
+          {
+            "path": "notices/cargo-upstream/brendanzab/gl-rs/f150967b1c44ae888e6676f93f639ebc82771bdc/LICENSE",
+            "bytes": 11358,
+            "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+          },
+          {
+            "path": "notices/cargo-upstream/DoumanAsh/clipboard-win/3b27cf2bfd1adcfa6e0264eb51c1025ddaf0f342/LICENSE",
+            "bytes": 1338,
+            "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+          },
+          {
+            "path": "notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+            "bytes": 10850,
+            "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+          },
+          {
+            "path": "notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+            "bytes": 1092,
+            "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+          },
+          {
+            "path": "notices/cargo-upstream/jni-rs/jni-rs/33045a124105c939d1e2cbdcb5a39e5d868ffa03/LICENSE-APACHE",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/cargo-upstream/jni-rs/jni-rs/33045a124105c939d1e2cbdcb5a39e5d868ffa03/LICENSE-MIT",
+            "bytes": 1104,
+            "sha256": "fea1d5bf3dd71605ce5d7d2ff695c1837e914c77195e523a86b5391716477960"
+          },
+          {
+            "path": "notices/cargo-upstream/jni-rs/jni-rs/5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7/LICENSE-APACHE",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/cargo-upstream/jni-rs/jni-rs/5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7/LICENSE-MIT",
+            "bytes": 1104,
+            "sha256": "fea1d5bf3dd71605ce5d7d2ff695c1837e914c77195e523a86b5391716477960"
+          },
+          {
+            "path": "notices/cargo-upstream/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-APACHE",
+            "bytes": 11358,
+            "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+          },
+          {
+            "path": "notices/cargo-upstream/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-MIT",
+            "bytes": 1071,
+            "sha256": "1d85bd754b04ceec93e98e890edd1fa3c6a22e81bcb32135806beeccefa51cd1"
+          },
+          {
+            "path": "notices/cargo-upstream/JulianSchmid/etherparse/70f72bee542ae49efebb8d2106bde64f84f02a43/LICENSE-APACHE",
+            "bytes": 11342,
+            "sha256": "affcd3a3acd2a70d6405c6a5088413da8f97b91f5074ae313fbaa2ec4b45b19f"
+          },
+          {
+            "path": "notices/cargo-upstream/JulianSchmid/etherparse/70f72bee542ae49efebb8d2106bde64f84f02a43/LICENSE-MIT",
+            "bytes": 1069,
+            "sha256": "4be7e6a9b3e7293807bbebfd081941c2d87fa445733e1ad0a9fc6efbc4f3029a"
+          },
+          {
+            "path": "notices/cargo-upstream/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-APACHE",
+            "bytes": 10850,
+            "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+          },
+          {
+            "path": "notices/cargo-upstream/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-MIT",
+            "bytes": 1053,
+            "sha256": "2710a622a896bba67356913d4d0492cab5465f61b2ecce6d880aeb483834fb50"
+          },
+          {
+            "path": "notices/cargo-upstream/leptos-rs/leptos/30fa4e039455bea69c9467e8ec45cad7fce0722f/LICENSE",
+            "bytes": 1070,
+            "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+          },
+          {
+            "path": "notices/cargo-upstream/leptos-rs/leptos/43359694b6596f88d911b9c8d8d92a121c27d0ce/LICENSE",
+            "bytes": 1070,
+            "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+          },
+          {
+            "path": "notices/cargo-upstream/leptos-rs/leptos/4e23d2b6f1cb74ef7eb08b40ef7f14baa85a7285/LICENSE",
+            "bytes": 1070,
+            "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+          },
+          {
+            "path": "notices/cargo-upstream/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+            "bytes": 1070,
+            "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+          },
+          {
+            "path": "notices/cargo-upstream/leptos-rs/leptos/5f2d5115537d08043bba0293c406c4f9b97a4dae/LICENSE",
+            "bytes": 1070,
+            "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+          },
+          {
+            "path": "notices/cargo-upstream/leptos-rs/leptos/6865c1f951bfa0bc5b107aa69286a110cd6f45ca/LICENSE",
+            "bytes": 1070,
+            "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+          },
+          {
+            "path": "notices/cargo-upstream/leptos-rs/leptos/9b2e313d20c89603ddc0deb7b1133e60c877faed/LICENSE",
+            "bytes": 1070,
+            "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+          },
+          {
+            "path": "notices/cargo-upstream/leptos-rs/leptos/d665dd4b89151e5d797df3db5cd2260cbe1e8fae/LICENSE",
+            "bytes": 1070,
+            "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+          },
+          {
+            "path": "notices/cargo-upstream/leptos-rs/leptos/da62c0cb9a1d814cf480c2f1dae5f67f4ea4773f/LICENSE",
+            "bytes": 1070,
+            "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+          },
+          {
+            "path": "notices/cargo-upstream/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+            "bytes": 1070,
+            "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f"
+          },
+          {
+            "path": "notices/cargo-upstream/madsmtm/objc2/5237cbf081d04ef75a1f6a207b4018e7c1ae7438/LICENSE.txt",
+            "bytes": 1066,
+            "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+          },
+          {
+            "path": "notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+            "bytes": 1066,
+            "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+          },
+          {
+            "path": "notices/cargo-upstream/madsmtm/objc2/4fc083f1c6d6784577e38b0ee8dbd344481e2fd2/LICENSE.txt",
+            "bytes": 1066,
+            "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+          },
+          {
+            "path": "notices/cargo-upstream/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+            "bytes": 1339,
+            "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+          },
+          {
+            "path": "notices/cargo-upstream/madsmtm/objc2/8852b424193ca41602281b3d7540d7c8ed51e49a/LICENSE.md",
+            "bytes": 1339,
+            "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+          },
+          {
+            "path": "notices/cargo-upstream/madsmtm/objc2/8d214f5477365ffcbcbb7de058c86ed9a518efb7/LICENSE.md",
+            "bytes": 1339,
+            "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+          },
+          {
+            "path": "notices/cargo-upstream/madsmtm/objc2/b4167b582b2f75f9a1be75495c41b765344fd03c/LICENSE.md",
+            "bytes": 1339,
+            "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+          },
+          {
+            "path": "notices/cargo-upstream/madsmtm/objc2/d7d2fa23ceaa5e6096c923b081040e5d81b3b9df/LICENSE.md",
+            "bytes": 1339,
+            "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+          },
+          {
+            "path": "notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+            "bytes": 1066,
+            "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+          },
+          {
+            "path": "notices/cargo-upstream/protobuf-36.2-LICENSE-BSD-3-Clause.txt",
+            "bytes": 1732,
+            "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d"
+          },
+          {
+            "path": "notices/cargo-upstream/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-APACHE",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/cargo-upstream/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-MIT",
+            "bytes": 1055,
+            "sha256": "2a7df90e60fd5512b8bca35d3ce90e068f21c52d962855053fd1d9e2e7ca0f16"
+          },
+          {
+            "path": "notices/cargo-upstream/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-APACHE",
+            "bytes": 11357,
+            "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+          },
+          {
+            "path": "notices/cargo-upstream/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-MIT",
+            "bytes": 1073,
+            "sha256": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b"
+          },
+          {
+            "path": "notices/cargo-upstream/rs-tml/rstml/9fe0f4616a8224d37d64a53fa91722a08d736952/LICENSE",
+            "bytes": 1097,
+            "sha256": "f99321bd5b3678fae12d43f1ae77064b2a0f6db3646c36d5171a38ecd01e744c"
+          },
+          {
+            "path": "notices/cargo-upstream/rust-lang/rust/a59de37e99060162a2674e3ff45409ac73595c0e/LICENSE-APACHE",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/cargo-upstream/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-APACHE",
+            "bytes": 11357,
+            "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+          },
+          {
+            "path": "notices/cargo-upstream/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-MIT",
+            "bytes": 1036,
+            "sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1"
+          },
+          {
+            "path": "notices/cargo-upstream/rust-windowing/android-ndk-rs/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-APACHE",
+            "bytes": 11357,
+            "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+          },
+          {
+            "path": "notices/cargo-upstream/rust-windowing/android-ndk-rs/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-MIT",
+            "bytes": 1036,
+            "sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1"
+          },
+          {
+            "path": "notices/cargo-upstream/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-APACHE",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/cargo-upstream/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-MIT",
+            "bytes": 1060,
+            "sha256": "a5c61b93b6ee1d104af9920cf020ff3c7efe818e31fe562c72261847a728f513"
+          },
+          {
+            "path": "notices/cargo-upstream/rustwasm/gloo/40c6daa612a90a138ba3e3d70804fcbc5ad4911e/LICENSE-APACHE",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/cargo-upstream/rustwasm/gloo/40c6daa612a90a138ba3e3d70804fcbc5ad4911e/LICENSE-MIT",
+            "bytes": 1078,
+            "sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66"
+          },
+          {
+            "path": "notices/cargo-upstream/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-APACHE",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/cargo-upstream/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-MIT",
+            "bytes": 1078,
+            "sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66"
+          },
+          {
+            "path": "notices/cargo-upstream/spdx/license-list-data/279b7e997a87c09be00dd6bdda189519ade502cf/text/MIT.txt",
+            "bytes": 1078,
+            "sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5"
+          },
+          {
+            "path": "notices/cargo-upstream/sqlite-3.50.2-PUBLIC-DOMAIN.txt",
+            "bytes": 271,
+            "sha256": "ad89cf5f9a0ca133418eae187ae954f2805fd3261aa00716642ed93fc7f3892d"
+          },
+          {
+            "path": "notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+            "bytes": 1057,
+            "sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a"
+          },
+          {
+            "path": "notices/cargo-upstream/tokio-rs/valuable/9efc29b6e58cef28f6566a47aa7e142a55fead77/LICENSE",
+            "bytes": 1065,
+            "sha256": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44"
+          },
+          {
+            "path": "notices/cargo-upstream/webrtc-rs/webrtc/a1f8f1919235d8452835852e018efd654f2f8366/LICENSE-APACHE",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/cargo-upstream/webrtc-rs/webrtc/a1f8f1919235d8452835852e018efd654f2f8366/LICENSE-MIT",
+            "bytes": 1066,
+            "sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d"
+          },
+          {
+            "path": "notices/cargo-upstream/WorldSEnder/wasm-split-prototype/a3266fe9d998b3f8b0d2111500b7c4b8ec892506/LICENSE",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/Apache-2.0.txt",
+            "bytes": 10280,
+            "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"
+          },
+          {
+            "path": "notices/cargo-upstream/WorldSEnder/wasm-split-prototype/d8263b20578e8c49b02851009ae3bc7d43c567bd/LICENSE",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/CC0-1.0.txt",
+            "bytes": 7048,
+            "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+          },
+          {
+            "path": "notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/MIT.txt",
+            "bytes": 1078,
+            "sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0"
+          },
+          {
+            "path": "notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/Apache-2.0.txt",
+            "bytes": 10280,
+            "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"
+          },
+          {
+            "path": "notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/CC0-1.0.txt",
+            "bytes": 7048,
+            "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+          },
+          {
+            "path": "notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/MIT.txt",
+            "bytes": 1078,
+            "sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0"
+          },
+          {
+            "path": "notices/cargo-upstream/zrzka/anes-rs/378ac7461ecac29fde9e10df7b08359d1315a9ad/LICENSE-APACHE",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/cargo-upstream/zrzka/anes-rs/378ac7461ecac29fde9e10df7b08359d1315a9ad/LICENSE-MIT",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/clipboard-win-5.4.1-BSL-1.0.txt",
+            "bytes": 1338,
+            "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+          },
+          {
+            "path": "notices/cc-1.8.0-MIT.txt",
+            "bytes": 1057,
+            "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+          },
+          {
+            "path": "notices/crab_nat-0.8.1-NOTICE.txt",
+            "bytes": 2019,
+            "sha256": "948884d5dd459fee115c53513e9b57df5bd34f4a01df065cec3ff46fc3f4b48b"
+          },
+          {
+            "path": "notices/endi-1.1.1-MIT.txt",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/enum-map-2.7.3-COPYRIGHT.txt",
+            "bytes": 2850,
+            "sha256": "3343c9876af0d8ec0b955bbf671ebb3691780b3ee510ff2e382846c6bfe037fa"
+          },
+          {
+            "path": "notices/enum-map-derive-0.17.0-COPYRIGHT.txt",
+            "bytes": 1268,
+            "sha256": "c4388e2a98c0ccc8ed866acb88789e9bc0e72e5f358e089126abde9faacf9d1b"
+          },
+          {
+            "path": "notices/enumflags2-0.7.12-MIT.txt",
+            "bytes": 1077,
+            "sha256": "2e3edd2716fb15616e867bd53f724f0906732242e9ae76bb1faad1d88f7eeebd"
+          },
+          {
+            "path": "notices/error-code-3.4.0-BSL-1.0.txt",
+            "bytes": 1338,
+            "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+          },
+          {
+            "path": "notices/enumflags2_derive-0.7.12-MIT.txt",
+            "bytes": 1054,
+            "sha256": "d13669f0eaff9b7015bff0d8637297213b53d9f239826636c07a15633acf7052"
+          },
+          {
+            "path": "notices/event-listener-5.4.2-MIT.txt",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/event-listener-strategy-0.5.4-MIT.txt",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/font-types-0.11.3-LICENSE-APACHE.txt",
+            "bytes": 9695,
+            "sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0"
+          },
+          {
+            "path": "notices/font-types-0.11.3-LICENSE-MIT.txt",
+            "bytes": 1058,
+            "sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434"
+          },
+          {
+            "path": "notices/futures-lite-2.6.1-THIRD-PARTY.txt",
+            "bytes": 1849,
+            "sha256": "6226d0632e2e1a80c23597e964da9812ae193c535fe058154afb034e94167aa5"
+          },
+          {
+            "path": "notices/futures-lite-2.6.1-MIT.txt",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/gethostname-1.1.0-Apache-2.0.txt",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/hex-0.4.3-MIT.txt",
+            "bytes": 1125,
+            "sha256": "f7bdb3426d045cd50efd4953026e3eb5a83d0199f458a075602611b9344da5b9"
+          },
+          {
+            "path": "notices/hkdf-MIT.txt",
+            "bytes": 1108,
+            "sha256": "d288f9c9b4590446ec18c22ead8f8b5a12a3d4025b68f62dc9015063eb9cca69"
+          },
+          {
+            "path": "notices/if-addrs-MIT.txt",
+            "bytes": 1085,
+            "sha256": "3990ddb78a5a2cfd64a5ffe5cebc3306f3298f6880c644afdf15043ef7d702d9"
+          },
+          {
+            "path": "notices/JSON-java-20250517-PUBLIC-DOMAIN.txt",
+            "bytes": 16,
+            "sha256": "86cc84f1773e3318ba26fd61b3ae508a167df38b361695e105f6e499e7a2736f"
+          },
+          {
+            "path": "notices/libc-MIT.txt",
+            "bytes": 1066,
+            "sha256": "123a331b5dbf04c30097fa43b8f858bc85df671fe776de498d01f3d6b7c1f69e"
+          },
+          {
+            "path": "notices/libvpx-1.16.0-LICENSE.txt",
+            "bytes": 1537,
+            "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615"
+          },
+          {
+            "path": "notices/libvpx-1.16.0-PATENTS.txt",
+            "bytes": 1436,
+            "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+          },
+          {
+            "path": "notices/libvpx-1.16.0-third_party-x86inc-LICENSE.txt",
+            "bytes": 936,
+            "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8"
+          },
+          {
+            "path": "notices/libyuv-1711-LICENSE.txt",
+            "bytes": 1506,
+            "sha256": "2b2cc1180c7e6988328ad2033b04b80117419db9c4c584918bbb3cfec7e9364f"
+          },
+          {
+            "path": "notices/libyuv-1711-README.libvpx.txt",
+            "bytes": 727,
+            "sha256": "26f96c1320cb651e747bd4c64f18d5f2920c0ec541af577f55cc45234e894814"
+          },
+          {
+            "path": "notices/memoffset-0.9.1-MIT.txt",
+            "bytes": 1055,
+            "sha256": "3234ac55816264ee7b6c7ee27efd61cf0a1fe775806870e3d9b4c41ea73c5cb1"
+          },
+          {
+            "path": "notices/opus-1.6.1-COPYING.txt",
+            "bytes": 1945,
+            "sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551"
+          },
+          {
+            "path": "notices/opus-1.6.1-LICENSE_PLEASE_READ.txt",
+            "bytes": 703,
+            "sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d"
+          },
+          {
+            "path": "notices/ordered-stream-0.2.0-MIT.txt",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/parking-2.2.1-MIT.txt",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/opus-1.6.1-source-notices.txt",
+            "bytes": 145940,
+            "sha256": "e66bfc995afb6397369afc2002c1e0739db5fc72b6178f559d07b3303fab5c2c"
+          },
+          {
+            "path": "notices/parking-2.2.1-THIRD-PARTY.txt",
+            "bytes": 451,
+            "sha256": "9a6d7a3c1b8edcc706c4b6c37f8dae9a77f02c7f9051df603f975db136b55419"
+          },
+          {
+            "path": "notices/PipeWire-1.0.5-Debian-copyright.txt",
+            "bytes": 9011,
+            "sha256": "4a870a368fbb14aae8ff343f0e7cb6758f6a83c13a7bcab17b7509452ae6064a"
+          },
+          {
+            "path": "notices/proc-macro-crate-3.5.0-MIT.txt",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/pkg-config-0.3.34-MIT.txt",
+            "bytes": 1057,
+            "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+          },
+          {
+            "path": "notices/read-fonts-0.37.0-LICENSE-APACHE.txt",
+            "bytes": 9695,
+            "sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0"
+          },
+          {
+            "path": "notices/read-fonts-0.37.0-LICENSE-MIT.txt",
+            "bytes": 1058,
+            "sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434"
+          },
+          {
+            "path": "notices/rustls-0.23.46-LICENSE-APACHE.txt",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/rustls-0.23.46-LICENSE-ISC.txt",
+            "bytes": 775,
+            "sha256": "7cfafc877eccc46c0e346ccbaa5c51bb6b894d2b818e617d970211e232785ad4"
+          },
+          {
+            "path": "notices/rustls-0.23.46-LICENSE-MIT.txt",
+            "bytes": 1082,
+            "sha256": "709e3175b4212f7b13aa93971c9f62ff8c69ec45ad8c6532a7e0c41d7a7d6f8c"
+          },
+          {
+            "path": "notices/serde_repr-0.1.21-MIT.txt",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "notices/skrifa-0.40.0-LICENSE-APACHE.txt",
+            "bytes": 9695,
+            "sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0"
+          },
+          {
+            "path": "notices/skrifa-0.40.0-LICENSE-MIT.txt",
+            "bytes": 1058,
+            "sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434"
+          },
+          {
+            "path": "notices/toml_datetime-1.1.2+spec-1.1.0-MIT.txt",
+            "bytes": 1062,
+            "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+          },
+          {
+            "path": "notices/toml_edit-0.25.17+spec-1.1.0-MIT.txt",
+            "bytes": 1062,
+            "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+          },
+          {
+            "path": "notices/tracing-attributes-0.1.31-MIT.txt",
+            "bytes": 1062,
+            "sha256": "898b1ae9821e98daf8964c8d6c7f61641f5f5aa78ad500020771c0939ee0dea1"
+          },
+          {
+            "path": "notices/uds_windows-1.2.1-MIT.txt",
+            "bytes": 1162,
+            "sha256": "27ebda9d51f0a56b7e281ccd8230a27236dcb51c05f64b07869ecf6e965d68b0"
+          },
+          {
+            "path": "notices/webpki-roots-CDLA-Permissive-2.0.txt",
+            "bytes": 2371,
+            "sha256": "e271993808fec50ab29350b39539cdec611a9103f827e0aa26d61da70e2d33f8"
+          },
+          {
+            "path": "notices/waitgroup-0.1.2-Apache-2.0.txt",
+            "bytes": 11357,
+            "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+          },
+          {
+            "path": "notices/webrtc-rs-LICENSE-APACHE-2.0.txt",
+            "bytes": 10847,
+            "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+          },
+          {
+            "path": "notices/webrtc-rs-LICENSE-MIT.txt",
+            "bytes": 1066,
+            "sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d"
+          },
+          {
+            "path": "notices/x11rb-0.13.2-MIT.txt",
+            "bytes": 1058,
+            "sha256": "a72561f47c1f665535930f606739d9098a6186802d5e2e8ec491faf00f4add5b"
+          },
+          {
+            "path": "notices/x11rb-protocol-0.13.2-MIT.txt",
+            "bytes": 1058,
+            "sha256": "a72561f47c1f665535930f606739d9098a6186802d5e2e8ec491faf00f4add5b"
+          },
+          {
+            "path": "notices/xxhash-rust-0.8.19-BSL-1.0.txt",
+            "bytes": 1338,
+            "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+          },
+          {
+            "path": "notices/zbus-5.19.0-MIT.txt",
+            "bytes": 1080,
+            "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+          },
+          {
+            "path": "notices/zbus_macros-5.19.0-MIT.txt",
+            "bytes": 1080,
+            "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+          },
+          {
+            "path": "notices/zbus_names-4.3.4-MIT.txt",
+            "bytes": 1080,
+            "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+          },
+          {
+            "path": "notices/zcheapstr-1.1.0-MIT.txt",
+            "bytes": 1085,
+            "sha256": "59871bb1612f8a0569655c10b995636827eceab42c6578cebdc45ad2922e0142"
+          },
+          {
+            "path": "notices/zvariant-5.15.0-MIT.txt",
+            "bytes": 1080,
+            "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+          },
+          {
+            "path": "notices/zvariant_derive-5.15.0-MIT.txt",
+            "bytes": 1080,
+            "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad"
+          },
+          {
+            "path": "notices/zvariant_utils-4.2.0-MIT.txt",
+            "bytes": 1023,
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+          },
+          {
+            "path": "README.md",
+            "bytes": 4976,
+            "sha256": "bc5447d87dab511cec8954e7cb2ec240790d14f1b06b2c42faffed92820ae4d1"
+          },
+          {
+            "path": "receipt.json",
+            "bytes": 35127,
+            "sha256": "85526745dbd0c5a3a42abe74e9ba0dad8c2981f012a53a018bfcd06044d4b652"
+          },
+          {
+            "path": "strict.log",
+            "bytes": 1838,
+            "sha256": "c8e59e7a7fd0f9dcd12f723fdb25ddd0768574cbc2d1422511eccccca929d698"
+          },
+          {
+            "path": "windows-amf-hevc-direction-probe.exe",
+            "bytes": 357376,
+            "sha256": "02346a3dd3ee2b76305930ddf1880a9f46bd47cd2f64fb85bcd25bf9b9f2a3fd"
+          },
+          {
+            "path": "windows-controller-direction-probe.exe",
+            "bytes": 385024,
+            "sha256": "2eeb5fda242c8934eee7a7a47908953bd505554ef972b2407777fcecbec14fee"
+          },
+          {
+            "path": "windows-cpu-direction-probe.exe",
+            "bytes": 321536,
+            "sha256": "c83cd85bd5a42c2c6278a290a460db6aa9e1285ad4431405fbc7c2148170877a"
+          },
+          {
+            "path": "windows-hevc-direction-probe.exe",
+            "bytes": 354816,
+            "sha256": "5aaf32a40108612b39769a23d135ff6f358c71480589c78e73312fa75cf4c084"
+          }
+        ]
+      },
+      {
+        "artifact_id": "13198330297",
+        "run_id": "41561895385",
+        "artifact_name": "native-peer-process-windows-2025-f0c65e1ae04bf481a69d7a3151800a73ded17d2e-1",
+        "official_digest": "sha256:4397f8dc7c75def886592a1623151f08201d5b0e4903e10f52d7d613160e0de7",
+        "archive_file": "peer-windows-13198330297.zip",
+        "archive_bytes": 6536,
+        "computed_archive_sha256": "4397f8dc7c75def886592a1623151f08201d5b0e4903e10f52d7d613160e0de7",
+        "official_archive_size_and_digest_matched": true,
+        "file_count": 3,
+        "producer_payload_manifest_count": 2,
+        "producer_payload_manifest_fully_matched": true,
+        "receipt": {
+          "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+          "run_id": "41561895385",
+          "attempt": "1",
+          "runner_os": "Windows",
+          "runner_environment": "github-hosted",
+          "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+          "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+          "passed": true,
+          "commands": [
+            {
+              "name": "ipc-tests",
+              "argv": [
+                "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+                "scripts/refactor-windows-normal-user.py",
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-local-ipc",
+                "--lib",
+                "--",
+                "--show-output"
+              ],
+              "return_code": 0
+            },
+            {
+              "name": "strict-peer-owner",
+              "argv": [
+                "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+                "scripts/refactor-windows-normal-user.py",
+                "cargo",
+                "clippy",
+                "--locked",
+                "-p",
+                "nestlink-local-ipc",
+                "-p",
+                "nestlink-platform-security",
+                "--all-targets",
+                "--",
+                "-D",
+                "warnings"
+              ],
+              "return_code": 0
+            }
+          ]
+        },
+        "files": [
+          {
+            "path": "ipc-tests.log",
+            "bytes": 21570,
+            "sha256": "64a53774d9c3874b88350488f77055f75dd9d93150c1ffde40419341818a933c"
+          },
+          {
+            "path": "receipt.json",
+            "bytes": 1622,
+            "sha256": "1d9b092e6b2d0d0c10b083640c81191a8e7283c1206c2780a010ec0b0f4f83c1"
+          },
+          {
+            "path": "strict-peer-owner.log",
+            "bytes": 5758,
+            "sha256": "afb4f9bdc245826aa6898bf49d927b605f7452a97e582f46cf1fffceda5fa184"
+          }
+        ]
+      },
+      {
+        "artifact_id": "13196899692",
+        "run_id": "41561895385",
+        "artifact_name": "native-peer-process-ubuntu-24.04-f0c65e1ae04bf481a69d7a3151800a73ded17d2e-1",
+        "official_digest": "sha256:008d5e884730723d1af0d465a488124e8bdedabbb9131115e6528673a8a4e6ad",
+        "archive_file": "peer-linux-13196899692.zip",
+        "archive_bytes": 6200,
+        "computed_archive_sha256": "008d5e884730723d1af0d465a488124e8bdedabbb9131115e6528673a8a4e6ad",
+        "official_archive_size_and_digest_matched": true,
+        "file_count": 3,
+        "producer_payload_manifest_count": 2,
+        "producer_payload_manifest_fully_matched": true,
+        "receipt": {
+          "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+          "run_id": "41561895385",
+          "attempt": "1",
+          "runner_os": "Linux",
+          "runner_environment": "github-hosted",
+          "cargo_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+          "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+          "passed": true,
+          "commands": [
+            {
+              "name": "ipc-tests",
+              "argv": [
+                "cargo",
+                "test",
+                "--locked",
+                "-p",
+                "nestlink-local-ipc",
+                "--lib",
+                "--",
+                "--show-output"
+              ],
+              "return_code": 0
+            },
+            {
+              "name": "strict-peer-owner",
+              "argv": [
+                "cargo",
+                "clippy",
+                "--locked",
+                "-p",
+                "nestlink-local-ipc",
+                "-p",
+                "nestlink-platform-security",
+                "--all-targets",
+                "--",
+                "-D",
+                "warnings"
+              ],
+              "return_code": 0
+            }
+          ]
+        },
+        "files": [
+          {
+            "path": "ipc-tests.log",
+            "bytes": 20853,
+            "sha256": "0933b8ae95b93d7f337b8c25b658712a530100d7282609aa1d25c104c75b107d"
+          },
+          {
+            "path": "receipt.json",
+            "bytes": 1311,
+            "sha256": "74c8323456e84982af5331c49b47351d615def73091e6b3972a3f84f49c0f49f"
+          },
+          {
+            "path": "strict-peer-owner.log",
+            "bytes": 5633,
+            "sha256": "bacba319b2197e9daf754c4239181a8010efeae0e9c7c31c907fba3bdf4f788e"
+          }
+        ]
+      },
+      {
+        "artifact_id": "13198443046",
+        "run_id": "41561895385",
+        "artifact_name": "windows-media-owner-windows-2025-f0c65e1ae04bf481a69d7a3151800a73ded17d2e-1",
+        "official_api_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13198443046",
+        "official_digest": "sha256:823118f55f1241d5cc11ea6b2c587670b5526aef771313d8230db8280a019c00",
+        "archive_file": "owner-2025-13198443046.zip",
+        "archive_bytes": 63617,
+        "computed_archive_sha256": "823118f55f1241d5cc11ea6b2c587670b5526aef771313d8230db8280a019c00",
+        "official_archive_size_and_digest_matched": true,
+        "file_count": 30,
+        "producer_payload_manifest_count": 0,
+        "producer_payload_manifest_fully_matched": false,
+        "owner_expected_output_inventory_matched": true,
+        "receipt": {
+          "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+          "workflow_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+          "run_id": "41561895385",
+          "attempt": "1",
+          "runner_environment": "github-hosted",
+          "runner_os": "Windows",
+          "runner_label": "windows-2025",
+          "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+          "hardware_or_target_acceptance_claimed": false,
+          "tool_sources": {
+            "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+            "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+          }
+        },
+        "files": [
+          {
+            "path": "amf-boundary-tests.log",
+            "bytes": 4194,
+            "sha256": "3de96533b6e42968938ecda56376cb9e9a86ecd9af3138ba2d8a9ee368cf23a0"
+          },
+          {
+            "path": "capture-precision-clippy.log",
+            "bytes": 3111,
+            "sha256": "99300e85bf6047eb8354645677152615360e39b200059aa508c08d8a5952267f"
+          },
+          {
+            "path": "compressed-context-tests.log",
+            "bytes": 14997,
+            "sha256": "fd485739606878221f2a497c069d8f19c7bcc129666c6c8b6187d2268abdc0d1"
+          },
+          {
+            "path": "compressed-native-tests.log",
+            "bytes": 46961,
+            "sha256": "9a014b1e4fe38f8b0cf743d21e24bbe455790d96945bc37e07893a883cab133e"
+          },
+          {
+            "path": "daemon-hevc-selection-tests.log",
+            "bytes": 14603,
+            "sha256": "14715a0b601a618efa2a95c1d995a3442a496bf6f0631121fad7b5b6c760d478"
+          },
+          {
+            "path": "daemon-media-clippy.log",
+            "bytes": 19982,
+            "sha256": "226ab06b25beeb9885b6de154aef30f205eab25ec8bdb24cc60f690eb5e81fc8"
+          },
+          {
+            "path": "decoded-export-owner-tests.log",
+            "bytes": 965,
+            "sha256": "a1ca24aa4c09f6b81908fca28aedd2c5d324b1f8a16ba1b1e6bc5b0bbed548d8"
+          },
+          {
+            "path": "desktop-clippy.log",
+            "bytes": 29132,
+            "sha256": "b037cb8e4cc150bb7858cfe55c39a2ed822f4eb9cdbc06621c68d4060335ce9a"
+          },
+          {
+            "path": "h264-output-geometry-tests.log",
+            "bytes": 1265,
+            "sha256": "7ba0abfc91d963ea6e83828098c8643f8f88685351e9748cc37a09791621f88b"
+          },
+          {
+            "path": "hevc-backend-selection-tests.log",
+            "bytes": 588,
+            "sha256": "b312e1b7e3ab586a403951fc351d32508b043d3dc45224d4b1a86b5d1151c2ec"
+          },
+          {
+            "path": "hevc-clippy.log",
+            "bytes": 877,
+            "sha256": "45a9ea676f943dae716fb3e6c0ac010befe192d8432d260e7b04fa1726f9c730"
+          },
+          {
+            "path": "hevc-contract-tests.log",
+            "bytes": 1867,
+            "sha256": "d54752b3a778e6ca8dcfbe7a1c09245c75c82af7d3d664db10799823010d7b6d"
+          },
+          {
+            "path": "hevc-execution-tests.log",
+            "bytes": 1319,
+            "sha256": "ac87904db30d75fc6f5e2e58490e2fd4d25755c8e474b04d48a66ce6c002ad3d"
+          },
+          {
+            "path": "hevc-mf-color-tests.log",
+            "bytes": 606,
+            "sha256": "21096ce269e43c0bb3c9814a63f7195e0213c7fde378899620bd80f04ef819cc"
+          },
+          {
+            "path": "hevc-target-tests.log",
+            "bytes": 2976,
+            "sha256": "1d94adcecd96d19d857f67b84e938caeef599ef49661424239a4f302e816dda7"
+          },
+          {
+            "path": "media-opt-in-approval-tests.log",
+            "bytes": 14586,
+            "sha256": "09c7d81752a26fe9cbe91fc0980d90ab5cf6c078267037a0d1d17085c1872f5d"
+          },
+          {
+            "path": "media-opt-in-cli-tests.log",
+            "bytes": 21100,
+            "sha256": "218917fb403f93ab06ada2e110832ac5b534837167a62df41fd7300db0b00a1f"
+          },
+          {
+            "path": "media-opt-in-config-tests.log",
+            "bytes": 15461,
+            "sha256": "a3757ae446ad46312315fd62ecac47af95d6f7271b744cceab3e445aaf89c85b"
+          },
+          {
+            "path": "media-opt-in-http-tests.log",
+            "bytes": 15004,
+            "sha256": "6122ab5288c82325e41c231e3abf40270986fe62c31d5dba76db5c44b10b8443"
+          },
+          {
+            "path": "media-provider-tests.log",
+            "bytes": 21627,
+            "sha256": "bd396974c04c662b8f00df4e3f7ac0c11c1c2fba6055b7ff1d0b4a25c7968cdb"
+          },
+          {
+            "path": "mf-adapter-binding-tests.log",
+            "bytes": 841,
+            "sha256": "46788cec6695dd19343849b2582a6a0409f17d5ff95b7edd181777a84353d3be"
+          },
+          {
+            "path": "native-media-wire-tests.log",
+            "bytes": 1593,
+            "sha256": "0d715e4a1d93e94301d57ccfdb9a84bb2c4050355d97caac61dd0c07960c94ac"
+          },
+          {
+            "path": "presenter-tests.log",
+            "bytes": 15055,
+            "sha256": "557807cec2ef7a152467d37518f951b1f24ffd84105b4940e9041f1756878cd9"
+          },
+          {
+            "path": "readback-ipc-tests.log",
+            "bytes": 17314,
+            "sha256": "d87a9e11e54109eef81fcbc58185cb8667e2eb7968afea04c0be708ab976048f"
+          },
+          {
+            "path": "receiver-tests.log",
+            "bytes": 26291,
+            "sha256": "407eafbdcf6f12b22219c06e43e6a43fbf75641c9f012a6434fc6ec58feb925a"
+          },
+          {
+            "path": "shared-surface-descriptor-tests.log",
+            "bytes": 14955,
+            "sha256": "b0b66491abeebfba007a358dc3ad3aed7270f46f9ffbff63a3cd0436f3eb2cd2"
+          },
+          {
+            "path": "shared-surface-transfer-claim-tests.log",
+            "bytes": 648,
+            "sha256": "4fead251d3626c56371e8a680d7524cfb3e54f0cecf5882c187fae5235cbcaab"
+          },
+          {
+            "path": "signed-store-media-tests.log",
+            "bytes": 3862,
+            "sha256": "55ec3a878fda5ac20be2647f22c54d522a5cacb1ecb61208cef5e3acc4f109d4"
+          },
+          {
+            "path": "source-receipt.json",
+            "bytes": 689,
+            "sha256": "a3bd46af83e0fdc3f41dbafa881ce21572ccdc36f14279f779b16a259798e125"
+          },
+          {
+            "path": "wgc-float16-source-tests.log",
+            "bytes": 3364,
+            "sha256": "852f91c8a328ed9a391fdda5da7e855e65a929254c299bddd4ca606c2888224b"
+          }
+        ],
+        "original_test_result_lines": [
+          {
+            "path": "amf-boundary-tests.log",
+            "result": "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "compressed-context-tests.log",
+            "result": "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.08s"
+          },
+          {
+            "path": "compressed-native-tests.log",
+            "result": "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.63s"
+          },
+          {
+            "path": "daemon-hevc-selection-tests.log",
+            "result": "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 52 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "decoded-export-owner-tests.log",
+            "result": "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 72 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "h264-output-geometry-tests.log",
+            "result": "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "hevc-backend-selection-tests.log",
+            "result": "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "hevc-contract-tests.log",
+            "result": "ok. 8 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "hevc-execution-tests.log",
+            "result": "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "hevc-mf-color-tests.log",
+            "result": "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "hevc-target-tests.log",
+            "result": "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "media-opt-in-approval-tests.log",
+            "result": "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 80 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "media-opt-in-cli-tests.log",
+            "result": "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 48 filtered out; finished in 0.03s"
+          },
+          {
+            "path": "media-opt-in-config-tests.log",
+            "result": "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 76 filtered out; finished in 1.89s"
+          },
+          {
+            "path": "media-opt-in-http-tests.log",
+            "result": "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.28s"
+          },
+          {
+            "path": "media-provider-tests.log",
+            "result": "ok. 14 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.09s"
+          },
+          {
+            "path": "mf-adapter-binding-tests.log",
+            "result": "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "native-media-wire-tests.log",
+            "result": "ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s"
+          },
+          {
+            "path": "presenter-tests.log",
+            "result": "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 81 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "readback-ipc-tests.log",
+            "result": "ok. 17 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.11s"
+          },
+          {
+            "path": "receiver-tests.log",
+            "result": "ok. 9 passed; 0 failed; 0 ignored; 0 measured; 77 filtered out; finished in 0.07s"
+          },
+          {
+            "path": "shared-surface-descriptor-tests.log",
+            "result": "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.04s"
+          },
+          {
+            "path": "shared-surface-transfer-claim-tests.log",
+            "result": "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "signed-store-media-tests.log",
+            "result": "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 10.48s"
+          },
+          {
+            "path": "wgc-float16-source-tests.log",
+            "result": "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s"
+          }
+        ],
+        "strict_logs_reviewed": [
+          {
+            "path": "capture-precision-clippy.log",
+            "compiler_warning_or_error_found": false,
+            "final_result": [
+              "Finished `dev` profile [unoptimized] target(s) in 37.47s"
+            ]
+          },
+          {
+            "path": "daemon-media-clippy.log",
+            "compiler_warning_or_error_found": true,
+            "final_result": [
+              "Finished `dev` profile [unoptimized] target(s) in 1m 23s"
+            ]
+          },
+          {
+            "path": "desktop-clippy.log",
+            "compiler_warning_or_error_found": true,
+            "final_result": [
+              "Finished `dev` profile [unoptimized] target(s) in 2m 12s"
+            ]
+          },
+          {
+            "path": "hevc-clippy.log",
+            "compiler_warning_or_error_found": false,
+            "final_result": [
+              "Finished `dev` profile [unoptimized] target(s) in 14.00s"
+            ]
+          }
+        ]
+      },
+      {
+        "artifact_id": "13197603251",
+        "run_id": "41561895385",
+        "artifact_name": "windows-media-owner-windows-2022-f0c65e1ae04bf481a69d7a3151800a73ded17d2e-1",
+        "official_api_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13197603251",
+        "official_digest": "sha256:ad1768e1de090afe9030a10e2447d06381d252e24e1a8a77f49a5cd2a113df0c",
+        "archive_file": "owner-2022-13197603251.zip",
+        "archive_bytes": 63635,
+        "computed_archive_sha256": "ad1768e1de090afe9030a10e2447d06381d252e24e1a8a77f49a5cd2a113df0c",
+        "official_archive_size_and_digest_matched": true,
+        "file_count": 30,
+        "producer_payload_manifest_count": 0,
+        "producer_payload_manifest_fully_matched": false,
+        "owner_expected_output_inventory_matched": true,
+        "receipt": {
+          "source_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+          "workflow_revision": "f0c65e1ae04bf481a69d7a3151800a73ded17d2e",
+          "run_id": "41561895385",
+          "attempt": "1",
+          "runner_environment": "github-hosted",
+          "runner_os": "Windows",
+          "runner_label": "windows-2022",
+          "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779",
+          "hardware_or_target_acceptance_claimed": false,
+          "tool_sources": {
+            "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+            "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+          }
+        },
+        "files": [
+          {
+            "path": "amf-boundary-tests.log",
+            "bytes": 4194,
+            "sha256": "e22d6923a4cfaad982fe3932a7d836420034c22a0bbcbd674f5f464cfb0bd852"
+          },
+          {
+            "path": "capture-precision-clippy.log",
+            "bytes": 3111,
+            "sha256": "2e3bfad0a38f97b2eefd2b66d99ea39b90dc154c92f1e0889d9134d6919c9769"
+          },
+          {
+            "path": "compressed-context-tests.log",
+            "bytes": 14997,
+            "sha256": "91d181e8f1e8c803bddae6a082652b492d49abc95d1be3c30d0b9cd4940229a0"
+          },
+          {
+            "path": "compressed-native-tests.log",
+            "bytes": 49765,
+            "sha256": "49f1a260fae6a8ee77a9f845e640400de8c6dd685d85fe3f939a7b3b288691ed"
+          },
+          {
+            "path": "daemon-hevc-selection-tests.log",
+            "bytes": 14603,
+            "sha256": "5ee65ba591686939e035a25473d81aba5ccc46556ee3cb47ceda6daf2e2ae14d"
+          },
+          {
+            "path": "daemon-media-clippy.log",
+            "bytes": 19982,
+            "sha256": "fbe6d2fca0e14846d14281b1b7759f5fe3e726fe0c452ed22bc8235a6e8b240b"
+          },
+          {
+            "path": "decoded-export-owner-tests.log",
+            "bytes": 965,
+            "sha256": "ab47b2f5d9349b9260a66117ea52c9534e979038424f54344f813f59c7bc8b32"
+          },
+          {
+            "path": "desktop-clippy.log",
+            "bytes": 29132,
+            "sha256": "cee09e0028a4a1c62a32ec27f5008e82306bf7f9eefa98e455f8b297255a6ccc"
+          },
+          {
+            "path": "h264-output-geometry-tests.log",
+            "bytes": 1265,
+            "sha256": "0c338fc6929de90f895f782efb2798471c9f158b01bb16dd4198889e990255f1"
+          },
+          {
+            "path": "hevc-backend-selection-tests.log",
+            "bytes": 588,
+            "sha256": "bab1e054974fc166515290fc82b81b4250408e1d67edd6439e8297bafa2c2063"
+          },
+          {
+            "path": "hevc-clippy.log",
+            "bytes": 877,
+            "sha256": "82a58b56821baa0ec7f055bc6fa8d9966dad8fd53d1eb44f0409111801fa5029"
+          },
+          {
+            "path": "hevc-contract-tests.log",
+            "bytes": 1867,
+            "sha256": "f76d5f357a91c87510a49b1850f4cf7440f41be341b27f642ea79cf56c9e8cc3"
+          },
+          {
+            "path": "hevc-execution-tests.log",
+            "bytes": 1319,
+            "sha256": "dfe1f06cc6e426f9819d80c80a051ffe9a0c865599b38b71e2995007459b8a89"
+          },
+          {
+            "path": "hevc-mf-color-tests.log",
+            "bytes": 606,
+            "sha256": "3a8b5df72afb083bfa04db7bdabd0dbee2e68e22415ef7b4e4c02cb115fc1fa6"
+          },
+          {
+            "path": "hevc-target-tests.log",
+            "bytes": 2976,
+            "sha256": "38d98808690b90b50e00d5bc4de178df721527ef26b3097941aa5fa5b2bf9008"
+          },
+          {
+            "path": "media-opt-in-approval-tests.log",
+            "bytes": 14586,
+            "sha256": "89aef6e27ca5ca62d15d574f98833cdfff720f5f6349e36e7a993de680bdcd31"
+          },
+          {
+            "path": "media-opt-in-cli-tests.log",
+            "bytes": 21100,
+            "sha256": "7ba9cb29bb0b2dc09ad86571e81a36044589953f721a3ff54af2f6c6960ffe8f"
+          },
+          {
+            "path": "media-opt-in-config-tests.log",
+            "bytes": 15461,
+            "sha256": "6045ea9045c7b176477ffa6ba0fd95d6d497472b39019275da11887050d57c4e"
+          },
+          {
+            "path": "media-opt-in-http-tests.log",
+            "bytes": 15004,
+            "sha256": "47a21ff1db1456726e8f982f8fef7eea603ce8994ea908788ee4466db2d4f82b"
+          },
+          {
+            "path": "media-provider-tests.log",
+            "bytes": 21627,
+            "sha256": "b4087dc2b44f676771c9bd324f53eaf667ab896331b50a06f68e8b1b3ebeb34a"
+          },
+          {
+            "path": "mf-adapter-binding-tests.log",
+            "bytes": 841,
+            "sha256": "66684c32afd1c8d4079805d9ff96ed161e35d3784ef7ffdf7bdfd6b5de81d5ff"
+          },
+          {
+            "path": "native-media-wire-tests.log",
+            "bytes": 1593,
+            "sha256": "0c9ef2c19e51466945c2c6c858dc4c59adfef6b9a7fe9bcd392c7fb75bd1ae39"
+          },
+          {
+            "path": "presenter-tests.log",
+            "bytes": 15055,
+            "sha256": "d158dbab921a37ff5acb41a3ac265ba4b927b5326f3f6189378abda34616e30c"
+          },
+          {
+            "path": "readback-ipc-tests.log",
+            "bytes": 17314,
+            "sha256": "192ba75efdb04229a3f1516609e6b104e511f8fb15f002cbc5360b7f925c5ca2"
+          },
+          {
+            "path": "receiver-tests.log",
+            "bytes": 26291,
+            "sha256": "b442717626752a576771b054547f8b4aa1a35df51d81059309be1227b130060b"
+          },
+          {
+            "path": "shared-surface-descriptor-tests.log",
+            "bytes": 14955,
+            "sha256": "0608ca90ad41feb65d1effeef9e0b353f12605658fd63958f4527a4c6f5893e0"
+          },
+          {
+            "path": "shared-surface-transfer-claim-tests.log",
+            "bytes": 648,
+            "sha256": "fb12e5a5e3135af87401e2f0f9d82c33b392773e865d4cdc6dba71e1c1bf5922"
+          },
+          {
+            "path": "signed-store-media-tests.log",
+            "bytes": 3861,
+            "sha256": "75afc9240eb634b6eff9f2ca6cc382859b95eb54642c89cc6ce2895ced6600e2"
+          },
+          {
+            "path": "source-receipt.json",
+            "bytes": 689,
+            "sha256": "73b7ef524ad9e7cd88a94ee9ef1bc04be891e4be5cdfd284b9bb8d08d9893975"
+          },
+          {
+            "path": "wgc-float16-source-tests.log",
+            "bytes": 3364,
+            "sha256": "ff2a8120cca14a553ecc32eb389bf0c871462322b7fc72d4d8b75aa87eee1982"
+          }
+        ],
+        "original_test_result_lines": [
+          {
+            "path": "amf-boundary-tests.log",
+            "result": "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "compressed-context-tests.log",
+            "result": "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.07s"
+          },
+          {
+            "path": "compressed-native-tests.log",
+            "result": "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.77s"
+          },
+          {
+            "path": "daemon-hevc-selection-tests.log",
+            "result": "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 52 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "decoded-export-owner-tests.log",
+            "result": "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 72 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "h264-output-geometry-tests.log",
+            "result": "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "hevc-backend-selection-tests.log",
+            "result": "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "hevc-contract-tests.log",
+            "result": "ok. 8 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "hevc-execution-tests.log",
+            "result": "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "hevc-mf-color-tests.log",
+            "result": "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "hevc-target-tests.log",
+            "result": "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "media-opt-in-approval-tests.log",
+            "result": "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 80 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "media-opt-in-cli-tests.log",
+            "result": "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 48 filtered out; finished in 0.02s"
+          },
+          {
+            "path": "media-opt-in-config-tests.log",
+            "result": "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 76 filtered out; finished in 2.12s"
+          },
+          {
+            "path": "media-opt-in-http-tests.log",
+            "result": "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.23s"
+          },
+          {
+            "path": "media-provider-tests.log",
+            "result": "ok. 14 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.14s"
+          },
+          {
+            "path": "mf-adapter-binding-tests.log",
+            "result": "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "native-media-wire-tests.log",
+            "result": "ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s"
+          },
+          {
+            "path": "presenter-tests.log",
+            "result": "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 81 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "readback-ipc-tests.log",
+            "result": "ok. 17 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.11s"
+          },
+          {
+            "path": "receiver-tests.log",
+            "result": "ok. 9 passed; 0 failed; 0 ignored; 0 measured; 77 filtered out; finished in 0.06s"
+          },
+          {
+            "path": "shared-surface-descriptor-tests.log",
+            "result": "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.04s"
+          },
+          {
+            "path": "shared-surface-transfer-claim-tests.log",
+            "result": "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 0.00s"
+          },
+          {
+            "path": "signed-store-media-tests.log",
+            "result": "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 9.89s"
+          },
+          {
+            "path": "wgc-float16-source-tests.log",
+            "result": "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s"
+          }
+        ],
+        "strict_logs_reviewed": [
+          {
+            "path": "capture-precision-clippy.log",
+            "compiler_warning_or_error_found": false,
+            "final_result": [
+              "Finished `dev` profile [unoptimized] target(s) in 35.94s"
+            ]
+          },
+          {
+            "path": "daemon-media-clippy.log",
+            "compiler_warning_or_error_found": true,
+            "final_result": [
+              "Finished `dev` profile [unoptimized] target(s) in 1m 21s"
+            ]
+          },
+          {
+            "path": "desktop-clippy.log",
+            "compiler_warning_or_error_found": true,
+            "final_result": [
+              "Finished `dev` profile [unoptimized] target(s) in 2m 00s"
+            ]
+          },
+          {
+            "path": "hevc-clippy.log",
+            "compiler_warning_or_error_found": false,
+            "final_result": [
+              "Finished `dev` profile [unoptimized] target(s) in 13.39s"
+            ]
+          }
+        ]
+      }
+    ],
+    "complete_run_logs": [
+      {
+        "archive_file": "owner-run-41561895385-logs.zip",
+        "bytes": 585946,
+        "sha256": "d542814e4e3d3a86fd74c1f0b3bc1be5f7aea70001658aba6a102354c4c1d443",
+        "origin": "Authenticated GitHub Actions complete logs API; no official artifact digest supplied for log archives",
+        "files": [
+          {
+            "path": "0_owner-boundaries (windows-2022).txt",
+            "bytes": 810072,
+            "sha256": "5f9599c78f7544e1767ce64c5c2363bb53b57e6d652bb054a1c6993be8c9b000"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/system.txt",
+            "bytes": 591,
+            "sha256": "c442f954d2b4602d9e3126c3657fb0488d573cc896706586c032da46488f5e3c"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/1_Set up job.txt",
+            "bytes": 2523,
+            "sha256": "0ac3e1cdda41765343f540eb5c3a956a4ac66c3a6577ba3bcf7f635048f1651d"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/2_Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt",
+            "bytes": 12570,
+            "sha256": "8b48e4f7380f3d69ab739d4b44461cdabd29e333059a9710eeba7880d04cb308"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/3_Verify exact hosted source and preserve input provenance.txt",
+            "bytes": 2627,
+            "sha256": "1a12255446d8effca9fb008444c79e8b2c6c86cfb8a6789e9a0adffc03175437"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/4_Verify diagnostic analyzer negatives on Actions.txt",
+            "bytes": 1468,
+            "sha256": "d66308cf1e59e606ce7b922d494768174bbe1f2000d6b09e95f1971c75ca8f4e"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/5_Run dtolnay_rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f.txt",
+            "bytes": 19191,
+            "sha256": "e8d1b6ca72053392e0ea52c8918651b2d96c3cb0814c0b53efb30ad0d5465895"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/6_Verify independent exact format, signed scope and unchanged legacy contracts.txt",
+            "bytes": 24455,
+            "sha256": "eb68fa658e88c5ccca49e8df1a71c4ee15f5992c2f751165544737608ba653ea"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/7_Run msys2_setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e.txt",
+            "bytes": 11896,
+            "sha256": "35bb3b19a577837ed82ffbc8c745ecd61e85aa08dc514ce2ff0e37565dea5979"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/8_Select native codec prefix.txt",
+            "bytes": 1014,
+            "sha256": "80aedffd751262cf1ab3c3a48117f4274edf0236d7e703e92ea46d9e0712cd21"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/9_Build the original pinned native codecs on Actions.txt",
+            "bytes": 1876,
+            "sha256": "755244d2ab086eccc78cf95552d36da74e9cf5f0bf8084bc102c2592005679b7"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/10_Verify native codec provenance.txt",
+            "bytes": 1122,
+            "sha256": "7d158e2835864aa639b2e06b312b464ad92bdb321539381585d35734b647b7a5"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/11_Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup.txt",
+            "bytes": 108405,
+            "sha256": "91745e1f64f5633f4be554a1c9150795b1328d33b562d34f6596186667e8c8a8"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/12_Verify actual receiver diagnostics, cleanup and cadence under the ordinary token.txt",
+            "bytes": 97498,
+            "sha256": "dc9455301f1e5257bc46a26ab262b1b7c93ecb8a05f1c3d855889d8672074b7b"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/13_Check the complete desktop owner code strictly.txt",
+            "bytes": 71871,
+            "sha256": "2b9056d5ec38ee950f22287b4a22a008ddbcace79036c2ecdd49a82d34bbf59b"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/14_Verify exact HEVC Main8 contract and original MF parser boundaries.txt",
+            "bytes": 37522,
+            "sha256": "8b7d201cc398a78cc10fabe9c9d692d37e14b0f06c7f46ad594ed1954ba8da08"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/15_Verify actual signed Store v2 and exact v3 frozen media lifecycles.txt",
+            "bytes": 7505,
+            "sha256": "a38268b632cae3584b0e2ae79b1f225c522000ba8b1743203a45d7447d4ff353"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/16_Verify exact provider, hardware target conversion and compressed IPC boundaries.txt",
+            "bytes": 167630,
+            "sha256": "28fe44a30c9ddbe86f3fd5a614836ea7f6a81e62dd8d49aa0a3ce6d39c0a2c37"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/17_Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries.txt",
+            "bytes": 154282,
+            "sha256": "de3ce7557126aa4281a768e2f1dd41435c47f179ce8c1952bf51ad48acbd4a4c"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/18_Verify production HEVC selection and strict original daemon cleanup boundaries.txt",
+            "bytes": 82088,
+            "sha256": "937835a8f85f19f104ccf3a298f206a9704062595550167191b05f33ae5aa467"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/19_Retain exact-source evidence including failures.txt",
+            "bytes": 2524,
+            "sha256": "4eb486300eaa492516b4561cdfc47fdfd520d4ea2521be758a2ef971b4ae6724"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/38_Post Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt",
+            "bytes": 1928,
+            "sha256": "b441956ad2c2696faf958f8c9f4dc5dce68bfaee955865fd8d8f7998bd168a58"
+          },
+          {
+            "path": "owner-boundaries (windows-2022)/39_Complete job.txt",
+            "bytes": 137,
+            "sha256": "7a11d17faf9a2687f4762ff35c8ae543eaca1365017a4626c38ba0e04580d662"
+          },
+          {
+            "path": "1_native-peer-process (ubuntu-24.04).txt",
+            "bytes": 41772,
+            "sha256": "a07508b1e2b29bd47b53d3458a851301e778419ef3c4160191051ef0420b3ddb"
+          },
+          {
+            "path": "native-peer-process (ubuntu-24.04)/system.txt",
+            "bytes": 594,
+            "sha256": "8895e8355cf17891ecd2f6916b5909050fc750b654daa4fbfd14e1fee2660766"
+          },
+          {
+            "path": "native-peer-process (ubuntu-24.04)/1_Set up job.txt",
+            "bytes": 2298,
+            "sha256": "340aa495eacec7e691f24959247bbf10ba0f1bf43cf7564a1d75face4ddd58ac"
+          },
+          {
+            "path": "native-peer-process (ubuntu-24.04)/2_Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt",
+            "bytes": 12370,
+            "sha256": "2a4ad7b8f95b45ce2cd9162529fe39b93fecb2cd83456c2752977f4e9faecb4e"
+          },
+          {
+            "path": "native-peer-process (ubuntu-24.04)/3_Run dtolnay_rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f.txt",
+            "bytes": 19055,
+            "sha256": "d0a140e90443413f0567064cc68e71bd791cf6a1d9959b663aac77376fdf8a65"
+          },
+          {
+            "path": "native-peer-process (ubuntu-24.04)/4_Exercise the actual local TLS process owner and portable compatibility.txt",
+            "bytes": 3881,
+            "sha256": "9d2b239c50c28749e3d64e4632989e658c776c2f474312efc09109be69ab07a2"
+          },
+          {
+            "path": "native-peer-process (ubuntu-24.04)/5_Run actions_upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a.txt",
+            "bytes": 2382,
+            "sha256": "b47426422dc8d1d2ea7a567c0b77bd29c83606eb0e8da2b8e34f9a149192c4f7"
+          },
+          {
+            "path": "native-peer-process (ubuntu-24.04)/10_Post Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt",
+            "bytes": 1743,
+            "sha256": "c4118445afdbb2532e9bf6fe18b825677e43d14aa2386a2044a4a4f36a151f93"
+          },
+          {
+            "path": "native-peer-process (ubuntu-24.04)/11_Complete job.txt",
+            "bytes": 61,
+            "sha256": "7755d1c49998fc0b1b8c425da5a042fe812419fdfe8b67fd133e15ce384be562"
+          },
+          {
+            "path": "2_native-peer-process (windows-2025).txt",
+            "bytes": 42551,
+            "sha256": "69c30f117fc612afebb34180d04b9e5b7a5799ce383d99121d449939745c5b01"
+          },
+          {
+            "path": "native-peer-process (windows-2025)/system.txt",
+            "bytes": 594,
+            "sha256": "282554d9b3fcb3b082c76ec1011c06cc401adfd2421d674501e52936b6d441a8"
+          },
+          {
+            "path": "native-peer-process (windows-2025)/1_Set up job.txt",
+            "bytes": 2388,
+            "sha256": "8e396f95a346b4a8133ad71bc484a2ce9b01fb56ab23e2be01a12714d492d3ba"
+          },
+          {
+            "path": "native-peer-process (windows-2025)/2_Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt",
+            "bytes": 12065,
+            "sha256": "6b3a3c2a10f7cff3e3f2bff72c8e51848b069239fc7003d508ca1090aa80c786"
+          },
+          {
+            "path": "native-peer-process (windows-2025)/3_Run dtolnay_rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f.txt",
+            "bytes": 19671,
+            "sha256": "e5457c640f4da997e21251ef5b6ed91943b417f8e1d98843d0d3af8c1ab0c9d9"
+          },
+          {
+            "path": "native-peer-process (windows-2025)/4_Exercise the actual local TLS process owner and portable compatibility.txt",
+            "bytes": 3972,
+            "sha256": "b20c230eb1c0a0ed36804d9181ec1c46bd27275dfac479f8ae0e2c1c479aa346"
+          },
+          {
+            "path": "native-peer-process (windows-2025)/5_Run actions_upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a.txt",
+            "bytes": 2408,
+            "sha256": "970b03be2db2a882156b9ca0e78f36b8d61a9caab52868a7c6d4027fbee2b609"
+          },
+          {
+            "path": "native-peer-process (windows-2025)/10_Post Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt",
+            "bytes": 1928,
+            "sha256": "777140bb7f93702713741546af438bd6906f60e13b8f46c2912a743718f6b876"
+          },
+          {
+            "path": "native-peer-process (windows-2025)/11_Complete job.txt",
+            "bytes": 137,
+            "sha256": "2797e038cc8137ae72c26107238be0b9889ecb815bb97b9ae9f4ea84a7083f63"
+          },
+          {
+            "path": "3_owner-boundaries (windows-2025).txt",
+            "bytes": 810065,
+            "sha256": "6c627695430d6aaa4cf6a4b2ceb42115f7d8440924f30b8769fb228f7840b5d6"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/system.txt",
+            "bytes": 591,
+            "sha256": "40f2106612d35a98f20c7d6b2cd011b54a068723a1a4944d97289b16ca1dd9e2"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/1_Set up job.txt",
+            "bytes": 2550,
+            "sha256": "297be98ae87aaf61d57708549350dd6aae31c6795d4909600fc3970415e74d09"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/2_Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt",
+            "bytes": 12570,
+            "sha256": "5e5d52b350c73ef00c314fd3ed255de93add79b98b6c61d6468fe47db55419ff"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/3_Verify exact hosted source and preserve input provenance.txt",
+            "bytes": 2627,
+            "sha256": "92392815ec07d934a684f1effac859051856d1b450b27b6d7c4f7bfeae3dbb4d"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/4_Verify diagnostic analyzer negatives on Actions.txt",
+            "bytes": 1468,
+            "sha256": "136b5f535cf05e4751f83c2a6bac1c315fc781422eb0e26e4f28a766c756a7d1"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/5_Run dtolnay_rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f.txt",
+            "bytes": 19192,
+            "sha256": "18ece40df0c4d9d831e946ee814e627aadcc5e261308fe35d00c2cabc069960f"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/6_Verify independent exact format, signed scope and unchanged legacy contracts.txt",
+            "bytes": 24455,
+            "sha256": "32f6b7c41e36a7467208e9272745820ba92d4402b1c0786ba5da6b59ea3d373a"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/7_Run msys2_setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e.txt",
+            "bytes": 14984,
+            "sha256": "49a67b958e49846f703c83335454a38c8698f4c63a5935379f6ff3c14a57bbf4"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/8_Select native codec prefix.txt",
+            "bytes": 1014,
+            "sha256": "2473193d065543f0014e206975d8e3ab64f76f3471cbd54a9ca5c92272acf09e"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/9_Build the original pinned native codecs on Actions.txt",
+            "bytes": 1876,
+            "sha256": "1dfac14b9ad37075da225f47a0c1777c44c98bb3bca8c234bad8383105f06dbb"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/10_Verify native codec provenance.txt",
+            "bytes": 1122,
+            "sha256": "798431b3144742f0558eaa8f054b98d2a21a0845eba00e36627d71301c2935e1"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/11_Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup.txt",
+            "bytes": 105281,
+            "sha256": "4d067f3ccf4488809fbc36e362b11123f78a0d4792221104e37155997d7d9b25"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/12_Verify actual receiver diagnostics, cleanup and cadence under the ordinary token.txt",
+            "bytes": 97498,
+            "sha256": "0f12acc37caf619dee46ba485466a2577e1aacdd51f14b05312744c9a4762c75"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/13_Check the complete desktop owner code strictly.txt",
+            "bytes": 71871,
+            "sha256": "a48bd6f3abf5c96b02a7d088e6429ae80e9b6e8dd8d6e730a2317929f357b700"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/14_Verify exact HEVC Main8 contract and original MF parser boundaries.txt",
+            "bytes": 37522,
+            "sha256": "cd755005b9ed107754b92a8f4c63248d02e885a1dee9e47e63afa0c5b3759fd7"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/15_Verify actual signed Store v2 and exact v3 frozen media lifecycles.txt",
+            "bytes": 7506,
+            "sha256": "807c2762a95dbd3b24d2c90d169969bc2a7e9f63bd93eeb8c86afe427a80b979"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/16_Verify exact provider, hardware target conversion and compressed IPC boundaries.txt",
+            "bytes": 167630,
+            "sha256": "67c91148042af2142b3bb45eeb569e202cd7c6f63dc9d46569428c3e3c10e3b1"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/17_Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries.txt",
+            "bytes": 154282,
+            "sha256": "a2f8b8234acf924ae90345085647500afa682ca7f29aa35cf656e9929dab36bf"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/18_Verify production HEVC selection and strict original daemon cleanup boundaries.txt",
+            "bytes": 82088,
+            "sha256": "acd663e137c5f18f1ca3a03c8546557ca3b226a4cdda74e334b71fe32f884820"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/19_Retain exact-source evidence including failures.txt",
+            "bytes": 2524,
+            "sha256": "3c59137993dc8fe60be5422bc46db669150affe333ef0224a54e0f6b6600977d"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/38_Post Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt",
+            "bytes": 1928,
+            "sha256": "d930dec89d0b26dabc1dc19969d333d704976876272a1c25e54c8d7260a9a799"
+          },
+          {
+            "path": "owner-boundaries (windows-2025)/39_Complete job.txt",
+            "bytes": 137,
+            "sha256": "9e762ceb73c1470e124b53a5f88a78e6b9649a28bb9d8f04fef826d2898d835b"
+          }
+        ],
+        "original_warning_or_error_annotations": []
+      },
+      {
+        "archive_file": "tools-run-41561899380-logs.zip",
+        "bytes": 33716,
+        "sha256": "4e1f8ffa27e22f37a1b2b46addf9579a7fbcc0ba83d01552f5992219ad0d8d80",
+        "origin": "Authenticated GitHub Actions complete logs API; no official artifact digest supplied for log archives",
+        "files": [
+          {
+            "path": "0_tools.txt",
+            "bytes": 59505,
+            "sha256": "a3661e458913a87dc5a663ad31d2f27af083a1a15186af28a4eae723d629e848"
+          },
+          {
+            "path": "tools/system.txt",
+            "bytes": 587,
+            "sha256": "2027d2c07140df46c1fa62befd1de937e766f32b7ad6c758a4d8a1c3db18e173"
+          },
+          {
+            "path": "tools/1_Set up job.txt",
+            "bytes": 2532,
+            "sha256": "28ad99ce0110336484f754b3dc0fcf03b9da2ad350b0a003e67a369f83fb7260"
+          },
+          {
+            "path": "tools/2_Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt",
+            "bytes": 12491,
+            "sha256": "b2ec849fdade31a3a31f840bcdb31ca34b124915cdae4d74af5ee7d0f33a15c0"
+          },
+          {
+            "path": "tools/3_Run dtolnay_rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f.txt",
+            "bytes": 18301,
+            "sha256": "ebc108b48d06fe65f834bc7fce80ab83854a0481589f5eabd6c938ca9b01484e"
+          },
+          {
+            "path": "tools/4_Run msys2_setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e.txt",
+            "bytes": 13171,
+            "sha256": "5c15bd0dda1a85382331f8aa36ed526ad246505e82708d0d95c43f6223e2b6ee"
+          },
+          {
+            "path": "tools/5_Select original locked codec prefix.txt",
+            "bytes": 943,
+            "sha256": "65932871d20b360d06ecabbd5baf4f019574593f1b3e9da85e0df03ab1d98a73"
+          },
+          {
+            "path": "tools/6_Build and verify original native components on GitHub.txt",
+            "bytes": 2168,
+            "sha256": "8cd5487e2dd1967e54b43c7af1bb3d359f99cd5bea76fe07790b5faa3e1f9050"
+          },
+          {
+            "path": "tools/7_Build bounded original direction tools and retain exact executable hashes.txt",
+            "bytes": 5272,
+            "sha256": "4ff64a2e9754b2480e544b05ed73ed998622db141f3fb68a2590a8f7fba8c2f9"
+          },
+          {
+            "path": "tools/8_Run actions_upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a.txt",
+            "bytes": 2436,
+            "sha256": "c3c839c10607e15bb3ea628782244612922f55c72c9feee157cb7a84a80ade4d"
+          },
+          {
+            "path": "tools/16_Post Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt",
+            "bytes": 1928,
+            "sha256": "ffd2a0ff2269f77df615afd2859807f6e6977df0a02763e6caced15bad31486f"
+          },
+          {
+            "path": "tools/17_Complete job.txt",
+            "bytes": 290,
+            "sha256": "248076c04baa678e6bbb6d3a26673b117a72786f344ba7ad28a27de08705adc8"
+          }
+        ],
+        "original_warning_or_error_annotations": []
+      }
+    ]
+  },
+  "verified_changes": [
+    "Both hosted Windows owner jobs passed the original AMF range/release/null-device regression (127) and independent 19-case optional absence regression (524287)",
+    "Original MF 511 and 255 native attribute contracts are unchanged; source f0 includes no SPS, deadline, workload, decoder or cleanup relaxation",
+    "Successful tools release build and strict Clippy preserve exact source/workflow/run identity and all 167 payload digests"
+  ],
+  "target_handoff": {
+    "artifact_id": "13198200768",
+    "extracted_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-media-f0c65e1-41561899380\\tools-13198200768-verified",
+    "all_168_extracted_sizes_and_hashes_matched": true,
+    "executables": [
+      {
+        "path": "windows-amf-hevc-direction-probe.exe",
+        "bytes": 357376,
+        "sha256": "02346a3dd3ee2b76305930ddf1880a9f46bd47cd2f64fb85bcd25bf9b9f2a3fd"
+      },
+      {
+        "path": "windows-controller-direction-probe.exe",
+        "bytes": 385024,
+        "sha256": "2eeb5fda242c8934eee7a7a47908953bd505554ef972b2407777fcecbec14fee"
+      },
+      {
+        "path": "windows-cpu-direction-probe.exe",
+        "bytes": 321536,
+        "sha256": "c83cd85bd5a42c2c6278a290a460db6aa9e1285ad4431405fbc7c2148170877a"
+      },
+      {
+        "path": "windows-hevc-direction-probe.exe",
+        "bytes": 354816,
+        "sha256": "5aaf32a40108612b39769a23d135ff6f358c71480589c78e73312fa75cf4c084"
+      }
+    ],
+    "local_executables_run_by_this_record": false
+  },
+  "preserved_failures": [
+    {
+      "evidence": "docs/network-rewrite/evidence/windows-hevc-target-f0c65e1.json",
+      "detail": "All eight actual directions exited 1. Main8 AMF successful FrameRate descriptor lookup was rejected by the new descriptor-name guard before property roundtrip; actual alias identity requires later diagnostic evidence. MF and Main10 failures remain."
+    },
+    {
+      "evidence": "docs/network-rewrite/evidence/windows-hevc-target-4a4496b.json",
+      "detail": "Earlier eight original direction failures remain failed and unchanged."
+    },
+    {
+      "evidence": "docs/network-rewrite/evidence/luanti-attempt-de61e76.json",
+      "detail": "Original 25-second disconnect display failure and gate unchanged."
+    }
+  ],
+  "limitations": [
+    "Hosted boundary regressions are not physical AMF hardware output or complete W27/W33/AC44/release qualification",
+    "Later diagnostic source46bc44d has separate build evidence in windows-media-tools-46bc44d.json; these f0 source regressions do not verify later production edits",
+    "No native ten-bit source, HDR, scanout, sustained frame rate, weak network or concurrent-file qualification"
+  ],
+  "local_activity": "Source/Git reads, Actions logs/metadata, downloaded artifact verification and safe extraction, evidence documentation only; no local build/test/formatter/lint/installation/packaging"
+}
