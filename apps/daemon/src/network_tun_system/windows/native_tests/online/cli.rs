@@ -215,7 +215,7 @@ pub(in super::super) async fn fixture(
         ),
         "the real product main did not report the original HTTP revocation error: {text}"
     );
-    let retained = crate::identity(&f.directory)?;
+    let retained = crate::read_existing_identity(&f.directory)?;
     assert_eq!(retained.device_id, f.source_device.device_id);
     assert_eq!(
         retained.identity.fingerprint(),

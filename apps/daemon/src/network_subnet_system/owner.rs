@@ -92,7 +92,7 @@ pub(crate) async fn run(args: SubnetArgs) -> Result {
         )
         .into());
     }
-    let local = crate::identity(&directory)?;
+    let local = crate::read_existing_identity(&directory)?;
     let owner_id = nestlink_auth::random_id();
     let mut access = OnlinePacketAccess::start(
         &sdk,

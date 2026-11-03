@@ -235,12 +235,11 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
     let original_login = session_snapshot(&directory)?;
     // This command consumes an installed identity; it cannot create or register
     // a new device implicitly while presenting another installation's services.
-    if !directory.join("installation-device.json").try_exists()? {
-        return Err(
-            io::Error::other("the installation has no registered local device identity").into(),
-        );
-    }
-    let consumer = Arc::new(crate::identity(&directory)?);
+    let consumer = Arc::new(crate::read_existing_identity(&directory).map_err(|error| {
+        io::Error::other(format!(
+            "the installation requires its existing registered local device identity: {error}"
+        ))
+    })?);
     match args.action {
         ProxyAction::Offline(args) => {
             drop(installation);
@@ -592,3 +591,6 @@ async fn selected_service(
     )
     .into())
 }
+
+#[cfg(test)]
+mod identity_tests;

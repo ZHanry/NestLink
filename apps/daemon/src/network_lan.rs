@@ -148,7 +148,7 @@ pub(crate) async fn run(args: LanArgs) -> Result {
     if !directory.join("installation-device.json").try_exists()? {
         return Err(io::Error::other("original registered installation identity required").into());
     }
-    let local = crate::identity(&directory)?;
+    let local = crate::read_existing_identity(&directory)?;
     let mut access = OnlinePacketAccess::start(
         &sdk,
         &pin,

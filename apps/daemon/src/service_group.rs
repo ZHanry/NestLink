@@ -127,7 +127,7 @@ pub(crate) async fn run(args: GroupArgs) -> Result {
             )
         })?;
     let original_login = session_snapshot(&directory)?;
-    let host = Arc::new(crate::identity(&directory)?);
+    let host = Arc::new(crate::read_existing_identity(&directory)?);
     let service = sdk.service(&args.service).await?;
     allocation.validate(&service.definition)?;
     if service.revision.checked_add(1) != Some(allocation.expected_service_revision)

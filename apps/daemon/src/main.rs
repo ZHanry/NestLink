@@ -447,27 +447,41 @@ fn lower_hex(bytes: &[u8]) -> String {
     output
 }
 
+// Consumption paths must not fall back to installation creation after a
+// missing-file observation. Their caller retains the existing private-directory
+// admission and runtime lease; these bounded reads retain the original file
+// ownership/permission checks and clear the temporary unprotected key seed.
+fn read_existing_identity(
+    directory: &Path,
+) -> Result<nestlink_sdk::DeviceIdentity, Box<dyn std::error::Error + Send + Sync>> {
+    let data = nestlink_platform_security::read_private(
+        &directory.join("installation-device.json"),
+        1024,
+    )?;
+    let saved: Installation = serde_json::from_slice(&data)?;
+    let mut seed =
+        nestlink_platform_security::load_key(&directory.join("installation-device.key"))?;
+    let identity = nestlink_identity::InstallationIdentity::from_seed_zeroizing(&mut seed);
+    if saved.schema_version != 1
+        || !nestlink_protocol::valid_id(&saved.device_id)
+        || saved.public_key_sha256 != identity.fingerprint()
+    {
+        return Err(io::Error::other("installation identity record invalid").into());
+    }
+    Ok(nestlink_sdk::DeviceIdentity {
+        device_id: saved.device_id,
+        identity,
+    })
+}
+
 fn identity(
     directory: &Path,
 ) -> Result<nestlink_sdk::DeviceIdentity, Box<dyn std::error::Error + Send + Sync>> {
-    use nestlink_platform_security::{create_key, create_private, load_key, read_private};
+    use nestlink_platform_security::{create_key, create_private, load_key};
     let manifest = directory.join("installation-device.json");
     let key_path = directory.join("installation-device.key");
     if manifest.try_exists()? {
-        let data = read_private(&manifest, 1024)?;
-        let saved: Installation = serde_json::from_slice(&data)?;
-        let mut seed = load_key(&key_path)?;
-        let identity = nestlink_identity::InstallationIdentity::from_seed_zeroizing(&mut seed);
-        if saved.schema_version != 1
-            || !nestlink_protocol::valid_id(&saved.device_id)
-            || saved.public_key_sha256 != identity.fingerprint()
-        {
-            return Err(io::Error::other("installation identity record invalid").into());
-        }
-        return Ok(nestlink_sdk::DeviceIdentity {
-            device_id: saved.device_id,
-            identity,
-        });
+        return read_existing_identity(directory);
     }
     let mut seed = match load_key(&key_path) {
         Ok(seed) => seed,

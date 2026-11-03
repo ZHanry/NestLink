@@ -791,7 +791,7 @@ pub(crate) async fn run(args: OfflineRemoteArgs) -> Result<()> {
             })?,
     );
     let login = crate::space_dns::session_snapshot(&directory)?;
-    let identity = Arc::new(crate::identity(&directory)?);
+    let identity = Arc::new(crate::read_existing_identity(&directory)?);
     let original = if args.role == Role::Host {
         sdk.host_permit(&identity, &args.session).await?
     } else {

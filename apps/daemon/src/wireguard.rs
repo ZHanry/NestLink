@@ -140,11 +140,11 @@ pub(crate) async fn run(args: WireGuardArgs) -> Result {
             )
         })?;
     let login = crate::space_dns::session_snapshot(&directory)?;
-    let local = crate::identity(&directory)?;
     match args.action {
         Action::Issue {
             request, output, ..
         } => {
+            let local = crate::read_existing_identity(&directory)?;
             fresh(&output)?;
             let request: WireGuardClientBindingRequest = serde_json::from_slice(
                 &nestlink_platform_security::read_private(&request, 16_384)?,
@@ -163,6 +163,7 @@ pub(crate) async fn run(args: WireGuardArgs) -> Result {
             );
         }
         Action::Show { binding, .. } => {
+            let local = crate::read_existing_identity(&directory)?;
             let view = sdk
                 .wireguard_client_binding(pin.space_id(), &binding)
                 .await?;
@@ -176,6 +177,8 @@ pub(crate) async fn run(args: WireGuardArgs) -> Result {
             expected_client_revision,
             ..
         } => {
+            // Revocation uses the original account authorization below. It
+            // must not create an unused installation identity as a side effect.
             current(&directory, login)?;
             let policy = sdk
                 .revoke_wireguard_client(
@@ -204,6 +207,7 @@ pub(crate) async fn run(args: WireGuardArgs) -> Result {
             approve_private_key_export,
             ..
         } => {
+            let local = crate::read_existing_identity(&directory)?;
             if !approve_private_key_export {
                 return Err(
                     io::Error::other("explicit private-key export approval required").into(),

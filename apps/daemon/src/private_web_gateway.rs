@@ -115,7 +115,7 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
         )
     })?;
     let original_login = session_snapshot(&directory)?;
-    let consumer = Arc::new(crate::identity(&directory)?);
+    let consumer = Arc::new(crate::read_existing_identity(&directory)?);
     let selection = selection(&args, &sdk, &consumer.device_id).await?;
     let entry = selected_service(
         &sdk,

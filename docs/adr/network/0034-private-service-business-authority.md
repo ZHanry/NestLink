@@ -97,7 +97,23 @@ The ordinary-user daemon now exposes that original host through
 `private-service-proxy --state-dir <installation> host`. It reuses installation
 startup admission, the single headless runtime lease, the existing installation
 identity and protected management-session recovery. It cannot implicitly enroll
-a device or start another login/refresh owner. The caller explicitly supplies
+a device or start another login/refresh owner. Its identity consumption now
+calls the extracted read-only installed-identity boundary directly, without an
+existence precheck followed by the creating loader. Deleting the manifest or key
+between earlier admission and that read therefore fails without creating either
+file. The installation's explicit first-creation path remains separate and
+retains its original key protection and zeroizing seed handling.
+The same read-only boundary is used by the existing private Web gateway,
+public service-group host, offline remote preparation, LAN packet owner, managed
+TUN owner, subnet gateway and WireGuard portal. Their existing enrollment,
+account, membership and grant checks remain authoritative. WireGuard binding
+issue/review/export reads the original installation before signed-binding
+inspection; account-authorized revocation does not create an unused identity.
+Independent standard-client key generation and the daemon's explicit initial
+installation path retain their original creation semantics. The Windows actual
+CLI cleanup acceptance also reads the retained installation without a creating
+fallback before its existing device/public-key assertions.
+The caller explicitly supplies
 service/space IDs, a numeric fixed backend and its protocol, QUIC listen address,
 reachable numeric advertised IP, private/both mode, finite private/public byte
 shares and an approval lifetime of 1..3600 seconds. `--approve-target` is required

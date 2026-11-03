@@ -99,7 +99,7 @@ pub(crate) async fn run(args: TunArgs) -> Result {
             io::Error::other("TUN requires the original registered installation identity").into(),
         );
     }
-    let local = crate::identity(&directory)?;
+    let local = crate::read_existing_identity(&directory)?;
     let owner_id = nestlink_auth::random_id();
     // The irreversible online claim happens before binding a packet socket,
     // creating a plan, or asking the helper for any OS resource. A lost start

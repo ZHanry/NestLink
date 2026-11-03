@@ -62,7 +62,7 @@ pub(crate) async fn run(args: PortalArgs) -> Result {
     if !directory.join("installation-device.json").try_exists()? {
         return Err(io::Error::other("registered original portal installation required").into());
     }
-    let local = crate::identity(&directory)?;
+    let local = crate::read_existing_identity(&directory)?;
     let owner_id = nestlink_auth::random_id();
     let mut owner = OnlineWireGuardClient::start(
         &sdk,
