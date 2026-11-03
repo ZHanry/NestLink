@@ -1797,6 +1797,7 @@ impl CoreHandle {
                 generation_guard: expected.is_some(),
                 kind,
                 action: None,
+                space_selection: None,
                 reply,
                 _permit: permit,
             },
@@ -1950,6 +1951,8 @@ impl AppCore {
             native_recovery: None,
             browser_host: None,
             service_host_preview: None,
+            native_space_preview: None,
+            space_selection: 0,
             service_host_start_cancel: None,
             service_host_owner: None,
             native_poll_deadline: None,
@@ -2026,6 +2029,7 @@ struct Envelope {
     generation_guard: bool,
     kind: OperationKind,
     action: Option<Action>,
+    space_selection: Option<u64>,
     reply: oneshot::Sender<Completion>,
     _permit: OwnedSemaphorePermit,
 }
@@ -2311,6 +2315,8 @@ struct Actor {
     native_recovery: Option<Box<NativeRecoverySource>>,
     browser_host: Option<BrowserHostRuntime>,
     service_host_preview: Option<PendingServiceHostPreview>,
+    native_space_preview: Option<sdk_call::PendingNativeSpace>,
+    space_selection: u64,
     /// Kept by the actor until the SDK's owned startup/cleanup future returns.
     service_host_start_cancel: Option<watch::Sender<bool>>,
     service_host_owner: Option<ServiceHostOwner>,
@@ -2405,6 +2411,11 @@ impl Actor {
                 Step::BrowserHost(None) => self.browser_host_event_lost(),
                 Step::ServiceHostCleanup(result) => self.service_host_cleanup_result(result),
                 Step::Tick => {
+                    if self.native_space_preview.as_ref().is_some_and(|preview| preview.expired()) {
+                        self.native_space_preview = None;
+                        self.view.native_space_preview = crate::Section::default();
+                        self.publish();
+                    }
                     self.poll_native_session();
                     if tokio::time::Instant::now() >= quality_deadline {
                         quality_deadline = tokio::time::Instant::now() + Duration::from_millis(500);
@@ -2469,7 +2480,7 @@ impl Actor {
             generation: self.shared.generation.clone(),
         });
     }
-    fn admit(&mut self, envelope: Envelope) {
+    fn admit(&mut self, mut envelope: Envelope) {
         if envelope.generation != self.view.generation || self.view.lifecycle != Lifecycle::Running
         {
             self.deliver(
@@ -2481,6 +2492,22 @@ impl Actor {
                 None,
             );
         } else {
+            let changes_selection = matches!(envelope.action.as_ref(), Some(Action::Space { action, .. }) if action.selects_space())
+                || matches!(envelope.action.as_ref(), Some(Action::PreviewNativeSpace { .. }
+                    | Action::InspectRemote { .. } | Action::RequestRemote { .. } | Action::RevokeRemote { .. }));
+            if changes_selection {
+                let Some(next) = self.space_selection.checked_add(1) else {
+                    self.deliver(envelope, OperationStatus::Failed, RemoteEffect::None,
+                        Some(Failure::local(FailureKind::Capacity)), PublicOutput::None, None);
+                    return;
+                };
+                self.space_selection = next;
+                self.native_space_preview = None;
+                self.view.native_space_preview = crate::Section::default();
+            }
+            if matches!(envelope.action.as_ref(), Some(Action::Space { .. } | Action::PreviewNativeSpace { .. } | Action::ConfirmNativeSpace { .. })) {
+                envelope.space_selection = Some(self.space_selection);
+            }
             if let Some(Action::Space { context, action }) = envelope.action.as_ref() {
                 if action.selects_space() {
                     for slot in self.secret_slots.iter().filter_map(|slot| slot.upgrade()) {
@@ -2895,6 +2922,7 @@ impl Actor {
     }
 
     fn fence(&mut self) {
+        self.native_space_preview = None;
         self.service_host_preview = None;
         self.stop_local_service_host_owner();
         self.request_native_stop(StopReason::ExplicitExit, None);
@@ -3630,10 +3658,30 @@ impl Actor {
         let Some(action) = envelope.action.take() else {
             return;
         };
-        if matches!(&action, Action::Space { context, .. } if *context != self.view.space_context) {
+        if envelope.space_selection.is_some_and(|selection| selection != self.space_selection)
+            || matches!(&action, Action::Space { context, .. } if *context != self.view.space_context) {
             self.deliver(envelope, OperationStatus::Superseded, RemoteEffect::None,
                 None, PublicOutput::None, None);
             return;
+        }
+        let pending_space = if let Action::ConfirmNativeSpace { .. } = &action {
+            self.view.native_space_preview = crate::Section::default();
+            self.native_space_preview.take()
+        } else { None };
+        let space_request = match &action {
+            Action::PreviewNativeSpace { request } => Some((request.context.as_str(), request.space_id.as_str(), request.expected_network_revision)),
+            Action::ConfirmNativeSpace { confirmation } => pending_space.as_ref().map(|pending|
+                (confirmation.context.as_str(), pending.public.space_id.as_str(), pending.public.expected_network_revision)),
+            _ => None,
+        };
+        if let Some((context, space_id, revision)) = space_request {
+            let selected = self.view.selected_space.data.as_ref().is_some_and(|details| details.space.space_id == space_id);
+            if context != self.view.space_context || !selected
+                || self.native_network_update_ready(envelope.generation, revision).is_err() {
+                self.deliver(envelope, OperationStatus::Superseded, RemoteEffect::None,
+                    Some(Failure::local(FailureKind::StaleGeneration)), PublicOutput::None, None);
+                return;
+            }
         }
         let failure = if self.sdk.is_none() {
             Some(Failure::local(FailureKind::SignInRequired))
@@ -3769,6 +3817,7 @@ impl Actor {
                         action,
                         fence,
                         native_config,
+                        pending_space,
                     )
                     .await,
                 )
@@ -4939,9 +4988,26 @@ impl Actor {
                     }
                 }
                 let context_current = response.space_context.as_ref()
-                    .is_none_or(|context| *context == self.view.space_context);
+                    .is_none_or(|context| *context == self.view.space_context)
+                    && envelope.space_selection.is_none_or(|selection| selection == self.space_selection);
                 let visible = current && context_current && active.cancelled.is_none();
                 if visible {
+                    if let Some(pending) = response.native_space_preview.take() {
+                        let selected = self.view.selected_request.data.as_ref().is_some_and(|remote|
+                            remote.id == pending.public.request_id && remote.status == "approved"
+                                && remote.connection_generation == pending.public.connection_generation);
+                        if selected && self.native_network_update_ready(envelope.generation,
+                            pending.public.expected_network_revision).is_ok() {
+                            self.view.native_space_preview.replace(pending.public.clone());
+                            self.native_space_preview = Some(pending);
+                        } else { response.failure = Some(Failure::local(FailureKind::StaleGeneration)); }
+                    }
+                    if response.failure.is_none() && let Some(approved) = response.approved_native_space.take() {
+                        match self.configure_native_network(envelope.generation, approved.expected_revision, approved.settings) {
+                            Ok(_) => response.output = PublicOutput::Revision { revision: self.view.native_network_revision },
+                            Err(error) => response.failure = Some(Failure::from(error)),
+                        }
+                    }
                     for patch in response.patches.drain(..) {
                         patch.apply(&mut self.view);
                     }

@@ -2,6 +2,8 @@
 //! destinations by publishing candidates or deployment discovery endpoints.
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
+mod preparation;
+pub use preparation::*;
 
 #[cfg(not(target_arch = "wasm32"))]
 mod file;
@@ -13,6 +15,8 @@ pub use nestlink_platform_security::MetadataCommit as NativeNetworkCommit;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NativeNetworkSettings {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preparation: Option<NativeRemotePreparationSettings>,
     /// A locally pinned direct-only space path; independent of business consent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub space_path: Option<NativeSpacePathSettings>,
@@ -115,6 +119,7 @@ impl Default for MediaRouteMode {
 impl Default for NativeNetworkSettings {
     fn default() -> Self {
         Self {
+            preparation: None,
             space_path: None,
             route_set: None,
             media_route: MediaRouteMode::default(),
@@ -148,6 +153,15 @@ impl NativeNetworkSettings {
     /// destinations need no exception; metadata, loopback, mapped IPv6 and
     /// link-local destinations remain forbidden by the SDK AddressPolicy.
     pub fn validate(&self) -> Result<(), NativeNetworkError> {
+        if let Some(preparation) = &self.preparation {
+            if !nestlink_protocol::valid_id(&preparation.request_id)
+                || preparation.connection_generation == 0 || preparation.permit_sha256 == [0; 32]
+                || preparation.space_revision == 0 || preparation.policy_epoch == 0
+                || preparation.expires_at_unix_ms == 0
+                || (self.space_path.is_none() && self.route_set.is_none()) {
+                return Err(NativeNetworkError::Invalid);
+            }
+        }
         if let Some(path) = &self.space_path {
             path.validate()?;
             if self.route_set.is_some() {

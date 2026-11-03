@@ -570,6 +570,8 @@ pub struct Snapshot {
     pub space_audit: Section<Vec<nestlink_protocol::spaces::SpaceAuditEntry>>,
     #[serde(default)]
     pub space_services: Section<crate::SpaceServicePage>,
+    #[serde(default)]
+    pub native_space_preview: Section<crate::NativeSpacePreview>,
     pub selected_service: Section<ServiceView>,
     #[serde(default)]
     pub service_edge_namespace: Section<ServiceEdgeNamespaceView>,
@@ -626,6 +628,7 @@ impl Default for Snapshot {
             selected_space: Section::default(),
             space_audit: Section::default(),
             space_services: Section::default(),
+            native_space_preview: Section::default(),
             selected_service: Section::default(),
             service_edge_namespace: Section::default(),
             requests: Section::default(),
@@ -669,6 +672,7 @@ impl Snapshot {
         self.selected_space = Section::default();
         self.space_audit = Section::default();
         self.space_services = Section::default();
+        self.native_space_preview = Section::default();
         self.selected_service = Section::default();
         self.service_edge_namespace = Section::default();
         self.requests = Section::default();

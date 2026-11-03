@@ -738,7 +738,14 @@ async fn serve_requests(
                         )
                     }
                 }
-                Command::Submit { action } => {
+                Command::Submit { mut action } => {
+                    // The authenticated local connection supplies runtime identity;
+                    // a command body cannot impersonate another desktop preview.
+                    match &mut action {
+                        nestlink_app_core::Action::PreviewNativeSpace { request } => request.runtime_id = connection.runtime_id().to_owned(),
+                        nestlink_app_core::Action::ConfirmNativeSpace { confirmation } => confirmation.runtime_id = connection.runtime_id().to_owned(),
+                        _ => {}
+                    }
                     if tickets.len() >= 16 {
                         Reply::Rejected {
                             reason: Rejection::Capacity,

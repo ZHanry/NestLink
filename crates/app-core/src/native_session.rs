@@ -14,6 +14,7 @@ use crate::{
 /// deployment. Private networks always require explicit local consent.
 #[derive(Clone)]
 pub struct NativeSessionConfig {
+    pub(crate) preparation: Option<crate::NativeRemotePreparationSettings>,
     pub(crate) space_path: Option<crate::NativeSpacePathSettings>,
     pub(crate) route_set: Option<crate::NativeRouteSetSettings>,
     /// Frozen for one local session and its recovery; never a forwarding grant.
@@ -78,6 +79,7 @@ impl NativeSessionConfig {
 
     pub fn new(network: Arc<NetworkMonitor>) -> Self {
         Self {
+            preparation: None,
             space_path: None,
             route_set: None,
             relay_node_id: None,
@@ -376,6 +378,7 @@ impl NativeSessionConfig {
 
     pub fn network_settings(&self) -> NativeNetworkSettings {
         NativeNetworkSettings {
+            preparation: self.preparation.clone(),
             space_path: self.space_path.clone(),
             route_set: self.route_set.clone(),
             media_route: self.media_route,
@@ -421,6 +424,7 @@ impl NativeSessionConfig {
         self.use_deployment_stun = settings.use_deployment_stun;
         self.pcp_gateway = settings.pcp_gateway;
         self.route_set = settings.route_set;
+        self.preparation = settings.preparation;
         self.space_path = settings.space_path;
         self.private_network_prefixes = settings.private_network_prefixes;
         self.network_settings_store = Some(store);
@@ -443,6 +447,7 @@ impl NativeSessionConfig {
         self.use_deployment_stun = settings.use_deployment_stun;
         self.pcp_gateway = settings.pcp_gateway;
         self.route_set = settings.route_set;
+        self.preparation = settings.preparation;
         self.space_path = settings.space_path;
         self.private_network_prefixes = settings.private_network_prefixes;
         Ok(commit)

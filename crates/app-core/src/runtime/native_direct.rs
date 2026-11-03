@@ -3,6 +3,28 @@ use super::*;
 use nestlink_protocol::api::NetworkRemotePathRequest;
 use nestlink_sdk::network::routed::PinnedNetworkSpace;
 
+/// Newly reviewed settings recover only the original fixed pair. No POST or
+/// administrative directory read can replace expired or revoked authority.
+pub(super) async fn prepared_scope(client: &Client, identity: &DeviceIdentity,
+    config: &NativeSessionConfig, permit: &VerifiedPermit, pin: &PinnedNetworkSpace,
+    members: [&str; 2], fence: &sdk_call::DispatchFence) -> Result<Option<(u64, u64)>, Failure> {
+    let Some(binding) = &config.preparation else { return Ok(None); };
+    let now = unix_millis().ok_or_else(|| Failure::local(FailureKind::Trust))?;
+    if binding.request_id != permit.claims().session_id
+        || binding.connection_generation != permit.claims().connection_generation
+        || binding.permit_sha256 != permit.digest() || binding.expires_at_unix_ms <= now {
+        return Err(Failure::local(FailureKind::Trust));
+    }
+    fence.check()?;
+    let owner = client.sdk.network_remote_preparation(pin, identity, permit,
+        binding.space_revision, binding.policy_epoch).await.map_err(Failure::from)?;
+    fence.check()?;
+    if owner.membership_grant_ids() != members || owner.expires_at_unix_ms() != binding.expires_at_unix_ms {
+        return Err(Failure::local(FailureKind::Trust));
+    }
+    Ok(Some((owner.policy().policy_epoch, owner.expires_at_unix_ms())))
+}
+
 fn path_id(permit: &VerifiedPermit, member_ids: [&str; 2], kind: u8) -> String {
     let mut input = b"NestLink/network/v1/product-direct-path\0".to_vec();
     input.extend_from_slice(&permit.digest());
@@ -73,7 +95,9 @@ pub(super) async fn establish(
     let deadline = tokio::time::Instant::now() + Duration::from_secs(8);
     let prepare = async {
         fence.check()?;
+        let prepared = prepared_scope(client, identity, config, &permit, &pin, members, &fence).await?;
         if !key.is_host {
+            let (policy_epoch, member_expiry) = if let Some(prepared) = prepared { prepared } else {
             let policy = client
                 .sdk
                 .network_policy(&scope.space_id)
@@ -89,11 +113,7 @@ pub(super) async fn establish(
             {
                 return Err(Failure::local(FailureKind::Trust));
             }
-            let now = unix_millis().ok_or_else(|| Failure::local(FailureKind::Trust))?;
-            let mut expires = permit
-                .claims()
-                .expires_at_unix_ms
-                .min(now.saturating_add(30_000));
+            let mut expires = permit.claims().expires_at_unix_ms;
             for id in members {
                 let view = client
                     .sdk
@@ -107,12 +127,16 @@ pub(super) async fn establish(
                         .map_err(|_| Failure::local(FailureKind::Trust))?;
                 expires = expires.min(claims.scope().expires_at_ms);
             }
+            (policy.policy_epoch, expires)
+            };
+            let now = unix_millis().ok_or_else(|| Failure::local(FailureKind::Trust))?;
+            let expires = member_expiry.min(permit.claims().expires_at_unix_ms).min(now.saturating_add(30_000));
             let request = NetworkRemotePathRequest {
                 connectivity_grant_id: path_id(&permit, members, 2),
                 path_grant_id: path.clone(),
                 controller_membership_grant_id: members[0].into(),
                 host_membership_grant_id: members[1].into(),
-                expected_policy_epoch: policy.policy_epoch,
+                expected_policy_epoch: policy_epoch,
                 expires_at_unix_ms: expires,
             };
             match client

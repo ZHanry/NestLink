@@ -52,6 +52,7 @@ impl NativeNetworkSettingsStore for Store {
 
 fn settings() -> NativeNetworkSettings {
     NativeNetworkSettings {
+        preparation: None,
         space_path: None,
         route_set: None,
         media_route: Default::default(),

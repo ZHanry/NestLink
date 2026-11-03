@@ -139,6 +139,7 @@ mod tests {
         assert_eq!(store.load()?, NativeNetworkSettings::default());
         assert!(NativeNetworkFileStore::open(&directory).is_err());
         let chosen = NativeNetworkSettings {
+            preparation: None,
             space_path: None,
             route_set: None,
             media_route: Default::default(),

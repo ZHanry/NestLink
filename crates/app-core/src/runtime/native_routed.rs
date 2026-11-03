@@ -304,6 +304,8 @@ pub(super) async fn establish(
     let baseline = *network.borrow();
     let prepare = async {
         fence.check()?;
+        let prepared = native_direct::prepared_scope(client, identity, config, &permit, &pin,
+            [&local.controller_membership_grant_id, &local.host_membership_grant_id], &fence).await?;
         let route = if key.is_host {
             loop {
                 fence.check()?;
@@ -326,6 +328,7 @@ pub(super) async fn establish(
                 }
             }
         } else {
+            let (policy_epoch, member_expiry) = if let Some(prepared) = prepared { prepared } else {
             let policy = client
                 .sdk
                 .network_policy(&local.space_id)
@@ -340,11 +343,7 @@ pub(super) async fn establish(
             {
                 return Err(Failure::local(FailureKind::Trust));
             }
-            let now = unix_millis().ok_or_else(|| Failure::local(FailureKind::Trust))?;
-            let mut expires = permit
-                .claims()
-                .expires_at_unix_ms
-                .min(now.saturating_add(30_000));
+            let mut expires = permit.claims().expires_at_unix_ms;
             for id in [
                 &local.controller_membership_grant_id,
                 &local.host_membership_grant_id,
@@ -361,6 +360,10 @@ pub(super) async fn establish(
                         .map_err(|_| Failure::local(FailureKind::Trust))?;
                 expires = expires.min(claims.scope().expires_at_ms);
             }
+            (policy.policy_epoch, expires)
+            };
+            let now = unix_millis().ok_or_else(|| Failure::local(FailureKind::Trust))?;
+            let mut expires = member_expiry.min(permit.claims().expires_at_unix_ms).min(now.saturating_add(30_000));
             let discovery = client
                 .sdk
                 .discover_relay_nodes(identity, &permit)
@@ -383,7 +386,7 @@ pub(super) async fn establish(
                     path_grant_id: nestlink_auth::random_id(),
                     controller_membership_grant_id: local.controller_membership_grant_id.clone(),
                     host_membership_grant_id: local.host_membership_grant_id.clone(),
-                    expected_policy_epoch: policy.policy_epoch,
+                    expected_policy_epoch: policy_epoch,
                     expires_at_unix_ms: expires,
                 },
                 members: [0, 1].map(|index| NetworkRemoteRouteSetMemberRequest {

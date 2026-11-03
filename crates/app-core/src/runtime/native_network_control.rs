@@ -75,7 +75,7 @@ impl CoreHandle {
 }
 
 impl Actor {
-    fn native_network_update_ready(
+    pub(super) fn native_network_update_ready(
         &self,
         expected_generation: u64,
         expected_revision: u64,
@@ -125,6 +125,8 @@ impl Actor {
         settings: NativeNetworkSettings,
     ) -> Result<NativeNetworkSettings, NativeNetworkError> {
         let revision = self.native_network_update_ready(expected_generation, expected_revision)?;
+        self.native_space_preview = None;
+        self.view.native_space_preview = crate::Section::default();
         settings.validate()?;
         let mut candidate = self.native.clone().ok_or(NativeNetworkError::Unavailable)?;
         // Invalidate before saving: if the monitor cannot advance, disk must

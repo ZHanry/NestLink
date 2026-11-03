@@ -14,6 +14,8 @@ use std::{
     },
 };
 mod spaces;
+mod native_space;
+pub(crate) use native_space::{PendingNativeSpace, ApprovedNativeSpace};
 
 #[derive(Clone)]
 pub(crate) struct DispatchFence {
@@ -111,6 +113,8 @@ impl Patch {
 }
 
 pub(crate) struct Response {
+    pub native_space_preview: Option<PendingNativeSpace>,
+    pub approved_native_space: Option<ApprovedNativeSpace>,
     pub sdk: Sdk,
     pub space_context: Option<String>,
     pub failure: Option<Failure>,
@@ -136,6 +140,18 @@ impl From<SdkError> for Failure {
             SdkError::Transport(error) if error.is_timeout() => Self::local(FailureKind::Timeout),
             _ => Self::local(FailureKind::Transport),
         }
+    }
+}
+impl From<crate::NativeNetworkError> for Failure {
+    fn from(error: crate::NativeNetworkError) -> Self {
+        use crate::NativeNetworkError;
+        Self::local(match error {
+            NativeNetworkError::Invalid => FailureKind::Invalid,
+            NativeNetworkError::Busy => FailureKind::Capacity,
+            NativeNetworkError::StaleGeneration => FailureKind::StaleGeneration,
+            NativeNetworkError::Stopped => FailureKind::CoreStopped,
+            NativeNetworkError::Unavailable | NativeNetworkError::Persistence => FailureKind::NativeSessionUnavailable,
+        })
     }
 }
 
@@ -187,12 +203,20 @@ pub(crate) async fn run_with_native_config(
     action: Action,
     fence: DispatchFence,
     native: Option<crate::NativeSessionConfig>,
+    pending_space: Option<PendingNativeSpace>,
 ) -> Response {
     let reauthentication = action.reauthentication();
     let sign_in = matches!(action, Action::SignIn { .. });
     let mut response = Response {
+        native_space_preview: None,
+        approved_native_space: None,
         sdk,
-        space_context: match &action { Action::Space { context, .. } => Some(context.clone()), _ => None },
+        space_context: match &action {
+            Action::Space { context, .. } => Some(context.clone()),
+            Action::PreviewNativeSpace { request } => Some(request.context.clone()),
+            Action::ConfirmNativeSpace { confirmation } => Some(confirmation.context.clone()),
+            _ => None,
+        },
         failure: None,
         effect: RemoteEffect::None,
         output: PublicOutput::None,
@@ -206,6 +230,7 @@ pub(crate) async fn run_with_native_config(
         action,
         &fence,
         native.as_ref(),
+        pending_space,
     )
     .await;
     if let Err(failure) = result {
@@ -239,6 +264,7 @@ async fn execute(
     action: Action,
     fence: &DispatchFence,
     native: Option<&crate::NativeSessionConfig>,
+    pending_space: Option<PendingNativeSpace>,
 ) -> Result<(), Failure> {
     fence.check()?;
     let sdk = &mut response.sdk;
@@ -246,6 +272,10 @@ async fn execute(
     let patches = &mut response.patches;
     let local = || identity.ok_or_else(|| Failure::local(FailureKind::LocalIdentityRequired));
     match action {
+        Action::PreviewNativeSpace { request } => return native_space::preview(response, local()?, request,
+            native.ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?, fence).await,
+        Action::ConfirmNativeSpace { confirmation } => return native_space::confirm(response, local()?, confirmation,
+            pending_space.ok_or_else(|| Failure::local(FailureKind::Superseded))?, fence).await,
         Action::Space { context, action } => return spaces::execute(response, context, action, fence).await,
         Action::SignIn {
             username,

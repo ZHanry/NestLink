@@ -7,6 +7,7 @@ use nestlink_auth::Secret;
 use nestlink_protocol::{network::SpaceRole, spaces::*};
 use zeroize::{Zeroize, Zeroizing};
 mod services;
+mod network;
 
 struct Pending {
     submission: u64,
@@ -32,6 +33,7 @@ pub(crate) struct SpacePanel {
     confirmation: Option<(String, SpaceAction)>,
     message: Option<String>,
     service: services::ServiceDraft,
+    network: network::NetworkDraft,
 }
 impl Default for SpacePanel {
     fn default() -> Self {
@@ -39,7 +41,7 @@ impl Default for SpacePanel {
             account: String::new(), installation: String::new(), role: SpaceRole::Member,
             invitation_target: String::new(), invitation_minutes: 60, incoming: Zeroizing::new(String::new()),
             issued: Zeroizing::new(String::new()), pending: None, confirmation: None, message: None,
-            service: Default::default() }
+            service: Default::default(), network: Default::default() }
     }
 }
 
@@ -66,6 +68,7 @@ impl SpacePanel {
         self.issued.zeroize();
         self.confirmation = None;
         self.pending = None;
+        self.network = Default::default();
     }
 
     pub(crate) fn disconnected(&mut self) {
@@ -90,7 +93,7 @@ impl SpacePanel {
         self.pending = None;
         if result.status == OperationStatus::Succeeded {
             if let nestlink_app_core::PublicOutput::Created { id } = &result.output { self.selected = Some(id.clone()); self.name.clear(); }
-            self.message = Some("已读取服务器确认的空间状态。 / Server-confirmed space state loaded.".into());
+            self.message = Some("操作完成，已读取确认状态。 / Operation complete; confirmed state loaded.".into());
         } else {
             self.message = Some(widgets::operation_message(result, false));
         }
@@ -102,13 +105,15 @@ impl SpacePanel {
             self.selected = action.space_id().map(str::to_owned);
             self.issued.zeroize();
             self.service = Default::default();
+            self.network = Default::default();
         }
         if matches!(&action, SpaceAction::Accept { .. }) { self.incoming.zeroize(); }
         Command::Submit { action: Action::Space { context: self.context.clone(), action } }
     }
 
-    fn show(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot, english: bool) -> Option<Command> {
+    fn show(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot, english: bool, runtime: Option<&str>) -> Option<Command> {
         let mut action = None;
+        let mut network_command = None;
         let mut confirmation = None;
         let busy = self.pending.is_some();
         ui.heading(t(english, "网络空间", "Network spaces"));
@@ -160,6 +165,7 @@ impl SpacePanel {
                     ui.small(t(english, "请与管理员通过可信渠道核验此公钥。读取目录不会修改本机批准的空间公钥或网络范围。", "Verify this key with the administrator through a trusted channel. Reading the directory does not change this device's approved space key or network scope."));
                 });
                 ui.add_enabled_ui(!space.archived, |ui| {
+                    network_command = self.network.show(ui, snapshot, details, english, runtime);
                     egui::CollapsingHeader::new(t(english, "设备", "Devices")).default_open(true).show(ui, |ui| {
                         if let Some(devices) = &snapshot.devices.data {
                             egui::ComboBox::from_id_salt("space-join-device").selected_text(devices.iter().find(|device| device.device.id == self.installation).map(|device| device.device.name.as_str()).unwrap_or(t(english, "选择已登记设备", "Choose a registered device"))).show_ui(ui, |ui| {
@@ -264,13 +270,14 @@ impl SpacePanel {
             if yes { action = self.confirmation.take().map(|(_, action)| action); }
             if no || ui.ctx().input(|input| input.key_pressed(egui::Key::Escape)) { self.confirmation = None; }
         }
-        action.map(|action| self.command(action))
+        network_command.or_else(|| action.map(|action| self.command(action)))
     }
 }
 
 impl DesktopApp {
     pub(crate) fn spaces_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        if let Some(command) = self.space_panel.show(ui, snapshot, self.english) {
+        let runtime = self.bridge.runtime_id();
+        if let Some(command) = self.space_panel.show(ui, snapshot, self.english, runtime.as_deref()) {
             let invitation = matches!(&command, Command::Submit { action: Action::Space { action: SpaceAction::Invite { .. }, .. } });
             if let (Some(submission), Some(runtime)) = (self.bridge.submit_tracked(snapshot.generation, command), self.bridge.runtime_id()) {
                 self.space_panel.pending = Some(Pending { submission, runtime, generation: snapshot.generation, context: self.space_panel.context.clone(), invitation });

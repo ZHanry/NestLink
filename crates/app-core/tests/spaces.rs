@@ -6,6 +6,8 @@ use nestlink_protocol::{network::SpaceRole, spaces::*};
 use nestlink_sdk::DeviceIdentity;
 use std::time::Duration;
 use support::*;
+#[path = "spaces/native_path.rs"]
+mod native_path;
 
 fn scoped(handle: &CoreHandle, action: SpaceAction) -> Action {
     Action::Space { context: handle.snapshot().space_context.clone(), action }
@@ -43,7 +45,7 @@ fn invite(handle: &CoreHandle, target: Option<String>, role: SpaceRole) -> Actio
 
 async fn enroll(handle: &CoreHandle) -> Result {
     success(handle.submit(Action::EnrollLocalDevice { name: "space actor device".into(),
-        platform: "linux-x11".into(), capabilities: vec!["controller".into(), "vp8".into()],
+        platform: "linux-x11".into(), capabilities: vec!["controller".into(), "host".into(), "vp8".into(), "opus".into()],
         path_mode: "direct_only".into(),
     })?).await?;
     Ok(())
@@ -177,11 +179,13 @@ async fn committed_invitation_reply_cannot_repopulate_a_new_same_login_space_sel
     gate.arm();
     let pending = handle.submit(invite(&handle, None, SpaceRole::Member))?;
     gate.entered().await?;
-    let context = random_id();
+    // A second local caller can reuse a context string. The actor's own
+    // monotonic selection fence must still discard the old response.
+    let context = handle.snapshot().space_context.clone();
     let next = handle.submit(Action::Space { context: context.clone(), action: SpaceAction::Read {
         space_id: second.clone(), cursor: SpacePageCursor::default(),
     } })?;
-    wait_view(&handle, |view| view.space_context == context).await?;
+    wait_view(&handle, |view| view.space_context == context && view.selected_space.data.is_none()).await?;
     assert!(handle.snapshot().selected_space.data.is_none());
     gate.unblock();
     let mut old = done(pending).await?;
