@@ -1,0 +1,5010 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+  "run_id": 41488417514,
+  "run_attempt": 1,
+  "workflow": ".github/workflows/network-rewrite.yml",
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41488417514",
+  "workflow_conclusion": "failure",
+  "whole_task_passed": false,
+  "release_qualification_claimed": false,
+  "summary": "Seven jobs succeeded; both OS contract jobs retain a format-check-only failure. Both original contract/strict suites and the original two-relay UDP case passed at this exact source. Historical UDP timeout cause remains unproved.",
+  "jobs": [
+    {
+      "job_id": 125424743952,
+      "name": "native-ice-kernel-nat-slice",
+      "conclusion": "success",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41488417514/job/125424743952"
+    },
+    {
+      "job_id": 125424744372,
+      "name": "production-socket-slice",
+      "conclusion": "success",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41488417514/job/125424744372"
+    },
+    {
+      "job_id": 125424744524,
+      "name": "routed-kernel-nat-slice",
+      "conclusion": "success",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41488417514/job/125424744524"
+    },
+    {
+      "job_id": 125424744543,
+      "name": "quinn-carrier-replacement-feasibility",
+      "conclusion": "success",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41488417514/job/125424744543"
+    },
+    {
+      "job_id": 125424744597,
+      "name": "topology-journal",
+      "conclusion": "success",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41488417514/job/125424744597"
+    },
+    {
+      "job_id": 125424744749,
+      "name": "topology-carrier",
+      "conclusion": "success",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41488417514/job/125424744749"
+    },
+    {
+      "job_id": 125424744820,
+      "name": "contract (windows-2022)",
+      "conclusion": "failure",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41488417514/job/125424744820"
+    },
+    {
+      "job_id": 125424744874,
+      "name": "contract (ubuntu-24.04)",
+      "conclusion": "failure",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41488417514/job/125424744874"
+    },
+    {
+      "job_id": 125424745086,
+      "name": "independent-vectors",
+      "conclusion": "success",
+      "url": "https://github.com/ZHanry/NestLink/actions/runs/41488417514/job/125424745086"
+    }
+  ],
+  "artifact_verification": {
+    "official_artifacts": [
+      {
+        "artifact_id": 13164865038,
+        "name": "network-chain-business-4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00-1",
+        "archive_bytes": 41227,
+        "official_artifact_digest": "sha256:55e202d56bf7320d8167c3d52b70dd962fb397080dc3e28a57885b0e64a24bdf",
+        "downloaded_archive_sha256": "55e202d56bf7320d8167c3d52b70dd962fb397080dc3e28a57885b0e64a24bdf",
+        "digest_matches": true,
+        "zip_file_entries": 13,
+        "all_zip_paths_contained_and_unique": true
+      },
+      {
+        "artifact_id": 13164381608,
+        "name": "network-rewrite-ubuntu-24.04-4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00-1",
+        "archive_bytes": 42373,
+        "official_artifact_digest": "sha256:2855e8201c3ead20428b7dd4e6d3905e0855bb07aba7885e6b92f6658ad33a76",
+        "downloaded_archive_sha256": "2855e8201c3ead20428b7dd4e6d3905e0855bb07aba7885e6b92f6658ad33a76",
+        "digest_matches": true,
+        "zip_file_entries": 13,
+        "all_zip_paths_contained_and_unique": true
+      },
+      {
+        "artifact_id": 13164125151,
+        "name": "network-routed-4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00-1",
+        "archive_bytes": 1644850,
+        "official_artifact_digest": "sha256:401c5efa1bc2b7ea285e7d0ef94627af139d69520b3b736c46599b54fc3ca1d0",
+        "downloaded_archive_sha256": "401c5efa1bc2b7ea285e7d0ef94627af139d69520b3b736c46599b54fc3ca1d0",
+        "digest_matches": true,
+        "zip_file_entries": 465,
+        "all_zip_paths_contained_and_unique": true
+      },
+      {
+        "artifact_id": 13164075029,
+        "name": "network-migration-feasibility-4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00-1",
+        "archive_bytes": 4256681,
+        "official_artifact_digest": "sha256:cd1e0321e8c48c52546b16b411a1499ec60669a7bb37dddbec15e8f10f5df40c",
+        "downloaded_archive_sha256": "cd1e0321e8c48c52546b16b411a1499ec60669a7bb37dddbec15e8f10f5df40c",
+        "digest_matches": true,
+        "zip_file_entries": 310,
+        "all_zip_paths_contained_and_unique": true
+      },
+      {
+        "artifact_id": 13163940556,
+        "name": "network-route-set-directory-4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00-1",
+        "archive_bytes": 2072,
+        "official_artifact_digest": "sha256:2550762d5328e39e4c19e435a5e813d9dedef08b0f04f2fc2934d2ebaa2b539d",
+        "downloaded_archive_sha256": "2550762d5328e39e4c19e435a5e813d9dedef08b0f04f2fc2934d2ebaa2b539d",
+        "digest_matches": true,
+        "zip_file_entries": 3,
+        "all_zip_paths_contained_and_unique": true
+      },
+      {
+        "artifact_id": 13163486370,
+        "name": "network-topology-4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00-1",
+        "archive_bytes": 11370,
+        "official_artifact_digest": "sha256:c12d619686e551f66b3047d6003f54a80a44fa2f0bd98b723644c66f8c09fc54",
+        "downloaded_archive_sha256": "c12d619686e551f66b3047d6003f54a80a44fa2f0bd98b723644c66f8c09fc54",
+        "digest_matches": true,
+        "zip_file_entries": 7,
+        "all_zip_paths_contained_and_unique": true
+      },
+      {
+        "artifact_id": 13163243805,
+        "name": "network-rewrite-windows-2022-4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00-1",
+        "archive_bytes": 43159,
+        "official_artifact_digest": "sha256:c6f90f4c1f3802289c45b3185318b5d581f865445bc84c4d26071aa145df15dc",
+        "downloaded_archive_sha256": "c6f90f4c1f3802289c45b3185318b5d581f865445bc84c4d26071aa145df15dc",
+        "digest_matches": true,
+        "zip_file_entries": 14,
+        "all_zip_paths_contained_and_unique": true
+      },
+      {
+        "artifact_id": 13163046853,
+        "name": "network-reference-4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00-1",
+        "archive_bytes": 4319,
+        "official_artifact_digest": "sha256:36566d1c242641958da1e4d50c2505308d8c4f9a613583dc070962953505bbd8",
+        "downloaded_archive_sha256": "36566d1c242641958da1e4d50c2505308d8c4f9a613583dc070962953505bbd8",
+        "digest_matches": true,
+        "zip_file_entries": 3,
+        "all_zip_paths_contained_and_unique": true
+      },
+      {
+        "artifact_id": 13162239962,
+        "name": "network-native-ice-4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00-1",
+        "archive_bytes": 4816954,
+        "official_artifact_digest": "sha256:12f2ba7a98ee8f3a1d9a0928ec4c04730f3548b2695d428be6912a64355dbe75",
+        "downloaded_archive_sha256": "12f2ba7a98ee8f3a1d9a0928ec4c04730f3548b2695d428be6912a64355dbe75",
+        "digest_matches": true,
+        "zip_file_entries": 643,
+        "all_zip_paths_contained_and_unique": true
+      },
+      {
+        "artifact_id": 13162084551,
+        "name": "network-topology-carrier-4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00-1",
+        "archive_bytes": 16464,
+        "official_artifact_digest": "sha256:aa076c61e0867522713bbf244c6fd44263552a44173943b6e0c2bd7e807347b2",
+        "downloaded_archive_sha256": "aa076c61e0867522713bbf244c6fd44263552a44173943b6e0c2bd7e807347b2",
+        "digest_matches": true,
+        "zip_file_entries": 13,
+        "all_zip_paths_contained_and_unique": true
+      },
+      {
+        "artifact_id": 13161389841,
+        "name": "network-socket-4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00-1",
+        "archive_bytes": 1280354,
+        "official_artifact_digest": "sha256:0c1cf6afed6fc94191fd79cf8356e7ff43fffd4bea063788fb5212eacae122d7",
+        "downloaded_archive_sha256": "0c1cf6afed6fc94191fd79cf8356e7ff43fffd4bea063788fb5212eacae122d7",
+        "digest_matches": true,
+        "zip_file_entries": 168,
+        "all_zip_paths_contained_and_unique": true
+      }
+    ],
+    "official_artifact_count": 11,
+    "all_official_archive_digests_match_downloads": true,
+    "total_artifact_files_independently_hashed": 1652,
+    "producer_manifest_payload_files_verified": 1607,
+    "other_hashed_artifact_files": 45,
+    "all_manifest_sizes_sha256_and_contained_unique_paths_verified": true,
+    "complete_file_inventory_scope": "All 1652 entries across the eleven official artifacts were independently hashed. Six official receipts attest 1607 payloads, all verified. The remaining 45 are six receipts and 39 business/plain-log/vector files whose independent hashes are retained here or in their official vector provenance. Complete large experiment manifests remain in their officially hashed receipt files.",
+    "verification_method": "Official ZIP download and digest comparison, bounded ZIP path review/extraction, every producer payload size/SHA256, complete command/process exit-code/log inventory and exact named test-result counts. No local project compilation, testing, formatter, lint, syntax check, prototype or packaging."
+  },
+  "official_run_logs": {
+    "archive_bytes": 417810,
+    "downloaded_archive_sha256": "6855a325d94770505b6b865e3f7cd21c0e13bab9842f284797649bc32e056b17",
+    "official_digest_available": false,
+    "source": "GitHub Actions run logs API",
+    "file_count": 18,
+    "main_job_logs": 9,
+    "system_logs": 9,
+    "all_nine_main_logs_contain_exact_full_source_sha": true,
+    "files": [
+      {
+        "path": "0_independent-vectors.txt",
+        "bytes": 17879,
+        "sha256": "c00b0c2ea3217899d552dc4347371fecdaacac767d6c370409c5e3f1a8e3c8a7",
+        "test_summaries": [],
+        "failure_lines": []
+      },
+      {
+        "path": "1_contract (ubuntu-24.04).txt",
+        "bytes": 124089,
+        "sha256": "2c80ee46aa1362f2b844832708dd08ec741f641ba058e11d2067acc2457b6a23",
+        "test_summaries": [
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.54s",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.86s",
+          "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.35s",
+          "test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.01s",
+          "test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.10s",
+          "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.42s",
+          "test result: ok. 54 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 6.45s",
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.05s",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+          "test result: ok. 0 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s",
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+          "test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.11s",
+          "Ran 25 tests in 0.111s"
+        ],
+        "failure_lines": [
+          "##[error]Process completed with exit code 1."
+        ]
+      },
+      {
+        "path": "2_topology-carrier.txt",
+        "bytes": 132216,
+        "sha256": "2e7cc48aa5ed4644d19bf2425f6dec89a27b5a655c89dafe82caaa0eb21b07db",
+        "test_summaries": [
+          "test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.61s",
+          "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+          "test result: ok. 24 passed; 0 failed; 5 ignored; 0 measured; 30 filtered out; finished in 1.87s",
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.00s",
+          "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s",
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 30 filtered out; finished in 0.52s",
+          "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 50 filtered out; finished in 3.01s",
+          "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 53 filtered out; finished in 0.54s",
+          "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 6.03s",
+          "test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 87 filtered out; finished in 1.00s",
+          "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 93 filtered out; finished in 1.03s",
+          "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 88 filtered out; finished in 10.09s",
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 97 filtered out; finished in 0.01s"
+        ],
+        "failure_lines": []
+      },
+      {
+        "path": "3_quinn-carrier-replacement-feasibility.txt",
+        "bytes": 339746,
+        "sha256": "79b7dd8fdb69331a649c66469f62edecde5d519ed3d997f85c57b7f066d69ff6",
+        "test_summaries": [],
+        "failure_lines": []
+      },
+      {
+        "path": "4_routed-kernel-nat-slice.txt",
+        "bytes": 474897,
+        "sha256": "2922af96a16f9cdd0dacd7c5cf27e4f483205a313ad7dfd1405442bc6ad147ec",
+        "test_summaries": [
+          "Ran 3 tests in 0.003s"
+        ],
+        "failure_lines": []
+      },
+      {
+        "path": "5_contract (windows-2022).txt",
+        "bytes": 130432,
+        "sha256": "abb57e975ed15cadfa488ea018aaca1856b98c93c7be9c8cdc441498b31322d4",
+        "test_summaries": [
+          "test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 31.56s\r",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.14s\r",
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.46s\r",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.76s\r",
+          "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.31s\r",
+          "test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 27.79s\r",
+          "test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 33.84s\r",
+          "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s\r",
+          "test result: ok. 54 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.61s\r",
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.07s\r",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s\r",
+          "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\r",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s\r",
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s\r",
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.04s\r",
+          "test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.12s\r",
+          "Ran 25 tests in 0.089s\r"
+        ],
+        "failure_lines": [
+          "##[error]Process completed with exit code 1.\r"
+        ]
+      },
+      {
+        "path": "6_topology-journal.txt",
+        "bytes": 124595,
+        "sha256": "8a585df924e444f37ded14f670c082143ebb59fd128d11388c86c5d1168eebb1",
+        "test_summaries": [
+          "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+          "test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.75s",
+          "test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 80 filtered out; finished in 26.73s",
+          "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 33.60s",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 19 filtered out; finished in 3.61s",
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 3.46s",
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 3.42s",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.00s",
+          "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 87 filtered out; finished in 24.91s",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 19 filtered out; finished in 3.52s",
+          "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 11.20s"
+        ],
+        "failure_lines": []
+      },
+      {
+        "path": "7_production-socket-slice.txt",
+        "bytes": 205131,
+        "sha256": "842a294b4872cbba738b33e262a5ff0931b1d8405f2b44ecb0a810d691264cef",
+        "test_summaries": [],
+        "failure_lines": []
+      },
+      {
+        "path": "8_native-ice-kernel-nat-slice.txt",
+        "bytes": 1108434,
+        "sha256": "8e81037cea65966132cb02b1b900d824d8da009e9d7c0343a5d4476a4687b132",
+        "test_summaries": [
+          "Ran 7 tests in 0.002s",
+          "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 174 filtered out; finished in 4.07s",
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 17.53s",
+          "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 22.86s",
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.29s",
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 193 filtered out; finished in 10.97s",
+          "test result: ok. 32 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 76.62s",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 7.05s",
+          "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 185 filtered out; finished in 3.45s",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.72s",
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.84s",
+          "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 189 filtered out; finished in 0.03s",
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 79 filtered out; finished in 1.60s",
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.99s"
+        ],
+        "failure_lines": []
+      },
+      {
+        "path": "contract (ubuntu-24.04)\\system.txt",
+        "bytes": 579,
+        "sha256": "1dd3a2a248bd8c2fd203f8b8d00e71d22026f77920aa4d889f8d7f36f9ffd4e4",
+        "test_summaries": [],
+        "failure_lines": []
+      },
+      {
+        "path": "contract (windows-2022)\\system.txt",
+        "bytes": 579,
+        "sha256": "76e2f9c6a8930a9ce78ea04b42969cb209349a393214c5c163f89c79642298d6",
+        "test_summaries": [],
+        "failure_lines": []
+      },
+      {
+        "path": "independent-vectors\\system.txt",
+        "bytes": 590,
+        "sha256": "d03919a7d86f2b565285b3a0aaaac3028d4180a1740f8e6f5e21520698a922a2",
+        "test_summaries": [],
+        "failure_lines": []
+      },
+      {
+        "path": "native-ice-kernel-nat-slice\\system.txt",
+        "bytes": 598,
+        "sha256": "0e8d9bb7a8f63f1c3194a79f9c117ee86312d8c56784631378d9514aefb09105",
+        "test_summaries": [],
+        "failure_lines": []
+      },
+      {
+        "path": "production-socket-slice\\system.txt",
+        "bytes": 594,
+        "sha256": "d80e5dc76b78596e54766953fb6862e48297edcac5b23445ed43b043f6c657f2",
+        "test_summaries": [],
+        "failure_lines": []
+      },
+      {
+        "path": "quinn-carrier-replacement-feasibility\\system.txt",
+        "bytes": 608,
+        "sha256": "6ec6756bbf72d8e6e22e3fab3907bad9e5b3d65411f4201441078323e9aaee07",
+        "test_summaries": [],
+        "failure_lines": []
+      },
+      {
+        "path": "routed-kernel-nat-slice\\system.txt",
+        "bytes": 594,
+        "sha256": "4412761def6b04351f6d748e5639b9daadfa235d6120d14c530eb8f12d86320e",
+        "test_summaries": [],
+        "failure_lines": []
+      },
+      {
+        "path": "topology-carrier\\system.txt",
+        "bytes": 587,
+        "sha256": "c582efff950b61ef1a4f414876a2d3490155f1082faf3c4daec2caee470737f6",
+        "test_summaries": [],
+        "failure_lines": []
+      },
+      {
+        "path": "topology-journal\\system.txt",
+        "bytes": 587,
+        "sha256": "2be3cce8a925d7b2074440c8ed989e69ca4293d1f85d30373017b8ebb79153f9",
+        "test_summaries": [],
+        "failure_lines": []
+      }
+    ],
+    "scope": "Full official logs for every job were read for source and failure inventory. Their downloaded digest is independently recorded; it is not represented as a GitHub artifact API digest."
+  },
+  "contracts": [
+    {
+      "os": "ubuntu-24.04",
+      "job_id": 125424744874,
+      "artifact_id": 13164381608,
+      "receipt_status": "failed",
+      "receipt_sha256": "6aeea90378e94fac120823d4ab9c69746622022cec296954bdd70a16ca5ec9b1",
+      "verified_manifest_payloads": 12,
+      "only_unlisted_file": "network-rewrite-evidence.json",
+      "all_manifest_sizes_hashes_paths_verified": true,
+      "source_before": {
+        "expected_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "exact_source": true,
+        "clean": true,
+        "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status_raw_bytes": 0,
+        "status": [],
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+      },
+      "source_after": {
+        "expected_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "exact_source": true,
+        "clean": true,
+        "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status_raw_bytes": 0,
+        "status": [],
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+      },
+      "all_commands": [
+        {
+          "name": "rust-toolchain",
+          "argv": [
+            "rustc",
+            "--version",
+            "--verbose"
+          ],
+          "started_at": "2026-11-02T17:09:39Z",
+          "timeout_seconds": 60,
+          "log": "rust-toolchain.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:09:39Z",
+          "elapsed_seconds": 0.064,
+          "log_bytes": 280,
+          "log_sha256": "70b513eab7b4bc8f534b01cfd479897b6bcd5d47b29585a9579e089d6bc10ded"
+        },
+        {
+          "name": "format-check",
+          "argv": [
+            "/usr/bin/python",
+            "-B",
+            "scripts/format-first-party.py",
+            "--check",
+            "--receipt",
+            "/home/runner/work/_temp/nestlink-network-rewrite-ubuntu-24.04/format-check-commands.json"
+          ],
+          "started_at": "2026-11-02T17:09:39Z",
+          "timeout_seconds": 300,
+          "log": "format-check.log",
+          "return_code": 1,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:09:45Z",
+          "elapsed_seconds": 5.928,
+          "log_bytes": 17757,
+          "log_sha256": "cd9c5f6a076a0b224bdc720cbcf817f2450b11bafb02fb6aa12e7affbaca775e"
+        },
+        {
+          "name": "format-worktree-create",
+          "argv": [
+            "git",
+            "worktree",
+            "add",
+            "--detach",
+            "/home/runner/work/_temp/nestlink-network-rewrite-ubuntu-24.04/format-source",
+            "HEAD"
+          ],
+          "started_at": "2026-11-02T17:09:45Z",
+          "timeout_seconds": 120,
+          "log": "format-worktree-create.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:09:45Z",
+          "elapsed_seconds": 0.214,
+          "log_bytes": 314,
+          "log_sha256": "722bfc37575ef934d001675fb58604dd71fca3db12668d03094d49bb6d6a2977"
+        },
+        {
+          "name": "format-patch-generate",
+          "argv": [
+            "/usr/bin/python",
+            "-B",
+            "scripts/format-first-party.py",
+            "--receipt",
+            "/home/runner/work/_temp/nestlink-network-rewrite-ubuntu-24.04/format-patch-commands.json"
+          ],
+          "started_at": "2026-11-02T17:09:45Z",
+          "timeout_seconds": 300,
+          "log": "format-patch-generate.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:09:51Z",
+          "elapsed_seconds": 5.828,
+          "log_bytes": 5870,
+          "log_sha256": "77d1cd8cd1da6b5bb9b6bbe8f247b65393115782abc39ed26ad82aa608e84225"
+        },
+        {
+          "name": "format-worktree-remove",
+          "argv": [
+            "git",
+            "worktree",
+            "remove",
+            "--force",
+            "/home/runner/work/_temp/nestlink-network-rewrite-ubuntu-24.04/format-source"
+          ],
+          "started_at": "2026-11-02T17:09:51Z",
+          "timeout_seconds": 120,
+          "log": "format-worktree-remove.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:09:51Z",
+          "elapsed_seconds": 0.064,
+          "log_bytes": 168,
+          "log_sha256": "81e0949a55cb5587a2d34b62742a1dd905ec55711d49fc3f93752678f8afc512"
+        },
+        {
+          "name": "contract-clippy",
+          "argv": [
+            "cargo",
+            "clippy",
+            "--all-targets",
+            "--locked",
+            "--keep-going",
+            "-p",
+            "nestlink-protocol",
+            "-p",
+            "nestlink-identity",
+            "-p",
+            "nestlink-policy",
+            "-p",
+            "nestlink-connectivity",
+            "-p",
+            "nestlink-storage",
+            "-p",
+            "nestlink-traversal",
+            "-p",
+            "nestlink-transport-stream",
+            "-p",
+            "nestlink-transport-quic",
+            "-p",
+            "nestlink-transport-wss",
+            "-p",
+            "nestlink-remote",
+            "-p",
+            "nestlink-server",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "started_at": "2026-11-02T17:09:51Z",
+          "timeout_seconds": 1200,
+          "log": "contract-clippy.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:11:24Z",
+          "elapsed_seconds": 92.153,
+          "log_bytes": 29016,
+          "log_sha256": "66e56894d68bbeb079c9daa1c520d7de3f95530fa7a08ac94cb73d16e9697950"
+        },
+        {
+          "name": "contract-tests",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--lib",
+            "--tests",
+            "--no-fail-fast",
+            "-p",
+            "nestlink-protocol",
+            "-p",
+            "nestlink-identity",
+            "-p",
+            "nestlink-policy",
+            "-p",
+            "nestlink-connectivity",
+            "-p",
+            "nestlink-storage",
+            "-p",
+            "nestlink-traversal",
+            "-p",
+            "nestlink-transport-stream",
+            "-p",
+            "nestlink-transport-quic",
+            "-p",
+            "nestlink-transport-wss",
+            "-p",
+            "nestlink-remote",
+            "-p",
+            "nestlink-server"
+          ],
+          "started_at": "2026-11-02T17:11:24Z",
+          "timeout_seconds": 1200,
+          "log": "contract-tests.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:22:09Z",
+          "elapsed_seconds": 645.457,
+          "log_bytes": 99094,
+          "log_sha256": "19643427755aecde996438477b5c67fe8a24e739b90cd49ff1cb232f65b7cbba"
+        },
+        {
+          "name": "ci-evidence-tests",
+          "argv": [
+            "/usr/bin/python",
+            "-B",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests/network",
+            "-p",
+            "test_*.py",
+            "-v"
+          ],
+          "started_at": "2026-11-02T17:22:09Z",
+          "timeout_seconds": 1200,
+          "log": "ci-evidence-tests.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:22:09Z",
+          "elapsed_seconds": 0.315,
+          "log_bytes": 4442,
+          "log_sha256": "a79e7612f76216214d32fba845ca251846670e3ac1f6c01b2bcd9a081a1d760c"
+        }
+      ],
+      "failed_command_names": [
+        "format-check"
+      ],
+      "rust_test_inventory": {
+        "harnesses": 53,
+        "passed": 749,
+        "failed": 0,
+        "ignored": 15,
+        "all_named_result_rows_match_summary_totals": true,
+        "harness_summaries": [
+          {
+            "status": "ok",
+            "passed": 23,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 16,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.6
+          },
+          {
+            "status": "ok",
+            "passed": 57,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.2
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.02
+          },
+          {
+            "status": "ok",
+            "passed": 10,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.04
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 8,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.02
+          },
+          {
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 89,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.01
+          },
+          {
+            "status": "ok",
+            "passed": 4,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 8,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.05
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 6,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 10,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 31,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.72
+          },
+          {
+            "status": "ok",
+            "passed": 46,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 1.49
+          },
+          {
+            "status": "ok",
+            "passed": 0,
+            "failed": 0,
+            "ignored": 3,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 1.4
+          },
+          {
+            "status": "ok",
+            "passed": 26,
+            "failed": 0,
+            "ignored": 3,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 5.34
+          },
+          {
+            "status": "ok",
+            "passed": 4,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.01
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 1.75
+          },
+          {
+            "status": "ok",
+            "passed": 4,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 3.77
+          },
+          {
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 20.63
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 3.15
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.26
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 21,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 42.15
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 14.79
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.27
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 3.23
+          },
+          {
+            "status": "ok",
+            "passed": 81,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 97.69
+          },
+          {
+            "status": "ok",
+            "passed": 96,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 179.53
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.19
+          },
+          {
+            "status": "ok",
+            "passed": 4,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.7
+          },
+          {
+            "status": "ok",
+            "passed": 17,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 25.42
+          },
+          {
+            "status": "ok",
+            "passed": 21,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 27.03
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.9
+          },
+          {
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.54
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 1.86
+          },
+          {
+            "status": "ok",
+            "passed": 12,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 16.35
+          },
+          {
+            "status": "ok",
+            "passed": 16,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.01
+          },
+          {
+            "status": "ok",
+            "passed": 15,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 25.1
+          },
+          {
+            "status": "ok",
+            "passed": 6,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.42
+          },
+          {
+            "status": "ok",
+            "passed": 54,
+            "failed": 0,
+            "ignored": 5,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 6.45
+          },
+          {
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 10.05
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.01
+          },
+          {
+            "status": "ok",
+            "passed": 0,
+            "failed": 0,
+            "ignored": 4,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.06
+          },
+          {
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.01
+          },
+          {
+            "status": "ok",
+            "passed": 4,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 18,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.11
+          }
+        ],
+        "ignored_tests": [
+          {
+            "name": "client_process",
+            "reason": "R02: requires the owned client network namespace and Actions fixture"
+          },
+          {
+            "name": "host_process",
+            "reason": "R02: requires the owned host network namespace and Actions fixture"
+          },
+          {
+            "name": "prepare_fixture",
+            "reason": "R02: invoked only by the GitHub-hosted network experiment runner"
+          },
+          {
+            "name": "service_edge::caddy::admin::tests::actual_caddy_loopback_admin_route_round_trip",
+            "reason": "requires explicit NESTLINK_CADDY_BINARY; exercises the production Rust private loopback Admin client against an actual owned Caddy process"
+          },
+          {
+            "name": "service_edge::caddy::admin::tests::actual_caddy_unix_admin_route_round_trip",
+            "reason": "requires explicit NESTLINK_CADDY_BINARY; exercises the production Rust Unix Admin client against an actual owned Caddy process"
+          },
+          {
+            "name": "service_edge::caddy::config::tests::actual_caddy_validates_generated_bootstrap",
+            "reason": "requires explicit NESTLINK_CADDY_BINARY; validates actual Rust-generated production bootstrap with the real Caddy executable"
+          },
+          {
+            "name": "routed::migration_experiment::first_process",
+            "reason": "explicit GitHub-hosted W14 namespace orchestrator only"
+          },
+          {
+            "name": "routed::migration_experiment::prepare_fixture",
+            "reason": "explicit GitHub-hosted W14 namespace orchestrator only"
+          },
+          {
+            "name": "routed::migration_experiment::relay_a_process",
+            "reason": "explicit GitHub-hosted W14 namespace orchestrator only"
+          },
+          {
+            "name": "routed::migration_experiment::relay_b_process",
+            "reason": "explicit GitHub-hosted W14 namespace orchestrator only"
+          },
+          {
+            "name": "routed::migration_experiment::second_process",
+            "reason": "explicit GitHub-hosted W14 namespace orchestrator only"
+          },
+          {
+            "name": "first_process",
+            "reason": "GitHub-hosted network namespace orchestrator only"
+          },
+          {
+            "name": "prepare_fixture",
+            "reason": "GitHub-hosted network namespace orchestrator only"
+          },
+          {
+            "name": "relay_process",
+            "reason": "GitHub-hosted network namespace orchestrator only"
+          },
+          {
+            "name": "second_process",
+            "reason": "GitHub-hosted network namespace orchestrator only"
+          }
+        ],
+        "inventory_limit": "Complete named output remains in the hashed official contract-tests.log; this focused evidence records exact per-harness totals and every ignored role."
+      },
+      "ci_evidence_tests": {
+        "discovered": 25,
+        "passed": 25,
+        "skipped": 0,
+        "failed": 0,
+        "passed_names": [
+          "test_ci_evidence.EvidenceTests.test_artifact_manifest_hashes_exact_bytes_and_excludes_receipt_self_hash",
+          "test_ci_evidence.EvidenceTests.test_evidence_must_be_new_and_outside_checkout_under_runner_temp",
+          "test_ci_evidence.EvidenceTests.test_identity_binds_source_workflow_attempt_and_runner",
+          "test_ci_evidence.EvidenceTests.test_incomplete_commands_or_missing_snapshot_cannot_generate_success",
+          "test_ci_evidence.EvidenceTests.test_real_command_failure_and_success_both_keep_exact_log_digest",
+          "test_ci_evidence.EvidenceTests.test_receipt_never_converts_a_source_integrity_failure_into_success",
+          "test_ci_evidence.EvidenceTests.test_receipt_retains_format_failure_even_when_patch_generation_succeeds",
+          "test_ci_evidence.EvidenceTests.test_refuses_local_and_self_hosted_execution",
+          "test_ci_evidence.EvidenceTests.test_refuses_wrong_repository_workflow_sha_and_missing_identity",
+          "test_ci_evidence.EvidenceTests.test_source_snapshot_binds_actual_git_revision_status_and_lock_bytes",
+          "test_ci_evidence.EvidenceTests.test_success_cannot_hide_dirty_source_different_sha_or_lock",
+          "test_ci_evidence.EvidenceTests.test_windows_legacy_console_cannot_abort_unicode_failure_receipt",
+          "test_gpu_cadence.CadenceTests.test_actual_slow_interval_tail_fails_the_original_threshold",
+          "test_gpu_cadence.CadenceTests.test_clock_owner_history_and_cleanup_negatives",
+          "test_gpu_cadence.CadenceTests.test_exact_integer_gate_preserves_measurement_boundary",
+          "test_native_ice_evidence.NativeIceEvidenceTests.test_blackhole_cannot_be_reported_as_success_or_transfer",
+          "test_native_ice_evidence.NativeIceEvidenceTests.test_complete_initial_and_real_xor_mapping",
+          "test_native_ice_evidence.NativeIceEvidenceTests.test_legacy_success_partial_file_input_or_cleanup_cannot_pass",
+          "test_native_ice_evidence.NativeIceEvidenceTests.test_port_change_requires_observed_kernel_rewrite_and_business_refusal",
+          "test_native_ice_evidence.NativeIceEvidenceTests.test_same_physical_socket_stun_mapping_and_quinn_initial_are_required",
+          "test_native_ice_evidence.NativeIceEvidenceTests.test_truncation_fragmentation_and_oversize_fail",
+          "test_native_ice_evidence.NativeIceEvidenceTests.test_wrong_stun_transaction_missing_and_truncated_mapping_fail",
+          "test_routed_evidence.RoutedCaptureTests.test_complete_initial_binds_actual_translated_port_and_size",
+          "test_routed_evidence.RoutedCaptureTests.test_partial_headers_frames_and_udp_never_count",
+          "test_routed_evidence.RoutedCaptureTests.test_wrong_nat_source_outer_oversize_fragmentation_and_plaintext_fail"
+        ],
+        "skipped_names": []
+      },
+      "format_check_commands": [
+        {
+          "command": [
+            "cargo",
+            "metadata",
+            "--no-deps",
+            "--format-version",
+            "1",
+            "--locked"
+          ],
+          "return_code": 0
+        },
+        {
+          "command": [
+            "cargo",
+            "fmt",
+            "--package",
+            "nestlink-app-core",
+            "--package",
+            "nestlink-app-ipc",
+            "--package",
+            "nestlink-auth",
+            "--package",
+            "nestlink-connectivity",
+            "--package",
+            "nestlink-daemon",
+            "--package",
+            "nestlink-desktop",
+            "--package",
+            "nestlink-identity",
+            "--package",
+            "nestlink-local-ipc",
+            "--package",
+            "nestlink-media-codec",
+            "--package",
+            "nestlink-media-session",
+            "--package",
+            "nestlink-node",
+            "--package",
+            "nestlink-operations",
+            "--package",
+            "nestlink-platform-audio",
+            "--package",
+            "nestlink-platform-capture",
+            "--package",
+            "nestlink-platform-clipboard",
+            "--package",
+            "nestlink-platform-files",
+            "--package",
+            "nestlink-platform-input",
+            "--package",
+            "nestlink-platform-network",
+            "--package",
+            "nestlink-platform-security",
+            "--package",
+            "nestlink-platform-session",
+            "--package",
+            "nestlink-platform-tray",
+            "--package",
+            "nestlink-policy",
+            "--package",
+            "nestlink-privileged",
+            "--package",
+            "nestlink-protocol",
+            "--package",
+            "nestlink-remote",
+            "--package",
+            "nestlink-sdk",
+            "--package",
+            "nestlink-server",
+            "--package",
+            "nestlink-session",
+            "--package",
+            "nestlink-storage",
+            "--package",
+            "nestlink-transport-quic",
+            "--package",
+            "nestlink-transport-stream",
+            "--package",
+            "nestlink-transport-wss",
+            "--package",
+            "nestlink-traversal",
+            "--package",
+            "nestlink-turn-service",
+            "--package",
+            "nestlink-web",
+            "--package",
+            "xtask",
+            "--",
+            "--check"
+          ],
+          "return_code": 1
+        }
+      ],
+      "format_patch_commands": [
+        {
+          "command": [
+            "cargo",
+            "metadata",
+            "--no-deps",
+            "--format-version",
+            "1",
+            "--locked"
+          ],
+          "return_code": 0
+        },
+        {
+          "command": [
+            "cargo",
+            "fmt",
+            "--package",
+            "nestlink-app-core",
+            "--package",
+            "nestlink-app-ipc",
+            "--package",
+            "nestlink-auth",
+            "--package",
+            "nestlink-connectivity",
+            "--package",
+            "nestlink-daemon",
+            "--package",
+            "nestlink-desktop",
+            "--package",
+            "nestlink-identity",
+            "--package",
+            "nestlink-local-ipc",
+            "--package",
+            "nestlink-media-codec",
+            "--package",
+            "nestlink-media-session",
+            "--package",
+            "nestlink-node",
+            "--package",
+            "nestlink-operations",
+            "--package",
+            "nestlink-platform-audio",
+            "--package",
+            "nestlink-platform-capture",
+            "--package",
+            "nestlink-platform-clipboard",
+            "--package",
+            "nestlink-platform-files",
+            "--package",
+            "nestlink-platform-input",
+            "--package",
+            "nestlink-platform-network",
+            "--package",
+            "nestlink-platform-security",
+            "--package",
+            "nestlink-platform-session",
+            "--package",
+            "nestlink-platform-tray",
+            "--package",
+            "nestlink-policy",
+            "--package",
+            "nestlink-privileged",
+            "--package",
+            "nestlink-protocol",
+            "--package",
+            "nestlink-remote",
+            "--package",
+            "nestlink-sdk",
+            "--package",
+            "nestlink-server",
+            "--package",
+            "nestlink-session",
+            "--package",
+            "nestlink-storage",
+            "--package",
+            "nestlink-transport-quic",
+            "--package",
+            "nestlink-transport-stream",
+            "--package",
+            "nestlink-transport-wss",
+            "--package",
+            "nestlink-traversal",
+            "--package",
+            "nestlink-turn-service",
+            "--package",
+            "nestlink-web",
+            "--package",
+            "xtask"
+          ],
+          "return_code": 0
+        }
+      ],
+      "file_manifest": [
+        {
+          "path": "ci-evidence-tests.log",
+          "bytes": 4442,
+          "sha256": "a79e7612f76216214d32fba845ca251846670e3ac1f6c01b2bcd9a081a1d760c"
+        },
+        {
+          "path": "contract-clippy.log",
+          "bytes": 29016,
+          "sha256": "66e56894d68bbeb079c9daa1c520d7de3f95530fa7a08ac94cb73d16e9697950"
+        },
+        {
+          "path": "contract-tests.log",
+          "bytes": 99094,
+          "sha256": "19643427755aecde996438477b5c67fe8a24e739b90cd49ff1cb232f65b7cbba"
+        },
+        {
+          "path": "format-check-commands.json",
+          "bytes": 5797,
+          "sha256": "24c135880b6cb006244cd43a5518ea7fc19d9043aaea81b3de90f1e9ad314449"
+        },
+        {
+          "path": "format-check.log",
+          "bytes": 17757,
+          "sha256": "cd9c5f6a076a0b224bdc720cbcf817f2450b11bafb02fb6aa12e7affbaca775e"
+        },
+        {
+          "path": "format-patch-commands.json",
+          "bytes": 5764,
+          "sha256": "7e5380bdaba55b3263e59d5ca7ecd68200d41f0f842a4d59e6d251b39890d665"
+        },
+        {
+          "path": "format-patch-generate.log",
+          "bytes": 5870,
+          "sha256": "77d1cd8cd1da6b5bb9b6bbe8f247b65393115782abc39ed26ad82aa608e84225"
+        },
+        {
+          "path": "format-worktree-create.log",
+          "bytes": 314,
+          "sha256": "722bfc37575ef934d001675fb58604dd71fca3db12668d03094d49bb6d6a2977"
+        },
+        {
+          "path": "format-worktree-remove.log",
+          "bytes": 168,
+          "sha256": "81e0949a55cb5587a2d34b62742a1dd905ec55711d49fc3f93752678f8afc512"
+        },
+        {
+          "path": "format-worktree-status.json",
+          "bytes": 55,
+          "sha256": "a9d445d6cfb350d37075fa335900e336477c93d6dc3c73a4b79c2599647922ec"
+        },
+        {
+          "path": "rust-toolchain.log",
+          "bytes": 280,
+          "sha256": "70b513eab7b4bc8f534b01cfd479897b6bcd5d47b29585a9579e089d6bc10ded"
+        },
+        {
+          "path": "rustfmt.patch",
+          "bytes": 11666,
+          "sha256": "e315c4f9b1f6fc36275499cde4569a76d61fa7aefad64493612f6fd76c75c5ea"
+        }
+      ]
+    },
+    {
+      "os": "windows-2022",
+      "job_id": 125424744820,
+      "artifact_id": 13163243805,
+      "receipt_status": "failed",
+      "receipt_sha256": "5f9355de82998377ec0c60683c5208c034eecc06380eb50466cc5fe9e9c8f6d8",
+      "verified_manifest_payloads": 13,
+      "only_unlisted_file": "network-rewrite-evidence.json",
+      "all_manifest_sizes_hashes_paths_verified": true,
+      "source_before": {
+        "expected_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "exact_source": true,
+        "clean": true,
+        "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status_raw_bytes": 0,
+        "status": [],
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+      },
+      "source_after": {
+        "expected_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "exact_source": true,
+        "clean": true,
+        "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status_raw_bytes": 0,
+        "status": [],
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+      },
+      "all_commands": [
+        {
+          "name": "ordinary-windows-token",
+          "argv": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "-B",
+            "scripts/refactor-windows-normal-user.py",
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "-B",
+            "scripts/refactor-windows-normal-user.py",
+            "--check"
+          ],
+          "started_at": "2026-11-02T17:09:51Z",
+          "timeout_seconds": 60,
+          "log": "ordinary-windows-token.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:09:52Z",
+          "elapsed_seconds": 0.141,
+          "log_bytes": 464,
+          "log_sha256": "ad40e9af28cc958a746a8f78b94a8d9ea0590d8795a421f8311b2fa6caee3c7e"
+        },
+        {
+          "name": "rust-toolchain",
+          "argv": [
+            "rustc",
+            "--version",
+            "--verbose"
+          ],
+          "started_at": "2026-11-02T17:09:52Z",
+          "timeout_seconds": 60,
+          "log": "rust-toolchain.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:09:52Z",
+          "elapsed_seconds": 0.109,
+          "log_bytes": 278,
+          "log_sha256": "4f9bd86854e5f9a6cba08eeed9b2e5e9dbef4265f915ac58a0f16700a19daf8e"
+        },
+        {
+          "name": "format-check",
+          "argv": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "-B",
+            "scripts/format-first-party.py",
+            "--check",
+            "--receipt",
+            "D:\\a\\_temp\\nestlink-network-rewrite-windows-2022\\format-check-commands.json"
+          ],
+          "started_at": "2026-11-02T17:09:52Z",
+          "timeout_seconds": 300,
+          "log": "format-check.log",
+          "return_code": 1,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:10:01Z",
+          "elapsed_seconds": 9.094,
+          "log_bytes": 19265,
+          "log_sha256": "ad4cfb40a955619f532b27f56229eac387585aaf246cc61ae5565203b1cfc790"
+        },
+        {
+          "name": "format-worktree-create",
+          "argv": [
+            "git",
+            "worktree",
+            "add",
+            "--detach",
+            "D:\\a\\_temp\\nestlink-network-rewrite-windows-2022\\format-source",
+            "HEAD"
+          ],
+          "started_at": "2026-11-02T17:10:01Z",
+          "timeout_seconds": 120,
+          "log": "format-worktree-create.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:10:01Z",
+          "elapsed_seconds": 0.593,
+          "log_bytes": 305,
+          "log_sha256": "e7cc1a2ede9cd93645634affe98f9e931525927e6023326309b13024934aef0b"
+        },
+        {
+          "name": "format-patch-generate",
+          "argv": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "-B",
+            "scripts/format-first-party.py",
+            "--receipt",
+            "D:\\a\\_temp\\nestlink-network-rewrite-windows-2022\\format-patch-commands.json"
+          ],
+          "started_at": "2026-11-02T17:10:01Z",
+          "timeout_seconds": 300,
+          "log": "format-patch-generate.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:10:09Z",
+          "elapsed_seconds": 7.594,
+          "log_bytes": 5911,
+          "log_sha256": "cf16db4390b51af71464111939f233c1f59ea9823dddc2cc2241f54542293fb8"
+        },
+        {
+          "name": "format-worktree-remove",
+          "argv": [
+            "git",
+            "worktree",
+            "remove",
+            "--force",
+            "D:\\a\\_temp\\nestlink-network-rewrite-windows-2022\\format-source"
+          ],
+          "started_at": "2026-11-02T17:10:09Z",
+          "timeout_seconds": 120,
+          "log": "format-worktree-remove.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:10:10Z",
+          "elapsed_seconds": 0.188,
+          "log_bytes": 159,
+          "log_sha256": "828f2ff0ba92dfc61da4d6fb5636a10c055a2148a91bb780ae4053ec408983b6"
+        },
+        {
+          "name": "contract-clippy",
+          "argv": [
+            "cargo",
+            "clippy",
+            "--all-targets",
+            "--locked",
+            "--keep-going",
+            "-p",
+            "nestlink-protocol",
+            "-p",
+            "nestlink-identity",
+            "-p",
+            "nestlink-policy",
+            "-p",
+            "nestlink-connectivity",
+            "-p",
+            "nestlink-storage",
+            "-p",
+            "nestlink-traversal",
+            "-p",
+            "nestlink-transport-stream",
+            "-p",
+            "nestlink-transport-quic",
+            "-p",
+            "nestlink-transport-wss",
+            "-p",
+            "nestlink-remote",
+            "-p",
+            "nestlink-server",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "started_at": "2026-11-02T17:10:10Z",
+          "timeout_seconds": 1200,
+          "log": "contract-clippy.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:12:28Z",
+          "elapsed_seconds": 138.687,
+          "log_bytes": 28925,
+          "log_sha256": "2a2c64c7b4feb9d888f93ddf6d4af244c46f481763b80a18aa63860a9f17ce24"
+        },
+        {
+          "name": "contract-tests",
+          "argv": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "-B",
+            "scripts/refactor-windows-normal-user.py",
+            "cargo",
+            "test",
+            "--locked",
+            "--lib",
+            "--tests",
+            "--no-fail-fast",
+            "-p",
+            "nestlink-protocol",
+            "-p",
+            "nestlink-identity",
+            "-p",
+            "nestlink-policy",
+            "-p",
+            "nestlink-connectivity",
+            "-p",
+            "nestlink-storage",
+            "-p",
+            "nestlink-traversal",
+            "-p",
+            "nestlink-transport-stream",
+            "-p",
+            "nestlink-transport-quic",
+            "-p",
+            "nestlink-transport-wss",
+            "-p",
+            "nestlink-remote",
+            "-p",
+            "nestlink-server"
+          ],
+          "started_at": "2026-11-02T17:12:28Z",
+          "timeout_seconds": 1200,
+          "log": "contract-tests.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:26:20Z",
+          "elapsed_seconds": 831.844,
+          "log_bytes": 97898,
+          "log_sha256": "ef4f02f7999e3c01a5f5a062ca6053e6a4f55cd201408303c201d88a28bd6ffc"
+        },
+        {
+          "name": "ci-evidence-tests",
+          "argv": [
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "-B",
+            "scripts/refactor-windows-normal-user.py",
+            "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+            "-B",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests/network",
+            "-p",
+            "test_*.py",
+            "-v"
+          ],
+          "started_at": "2026-11-02T17:26:20Z",
+          "timeout_seconds": 1200,
+          "log": "ci-evidence-tests.log",
+          "return_code": 0,
+          "timed_out": false,
+          "finished_at": "2026-11-02T17:26:21Z",
+          "elapsed_seconds": 0.766,
+          "log_bytes": 5158,
+          "log_sha256": "3e0cf8a0c46ef7b391ac1b499bd626afd79461ea9ceb6b853e0e8379c09e94af"
+        }
+      ],
+      "failed_command_names": [
+        "format-check"
+      ],
+      "rust_test_inventory": {
+        "harnesses": 53,
+        "passed": 749,
+        "failed": 0,
+        "ignored": 2,
+        "all_named_result_rows_match_summary_totals": true,
+        "harness_summaries": [
+          {
+            "status": "ok",
+            "passed": 23,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 16,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.73
+          },
+          {
+            "status": "ok",
+            "passed": 57,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.21
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.02
+          },
+          {
+            "status": "ok",
+            "passed": 10,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.05
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 8,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.03
+          },
+          {
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 89,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.02
+          },
+          {
+            "status": "ok",
+            "passed": 4,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 8,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.04
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 6,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 10,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 31,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.75
+          },
+          {
+            "status": "ok",
+            "passed": 46,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 1.52
+          },
+          {
+            "status": "ok",
+            "passed": 0,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 1.43
+          },
+          {
+            "status": "ok",
+            "passed": 26,
+            "failed": 0,
+            "ignored": 2,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 5.28
+          },
+          {
+            "status": "ok",
+            "passed": 4,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.01
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 1.73
+          },
+          {
+            "status": "ok",
+            "passed": 4,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 3.51
+          },
+          {
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 21.57
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.52
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.27
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 21,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 45.67
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 14.84
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.33
+          },
+          {
+            "status": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 3.45
+          },
+          {
+            "status": "ok",
+            "passed": 81,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 101.8
+          },
+          {
+            "status": "ok",
+            "passed": 96,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 182.8
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.2
+          },
+          {
+            "status": "ok",
+            "passed": 4,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.66
+          },
+          {
+            "status": "ok",
+            "passed": 17,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 32.62
+          },
+          {
+            "status": "ok",
+            "passed": 21,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 31.56
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 4.14
+          },
+          {
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.46
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 1.76
+          },
+          {
+            "status": "ok",
+            "passed": 12,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 19.31
+          },
+          {
+            "status": "ok",
+            "passed": 16,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 27.79
+          },
+          {
+            "status": "ok",
+            "passed": 15,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 33.84
+          },
+          {
+            "status": "ok",
+            "passed": 6,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.31
+          },
+          {
+            "status": "ok",
+            "passed": 54,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 6.61
+          },
+          {
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 10.07
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.02
+          },
+          {
+            "status": "ok",
+            "passed": 0,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0
+          },
+          {
+            "status": "ok",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.08
+          },
+          {
+            "status": "ok",
+            "passed": 3,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 0.02
+          },
+          {
+            "status": "ok",
+            "passed": 4,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.04
+          },
+          {
+            "status": "ok",
+            "passed": 18,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered_out": 0,
+            "seconds": 2.12
+          }
+        ],
+        "ignored_tests": [
+          {
+            "name": "service_edge::caddy::admin::tests::actual_caddy_loopback_admin_route_round_trip",
+            "reason": "requires explicit NESTLINK_CADDY_BINARY; exercises the production Rust private loopback Admin client against an actual owned Caddy process"
+          },
+          {
+            "name": "service_edge::caddy::config::tests::actual_caddy_validates_generated_bootstrap",
+            "reason": "requires explicit NESTLINK_CADDY_BINARY; validates actual Rust-generated production bootstrap with the real Caddy executable"
+          }
+        ],
+        "inventory_limit": "Complete named output remains in the hashed official contract-tests.log; this focused evidence records exact per-harness totals and every ignored role."
+      },
+      "ci_evidence_tests": {
+        "discovered": 25,
+        "passed": 15,
+        "skipped": 10,
+        "failed": 0,
+        "passed_names": [
+          "test_ci_evidence.EvidenceTests.test_artifact_manifest_hashes_exact_bytes_and_excludes_receipt_self_hash",
+          "test_ci_evidence.EvidenceTests.test_evidence_must_be_new_and_outside_checkout_under_runner_temp",
+          "test_ci_evidence.EvidenceTests.test_identity_binds_source_workflow_attempt_and_runner",
+          "test_ci_evidence.EvidenceTests.test_incomplete_commands_or_missing_snapshot_cannot_generate_success",
+          "test_ci_evidence.EvidenceTests.test_real_command_failure_and_success_both_keep_exact_log_digest",
+          "test_ci_evidence.EvidenceTests.test_receipt_never_converts_a_source_integrity_failure_into_success",
+          "test_ci_evidence.EvidenceTests.test_receipt_retains_format_failure_even_when_patch_generation_succeeds",
+          "test_ci_evidence.EvidenceTests.test_refuses_local_and_self_hosted_execution",
+          "test_ci_evidence.EvidenceTests.test_refuses_wrong_repository_workflow_sha_and_missing_identity",
+          "test_ci_evidence.EvidenceTests.test_source_snapshot_binds_actual_git_revision_status_and_lock_bytes",
+          "test_ci_evidence.EvidenceTests.test_success_cannot_hide_dirty_source_different_sha_or_lock",
+          "test_ci_evidence.EvidenceTests.test_windows_legacy_console_cannot_abort_unicode_failure_receipt",
+          "test_gpu_cadence.CadenceTests.test_actual_slow_interval_tail_fails_the_original_threshold",
+          "test_gpu_cadence.CadenceTests.test_clock_owner_history_and_cleanup_negatives",
+          "test_gpu_cadence.CadenceTests.test_exact_integer_gate_preserves_measurement_boundary"
+        ],
+        "skipped_names": [
+          {
+            "name": "test_native_ice_evidence.NativeIceEvidenceTests.test_blackhole_cannot_be_reported_as_success_or_transfer",
+            "reason": "'Linux native ICE namespace evidence'"
+          },
+          {
+            "name": "test_native_ice_evidence.NativeIceEvidenceTests.test_complete_initial_and_real_xor_mapping",
+            "reason": "'Linux native ICE namespace evidence'"
+          },
+          {
+            "name": "test_native_ice_evidence.NativeIceEvidenceTests.test_legacy_success_partial_file_input_or_cleanup_cannot_pass",
+            "reason": "'Linux native ICE namespace evidence'"
+          },
+          {
+            "name": "test_native_ice_evidence.NativeIceEvidenceTests.test_port_change_requires_observed_kernel_rewrite_and_business_refusal",
+            "reason": "'Linux native ICE namespace evidence'"
+          },
+          {
+            "name": "test_native_ice_evidence.NativeIceEvidenceTests.test_same_physical_socket_stun_mapping_and_quinn_initial_are_required",
+            "reason": "'Linux native ICE namespace evidence'"
+          },
+          {
+            "name": "test_native_ice_evidence.NativeIceEvidenceTests.test_truncation_fragmentation_and_oversize_fail",
+            "reason": "'Linux native ICE namespace evidence'"
+          },
+          {
+            "name": "test_native_ice_evidence.NativeIceEvidenceTests.test_wrong_stun_transaction_missing_and_truncated_mapping_fail",
+            "reason": "'Linux native ICE namespace evidence'"
+          },
+          {
+            "name": "test_routed_evidence.RoutedCaptureTests.test_complete_initial_binds_actual_translated_port_and_size",
+            "reason": "'Linux namespace experiment parser'"
+          },
+          {
+            "name": "test_routed_evidence.RoutedCaptureTests.test_partial_headers_frames_and_udp_never_count",
+            "reason": "'Linux namespace experiment parser'"
+          },
+          {
+            "name": "test_routed_evidence.RoutedCaptureTests.test_wrong_nat_source_outer_oversize_fragmentation_and_plaintext_fail",
+            "reason": "'Linux namespace experiment parser'"
+          }
+        ]
+      },
+      "format_check_commands": [
+        {
+          "command": [
+            "cargo",
+            "metadata",
+            "--no-deps",
+            "--format-version",
+            "1",
+            "--locked"
+          ],
+          "return_code": 0
+        },
+        {
+          "command": [
+            "cargo",
+            "fmt",
+            "--package",
+            "nestlink-app-core",
+            "--package",
+            "nestlink-app-ipc",
+            "--package",
+            "nestlink-auth",
+            "--package",
+            "nestlink-connectivity",
+            "--package",
+            "nestlink-daemon",
+            "--package",
+            "nestlink-desktop",
+            "--package",
+            "nestlink-identity",
+            "--package",
+            "nestlink-local-ipc",
+            "--package",
+            "nestlink-media-codec",
+            "--package",
+            "nestlink-media-session",
+            "--package",
+            "nestlink-node",
+            "--package",
+            "nestlink-operations",
+            "--package",
+            "nestlink-platform-audio",
+            "--package",
+            "nestlink-platform-capture",
+            "--package",
+            "nestlink-platform-clipboard",
+            "--package",
+            "nestlink-platform-files",
+            "--package",
+            "nestlink-platform-input",
+            "--package",
+            "nestlink-platform-network",
+            "--package",
+            "nestlink-platform-security",
+            "--package",
+            "nestlink-platform-session",
+            "--package",
+            "nestlink-platform-tray",
+            "--package",
+            "nestlink-policy",
+            "--package",
+            "nestlink-privileged",
+            "--package",
+            "nestlink-protocol",
+            "--package",
+            "nestlink-remote",
+            "--package",
+            "nestlink-sdk",
+            "--package",
+            "nestlink-server",
+            "--package",
+            "nestlink-session",
+            "--package",
+            "nestlink-storage",
+            "--package",
+            "nestlink-transport-quic",
+            "--package",
+            "nestlink-transport-stream",
+            "--package",
+            "nestlink-transport-wss",
+            "--package",
+            "nestlink-traversal",
+            "--package",
+            "nestlink-turn-service",
+            "--package",
+            "nestlink-web",
+            "--package",
+            "xtask",
+            "--",
+            "--check"
+          ],
+          "return_code": 1
+        }
+      ],
+      "format_patch_commands": [
+        {
+          "command": [
+            "cargo",
+            "metadata",
+            "--no-deps",
+            "--format-version",
+            "1",
+            "--locked"
+          ],
+          "return_code": 0
+        },
+        {
+          "command": [
+            "cargo",
+            "fmt",
+            "--package",
+            "nestlink-app-core",
+            "--package",
+            "nestlink-app-ipc",
+            "--package",
+            "nestlink-auth",
+            "--package",
+            "nestlink-connectivity",
+            "--package",
+            "nestlink-daemon",
+            "--package",
+            "nestlink-desktop",
+            "--package",
+            "nestlink-identity",
+            "--package",
+            "nestlink-local-ipc",
+            "--package",
+            "nestlink-media-codec",
+            "--package",
+            "nestlink-media-session",
+            "--package",
+            "nestlink-node",
+            "--package",
+            "nestlink-operations",
+            "--package",
+            "nestlink-platform-audio",
+            "--package",
+            "nestlink-platform-capture",
+            "--package",
+            "nestlink-platform-clipboard",
+            "--package",
+            "nestlink-platform-files",
+            "--package",
+            "nestlink-platform-input",
+            "--package",
+            "nestlink-platform-network",
+            "--package",
+            "nestlink-platform-security",
+            "--package",
+            "nestlink-platform-session",
+            "--package",
+            "nestlink-platform-tray",
+            "--package",
+            "nestlink-policy",
+            "--package",
+            "nestlink-privileged",
+            "--package",
+            "nestlink-protocol",
+            "--package",
+            "nestlink-remote",
+            "--package",
+            "nestlink-sdk",
+            "--package",
+            "nestlink-server",
+            "--package",
+            "nestlink-session",
+            "--package",
+            "nestlink-storage",
+            "--package",
+            "nestlink-transport-quic",
+            "--package",
+            "nestlink-transport-stream",
+            "--package",
+            "nestlink-transport-wss",
+            "--package",
+            "nestlink-traversal",
+            "--package",
+            "nestlink-turn-service",
+            "--package",
+            "nestlink-web",
+            "--package",
+            "xtask"
+          ],
+          "return_code": 0
+        }
+      ],
+      "file_manifest": [
+        {
+          "path": "ci-evidence-tests.log",
+          "bytes": 5158,
+          "sha256": "3e0cf8a0c46ef7b391ac1b499bd626afd79461ea9ceb6b853e0e8379c09e94af"
+        },
+        {
+          "path": "contract-clippy.log",
+          "bytes": 28925,
+          "sha256": "2a2c64c7b4feb9d888f93ddf6d4af244c46f481763b80a18aa63860a9f17ce24"
+        },
+        {
+          "path": "contract-tests.log",
+          "bytes": 97898,
+          "sha256": "ef4f02f7999e3c01a5f5a062ca6053e6a4f55cd201408303c201d88a28bd6ffc"
+        },
+        {
+          "path": "format-check-commands.json",
+          "bytes": 6041,
+          "sha256": "b440d8e43703b6bcdd1c5a49cf6c39e0d15d05c598c42cfee207c791f01373b3"
+        },
+        {
+          "path": "format-check.log",
+          "bytes": 19265,
+          "sha256": "ad4cfb40a955619f532b27f56229eac387585aaf246cc61ae5565203b1cfc790"
+        },
+        {
+          "path": "format-patch-commands.json",
+          "bytes": 6006,
+          "sha256": "3a1311b054ba0e5bb98c28ae6a9c2e801d02fb9813e8cb9a7068ecd7ad0d533d"
+        },
+        {
+          "path": "format-patch-generate.log",
+          "bytes": 5911,
+          "sha256": "cf16db4390b51af71464111939f233c1f59ea9823dddc2cc2241f54542293fb8"
+        },
+        {
+          "path": "format-worktree-create.log",
+          "bytes": 305,
+          "sha256": "e7cc1a2ede9cd93645634affe98f9e931525927e6023326309b13024934aef0b"
+        },
+        {
+          "path": "format-worktree-remove.log",
+          "bytes": 159,
+          "sha256": "828f2ff0ba92dfc61da4d6fb5636a10c055a2148a91bb780ae4053ec408983b6"
+        },
+        {
+          "path": "format-worktree-status.json",
+          "bytes": 60,
+          "sha256": "249eb062ca162c6248245eaa1adfdde8435257dad7b4240b960dca6f19edb748"
+        },
+        {
+          "path": "ordinary-windows-token.log",
+          "bytes": 464,
+          "sha256": "ad40e9af28cc958a746a8f78b94a8d9ea0590d8795a421f8311b2fa6caee3c7e"
+        },
+        {
+          "path": "rust-toolchain.log",
+          "bytes": 278,
+          "sha256": "4f9bd86854e5f9a6cba08eeed9b2e5e9dbef4265f915ac58a0f16700a19daf8e"
+        },
+        {
+          "path": "rustfmt.patch",
+          "bytes": 11666,
+          "sha256": "e315c4f9b1f6fc36275499cde4569a76d61fa7aefad64493612f6fd76c75c5ea"
+        }
+      ]
+    }
+  ],
+  "formatter_failure": {
+    "command": "format-check",
+    "nested_failing_command": "cargo fmt ... -- --check",
+    "both_os_return_code": 1,
+    "patch_bytes": 11666,
+    "patch_sha256": "e315c4f9b1f6fc36275499cde4569a76d61fa7aefad64493612f6fd76c75c5ea",
+    "both_os_patch_bytes_identical": true,
+    "patch_paths": [
+      "apps/daemon/src/main.rs"
+    ],
+    "source_remained_exact_and_clean": true,
+    "subsequent_fix_reference": "ebc1ecc applies the separately verified hosted formatting patch under parent coordination; it does not convert this failed run to success.",
+    "applied_by_this_evidence_task": false
+  },
+  "experiments": [
+    {
+      "artifact_directory": "socket-13161389841",
+      "receipt": "network-socket-evidence.json",
+      "receipt_sha256": "346a16919621db6f99a88e815f574aaa681b184860efdba38e2aa8e47ea0f25c",
+      "passed": true,
+      "failure": null,
+      "source": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+      "workflow": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+      "run": "41488417514",
+      "attempt": "1",
+      "runner": {
+        "environment": "github-hosted",
+        "name": "GitHub Actions 1000012000",
+        "os": "Linux",
+        "architecture": "X64"
+      },
+      "source_before": {
+        "expected_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "exact_source": true,
+        "clean": true,
+        "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status_raw_bytes": 0,
+        "status": [],
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+      },
+      "source_after": {
+        "expected_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "exact_source": true,
+        "clean": true,
+        "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status_raw_bytes": 0,
+        "status": [],
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+      },
+      "verified_payloads": 167,
+      "unlisted": [
+        "network-socket-evidence.json"
+      ],
+      "cases": [
+        {
+          "name": "success",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": null
+        },
+        {
+          "name": "blackhole",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": null
+        },
+        {
+          "name": "cancel",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": null
+        },
+        {
+          "name": "peer-close",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": null
+        }
+      ],
+      "flags": [
+        {
+          "name": "ac04_passed",
+          "value": false
+        },
+        {
+          "name": "scope",
+          "value": "partial production socket development experiment; two endpoints, zero relays, no NAT"
+        }
+      ],
+      "limitations": [
+        "No two-relay or NAT topology, real LAN or target device qualification",
+        "No SDK signaling/discovery, TLS/WSS fallback, new network routing or migration qualification",
+        "FileRead uses production client/server with a fixture adapter approving one real file",
+        "Success/cancel isolate teardown packets to measure independent local ExplicitExit; peer-close separately verifies unisolated code-0 close maps to host Revoked",
+        "No screen capture, OS input injection, installation, performance, 24h or UU acceptance",
+        "Environment guards prevent accidental local execution; GitHub run/job/artifact records remain authoritative"
+      ],
+      "command_count": 141,
+      "process_count": 16,
+      "nonzero_commands": [
+        {
+          "name": "044-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "044-success-remaining-veth.log",
+          "log_sha256": "ab8fc883c20bc8fa9536b01b6357dcb37e695674e3415a71cbe914f55de1384d"
+        },
+        {
+          "name": "045-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "045-success-remaining-veth.log",
+          "log_sha256": "7c32b91bf5f6e94847ab1228c34f291866322b3bcb8c46c1b383e97e30788abb"
+        },
+        {
+          "name": "076-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "076-blackhole-remaining-veth.log",
+          "log_sha256": "a5678fb78866e43667f48ddab77468f1c84751b64cb82658b5e2b38051bf55d7"
+        },
+        {
+          "name": "077-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "077-blackhole-remaining-veth.log",
+          "log_sha256": "3a24e45e81bd54456ef0fc4656c9d0308d631f50a58432362168c3aa226f55c9"
+        },
+        {
+          "name": "110-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "110-cancel-remaining-veth.log",
+          "log_sha256": "009820c7a45967844e75a6a8f469b271897c9679b3c778199a4f57914e578598"
+        },
+        {
+          "name": "111-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "111-cancel-remaining-veth.log",
+          "log_sha256": "5d77c42ee420556afd2e50b55708a61c39afbcc177094463f3fef81861262f02"
+        },
+        {
+          "name": "140-peer-close-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "140-peer-close-remaining-veth.log",
+          "log_sha256": "3800ebcbd630b40a2f7ab4cae369b47613218c9c65fc5f187f7c187680265415"
+        },
+        {
+          "name": "141-peer-close-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "141-peer-close-remaining-veth.log",
+          "log_sha256": "8e694d92f1d2551b60c8497895146f6d0a5a161fa5dd281fbfa30724f4295180"
+        }
+      ],
+      "nonzero_processes": [],
+      "all_command_and_process_log_hashes_match_manifest": true,
+      "all_return_codes_match_original_expectations": true,
+      "all_commands_completed_without_timeout": true
+    },
+    {
+      "artifact_directory": "routed-13164125151",
+      "receipt": "network-routed-evidence.json",
+      "receipt_sha256": "8bb251f5c740a8de23e002eab0b35418cebf2e5ac875a8587b764bd1218b09a8",
+      "passed": true,
+      "failure": null,
+      "source": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+      "workflow": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+      "run": "41488417514",
+      "attempt": "1",
+      "runner": {
+        "environment": "github-hosted",
+        "name": "GitHub Actions 1000012003",
+        "os": "Linux",
+        "architecture": "X64"
+      },
+      "source_before": {
+        "expected_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "exact_source": true,
+        "clean": true,
+        "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status_raw_bytes": 0,
+        "status": [],
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+      },
+      "source_after": {
+        "expected_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "exact_source": true,
+        "clean": true,
+        "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status_raw_bytes": 0,
+        "status": [],
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+      },
+      "verified_payloads": 464,
+      "unlisted": [
+        "network-routed-evidence.json"
+      ],
+      "cases": [
+        {
+          "name": "success",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true
+        },
+        {
+          "name": "blackhole",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true
+        },
+        {
+          "name": "cancel",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true
+        }
+      ],
+      "flags": [
+        {
+          "name": "scope",
+          "value": "two endpoints, one authenticated relay, two actual Linux SNAT gateways; raw routed transport only"
+        },
+        {
+          "name": "ac04_passed",
+          "value": false
+        },
+        {
+          "name": "ac10_passed",
+          "value": false
+        },
+        {
+          "name": "ac11_passed",
+          "value": false
+        },
+        {
+          "name": "ac13_passed",
+          "value": false
+        }
+      ],
+      "limitations": [
+        "No bilateral ICE/STUN nomination, consent or same-socket hole-punching qualification",
+        "No public/external NAT, dual relay, multi-hop discovery or path migration",
+        "Inner QUIC handshakes and complete 1280-byte IPv6-shaped payloads run through the production routed adapter; no TUN injection",
+        "No business SessionPermit endpoint proof, actual FileRead worker or SDK signaling; framed bytes are transport checks only",
+        "Physical captures show encrypted outer UDP and actual SNAT tuples; they do not decrypt inner Initial packets",
+        "Credentials/seeds remain in an owned temporary fixture outside artifact output; no installed-device or full acceptance qualification"
+      ],
+      "command_count": 416,
+      "process_count": 24,
+      "nonzero_commands": [
+        {
+          "name": "136-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "136-success-remaining-veth.log",
+          "log_sha256": "4c1e631c62f708e313d993b9538b983c9ed5c5e7bdcd51f4235b3ded1b582a30"
+        },
+        {
+          "name": "137-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "137-success-remaining-veth.log",
+          "log_sha256": "bf73b1910ff087d2c92d8d1d0fa76d7bc9e7dc4429e15785146019f18dace8bc"
+        },
+        {
+          "name": "138-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "138-success-remaining-veth.log",
+          "log_sha256": "23315329e1bac9889efe1425778b2e5c75bf7ca218353bb225a2c45195a70651"
+        },
+        {
+          "name": "139-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "139-success-remaining-veth.log",
+          "log_sha256": "d283e77b52dda9cce618611ef1763041fe15b0a1d39bc9e01508b6329c73cb7c"
+        },
+        {
+          "name": "140-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "140-success-remaining-veth.log",
+          "log_sha256": "cd8e82b76a4c47c9151bd299af1cd3e01f70e33d8cf10a91655237d5681e0e29"
+        },
+        {
+          "name": "141-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "141-success-remaining-veth.log",
+          "log_sha256": "bd26c29d46ebddc564e9cb8a02170104b33f7af5f24442f1505ee8865c720b57"
+        },
+        {
+          "name": "142-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "142-success-remaining-veth.log",
+          "log_sha256": "8f1e369534dd77a3d155e41d5e5f7d56d812ae72e1343f70384cb4b66a3de2ba"
+        },
+        {
+          "name": "143-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "143-success-remaining-veth.log",
+          "log_sha256": "63e711432cc35c3d041a5e21dbd4e7ed5f437c00e2a5c648ba1b8885205abbcf"
+        },
+        {
+          "name": "272-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "272-blackhole-remaining-veth.log",
+          "log_sha256": "3d9344bfd2dbed987d99414bdb837d9acbbd96210f9ea74a6357a5c0e97bd96d"
+        },
+        {
+          "name": "273-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "273-blackhole-remaining-veth.log",
+          "log_sha256": "9f5507fced8a3bb561e9b8bdb205c45130c3de012d83c2f0e4e0867221cb95d4"
+        },
+        {
+          "name": "274-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "274-blackhole-remaining-veth.log",
+          "log_sha256": "0219f93fa19d621d54aa624f9792d1f59259259f1e4506fba792a8f7a65baa76"
+        },
+        {
+          "name": "275-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "275-blackhole-remaining-veth.log",
+          "log_sha256": "bdacf7fbe30a43dcaf80a9580bb6b8761d34b588a31a591a34672f1a92ba5bf0"
+        },
+        {
+          "name": "276-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "276-blackhole-remaining-veth.log",
+          "log_sha256": "6d176cdcfb9cda286a4c94ad524615c6ddcf14f049d8901bcb0eebab95b7c57a"
+        },
+        {
+          "name": "277-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "277-blackhole-remaining-veth.log",
+          "log_sha256": "363c388c9747c53bd40ec59fcb9ca655d765f0c7839f081f6cd058964051d589"
+        },
+        {
+          "name": "278-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "278-blackhole-remaining-veth.log",
+          "log_sha256": "ded43ea92d440fc24911ffaa2a014e88f16a2e6f951c1c69888e1a9aef4bd6cf"
+        },
+        {
+          "name": "279-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "279-blackhole-remaining-veth.log",
+          "log_sha256": "c1e24d1af21ae15031540970dc1182b8ad318c1ceec5f77e157749ab456efcc6"
+        },
+        {
+          "name": "408-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "408-cancel-remaining-veth.log",
+          "log_sha256": "0422b755a17ca23bd9dad2f990e034ee616998b4a853a1fdec8375e828eaa6bb"
+        },
+        {
+          "name": "409-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "409-cancel-remaining-veth.log",
+          "log_sha256": "4c21393e306853c392c63a2cd7c4c7b2f02117216cb20e7590c4a6d66b528bbb"
+        },
+        {
+          "name": "410-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "410-cancel-remaining-veth.log",
+          "log_sha256": "24389f4b3ff8ca007c9ff966ff1096913b1cc24aa750c5663baf0deb2847346e"
+        },
+        {
+          "name": "411-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "411-cancel-remaining-veth.log",
+          "log_sha256": "2dfa98914d7d12a5f8d50f355c1dfb3eaacd53d74216b66bdd46e9bdaf0adf6c"
+        },
+        {
+          "name": "412-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "412-cancel-remaining-veth.log",
+          "log_sha256": "a8dcda912c92bf2780eb17f10ae3511704b00ebf5101bfee9a26c1a98699b744"
+        },
+        {
+          "name": "413-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "413-cancel-remaining-veth.log",
+          "log_sha256": "12b9ecf5486079fce1a40c928804f64a6d490c88e20aadf3be94e2a4d3c2caf0"
+        },
+        {
+          "name": "414-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "414-cancel-remaining-veth.log",
+          "log_sha256": "56794e323d939de5c51ea14b176df3a089608fac9ea9faf74d963ee2b337965a"
+        },
+        {
+          "name": "415-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "415-cancel-remaining-veth.log",
+          "log_sha256": "02fc56fb27e36de2519adebfabb24b40ff152ba84f64c22f44e24ca07d4e51eb"
+        }
+      ],
+      "nonzero_processes": [],
+      "all_command_and_process_log_hashes_match_manifest": true,
+      "all_return_codes_match_original_expectations": true,
+      "all_commands_completed_without_timeout": true
+    },
+    {
+      "artifact_directory": "native-ice-13162239962",
+      "receipt": "network-native-ice-evidence.json",
+      "receipt_sha256": "59d2942297289dda00a8eb04fcc52c5002340b0ac33cc921ad6c294631ae5d95",
+      "passed": true,
+      "failure": null,
+      "source": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+      "workflow": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+      "run": "41488417514",
+      "attempt": "1",
+      "runner": {
+        "environment": "github-hosted",
+        "name": "GitHub Actions 1000011999",
+        "os": "Linux",
+        "architecture": "X64"
+      },
+      "source_before": {
+        "expected_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "exact_source": true,
+        "clean": true,
+        "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status_raw_bytes": 0,
+        "status": [],
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+      },
+      "source_after": {
+        "expected_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "exact_source": true,
+        "clean": true,
+        "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status_raw_bytes": 0,
+        "status": [],
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+      },
+      "verified_payloads": 642,
+      "unlisted": [
+        "network-native-ice-evidence.json"
+      ],
+      "cases": [
+        {
+          "name": "success",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true
+        },
+        {
+          "name": "blackhole",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true
+        },
+        {
+          "name": "cancel",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true
+        },
+        {
+          "name": "port_change",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true
+        }
+      ],
+      "flags": [
+        {
+          "name": "scope",
+          "value": "signed SDK native ICE and FileRead across two real Linux 1:1 UDP NAT gateways, plus forced destination-dependent port-change rejection"
+        },
+        {
+          "name": "ac04_passed",
+          "value": false
+        },
+        {
+          "name": "ac05_passed",
+          "value": false
+        },
+        {
+          "name": "ac07_passed",
+          "value": false
+        }
+      ],
+      "limitations": [
+        "Successful business scope is owned Linux 1:1 UDP address mappings with peer-restricted ingress; the forced destination-dependent case proves refusal only, without external-router, general symmetric NAT, CGNAT or IPv6 NAT qualification",
+        "Actual signed remote SessionPermit, SDK signaling, bilateral ICE and pinned Quinn run; no screen, input injection, audio or installed Windows acceptance",
+        "FileRead frames carry a complete owned random 256KiB payload in both directions; no file browser, filesystem grant, download/resume or file worker claim",
+        "Both original legacy and ICE physical sockets must be rebound after explicit owner cleanup; success cannot fall back to legacy",
+        "Management uses unchanged loopback-only HTTP development policy with namespace-local transparent TCP forwarders; no SDK TLS rules changed",
+        "Credentials, identities, ICE passwords and signaling payloads remain in private temporary storage outside artifacts; captures contain UDP only"
+      ],
+      "command_count": 582,
+      "process_count": 28,
+      "nonzero_commands": [
+        {
+          "name": "144-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "144-success-remaining-veth.log",
+          "log_sha256": "46878a76d084c89c702f7eb25c60a3f2b67c8770097ef4f680f38c522a2ec0c9"
+        },
+        {
+          "name": "145-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "145-success-remaining-veth.log",
+          "log_sha256": "1f3502b783940f79ac19862ff6829d619600e373611edffaad9f4b06111aec2a"
+        },
+        {
+          "name": "146-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "146-success-remaining-veth.log",
+          "log_sha256": "c30fbd8b1f7c67d9c5e95099fc1fcbddcdaa127bb568f1450a688763d7009846"
+        },
+        {
+          "name": "147-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "147-success-remaining-veth.log",
+          "log_sha256": "ded52989517608c5def38ee6dca2653292f9649d4e661da47e19ae3b7c08e65c"
+        },
+        {
+          "name": "148-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "148-success-remaining-veth.log",
+          "log_sha256": "47c0006e376bb1be25f1a1acd5e63ed1ed1eac5ed31df2536908e7754217c920"
+        },
+        {
+          "name": "149-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "149-success-remaining-veth.log",
+          "log_sha256": "21a8b9b910a12d297a6e676e99335abf5ec0f1488a0eb8a9adff49822be378c1"
+        },
+        {
+          "name": "150-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "150-success-remaining-veth.log",
+          "log_sha256": "38365fb02b2716e0434071169c1cc28f9711b03e27cda128e405943acda73644"
+        },
+        {
+          "name": "151-success-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "151-success-remaining-veth.log",
+          "log_sha256": "d97298e70256b79cc42ee54eaba8cb2392cdf1f29729abacb90c260f69f84d1e"
+        },
+        {
+          "name": "287-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "287-blackhole-remaining-veth.log",
+          "log_sha256": "27309bdf6b741bbb2627b4332ac0f374491e784daaa5eee6c55ccd372fc8c2c5"
+        },
+        {
+          "name": "288-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "288-blackhole-remaining-veth.log",
+          "log_sha256": "222b05be153ec47612a0e082a4a6e864f7a41ae387938baf35483b1447eedf13"
+        },
+        {
+          "name": "289-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "289-blackhole-remaining-veth.log",
+          "log_sha256": "48279125ec20a4b952930608340a4a16be653e9b4d2ca29c6a8e3886966df8fa"
+        },
+        {
+          "name": "290-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "290-blackhole-remaining-veth.log",
+          "log_sha256": "fc9995d358857232dd9906bf957fdd38cff7fef4778916f4ffcd865004556ff2"
+        },
+        {
+          "name": "291-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "291-blackhole-remaining-veth.log",
+          "log_sha256": "83e600d98cdf9bc28f5afaef385fe34606b308c4fd0101b4bdb0fe7559ea6902"
+        },
+        {
+          "name": "292-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "292-blackhole-remaining-veth.log",
+          "log_sha256": "ffbccefa2848ff46684f70f154e6b639c64b13501443060db86d1f7caab19a7b"
+        },
+        {
+          "name": "293-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "293-blackhole-remaining-veth.log",
+          "log_sha256": "95ad50ca6927c2cd206e7e1972e81faddc2fbf7c93a86a7c0d289f4924ef0006"
+        },
+        {
+          "name": "294-blackhole-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "294-blackhole-remaining-veth.log",
+          "log_sha256": "22c2f5a76062c42aea8b7a0327c082fd53100f9adb3ff745ea6efbd8ce080d54"
+        },
+        {
+          "name": "432-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "432-cancel-remaining-veth.log",
+          "log_sha256": "d19f59fe3ba2b1e7e49de63bbe739b3f4393ff4442114af4edbbec74e4f66750"
+        },
+        {
+          "name": "433-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "433-cancel-remaining-veth.log",
+          "log_sha256": "cabd7cccbe913adce1d77d8bb377a56f46f26f2c12eb74ac3fd33f293e81f65c"
+        },
+        {
+          "name": "434-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "434-cancel-remaining-veth.log",
+          "log_sha256": "048fe6b3eb169fb0b29a1f551722630ec7c8a939ab5b716863e58bdbac647fd2"
+        },
+        {
+          "name": "435-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "435-cancel-remaining-veth.log",
+          "log_sha256": "b25963296f32a2ab59034da6ccb59b06d20f9f2123425e24d340a1c7b8f97c67"
+        },
+        {
+          "name": "436-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "436-cancel-remaining-veth.log",
+          "log_sha256": "47cbaf7576e0d63c705d7c31b06e67db92d82d368fa52b987f773e68c1eee4bb"
+        },
+        {
+          "name": "437-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "437-cancel-remaining-veth.log",
+          "log_sha256": "216f060d576605ba5407cf605ab5846b3c1895754db578d78fc5ba24dd0487cf"
+        },
+        {
+          "name": "438-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "438-cancel-remaining-veth.log",
+          "log_sha256": "ae3aa959bcb7e46773e470c83448010445fee376124039e189d30ff243956980"
+        },
+        {
+          "name": "439-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "439-cancel-remaining-veth.log",
+          "log_sha256": "ffb0cc711c233164e1eb594d6e6553f6823f240793418deb500bbe6b48cc9d67"
+        },
+        {
+          "name": "574-port_change-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "574-port_change-remaining-veth.log",
+          "log_sha256": "4d0d4c2dbcd498aa5f9d89adb7c869aafdde4d658ba8984b77cbf4ede9870e59"
+        },
+        {
+          "name": "575-port_change-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "575-port_change-remaining-veth.log",
+          "log_sha256": "623a3976b93a43d74e37dee7f32b093b89068b60953069d1cda39d588df1a400"
+        },
+        {
+          "name": "576-port_change-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "576-port_change-remaining-veth.log",
+          "log_sha256": "46c174fead4742bc7064a95729bc41cdba94de15cce35bf64780d928754a368a"
+        },
+        {
+          "name": "577-port_change-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "577-port_change-remaining-veth.log",
+          "log_sha256": "13d68403d949994747c20673232094c2425c8cec954e48681a5269a5d46da837"
+        },
+        {
+          "name": "578-port_change-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "578-port_change-remaining-veth.log",
+          "log_sha256": "0270e2b67d53a10ca47ff910532a50304989ddc45cf8e01f256b0c65a6b8a213"
+        },
+        {
+          "name": "579-port_change-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "579-port_change-remaining-veth.log",
+          "log_sha256": "f7b70d1174c9df5eac99295b08e2813c7695f9049b1d18eabfc1286a400c2286"
+        },
+        {
+          "name": "580-port_change-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "580-port_change-remaining-veth.log",
+          "log_sha256": "294baad7752d96b94b7f5d0cd6260f408b674aed66a1169f24970a1022144ad5"
+        },
+        {
+          "name": "581-port_change-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "581-port_change-remaining-veth.log",
+          "log_sha256": "d0e11a1c502291a069cdd869a7055e807aa8d4f3fa1ea548419b2a7f5d71c45e"
+        }
+      ],
+      "nonzero_processes": [],
+      "all_command_and_process_log_hashes_match_manifest": true,
+      "all_return_codes_match_original_expectations": true,
+      "all_commands_completed_without_timeout": true
+    },
+    {
+      "artifact_directory": "migration-13164075029",
+      "receipt": "network-migration-evidence.json",
+      "receipt_sha256": "41afbc628f154d36c8ea5d3ba1557e33b6a097bae570b2c34f0ad44f4e7e6339",
+      "passed": true,
+      "failure": null,
+      "source": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+      "workflow": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+      "run": "41488417514",
+      "attempt": "1",
+      "runner": {
+        "environment": "github-hosted",
+        "name": "GitHub Actions 1000012004",
+        "os": "Linux",
+        "architecture": "X64"
+      },
+      "source_before": {
+        "expected_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "exact_source": true,
+        "clean": true,
+        "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status_raw_bytes": 0,
+        "status": [],
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+      },
+      "source_after": {
+        "expected_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+        "exact_source": true,
+        "clean": true,
+        "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status_raw_bytes": 0,
+        "status": [],
+        "dependency_lock_sha256": "f577260f66b488299569133814718216578f99d3742fa488dcf654d081db9779"
+      },
+      "verified_payloads": 309,
+      "unlisted": [
+        "network-migration-evidence.json"
+      ],
+      "cases": [
+        {
+          "name": "switch",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true
+        },
+        {
+          "name": "cancel",
+          "passed": true,
+          "failure": null,
+          "cleanup_failures": [],
+          "owned_namespaces_removed": true
+        }
+      ],
+      "flags": [
+        {
+          "name": "w14_complete",
+          "value": false
+        },
+        {
+          "name": "ac22_passed",
+          "value": false
+        },
+        {
+          "name": "production_migration_protocol_exercised",
+          "value": false
+        }
+      ],
+      "limitations": [
+        "Private cfg(test,Linux) prototype uses Quinn rebind_abstract after out-of-band fixture agreement; no production migration negotiation",
+        "Production path epoch remains one; no simultaneous proposal, lost ACK, bounded epoch drain, grant renewal or old-v15 semantic change",
+        "Same original PathGrant, Permit and transport group; each real preauthenticated relay has its own signed TransitGrant and unchanged deadlines/quotas",
+        "Fresh phase-tagged OS file bytes traverse one pinned inner QUIC stream after all old physical sockets release and old interfaces are down",
+        "No business endpoint SessionPermit proof, actual FileRead worker, input/media/TCP recovery, SDK signaling or full AC22 qualification",
+        "RTT, congestion and logical PLPMTUD trajectories are observations; Quinn local_address_changed changes CID and sends ping without resetting these estimates",
+        "NRD fragmentation adapts logical packets up to 1400 bytes onto outer QUIC fixed at 1200 bytes; logical PMTU is not physical dynamic PMTU convergence",
+        "Four isolated kernel namespaces and actual netem loss/delay/rate, no NAT/public Internet/installed device acceptance; private credentials are excluded from artifacts"
+      ],
+      "command_count": 273,
+      "process_count": 18,
+      "nonzero_commands": [
+        {
+          "name": "132-switch-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "132-switch-remaining-veth.log",
+          "log_sha256": "6e4c3c1657a55dae31a8e1da3b0568d95052f2ca51b6939ade324971b06a25b5"
+        },
+        {
+          "name": "133-switch-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "133-switch-remaining-veth.log",
+          "log_sha256": "29592a1a60d7879a259e2f8931faf9c5a41697aba3f1f56e0680ff8152943541"
+        },
+        {
+          "name": "134-switch-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "134-switch-remaining-veth.log",
+          "log_sha256": "f2695c241b26fd74231f8be285767f2a961124360ce39690b5729be87d5eaa7c"
+        },
+        {
+          "name": "135-switch-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "135-switch-remaining-veth.log",
+          "log_sha256": "000d9c226533df9cb863dfcd58de7ec0f0054f2599e01f8a364697531d4e11fd"
+        },
+        {
+          "name": "136-switch-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "136-switch-remaining-veth.log",
+          "log_sha256": "e8ff74a468c3bfe3c675a27722b99de480a451d55f7577b698cc98005f51bafc"
+        },
+        {
+          "name": "137-switch-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "137-switch-remaining-veth.log",
+          "log_sha256": "7a715f1629288971959e20f77a909c94b9e1ff5e83f7631a1e4c2e33126c61c7"
+        },
+        {
+          "name": "138-switch-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "138-switch-remaining-veth.log",
+          "log_sha256": "7f6b88cdf770705b4e71da1cc4ef340d2d6a7897b36dd3e2bf6961c960353f9b"
+        },
+        {
+          "name": "139-switch-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "139-switch-remaining-veth.log",
+          "log_sha256": "06880a1f10471bf17b2bcef84f7a7b9111e1271b0afca92146a75317b9756edc"
+        },
+        {
+          "name": "265-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "265-cancel-remaining-veth.log",
+          "log_sha256": "4cf226c509bccb71f9fd11cebddba65d03f868e08086e8ef90498b49c3466c55"
+        },
+        {
+          "name": "266-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "266-cancel-remaining-veth.log",
+          "log_sha256": "04574d5139ffa3c3a49efef8cb4b56ce6a6733067a42731e91b4dcad64bd5a7e"
+        },
+        {
+          "name": "267-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "267-cancel-remaining-veth.log",
+          "log_sha256": "e5ea7f07da041d6a176e3ba0a6223b1f33bba8ab4a9a50e0ac6a211ba3f7abc6"
+        },
+        {
+          "name": "268-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "268-cancel-remaining-veth.log",
+          "log_sha256": "b5f2baa1c6360d9b3a68dc39e18780dc909eef084698fb098a16532fd37a71f0"
+        },
+        {
+          "name": "269-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "269-cancel-remaining-veth.log",
+          "log_sha256": "ded1bee321dbe100cbfce73b5f28d86081cdd9a5a048b2204017b62aa7ffae69"
+        },
+        {
+          "name": "270-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "270-cancel-remaining-veth.log",
+          "log_sha256": "14ebea7aa2ca5b93d9c33fa0d30c14509eaceed6508166db1388b8142e37e477"
+        },
+        {
+          "name": "271-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "271-cancel-remaining-veth.log",
+          "log_sha256": "dd4b12daa802159c49b56d36842aa27228883d9ac08624badd8e6dd921c800a3"
+        },
+        {
+          "name": "272-cancel-remaining-veth",
+          "return_code": 1,
+          "expected_return_codes": [
+            0,
+            1
+          ],
+          "timed_out": false,
+          "timeout_seconds": 60,
+          "log": "272-cancel-remaining-veth.log",
+          "log_sha256": "5d31ee45d733c6d84fdfec80588269cf85b4ba06c87800f0338c24429b462d78"
+        }
+      ],
+      "nonzero_processes": [],
+      "all_command_and_process_log_hashes_match_manifest": true,
+      "all_return_codes_match_original_expectations": true,
+      "all_commands_completed_without_timeout": true
+    }
+  ],
+  "experiment_producer_inventory": {
+    "command_count": 1412,
+    "process_count": 86,
+    "total": 1498,
+    "all_original_expected_return_codes_verified": true,
+    "all_command_and_process_log_hashes_match_payload_manifests": true,
+    "all_commands_completed_without_timeout": true,
+    "nonzero_scope": "The recorded nonzero commands are expected read-only remaining-veth absence probes with original expected_return_codes [0,1]. They are retained in each experiment summary. No failing test or mutation is reclassified.",
+    "full_inventory_location": "Every original argv, deadline, return code, PID/process record and full file manifest remains in the officially hashed experiment receipt identified by its receipt_sha256."
+  },
+  "business_test_inventory": {
+    "artifact_id": 13164865038,
+    "producer_logs": 13,
+    "passed": 98,
+    "failed": 0,
+    "ignored": 5,
+    "all_named_results_match_summaries": true,
+    "files": [
+      {
+        "path": "network-chain-registered-tests.log",
+        "bytes": 39823,
+        "sha256": "e33a411783bcecc537c3daddf329ea589756713b465ae5d0663b2f30c62503f4",
+        "passed": 4,
+        "failed": 0,
+        "ignored": 0,
+        "filtered_out": 11,
+        "seconds": 17.53,
+        "passed_test_names": [
+          "chain::registered_nrd2_nodes_keep_host_initiated_quic_and_controller_business_permissions",
+          "chain::registered_nrd2_nodes_read_an_approved_os_file_and_revoke_both_original_hops",
+          "chain::registered_topology_owner_isolates_a_revoked_space_on_the_same_real_neighbor",
+          "chain::registered_topology_owner_withdraws_a_stopped_real_neighbor_before_original_chain_expiry"
+        ],
+        "ignored_test_lines": []
+      },
+      {
+        "path": "network-chain-sdk-tests.log",
+        "bytes": 28094,
+        "sha256": "dae6fcfbc8983f68d612b35733b57400f5f9f4477471a26e6bddd81629b36926",
+        "passed": 22,
+        "failed": 0,
+        "ignored": 0,
+        "filtered_out": 174,
+        "seconds": 4.07,
+        "passed_test_names": [
+          "network::routed::tests::a_verified_readback_cannot_cross_logout_login_server_or_business_generation",
+          "network::routed::tests::chain::sdk_four_node_chain_preserves_host_initiated_quic_and_controller_file_permissions",
+          "network::routed::tests::chain::sdk_four_node_chain_reads_an_approved_os_file_after_both_business_proofs",
+          "network::routed::tests::existing_carrier_lifecycle_is_rejected_before_business_proof_and_releases_original_sockets",
+          "network::routed::tests::external_cancel_and_source_drop_interrupt_business_proof_with_physical_cleanup",
+          "network::routed::tests::external_cancel_and_source_drop_interrupt_inner_setup_with_physical_cleanup",
+          "network::routed::tests::management_readback_binds_both_device_roles_and_the_original_network_pin",
+          "network::routed::tests::management_readback_rejects_retargeted_corrupted_and_obsolete_credentials",
+          "network::routed::tests::ready_current_readback_cannot_bypass_the_final_deadline_or_terminal_sources",
+          "network::routed::tests::required_peer_capability_rejection_never_opens_business_and_releases_original_route",
+          "network::routed::tests::route_sets::original_route_set_readback_preserves_distinct_routes_at_the_same_address_and_gates_availability",
+          "network::routed::tests::route_sets::route_set_readback_rejects_crossed_group_transits_retargeted_members_wrong_pins_and_stale_source",
+          "network::routed::tests::sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_establishment",
+          "network::routed::tests::sdk_business_renewal_preserves_the_original_route_ceiling_and_synchronous_stop_handler",
+          "network::routed::tests::sdk_host_initiated_inner_quic_still_proves_controller_business_and_releases_original_sockets",
+          "network::routed::tests::sdk_preflight_rejects_an_existing_stop_and_a_dropped_stop_source_with_socket_receipts",
+          "network::routed::tests::sdk_route_admission_rejects_another_business_permit_peer_key_and_direct_only_business",
+          "network::routed::tests::sdk_stop_interrupts_routed_establishment_before_the_inner_peer_starts",
+          "network::routed::tests::sdk_three_node_business_proof_limits_channels_and_releases_every_physical_socket",
+          "network::routed::tests::sdk_waiting_business_proof_ignores_none_updates_and_stops_on_revocation_or_source_drop",
+          "network::routed::tests::signed_direct_readback_keeps_membership_business_pin_path_and_login_independent",
+          "network::routed::tests::terminal_route_hook_revokes_the_same_authorization_before_returning_to_its_caller"
+        ],
+        "ignored_test_lines": []
+      },
+      {
+        "path": "network-local-proxy-tests.log",
+        "bytes": 21403,
+        "sha256": "2aeea6771f6d8f452a203496487a477162fd5319fd407ba8bc6914672ca5e926",
+        "passed": 7,
+        "failed": 0,
+        "ignored": 0,
+        "filtered_out": 189,
+        "seconds": 0.03,
+        "passed_test_names": [
+          "services::local_proxy::tests::cancelled_wait_keeps_original_cleanup_receipt",
+          "services::local_proxy::tests::component_preserves_fin_and_reverse_reply",
+          "services::local_proxy::tests::component_refuses_corrupted_rfc1929_version_before_credential_check",
+          "services::local_proxy::tests::credential_cleanup_preserves_replacement_and_only_removes_original",
+          "services::local_proxy::tests::debug_authentication_logs_never_contain_random_credentials",
+          "services::local_proxy::tests::explicit_choice_is_fixed_private_authority",
+          "services::local_proxy::tests::standard_client_requires_password_and_one_exact_connect_target"
+        ],
+        "ignored_test_lines": []
+      },
+      {
+        "path": "network-node-admission-tests.log",
+        "bytes": 6401,
+        "sha256": "37e48113c78daf2190a3902ef4104dba8963e0651bf3b0b9f721b04f08567694",
+        "passed": 4,
+        "failed": 0,
+        "ignored": 0,
+        "filtered_out": 55,
+        "seconds": 0.99,
+        "passed_test_names": [
+          "routed::tests::node_admission::a_wrong_fixed_node_pin_is_terminal_before_any_signed_hello",
+          "routed::tests::node_admission::application_rejection_after_hello_cannot_redial_or_reuse_the_owner",
+          "routed::tests::node_admission::delayed_current_client_pin_keeps_the_same_udp_owner_and_sends_one_signed_hello",
+          "routed::tests::node_admission::unavailable_dynamic_pin_never_extends_the_original_setup_deadline"
+        ],
+        "ignored_test_lines": []
+      },
+      {
+        "path": "network-private-service-sdk-tests.log",
+        "bytes": 29891,
+        "sha256": "5eb536f6133b8fa28f5da147e4548a0480d145ac285a0d34df913d7a26fdcfbd",
+        "passed": 32,
+        "failed": 0,
+        "ignored": 5,
+        "filtered_out": 0,
+        "seconds": 76.62,
+        "passed_test_names": [
+          "multiplex::multiplex_acl_revocation_drains_every_original_flow_and_actual_usage",
+          "multiplex::multiplex_control_fin_closes_two_flows_and_replayed_stream_proof_is_refused",
+          "multiplex::multiplex_duplicate_owner_is_fenced_and_owner_drop_drains_original_flows",
+          "multiplex::multiplex_original_lease_expiry_ends_active_http_before_original_idle_timeout",
+          "multiplex::multiplex_real_http_shares_one_grant_and_refuses_fifth_original_flow",
+          "multiplex::multiplex_udp_refusal_keeps_original_datagram_entry",
+          "native_private_stream_refuses_udp_without_creating_an_os_endpoint_or_reservation",
+          "native_private_stream_transports_real_bytes_and_stops_active_backend_and_os_endpoint",
+          "native_private_unix_stream_preserves_request_fin_and_replacement_path",
+          "offline::carrier::original_installation_certificate_without_memory_process_proof_cannot_reach_target",
+          "offline::carrier::original_offline_deadline_closes_idle_real_stream_and_native_listener",
+          "offline::carrier::original_offline_process_exit_and_authenticated_recovery_close_actual_channels",
+          "offline::carrier::original_offline_shared_byte_budget_stops_actual_reconnect_traffic",
+          "offline::carrier::original_quic_real_center_disconnect_reconnect_half_close_and_socket_release",
+          "offline::offline_http_sdk_administrator_enable_and_direct_policy_boundaries",
+          "offline::offline_http_sdk_approval_exact_process_consume_budget_and_recovery",
+          "private_direct_carrier_refuses_relay_only_business_before_reserving_bytes",
+          "private_host_rechecks_original_consumer_login_after_signout",
+          "private_http_runs_real_http_backend_and_rejects_wrong_consumer_identity",
+          "private_tcp_preserves_half_close_without_public_edge_and_charges_original_ledgers",
+          "private_udp_preserves_empty_datagrams_transports_dns_and_revokes_live_mapping",
+          "relay::single_relay_tcp_fixed_target_expiry_closes_backend_without_a_local_stop",
+          "relay::single_relay_tcp_uses_private_authority_and_acl_revoke_closes_original_backend",
+          "relay::single_relay_udp_keeps_empty_datagrams_and_acl_revocation_releases_original_mapping",
+          "relay::two_relay_tcp_keeps_original_consumer_login_and_signout_closes_backend",
+          "relay::two_relay_tcp_uses_private_authority_and_acl_revoke_closes_original_backend",
+          "relay::two_relay_udp_keeps_empty_datagrams_and_acl_revocation_releases_both_original_hops",
+          "short_local_target_approval_bounds_presence_business_and_automatic_socket_release",
+          "standard_socks_client_uses_private_target_and_stops_stalled_workers_and_credentials",
+          "standard_socks_udp_association_keeps_empty_boundaries_and_exact_local_peer",
+          "web::real_private_web_preserves_cookie_upload_redirect_and_websocket_then_logout_closes_upgrade",
+          "web::real_private_web_rejects_host_origin_and_acl_revocation_closes_existing_upgrade"
+        ],
+        "ignored_test_lines": [
+          "raw::root_helper_role ... ignored, cooperation role; invoked explicitly by the hosted raw experiment",
+          "raw::tcp_uid_fence_and_physical_cleanup ... ignored, requires dedicated GitHub-hosted nftables workflow",
+          "raw::udp_uid_fence_empty_datagrams_and_helper_crash ... ignored, requires dedicated GitHub-hosted nftables workflow",
+          "raw::uid_probe_role ... ignored, cooperation role; invoked explicitly by the hosted raw experiment",
+          "web::hosted::caddy_browser_fixture_role ... ignored, cooperation role; only the dedicated GitHub-hosted Caddy/Chrome workflow invokes it"
+        ]
+      },
+      {
+        "path": "network-product-owner-tests.log",
+        "bytes": 20849,
+        "sha256": "953fbe87c39bb5810d7be8b7f8cc0eca63c32e8aeb82daa87d035e613b761f99",
+        "passed": 3,
+        "failed": 0,
+        "ignored": 0,
+        "filtered_out": 79,
+        "seconds": 1.6,
+        "passed_test_names": [
+          "runtime::native_routed::tests::aborted_poll_owner_returns_the_same_authenticated_client_before_completion",
+          "runtime::native_routed::tests::closed_and_dropped_poll_requests_return_the_original_authenticated_client",
+          "runtime::native_routed::tests::dropping_route_lifetime_cancels_its_original_receiver"
+        ],
+        "ignored_test_lines": []
+      },
+      {
+        "path": "network-route-set-product-tests.log",
+        "bytes": 27547,
+        "sha256": "bb38f87a52079443350d10b2bc8add477cb3e5ce66827476675ebcd0ebbf6735",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0,
+        "filtered_out": 4,
+        "seconds": 7.05,
+        "passed_test_names": [
+          "route_set::product_route_set_recovers_after_total_old_node_loss_releases_pressed_input_and_requests_fresh_keyframe",
+          "route_set::signed_direct_space_path_uses_original_media_and_input_owner_and_revocation_releases_pressed_keys"
+        ],
+        "ignored_test_lines": []
+      },
+      {
+        "path": "network-route-set-sdk-tests.log",
+        "bytes": 22719,
+        "sha256": "94d0a1a02e61cb7d9be3d15a517011473c0ecc4e4b49bd1ed66803a16949d6a1",
+        "passed": 6,
+        "failed": 0,
+        "ignored": 0,
+        "filtered_out": 9,
+        "seconds": 22.86,
+        "passed_test_names": [
+          "route_sets::continuation::actual_continuous_owner_prepares_and_probes_spare_without_replacing_business_and_retires_it",
+          "route_sets::original_route_set_keeps_b_admissible_after_a_stops_and_rejects_role_replay",
+          "route_sets::recovery::both_explicit_recoverable_stops_keep_the_fixed_budget_but_current_group_revocation_still_wins",
+          "route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay",
+          "route_sets::recovery::recovery_rejects_live_sources_terminal_stops_cancel_and_narrower_local_consent_before_signing",
+          "route_sets::selected_original_candidate_keeps_business_after_other_node_loss_and_stops_on_group_revoke"
+        ],
+        "ignored_test_lines": []
+      },
+      {
+        "path": "network-service-publication-owner-tests.log",
+        "bytes": 22713,
+        "sha256": "6f7fad7654fce3a7767c7a1b363329bc1545c1d473e8136a3b0db1724e00bcbc",
+        "passed": 11,
+        "failed": 0,
+        "ignored": 0,
+        "filtered_out": 185,
+        "seconds": 3.45,
+        "passed_test_names": [
+          "services::publication::backend_tls::tests::backend_tls_refuses_empty_unbounded_or_invalid_local_trust",
+          "services::publication::backend_tls::tests::fixed_backend_tls_checks_actual_chain_name_and_certificate_expiry",
+          "services::publication::cleanup::tests::abandoning_a_wait_preserves_the_same_cleanup_worker_and_endpoint",
+          "services::publication::cleanup::tests::drop_on_an_ordinary_thread_retains_endpoint_until_original_worker_ends",
+          "services::publication::cleanup::tests::joined_worker_cannot_certify_socket_stop_while_an_endpoint_holder_remains",
+          "services::publication::cleanup::tests::slow_cleanup_does_not_report_physical_stop_or_drop_original_handle",
+          "services::publication::issuer::tests::actual_quic_signed_refresh_keeps_publication_alive_past_original_issuer_deadline",
+          "services::publication::issuer::tests::actual_signed_lease_observation_discovers_pins_renews_and_rejects_retired_or_expired",
+          "services::publication::issuer::tests::issuer_refresh_rejects_scope_rotation_tampering_and_deadline_rollback",
+          "services::publication::issuer::tests::original_public_delegation_evidence_is_exact_bound_live_and_changes_on_refresh",
+          "services::publication::renewal::tests::original_edge_progress_gap_and_replays_cannot_extend_or_revive_health"
+        ],
+        "ignored_test_lines": []
+      },
+      {
+        "path": "network-service-publication-sdk-tests.log",
+        "bytes": 20567,
+        "sha256": "9ca0689d8dd0dd955a6315b45a229f7c5ed104d7e8126c8f1c1fb527a5d5e7cf",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0,
+        "filtered_out": 0,
+        "seconds": 10.72,
+        "passed_test_names": [
+          "actual_http_quic_tcp_publication_retains_half_close_renews_and_physically_stops",
+          "space_publication_rule_is_enforced_by_real_http_quic_and_physical_ingress_teardown"
+        ],
+        "ignored_test_lines": []
+      },
+      {
+        "path": "network-service-start-cancellation-tests.log",
+        "bytes": 20367,
+        "sha256": "d372a5db27faaa6b52f2c12bdbb5a4f5b37c686fff2399c06ccfe11880401f1b",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "filtered_out": 0,
+        "seconds": 1.84,
+        "passed_test_names": [
+          "cancel_during_actual_quic_web_readiness_drains_the_same_endpoint"
+        ],
+        "ignored_test_lines": []
+      },
+      {
+        "path": "network-signed-direct-sdk-tests.log",
+        "bytes": 20802,
+        "sha256": "38b3b65542c7259c18042ae47332288402b29c6bbac4c64f2f5ecc97eb212949",
+        "passed": 3,
+        "failed": 0,
+        "ignored": 0,
+        "filtered_out": 193,
+        "seconds": 10.97,
+        "passed_test_names": [
+          "native_tests::signed_direct_deadline_stops_idle_business_without_management_poll_and_releases_original_socket",
+          "network::routed::tests::signed_direct_readback_keeps_membership_business_pin_path_and_login_independent",
+          "webrtc_host::tests::turn_fallback_tests::trickle_answers_before_slow_stun_and_completes_a_signed_direct_connection"
+        ],
+        "ignored_test_lines": []
+      },
+      {
+        "path": "network-space-address-sdk-tests.log",
+        "bytes": 20355,
+        "sha256": "1bada8a57f4ffb7b16614cf77f7ee68562c47365ea3abfef296ba696f85ae22f",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "filtered_out": 0,
+        "seconds": 1.29,
+        "passed_test_names": [
+          "directory_issue_reserve_rename_revoke_are_real_authorized_http_calls"
+        ],
+        "ignored_test_lines": []
+      }
+    ]
+  },
+  "ordinary_log_and_vector_artifacts": [
+    {
+      "directory": "directory-13163940556",
+      "files": [
+        {
+          "path": "network-route-set-http-tests.log",
+          "bytes": 754,
+          "sha256": "c6d71851b7aae1f79777a56190962316a4d328bcb642be096373ef3812f5d9a6",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 19,
+              "seconds": 3.52
+            }
+          ],
+          "passed_test_names": [
+            "route_sets::route_set_http_second_global_capacity_rejection_leaves_no_partial_path_or_allocation",
+            "route_sets::route_set_http_binds_atomic_consent_and_keeps_healthy_member_after_other_node_revocation"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-route-set-storage-tests.log",
+          "bytes": 2389,
+          "sha256": "9df5375b5ac5e7b87f8498ef5bc8a90369fe8b57eb60921264f09a12471d30aa",
+          "passed": 9,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 9,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 87,
+              "seconds": 24.91
+            }
+          ],
+          "passed_test_names": [
+            "network_paths::route_sets::atomic_route_set_preserves_original_group_and_divides_one_cumulative_byte_budget",
+            "network_paths::route_sets::both_node_snapshots_delegate_only_their_original_member_and_withdraw_together",
+            "network_paths::route_sets::a_changed_node_endpoint_only_withdraws_that_original_candidate_without_refunding",
+            "network_paths::route_sets::revoking_one_node_preserves_the_other_original_grant_and_node_admission_resource",
+            "network_paths::route_sets::recovery::signed_recovery_has_one_target_one_receipt_fresh_ids_and_unreplenished_original_capacity",
+            "network_paths::route_sets::route_set_audit_failure_rolls_back_both_allocations_and_original_grants",
+            "network_paths::route_sets::route_set_device_consent_covers_every_member_and_original_path_field",
+            "network_paths::route_sets::second_member_node_global_and_account_capacity_failures_roll_back_the_entire_set",
+            "network_paths::route_sets::recovery::forged_context_changed_target_policy_and_expiry_never_gain_a_successor"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-space-address-storage-tests.log",
+          "bytes": 1588,
+          "sha256": "479ff570c94eedc56c49f0b2c9136afbe5b23a024c3606af6bf035c6a1906854",
+          "passed": 6,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 6,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 9,
+              "seconds": 11.2
+            }
+          ],
+          "passed_test_names": [
+            "addressing::dense_manual_reservations_stop_after_a_bounded_probe_window_without_a_write",
+            "addressing::dual_stack_is_stable_and_names_reservations_revocation_have_independent_cas",
+            "addressing::concurrent_directory_writers_commit_one_cas_and_audit_failure_rolls_back",
+            "addressing::directory_permissions_duplicate_names_and_global_address_collisions_fail_closed",
+            "addressing::member_epoch_key_replacement_and_archive_invalidate_without_identity_inheritance",
+            "addressing::schema_38_upgrade_preserves_existing_memberships_and_starts_an_empty_directory"
+          ],
+          "ignored_test_lines": []
+        }
+      ]
+    },
+    {
+      "directory": "topology-13163486370",
+      "files": [
+        {
+          "path": "network-chain-http-tests.log",
+          "bytes": 515,
+          "sha256": "e3f7f195d4bcbd4d122e72a762cfbbfafe702116e46c7b8b9e33ac1573a4ac80",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 20,
+              "seconds": 3.46
+            }
+          ],
+          "passed_test_names": [
+            "chains::chain_http_authenticates_atomic_reservation_exact_readback_and_held_revocation"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-chain-reservation-tests.log",
+          "bytes": 3997,
+          "sha256": "e8f1ef851f856c777f0e533362d06b57b8fb2c633e30fea7e22f09bad1c02791",
+          "passed": 16,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 16,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 80,
+              "seconds": 26.73
+            }
+          ],
+          "passed_test_names": [
+            "network_paths::chains::both_account_endpoint_promises_share_the_existing_limit",
+            "network_paths::chains::atomic_chain_persists_exact_ordered_transits_and_revokes_without_refunding",
+            "network_paths::chains::both_node_snapshots_delegate_the_same_full_chain_and_withdraw_it_together",
+            "network_paths::chains::continuity::down_then_up_without_an_intermediate_poll_permanently_retires_both_original_hops",
+            "network_paths::chains::continuity::failed_report_journal_rolls_back_the_new_head_and_both_hop_retirements",
+            "network_paths::chains::business_revocation_or_originating_login_logout_ends_the_whole_chain",
+            "network_paths::chains::continuity::replacement_publisher_with_identical_neighbors_never_inherits_an_old_chain",
+            "network_paths::chains::continuity::expired_observation_cannot_be_repaired_into_the_original_chain_with_or_without_readback",
+            "network_paths::chains::continuity::one_second_observations_continue_original_node_bounded_grants_across_refresh_and_restart",
+            "network_paths::chains::continuity::schema_36_retires_unprovable_old_chains_without_refunding_or_resigning_them",
+            "network_paths::chains::device_proof_binds_order_both_topology_references_and_all_grant_identifiers",
+            "network_paths::chains::continuity::stale_initial_digest_is_rejected_even_when_a_new_head_continues_the_same_edge",
+            "network_paths::chains::global_quota_counts_both_hops_and_audit_failure_rolls_back_everything",
+            "network_paths::chains::second_hop_capacity_failure_rolls_back_both_promises_and_all_credentials",
+            "network_paths::chains::simultaneous_chain_transactions_cannot_split_or_overbook_two_remaining_slots",
+            "network_paths::chains::topology_publisher_revoke_or_endpoint_change_invalidates_entire_reserved_chain"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-local-prefix-config-tests.log",
+          "bytes": 867,
+          "sha256": "0216b712c8ac06682cd12e8ac4f953d3a7104bde60a705377cba4a8b21891c00",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 27,
+              "seconds": 0
+            }
+          ],
+          "passed_test_names": [
+            "node_quic::prefixes::tests::protected_choices_bind_deployment_node_exact_host_and_unique_space_prefix",
+            "node_quic::prefixes::tests::protected_choices_reject_excess_and_allow_explicitly_empty_configuration"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-route-export-http-tests.log",
+          "bytes": 539,
+          "sha256": "9c00c1e1d18332349d916770c794c171e4398bac61205301a3ec7b9b442a12c1",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 20,
+              "seconds": 3.42
+            }
+          ],
+          "passed_test_names": [
+            "route_exports::route_export_http_keeps_node_prefix_authority_separate_and_revokes_the_real_journal"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-service-both-policy-tests.log",
+          "bytes": 4288,
+          "sha256": "51ac76a95b94f0e75fc4a9ae4e1d13c88f4e5141df5e87a1f56385d5ab1c5558",
+          "passed": 14,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 14,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 67,
+              "seconds": 33.6
+            }
+          ],
+          "passed_test_names": [
+            "services::publication::tests::private_policy::both_modes_share_durable_allowance_exact_network_graph_and_terminal_private_owner",
+            "services::publication::tests::private_policy::combined_private_currentness_keeps_original_bytes_and_rejects_tamper_expiry_and_revoke",
+            "services::publication::tests::private_policy::offline::offline_consume_binds_exact_process_digest_and_device_then_burns_durably",
+            "services::publication::tests::private_policy::offline::offline_distinct_accounts_cannot_approve_or_consume_the_other_endpoint",
+            "services::publication::tests::private_policy::offline::offline_exact_both_approvals_charge_original_online_ledgers_without_refund",
+            "services::publication::tests::private_policy::offline::offline_failed_audit_rolls_back_both_approval_and_all_original_budget_debits",
+            "services::publication::tests::private_policy::offline::offline_outstanding_online_promise_blocks_second_approval_without_partial_spend",
+            "services::publication::tests::private_policy::offline::offline_recovery_applies_acl_revocation_and_cannot_revive_after_regrant",
+            "services::publication::tests::private_policy::offline::offline_restore_fence_and_administrator_disable_fail_closed_without_refund",
+            "services::publication::tests::private_policy::offline::offline_sqlite_two_connections_can_consume_original_endpoint_only_once",
+            "services::publication::tests::private_policy::private_relay_preserves_original_budget_pinned_metadata_snapshot_and_close_receipt",
+            "services::publication::tests::private_policy::relays::expired_private_grant_is_omitted_after_same_runtime_presence_refresh",
+            "services::publication::tests::private_policy::relays::private_two_hop_refresh_preserves_exact_grants_and_down_up_cannot_revive_them",
+            "services::publication::tests::private_policy::relays::private_two_hop_second_capacity_failure_rolls_back_service_and_both_hop_promises"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-topology-http-tests.log",
+          "bytes": 19554,
+          "sha256": "f04df52d8a9d8263fa4922c80370714cbf0fafe2372b9fb242b49bcd5bc8dca1",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 19,
+              "seconds": 3.61
+            }
+          ],
+          "passed_test_names": [
+            "topology::topology_http_authenticates_node_reports_and_signs_query_bound_withdrawals",
+            "topology::real_node_control_reports_to_management_without_reusing_sequences_after_publisher_change"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-topology-tests.log",
+          "bytes": 20330,
+          "sha256": "8629cf5f7ae1b3ea4a5fa519e851995f3a96f01c7a5043061094e94f90fa28f6",
+          "passed": 32,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 8,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 0,
+              "seconds": 0.02
+            },
+            {
+              "passed": 3,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 0,
+              "seconds": 0
+            },
+            {
+              "passed": 21,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 0,
+              "seconds": 28.75
+            }
+          ],
+          "passed_test_names": [
+            "prefixes_need_the_current_exact_export_chain_and_never_accept_default_routes",
+            "authority_signed_withdrawal_survives_report_expiry_and_binds_query_and_cursor",
+            "publisher_proof_budget_and_projection_do_not_expand_duplicate_export_credentials",
+            "node_report_and_authority_advertisement_keep_original_permission_and_deadline",
+            "signatures_are_node_pinned_domain_separated_canonical_and_bounded",
+            "verified_advertisement_projection_retains_all_current_publication_revocations",
+            "reports_reject_cross_scope_replay_old_incarnation_and_unauthorized_neighbors",
+            "verified_observation_metadata_binds_exact_envelopes_and_rechecks_current_authority",
+            "reports_reject_default_routes_bad_incarnations_sequences_hops_and_size",
+            "full_snapshot_and_delta_are_unambiguous_and_journal_cursors_are_bounded",
+            "canonical_reports_and_envelopes_reject_unknown_duplicate_and_noncanonical_json",
+            "exact_retry_is_idempotent_without_ttl_extension_and_sequence_survives_restart",
+            "current_endpoint_revisions_runtime_and_registered_key_are_admission_facts",
+            "expiry_emits_signed_withdrawal_without_losing_report_high_watermark",
+            "compacted_delta_cursor_requires_full_snapshot_and_clock_rollback_is_rejected",
+            "new_policy_epoch_requires_full_snapshot_without_signing_old_epoch_upserts",
+            "node_resources::bootstrap_uses_current_mutually_allowed_publishers_and_exact_registered_endpoints",
+            "node_resources::exact_route_export_envelopes_are_delegated_and_revocation_removes_dependent_authority",
+            "node_resources::expired_neighbor_lease_is_removed_while_independently_renewed_local_node_remains_current",
+            "node_resources::publisher_deadline_removes_bootstrap_even_while_both_registered_node_leases_are_live",
+            "node_resources::publisher_revocation_omits_local_authority_and_remote_bootstrap_without_granting_transit",
+            "publisher_reissue_preserves_same_runtime_sequence_and_report_flood_is_bounded",
+            "route_exports::exact_prefix_chain_enters_real_journal_and_export_revocation_withdraws_atomically",
+            "route_exports::expired_export_chain_withdraws_its_live_head_without_resetting_sequence",
+            "route_exports::export_issuance_rejects_wrong_revision_epoch_authority_prefix_and_lifetime",
+            "route_exports::node_revocation_and_clock_rollback_invalidate_publication_proofs",
+            "route_exports::prefixes_still_need_exact_stored_authority_and_cannot_expand_their_permission",
+            "route_exports::publisher_deadlines_duplicates_and_cross_kind_ids_do_not_bypass_stored_exports",
+            "route_exports::schema_35_upgrade_preserves_existing_signed_topology_and_original_sequence",
+            "route_exports::stored_exports_bind_node_space_and_exact_committed_bytes_across_restart",
+            "route_exports::route_export_capacity_and_permanent_history_budgets_fail_closed",
+            "space_manager_revoke_withdraws_both_endpoints_and_old_grant_cannot_revive"
+          ],
+          "ignored_test_lines": []
+        }
+      ]
+    },
+    {
+      "directory": "vectors-13163046853",
+      "files": [
+        {
+          "path": "network-v1-all-grants.json",
+          "bytes": 9243,
+          "sha256": "4e63b135970c363b2451fa923ded131250450b59e54abd98851e1ab69632abc7",
+          "test_lines": [],
+          "failure_lines": []
+        },
+        {
+          "path": "network-v1-reference.json",
+          "bytes": 1346,
+          "sha256": "a7b316184a15d45b76ea87dac31d85b670c180a27761d6055e448435441f6fe3",
+          "test_lines": [],
+          "failure_lines": []
+        },
+        {
+          "path": "vector-build-provenance.json",
+          "bytes": 864,
+          "sha256": "92e40d1e856fc2df0e2872dd3c83572ce46399d79d2470737f520a773a410073",
+          "test_lines": [],
+          "failure_lines": []
+        }
+      ]
+    },
+    {
+      "directory": "carrier-13162084551",
+      "files": [
+        {
+          "path": "network-capability-tests.log",
+          "bytes": 1456,
+          "sha256": "3d7de74ac5ef77db88e3cb03426089bea2d7a65058b6bfc1aeb76e0f8e9c4095",
+          "passed": 6,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 6,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 53,
+              "seconds": 0.54
+            }
+          ],
+          "passed_test_names": [
+            "capability::tests::expired_absolute_deadline_cannot_admit_an_already_ready_connection",
+            "capability::tests::pinned_offers_bind_original_business_and_select_only_common_features",
+            "capability::tests::oversized_malformed_and_unknown_field_authenticated_offers_are_bounded",
+            "capability::tests::cancellation_and_deadline_close_the_original_connection",
+            "capability::tests::another_original_group_or_peer_or_alpn_cannot_supply_capabilities",
+            "capability::tests::required_unavailable_future_or_unknown_schema_closes_without_downgrade"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-chain-carrier-tests.log",
+          "bytes": 14927,
+          "sha256": "930c9a73b0136c9ca52b5a3ec2e666829e20295fea61fa686ae7ab87425fcd22",
+          "passed": 24,
+          "failed": 0,
+          "ignored": 5,
+          "summaries": [
+            {
+              "passed": 24,
+              "failed": 0,
+              "ignored": 5,
+              "filtered_out": 30,
+              "seconds": 1.87
+            }
+          ],
+          "passed_test_names": [
+            "routed::tests::borrowed_routed_establishment_can_be_cancelled_without_losing_original_socket_receipts",
+            "routed::tests::cancelling_routed_close_preserves_its_first_deadline_while_a_physical_holder_remains",
+            "routed::tests::actual_fragment_replay_does_not_forward_twice_and_both_directions_share_one_quota",
+            "routed::tests::actual_three_node_quic_keeps_initial_and_full_ipv6_packet_opaque_over_smaller_outer_datagrams",
+            "routed::tests::chain::full_chain_binds_both_hops_order_original_business_and_fixed_neighbors",
+            "routed::tests::chain::chain_authority_cannot_reinterpret_a_legacy_alpn_adjacency",
+            "routed::tests::chain::actual_four_node_chain_preserves_inner_quic_ipv6_streams_and_physical_release",
+            "routed::tests::cleanup::abrupt_carrier_close_and_route_revocation_release_the_original_inner_and_physical_owners",
+            "routed::tests::cleanup::external_inner_connection_and_endpoint_clones_keep_cancelled_cleanup_pending_without_a_new_budget",
+            "routed::tests::cleanup::only_the_explicit_retired_close_is_recoverable_and_unknown_application_closes_stay_denied",
+            "routed::tests::complete_binding_refuses_crossed_grants_actual_business_peers_adjacencies_and_stale_policy",
+            "routed::tests::cleanup::routed_socket_release_waits_for_its_real_writable_poller_after_receiver_join",
+            "routed::tests::node_admission::a_wrong_fixed_node_pin_is_terminal_before_any_signed_hello",
+            "routed::tests::chain::second_relay_refuses_cross_binding_reflection_and_wrong_authenticated_position",
+            "routed::tests::explicit_routed_establishment_failures_retain_the_original_adjacency_for_cleanup",
+            "routed::tests::node_admission::application_rejection_after_hello_cannot_redial_or_reuse_the_owner",
+            "routed::tests::live_revoke_and_sender_drop_stop_idle_forwarding_without_receiving_another_packet",
+            "routed::tests::route_retirement_is_permanent_and_a_true_revocation_always_overrides_it",
+            "routed::tests::routed_codec_and_shared_assembly_bound_full_packets_reordering_expiry_and_floods",
+            "routed::tests::node_admission::delayed_current_client_pin_keeps_the_same_udp_owner_and_sends_one_signed_hello",
+            "routed::tests::wrong_relay_key_cannot_create_an_authenticated_adjacency",
+            "routed::tests::node_admission::unavailable_dynamic_pin_never_extends_the_original_setup_deadline",
+            "routed::tests::physical_relay_refuses_cross_binding_reflection_hop_replay_and_cumulative_overquota",
+            "routed::tests::signed_transit_expiry_is_a_fixed_monotonic_deadline_without_traffic"
+          ],
+          "ignored_test_lines": [
+            "routed::migration_experiment::first_process ... ignored, explicit GitHub-hosted W14 namespace orchestrator only",
+            "routed::migration_experiment::prepare_fixture ... ignored, explicit GitHub-hosted W14 namespace orchestrator only",
+            "routed::migration_experiment::relay_a_process ... ignored, explicit GitHub-hosted W14 namespace orchestrator only",
+            "routed::migration_experiment::relay_b_process ... ignored, explicit GitHub-hosted W14 namespace orchestrator only",
+            "routed::migration_experiment::second_process ... ignored, explicit GitHub-hosted W14 namespace orchestrator only"
+          ]
+        },
+        {
+          "path": "network-continuation-policy-tests.log",
+          "bytes": 3251,
+          "sha256": "fdf17aa2be5d9fdbb309619f87b8332d07fb76838253864734be848c384de2f4",
+          "passed": 14,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 14,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 9,
+              "seconds": 0
+            }
+          ],
+          "passed_test_names": [
+            "continuation::tests::fifteen_percent_requires_two_seconds_of_fresh_samples_and_explicit_owner_commit",
+            "continuation::tests::forged_binding_future_sample_rollback_and_stale_authority_are_rejected",
+            "continuation::tests::idle_backoff_is_capped_and_no_work_can_outlive_the_original_group",
+            "continuation::tests::known_hard_limits_can_admit_failure_recovery_but_security_failure_is_terminal",
+            "continuation::tests::opt_in_attaches_to_the_existing_successful_scheduler_once_and_preserves_the_winner",
+            "continuation::tests::normal_optimization_resumes_only_after_the_original_ten_second_cooldown",
+            "continuation::tests::idle_probes_back_off_have_one_original_deadline_and_late_work_has_no_effect",
+            "continuation::tests::proposal_has_a_fixed_deadline_and_fresh_feedback_cannot_reactivate_its_old_token",
+            "continuation::tests::same_address_routes_remain_independent_and_cross_group_or_direct_only_is_rejected",
+            "continuation::tests::switch_cooldown_blocks_optimization_but_a_real_active_failure_can_bypass_it",
+            "continuation::tests::revoked_changed_or_expired_authority_and_network_changes_cannot_be_revived",
+            "continuation::tests::transient_improvement_unknown_rtt_and_stale_gap_cannot_satisfy_the_hold",
+            "continuation::tests::unknown_capacity_or_cost_and_offered_tx_never_satisfy_hard_constraints",
+            "continuation::tests::vanished_target_cancels_a_pending_proposal_and_late_commit_is_rejected"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-datagram-v2-tests.log",
+          "bytes": 2358,
+          "sha256": "9a3ecc97995417abe26b022dd3a03b692638cde7fc6c7f2e0fb31a0519cfd8a5",
+          "passed": 10,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 10,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 0,
+              "seconds": 0
+            }
+          ],
+          "passed_test_names": [
+            "both_directions_can_encode_a_single_relay_chain",
+            "both_directions_consume_two_hops_once_without_changing_inner_bytes",
+            "decode_and_forward_enforce_exact_fragment_size_index_and_total_budget",
+            "decode_and_forward_reject_reserved_bytes_invalid_fields_and_over_hop_counts",
+            "decode_and_forward_reject_truncated_headers_and_missing_payloads",
+            "encode_rejects_invalid_relay_counts_packet_ids_bindings_and_lengths",
+            "forward_rejects_wrong_position_direction_or_binding_before_any_mutation",
+            "legacy_encoder_and_forwarder_preserve_the_single_hop_contract",
+            "complete_packet_and_fragment_boundaries_round_trip_in_both_directions",
+            "versions_have_distinct_alpn_and_reject_each_others_wire_magic"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-host-prefix-tests.log",
+          "bytes": 1980,
+          "sha256": "9bead5c93efe59e98ba3297780527b47c1a655a9f567a5ce247329d6abdb1883",
+          "passed": 7,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 7,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 93,
+              "seconds": 1.03
+            }
+          ],
+          "passed_test_names": [
+            "control::prefix::tests::completed_measurement_keeps_original_start_and_expires_before_slow_probe_completion",
+            "control::prefix::tests::cancelled_close_retains_original_task_and_cleanup_deadline_until_real_join",
+            "control::prefix::tests::local_approval_is_exact_host_and_port_without_mapped_or_default_routes",
+            "control::prefix::tests::actual_tcp_measurement_reaches_signed_http_through_the_original_sequence_owner",
+            "control::prefix::tests::original_export_runtime_revision_omission_and_stop_revoke_measured_targets",
+            "control::prefix::tests::lease_renewal_never_moves_the_local_choices_original_deadline",
+            "control::prefix::tests::actual_probe_failure_withdraws_and_recovery_cannot_acknowledge_old_evidence"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-node-chain-admission-tests.log",
+          "bytes": 3411,
+          "sha256": "dd73687532646a9f82d9a4643d026f0ffc0a5cd5d410436e3549a227de87e24d",
+          "passed": 12,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 88,
+              "seconds": 10.09
+            }
+          ],
+          "passed_test_names": [
+            "control::resources::tests::network::a_pending_network_candidate_survives_continuous_fresh_snapshots_until_commit",
+            "control::resources::tests::network::a_prepared_network_candidate_keeps_the_original_node_authorization_cutoff",
+            "control::resources::tests::network::chain::chain_neighbors_reuse_shared_slots_meters_and_original_snapshot_continuity",
+            "control::resources::tests::network::network_routes_share_pair_counters_and_cannot_reset_reuse_or_mint_legacy_close_receipts",
+            "control::resources::tests::network::network_snapshot_rejects_changed_envelopes_authority_versions_and_stops_omitted_routes",
+            "control::resources::tests::network::identical_live_network_chain_reuse_requires_fresh_snapshots_and_keeps_original_deadlines",
+            "control::resources::tests::network::a_pending_network_candidate_cannot_revive_after_omission_expiry_or_resource_stop",
+            "control::resources::tests::network::routes::chain_routes_return_the_original_opposite_grants_and_endpoints_for_both_relay_positions",
+            "control::resources::tests::network::routes::omitted_revoked_snapshot_stopped_resources_and_stopped_nodes_cannot_return_old_routes",
+            "control::resources::tests::network::routes::route_descriptions_must_still_match_the_original_verified_resource_credential",
+            "control::resources::tests::network::routes::terminal_pairs_and_drained_allocation_watermarks_are_not_dialing_authority",
+            "control::resources::tests::network::routes::continuous_snapshots_cannot_extend_original_chain_or_entry_expiration"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-node-topology-authority-tests.log",
+          "bytes": 1070,
+          "sha256": "a75028ce4deaa49fcdc613c1b684edbdeb91be180c691e82908d47be395a00e4",
+          "passed": 3,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 3,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 97,
+              "seconds": 0.01
+            }
+          ],
+          "passed_test_names": [
+            "control::resources::tests::topology::observation_metadata_grants_no_forwarding_and_omission_removes_its_current_owner",
+            "control::resources::tests::topology::refreshed_observations_stop_and_wall_rollback_never_move_original_publisher_deadline",
+            "control::resources::tests::topology::forged_publisher_wrong_runtime_and_unapproved_probe_targets_are_rejected"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-packet-capability-tests.log",
+          "bytes": 1848,
+          "sha256": "d4ddf5733967ff6f4dbf92b1074818cdcfa0d190d818fcbba6bcb928671b9229",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 8,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 51,
+              "seconds": 6.03
+            }
+          ],
+          "passed_test_names": [
+            "packet_codec::tests::full_ipv6_minimum_mtu_reuses_existing_bounded_assembler_and_replay_window",
+            "packet_codec::tests::mismatched_mutual_proof_never_exposes_a_datagram_connection",
+            "packet_codec::tests::exact_mutual_proof_exposes_only_the_authenticated_datagram_connection",
+            "packet_codec::tests::legacy_packet_proof_is_an_explicit_frozen_protocol_choice",
+            "packet_codec::tests::stale_partial_packet_never_becomes_an_injected_packet",
+            "packet_codec::tests::new_packet_protocol_never_retries_a_legacy_alpn_after_failure",
+            "packet_codec::tests::incomplete_mutual_proof_times_out_without_exposing_or_restarting_connection",
+            "packet_codec::tests::slow_initial_handshake_cannot_extend_terminal_physical_socket_ownership"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-path-observation-policy-tests.log",
+          "bytes": 1052,
+          "sha256": "7939fe64f8de0b7e26e9d8f1a95185e434dcb1db15094ea901efd8d72a01d36b",
+          "passed": 3,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 3,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 20,
+              "seconds": 0
+            }
+          ],
+          "passed_test_names": [
+            "observation::tests::deferred_losses_have_no_fabricated_ratio_and_stop_clears_all_live_values",
+            "observation::tests::genuine_feedback_time_survives_cached_reads_and_idle_polls_until_expiry",
+            "observation::tests::initial_estimate_idle_and_expired_feedback_are_unknown_without_rebinding"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-path-observation-quic-tests.log",
+          "bytes": 3468,
+          "sha256": "decf20ff16023931160e0bd72ad89160ea924d569e318c64f896d1e983ac3421",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 30,
+              "seconds": 0.52
+            }
+          ],
+          "passed_test_names": [
+            "quic::tests::local_path_observation_uses_actual_quic_writes_and_joins_without_replacing_carrier"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-service-carrier-tests.log",
+          "bytes": 1920,
+          "sha256": "c29d66741a3af4441af033de8aa08dbf6ca6752e5b827a67dd14fa942a574b09",
+          "passed": 9,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 9,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 50,
+              "seconds": 3.01
+            }
+          ],
+          "passed_test_names": [
+            "service::socket::tests::release_completion_waits_for_the_last_real_writable_poller",
+            "service::datagram::tests::mapping_owners_bound_capacity_and_close_wakes_every_receiver",
+            "service::tests::pinned_service_quic_preserves_response_after_request_fin",
+            "service::tests::service_framing_uses_bounded_generic_streams_and_preserves_half_close",
+            "service::tests::service_carrier_rejects_the_wrong_installation_pin",
+            "service::datagram::tests::actual_native_quic_routes_empty_and_mtu_payload_and_refuses_second_driver",
+            "service::tests::service_owner_confirms_real_ipv6_udp_release_before_returning",
+            "service::tests::service_owner_confirms_real_udp_release_before_returning",
+            "service::tests::service_carrier_does_not_negotiate_the_remote_desktop_alpn"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-topology-graph-tests.log",
+          "bytes": 14451,
+          "sha256": "4f50366132a892374e76b2a9e62cc6dc6b7ecce6e46f03a995734341998b11be",
+          "passed": 16,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 16,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 0,
+              "seconds": 2.61
+            }
+          ],
+          "passed_test_names": [
+            "cursor_failures_and_late_invalid_changes_leave_the_original_graph_atomic",
+            "a_rejected_newer_authenticated_view_cannot_reopen_candidates_from_an_older_snapshot",
+            "candidates_wait_for_the_last_delta_page_and_full_snapshots_restore_completeness",
+            "exact_envelope_proofs_and_absolute_expiry_prevent_unsigned_or_renewed_content",
+            "full_omission_preserves_fences_and_expired_updates_cannot_remove_current_observations",
+            "expired_historical_upserts_and_withdrawals_advance_without_minting_live_proofs",
+            "graph_and_proofs_stay_bound_to_current_authority_scope_epoch_and_revocation",
+            "failed_batches_preserve_trusted_time_expiry_and_revocation_fences",
+            "new_boot_generation_allows_sequence_reset_and_rejects_prior_boot_or_uuid_alias",
+            "mutual_live_observations_choose_two_relays_without_extending_original_deadline",
+            "fewest_hops_then_peer_order_is_deterministic_even_in_a_cyclic_topology",
+            "signed_hop_limit_and_endpoint_pair_are_checked_after_graph_discovery",
+            "three_relay_chain_cannot_escape_the_two_relay_protocol_limit",
+            "one_sided_down_or_revision_mismatched_observations_do_not_connect_relays",
+            "withdrawal_partition_and_new_sequence_recovery_keep_old_sequences_retired",
+            "retained_publisher_budget_is_bounded_and_overflow_is_atomic"
+          ],
+          "ignored_test_lines": []
+        },
+        {
+          "path": "network-topology-reporter-tests.log",
+          "bytes": 10328,
+          "sha256": "0d5abb213c9d86726e4bfb8a5fc5bfd72d86bd08d3ecc1f4318d757e9ac4b66f",
+          "passed": 13,
+          "failed": 0,
+          "ignored": 0,
+          "summaries": [
+            {
+              "passed": 13,
+              "failed": 0,
+              "ignored": 0,
+              "filtered_out": 87,
+              "seconds": 1
+            }
+          ],
+          "passed_test_names": [
+            "control::topology::tests::neighbor_claims_are_bounded_owned_unique_and_explicitly_allowed",
+            "control::topology::tests::a_later_trusted_time_is_never_replaced_with_an_earlier_local_clock",
+            "control::topology::tests::cancellation_after_server_receipt_never_reuses_a_sequence_even_with_a_new_reporter",
+            "control::topology::tests::concurrent_publishers_allocate_unique_sequences_and_discard_superseded_receipts",
+            "control::topology::tests::publisher_reissue_and_reporter_recreation_keep_the_runtime_sequence_fence",
+            "control::topology::tests::real_http_rejects_declared_and_streamed_oversize_bodies_and_never_follows_redirects",
+            "control::topology::tests::registered_node_and_current_space_policy_cannot_be_replaced_by_publication_claims",
+            "control::topology::tests::real_http_rejects_different_reports_and_corrupted_authority_responses",
+            "control::topology::tests::reporter_reuses_the_existing_explicit_loopback_http_and_https_only_origin_rules",
+            "control::topology::tests::stop_cancels_in_flight_http_and_revokes_a_prepared_response",
+            "control::topology::tests::no_more_than_64_spaces_can_consume_runtime_watermarks_and_exhaustion_never_wraps",
+            "control::topology::tests::real_http_total_deadline_rejects_a_750ms_response_while_report_is_still_live",
+            "control::topology::tests::renewed_node_leases_cannot_extend_either_original_report_expiration_anchor"
+          ],
+          "ignored_test_lines": []
+        }
+      ]
+    }
+  ],
+  "original_two_relay_udp": {
+    "test": "relay::two_relay_udp_keeps_empty_datagrams_and_acl_revocation_releases_both_original_hops",
+    "source_revision": "4a4496b77cf5923a1b39c85c757b7cc6a7f3dc00",
+    "job_id": 125424743952,
+    "log": "network-private-service-sdk-tests.log",
+    "log_sha256": "5eb536f6133b8fa28f5da147e4548a0480d145ac285a0d34df913d7a26fdcfbd",
+    "outcome": "passed",
+    "suite": {
+      "discovered": 37,
+      "passed": 32,
+      "failed": 0,
+      "ignored": 5,
+      "seconds": 76.62
+    },
+    "official_job_line": "2026-11-02T17:15:52.2137770Z test relay::two_relay_udp_keeps_empty_datagrams_and_acl_revocation_releases_both_original_hops ... ok",
+    "fixed_stage_failure_records": 0,
+    "source_assertions_review": {
+      "path": "crates/sdk/tests/private_services/relay.rs",
+      "outer_timeout_seconds": 25,
+      "individual_datagram_and_stop_timeout_seconds": 3,
+      "post_revoke_backend_observation_milliseconds": 200,
+      "scope": "Original empty and nonempty datagrams traverse both hops and echo exactly; original resource ownership, ACL revoke, refusal after revoke and original connection/host/relay teardown all complete. The diagnostic prints only a fixed stage when an original operation fails, without retry or deadline changes."
+    },
+    "cause_limit": "No stage failure was emitted in this successful run. It establishes this execution's behavior and does not identify the historical timeout's pending owner or root cause."
+  },
+  "retained_failures": [
+    {
+      "source_revision": "745c05a8016c1d33c193706171714fa8b72c30cf",
+      "run_id": 41479920172,
+      "evidence": "production-carriers-745c05a.json",
+      "artifact_id": 13160575441,
+      "test": "relay::two_relay_udp_keeps_empty_datagrams_and_acl_revocation_releases_both_original_hops",
+      "outcome": "Elapsed(())",
+      "suite_passed": 31,
+      "suite_failed": 1,
+      "suite_ignored": 5,
+      "observation": "The source predates fixed-stage diagnostic ccf3aa5; neither original pending operation nor cause was established. The original failure remains failed."
+    }
+  ],
+  "limits": [
+    "This workflow remains failed because both original format-check commands failed. Later formatting edits and passing runtime tests do not rewrite that outcome.",
+    "Existing ignored cooperation/root/Caddy/browser/namespace roles and Windows Linux-only parser skips are explicitly retained and require their dedicated workflows where applicable.",
+    "The four experiments retain all original AC04/AC05/AC07/AC10/AC11/AC13/AC22 and W14 completion flags as recorded, including false values. They do not qualify full acceptance or installed physical targets.",
+    "The migration job is a private cfg(test,Linux) Quinn rebind feasibility experiment after fixture coordination, without production negotiation, path epoch advance or complete W14/AC22 behavior.",
+    "No source production change is justified by this run's two-relay UDP behavior. This evidence task changed no production source and did not dispatch or push.",
+    "Luanti's user-required original 25-second disconnect-display failure, prior capacity/debug/carrier failures, physical target/mobile/public ingress/cross-day and release gates remain unchanged."
+  ]
+}
