@@ -567,7 +567,10 @@ impl ContinuousRouteSetSession {
         // and old-path drain. Cancellation leaves this requirement in place
         // until the fenced original owner finishes complete cleanup.
         if let Some(required) = &owner.required_members {
-            required.fetch_or(1usize << receipt.candidate_index, std::sync::atomic::Ordering::AcqRel);
+            required.fetch_or(
+                1usize << receipt.candidate_index,
+                std::sync::atomic::Ordering::AcqRel,
+            );
         }
         let result = owner
             .transport

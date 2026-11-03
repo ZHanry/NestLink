@@ -344,13 +344,13 @@ mod tests {
         }
         let mut announcement = MediaAnnouncement {
             version: 6,
-            device_id: "device_rgb444".into(),
+            device_id: "12345678-1234-4234-8234-123456789abc".into(),
             direction: MediaDirection::Decode,
             revision: 1,
             expires_at_unix_ms: 200,
             probe: ProbeIdentity {
                 generation: 1,
-                resource_id: "resource_rgb444".into(),
+                resource_id: "12345678-1234-4234-8234-123456789abd".into(),
                 backend: "cpu-software".into(),
                 adapter_luid: None,
                 driver_version: None,

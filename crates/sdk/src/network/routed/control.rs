@@ -510,7 +510,9 @@ pub(super) fn route_set_members_current(
 impl RemoteRouteObserver {
     pub(super) fn required_members(&self) -> Option<Arc<std::sync::atomic::AtomicUsize>> {
         match &self.kind {
-            ReadbackKind::RouteSet { required_members, .. } => Some(required_members.clone()),
+            ReadbackKind::RouteSet {
+                required_members, ..
+            } => Some(required_members.clone()),
             _ => None,
         }
     }

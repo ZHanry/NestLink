@@ -604,7 +604,10 @@ async fn original_inner_migration(
         // A late guardian Drop must not turn their recoverable retirement
         // into PermissionDenied or extend the original signed deadline.
         for (budget, original_deadline) in [
-            controller.channels().lease_control().reconnection_budget()?,
+            controller
+                .channels()
+                .lease_control()
+                .reconnection_budget()?,
             host.channels().lease_control().reconnection_budget()?,
         ]
         .into_iter()

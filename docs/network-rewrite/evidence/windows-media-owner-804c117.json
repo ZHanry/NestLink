@@ -1,0 +1,2341 @@
+{
+  "schema_version": 1,
+  "kind": "windows-media-owner-exact-source-independent-failure-verification",
+  "recorded_at_utc": "2026-11-03T08:32:23.3392812Z",
+  "repository": "ZHanry/NestLink",
+  "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+  "run_id": 41602641860,
+  "run_attempt": 1,
+  "workflow": "Windows actual media owner diagnostics and strict boundaries",
+  "workflow_path": ".github/workflows/windows-media-owner.yml",
+  "workflow_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41602641860",
+  "status": "completed",
+  "conclusion": "failure",
+  "local_audit_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-804c117-independent",
+  "metadata_files": [
+    {
+      "path": "run.json",
+      "bytes": 11797,
+      "sha256": "52edb79ef35f0c9c50a68f7ea63a14fc767b1033b7da3e5b9e37a1786e0290d9"
+    },
+    {
+      "path": "jobs.json",
+      "bytes": 15695,
+      "sha256": "94b29cf4b5f55d357470223bf88dbd6852065db7fffbfdc4e66170d26858f9db"
+    },
+    {
+      "path": "artifacts.json",
+      "bytes": 2962,
+      "sha256": "be1ccc87412db2bd6f0d56a25d27255263325680e73e39a73fd897100e2b4ad2"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 125804796946,
+      "name": "owner-boundaries (windows-2022)",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41602641860/job/125804796946",
+      "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T08:21:16Z",
+      "completed_at": "2026-11-03T08:28:49Z",
+      "runner_name": "GitHub Actions 1000012313",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "windows-2022"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T08:21:17Z",
+          "completed_at": "2026-11-03T08:21:19Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T08:21:19Z",
+          "completed_at": "2026-11-03T08:21:29Z"
+        },
+        {
+          "name": "Verify exact hosted source and preserve input provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T08:21:29Z",
+          "completed_at": "2026-11-03T08:21:30Z"
+        },
+        {
+          "name": "Verify diagnostic analyzer negatives on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T08:21:30Z",
+          "completed_at": "2026-11-03T08:21:31Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T08:21:31Z",
+          "completed_at": "2026-11-03T08:21:43Z"
+        },
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 6,
+          "started_at": "2026-11-03T08:21:43Z",
+          "completed_at": "2026-11-03T08:22:47Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7,
+          "started_at": "2026-11-03T08:22:47Z",
+          "completed_at": "2026-11-03T08:22:47Z"
+        },
+        {
+          "name": "Select native codec prefix",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8,
+          "started_at": "2026-11-03T08:22:47Z",
+          "completed_at": "2026-11-03T08:22:47Z"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-03T08:22:47Z",
+          "completed_at": "2026-11-03T08:22:47Z"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2026-11-03T08:22:47Z",
+          "completed_at": "2026-11-03T08:22:47Z"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 11,
+          "started_at": "2026-11-03T08:22:47Z",
+          "completed_at": "2026-11-03T08:24:57Z"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T08:24:57Z",
+          "completed_at": "2026-11-03T08:24:57Z"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 13,
+          "started_at": "2026-11-03T08:24:57Z",
+          "completed_at": "2026-11-03T08:26:25Z"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 14,
+          "started_at": "2026-11-03T08:26:25Z",
+          "completed_at": "2026-11-03T08:26:41Z"
+        },
+        {
+          "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-03T08:26:41Z",
+          "completed_at": "2026-11-03T08:27:26Z"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 16,
+          "started_at": "2026-11-03T08:27:26Z",
+          "completed_at": "2026-11-03T08:27:39Z"
+        },
+        {
+          "name": "Verify ordinary RGB444 pacing with the actual original sealed encoder owner",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 17,
+          "started_at": "2026-11-03T08:27:39Z",
+          "completed_at": "2026-11-03T08:27:47Z"
+        },
+        {
+          "name": "Verify exact production opt-in and actual RGB444 Core ACK AU decoded export",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 18,
+          "started_at": "2026-11-03T08:27:47Z",
+          "completed_at": "2026-11-03T08:28:24Z"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 19,
+          "started_at": "2026-11-03T08:28:24Z",
+          "completed_at": "2026-11-03T08:28:30Z"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 20,
+          "started_at": "2026-11-03T08:28:30Z",
+          "completed_at": "2026-11-03T08:28:44Z"
+        },
+        {
+          "name": "Retain exact-source evidence including failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-03T08:28:44Z",
+          "completed_at": "2026-11-03T08:28:45Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 42,
+          "started_at": "2026-11-03T08:28:45Z",
+          "completed_at": "2026-11-03T08:28:47Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 43,
+          "started_at": "2026-11-03T08:28:47Z",
+          "completed_at": "2026-11-03T08:28:47Z"
+        }
+      ],
+      "failed_steps": [
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "number": 6,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "number": 11,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "number": 13,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "number": 14,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "number": 16,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify ordinary RGB444 pacing with the actual original sealed encoder owner",
+          "number": 17,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact production opt-in and actual RGB444 Core ACK AU decoded export",
+          "number": 18,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "number": 19,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "number": 20,
+          "conclusion": "failure"
+        }
+      ],
+      "skipped_steps": [
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "number": 7,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Select native codec prefix",
+          "number": 8,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "number": 9,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "number": 10,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "number": 12,
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": 125804797074,
+      "name": "native-peer-process (ubuntu-24.04)",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41602641860/job/125804797074",
+      "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-03T08:21:24Z",
+      "completed_at": "2026-11-03T08:22:33Z",
+      "runner_name": "GitHub Actions 1000012314",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T08:21:24Z",
+          "completed_at": "2026-11-03T08:21:25Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T08:21:25Z",
+          "completed_at": "2026-11-03T08:21:27Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T08:21:27Z",
+          "completed_at": "2026-11-03T08:21:34Z"
+        },
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T08:21:34Z",
+          "completed_at": "2026-11-03T08:22:29Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T08:22:29Z",
+          "completed_at": "2026-11-03T08:22:31Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T08:22:31Z",
+          "completed_at": "2026-11-03T08:22:31Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T08:22:31Z",
+          "completed_at": "2026-11-03T08:22:31Z"
+        }
+      ],
+      "failed_steps": [],
+      "skipped_steps": []
+    },
+    {
+      "id": 125804797107,
+      "name": "owner-boundaries (windows-2025)",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41602641860/job/125804797107",
+      "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T08:21:16Z",
+      "completed_at": "2026-11-03T08:28:48Z",
+      "runner_name": "GitHub Actions 1000012315",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "windows-2025"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T08:21:17Z",
+          "completed_at": "2026-11-03T08:21:18Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T08:21:18Z",
+          "completed_at": "2026-11-03T08:21:29Z"
+        },
+        {
+          "name": "Verify exact hosted source and preserve input provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T08:21:29Z",
+          "completed_at": "2026-11-03T08:21:30Z"
+        },
+        {
+          "name": "Verify diagnostic analyzer negatives on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T08:21:30Z",
+          "completed_at": "2026-11-03T08:21:31Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T08:21:31Z",
+          "completed_at": "2026-11-03T08:21:43Z"
+        },
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 6,
+          "started_at": "2026-11-03T08:21:43Z",
+          "completed_at": "2026-11-03T08:22:47Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7,
+          "started_at": "2026-11-03T08:22:47Z",
+          "completed_at": "2026-11-03T08:22:47Z"
+        },
+        {
+          "name": "Select native codec prefix",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8,
+          "started_at": "2026-11-03T08:22:47Z",
+          "completed_at": "2026-11-03T08:22:47Z"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-03T08:22:47Z",
+          "completed_at": "2026-11-03T08:22:47Z"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2026-11-03T08:22:47Z",
+          "completed_at": "2026-11-03T08:22:47Z"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 11,
+          "started_at": "2026-11-03T08:22:47Z",
+          "completed_at": "2026-11-03T08:24:54Z"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T08:24:54Z",
+          "completed_at": "2026-11-03T08:24:54Z"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 13,
+          "started_at": "2026-11-03T08:24:54Z",
+          "completed_at": "2026-11-03T08:26:19Z"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 14,
+          "started_at": "2026-11-03T08:26:19Z",
+          "completed_at": "2026-11-03T08:26:34Z"
+        },
+        {
+          "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-03T08:26:34Z",
+          "completed_at": "2026-11-03T08:27:18Z"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 16,
+          "started_at": "2026-11-03T08:27:18Z",
+          "completed_at": "2026-11-03T08:27:31Z"
+        },
+        {
+          "name": "Verify ordinary RGB444 pacing with the actual original sealed encoder owner",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 17,
+          "started_at": "2026-11-03T08:27:31Z",
+          "completed_at": "2026-11-03T08:27:39Z"
+        },
+        {
+          "name": "Verify exact production opt-in and actual RGB444 Core ACK AU decoded export",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 18,
+          "started_at": "2026-11-03T08:27:39Z",
+          "completed_at": "2026-11-03T08:28:20Z"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 19,
+          "started_at": "2026-11-03T08:28:20Z",
+          "completed_at": "2026-11-03T08:28:27Z"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 20,
+          "started_at": "2026-11-03T08:28:27Z",
+          "completed_at": "2026-11-03T08:28:43Z"
+        },
+        {
+          "name": "Retain exact-source evidence including failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-03T08:28:43Z",
+          "completed_at": "2026-11-03T08:28:44Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 42,
+          "started_at": "2026-11-03T08:28:44Z",
+          "completed_at": "2026-11-03T08:28:47Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 43,
+          "started_at": "2026-11-03T08:28:47Z",
+          "completed_at": "2026-11-03T08:28:47Z"
+        }
+      ],
+      "failed_steps": [
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "number": 6,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "number": 11,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "number": 13,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "number": 14,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "number": 16,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify ordinary RGB444 pacing with the actual original sealed encoder owner",
+          "number": 17,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact production opt-in and actual RGB444 Core ACK AU decoded export",
+          "number": 18,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "number": 19,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "number": 20,
+          "conclusion": "failure"
+        }
+      ],
+      "skipped_steps": [
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "number": 7,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Select native codec prefix",
+          "number": 8,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "number": 9,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "number": 10,
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "number": 12,
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": 125804797157,
+      "name": "native-peer-process (windows-2025)",
+      "html_url": "https://github.com/ZHanry/NestLink/actions/runs/41602641860/job/125804797157",
+      "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-03T08:21:16Z",
+      "completed_at": "2026-11-03T08:23:12Z",
+      "runner_name": "GitHub Actions 1000012316",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "windows-2025"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T08:21:17Z",
+          "completed_at": "2026-11-03T08:21:18Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T08:21:18Z",
+          "completed_at": "2026-11-03T08:21:26Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T08:21:26Z",
+          "completed_at": "2026-11-03T08:21:37Z"
+        },
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T08:21:37Z",
+          "completed_at": "2026-11-03T08:23:08Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T08:23:08Z",
+          "completed_at": "2026-11-03T08:23:09Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T08:23:09Z",
+          "completed_at": "2026-11-03T08:23:10Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T08:23:10Z",
+          "completed_at": "2026-11-03T08:23:10Z"
+        }
+      ],
+      "failed_steps": [],
+      "skipped_steps": []
+    }
+  ],
+  "artifact_count": 4,
+  "official_zip_verification_count": 4,
+  "independent_downloaded_file_count": 28,
+  "producer_input_hash_verification_count": 8,
+  "producer_output_hash_verification_count": 4,
+  "artifacts": [
+    {
+      "id": 13215875282,
+      "name": "native-peer-process-ubuntu-24.04-804c117da15dd7666c2919ee36757e8045bcb4b0-1",
+      "job_id": 125804797074,
+      "api_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13215875282",
+      "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13215875282/zip",
+      "official_digest": "sha256:ce84295c77191130ca188cc10da1239f6d2f15436e656e9e5aa6e7da533ce130",
+      "official_size_in_bytes": 6134,
+      "zip_sha256": "ce84295c77191130ca188cc10da1239f6d2f15436e656e9e5aa6e7da533ce130",
+      "zip_bytes": 6134,
+      "official_digest_size_run_source_matches": true,
+      "local_verified_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-804c117-independent\\peer-ubuntu-24.04",
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "ipc-tests.log",
+          "bytes": 20853,
+          "sha256": "e3fc6ec6dc58e875f3613d29f33f6a8b6a2c24c7e2f69a57f3c8a62fca9a4760"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 1311,
+          "sha256": "10d35e0de19794fb09c76d320f3d8c5ea06ac0fdefc3ee0a8c8930e3f6e431d9"
+        },
+        {
+          "path": "strict-peer-owner.log",
+          "bytes": 5633,
+          "sha256": "e2da2a851d5e3fe37c5494e19b667acd80626a19c7f1b09ce7be0acdee6c6933"
+        }
+      ],
+      "producer_receipt_file": "receipt.json",
+      "producer_receipt": {
+        "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+        "run_id": "41602641860",
+        "attempt": "1",
+        "runner_os": "Linux",
+        "runner_environment": "github-hosted",
+        "cargo_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+        "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+        "passed": true,
+        "commands": [
+          {
+            "name": "ipc-tests",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-local-ipc",
+              "--lib",
+              "--",
+              "--show-output"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "strict-peer-owner",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-local-ipc",
+              "-p",
+              "nestlink-platform-security",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "return_code": 0
+          }
+        ],
+        "files": [
+          {
+            "path": "ipc-tests.log",
+            "bytes": 20853,
+            "sha256": "e3fc6ec6dc58e875f3613d29f33f6a8b6a2c24c7e2f69a57f3c8a62fca9a4760"
+          },
+          {
+            "path": "strict-peer-owner.log",
+            "bytes": 5633,
+            "sha256": "e2da2a851d5e3fe37c5494e19b667acd80626a19c7f1b09ce7be0acdee6c6933"
+          }
+        ]
+      },
+      "producer_source_and_run_verified": true,
+      "producer_input_verifications": [
+        {
+          "path": "Cargo.lock",
+          "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+          "producer_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_bytes": 209815,
+          "matches": true
+        }
+      ],
+      "producer_payload_verifications": [
+        {
+          "path": "ipc-tests.log",
+          "producer_bytes": 20853,
+          "producer_sha256": "e3fc6ec6dc58e875f3613d29f33f6a8b6a2c24c7e2f69a57f3c8a62fca9a4760",
+          "actual_bytes": 20853,
+          "actual_sha256": "e3fc6ec6dc58e875f3613d29f33f6a8b6a2c24c7e2f69a57f3c8a62fca9a4760",
+          "matches": true
+        },
+        {
+          "path": "strict-peer-owner.log",
+          "producer_bytes": 5633,
+          "producer_sha256": "e2da2a851d5e3fe37c5494e19b667acd80626a19c7f1b09ce7be0acdee6c6933",
+          "actual_bytes": 5633,
+          "actual_sha256": "e2da2a851d5e3fe37c5494e19b667acd80626a19c7f1b09ce7be0acdee6c6933",
+          "matches": true
+        }
+      ],
+      "producer_output_inventory_available": true,
+      "producer_output_inventory_limitation": null,
+      "command_log_analysis": [
+        {
+          "file": "ipc-tests.log",
+          "analysis": {
+            "diagnostics": [],
+            "diagnostic_contexts": [],
+            "actual_rust_test_result_lines": [
+              "test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s"
+            ],
+            "actual_rust_test_case_lines": [
+              "test instance::tests::development_directories_keep_explicit_paths ... ok",
+              "test instance::tests::linked_or_group_writable_marker_is_rejected_without_changing_target ... ok",
+              "test instance::tests::missing_invalid_and_duplicate_instance_markers_fail_closed ... ok",
+              "test instance::tests::explicit_review_reads_public_descriptor_and_never_opens_key_bytes ... ok",
+              "test maintenance::tests::maintenance_rejects_a_link_without_touching_its_target ... ok",
+              "test instance::tests::reinstall_selects_a_fresh_namespace_and_preserves_old_private_bytes ... ok",
+              "test maintenance::tests::installation_recovery_is_observed_only_under_exclusive_ownership ... ok",
+              "test maintenance::tests::repeated_desktop_start_activates_exact_state_directory ... ok",
+              "test maintenance::tests::startup_handoff_is_atomic_and_stable_lock_bytes_are_never_reset ... ok",
+              "test maintenance::tests::maintenance_fences_startup_and_waits_for_original_runtime_and_desktops ... ok",
+              "test tests::accepted_handshake_slots_are_bounded_and_stop_cancels_incomplete_tls ... ok",
+              "test tests::binary_video_round_trip_uses_the_authenticated_tls_stream_and_never_returns_to_json ... ok",
+              "test tests::duplex_owner_drop_wakes_idle_reader_and_retires_writer ... ok",
+              "test tests::cancelling_a_partial_frame_receive_permanently_retires_that_stream ... ok",
+              "test tests::cancelling_mid_video_payload_read_drops_the_zeroizing_buffer_and_retires_tls ... ok",
+              "test tests::headless_session_owner_and_daemon_share_one_singleton_without_fake_endpoint ... ok",
+              "test tests::non_loopback_or_unknown_endpoints_do_not_become_dial_targets ... ok",
+              "test tests::frame_lengths_fail_before_body_allocation_and_poison_the_stream ... ok",
+              "test tests::duplex_partial_prefix_cancel_poison_is_shared_with_writer ... ok",
+              "test tests::stale_runtime_manifest_is_rejected_by_the_authenticated_daemon_hello ... ok",
+              "test tests::real_tls_ipc_owns_singleton_and_shutdown_interrupts_idle_clients ... ok",
+              "test tests::substituting_the_local_key_cannot_authenticate_to_a_live_daemon ... ok",
+              "test tests::video_payload_budget_and_wire_length_are_checked_before_payload_allocation ... ok",
+              "test tests::cancelling_a_backpressured_video_chunk_permanently_retires_the_tls_stream ... ok"
+            ],
+            "test_execution": "executed_see_per_invocation_result_lines",
+            "rust_results_per_invocation": [
+              {
+                "result": "ok",
+                "passed": 24,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered": 0,
+                "elapsed_seconds": 0.29
+              }
+            ],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "strict-peer-owner.log",
+          "analysis": {
+            "diagnostics": [],
+            "diagnostic_contexts": [],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "completed_build_or_lint_without_test_harness",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 13215278529,
+      "name": "windows-media-owner-windows-2025-804c117da15dd7666c2919ee36757e8045bcb4b0-1",
+      "job_id": 125804797107,
+      "api_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13215278529",
+      "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13215278529/zip",
+      "official_digest": "sha256:21c59ef58e18d94f44049d1bd68545f6596a8510b8b3d8561cc3312b2c30ac5b",
+      "official_size_in_bytes": 17277,
+      "zip_sha256": "21c59ef58e18d94f44049d1bd68545f6596a8510b8b3d8561cc3312b2c30ac5b",
+      "zip_bytes": 17277,
+      "official_digest_size_run_source_matches": true,
+      "local_verified_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-804c117-independent\\owner-windows-2025",
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "compressed-native-tests.log",
+          "bytes": 21025,
+          "sha256": "745f4e8048de6c0feb52ee1c0c7d159394f2476ce629c00f3564d39016ce1fec"
+        },
+        {
+          "path": "daemon-hevc-selection-tests.log",
+          "bytes": 1981,
+          "sha256": "86e403024724bc7cf577c75017117935d6bcc83e8b435ab5a5fef8dcb3aa3196"
+        },
+        {
+          "path": "desktop-clippy.log",
+          "bytes": 15589,
+          "sha256": "8cf47f88baf0d57154eafc424e50d7941cf158bbaea5aaefa895979dd238cebf"
+        },
+        {
+          "path": "explicit-selection.log",
+          "bytes": 1266,
+          "sha256": "d0c399fdd5b19590ae51884976541ff1df69238b592239e2f301e27a4a572374"
+        },
+        {
+          "path": "h264-output-geometry-tests.log",
+          "bytes": 1578,
+          "sha256": "24581ea13134faea5ec9dd55afcc2260459f5fbfbb3f182a49a29b77d3a16c8a"
+        },
+        {
+          "path": "media-opt-in-config-tests.log",
+          "bytes": 1332,
+          "sha256": "8cbf3eff4bd065f82b7a188621f25dbea41d08dba9f7530b720098c0b1a60ce4"
+        },
+        {
+          "path": "media-provider-tests.log",
+          "bytes": 1578,
+          "sha256": "5e3540967301c30a1dc5ea09ebe72ac9b22a7126f8ae9f76a8f18c2e8cb9bd3c"
+        },
+        {
+          "path": "signed-store-media-tests.log",
+          "bytes": 4044,
+          "sha256": "3c0fea84684c9c27edf070d752c3a3ddc68c00eb5e9db86ca968c560549a4dd5"
+        },
+        {
+          "path": "source-receipt.json",
+          "bytes": 689,
+          "sha256": "8e4706abadb318e12ec370204f290a5ce7e8c7ebfa6382254decc3dab3d6dd23"
+        },
+        {
+          "path": "vp9-core-ack-au-export.log",
+          "bytes": 2778,
+          "sha256": "b46765a6dced00eb29395322211c4f55d7fc7449e93615bad42db17ca90da1a5"
+        },
+        {
+          "path": "vp9-ordinary-pacing-owner.log",
+          "bytes": 1940,
+          "sha256": "7c3dce32a9c0bd733f8df4578bcf6624baca3d4534051b9968538b47cd97d10f"
+        }
+      ],
+      "producer_receipt_file": "source-receipt.json",
+      "producer_receipt": {
+        "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+        "workflow_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+        "run_id": "41602641860",
+        "attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Windows",
+        "runner_label": "windows-2025",
+        "dependency_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+        "hardware_or_target_acceptance_claimed": false,
+        "tool_sources": {
+          "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+        }
+      },
+      "producer_source_and_run_verified": true,
+      "producer_input_verifications": [
+        {
+          "path": "Cargo.lock",
+          "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+          "producer_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_bytes": 209815,
+          "matches": true
+        },
+        {
+          "path": "scripts/network-rewrite-gpu-cadence.py",
+          "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+          "producer_sha256": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "actual_sha256": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "actual_bytes": 5664,
+          "matches": true
+        },
+        {
+          "path": "tests/network/test_gpu_cadence.py",
+          "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+          "producer_sha256": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35",
+          "actual_sha256": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35",
+          "actual_bytes": 3543,
+          "matches": true
+        }
+      ],
+      "producer_payload_verifications": [],
+      "producer_output_inventory_available": false,
+      "producer_output_inventory_limitation": "This owner artifact supplies source-receipt.json but no producer output-file inventory. Official ZIP digest/size and an independent hash of every extracted file were verified; producer-declared output hashes are unavailable and are not claimed.",
+      "command_log_analysis": [
+        {
+          "file": "compressed-native-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "daemon-hevc-selection-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "desktop-clippy.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-0d78c54e9a4d3d56\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "explicit-selection.log",
+          "analysis": {
+            "diagnostics": [],
+            "diagnostic_contexts": [],
+            "actual_rust_test_result_lines": [
+              "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.02s"
+            ],
+            "actual_rust_test_case_lines": [
+              "test explicit_media::tests::explicit_v3_to_v6_require_local_selection_and_preserve_exact_scope_across_renewal ... ok"
+            ],
+            "test_execution": "executed_see_per_invocation_result_lines",
+            "rust_results_per_invocation": [
+              {
+                "result": "ok",
+                "passed": 1,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered": 2,
+                "elapsed_seconds": 0.02
+              }
+            ],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "h264-output-geometry-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-cd14c2948a42f9db\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "media-opt-in-config-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "media-provider-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "signed-store-media-tests.log",
+          "analysis": {
+            "diagnostics": [],
+            "diagnostic_contexts": [],
+            "actual_rust_test_result_lines": [
+              "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 10.20s"
+            ],
+            "actual_rust_test_case_lines": [
+              "test control::media_authority_tests::frozen_scope_requires_explicit_signed_approval_and_never_widens_from_latest_catalog ... ok",
+              "test control::media_authority_tests::internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets ... ok",
+              "test control::media_authority_tests::internal_software_candidate_rejects_account_peer_target_and_expiry ... ok",
+              "test control::media_authority_tests::expired_or_withdrawn_announcements_block_prepared_renewal_and_reconnection ... ok",
+              "test control::media_authority_tests::internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery ... ok",
+              "test control::media_authority_tests::management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publication_recovers ... ok",
+              "test control::media_authority_tests::v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain ... ok",
+              "test control::media_authority_tests::signed_media_public_lifecycle_issues_renews_and_reconnects_without_scope_widening ... ok",
+              "test control::media_authority_tests::expired_or_withdrawn_announcements_allow_reviewed_decision_but_block_initial_issuance ... ok",
+              "test control::media_authority_tests::v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain ... ok"
+            ],
+            "test_execution": "executed_see_per_invocation_result_lines",
+            "rust_results_per_invocation": [
+              {
+                "result": "ok",
+                "passed": 10,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered": 71,
+                "elapsed_seconds": 10.2
+              }
+            ],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "vp9-core-ack-au-export.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "vp9-ordinary-pacing-owner.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 13215153421,
+      "name": "windows-media-owner-windows-2022-804c117da15dd7666c2919ee36757e8045bcb4b0-1",
+      "job_id": 125804796946,
+      "api_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13215153421",
+      "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13215153421/zip",
+      "official_digest": "sha256:f94699d90ce2778cb9ed31b107b3ba036ea726b01a3b675f4195a4cc6b3d27e6",
+      "official_size_in_bytes": 17267,
+      "zip_sha256": "f94699d90ce2778cb9ed31b107b3ba036ea726b01a3b675f4195a4cc6b3d27e6",
+      "zip_bytes": 17267,
+      "official_digest_size_run_source_matches": true,
+      "local_verified_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-804c117-independent\\owner-windows-2022",
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "compressed-native-tests.log",
+          "bytes": 21025,
+          "sha256": "220f016afe4b1124969b2b482ffcc06605286179d93f8ca815bd1e2703cda7c5"
+        },
+        {
+          "path": "daemon-hevc-selection-tests.log",
+          "bytes": 1981,
+          "sha256": "3838572bac71a1b09b5811fa6c7c30a6b45bfd28e07bb32dea6f4669dbf5554a"
+        },
+        {
+          "path": "desktop-clippy.log",
+          "bytes": 15560,
+          "sha256": "e403a0c24f2a4434b89698b6ace9c0e742a3ef92d5c6548bddebc670ad08e119"
+        },
+        {
+          "path": "explicit-selection.log",
+          "bytes": 1266,
+          "sha256": "1beb8a1b1b0fb219d71a672c10d01598b68ca860aebe7da300a290abb5d81937"
+        },
+        {
+          "path": "h264-output-geometry-tests.log",
+          "bytes": 1578,
+          "sha256": "d98f0669d5e92a4e51f1137f4734cea2a42f143355751cb052b69be0350017f5"
+        },
+        {
+          "path": "media-opt-in-config-tests.log",
+          "bytes": 1336,
+          "sha256": "61057c3da4cc92fae1bc5afed4d6567f2954180429ea68f3b01cf2a3261f568e"
+        },
+        {
+          "path": "media-provider-tests.log",
+          "bytes": 1578,
+          "sha256": "00f6c411c2161cc636e138881d8e6352d032edd73b80181783f200347413e80f"
+        },
+        {
+          "path": "signed-store-media-tests.log",
+          "bytes": 4044,
+          "sha256": "509777362763c752873345448251d24a98c9245fd9b1b819138b5442e0306900"
+        },
+        {
+          "path": "source-receipt.json",
+          "bytes": 689,
+          "sha256": "1124e26e46856fe9a75348aae8412091f54625878908f79175f2de03792b8997"
+        },
+        {
+          "path": "vp9-core-ack-au-export.log",
+          "bytes": 2778,
+          "sha256": "2ab257d6ac8be146d0353c5c81ef24b2421fb10f4eda019d17adc478bd887a4f"
+        },
+        {
+          "path": "vp9-ordinary-pacing-owner.log",
+          "bytes": 1899,
+          "sha256": "5d5ee08c6a43c0ceac74a781378488cf30c209c640ecbe8b15990fe5605c3dfe"
+        }
+      ],
+      "producer_receipt_file": "source-receipt.json",
+      "producer_receipt": {
+        "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+        "workflow_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+        "run_id": "41602641860",
+        "attempt": "1",
+        "runner_environment": "github-hosted",
+        "runner_os": "Windows",
+        "runner_label": "windows-2022",
+        "dependency_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+        "hardware_or_target_acceptance_claimed": false,
+        "tool_sources": {
+          "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+        }
+      },
+      "producer_source_and_run_verified": true,
+      "producer_input_verifications": [
+        {
+          "path": "Cargo.lock",
+          "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+          "producer_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_bytes": 209815,
+          "matches": true
+        },
+        {
+          "path": "scripts/network-rewrite-gpu-cadence.py",
+          "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+          "producer_sha256": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "actual_sha256": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+          "actual_bytes": 5664,
+          "matches": true
+        },
+        {
+          "path": "tests/network/test_gpu_cadence.py",
+          "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+          "producer_sha256": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35",
+          "actual_sha256": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35",
+          "actual_bytes": 3543,
+          "matches": true
+        }
+      ],
+      "producer_payload_verifications": [],
+      "producer_output_inventory_available": false,
+      "producer_output_inventory_limitation": "This owner artifact supplies source-receipt.json but no producer output-file inventory. Official ZIP digest/size and an independent hash of every extracted file were verified; producer-declared output hashes are unavailable and are not claimed.",
+      "command_log_analysis": [
+        {
+          "file": "compressed-native-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "daemon-hevc-selection-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "desktop-clippy.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-0d78c54e9a4d3d56\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "explicit-selection.log",
+          "analysis": {
+            "diagnostics": [],
+            "diagnostic_contexts": [],
+            "actual_rust_test_result_lines": [
+              "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.02s"
+            ],
+            "actual_rust_test_case_lines": [
+              "test explicit_media::tests::explicit_v3_to_v6_require_local_selection_and_preserve_exact_scope_across_renewal ... ok"
+            ],
+            "test_execution": "executed_see_per_invocation_result_lines",
+            "rust_results_per_invocation": [
+              {
+                "result": "ok",
+                "passed": 1,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered": 2,
+                "elapsed_seconds": 0.02
+              }
+            ],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "h264-output-geometry-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-cd14c2948a42f9db\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "media-opt-in-config-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "media-provider-tests.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "signed-store-media-tests.log",
+          "analysis": {
+            "diagnostics": [],
+            "diagnostic_contexts": [],
+            "actual_rust_test_result_lines": [
+              "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 10.03s"
+            ],
+            "actual_rust_test_case_lines": [
+              "test control::media_authority_tests::frozen_scope_requires_explicit_signed_approval_and_never_widens_from_latest_catalog ... ok",
+              "test control::media_authority_tests::internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets ... ok",
+              "test control::media_authority_tests::internal_software_candidate_rejects_account_peer_target_and_expiry ... ok",
+              "test control::media_authority_tests::expired_or_withdrawn_announcements_block_prepared_renewal_and_reconnection ... ok",
+              "test control::media_authority_tests::internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery ... ok",
+              "test control::media_authority_tests::v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain ... ok",
+              "test control::media_authority_tests::expired_or_withdrawn_announcements_allow_reviewed_decision_but_block_initial_issuance ... ok",
+              "test control::media_authority_tests::management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publication_recovers ... ok",
+              "test control::media_authority_tests::signed_media_public_lifecycle_issues_renews_and_reconnects_without_scope_widening ... ok",
+              "test control::media_authority_tests::v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain ... ok"
+            ],
+            "test_execution": "executed_see_per_invocation_result_lines",
+            "rust_results_per_invocation": [
+              {
+                "result": "ok",
+                "passed": 10,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered": 71,
+                "elapsed_seconds": 10.03
+              }
+            ],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "vp9-core-ack-au-export.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "vp9-ordinary-pacing-owner.log",
+          "analysis": {
+            "diagnostics": [
+              "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+              "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+              "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }"
+            ],
+            "diagnostic_contexts": [
+              [
+                "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+                "warning: build failed, waiting for other jobs to finish...",
+                ""
+              ]
+            ],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "not_reached_due_to_compilation_or_build_failure",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 13215022575,
+      "name": "native-peer-process-windows-2025-804c117da15dd7666c2919ee36757e8045bcb4b0-1",
+      "job_id": 125804797157,
+      "api_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13215022575",
+      "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13215022575/zip",
+      "official_digest": "sha256:22faf2e2cc1c5e690da73ff3d56a76194fdd962f010f207afac2dab5fa292b57",
+      "official_size_in_bytes": 6485,
+      "zip_sha256": "22faf2e2cc1c5e690da73ff3d56a76194fdd962f010f207afac2dab5fa292b57",
+      "zip_bytes": 6485,
+      "official_digest_size_run_source_matches": true,
+      "local_verified_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-804c117-independent\\peer-windows-2025",
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "ipc-tests.log",
+          "bytes": 21570,
+          "sha256": "e4cd62adc6edcde8903c93ef020ec03ab4419f307dd0fa2feda3bc03a9fa6bac"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 1622,
+          "sha256": "88f66871ef100f296a54ae0350a5cfebc824a9b8c4884ad66730ecc6e7443747"
+        },
+        {
+          "path": "strict-peer-owner.log",
+          "bytes": 5758,
+          "sha256": "4ba403a3cdbeb11a675bae10eb3758aca976f21e8b0faeb452b227f92f67ee64"
+        }
+      ],
+      "producer_receipt_file": "receipt.json",
+      "producer_receipt": {
+        "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+        "run_id": "41602641860",
+        "attempt": "1",
+        "runner_os": "Windows",
+        "runner_environment": "github-hosted",
+        "cargo_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+        "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+        "passed": true,
+        "commands": [
+          {
+            "name": "ipc-tests",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+              "scripts/refactor-windows-normal-user.py",
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-local-ipc",
+              "--lib",
+              "--",
+              "--show-output"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "strict-peer-owner",
+            "argv": [
+              "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.EXE",
+              "scripts/refactor-windows-normal-user.py",
+              "cargo",
+              "clippy",
+              "--locked",
+              "-p",
+              "nestlink-local-ipc",
+              "-p",
+              "nestlink-platform-security",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "return_code": 0
+          }
+        ],
+        "files": [
+          {
+            "path": "ipc-tests.log",
+            "bytes": 21570,
+            "sha256": "e4cd62adc6edcde8903c93ef020ec03ab4419f307dd0fa2feda3bc03a9fa6bac"
+          },
+          {
+            "path": "strict-peer-owner.log",
+            "bytes": 5758,
+            "sha256": "4ba403a3cdbeb11a675bae10eb3758aca976f21e8b0faeb452b227f92f67ee64"
+          }
+        ]
+      },
+      "producer_source_and_run_verified": true,
+      "producer_input_verifications": [
+        {
+          "path": "Cargo.lock",
+          "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+          "producer_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+          "actual_bytes": 209815,
+          "matches": true
+        }
+      ],
+      "producer_payload_verifications": [
+        {
+          "path": "ipc-tests.log",
+          "producer_bytes": 21570,
+          "producer_sha256": "e4cd62adc6edcde8903c93ef020ec03ab4419f307dd0fa2feda3bc03a9fa6bac",
+          "actual_bytes": 21570,
+          "actual_sha256": "e4cd62adc6edcde8903c93ef020ec03ab4419f307dd0fa2feda3bc03a9fa6bac",
+          "matches": true
+        },
+        {
+          "path": "strict-peer-owner.log",
+          "producer_bytes": 5758,
+          "producer_sha256": "4ba403a3cdbeb11a675bae10eb3758aca976f21e8b0faeb452b227f92f67ee64",
+          "actual_bytes": 5758,
+          "actual_sha256": "4ba403a3cdbeb11a675bae10eb3758aca976f21e8b0faeb452b227f92f67ee64",
+          "matches": true
+        }
+      ],
+      "producer_output_inventory_available": true,
+      "producer_output_inventory_limitation": null,
+      "command_log_analysis": [
+        {
+          "file": "ipc-tests.log",
+          "analysis": {
+            "diagnostics": [],
+            "diagnostic_contexts": [],
+            "actual_rust_test_result_lines": [
+              "test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.68s"
+            ],
+            "actual_rust_test_case_lines": [
+              "test instance::tests::development_directories_keep_explicit_paths ... ok",
+              "test instance::tests::missing_invalid_and_duplicate_instance_markers_fail_closed ... ok",
+              "test instance::tests::explicit_review_reads_public_descriptor_and_never_opens_key_bytes ... ok",
+              "test instance::tests::reinstall_selects_a_fresh_namespace_and_preserves_old_private_bytes ... ok",
+              "test maintenance::tests::installation_recovery_is_observed_only_under_exclusive_ownership ... ok",
+              "test process_tests::child_native_tls_process ... ok",
+              "test maintenance::tests::maintenance_fences_startup_and_waits_for_original_runtime_and_desktops ... ok",
+              "test maintenance::tests::startup_handoff_is_atomic_and_stable_lock_bytes_are_never_reset ... ok",
+              "test maintenance::tests::repeated_desktop_start_activates_exact_state_directory ... ok",
+              "test process_tests::native_tls_drop_cancel_and_original_daemon_stop_fence_every_peer_clone ... ok",
+              "test process_tests::new_client_reuses_original_tcp_tls_when_old_daemon_has_no_native_pipe ... ok",
+              "test process_tests::original_native_tls_peer_is_the_actual_child_and_exit_retires_its_handle ... ok",
+              "test process_tests::original_tcp_tls_compatibility_has_no_native_process_proof ... ok",
+              "test tests::accepted_handshake_slots_are_bounded_and_stop_cancels_incomplete_tls ... ok",
+              "test tests::binary_video_round_trip_uses_the_authenticated_tls_stream_and_never_returns_to_json ... ok",
+              "test tests::cancelling_mid_video_payload_read_drops_the_zeroizing_buffer_and_retires_tls ... ok",
+              "test tests::duplex_owner_drop_wakes_idle_reader_and_retires_writer ... ok",
+              "test tests::cancelling_a_partial_frame_receive_permanently_retires_that_stream ... ok",
+              "test tests::duplex_partial_prefix_cancel_poison_is_shared_with_writer ... ok",
+              "test tests::non_loopback_or_unknown_endpoints_do_not_become_dial_targets ... ok",
+              "test tests::headless_session_owner_and_daemon_share_one_singleton_without_fake_endpoint ... ok",
+              "test tests::frame_lengths_fail_before_body_allocation_and_poison_the_stream ... ok",
+              "test tests::real_tls_ipc_owns_singleton_and_shutdown_interrupts_idle_clients ... ok",
+              "test tests::stale_runtime_manifest_is_rejected_by_the_authenticated_daemon_hello ... ok",
+              "test tests::substituting_the_local_key_cannot_authenticate_to_a_live_daemon ... ok",
+              "test tests::cancelling_a_backpressured_video_chunk_permanently_retires_the_tls_stream ... ok",
+              "test tests::video_payload_budget_and_wire_length_are_checked_before_payload_allocation ... ok"
+            ],
+            "test_execution": "executed_see_per_invocation_result_lines",
+            "rust_results_per_invocation": [
+              {
+                "result": "ok",
+                "passed": 27,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered": 0,
+                "elapsed_seconds": 0.68
+              }
+            ],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        },
+        {
+          "file": "strict-peer-owner.log",
+          "analysis": {
+            "diagnostics": [],
+            "diagnostic_contexts": [],
+            "actual_rust_test_result_lines": [],
+            "actual_rust_test_case_lines": [],
+            "test_execution": "completed_build_or_lint_without_test_harness",
+            "rust_results_per_invocation": [],
+            "aggregated_rust_counts": null,
+            "counts_are_not_summed_across_repeated_invocations": true,
+            "absence_of_harness_is_not_a_zero_test_success": true
+          }
+        }
+      ]
+    }
+  ],
+  "original_job_logs": [
+    {
+      "job_id": 125804796946,
+      "job_name": "owner-boundaries (windows-2022)",
+      "job_conclusion": "failure",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125804796946/logs",
+      "path": "job-125804796946.log",
+      "local_path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-804c117-independent\\job-125804796946.log",
+      "bytes": 211179,
+      "sha256": "b1241eb013cce63b2633a6c1f643fd000d3133271dd60516b25bd651e16e4d3c",
+      "analysis": {
+        "diagnostics": [
+          "Error: ContractError { code: InvalidMessage, reason: \"invalid media announcement identity or lifetime\" }",
+          "error: test failed, to rerun pass `-p nestlink-protocol --lib`",
+          "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+          "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+          "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+          "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-0d78c54e9a4d3d56\\build-script-build` (exit code: 1)",
+          "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-cd14c2948a42f9db\\build-script-build` (exit code: 1)"
+        ],
+        "diagnostic_contexts": [
+          [
+            "---- media_authority::tests::rgb444_v6_requires_its_own_marker_scope_domain_and_software_owner stdout ----",
+            "Error: ContractError { code: InvalidMessage, reason: \"invalid media announcement identity or lifetime\" }",
+            "",
+            "",
+            "failures:",
+            "    media_authority::tests::rgb444_v6_requires_its_own_marker_scope_domain_and_software_owner"
+          ],
+          [
+            "Error: ContractError { code: InvalidMessage, reason: \"invalid media announcement identity or lifetime\" }",
+            "",
+            "",
+            "failures:",
+            "    media_authority::tests::rgb444_v6_requires_its_own_marker_scope_domain_and_software_owner",
+            ""
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "exit $LASTEXITCODE"
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }"
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+            "exit $LASTEXITCODE"
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run import os, pathlib, re, subprocess, sys",
+            "import os, pathlib, re, subprocess, sys",
+            "name = 'runtime::native_intra::tests::ordinary_rgb444_pacing_requires_exact_live_sealed_output'"
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "    assert result.returncode == 0, 'actual RGB444 pacing owner failed; original diagnostic retained'",
+            "",
+            "           ^^^^^^^^^^^^^^^^^^^^^^",
+            "AssertionError: actual RGB444 pacing owner failed; original diagnostic retained"
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\""
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }"
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:",
+            "  name: windows-media-owner-windows-2022-804c117da15dd7666c2919ee36757e8045bcb4b0-1"
+          ]
+        ],
+        "actual_rust_test_result_lines": [
+          "test result: FAILED. 31 passed; 1 failed; 0 ignored; 0 measured; 64 filtered out; finished in 0.01s",
+          "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 10.03s",
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.02s"
+        ],
+        "actual_rust_test_case_lines": [
+          "test media_authority::tests::announcement_withdrawal_is_explicit_and_backend_identity_is_not_defaulted ... ok",
+          "test media_authority::tests::canonical_format_roundtrip_rejects_trailing_unknown_flags_and_nonreduced_rate ... ok",
+          "test media_authority::tests::exact_hevc_scope_has_its_own_marker_digest_and_original_direction ... ok",
+          "test internal_software_media_candidate::tests::explicit_finite_candidate_requires_the_entire_exact_set_within_original_ceiling ... ok",
+          "test media_authority::tests::main10_v4_needs_its_own_marker_scope_and_approval_domain ... ok",
+          "test media_authority::tests::hdr_requires_v5_marker_and_independent_scope_and_approval_domain ... ok",
+          "test internal_software_media_candidate::tests::internal_candidate_policy_requires_every_exact_field_and_rejects_non_h264 ... ok",
+          "test media_authority::tests::signed_scope_cannot_omit_marker_duplicate_or_change_crop_and_digest ... ok",
+          "test media_authority::tests::rgb444_v6_requires_its_own_marker_scope_domain_and_software_owner ... FAILED",
+          "test media_format::tests::canonical_set_digest_ignores_wire_order_but_binds_every_format_field ... ok",
+          "test media_format::tests::digest_has_stable_field_order_big_endian_encoding_and_domain ... ok",
+          "test media_format::tests::exact_intersection_does_not_invent_four_k_at_120_from_two_probed_modes ... ok",
+          "test media_format::tests::empty_no_common_duplicates_and_excess_entries_are_distinct_outcomes ... ok",
+          "test media_format::tests::geometry_and_high_bit_depth_have_conservative_raw_budget ... ok",
+          "test media_format::tests::hdr_requires_independent_depth_primaries_and_transfer ... ok",
+          "test media_format::tests::hdr_v5_cannot_be_decoded_as_main10_sdr_or_share_its_signed_catalog ... ok",
+          "test media_format::tests::hevc_display_rate_cannot_hide_padded_coded_sample_rate_limit ... ok",
+          "test media_format::tests::hevc_display_area_cannot_hide_padded_coded_picture_limit ... ok",
+          "test media_format::tests::legacy_defaults_preserve_actual_distinct_color_conversions ... ok",
+          "test media_format::tests::level_picture_sample_rate_tier_and_bitrate_are_enforced ... ok",
+          "test media_format::tests::main10_and_444_are_independent_and_require_exact_intersection ... ok",
+          "test media_format::tests::independently_versioned_hevc_ptl_is_exact_and_cannot_change_v2_h264_bytes ... ok",
+          "test media_format::tests::main10_v4_preserves_v3_bytes_and_requires_exact_profile_depth_and_version ... ok",
+          "test media_format::tests::rational_framerate_is_canonical_and_bounded ... ok",
+          "test media_format::tests::observed_h264_digest_binds_constraint_flags_and_crop_origin ... ok",
+          "test media_format::tests::rgba16_budget_is_checked_independently_of_eight_bit_budget ... ok",
+          "test media_format::tests::rgb444_v6_keeps_old_descriptors_and_rejects_relabeling ... ok",
+          "test media_format::tests::syntax_support_is_not_a_backend_capability_announcement ... ok",
+          "test native_media_format::tests::exact_canonical_roundtrip_rejects_tail_kind_version_hash_and_truncation ... ok",
+          "test native_media_format::tests::proposal_ack_requires_exact_signed_format_and_binding_and_never_overwrites ... ok",
+          "test webrtc::tests::audio_media_cannot_be_requested_with_only_view_permission ... ok",
+          "test native_media_format::tests::exact_hevc_nlmf_preserves_all_ptl_bytes_and_rejects_changed_ack_and_legacy_set ... ok",
+          "test control::media_authority_tests::frozen_scope_requires_explicit_signed_approval_and_never_widens_from_latest_catalog ... ok",
+          "test control::media_authority_tests::internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets ... ok",
+          "test control::media_authority_tests::internal_software_candidate_rejects_account_peer_target_and_expiry ... ok",
+          "test control::media_authority_tests::expired_or_withdrawn_announcements_block_prepared_renewal_and_reconnection ... ok",
+          "test control::media_authority_tests::internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery ... ok",
+          "test control::media_authority_tests::v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain ... ok",
+          "test control::media_authority_tests::expired_or_withdrawn_announcements_allow_reviewed_decision_but_block_initial_issuance ... ok",
+          "test control::media_authority_tests::management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publication_recovers ... ok",
+          "test control::media_authority_tests::signed_media_public_lifecycle_issues_renews_and_reconnects_without_scope_widening ... ok",
+          "test control::media_authority_tests::v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain ... ok",
+          "test explicit_media::tests::explicit_v3_to_v6_require_local_selection_and_preserve_exact_scope_across_renewal ... ok"
+        ],
+        "test_execution": "executed_see_per_invocation_result_lines",
+        "rust_results_per_invocation": [
+          {
+            "result": "FAILED",
+            "passed": 31,
+            "failed": 1,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 64,
+            "elapsed_seconds": 0.01
+          },
+          {
+            "result": "ok",
+            "passed": 10,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 71,
+            "elapsed_seconds": 10.03
+          },
+          {
+            "result": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 2,
+            "elapsed_seconds": 0.02
+          }
+        ],
+        "aggregated_rust_counts": null,
+        "counts_are_not_summed_across_repeated_invocations": true,
+        "absence_of_harness_is_not_a_zero_test_success": true
+      },
+      "note": "The Python cadence analyzer ran three negative unit cases. Real protocol, Store and session result lines are retained separately from echoed workflow assertions; native supplier and runtime media tests did not execute successfully."
+    },
+    {
+      "job_id": 125804797074,
+      "job_name": "native-peer-process (ubuntu-24.04)",
+      "job_conclusion": "success",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125804797074/logs",
+      "path": "job-125804797074.log",
+      "local_path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-804c117-independent\\job-125804797074.log",
+      "bytes": 41782,
+      "sha256": "bfa60ffc9a4847bb56fbc47ae44fd1e45c98ef81947a0cfa632149383b570dc0",
+      "analysis": {
+        "diagnostics": [],
+        "diagnostic_contexts": [],
+        "actual_rust_test_result_lines": [],
+        "actual_rust_test_case_lines": [],
+        "test_execution": "command_output_redirected_see_artifact_logs_and_producer_return_codes",
+        "rust_results_per_invocation": [],
+        "aggregated_rust_counts": null,
+        "counts_are_not_summed_across_repeated_invocations": true,
+        "absence_of_harness_is_not_a_zero_test_success": true
+      },
+      "note": "Command output is redirected into ipc-tests.log and strict-peer-owner.log in the official artifact; the receipt records both commands returning zero."
+    },
+    {
+      "job_id": 125804797107,
+      "job_name": "owner-boundaries (windows-2025)",
+      "job_conclusion": "failure",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125804797107/logs",
+      "path": "job-125804797107.log",
+      "local_path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-804c117-independent\\job-125804797107.log",
+      "bytes": 211349,
+      "sha256": "1821ef18a0e13877ecf057025c86ab4e1ce9cf2d0c31c09587516cf110202a08",
+      "analysis": {
+        "diagnostics": [
+          "Error: ContractError { code: InvalidMessage, reason: \"invalid media announcement identity or lifetime\" }",
+          "error: test failed, to rerun pass `-p nestlink-protocol --lib`",
+          "error: failed to run custom build command for `nestlink-media-codec v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\media-codec)`",
+          "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-284e4f6177e3f52a\\build-script-build` (exit code: 1)",
+          "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+          "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-0d78c54e9a4d3d56\\build-script-build` (exit code: 1)",
+          "  process didn't exit successfully: `D:\\a\\NestLink\\NestLink\\target\\debug\\build\\nestlink-media-codec-cd14c2948a42f9db\\build-script-build` (exit code: 1)"
+        ],
+        "diagnostic_contexts": [
+          [
+            "---- media_authority::tests::rgb444_v6_requires_its_own_marker_scope_domain_and_software_owner stdout ----",
+            "Error: ContractError { code: InvalidMessage, reason: \"invalid media announcement identity or lifetime\" }",
+            "",
+            "",
+            "failures:",
+            "    media_authority::tests::rgb444_v6_requires_its_own_marker_scope_domain_and_software_owner"
+          ],
+          [
+            "Error: ContractError { code: InvalidMessage, reason: \"invalid media announcement identity or lifetime\" }",
+            "",
+            "",
+            "failures:",
+            "    media_authority::tests::rgb444_v6_requires_its_own_marker_scope_domain_and_software_owner",
+            ""
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "exit $LASTEXITCODE"
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }"
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+            "exit $LASTEXITCODE"
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run import os, pathlib, re, subprocess, sys",
+            "import os, pathlib, re, subprocess, sys",
+            "name = 'runtime::native_intra::tests::ordinary_rgb444_pacing_requires_exact_live_sealed_output'"
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "",
+            "           ^^^^^^^^^^^^^^^^^^^^^^",
+            "AssertionError: actual RGB444 pacing owner failed; original diagnostic retained",
+            "##[error]Process completed with exit code 1."
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\""
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }"
+          ],
+          [
+            "  Error: Custom { kind: NotFound, error: \"run scripts/refactor-native-codecs.py build, then set NESTLINK_CODEC_PREFIX to the verified installation\" }",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:",
+            "  name: windows-media-owner-windows-2025-804c117da15dd7666c2919ee36757e8045bcb4b0-1"
+          ]
+        ],
+        "actual_rust_test_result_lines": [
+          "test result: FAILED. 31 passed; 1 failed; 0 ignored; 0 measured; 64 filtered out; finished in 0.01s",
+          "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 10.20s",
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.02s"
+        ],
+        "actual_rust_test_case_lines": [
+          "test media_authority::tests::canonical_format_roundtrip_rejects_trailing_unknown_flags_and_nonreduced_rate ... ok",
+          "test media_authority::tests::announcement_withdrawal_is_explicit_and_backend_identity_is_not_defaulted ... ok",
+          "test media_authority::tests::exact_hevc_scope_has_its_own_marker_digest_and_original_direction ... ok",
+          "test internal_software_media_candidate::tests::explicit_finite_candidate_requires_the_entire_exact_set_within_original_ceiling ... ok",
+          "test media_authority::tests::hdr_requires_v5_marker_and_independent_scope_and_approval_domain ... ok",
+          "test internal_software_media_candidate::tests::internal_candidate_policy_requires_every_exact_field_and_rejects_non_h264 ... ok",
+          "test media_authority::tests::signed_scope_cannot_omit_marker_duplicate_or_change_crop_and_digest ... ok",
+          "test media_authority::tests::main10_v4_needs_its_own_marker_scope_and_approval_domain ... ok",
+          "test media_authority::tests::rgb444_v6_requires_its_own_marker_scope_domain_and_software_owner ... FAILED",
+          "test media_format::tests::digest_has_stable_field_order_big_endian_encoding_and_domain ... ok",
+          "test media_format::tests::canonical_set_digest_ignores_wire_order_but_binds_every_format_field ... ok",
+          "test media_format::tests::empty_no_common_duplicates_and_excess_entries_are_distinct_outcomes ... ok",
+          "test media_format::tests::exact_intersection_does_not_invent_four_k_at_120_from_two_probed_modes ... ok",
+          "test media_format::tests::geometry_and_high_bit_depth_have_conservative_raw_budget ... ok",
+          "test media_format::tests::hdr_requires_independent_depth_primaries_and_transfer ... ok",
+          "test media_format::tests::hdr_v5_cannot_be_decoded_as_main10_sdr_or_share_its_signed_catalog ... ok",
+          "test media_format::tests::hevc_display_rate_cannot_hide_padded_coded_sample_rate_limit ... ok",
+          "test media_format::tests::hevc_display_area_cannot_hide_padded_coded_picture_limit ... ok",
+          "test media_format::tests::legacy_defaults_preserve_actual_distinct_color_conversions ... ok",
+          "test media_format::tests::level_picture_sample_rate_tier_and_bitrate_are_enforced ... ok",
+          "test media_format::tests::independently_versioned_hevc_ptl_is_exact_and_cannot_change_v2_h264_bytes ... ok",
+          "test media_format::tests::main10_and_444_are_independent_and_require_exact_intersection ... ok",
+          "test media_format::tests::main10_v4_preserves_v3_bytes_and_requires_exact_profile_depth_and_version ... ok",
+          "test media_format::tests::observed_h264_digest_binds_constraint_flags_and_crop_origin ... ok",
+          "test media_format::tests::rational_framerate_is_canonical_and_bounded ... ok",
+          "test media_format::tests::syntax_support_is_not_a_backend_capability_announcement ... ok",
+          "test media_format::tests::rgba16_budget_is_checked_independently_of_eight_bit_budget ... ok",
+          "test media_format::tests::rgb444_v6_keeps_old_descriptors_and_rejects_relabeling ... ok",
+          "test native_media_format::tests::exact_canonical_roundtrip_rejects_tail_kind_version_hash_and_truncation ... ok",
+          "test native_media_format::tests::proposal_ack_requires_exact_signed_format_and_binding_and_never_overwrites ... ok",
+          "test webrtc::tests::audio_media_cannot_be_requested_with_only_view_permission ... ok",
+          "test native_media_format::tests::exact_hevc_nlmf_preserves_all_ptl_bytes_and_rejects_changed_ack_and_legacy_set ... ok",
+          "test control::media_authority_tests::frozen_scope_requires_explicit_signed_approval_and_never_widens_from_latest_catalog ... ok",
+          "test control::media_authority_tests::internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets ... ok",
+          "test control::media_authority_tests::internal_software_candidate_rejects_account_peer_target_and_expiry ... ok",
+          "test control::media_authority_tests::expired_or_withdrawn_announcements_block_prepared_renewal_and_reconnection ... ok",
+          "test control::media_authority_tests::internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery ... ok",
+          "test control::media_authority_tests::management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publication_recovers ... ok",
+          "test control::media_authority_tests::v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain ... ok",
+          "test control::media_authority_tests::signed_media_public_lifecycle_issues_renews_and_reconnects_without_scope_widening ... ok",
+          "test control::media_authority_tests::expired_or_withdrawn_announcements_allow_reviewed_decision_but_block_initial_issuance ... ok",
+          "test control::media_authority_tests::v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain ... ok",
+          "test explicit_media::tests::explicit_v3_to_v6_require_local_selection_and_preserve_exact_scope_across_renewal ... ok"
+        ],
+        "test_execution": "executed_see_per_invocation_result_lines",
+        "rust_results_per_invocation": [
+          {
+            "result": "FAILED",
+            "passed": 31,
+            "failed": 1,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 64,
+            "elapsed_seconds": 0.01
+          },
+          {
+            "result": "ok",
+            "passed": 10,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 71,
+            "elapsed_seconds": 10.2
+          },
+          {
+            "result": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 2,
+            "elapsed_seconds": 0.02
+          }
+        ],
+        "aggregated_rust_counts": null,
+        "counts_are_not_summed_across_repeated_invocations": true,
+        "absence_of_harness_is_not_a_zero_test_success": true
+      },
+      "note": "The Python cadence analyzer ran three negative unit cases. Real protocol, Store and session result lines are retained separately from echoed workflow assertions; native supplier and runtime media tests did not execute successfully."
+    },
+    {
+      "job_id": 125804797157,
+      "job_name": "native-peer-process (windows-2025)",
+      "job_conclusion": "success",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125804797157/logs",
+      "path": "job-125804797157.log",
+      "local_path": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\owner-804c117-independent\\job-125804797157.log",
+      "bytes": 42564,
+      "sha256": "6f8b9eb5b7e0bff589c4230a1a659f94f83d18197e6a03d001696af103c9fd26",
+      "analysis": {
+        "diagnostics": [],
+        "diagnostic_contexts": [],
+        "actual_rust_test_result_lines": [],
+        "actual_rust_test_case_lines": [],
+        "test_execution": "command_output_redirected_see_artifact_logs_and_producer_return_codes",
+        "rust_results_per_invocation": [],
+        "aggregated_rust_counts": null,
+        "counts_are_not_summed_across_repeated_invocations": true,
+        "absence_of_harness_is_not_a_zero_test_success": true
+      },
+      "note": "Command output is redirected into ipc-tests.log and strict-peer-owner.log in the official artifact; the receipt records both commands returning zero."
+    }
+  ],
+  "failure_summary": {
+    "primary": "The two native-peer-process jobs passed. Both Windows owner jobs failed an actual protocol test: rgb444_v6_requires_its_own_marker_scope_domain_and_software_owner returned InvalidMessage, invalid media announcement identity or lifetime. Each actual media_ invocation recorded 31 passed, 1 failed, 0 ignored. The positive fixture used device_rgb444 and resource_rgb444 instead of the UUID identities required by the existing production validator.",
+    "secondary": "After this initial protocol test failure on each Windows owner job, MSYS2 setup, native-codec prefix selection, pinned-codec build and codec provenance steps were skipped. Subsequent !cancelled() media commands retained native-codec build-script NotFound failures asking for NESTLINK_CODEC_PREFIX. No successful native supplier build or AppCore runtime test is claimed for this run.",
+    "new_tests": {
+      "ordinary_rgb444_pacing": "invoked_but_native_codec_build_failed_before_test_execution_on_both_Windows_owners",
+      "explicit_v3_v6_selection": "executed_on_both_Windows_owners_exactly_1_passed_0_failed_0_ignored_each",
+      "rgb444_core_ack_au_export": "invoked_after_successful_session_test_but_native_codec_build_failed_before_test_execution_on_both_Windows_owners"
+    },
+    "completed_scopes": {
+      "local_ipc_linux": "24_passed_0_failed_0_ignored_plus_strict_owner_Clippy_success",
+      "local_ipc_windows": "27_passed_0_failed_0_ignored_plus_strict_owner_Clippy_success",
+      "signed_store_media": "10_passed_0_failed_0_ignored_per_Windows_owner",
+      "session_explicit_selection": "1_passed_0_failed_0_ignored_per_Windows_owner"
+    },
+    "aggregate_rust_test_counts": null,
+    "result_lines_are_per_invocation_not_unique_case_totals": true,
+    "missing_media_harness_does_not_mean_zero_test_pass": true,
+    "source_review": "The protocol positive fixture uses non-UUID identities. This was reported to the main agent without changing source, assertions or the failed evidence. Separately reported Linux workspace uuid E0433 is outside this run and is not attributed to these owner logs."
+  },
+  "limitations": [
+    "Two owner artifacts contain no producer output inventory; only source input digests, official ZIP digest/size and independent downloaded-file hashes are available for those artifacts.",
+    "The successful peer jobs establish only their actual original native IPC/TLS process-owner and strict-lint scope; they do not establish a full media path, decoded output or desktop scanout.",
+    "No actual runtime media decoder/presenter output, GPU/HDR qualification or sustained target performance is established. The session synthetic authorization test is separate from native AppCore execution.",
+    "Skipped steps and media commands blocked before test execution remain unverified. No passing/failed/ignored count is inferred from an absent media harness.",
+    "Only run 41602641860 is included; no cancelled or differently sourced dispatch is collected."
+  ],
+  "acceptance_claims": {
+    "complete_media_build_passed": false,
+    "protocol_media_suite_passed": false,
+    "actual_rgb444_owner_test_passed": false,
+    "v3_v6_session_authorization_test_passed": true,
+    "rgb444_core_ack_au_export_test_passed": false,
+    "original_native_peer_process_jobs_passed": true,
+    "complete_media_tls_ipc_passed": false,
+    "gpu_or_hdr_passed": false,
+    "whole_W29_passed": false,
+    "release_eligible": false
+  },
+  "release_eligibility_claimed": false,
+  "independent_audit_execution": {
+    "kind": "local_artifact_bytes_and_historical_source_hashes_only",
+    "source_builds_or_project_tests_run_locally": false,
+    "operations": [
+      "GitHub API metadata/ZIP/job-log downloads",
+      "Official ZIP SHA256/size/run/source comparison",
+      "Artifact extraction and independent file SHA256/size inventory",
+      "Producer-declared payload comparison and historical Git blob input hash comparison",
+      "Read-only parsing of original Actions receipts and diagnostics"
+    ]
+  }
+}

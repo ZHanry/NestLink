@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
-  "checkpoint_kind": "guardian_recovery_and_dual_authority_cancellation_matrix_queued_for_hosted_validation",
+  "source_revision": "3c4c50af03911964fd36c6283180b695e4061bc5",
+  "checkpoint_kind": "reviewed_hosted_migration_format_and_valid_media_fixture_ids",
   "active_tasks": [
     "W00",
     "W02",
@@ -56,7 +56,9 @@
     "804c117 hosted Linux workspace found product uuid dependency absent. Fixed by reusing existing format_uuid helper on all native platforms, without dependency changes.",
     "Hosted OpenAPI output804c117 exact ZIP/output hash verified and imported; only the five authorized-field schema lines changed. Original804c117 drift failure remains.",
     "Next source adds real candidate detach/rebind/drain cancellation and current-node revocation regression, guardian recoverable-retirement preservation, exact original reconnection budget test and two-authority mask while owner migration is pending. These new tests require hosted execution.",
-    "Original media target failures, Luanti25s failure, external public HTTPS DNS fixture failure, full target/NAT/mobile/signing/24h acceptance remain open."
+    "Original media target failures, Luanti25s failure, external public HTTPS DNS fixture failure, full target/NAT/mobile/signing/24h acceptance remain open.",
+    "Protocol media RGB444 new positive fixture used non-UUID device/resource names. Corrected only those positive input identities to canonical UUIDs; existing validation, time limits and all assertions are unchanged. Original31pass/1fail retained in804c117 owner evidence.",
+    "Pure physical DROP still exposes an internal automatic-liveness gap: shared outer idle10s conflicts with original node lease10s and network recoveryp95<=3s. Opt-in mature Quinn liveness adapter and actual kernel DROP production-SDK experiment are being implemented; no physical-loss qualification claimed."
   ],
   "external_prerequisites": [
     {
@@ -92,6 +94,9 @@
     "Complete remaining production fault matrix and all required target qualification before creating the 0.8.0RC release; preserve only main."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/format-3c4c50a.json",
+    "docs/network-rewrite/evidence/network-da61be4.json",
+    "docs/network-rewrite/evidence/windows-media-owner-804c117.json",
     "docs/network-rewrite/evidence/windows-media-owner-da61be4.json",
     "docs/network-rewrite/evidence/openapi-804c117.json",
     "docs/network-rewrite/evidence/full-rust-core-ca1e36a.json",
@@ -820,8 +825,8 @@
     }
   },
   "continuation_checkpoint": {
-    "recorded_at": "2026-11-03T16:30:48.3401824+08:00",
-    "source_revision": "804c117da15dd7666c2919ee36757e8045bcb4b0",
+    "recorded_at": "2026-11-03T16:35:48.0095674+08:00",
+    "source_revision": "3c4c50af03911964fd36c6283180b695e4061bc5",
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
     "user_decisions": [
