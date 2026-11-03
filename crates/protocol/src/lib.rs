@@ -22,6 +22,7 @@ pub mod network;
 pub mod network_access;
 pub mod network_datagram;
 pub mod network_datagram_v2;
+pub mod network_migration;
 pub mod network_topology;
 pub mod node_discovery;
 pub mod node_resources;

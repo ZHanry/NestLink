@@ -16,7 +16,7 @@ use std::{future::Future, io, pin::Pin, sync::Arc};
 use tokio::{sync::watch, time::Instant};
 mod control;
 pub use control::{
-    ContinuousRouteSetSession, PinnedNetworkSpace, RouteSetContinuationStatus,
+    AuthenticatedPathRecovery, ContinuousRouteSetSession, PinnedNetworkSpace, RouteSetContinuationStatus,
     RouteSetRecoveryProposal, VerifiedRemoteChain, VerifiedRemoteDirect, VerifiedRemotePreparation,
     VerifiedRemoteRelay, VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet,
 };

@@ -13,6 +13,8 @@ use nestlink_remote::{PathObservation, StopReport};
 use nestlink_transport_quic::routed::{AdjacencyEndpoint, RoutedEstablishment, RoutedTransport};
 use nestlink_transport_stream::owner::TaskOwner;
 use std::{collections::BTreeSet, sync::Arc};
+mod migration;
+pub use migration::AuthenticatedPathRecovery;
 
 #[derive(Clone, Debug)]
 pub struct RouteSetRecoveryProposal {
@@ -138,6 +140,9 @@ pub struct ContinuousRouteSetSession {
     close_deadline: Option<Instant>,
     pending_retirements: Vec<PendingRetirement>,
     attempted_members: BTreeSet<usize>,
+    original_connection: [u8; 32],
+    migration_interrupted: bool,
+    committed_recovery: Option<[u8; 32]>,
 }
 
 impl Sdk {
@@ -235,6 +240,7 @@ impl Sdk {
             )
             .await?;
         let construct = (|| -> Result<_, SessionEstablishError> {
+            let original_connection = channels.network_connection_binding()?;
             let observation = channels.path_observation().ok_or(SdkError::Invalid)?;
             let group = OriginalGroup {
                 business_grant_digest: permit.digest(),
@@ -278,9 +284,9 @@ impl Sdk {
                 active,
                 constraints,
             )?;
-            Ok((observation, group, originals, keys, scheduler))
+            Ok((observation, group, originals, keys, scheduler, original_connection))
         })();
-        let (observation, group, originals, keys, scheduler) = match construct {
+        let (observation, group, originals, keys, scheduler, original_connection) = match construct {
             Ok(value) => value,
             Err(error) => {
                 channels.shutdown(StopReason::Revoked).await?;
@@ -315,6 +321,9 @@ impl Sdk {
             close_deadline: None,
             pending_retirements: Vec::new(),
             attempted_members: BTreeSet::from([selected]),
+            original_connection,
+            migration_interrupted: false,
+            committed_recovery: None,
         })
     }
 }
@@ -486,6 +495,13 @@ impl ContinuousRouteSetSession {
         peer_key: &[u8; 32],
         demand: bool,
     ) -> Result<RouteSetContinuationStatus, SessionEstablishError> {
+        // A cancelled control future might already have sent Commit. Its
+        // original owner must stop/recover before another control attempt;
+        // neither a new random proposal nor a unilateral rollback is safe.
+        if self.migration_interrupted {
+            let _ = self.channels.lease_control().stop(StopReason::TransportLost);
+            return Err(SdkError::Trust.into());
+        }
         self.consume(sdk, local, peer_key, ContinuationDecision::default())
             .await?;
         if let Some(work) = self.interrupted.clone() {

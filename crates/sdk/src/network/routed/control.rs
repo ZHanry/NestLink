@@ -27,7 +27,7 @@ mod preparation;
 pub use preparation::VerifiedRemotePreparation;
 mod route_set;
 pub use route_set::{
-    ContinuousRouteSetSession, RouteSetContinuationStatus, RouteSetRecoveryProposal,
+    AuthenticatedPathRecovery, ContinuousRouteSetSession, RouteSetContinuationStatus, RouteSetRecoveryProposal,
     VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet,
 };
 pub use route_set::{RecoveredNetworkSession, RouteSetRecoveryConfig, RouteSetRecoverySource};

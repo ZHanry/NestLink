@@ -9,7 +9,7 @@ mod connect;
 mod continuation;
 mod recovery;
 pub use continuation::{
-    ContinuousRouteSetSession, RouteSetContinuationStatus, RouteSetRecoveryProposal,
+    AuthenticatedPathRecovery, ContinuousRouteSetSession, RouteSetContinuationStatus, RouteSetRecoveryProposal,
 };
 pub use recovery::{RecoveredNetworkSession, RouteSetRecoveryConfig, RouteSetRecoverySource};
 

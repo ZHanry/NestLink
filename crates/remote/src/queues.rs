@@ -937,6 +937,20 @@ impl<R: AsyncRead + Unpin + Send + 'static, W: AsyncWrite + Unpin + Send + 'stat
     }
 }
 impl ChannelRuntime {
+    /// Opaque TLS exporter of this proved connection. This is a transcript
+    /// binding only; it neither exposes transport handles nor grants new I/O.
+    pub fn network_connection_binding(&self) -> Result<[u8; 32], RemoteError> {
+        let connection = self.connection.as_ref().ok_or_else(|| {
+            io::Error::new(io::ErrorKind::Unsupported, "business transport has no pinned QUIC binding")
+        })?;
+        let mut material = [0; 32];
+        connection.export_keying_material(&mut material,
+            nestlink_protocol::network_migration::CONNECTION_BINDING_LABEL, b"")
+            .map_err(|_| io::Error::new(io::ErrorKind::PermissionDenied, "business TLS exporter unavailable"))?;
+        let binding = nestlink_identity::digest(&material);
+        material.fill(0);
+        Ok(binding)
+    }
     /// Observe this already proved original QUIC path. Caller-supplied network
     /// metadata is descriptive; it is never consulted for business admission.
     /// The SDK supplies it from its independently verified original grants.

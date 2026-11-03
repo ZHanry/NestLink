@@ -5,6 +5,7 @@ use nestlink_transport_stream::tls;
 pub mod capability;
 pub mod direct;
 pub mod discovery;
+pub mod migration;
 mod fragments;
 pub mod node;
 pub mod packet_codec;
