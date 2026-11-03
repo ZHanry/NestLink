@@ -21,6 +21,7 @@ tempfile = "3.23.0"
 
 [target.'cfg(windows)'.dev-dependencies]
 axum.workspace = true
+futures-util.workspace = true
 nestlink-identity.workspace = true
 nestlink-media-codec.workspace = true
 nestlink-sdk.workspace = true
