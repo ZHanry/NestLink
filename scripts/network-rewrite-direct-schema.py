@@ -90,12 +90,18 @@ def main():
             env = ["env", "NESTLINK_DIRECT_SCHEMA_DIRECTORY=" + str(fixture),
                    "NESTLINK_DIRECT_SCHEMA_DEPLOYMENT=" + deployment]
             run("create-real-current-lineage", [*env, "NESTLINK_DIRECT_SCHEMA_MODE=create", executable, "--ignored", "--exact", ROLE, "--nocapture"])
-            # sqlite3.Connection's context manager only ends a transaction; it
-            # does not close the connection or relinquish its WAL reader. End
-            # this fixture inspection before observing either old Store entry.
-            with closing(sqlite3.connect("file:" + str(fixture / "control.sqlite3") + "?mode=ro", uri=True)) as database:
+            # The current Store has closed and checkpointed its owned fixture.
+            # Even a mode=ro SQLite reader can create WAL/SHM files that its
+            # later read/write successor removes on close. Inspect this sealed
+            # fixture immutably and prove that inspection changes no bytes.
+            inspection_before = snapshot(fixture)
+            require(not any((fixture / ("control.sqlite3" + suffix)).exists() for suffix in ("-wal", "-shm")), "current fixture did not checkpoint and close")
+            with closing(sqlite3.connect("file:" + str(fixture / "control.sqlite3") + "?mode=ro&immutable=1", uri=True)) as database:
                 require(database.execute("PRAGMA user_version").fetchone()[0] == 51, "fixture is not actual schema 51")
                 require(database.execute("SELECT count(*) FROM network_direct_recovery_lineage").fetchone()[0] == 1, "real dual-signed child lineage missing")
+            report["inspection_fixture_before"] = inspection_before
+            report["inspection_fixture_after"] = snapshot(fixture)
+            require(report["inspection_fixture_after"] == inspection_before, "fixture inspection changed files before the original refusal observation")
             (fixture / "server.toml").write_text('schema_fixture = "owned-direct-lineage"\n')
             (fixture / "server.toml").chmod(0o600)
             old = private / "old-source"
