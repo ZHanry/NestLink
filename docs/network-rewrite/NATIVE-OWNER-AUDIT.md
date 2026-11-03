@@ -5,7 +5,7 @@
 原生远控只使用现有 `nestlink_connectivity::Scheduler`、原有
 `NativeEndpoint` 的 UDP / ICE、原有 TLS 与 SessionPermit proof，以及同一个
 `ChannelRuntime`。AppCore 的 `NativeConnection` 负责 legacy、signed direct、
-signed original route-set 与一次安全恢复的产品生命周期；没有新增调度器或登录 Client。
+signed original route-set 及其新代安全恢复的产品生命周期；没有新增调度器或登录 Client。
 
 没有选择空间的兼容连接仍使用原 `LegacyEndpoint`。程序不会从任意管理响应自动信任
 空间公钥，也不会把加入空间解释为屏幕、输入、文件、剪贴板或原始 IP 许可。
@@ -44,10 +44,20 @@ path。相同 pin、permit digest、成员和响应指纹必须保持一致；�
 原期限届满均停止。操作取消和 OS network generation 改变也被同一 owner 观察；取消
 建立时发送 cancel 并等待原 SDK cleanup，不遗弃已经打开的运输 future。
 
-signed direct 当前发生传输故障会明确停止，不自动改走 relay、不复用旧 input / 媒体、
-不把 direct-only group 转为 relay group。双 relay route-set 的一次安全恢复另需新
-business generation、新 allocation/path/transit、fresh node challenge 与新业务 proof；
-该功能仍受 W14 待通过证据限制。
+signed direct 在 TransportLost / NetworkChanged 且原 cleanup 成功后，保留精确原始
+scope 与 stopped-session budget，通过既有双方设备签名交换取得新 business generation。
+服务端 schema 51 同事务保存 child → parent，按精确原 Permit digest 验证父路径；
+每次 child GET 迭代验证所有祖先的签名、会员、epoch、原始期限与撤销。路径 ID 与
+connectivity ID 从原完整凭据 fingerprint 和既有互签 choice 派生，一次恢复仅 POST
+一次；丢响应或冲突后只 GET 同 ID，失败不换 ID 补偿。原期限最多 30 秒不变，最多
+16 层恢复，依然仅直连。原 input / 媒体和待发送业务不会重放，恢复后重选屏幕与关键帧。
+待建立的新 endpoint 观察当前 child 的实时拒绝并取消后等待原 cleanup；完成后继续
+由原 Direct owner 的认证 currentness poller 管理。普通 TCP 请求恢复不属于此承诺。
+具体边界见 [ADR 0080](../adr/network/0080-signed-direct-generation-recovery.md) 和
+[签名空间直连操作说明](SIGNED-DIRECT-RECOVERY.md)，新增源码尚待新 SHA 的 Actions。
+
+双 relay route-set 仍只支持一次安全恢复，另需新 business generation、新
+allocation/path/transit、fresh node challenge 与新业务 proof；该功能仍受 W14 待通过证据限制。
 
 ## 用户可操作入口
 
@@ -83,6 +93,11 @@ desktop 的「本机连接网络」提供三个互斥选择：原会话路径策
 - `route_set::signed_direct_space_path_uses_original_media_and_input_owner_and_revocation_releases_pressed_keys`：
   真实管理签发、两个实际 AppCore actors、真实 VP8 编码与解码像素、真实 input owner、
   当前 path / transport-group、空间路径撤销后按键释放与终止，旧 input binding 失败。
+- 新 signed direct recovery 产品用例：两个真实 AppCore actor 的新代直连、旧按键释放、
+  新 VP8/输入绑定；真实路径 POST 提交后丢 HTTP body 只读原 child，提交前/后撤祖先
+  都不能挂接新业务或重新分配 ID。Store 另覆盖三代叶路径仅因 root 撤销拒绝、落盘
+  重开、65 候选与 16 层上限，hosted producer 验证真实旧 Store 拒绝 schema 51。
+  这些新增用例全部待对应新源码的托管执行，不能引用此前 run 当作通过。
 
 `6602a70` 的 Network run `41163165105` / job `124424971645` 已证明原 SDK NRD2
 两个真实业务测试和四个 registered-chain 测试通过，route-set recovery 三个测试仍在

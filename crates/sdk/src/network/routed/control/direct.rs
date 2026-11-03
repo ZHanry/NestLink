@@ -3,6 +3,7 @@ use super::*;
 use crate::network::{LegacyConnection, LegacyEndpoint};
 use nestlink_policy::PathSet;
 use nestlink_protocol::api::NetworkRemotePathView;
+mod recovery;
 
 /// Obtained only from authenticated management readback and a local space pin.
 /// Membership never replaces the independently approved business permit.

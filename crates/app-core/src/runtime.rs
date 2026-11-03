@@ -2195,6 +2195,11 @@ struct NativeRecoverySource {
     context: NativeRecoveryContext,
 }
 enum NativeRecoveryTransport {
+    Direct {
+        failed: Box<NativeSession>,
+        endpoint: Box<LegacyEndpoint>,
+        admission: Box<nestlink_sdk::network::routed::VerifiedRemoteDirect>,
+    },
     Legacy {
         failed: Box<NativeSession>,
         endpoint: Box<LegacyEndpoint>,
@@ -2207,7 +2212,8 @@ enum NativeRecoveryTransport {
 impl NativeRecoverySource {
     fn stop(&self, reason: StopReason) {
         match &self.transport {
-            NativeRecoveryTransport::Legacy { failed, .. } => {
+            NativeRecoveryTransport::Legacy { failed, .. }
+            | NativeRecoveryTransport::Direct { failed, .. } => {
                 let _ = failed.control.stop(reason);
             }
             NativeRecoveryTransport::Original { session, .. } => {

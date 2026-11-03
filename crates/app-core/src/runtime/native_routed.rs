@@ -643,6 +643,97 @@ pub(super) async fn wait_network_change(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+pub(super) async fn prove_recovered_direct(
+    client: &Client,
+    identity: &DeviceIdentity,
+    peer_key: &[u8; 32],
+    config: &NativeSessionConfig,
+    receipt: &nestlink_sdk::ReconnectedPermit,
+    options: NativeSessionOptions,
+    admission: nestlink_sdk::network::routed::VerifiedRemoteDirect,
+    fence: sdk_call::DispatchFence,
+    deadline: Instant,
+    network_generation: u64,
+) -> Result<NativeConnection, Failure> {
+    fence.check()?;
+    let network = config.network().subscribe();
+    // Readmission and media publication complete before opening a successor
+    // UDP endpoint. Refusal/cancellation here owns no new carrier resources.
+    let media = tokio::select! { biased;
+        _ = wait_for_fence_invalidation(fence.clone()) => return Err(Failure::local(FailureKind::NativeSessionCancelled)),
+        _ = wait_network_change(network.clone(), network_generation) => return Err(Failure::local(FailureKind::NetworkChanged)),
+        _ = tokio::time::sleep_until(deadline.into()) => return Err(Failure::local(FailureKind::PermitExpired)),
+        result = native_recovery::prepare_media(client, identity, config, receipt.permit(), &fence) => result?,
+    };
+    fence.check()?;
+    let space = &config.space_path.as_ref()
+        .ok_or_else(|| Failure::local(FailureKind::Trust))?.space_id;
+    let path = admission.path_grant_id().to_owned();
+    let endpoint = client.sdk.reconnection_endpoint(
+        receipt, identity, peer_key,
+        nestlink_sdk::NativeReconnectionConfig {
+            bound: config.bind_address, stun_servers: config.stun_servers.clone(),
+            address_policy: config.address_policy()
+                .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?,
+            monitor: Some(config.network()),
+        },
+    ).map_err(Failure::from)?;
+    let (cancel, cancelled) = watch::channel(false);
+    let connect = admission.establish(
+        LegacyEndpoint::new(endpoint), &client.sdk, identity, peer_key,
+        nestlink_sdk::native::NativeMediaSessionOptions {
+            session: options, media, relay_node_id: None, pcp_gateway: config.pcp_gateway,
+        },
+        config.stun_servers.clone(), cancelled,
+    );
+    tokio::pin!(connect);
+    // A peer can be awaiting endpoint proof while the controller's committed
+    // POST response is still in flight. A withdrawn ancestor must cancel that
+    // wait, rather than letting it linger until the full original expiry.
+    let currentness = async {
+        loop {
+            tokio::time::sleep(Duration::from_millis(200)).await;
+            if let Err(error) = client.sdk.network_remote_path(space, &path).await {
+                break Failure::from(error);
+            }
+        }
+    };
+    tokio::pin!(currentness);
+    let mut interrupted = Failure::local(FailureKind::NativeSessionCancelled);
+    let result = tokio::select! { biased;
+        _ = wait_for_fence_invalidation(fence.clone()) => None,
+        _ = wait_network_change(network.clone(), network_generation) => {
+            interrupted = Failure::local(FailureKind::NetworkChanged);
+            None
+        },
+        _ = tokio::time::sleep_until(deadline.into()) => {
+            interrupted = Failure::local(FailureKind::PermitExpired);
+            None
+        },
+        failure = &mut currentness => {
+            interrupted = failure;
+            None
+        },
+        result = &mut connect => Some(result),
+    };
+    let Some(result) = result else {
+        cancel.send_replace(true);
+        if let Ok((mut session, _)) = connect.await {
+            let _ = session.close_and_wait(StopReason::ExplicitExit, tokio::time::Instant::now() + Duration::from_secs(5)).await;
+        }
+        return Err(interrupted);
+    };
+    let (mut session, admission) = result.map_err(map_establish_failure)?;
+    if fence.check().is_err() || Instant::now() >= deadline
+        || !network.borrow().available || network.borrow().generation != network_generation
+    {
+        let _ = session.close_and_wait(StopReason::NetworkChanged, tokio::time::Instant::now() + Duration::from_secs(5)).await;
+        return Err(Failure::local(FailureKind::NetworkChanged));
+    }
+    Ok(NativeConnection::Direct { session: Box::new(session), admission: Box::new(admission), network_generation })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

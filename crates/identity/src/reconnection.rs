@@ -10,6 +10,42 @@ use nestlink_protocol::{
 use prost::Message;
 const GRANT_DOMAIN: &[u8] = b"NestLink/v15/reconnection-grant/v1\0";
 pub const NETWORK_RECOVERY_CAPABILITY: &str = "network-route-recovery-v1";
+/// Immutable direct-space ancestry. This is a request identity, never authority;
+/// storage must independently prove and retain the exact parent and receipt.
+pub fn direct_recovery_fingerprint(
+    path: &[u8],
+    connectivity: &[u8],
+    memberships: [&[u8]; 2],
+) -> [u8; 32] {
+    let mut bytes = b"NestLink/network/direct-recovery-parent/v1\0".to_vec();
+    for claims in [path, connectivity, memberships[0], memberships[1]] {
+        bytes.extend_from_slice(&digest(claims));
+    }
+    digest(&bytes)
+}
+pub fn direct_recovery_id(
+    previous: &PermitClaims,
+    choice: &ReconnectionChoice,
+    parent: [u8; 32],
+    kind: u8,
+) -> Result<String, ContractError> {
+    validate_choice(previous, choice)?;
+    if choice.network_recovery.is_some()
+        || !previous.paths.contains(&(nestlink_protocol::Path::Direct as i32))
+        || ![1, 2].contains(&kind)
+    {
+        return Err(invalid());
+    }
+    let mut bytes = b"NestLink/network/direct-recovery-request/v1\0".to_vec();
+    bytes.push(kind);
+    bytes.extend_from_slice(&parent);
+    bytes.extend_from_slice(&serde_json::to_vec(choice).map_err(|_| invalid())?);
+    let hash = digest(&bytes);
+    let mut id: [u8; 16] = hash[..16].try_into().map_err(|_| invalid())?;
+    id[6] = (id[6] & 0x0f) | 0x80;
+    id[8] = (id[8] & 0x3f) | 0x80;
+    Ok(uuid::Uuid::from_bytes(id).hyphenated().to_string())
+}
 /// Hash only the immutable original signed claims in allocation order. Node
 /// availability is an observation and cannot change the agreed original group.
 pub fn route_set_fingerprint(path: &[u8], transits: [&[u8]; 2]) -> [u8; 32] {

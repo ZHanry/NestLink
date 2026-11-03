@@ -149,7 +149,7 @@ impl NativeNetworkPanel {
                         ui.small(t("保存后清除此设备的空间直连和双中继配置。后续连接按原部署及会话许可选择路径，可能使用中继；远控批准与上面的内网批准仍独立生效。", "Saving clears this device's direct-space and relay-space settings. Future connections use the deployment and session path policy, which may allow relays. Remote-control approval and private-network consent remain separate."));
                     },
                     SpacePathChoice::Direct => {
-                        ui.small(t("直连失败或空间授权撤销时停止，不会回退到中继。当前候选功能的路径授权最多 30 秒；期限届满后需建立新会话。", "Direct failure or space revocation stops the session without relay fallback. This candidate feature has a fixed path lifetime of at most 30 seconds; start a new session after it expires."));
+                        ui.small(t("网络变化或连接丢失后，在原期限内重新认证并仅以直连恢复；恢复后需重新选择共享屏幕。当前候选功能的初始路径授权最多 30 秒，最多恢复 16 次；撤销或到期停止，需建立新会话。", "After a network change or connection loss, fresh authentication can restore a direct connection within the original deadline; select the shared screen again after recovery. This candidate feature has an initial path lifetime of at most 30 seconds and permits at most 16 recoveries. Revocation or expiry stops it; start a new session."));
                     },
                     SpacePathChoice::Relays => {
                     ui.small(t("当前候选功能的路径授权最多 30 秒，只支持一次安全恢复；期限届满后需建立新会话。", "This candidate feature has a fixed path lifetime of at most 30 seconds and supports one safe recovery. Start a new session after it expires."));

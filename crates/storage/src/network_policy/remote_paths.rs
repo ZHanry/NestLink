@@ -9,6 +9,7 @@ use nestlink_protocol::{
     network::{ConnectivityClaims, PathClaims, PathPolicy, PeerPair, Purpose},
 };
 use prost::Message;
+mod direct_recovery;
 
 pub struct NetworkRemotePathIssuance {
     pub space_id: String,
@@ -163,6 +164,11 @@ impl Store {
         if request.expected_policy_epoch != snapshot.policy_epoch {
             return Err(StorageError::Conflict);
         }
+        let direct_lineage = if policy.allow_direct {
+            self.direct_recovery_lineage(tx, &business, &space_id, &request, now_ms)?
+        } else {
+            None
+        };
         if request.path_grant_id == request.connectivity_grant_id {
             return Err(StorageError::Conflict);
         }
@@ -239,6 +245,9 @@ impl Store {
             VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13)",params![space_id,request.path_grant_id,request.connectivity_grant_id,request_id,
                 request.controller_membership_grant_id,request.host_membership_grant_id,snapshot.policy_epoch,business_digest.as_slice(),
                 connectivity.claims,connectivity.signature,path.claims,path.signature,request.expires_at_unix_ms])?;
+        if let Some(lineage) = direct_lineage {
+            lineage.insert(tx, &space_id, &request.path_grant_id)?;
+        }
         observe(tx, &space_id, now_ms)?;
         audit(
             tx,
@@ -448,13 +457,17 @@ impl Store {
             return Err(StorageError::Forbidden);
         }
         observe(tx, space, now_ms)?;
-        Ok(NetworkRemotePathBundle {
+        let bundle = NetworkRemotePathBundle {
             request_id: row.request_id,
             memberships: [controller, host],
             connectivity: row.connectivity,
             path: row.path,
             verified,
-        })
+        };
+        if previous.is_none() && relay_hops == 0 {
+            self.validate_direct_lineage(tx, space, &bundle, &business, now_ms)?;
+        }
+        Ok(bundle)
     }
 
     pub fn revoke_network_remote_path(

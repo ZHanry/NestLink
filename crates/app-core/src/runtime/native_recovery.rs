@@ -25,6 +25,16 @@ pub(super) fn retain_source(
         return None;
     }
     let (transport, budget) = match failed {
+        NativeConnection::Direct { session, admission, .. } => {
+            let (failed, endpoint) = (*session).into_stopped_parts().ok()?;
+            let budget = failed.channels.lease_control().reconnection_budget().ok()?;
+            if budget.deadline() > admission.deadline().into_std() {
+                return None;
+            }
+            (NativeRecoveryTransport::Direct {
+                failed: Box::new(failed), endpoint: Box::new(endpoint), admission,
+            }, budget)
+        }
         NativeConnection::Legacy(failed) => {
             let (failed, endpoint) = (*failed).into_stopped_parts().ok()?;
             let budget = failed.channels.lease_control().reconnection_budget().ok()?;
@@ -50,8 +60,9 @@ pub(super) fn retain_source(
                 budget,
             )
         }
-        // This first safe-recovery contract authorizes one successor only.
-        NativeConnection::Recovered { .. } | NativeConnection::Direct { .. } => return None,
+        // Original route-set recovery currently authorizes one successor.
+        // Direct recovery retains its checked lineage and original deadline.
+        NativeConnection::Recovered { .. } => return None,
     };
     // All input/media/business cleanup has completed before this extraction.
     // The retained endpoint keeps the original network observer live, and the
@@ -446,12 +457,13 @@ async fn recover_native_session(
     if Instant::now() >= deadline || !same_server(&client.server, &context.server) {
         return Err(Failure::local(FailureKind::PermitExpired));
     }
-    let (failed, endpoint) = match transport {
+    let (failed, endpoint, direct) = match transport {
         NativeRecoveryTransport::Original { session, lifetime } => {
             return native_routed::recover(client, identity, session, lifetime, context, fence)
                 .await;
         }
-        NativeRecoveryTransport::Legacy { failed, endpoint } => (failed, endpoint),
+        NativeRecoveryTransport::Legacy { failed, endpoint } => (failed, endpoint, None),
+        NativeRecoveryTransport::Direct { failed, endpoint, admission } => (failed, endpoint, Some(admission)),
     };
     let network = context.config.network().subscribe();
     let baseline = *network.borrow();
@@ -464,6 +476,18 @@ async fn recover_native_session(
             || !network.borrow().available
             || network.borrow().generation != baseline.generation
     };
+    if let Some(admission) = &direct {
+        // Both peers check the old signed scope before either can approve the
+        // existing mutual business transition. Storage checks it again when
+        // issuing the exact child and on every subsequent currentness read.
+        tokio::select! { biased;
+            _ = wait_for_fence_invalidation(fence.clone()) => return Err(Failure::local(FailureKind::NativeSessionCancelled)),
+            _ = native_routed::wait_network_change(network.clone(), baseline.generation) => return Err(Failure::local(FailureKind::NetworkChanged)),
+            result = tokio::time::timeout_at(deadline.into(), admission.check_current(&client.sdk, identity, &context.peer_key)) => {
+                result.map_err(|_| Failure::local(FailureKind::PermitExpired))?.map_err(Failure::from)?;
+            },
+        }
+    }
     let receipt = if key.is_host {
         client
             .sdk
@@ -510,37 +534,39 @@ async fn recover_native_session(
     }
     let (mut key, options) =
         authorize_native_session(client, identity, &context.config, &remote, next)?;
-    let endpoint = client
-        .sdk
-        .reconnection_endpoint(
-            &receipt,
-            identity,
-            &context.peer_key,
+    let session = if let Some(previous_admission) = direct {
+        let admission = tokio::select! { biased;
+            _ = wait_for_fence_invalidation(fence.clone()) => return Err(Failure::local(FailureKind::NativeSessionCancelled)),
+            _ = native_routed::wait_network_change(network.clone(), baseline.generation) => return Err(Failure::local(FailureKind::NetworkChanged)),
+            result = previous_admission.recover_for_permit(&client.sdk, identity, &context.peer_key, &receipt) => result.map_err(Failure::from)?,
+        };
+        let direct = native_routed::prove_recovered_direct(
+            client, identity, &context.peer_key, &context.config, &receipt,
+            options, admission, fence, deadline, baseline.generation,
+        ).await?;
+        key.path = nestlink_protocol::Path::Direct as i32;
+        direct
+    } else {
+        let endpoint = client.sdk.reconnection_endpoint(
+            &receipt, identity, &context.peer_key,
             NativeReconnectionConfig {
                 bound: context.config.bind_address,
                 stun_servers: context.config.stun_servers.clone(),
-                address_policy: context
-                    .config
-                    .address_policy()
+                address_policy: context.config.address_policy()
                     .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?,
                 monitor: Some(context.config.network()),
             },
-        )
-        .map_err(Failure::from)?;
-    let session = prove_endpoint(
-        client,
-        identity,
-        &context.config,
-        LegacyEndpoint::new(endpoint),
-        options,
-        fence,
-        Some(deadline),
-    )
-    .await?;
-    key.path = session.candidate.path() as i32;
+        ).map_err(Failure::from)?;
+        let session = prove_endpoint(
+            client, identity, &context.config, LegacyEndpoint::new(endpoint),
+            options, fence, Some(deadline),
+        ).await?;
+        key.path = session.candidate.path() as i32;
+        NativeConnection::Legacy(Box::new(session))
+    };
     context.deadline = Some(deadline);
     Ok(EstablishedNativeSession {
-        session: NativeConnection::Legacy(Box::new(session)),
+        session,
         key,
         recovery: context,
     })
