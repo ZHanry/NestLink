@@ -453,12 +453,37 @@ HRESULT capabilities(Encoder& state) noexcept {
         && static_cast<amf_int32>(state.height) >= min_height && static_cast<amf_int32>(state.height) <= max_height ? S_OK : DXGI_ERROR_UNSUPPORTED;
 }
 
+// Select a conservative Main-tier request from the actual workload, instead of
+// accepting the installed encoder's hardware-maximum default (observed 6.2 for
+// 1080p60). These standard limits are numerical policy, not an SPS substitute.
+// Actual headers, geometry, color, PTS and independent decoders remain mandatory.
+amf_int64 target_level(uint32_t width, uint32_t height, uint32_t fps, uint32_t kbps) noexcept {
+    if (!width || !height || !fps || !kbps || width > 8192 || height > 8192 || fps > 144 || kbps > 100000)
+        return 0;
+    struct Level { amf_int64 value; uint64_t picture, rate, kbps; };
+    const Level choices[] = {
+        {AMF_LEVEL_4_1, 2228224, 133693440, 20000},
+        {AMF_LEVEL_5_1, 8912896, 534773760, 40000},
+        {AMF_LEVEL_6_2, 35651584, 4278190080, 240000},
+    };
+    const uint64_t picture = uint64_t(width) * height;
+    for (const auto& level : choices) {
+        if (picture <= level.picture && picture * fps <= level.rate && kbps <= level.kbps
+            && uint64_t(width) * width <= 8 * level.picture && uint64_t(height) * height <= 8 * level.picture)
+            return level.value;
+    }
+    return 0;
+}
+
 HRESULT configure(Encoder& state, uint32_t kbps) noexcept {
+    const amf_int64 level = target_level(state.width, state.height, state.fps, kbps);
+    if (!level) return E_INVALIDARG;
     HRESULT hr = property(state, AMF_VIDEO_ENCODER_HEVC_USAGE, amf::AMFVariant(amf_int64(AMF_VIDEO_ENCODER_HEVC_USAGE_ULTRA_LOW_LATENCY)));
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_FRAMESIZE, amf::AMFVariant(AMFConstructSize(static_cast<amf_int32>(state.width), static_cast<amf_int32>(state.height))));
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_FRAMERATE, amf::AMFVariant(AMFConstructRate(state.fps, 1)));
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_PROFILE, amf::AMFVariant(amf_int64(state.depth == 10 ? AMF_VIDEO_ENCODER_HEVC_PROFILE_MAIN_10 : AMF_VIDEO_ENCODER_HEVC_PROFILE_MAIN)));
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_TIER, amf::AMFVariant(amf_int64(AMF_VIDEO_ENCODER_HEVC_TIER_MAIN)));
+    if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_PROFILE_LEVEL, amf::AMFVariant(level));
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_COLOR_BIT_DEPTH, amf::AMFVariant(amf_int64(state.depth)));
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD, amf::AMFVariant(amf_int64(AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD_CBR)));
     if (SUCCEEDED(hr)) hr = property(state, AMF_VIDEO_ENCODER_HEVC_TARGET_BITRATE, amf::AMFVariant(amf_int64(kbps) * 1000));
@@ -619,7 +644,10 @@ HRESULT input(Encoder& state, ID3D11Texture2D* source, uint64_t pts, bool keyfra
     state.context->CopyResource(state.slots[slot].Get(), source);
     state.context->End(query.Get()); state.context->Flush();
     const ULONGLONG deadline = GetTickCount64() + 16;
-    do { hr = state.context->GetData(query.Get(), nullptr, 0, 0); if (hr == S_FALSE) Sleep(0); }
+    // The copy and EVENT were explicitly flushed once above. Repeated polling
+    // must not implicitly flush the command stream again. The same original
+    // 16ms deadline and incomplete-copy owner quarantine still apply.
+    do { hr = state.context->GetData(query.Get(), nullptr, 0, D3D11_ASYNC_GETDATA_DONOTFLUSH); if (hr == S_FALSE) Sleep(0); }
     while (hr == S_FALSE && GetTickCount64() < deadline);
     // An incomplete copy must not release and reuse its slot as another input.
     // Retire this owner instead of acknowledging an unaccepted retryable frame.
@@ -956,4 +984,23 @@ extern "C" uint32_t nl_amf_base_layer_alias_contract() noexcept {
         if (FAILED(inspect(index_error))) passed |= 2097152;
         return passed;
     } catch (...) { return 0; }
+}
+
+extern "C" uint32_t nl_amf_target_level_contract() noexcept {
+    uint32_t passed = 0;
+    if (target_level(1920, 1080, 60, 8000) == AMF_LEVEL_4_1) passed |= 1;
+    if (target_level(3840, 2160, 60, 40000) == AMF_LEVEL_5_1) passed |= 2;
+    if (target_level(3840, 2160, 144, 8000) == AMF_LEVEL_6_2) passed |= 4;
+    if (target_level(2048, 1088, 60, 20000) == AMF_LEVEL_4_1) passed |= 8;
+    if (target_level(2048, 1096, 60, 20000) == AMF_LEVEL_5_1) passed |= 16;
+    if (target_level(2048, 1088, 61, 20000) == AMF_LEVEL_5_1) passed |= 32;
+    if (target_level(1920, 1080, 60, 20001) == AMF_LEVEL_5_1) passed |= 64;
+    if (target_level(3840, 2160, 60, 40001) == AMF_LEVEL_6_2) passed |= 128;
+    if (target_level(8192, 8192, 144, 100000) == 0) passed |= 256;
+    if (target_level(8192, 16, 1, 8000) == AMF_LEVEL_5_1) passed |= 512;
+    if (target_level(16, 8192, 1, 8000) == AMF_LEVEL_5_1) passed |= 1024;
+    if (target_level(0, 1080, 60, 8000) == 0 && target_level(1920, 0, 60, 8000) == 0) passed |= 2048;
+    if (target_level(1920, 1080, 0, 8000) == 0 && target_level(1920, 1080, 60, 0) == 0) passed |= 4096;
+    if (target_level(1920, 1080, 145, 8000) == 0 && target_level(1920, 1080, 60, 100001) == 0) passed |= 8192;
+    return passed;
 }

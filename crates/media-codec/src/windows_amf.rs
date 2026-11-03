@@ -281,4 +281,13 @@ mod boundary_tests {
         // responses; no installed runtime, device or pixel submission.
         assert_eq!(unsafe { nl_amf_base_layer_alias_contract() }, 4194303);
     }
+
+    #[test]
+    fn requested_level_covers_exact_picture_rate_bitrate_and_dimension_boundaries() {
+        unsafe extern "C" {
+            fn nl_amf_target_level_contract() -> u32;
+        }
+        // SAFETY: bounded production workload policy; no runtime, GPU or pixels.
+        assert_eq!(unsafe { nl_amf_target_level_contract() }, 16383);
+    }
 }
