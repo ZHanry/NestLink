@@ -667,25 +667,42 @@ pub(super) async fn prove_recovered_direct(
         result = native_recovery::prepare_media(client, identity, config, receipt.permit(), &fence) => result?,
     };
     fence.check()?;
-    let space = &config.space_path.as_ref()
-        .ok_or_else(|| Failure::local(FailureKind::Trust))?.space_id;
+    let space = &config
+        .space_path
+        .as_ref()
+        .ok_or_else(|| Failure::local(FailureKind::Trust))?
+        .space_id;
     let path = admission.path_grant_id().to_owned();
-    let endpoint = client.sdk.reconnection_endpoint(
-        receipt, identity, peer_key,
-        nestlink_sdk::NativeReconnectionConfig {
-            bound: config.bind_address, stun_servers: config.stun_servers.clone(),
-            address_policy: config.address_policy()
-                .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?,
-            monitor: Some(config.network()),
-        },
-    ).map_err(Failure::from)?;
+    let endpoint = client
+        .sdk
+        .reconnection_endpoint(
+            receipt,
+            identity,
+            peer_key,
+            nestlink_sdk::NativeReconnectionConfig {
+                bound: config.bind_address,
+                stun_servers: config.stun_servers.clone(),
+                address_policy: config
+                    .address_policy()
+                    .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?,
+                monitor: Some(config.network()),
+            },
+        )
+        .map_err(Failure::from)?;
     let (cancel, cancelled) = watch::channel(false);
     let connect = admission.establish(
-        LegacyEndpoint::new(endpoint), &client.sdk, identity, peer_key,
+        LegacyEndpoint::new(endpoint),
+        &client.sdk,
+        identity,
+        peer_key,
         nestlink_sdk::native::NativeMediaSessionOptions {
-            session: options, media, relay_node_id: None, pcp_gateway: config.pcp_gateway,
+            session: options,
+            media,
+            relay_node_id: None,
+            pcp_gateway: config.pcp_gateway,
         },
-        config.stun_servers.clone(), cancelled,
+        config.stun_servers.clone(),
+        cancelled,
     );
     tokio::pin!(connect);
     // A peer can be awaiting endpoint proof while the controller's committed
@@ -720,18 +737,34 @@ pub(super) async fn prove_recovered_direct(
     let Some(result) = result else {
         cancel.send_replace(true);
         if let Ok((mut session, _)) = connect.await {
-            let _ = session.close_and_wait(StopReason::ExplicitExit, tokio::time::Instant::now() + Duration::from_secs(5)).await;
+            let _ = session
+                .close_and_wait(
+                    StopReason::ExplicitExit,
+                    tokio::time::Instant::now() + Duration::from_secs(5),
+                )
+                .await;
         }
         return Err(interrupted);
     };
     let (mut session, admission) = result.map_err(map_establish_failure)?;
-    if fence.check().is_err() || Instant::now() >= deadline
-        || !network.borrow().available || network.borrow().generation != network_generation
+    if fence.check().is_err()
+        || Instant::now() >= deadline
+        || !network.borrow().available
+        || network.borrow().generation != network_generation
     {
-        let _ = session.close_and_wait(StopReason::NetworkChanged, tokio::time::Instant::now() + Duration::from_secs(5)).await;
+        let _ = session
+            .close_and_wait(
+                StopReason::NetworkChanged,
+                tokio::time::Instant::now() + Duration::from_secs(5),
+            )
+            .await;
         return Err(Failure::local(FailureKind::NetworkChanged));
     }
-    Ok(NativeConnection::Direct { session: Box::new(session), admission: Box::new(admission), network_generation })
+    Ok(NativeConnection::Direct {
+        session: Box::new(session),
+        admission: Box::new(admission),
+        network_generation,
+    })
 }
 
 #[cfg(test)]

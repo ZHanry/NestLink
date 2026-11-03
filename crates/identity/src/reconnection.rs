@@ -31,7 +31,9 @@ pub fn direct_recovery_id(
 ) -> Result<String, ContractError> {
     validate_choice(previous, choice)?;
     if choice.network_recovery.is_some()
-        || !previous.paths.contains(&(nestlink_protocol::Path::Direct as i32))
+        || !previous
+            .paths
+            .contains(&(nestlink_protocol::Path::Direct as i32))
         || ![1, 2].contains(&kind)
     {
         return Err(invalid());

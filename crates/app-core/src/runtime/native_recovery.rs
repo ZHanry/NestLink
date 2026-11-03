@@ -25,15 +25,22 @@ pub(super) fn retain_source(
         return None;
     }
     let (transport, budget) = match failed {
-        NativeConnection::Direct { session, admission, .. } => {
+        NativeConnection::Direct {
+            session, admission, ..
+        } => {
             let (failed, endpoint) = (*session).into_stopped_parts().ok()?;
             let budget = failed.channels.lease_control().reconnection_budget().ok()?;
             if budget.deadline() > admission.deadline().into_std() {
                 return None;
             }
-            (NativeRecoveryTransport::Direct {
-                failed: Box::new(failed), endpoint: Box::new(endpoint), admission,
-            }, budget)
+            (
+                NativeRecoveryTransport::Direct {
+                    failed: Box::new(failed),
+                    endpoint: Box::new(endpoint),
+                    admission,
+                },
+                budget,
+            )
         }
         NativeConnection::Legacy(failed) => {
             let (failed, endpoint) = (*failed).into_stopped_parts().ok()?;
@@ -463,7 +470,11 @@ async fn recover_native_session(
                 .await;
         }
         NativeRecoveryTransport::Legacy { failed, endpoint } => (failed, endpoint, None),
-        NativeRecoveryTransport::Direct { failed, endpoint, admission } => (failed, endpoint, Some(admission)),
+        NativeRecoveryTransport::Direct {
+            failed,
+            endpoint,
+            admission,
+        } => (failed, endpoint, Some(admission)),
     };
     let network = context.config.network().subscribe();
     let baseline = *network.borrow();
@@ -541,26 +552,48 @@ async fn recover_native_session(
             result = previous_admission.recover_for_permit(&client.sdk, identity, &context.peer_key, &receipt) => result.map_err(Failure::from)?,
         };
         let direct = native_routed::prove_recovered_direct(
-            client, identity, &context.peer_key, &context.config, &receipt,
-            options, admission, fence, deadline, baseline.generation,
-        ).await?;
+            client,
+            identity,
+            &context.peer_key,
+            &context.config,
+            &receipt,
+            options,
+            admission,
+            fence,
+            deadline,
+            baseline.generation,
+        )
+        .await?;
         key.path = nestlink_protocol::Path::Direct as i32;
         direct
     } else {
-        let endpoint = client.sdk.reconnection_endpoint(
-            &receipt, identity, &context.peer_key,
-            NativeReconnectionConfig {
-                bound: context.config.bind_address,
-                stun_servers: context.config.stun_servers.clone(),
-                address_policy: context.config.address_policy()
-                    .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?,
-                monitor: Some(context.config.network()),
-            },
-        ).map_err(Failure::from)?;
+        let endpoint = client
+            .sdk
+            .reconnection_endpoint(
+                &receipt,
+                identity,
+                &context.peer_key,
+                NativeReconnectionConfig {
+                    bound: context.config.bind_address,
+                    stun_servers: context.config.stun_servers.clone(),
+                    address_policy: context
+                        .config
+                        .address_policy()
+                        .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?,
+                    monitor: Some(context.config.network()),
+                },
+            )
+            .map_err(Failure::from)?;
         let session = prove_endpoint(
-            client, identity, &context.config, LegacyEndpoint::new(endpoint),
-            options, fence, Some(deadline),
-        ).await?;
+            client,
+            identity,
+            &context.config,
+            LegacyEndpoint::new(endpoint),
+            options,
+            fence,
+            Some(deadline),
+        )
+        .await?;
         key.path = session.candidate.path() as i32;
         NativeConnection::Legacy(Box::new(session))
     };

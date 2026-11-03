@@ -72,7 +72,14 @@ async fn original_platform_owner_is_exclusive_cancel_safe_and_released_after_shu
     .await??;
     after_drop.shutdown().await;
     #[cfg(target_os = "linux")]
-    for stage in ["dbus", "seed-xauth", "xvfb", "keyring", "dbus-owner", "xsetroot"] {
+    for stage in [
+        "dbus",
+        "seed-xauth",
+        "xvfb",
+        "keyring",
+        "dbus-owner",
+        "xsetroot",
+    ] {
         construction_terminal_reaps_before_reentry(stage, true).await?;
         construction_terminal_reaps_before_reentry(stage, false).await?;
     }
@@ -108,9 +115,12 @@ async fn construction_terminal_reaps_before_reentry(stage: &'static str, cancel:
     .await??;
     assert!(!owned.is_empty(), "real constructor spawn had no owned PID");
     assert!(
-        tokio::time::timeout(Duration::from_millis(100), Platform::new(waiting_area.path()))
-            .await
-            .is_err(),
+        tokio::time::timeout(
+            Duration::from_millis(100),
+            Platform::new(waiting_area.path())
+        )
+        .await
+        .is_err(),
         "construction admitted a second original desktop owner"
     );
     if cancel {
@@ -136,11 +146,8 @@ async fn construction_terminal_reaps_before_reentry(stage: &'static str, cancel:
         }),
         "cancelled or failed construction left an original PID alive or unreaped"
     );
-    let reentered = tokio::time::timeout(
-        Duration::from_secs(30),
-        Platform::new(reentry_area.path()),
-    )
-    .await??;
+    let reentered =
+        tokio::time::timeout(Duration::from_secs(30), Platform::new(reentry_area.path())).await??;
     reentered.shutdown().await;
     Ok(())
 }

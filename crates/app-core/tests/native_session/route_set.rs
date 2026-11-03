@@ -56,8 +56,13 @@ enum DirectProduct {
 
 async fn signed_direct_product(case: DirectProduct) -> Result {
     let recover = case != DirectProduct::Original;
-    let gate = matches!(case, DirectProduct::LostPost | DirectProduct::RevokedDuringPost | DirectProduct::RevokedBeforePost)
-        .then(|| Gate::suffix("/paths", "POST"));
+    let gate = matches!(
+        case,
+        DirectProduct::LostPost
+            | DirectProduct::RevokedDuringPost
+            | DirectProduct::RevokedBeforePost
+    )
+    .then(|| Gate::suffix("/paths", "POST"));
     let server = Server::start(gate.clone()).await?;
     let mut admin = Sdk::connect(
         &server.config.origin,
@@ -96,8 +101,7 @@ async fn signed_direct_product(case: DirectProduct) -> Result {
     };
     let controller_network = Arc::new(NetworkMonitor::start()?);
     let config = |network| -> Result<NativeSessionConfig> {
-        let mut config = NativeSessionConfig::new(network)
-            .with_space_path(scope.clone())?;
+        let mut config = NativeSessionConfig::new(network).with_space_path(scope.clone())?;
         config.bind_address = (address, 0).into();
         config.use_deployment_stun = false;
         config.private_network_prefixes = vec![format!("{address}/32")];
@@ -109,8 +113,11 @@ async fn signed_direct_product(case: DirectProduct) -> Result {
         controller_identity,
         config(controller_network.clone())?,
     )?;
-    let mut host_core =
-        AppCore::with_identity_and_native_session(Limits::default(), host_identity, config(Arc::new(NetworkMonitor::start()?))?)?;
+    let mut host_core = AppCore::with_identity_and_native_session(
+        Limits::default(),
+        host_identity,
+        config(Arc::new(NetworkMonitor::start()?))?,
+    )?;
     let controller = connect(&controller_core, &server).await?;
     let host = connect(&host_core, &server).await?;
     for (handle, name) in [(&controller, "controller"), (&host, "host")] {
@@ -232,7 +239,8 @@ async fn signed_direct_product(case: DirectProduct) -> Result {
     assert_eq!(current.host_membership.grant_id, grants[1]);
     if recover {
         let original = nestlink_sdk::network_management::decode_network_grant(&current.path)?;
-        let original_claims = nestlink_protocol::network::GrantClaims::decode_canonical(&original.claims)?;
+        let original_claims =
+            nestlink_protocol::network::GrantClaims::decode_canonical(&original.claims)?;
         let post_count = gate.as_ref().map(|gate| {
             let count = gate.matching_requests.load(Ordering::Acquire);
             if case == DirectProduct::RevokedBeforePost {
@@ -246,96 +254,236 @@ async fn signed_direct_product(case: DirectProduct) -> Result {
         wait_input(&log, "release-key:8").await?;
         let committed: Option<NetworkRemotePathView> = if let Some(gate) = &gate {
             gate.entered().await?;
-            let committed: Option<NetworkRemotePathView> = if case == DirectProduct::RevokedBeforePost {
+            let committed: Option<NetworkRemotePathView> = if case
+                == DirectProduct::RevokedBeforePost
+            {
                 None
             } else {
                 let response: NetworkRemotePathView = serde_json::from_value(gate.held_json()?)?;
                 assert_ne!(response.path.grant_id, path);
                 Some(response)
             };
-            assert_eq!(gate.matching_requests.load(Ordering::Acquire), post_count.ok_or("post count")? + 1);
-            if matches!(case, DirectProduct::RevokedDuringPost | DirectProduct::RevokedBeforePost) {
+            assert_eq!(
+                gate.matching_requests.load(Ordering::Acquire),
+                post_count.ok_or("post count")? + 1
+            );
+            if matches!(
+                case,
+                DirectProduct::RevokedDuringPost | DirectProduct::RevokedBeforePost
+            ) {
                 // Exercise withdrawal both before the real transaction and
                 // after it committed without returning its HTTP response.
                 admin.revoke_network_remote_path(&space, &path).await?;
                 if let Some(committed) = &committed {
-                    assert!(admin.network_remote_path(&space, &committed.path.grant_id).await.is_err());
+                    assert!(
+                        admin
+                            .network_remote_path(&space, &committed.path.grant_id)
+                            .await
+                            .is_err()
+                    );
                 }
                 gate.unblock();
                 for handle in [&controller, &host] {
-                    wait_view(handle, |snapshot| snapshot.native_session.data.as_ref().is_some_and(|session| {
-                        matches!(session.status, NativeSessionStatus::Stopped | NativeSessionStatus::Failed)
-                    })).await?;
+                    wait_view(handle, |snapshot| {
+                        snapshot
+                            .native_session
+                            .data
+                            .as_ref()
+                            .is_some_and(|session| {
+                                matches!(
+                                    session.status,
+                                    NativeSessionStatus::Stopped | NativeSessionStatus::Failed
+                                )
+                            })
+                    })
+                    .await?;
                     let snapshot = handle.snapshot();
-                    let session = snapshot.native_session.data.as_ref().ok_or("missing rejected direct session")?;
+                    let session = snapshot
+                        .native_session
+                        .data
+                        .as_ref()
+                        .ok_or("missing rejected direct session")?;
                     assert_eq!(session.connection_generation, binding.connection_generation);
                     assert!(handle.native_host_session_binding().is_none());
                     assert!(handle.native_input_layout().is_err());
                 }
                 assert!(controller.poll_native_video()?.is_none());
-                assert!(controller.send_native_input(&input, NativeInputAction::Key { code: 9, down: true }).await.is_err());
-                assert!(host.configure_native_video_stream(&binding, 0, 64, 48, 1).await.is_err());
-                assert_eq!(gate.discarded_responses.load(Ordering::Acquire), usize::from(case == DirectProduct::RevokedDuringPost));
-                assert_eq!(gate.matching_requests.load(Ordering::Acquire), post_count.ok_or("post count")? + 1);
-                assert!(!log.lock().map_err(|_| "input log")?.iter().any(|event| event == "Key { code: 9, down: true }"));
-                assert_eq!(controller_core.shutdown(Duration::from_secs(5)).await, ShutdownState::Complete);
-                assert_eq!(host_core.shutdown(Duration::from_secs(5)).await, ShutdownState::Complete);
+                assert!(
+                    controller
+                        .send_native_input(
+                            &input,
+                            NativeInputAction::Key {
+                                code: 9,
+                                down: true
+                            }
+                        )
+                        .await
+                        .is_err()
+                );
+                assert!(
+                    host.configure_native_video_stream(&binding, 0, 64, 48, 1)
+                        .await
+                        .is_err()
+                );
+                assert_eq!(
+                    gate.discarded_responses.load(Ordering::Acquire),
+                    usize::from(case == DirectProduct::RevokedDuringPost)
+                );
+                assert_eq!(
+                    gate.matching_requests.load(Ordering::Acquire),
+                    post_count.ok_or("post count")? + 1
+                );
+                assert!(
+                    !log.lock()
+                        .map_err(|_| "input log")?
+                        .iter()
+                        .any(|event| event == "Key { code: 9, down: true }")
+                );
+                assert_eq!(
+                    controller_core.shutdown(Duration::from_secs(5)).await,
+                    ShutdownState::Complete
+                );
+                assert_eq!(
+                    host_core.shutdown(Duration::from_secs(5)).await,
+                    ShutdownState::Complete
+                );
                 return Ok(());
             }
             let committed = committed.ok_or("missing actual committed successor")?;
-            let read = admin.network_remote_path(&space, &committed.path.grant_id).await?;
-            assert_eq!(serde_json::to_value(&read)?, serde_json::to_value(&committed)?);
+            let read = admin
+                .network_remote_path(&space, &committed.path.grant_id)
+                .await?;
+            assert_eq!(
+                serde_json::to_value(&read)?,
+                serde_json::to_value(&committed)?
+            );
             gate.unblock();
             Some(committed)
         } else {
             None
         };
         for handle in [&controller, &host] {
-            wait_view(handle, |snapshot| snapshot.native_session.data.as_ref().is_some_and(|session| {
-                session.status == NativeSessionStatus::Connected
-                    && session.connection_generation == binding.connection_generation + 1
-                    && session.path == Some(Path::Direct as i32)
-            })).await?;
+            wait_view(handle, |snapshot| {
+                snapshot
+                    .native_session
+                    .data
+                    .as_ref()
+                    .is_some_and(|session| {
+                        session.status == NativeSessionStatus::Connected
+                            && session.connection_generation == binding.connection_generation + 1
+                            && session.path == Some(Path::Direct as i32)
+                    })
+            })
+            .await?;
         }
-        assert!(controller.send_native_input(&input, NativeInputAction::Key { code: 9, down: true }).await.is_err());
-        assert!(host.configure_native_video_stream(&binding, 0, 64, 48, 1).await.is_err());
+        assert!(
+            controller
+                .send_native_input(
+                    &input,
+                    NativeInputAction::Key {
+                        code: 9,
+                        down: true
+                    }
+                )
+                .await
+                .is_err()
+        );
+        assert!(
+            host.configure_native_video_stream(&binding, 0, 64, 48, 1)
+                .await
+                .is_err()
+        );
         assert!(controller.poll_native_video()?.is_none());
         let successor = tokio::time::timeout(Duration::from_secs(3), async {
             loop {
-                if let Some(id) = controller.snapshot().native_session.data.as_ref()
+                if let Some(id) = controller
+                    .snapshot()
+                    .native_session
+                    .data
+                    .as_ref()
                     .and_then(|session| session.quality.as_ref())
                     .and_then(|quality| quality.original_binding.as_ref())
                     .and_then(|binding| binding.path_grant_id.as_ref())
-                    .filter(|id| *id != &path).cloned()
-                { return id; }
+                    .filter(|id| *id != &path)
+                    .cloned()
+                {
+                    return id;
+                }
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
-        }).await?;
+        })
+        .await?;
         let read = admin.network_remote_path(&space, &successor).await?;
         if let Some(committed) = committed {
-            assert_eq!(serde_json::to_value(&read)?, serde_json::to_value(&committed)?);
+            assert_eq!(
+                serde_json::to_value(&read)?,
+                serde_json::to_value(&committed)?
+            );
             let gate = gate.as_ref().ok_or("missing lost response gate")?;
             assert_eq!(gate.discarded_responses.load(Ordering::Acquire), 1);
-            assert_eq!(gate.matching_requests.load(Ordering::Acquire), post_count.ok_or("post count")? + 1);
+            assert_eq!(
+                gate.matching_requests.load(Ordering::Acquire),
+                post_count.ok_or("post count")? + 1
+            );
         }
         let next = nestlink_sdk::network_management::decode_network_grant(&read.path)?;
         let next_claims = nestlink_protocol::network::GrantClaims::decode_canonical(&next.claims)?;
-        assert_eq!(next_claims.scope().expires_at_ms, original_claims.scope().expires_at_ms);
-        assert_eq!(next_claims.scope().policy_epoch, original_claims.scope().policy_epoch);
-        assert_eq!(read.controller_membership.claims, current.controller_membership.claims);
+        assert_eq!(
+            next_claims.scope().expires_at_ms,
+            original_claims.scope().expires_at_ms
+        );
+        assert_eq!(
+            next_claims.scope().policy_epoch,
+            original_claims.scope().policy_epoch
+        );
+        assert_eq!(
+            read.controller_membership.claims,
+            current.controller_membership.claims
+        );
         assert_eq!(read.host_membership.claims, current.host_membership.claims);
         assert!(admin.network_remote_path(&space, &path).await.is_err());
-        assert_eq!(log.lock().map_err(|_| "input log")?.iter().filter(|event| event.as_str() == "reset").count(), 1);
+        assert_eq!(
+            log.lock()
+                .map_err(|_| "input log")?
+                .iter()
+                .filter(|event| event.as_str() == "reset")
+                .count(),
+            1
+        );
         let (fresh, fresh_input) = prepare_display(&host, &controller, log.clone()).await?;
-        assert_eq!(fresh.connection_generation, binding.connection_generation + 1);
+        assert_eq!(
+            fresh.connection_generation,
+            binding.connection_generation + 1
+        );
         assert_ne!(fresh_input, input);
         video(&host, &controller, &fresh).await?;
-        controller.send_native_input(&fresh_input, NativeInputAction::Key { code: 10, down: true }).await?;
+        controller
+            .send_native_input(
+                &fresh_input,
+                NativeInputAction::Key {
+                    code: 10,
+                    down: true,
+                },
+            )
+            .await?;
         wait_input(&log, "Key { code: 10, down: true }").await?;
-        assert!(!log.lock().map_err(|_| "input log")?.iter().any(|event| event == "Key { code: 9, down: true }"));
+        assert!(
+            !log.lock()
+                .map_err(|_| "input log")?
+                .iter()
+                .any(|event| event == "Key { code: 9, down: true }")
+        );
     }
     admin.revoke_network_remote_path(&space, &path).await?;
-    wait_input(&log, if recover { "release-key:10" } else { "release-key:8" }).await?;
+    wait_input(
+        &log,
+        if recover {
+            "release-key:10"
+        } else {
+            "release-key:8"
+        },
+    )
+    .await?;
     for handle in [&controller, &host] {
         wait_view(handle, |snapshot| {
             snapshot

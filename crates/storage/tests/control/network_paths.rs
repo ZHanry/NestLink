@@ -10,12 +10,12 @@ use nestlink_storage::network_policy::*;
 const NOW: u64 = 1_002_000;
 #[path = "network_paths/chains.rs"]
 mod chains;
+#[path = "network_paths/direct_recovery.rs"]
+mod direct_recovery;
 #[path = "network_paths/relays.rs"]
 mod relays;
 #[path = "network_paths/route_sets.rs"]
 mod route_sets;
-#[path = "network_paths/direct_recovery.rs"]
-mod direct_recovery;
 struct Setup {
     store: Store,
     controller: Principal,
@@ -36,7 +36,13 @@ impl Setup {
         let (store, _, _, controller, host) = fixture()?;
         Self::with_actors(store, controller, host, approve, direct)
     }
-    fn with_actors(mut store: Store, controller: Principal, host: Principal, approve: bool, direct: bool) -> Result<Self> {
+    fn with_actors(
+        mut store: Store,
+        controller: Principal,
+        host: Principal,
+        approve: bool,
+        direct: bool,
+    ) -> Result<Self> {
         if !direct {
             store.apply_policy(
                 1,

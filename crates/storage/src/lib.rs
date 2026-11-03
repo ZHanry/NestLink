@@ -515,7 +515,9 @@ impl Store {
         }
         if version < 51 {
             let transaction = connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/051_direct_recovery_lineage.sql"))?;
+            transaction.execute_batch(include_str!(
+                "../migrations/051_direct_recovery_lineage.sql"
+            ))?;
             transaction.pragma_update(None, "user_version", 51)?;
             transaction.commit()?;
         }

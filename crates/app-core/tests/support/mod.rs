@@ -290,8 +290,11 @@ impl Gate {
         self.arm();
     }
     pub fn held_json(&self) -> Result<serde_json::Value> {
-        self.held_json.lock().map_err(|_| "held response poisoned")?
-            .clone().ok_or_else(|| "held response missing".into())
+        self.held_json
+            .lock()
+            .map_err(|_| "held response poisoned")?
+            .clone()
+            .ok_or_else(|| "held response missing".into())
     }
     pub async fn entered(&self) -> Result {
         tokio::time::timeout(Duration::from_secs(5), self.arrived.acquire())
@@ -316,8 +319,7 @@ async fn intercept(State(gate): State<Arc<Gate>>, request: Request, next: Next) 
     if matches {
         gate.matching_requests.fetch_add(1, Ordering::AcqRel);
     }
-    let hold = matches
-        && gate.enabled.swap(false, Ordering::AcqRel);
+    let hold = matches && gate.enabled.swap(false, Ordering::AcqRel);
     let discard = hold && gate.discard_once.swap(false, Ordering::AcqRel);
     let before = hold && gate.before_once.swap(false, Ordering::AcqRel);
     if before {
@@ -340,21 +342,33 @@ async fn intercept(State(gate): State<Arc<Gate>>, request: Request, next: Next) 
     }
     if hold && !before {
         if discard {
-            assert!(response.status().is_success(), "only committed successful responses can be discarded");
+            assert!(
+                response.status().is_success(),
+                "only committed successful responses can be discarded"
+            );
             let (mut parts, body) = response.into_parts();
-            let bytes = to_bytes(body, nestlink_protocol::CONTROL_BYTES as usize).await
+            let bytes = to_bytes(body, nestlink_protocol::CONTROL_BYTES as usize)
+                .await
                 .unwrap_or_else(|error| panic!("actual held response body: {error}"));
-            *gate.held_json.lock().unwrap_or_else(|_| panic!("held response mutex")) = Some(
-                serde_json::from_slice(&bytes).unwrap_or_else(|error| panic!("actual held JSON response: {error}")),
+            *gate
+                .held_json
+                .lock()
+                .unwrap_or_else(|_| panic!("held response mutex")) = Some(
+                serde_json::from_slice(&bytes)
+                    .unwrap_or_else(|error| panic!("actual held JSON response: {error}")),
             );
             parts.headers.remove(axum::http::header::CONTENT_LENGTH);
             // Hyper aborts this actual response stream. The SDK must observe a
             // transport/body-read error, rather than a fabricated API status.
-            response = Response::from_parts(parts, Body::from_stream(futures_util::stream::once(async {
-                Err::<axum::body::Bytes, _>(std::io::Error::new(
-                    std::io::ErrorKind::ConnectionReset, "committed test response discarded once",
-                ))
-            })));
+            response = Response::from_parts(
+                parts,
+                Body::from_stream(futures_util::stream::once(async {
+                    Err::<axum::body::Bytes, _>(std::io::Error::new(
+                        std::io::ErrorKind::ConnectionReset,
+                        "committed test response discarded once",
+                    ))
+                })),
+            );
         }
         gate.arrived.add_permits(1);
         if let Ok(permit) = gate.release.acquire().await {

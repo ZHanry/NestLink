@@ -5847,8 +5847,14 @@ fn map_dial_failure(error: DialError) -> Failure {
         DialError::Failed { code, failures } => {
             // Preserve bounded failure categories without exporting addresses,
             // peer identifiers or raw transport/HTTP errors into diagnostics.
-            eprintln!("native candidate race failed code={code:?} attempts={}", failures.len());
-            for failure in failures.iter().take(nestlink_protocol::CANDIDATE_COUNT as usize) {
+            eprintln!(
+                "native candidate race failed code={code:?} attempts={}",
+                failures.len()
+            );
+            for failure in failures
+                .iter()
+                .take(nestlink_protocol::CANDIDATE_COUNT as usize)
+            {
                 let stage = match failure.stage.as_str() {
                     "path-policy" => "path-policy",
                     "transport-policy" => "transport-policy",
@@ -5862,15 +5868,17 @@ fn map_dial_failure(error: DialError) -> Failure {
                     "timeout" => "timeout",
                     _ => "other",
                 };
-                eprintln!("native candidate failure stage={stage} transport={:?} kind={:?} code={:?}",
-                    failure.candidate.transport, failure.candidate.kind, failure.code);
+                eprintln!(
+                    "native candidate failure stage={stage} transport={:?} kind={:?} code={:?}",
+                    failure.candidate.transport, failure.candidate.kind, failure.code
+                );
             }
             Failure {
                 kind: FailureKind::Transport,
                 status: None,
                 code: Some(code),
             }
-        },
+        }
         DialError::Binding | DialError::Setup | DialError::Contract(_) => {
             Failure::local(FailureKind::NativeSessionUnavailable)
         }

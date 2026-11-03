@@ -26,9 +26,10 @@ fn same_scope(a: &NetworkRemotePathBundle, b: &NetworkRemotePathBundle) -> bool 
     let a_scope = &a.verified.claims().scope;
     let b_scope = &b.verified.claims().scope;
     a.request_id == b.request_id
-        && a.memberships.iter().zip(&b.memberships).all(|(a, b)| {
-            a.claims == b.claims && a.signature == b.signature
-        })
+        && a.memberships
+            .iter()
+            .zip(&b.memberships)
+            .all(|(a, b)| a.claims == b.claims && a.signature == b.signature)
         && a_scope.deployment_id == b_scope.deployment_id
         && a_scope.space_id == b_scope.space_id
         && a_scope.policy_epoch == b_scope.policy_epoch
@@ -44,9 +45,17 @@ impl Lineage {
     ) -> Result<(), StorageError> {
         tx.execute(
             "INSERT INTO network_direct_recovery_lineage VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)",
-            params![space,path,self.parent,serde_json::to_string(&self.receipt.previous)?,
-                serde_json::to_string(&self.receipt.next)?,serde_json::to_string(&self.receipt.submission)?,
-                self.fingerprint.as_slice(),self.depth,self.expires],
+            params![
+                space,
+                path,
+                self.parent,
+                serde_json::to_string(&self.receipt.previous)?,
+                serde_json::to_string(&self.receipt.next)?,
+                serde_json::to_string(&self.receipt.submission)?,
+                self.fingerprint.as_slice(),
+                self.depth,
+                self.expires
+            ],
         )?;
         Ok(())
     }
@@ -64,8 +73,16 @@ impl Store {
             return Err(StorageError::Forbidden);
         }
         for (device, key_digest, signature) in [
-            (&previous.controller_device_id, &previous.controller_key_sha256, &submission.controller_signature),
-            (&previous.host_device_id, &previous.host_key_sha256, &submission.host_signature),
+            (
+                &previous.controller_device_id,
+                &previous.controller_key_sha256,
+                &submission.controller_signature,
+            ),
+            (
+                &previous.host_device_id,
+                &previous.host_key_sha256,
+                &submission.host_signature,
+            ),
         ] {
             let device_record = self.device_record_at(device, now / 1000)?;
             if digest(&device_record.public_key).as_slice() != key_digest.as_slice() {
@@ -99,37 +116,62 @@ impl Store {
         // The dedicated index confines this to one space/session/generation.
         // Overflow fails closed rather than scanning arbitrary stored grants.
         let mut query = tx.prepare("SELECT path_grant_id FROM network_remote_paths WHERE space_id=?1 AND request_id=?2 AND business_digest=?3 ORDER BY path_grant_id LIMIT ?4")?;
-        let parents = query.query_map(
-            params![space,business.session_id,previous_digest.as_slice(),PARENT_LIMIT + 1],
-            |row| row.get::<_, String>(0),
-        )?.collect::<Result<Vec<_>, _>>()?;
+        let parents = query
+            .query_map(
+                params![
+                    space,
+                    business.session_id,
+                    previous_digest.as_slice(),
+                    PARENT_LIMIT + 1
+                ],
+                |row| row.get::<_, String>(0),
+            )?
+            .collect::<Result<Vec<_>, _>>()?;
         if parents.len() > PARENT_LIMIT {
             return Err(StorageError::RateLimited);
         }
         let mut matched = None;
         for id in parents {
             let parent = match self.network_path_current_with_business(
-                tx, None, space, &id, (0, 0), now, Some(&receipt.previous),
+                tx,
+                None,
+                space,
+                &id,
+                (0, 0),
+                now,
+                Some(&receipt.previous),
             ) {
                 Ok(parent) => parent,
                 Err(StorageError::Forbidden) => continue,
                 Err(error) => return Err(error),
             };
             let hash = fingerprint(&parent);
-            if request.path_grant_id != reconnection::direct_recovery_id(
-                &receipt.previous, &receipt.submission.choice, hash, 1,
-            )? || request.connectivity_grant_id != reconnection::direct_recovery_id(
-                &receipt.previous, &receipt.submission.choice, hash, 2,
-            )? {
+            if request.path_grant_id
+                != reconnection::direct_recovery_id(
+                    &receipt.previous,
+                    &receipt.submission.choice,
+                    hash,
+                    1,
+                )?
+                || request.connectivity_grant_id
+                    != reconnection::direct_recovery_id(
+                        &receipt.previous,
+                        &receipt.submission.choice,
+                        hash,
+                        2,
+                    )?
+            {
                 continue;
             }
-            let depth = self.validate_direct_lineage(tx, space, &parent, &receipt.previous, now)? + 1;
+            let depth =
+                self.validate_direct_lineage(tx, space, &parent, &receipt.previous, now)? + 1;
             let scope = &parent.verified.claims().scope;
             let members: (String, String) = tx.query_row(
                 "SELECT controller_membership_id,host_membership_id FROM network_remote_paths WHERE space_id=?1 AND path_grant_id=?2",
                 params![space,id], |row| Ok((row.get(0)?,row.get(1)?)),
             )?;
-            if matched.is_some() || depth > MAX_DEPTH
+            if matched.is_some()
+                || depth > MAX_DEPTH
                 || request.controller_membership_grant_id != members.0
                 || request.host_membership_grant_id != members.1
                 || request.expected_policy_epoch != scope.policy_epoch
@@ -140,7 +182,13 @@ impl Store {
             matched = Some((id, hash, depth, scope.expires_at_ms));
         }
         let (parent, fingerprint, depth, expires) = matched.ok_or(StorageError::Forbidden)?;
-        Ok(Some(Lineage { parent, fingerprint, receipt, depth, expires }))
+        Ok(Some(Lineage {
+            parent,
+            fingerprint,
+            receipt,
+            depth,
+            expires,
+        }))
     }
 
     /// Validate each historically verified business transition only as ancestry.
@@ -169,7 +217,10 @@ impl Store {
             ).optional()?;
             let Some((parent_id, previous, next, submission, hash, depth, expires)) = row else {
                 if remaining.is_some_and(|depth| depth != 0)
-                    || (remaining.is_none() && self.receipt(&business.session_id)?.is_some_and(|receipt| receipt.next == *business))
+                    || (remaining.is_none()
+                        && self
+                            .receipt(&business.session_id)?
+                            .is_some_and(|receipt| receipt.next == *business))
                 {
                     return Err(StorageError::Forbidden);
                 }
@@ -179,20 +230,36 @@ impl Store {
             let next: PermitClaims = serde_json::from_str(&next)?;
             let submission: ReconnectionSubmission = serde_json::from_str(&submission)?;
             self.verify_direct_transition(&previous, &next, &submission, now)?;
-            if next != expected || previous.session_id != child.request_id
+            if next != expected
+                || previous.session_id != child.request_id
                 || submission.choice.network_recovery.is_some()
-                || depth == 0 || depth > MAX_DEPTH
+                || depth == 0
+                || depth > MAX_DEPTH
                 || remaining.is_some_and(|expected| expected != depth)
-                || expires != child.verified.claims().scope.expires_at_ms || now >= expires
+                || expires != child.verified.claims().scope.expires_at_ms
+                || now >= expires
             {
                 return Err(StorageError::Forbidden);
             }
             let parent = self.network_path_current_with_business(
-                tx, None, space, &parent_id, (0, 0), now, Some(&previous),
+                tx,
+                None,
+                space,
+                &parent_id,
+                (0, 0),
+                now,
+                Some(&previous),
             )?;
             let actual_hash = fingerprint(&parent);
-            if hash != actual_hash || !same_scope(child, &parent)
-                || id != reconnection::direct_recovery_id(&previous, &submission.choice, actual_hash, 1)?
+            if hash != actual_hash
+                || !same_scope(child, &parent)
+                || id
+                    != reconnection::direct_recovery_id(
+                        &previous,
+                        &submission.choice,
+                        actual_hash,
+                        1,
+                    )?
             {
                 return Err(StorageError::Forbidden);
             }
@@ -200,10 +267,14 @@ impl Store {
                 "SELECT connectivity_grant_id FROM network_remote_paths WHERE space_id=?1 AND path_grant_id=?2",
                 params![space,id], |row| row.get(0),
             )?;
-            if connectivity_id != reconnection::direct_recovery_id(&previous, &submission.choice, actual_hash, 2)? {
+            if connectivity_id
+                != reconnection::direct_recovery_id(&previous, &submission.choice, actual_hash, 2)?
+            {
                 return Err(StorageError::Forbidden);
             }
-            if remaining.is_none() { total = depth; }
+            if remaining.is_none() {
+                total = depth;
+            }
             remaining = Some(depth - 1);
             expected = previous;
             id = parent_id;

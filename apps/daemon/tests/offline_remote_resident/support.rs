@@ -112,7 +112,9 @@ impl Platform {
                     .read_line(&mut address),
             )
             .await
-            .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "original D-Bus address deadline"))??;
+            .map_err(|_| {
+                io::Error::new(io::ErrorKind::TimedOut, "original D-Bus address deadline")
+            })??;
             assert!(address.starts_with("unix:"));
             value
                 .env
@@ -128,9 +130,12 @@ impl Platform {
                 .collect::<String>();
             let seed_display = ":0";
             let mut xauth = value.command("xauth");
-            xauth.arg("-f")
-                .arg(&authority)
-                .args(["add", seed_display, "MIT-MAGIC-COOKIE-1", &cookie]);
+            xauth.arg("-f").arg(&authority).args([
+                "add",
+                seed_display,
+                "MIT-MAGIC-COOKIE-1",
+                &cookie,
+            ]);
             let status = value
                 .constructor_status(&mut xauth, "seed-xauth", &mut probe)
                 .await?;
@@ -166,16 +171,21 @@ impl Platform {
                     .read_line(&mut display),
             )
             .await
-            .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "original Xvfb display deadline"))??;
+            .map_err(|_| {
+                io::Error::new(io::ErrorKind::TimedOut, "original Xvfb display deadline")
+            })??;
             let _: u16 = display.trim().parse()?;
             let display = format!(":{}", display.trim());
             if display != seed_display {
                 // Xvfb loads the seeded cookie before choosing its display.
                 // The client record must then identify that actual display.
                 let mut xauth = value.command("xauth");
-                xauth.arg("-f")
-                    .arg(&authority)
-                    .args(["add", &display, "MIT-MAGIC-COOKIE-1", &cookie]);
+                xauth.arg("-f").arg(&authority).args([
+                    "add",
+                    &display,
+                    "MIT-MAGIC-COOKIE-1",
+                    &cookie,
+                ]);
                 let status = value
                     .constructor_status(&mut xauth, "display-xauth", &mut probe)
                     .await?;
@@ -183,7 +193,8 @@ impl Platform {
                     return Err(io::Error::other("original Xvfb display authority failed").into());
                 }
                 let mut xauth = value.command("xauth");
-                xauth.arg("-f")
+                xauth
+                    .arg("-f")
                     .arg(&authority)
                     .args(["remove", seed_display]);
                 let status = value

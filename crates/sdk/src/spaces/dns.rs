@@ -83,12 +83,13 @@ impl SpaceDns {
             })?;
         let address = udp.local_addr()?;
         // Either both protocols bind the same port, or neither remains owned.
-        let tcp = TcpListener::bind(address)
-            .await
-            .map_err(|source| SpaceDnsError::ListenerBind {
-                transport: "TCP",
-                source,
-            })?;
+        let tcp =
+            TcpListener::bind(address)
+                .await
+                .map_err(|source| SpaceDnsError::ListenerBind {
+                    transport: "TCP",
+                    source,
+                })?;
         let (stop, mut stopping) = watch::channel(StopState::Running);
         let mut server = Server::new(handler::Handler::new(authority.clone(), stop.clone()));
         server.register_socket(udp);
