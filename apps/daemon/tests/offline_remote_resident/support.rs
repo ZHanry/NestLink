@@ -19,7 +19,7 @@ use std::{
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
     process::{Child, ChildStdin, Command},
-    sync::{mpsc, oneshot, watch},
+    sync::{Semaphore, SemaphorePermit, mpsc, oneshot, watch},
     task::JoinHandle,
 };
 #[path = "https.rs"]
@@ -46,17 +46,26 @@ fn password() -> Secret {
     Secret::from_text(URL_SAFE_NO_PAD.encode(nestlink_auth::random_bytes::<32>()))
 }
 
+// The hosted desktop UID and capture scheduling are one real lab resource.
+// Acquire its owner before starting any original fixture deadline or OS owner.
+static PLATFORM_OWNER: Semaphore = Semaphore::const_new(1);
+
 /// Actual OS services are owned by this test, without changing process-global
 /// environment or installing a replacement platform/keyring implementation.
 pub struct Platform {
     env: Vec<(&'static str, String)>,
     children: Vec<Child>,
+    // Fields drop in declaration order: retain ownership through child Drop,
+    // and through every awaited kill/reap in the original explicit shutdown.
+    _desktop_owner: SemaphorePermit<'static>,
 }
 impl Platform {
     pub async fn new(area: &Path) -> Result<Self> {
+        let desktop_owner = PLATFORM_OWNER.acquire().await.map_err(io::Error::other)?;
         let value = Self {
             env: Vec::new(),
             children: Vec::new(),
+            _desktop_owner: desktop_owner,
         };
         #[cfg(target_os = "linux")]
         let mut value = value;

@@ -137,6 +137,7 @@ def main():
             ("daemon-entry-unit", ["-p", "nestlink-daemon", "--bin", "nestlink-daemon", "entry_tests::"], 1, None),
             ("desktop-layout", ["-p", "nestlink-desktop", "--lib", "layout_tests::independent_offline_"], 2, None),
             ("resident", ["-p", "nestlink-daemon", "--test", "offline_remote_resident"], 4, RESIDENT_TESTS),
+            ("resident-platform-owner", ["-p", "nestlink-daemon", "--test", "offline_resident_platform_owner"], 1, {"original_platform_owner_is_exclusive_cancel_safe_and_released_after_shutdown_or_drop"}),
         ]
         if os.name != "nt":
             tests.append(("secret-service-literal-attributes", ["-p", "nestlink-daemon", "--test", "secret_service_literal_attributes"], 1, {"original_secret_service_stores_and_reads_a_leading_hyphen_attribute"}))
@@ -147,6 +148,7 @@ def main():
             ("app-core-clippy", ["-p", "nestlink-app-core", "--test", "native_offline"]),
             ("daemon-clippy", ["-p", "nestlink-daemon", "--bin", "nestlink-daemon"]),
             ("resident-clippy", ["-p", "nestlink-daemon", "--test", "offline_remote_resident"]),
+            ("resident-platform-owner-clippy", ["-p", "nestlink-daemon", "--test", "offline_resident_platform_owner"]),
         ]:
             execute(name, ["cargo", "clippy", "--locked", *arguments, "--", "-D", "warnings"])
         if os.name != "nt":
