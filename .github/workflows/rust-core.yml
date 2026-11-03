@@ -531,8 +531,10 @@ jobs:
         run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --test native_recovery
       - name: Debug scoped signed media Core ACK and actual software AU regression
         if: runner.os == 'Windows'
+        # These cases share the production process-wide CPU probe owner.
+        # Preserve its single-owner refusal while running every case in order.
         run: >-
-          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib --features media-runtime-test-support native_displays::positive_runtime_test:: -- --nocapture
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib --features media-runtime-test-support native_displays::positive_runtime_test:: -- --nocapture --test-threads=1
       - name: Verify actual Media Foundation output with the ordinary token
         if: runner.os == 'Windows'
         shell: pwsh

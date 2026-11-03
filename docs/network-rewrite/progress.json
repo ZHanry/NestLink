@@ -6,8 +6,21 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "13ce2383a7b1fa8d54e21163ef185d6c60c839b9",
-  "checkpoint_kind": "rc_preview_recovery_race_fix_awaiting_exact_source_checks",
+  "source_revision": "6af910f529a01fd4266f7fd535ef5270f82f1bb3",
+  "checkpoint_kind": "rc_preview_serialize_shared_media_probe_fixture_awaiting_exact_source_checks",
+  "publication_followup": {
+    "source_is_pre_commit_parent": true,
+    "prior_required_run": 41620251754,
+    "prior_required_run_result": "failure",
+    "prior_failures": [
+      "Linux workspace native_session file-access setup: original QUIC LAN connection timed out; no deadline or assertion changed.",
+      "Linux workspace offline resident identity-case setup: temporary public-PKI HTTPS system DNS did not resolve within its original deadline.",
+      "Windows core scoped positive media cases ran concurrently and contended for the production process-wide CPU probe slot; software case correctly received WouldBlock while RGB444 held the slot."
+    ],
+    "change": "Only serialize all three scoped positive media tests with --test-threads=1, following existing media-owner workflow scheduling. Product source, singleton refusal, every assertion and deadline remain unchanged.",
+    "prior_successes": "All other eleven jobs in the required Rust workflow succeeded, including Windows complete workspace and Linux/Windows strict lint; six other required workflows, release policy and actual SDK DROP workflow succeeded at 6af910f.",
+    "next": "Run all seven required workflows at the new exact source, then build and publish the complete sixteen-role same-source prerelease with original failures and pending target acceptance disclosed."
+  },
   "current_followup": {
     "source_parent": "13ce2383a7b1fa8d54e21163ef185d6c60c839b9",
     "new_source_verified": false,
