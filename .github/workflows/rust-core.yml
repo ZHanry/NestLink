@@ -814,6 +814,9 @@ jobs:
           }
           "TEMP=$testTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "TMP=$testTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Freeze original offline resident public-PKI HTTPS fixture tool for the complete workspace
+        if: ${{ !cancelled() }}
+        run: python scripts/refactor-offline-resident-https.py
       - if: ${{ !cancelled() && runner.os == 'Linux' }}
         run: cargo test --workspace --locked --no-fail-fast
       - name: Test Windows with the ordinary business-process token
