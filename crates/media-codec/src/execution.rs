@@ -124,13 +124,28 @@ pub struct Vp9Rgb444ExecutionTarget {
 impl Vp9Rgb444ExecutionTarget {
     pub fn new(config: VideoConfig, digest: [u8; 32]) -> io::Result<Self> {
         crate::vp9::validate_config(config)?;
-        if digest == [0; 32] { return Err(io::Error::other("VP9 target has no signed format digest")); }
-        Ok(Self { width: config.width, height: config.height, fps: config.fps, kbps: config.bitrate_kbps, digest })
+        if digest == [0; 32] {
+            return Err(io::Error::other("VP9 target has no signed format digest"));
+        }
+        Ok(Self {
+            width: config.width,
+            height: config.height,
+            fps: config.fps,
+            kbps: config.bitrate_kbps,
+            digest,
+        })
     }
     pub fn config(self) -> VideoConfig {
-        VideoConfig { width: self.width, height: self.height, fps: self.fps, bitrate_kbps: self.kbps }
+        VideoConfig {
+            width: self.width,
+            height: self.height,
+            fps: self.fps,
+            bitrate_kbps: self.kbps,
+        }
     }
-    pub fn format_digest(self) -> [u8; 32] { self.digest }
+    pub fn format_digest(self) -> [u8; 32] {
+        self.digest
+    }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SoftwareExecutionTarget {
@@ -138,20 +153,33 @@ pub enum SoftwareExecutionTarget {
     Vp9Rgb444(Vp9Rgb444ExecutionTarget),
 }
 impl From<H264ExecutionTarget> for SoftwareExecutionTarget {
-    fn from(value: H264ExecutionTarget) -> Self { Self::H264(value) }
+    fn from(value: H264ExecutionTarget) -> Self {
+        Self::H264(value)
+    }
 }
 impl From<Vp9Rgb444ExecutionTarget> for SoftwareExecutionTarget {
-    fn from(value: Vp9Rgb444ExecutionTarget) -> Self { Self::Vp9Rgb444(value) }
+    fn from(value: Vp9Rgb444ExecutionTarget) -> Self {
+        Self::Vp9Rgb444(value)
+    }
 }
 impl SoftwareExecutionTarget {
     pub fn config(self) -> VideoConfig {
-        match self { Self::H264(value) => value.config(), Self::Vp9Rgb444(value) => value.config() }
+        match self {
+            Self::H264(value) => value.config(),
+            Self::Vp9Rgb444(value) => value.config(),
+        }
     }
     pub fn format_digest(self) -> [u8; 32] {
-        match self { Self::H264(value) => value.format_digest(), Self::Vp9Rgb444(value) => value.format_digest() }
+        match self {
+            Self::H264(value) => value.format_digest(),
+            Self::Vp9Rgb444(value) => value.format_digest(),
+        }
     }
     pub fn h264(self) -> Option<H264ExecutionTarget> {
-        match self { Self::H264(value) => Some(value), Self::Vp9Rgb444(_) => None }
+        match self {
+            Self::H264(value) => Some(value),
+            Self::Vp9Rgb444(_) => None,
+        }
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -471,7 +499,10 @@ pub struct SoftwareExecution {
 /// and its bounded queue, fence, checked join and quarantine are shared.
 pub type SoftwareH264Execution = SoftwareExecution;
 impl SoftwareExecution {
-    pub fn start(direction: ExecutionDirection, target: impl Into<SoftwareExecutionTarget>) -> io::Result<Self> {
+    pub fn start(
+        direction: ExecutionDirection,
+        target: impl Into<SoftwareExecutionTarget>,
+    ) -> io::Result<Self> {
         let target = target.into();
         let generation = reserve(direction)?;
         let state = Arc::new(Lifecycle {
@@ -485,7 +516,9 @@ impl SoftwareExecution {
         let (ready, initial) = mpsc::sync_channel(1);
         let owner = state.clone();
         let spawned = thread::Builder::new()
-            .name(format!("software-video-execution-{direction:?}-{generation}"))
+            .name(format!(
+                "software-video-execution-{direction:?}-{generation}"
+            ))
             .spawn(move || run(direction, generation, target, owner, receive, ready));
         let worker = match spawned {
             Ok(worker) => worker,
@@ -623,16 +656,24 @@ enum Engine {
 impl Engine {
     fn new(direction: ExecutionDirection, target: SoftwareExecutionTarget) -> io::Result<Self> {
         match (direction, target) {
-            (ExecutionDirection::Encode, SoftwareExecutionTarget::H264(target)) => Ok(Self::Encode(VideoEncoder::new_h264_software(
-                target.config(),
-                target.limits(),
-            )?)),
-            (ExecutionDirection::Decode, SoftwareExecutionTarget::H264(target)) => Ok(Self::Decode(VideoDecoder::with_config_software(
-                VideoCodec::H264Baseline,
-                target.config(),
-            )?)),
-            (ExecutionDirection::Encode, SoftwareExecutionTarget::Vp9Rgb444(target)) => Ok(Self::Vp9Encode(crate::Vp9Rgb444Encoder::new(target.config())?)),
-            (ExecutionDirection::Decode, SoftwareExecutionTarget::Vp9Rgb444(target)) => Ok(Self::Vp9Decode(crate::Vp9Rgb444Decoder::new(target.width, target.height)?)),
+            (ExecutionDirection::Encode, SoftwareExecutionTarget::H264(target)) => {
+                Ok(Self::Encode(VideoEncoder::new_h264_software(
+                    target.config(),
+                    target.limits(),
+                )?))
+            }
+            (ExecutionDirection::Decode, SoftwareExecutionTarget::H264(target)) => {
+                Ok(Self::Decode(VideoDecoder::with_config_software(
+                    VideoCodec::H264Baseline,
+                    target.config(),
+                )?))
+            }
+            (ExecutionDirection::Encode, SoftwareExecutionTarget::Vp9Rgb444(target)) => Ok(
+                Self::Vp9Encode(crate::Vp9Rgb444Encoder::new(target.config())?),
+            ),
+            (ExecutionDirection::Decode, SoftwareExecutionTarget::Vp9Rgb444(target)) => Ok(
+                Self::Vp9Decode(crate::Vp9Rgb444Decoder::new(target.width, target.height)?),
+            ),
         }
     }
     fn observation(&self) -> io::Result<[u8; 16]> {
@@ -677,10 +718,18 @@ impl Engine {
     }
     fn encode(&mut self, kind: CommandKind) -> io::Result<VideoEncodeStep> {
         match (self, kind) {
-            (Self::Encode(value), CommandKind::Encode(pixels, pts, keyframe)) => value.encode_step(&pixels, pts, keyframe),
+            (Self::Encode(value), CommandKind::Encode(pixels, pts, keyframe)) => {
+                value.encode_step(&pixels, pts, keyframe)
+            }
             (Self::Encode(value), CommandKind::Drain) => value.drain_encoded(),
-            (Self::Vp9Encode(value), CommandKind::Encode(pixels, pts, _)) => Ok(VideoEncodeStep { accepted: true, output: Some(value.encode(&pixels, pts)?) }),
-            (Self::Vp9Encode(_), CommandKind::Drain) => Ok(VideoEncodeStep { accepted: false, output: None }),
+            (Self::Vp9Encode(value), CommandKind::Encode(pixels, pts, _)) => Ok(VideoEncodeStep {
+                accepted: true,
+                output: Some(value.encode(&pixels, pts)?),
+            }),
+            (Self::Vp9Encode(_), CommandKind::Drain) => Ok(VideoEncodeStep {
+                accepted: false,
+                output: None,
+            }),
             _ => Err(io::Error::other("execution encode direction differs")),
         }
     }
@@ -694,7 +743,9 @@ impl Engine {
     fn reset(&mut self) -> io::Result<()> {
         match self {
             Self::Decode(value) => {
-                if !value.reset_for_keyframe()? { return Err(io::Error::other("execution decoder cannot reset")); }
+                if !value.reset_for_keyframe()? {
+                    return Err(io::Error::other("execution decoder cannot reset"));
+                }
                 Ok(())
             }
             // Every admitted VP9 packet is an independent keyframe. This retains
@@ -713,7 +764,13 @@ impl Validator {
         match target {
             SoftwareExecutionTarget::H264(target) => {
                 let config = target.config();
-                Ok(Self::H264(H264Validator::new_sdr(config.width + (config.width & 1), config.height + (config.height & 1))?, target))
+                Ok(Self::H264(
+                    H264Validator::new_sdr(
+                        config.width + (config.width & 1),
+                        config.height + (config.height & 1),
+                    )?,
+                    target,
+                ))
             }
             SoftwareExecutionTarget::Vp9Rgb444(target) => Ok(Self::Vp9Rgb444(target)),
         }
@@ -724,13 +781,20 @@ impl Validator {
                 let unit = validator.validate(bytes)?;
                 if keyframe.is_some_and(|flag| unit.keyframe != flag)
                     || validator.sps_info() != Some(target.sps)
-                    || validator.sps_geometry() != Some(target.geometry) {
-                    return Err(io::Error::other("actual owner AU differs from exact signed target"));
+                    || validator.sps_geometry() != Some(target.geometry)
+                {
+                    return Err(io::Error::other(
+                        "actual owner AU differs from exact signed target",
+                    ));
                 }
                 Ok(())
             }
             Self::Vp9Rgb444(target) => {
-                if keyframe == Some(false) { return Err(io::Error::other("VP9 RGB444 requires independent keyframes")); }
+                if keyframe == Some(false) {
+                    return Err(io::Error::other(
+                        "VP9 RGB444 requires independent keyframes",
+                    ));
+                }
                 crate::validate_vp9_rgb444_keyframe(bytes, target.width, target.height)
             }
         }
@@ -806,8 +870,7 @@ fn run(
                 ) => {
                     let mut step = engine.encode(kind)?;
                     let receipt = if let Some(packet) = &mut step.output {
-                        if let Err(error) =
-                            validator.validate(&packet.data, Some(packet.keyframe))
+                        if let Err(error) = validator.validate(&packet.data, Some(packet.keyframe))
                         {
                             packet.data.zeroize();
                             return Err(error);
@@ -825,7 +888,10 @@ fn run(
                     };
                     ExecutionOutput::Encoded(step, receipt)
                 }
-                (decoder @ (Engine::Decode(_) | Engine::Vp9Decode(_)), CommandKind::Decode(bytes, pts)) => {
+                (
+                    decoder @ (Engine::Decode(_) | Engine::Vp9Decode(_)),
+                    CommandKind::Decode(bytes, pts),
+                ) => {
                     // Parsed keyframe flag comes from this exact access unit.
                     validator.validate(&bytes, None)?;
                     ExecutionOutput::Decoded(decoder.decode(&bytes, pts)?.map(|(pixels, pts)| {
@@ -911,7 +977,8 @@ mod tests {
                     crop: [0; 4],
                 },
                 digest: [2; 32],
-            }.into(),
+            }
+            .into(),
         })
     }
     #[test]

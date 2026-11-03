@@ -30,7 +30,9 @@ fn main() -> io::Result<()> {
         "native codec target not supported"
     );
     let mut bridge = cc::Build::new();
-    bridge.include(&include).files(["src/vp8.c", "src/vp9.c", "src/opus.c"]);
+    bridge
+        .include(&include)
+        .files(["src/vp8.c", "src/vp9.c", "src/opus.c"]);
     bridge.warnings(true).warnings_into_errors(true);
     bridge.std("c11");
     if target == "windows" {

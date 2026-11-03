@@ -145,7 +145,7 @@ jobs:
               if executable.is_file():
                   receipt['executable_sha256'] = hashlib.sha256(executable.read_bytes()).hexdigest()
                   for direction in ['encode','decode']:
-                      results.append(execute(direction+'-direction',wrapper+[str(executable),'65','33','60','10000']))
+                      results.append(execute(direction+'-direction',wrapper+[str(executable),direction,'65','33','60','10000']))
               else:
                   results.append(False)
               receipt['passed'] = all(results) and receipt['every_expected_test_passed'] and receipt['no_ignored_cases']
