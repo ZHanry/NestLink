@@ -934,8 +934,10 @@ async fn product_route_set_recovers_after_total_old_node_loss_releases_pressed_i
                 "successor generation connected",
                 (
                     error,
-                    controller.snapshot().native_session.clone(),
-                    host.snapshot().native_session.clone(),
+                    controller.snapshot().native_session.data.clone(),
+                    controller.snapshot().native_session.error.clone(),
+                    host.snapshot().native_session.data.clone(),
+                    host.snapshot().native_session.error.clone(),
                 ),
             )
         })?;

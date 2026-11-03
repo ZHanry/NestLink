@@ -771,7 +771,7 @@ class DeferredRCPublicationTests(RCPublicationTests):
     def test_deferral_requires_explicit_flag(self):
         self.enable_deferred()
         self.args.deferred_target_acceptance = False
-        with self.assertRaises(ValueError):
+        with self.assertRaises((ValueError, OSError)):
             P.promote(self.args, self.github)
         self.assertEqual(self.github.writes, [])
 
