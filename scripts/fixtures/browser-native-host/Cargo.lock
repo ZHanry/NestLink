@@ -2441,6 +2441,7 @@ dependencies = [
  "if-addrs 0.14.0",
  "ipnet",
  "js-sys",
+ "log",
  "mdns-sd",
  "nestlink-auth",
  "nestlink-connectivity",

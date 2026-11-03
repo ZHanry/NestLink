@@ -23,7 +23,6 @@ url.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
-log = "=0.4.34"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"] }
 tempfile = "3.23.0"
 rcgen.workspace = true
@@ -45,6 +44,7 @@ tokio-tungstenite.workspace = true
 workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+log = "=0.4.34"
 fast-socks5 = { version = "=1.0.0", path = "../../third-party/fast-socks5" }
 nestlink-platform-security.workspace = true
 nestlink-traversal.workspace = true
