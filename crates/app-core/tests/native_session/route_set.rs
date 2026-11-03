@@ -307,7 +307,10 @@ async fn signed_direct_product(case: DirectProduct) -> Result {
                     assert!(handle.native_host_session_binding().is_none());
                     assert!(handle.native_input_layout().is_err());
                 }
-                assert!(controller.poll_native_video()?.is_none());
+                assert!(matches!(
+                    controller.poll_native_video(),
+                    Err(NativeVideoError::Unauthorized)
+                ));
                 assert!(
                     controller
                         .send_native_input(

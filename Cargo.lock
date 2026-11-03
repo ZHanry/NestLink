@@ -3713,6 +3713,7 @@ name = "nestlink-app-ipc"
 version = "0.8.0-rc.1"
 dependencies = [
  "axum",
+ "futures-util",
  "nestlink-app-core",
  "nestlink-auth",
  "nestlink-identity",

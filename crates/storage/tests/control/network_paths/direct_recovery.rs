@@ -27,7 +27,7 @@ fn advance(f: &mut Setup, nonce: u8) -> Result<ReconnectionReceipt> {
     Ok(f.store
         .reconnect_permit_at_ms(&f.controller, &f.request, submission, NOW)?)
 }
-fn request(
+pub(super) fn request(
     f: &Setup,
     parent: &NetworkRemotePathBundle,
     receipt: &ReconnectionReceipt,

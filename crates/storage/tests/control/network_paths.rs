@@ -360,13 +360,13 @@ fn renewal_and_reconnection_require_a_new_chain_for_the_exact_business_generatio
         let mut f = Setup::new(true)?;
         let issuance = f.issuance();
         let id = issuance.request.path_grant_id.clone();
-        f.store
+        let parent = f.store
             .issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)?;
         let previous = f
             .store
             .current_permit(&f.controller, &f.request, NOW / 1000)?;
         let next_now = NOW / 1000 + 1;
-        if reconnect {
+        let recovery = if reconnect {
             let choice = ReconnectionChoice {
                 previous_permit_sha256: URL_SAFE_NO_PAD.encode(digest(&previous.encode_to_vec())),
                 connection_generation: previous.connection_generation + 1,
@@ -375,7 +375,7 @@ fn renewal_and_reconnection_require_a_new_chain_for_the_exact_business_generatio
                 network_recovery: None,
             };
             let transcript = nestlink_identity::reconnection::transcript;
-            f.store.reconnect_permit(
+            Some(f.store.reconnect_permit(
                 &f.controller,
                 &f.request,
                 ReconnectionSubmission {
@@ -396,7 +396,7 @@ fn renewal_and_reconnection_require_a_new_chain_for_the_exact_business_generatio
                     choice,
                 },
                 next_now,
-            )?;
+            )?)
         } else {
             let sequence = previous.lease_sequence + 1;
             let c =
@@ -416,13 +416,20 @@ fn renewal_and_reconnection_require_a_new_chain_for_the_exact_business_generatio
                 },
                 next_now,
             )?;
-        }
+            None
+        };
         assert!(matches!(
             f.store
                 .network_remote_path(&f.host, &f.space, &id, next_now * 1000),
             Err(StorageError::Forbidden)
         ));
-        let issuance = f.issuance();
+        // A reconnection successor is derived from the exact signed parent;
+        // ordinary renewal retains its independent fresh-chain allocation.
+        let issuance = if let Some(receipt) = recovery {
+            direct_recovery::request(&f, &parent, &receipt)?
+        } else {
+            f.issuance()
+        };
         f.store
             .issue_network_remote_path(&f.controller, &f.signer, issuance, next_now * 1000)?;
     }

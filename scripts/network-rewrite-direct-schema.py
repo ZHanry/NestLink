@@ -6,6 +6,7 @@ credentials never enter the artifact; command receipts and hashes do.
 """
 from __future__ import annotations
 import argparse
+from contextlib import closing
 import importlib.util
 import json
 import os
@@ -89,7 +90,10 @@ def main():
             env = ["env", "NESTLINK_DIRECT_SCHEMA_DIRECTORY=" + str(fixture),
                    "NESTLINK_DIRECT_SCHEMA_DEPLOYMENT=" + deployment]
             run("create-real-current-lineage", [*env, "NESTLINK_DIRECT_SCHEMA_MODE=create", executable, "--ignored", "--exact", ROLE, "--nocapture"])
-            with sqlite3.connect("file:" + str(fixture / "control.sqlite3") + "?mode=ro", uri=True) as database:
+            # sqlite3.Connection's context manager only ends a transaction; it
+            # does not close the connection or relinquish its WAL reader. End
+            # this fixture inspection before observing either old Store entry.
+            with closing(sqlite3.connect("file:" + str(fixture / "control.sqlite3") + "?mode=ro", uri=True)) as database:
                 require(database.execute("PRAGMA user_version").fetchone()[0] == 51, "fixture is not actual schema 51")
                 require(database.execute("SELECT count(*) FROM network_direct_recovery_lineage").fetchone()[0] == 1, "real dual-signed child lineage missing")
             (fixture / "server.toml").write_text('schema_fixture = "owned-direct-lineage"\n')
@@ -108,10 +112,14 @@ def main():
                 report["old_library_sha256"] = EVIDENCE.sha256_file(library)
                 report["old_probe_sha256"] = EVIDENCE.sha256_file(probe)
                 original = snapshot(fixture)
+                report["refusal_fixture_before"] = original
+                report["refusal_fixture_after_each_entry"] = {}
                 for entry in ("existing", "open"):
                     log = run("old-store-" + entry + "-refuses-real-lineage", [probe, entry, fixture / "control.sqlite3", deployment], timeout=60)
                     require("OLD_SCHEMA50_STORE_REJECTED_NEW_SCHEMA" in log.read_text(), "old Store did not reach the exact unsupported-schema failure")
-                    require(snapshot(fixture) == original, "old refusal changed database/configuration/ownership/permissions or created a sidecar")
+                    observed = snapshot(fixture)
+                    report["refusal_fixture_after_each_entry"][entry] = observed
+                    require(observed == original, "old refusal changed database/configuration/ownership/permissions or created a sidecar")
                 report["both_old_store_entries_refused_without_writes"] = True
                 report["refusal_fixture_file_hashes_and_permissions"] = original
                 report["old_source_after"] = EVIDENCE.source_snapshot(old, OLD_SOURCE)

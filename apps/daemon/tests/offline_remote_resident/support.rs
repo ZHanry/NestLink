@@ -159,7 +159,7 @@ impl Platform {
                 ])
                 .arg(&authority)
                 .stdout(Stdio::piped())
-                .stderr(Stdio::null())
+                .stderr(Stdio::inherit())
                 .kill_on_drop(true)
                 .spawn()?;
             let x = value.retain_constructor_child(x);

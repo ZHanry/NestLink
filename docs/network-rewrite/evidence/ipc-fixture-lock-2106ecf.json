@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "scope": "Hosted lock derivation only; no compilation or acceptance claim",
+  "source_revision": "2106ecfaeb2729f66569a03a6ced91894cececff",
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41570804688",
+  "artifact_metadata": {
+    "id": 13200489605,
+    "node_id": "MDg6QXJ0aWZhY3QxMzIwMDQ4OTYwNQ==",
+    "name": "network-lock-product-2106ecfaeb2729f66569a03a6ced91894cececff-1",
+    "size_in_bytes": 504618,
+    "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13200489605",
+    "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13200489605/zip",
+    "expired": false,
+    "digest": "sha256:250e61788c34ece49f747870f56526d0f16407546c56b7ef699ac45f3712dbe6",
+    "created_at": "2026-11-03T03:13:40Z",
+    "updated_at": "2026-11-03T03:13:40Z",
+    "expires_at": "2026-12-03T03:13:39Z",
+    "workflow_run": {
+      "id": 41570804688,
+      "repository_id": 1423035582,
+      "head_repository_id": 1423035582,
+      "head_branch": "main",
+      "head_sha": "2106ecfaeb2729f66569a03a6ced91894cececff"
+    }
+  },
+  "official_archive_digest_matched": true,
+  "producer_files_verified": 7,
+  "receipt": {
+    "schema_version": 1,
+    "purpose": "reviewed-network-components-lock-derivation-only",
+    "repository": "ZHanry/NestLink",
+    "source_revision": "2106ecfaeb2729f66569a03a6ced91894cececff",
+    "run_id": "41570804688",
+    "run_attempt": "1",
+    "scope": "product",
+    "manifest_path": "Cargo.toml",
+    "before_lock_sha256": "34aa0cfc83ff1566eadcffbbce9f5e9da639b9f174b03e0a72d01c5a751ca065",
+    "commands": [
+      {
+        "argv": [
+          "cargo",
+          "update",
+          "--workspace",
+          "--manifest-path",
+          "Cargo.toml"
+        ],
+        "return_code": 0
+      },
+      {
+        "argv": [
+          "cargo",
+          "update",
+          "-p",
+          "encoding_rs",
+          "--precise",
+          "0.8.35",
+          "--manifest-path",
+          "Cargo.toml"
+        ],
+        "return_code": 0
+      },
+      {
+        "argv": [
+          "cargo",
+          "metadata",
+          "--manifest-path",
+          "Cargo.toml",
+          "--locked",
+          "--format-version",
+          "1"
+        ],
+        "return_code": 0
+      }
+    ],
+    "assertions": {
+      "only_selected_lock_changed": true,
+      "all_existing_package_identities_and_checksums_preserved_except_reviewed_mdns_source": true,
+      "only_mdns_source_changed_to_reviewed_local_fork": true,
+      "all_unrelated_external_package_edges_preserved": true,
+      "only_exact_reviewed_component_feature_edges_added": true,
+      "app_core_only_reviewed_test_stream_edge_added": true,
+      "app_ipc_only_reviewed_windows_test_stream_edge_added": true,
+      "app_core_test_stream_reuses_exact_locked_external_package_and_edges": true,
+      "reviewed_crab_nat_exact_version_and_checksum": true,
+      "reviewed_petgraph_exact_version_and_checksum": true,
+      "reviewed_authoritative_dns_exact_version": true,
+      "locked_metadata_succeeded": true,
+      "lan_and_scaler_exact_reviewed_package_closure": true,
+      "protected_native_stream_reuses_existing_tokio_identity": true,
+      "native_stdio_reuses_locked_tokio_util_identity": true,
+      "media_actual_mtls_fixture_reuses_locked_tokio_rustls_identity": true,
+      "packet_parser_exact_identity_checksum_and_only_locked_arrayvec_edge": true,
+      "managed_tun_exact_reviewed_provider_closure": true,
+      "tun_native_fixture_reuses_exact_locked_packet_parser": true,
+      "only_reviewed_cookie_packet_components_or_exact_product_reuse_added": true
+    },
+    "failure": null,
+    "product_compilation_performed": false,
+    "quality_or_acceptance_claimed": false,
+    "files": [
+      {
+        "path": "Cargo.lock",
+        "bytes": 209806,
+        "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+      },
+      {
+        "path": "before.lock",
+        "bytes": 209789,
+        "sha256": "34aa0cfc83ff1566eadcffbbce9f5e9da639b9f174b03e0a72d01c5a751ca065"
+      },
+      {
+        "path": "cargo-generated.lock",
+        "bytes": 209806,
+        "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+      },
+      {
+        "path": "command-0.log",
+        "bytes": 470,
+        "sha256": "085a54d22e678f8765d8e7985df06c838e8a07a25c3d738e1beec4c6e3132c1b"
+      },
+      {
+        "path": "command-1.log",
+        "bytes": 125,
+        "sha256": "b3b37e1cde8bd6a78fb798f2569e2c079127a41e865d66a546b81f8dea85f5fd"
+      },
+      {
+        "path": "command-2.log",
+        "bytes": 4275632,
+        "sha256": "5f3e04ba3613b4f45239340c7e4b0535a2da030182f8ffa336e725a1e3b9d7a4"
+      },
+      {
+        "path": "derivation.diff",
+        "bytes": 284,
+        "sha256": "7a90de5394fd0740bc69d078ad53f3826007ed377ddb589a65b5069eeea3b2de"
+      }
+    ]
+  },
+  "review": "Exact diff adds only the existing futures-util dependency edge to nestlink-app-ipc, declared in e275161 for the reused real HTTP body-error test fixture. No external identities, checksums or dependency edges changed.",
+  "diff": "diff --git a/Cargo.lock b/Cargo.lock\nindex 41c34f2..ca4e6e8 100644\n--- a/Cargo.lock\n+++ b/Cargo.lock\n@@ -3713,6 +3713,7 @@ name = \"nestlink-app-ipc\"\n version = \"0.8.0-rc.1\"\n dependencies = [\n  \"axum\",\n+ \"futures-util\",\n  \"nestlink-app-core\",\n  \"nestlink-auth\",\n  \"nestlink-identity\",\n",
+  "files": [
+    {
+      "path": "before.lock",
+      "bytes": 209789,
+      "sha256": "34aa0cfc83ff1566eadcffbbce9f5e9da639b9f174b03e0a72d01c5a751ca065"
+    },
+    {
+      "path": "cargo-generated.lock",
+      "bytes": 209806,
+      "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+    },
+    {
+      "path": "Cargo.lock",
+      "bytes": 209806,
+      "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+    },
+    {
+      "path": "command-0.log",
+      "bytes": 470,
+      "sha256": "085a54d22e678f8765d8e7985df06c838e8a07a25c3d738e1beec4c6e3132c1b"
+    },
+    {
+      "path": "command-1.log",
+      "bytes": 125,
+      "sha256": "b3b37e1cde8bd6a78fb798f2569e2c079127a41e865d66a546b81f8dea85f5fd"
+    },
+    {
+      "path": "command-2.log",
+      "bytes": 4275632,
+      "sha256": "5f3e04ba3613b4f45239340c7e4b0535a2da030182f8ffa336e725a1e3b9d7a4"
+    },
+    {
+      "path": "derivation-receipt.json",
+      "bytes": 3472,
+      "sha256": "1da7a664fac6afe1bad7708dbcaa323b598ce23b8db938f6063d77de679e7bf7"
+    },
+    {
+      "path": "derivation.diff",
+      "bytes": 284,
+      "sha256": "7a90de5394fd0740bc69d078ad53f3826007ed377ddb589a65b5069eeea3b2de"
+    }
+  ],
+  "local_project_compilation_or_tests_performed": false
+}

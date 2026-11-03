@@ -447,6 +447,8 @@ jobs:
           cargo test --locked -p nestlink-storage --test spaces -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $spacesLog
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --locked -p nestlink-sdk --test spaces -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $spacesLog -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked -p nestlink-app-core --test spaces -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $spacesLog -Append
           exit $LASTEXITCODE
       - name: Check actual space storage and HTTP SDK delegation with the ordinary Windows token before formatting
         if: ${{ !cancelled() && runner.os == 'Windows' && steps.sdk_routed_windows.outcome != 'skipped' }}
@@ -456,6 +458,8 @@ jobs:
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --test spaces -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $spacesLog
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test spaces -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $spacesLog -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --test spaces -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $spacesLog -Append
           exit $LASTEXITCODE
       - name: Check actual space address, DNS transports and shared daemon singleton
         if: ${{ !cancelled() }}
