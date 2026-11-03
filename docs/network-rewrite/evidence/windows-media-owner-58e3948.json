@@ -1,0 +1,2525 @@
+{
+  "schema_version": 1,
+  "kind": "windows-media-owner-exact-source-independent-verification",
+  "recorded_at_utc": "2026-11-03T07:28:17.2214666Z",
+  "repository": "ZHanry/NestLink",
+  "source_revision": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
+  "run_id": 41593952499,
+  "run_attempt": 1,
+  "workflow": "Windows actual media owner diagnostics and strict boundaries",
+  "workflow_path": ".github/workflows/windows-media-owner.yml",
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41593952499",
+  "status": "completed",
+  "conclusion": "failure",
+  "metadata_files": [
+    {
+      "path": "run.json",
+      "bytes": 11797,
+      "sha256": "a189e7e01ba8818d647c77353b64cc9ded113cbfbf698f6eccac211bc597446a"
+    },
+    {
+      "path": "jobs.json",
+      "bytes": 14826,
+      "sha256": "e9fbe1a7d10d14a249b389f2860109e32057738843278a61ed8f590e099ad8e3"
+    },
+    {
+      "path": "artifacts.json",
+      "bytes": 2961,
+      "sha256": "1e7ab16ce2831841f0d1c9470f60206f8a9cc38a4eb79a3a2aba4d9262ae1e3e"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 125776839668,
+      "name": "owner-boundaries (windows-2022)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T07:05:06Z",
+      "completed_at": "2026-11-03T07:19:17Z",
+      "runner_name": "GitHub Actions 1000012242",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "windows-2022"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T07:05:07Z",
+          "completed_at": "2026-11-03T07:05:09Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T07:05:09Z",
+          "completed_at": "2026-11-03T07:05:19Z"
+        },
+        {
+          "name": "Verify exact hosted source and preserve input provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T07:05:19Z",
+          "completed_at": "2026-11-03T07:05:21Z"
+        },
+        {
+          "name": "Verify diagnostic analyzer negatives on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T07:05:21Z",
+          "completed_at": "2026-11-03T07:05:22Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T07:05:22Z",
+          "completed_at": "2026-11-03T07:05:34Z"
+        },
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T07:05:34Z",
+          "completed_at": "2026-11-03T07:06:44Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T07:06:44Z",
+          "completed_at": "2026-11-03T07:07:00Z"
+        },
+        {
+          "name": "Select native codec prefix",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T07:07:00Z",
+          "completed_at": "2026-11-03T07:07:00Z"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T07:07:00Z",
+          "completed_at": "2026-11-03T07:09:06Z"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T07:09:06Z",
+          "completed_at": "2026-11-03T07:09:06Z"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 11,
+          "started_at": "2026-11-03T07:09:06Z",
+          "completed_at": "2026-11-03T07:12:29Z"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T07:12:29Z",
+          "completed_at": "2026-11-03T07:12:29Z"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 13,
+          "started_at": "2026-11-03T07:12:29Z",
+          "completed_at": "2026-11-03T07:13:31Z"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 14,
+          "started_at": "2026-11-03T07:13:31Z",
+          "completed_at": "2026-11-03T07:15:17Z"
+        },
+        {
+          "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-03T07:15:17Z",
+          "completed_at": "2026-11-03T07:16:00Z"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 16,
+          "started_at": "2026-11-03T07:16:00Z",
+          "completed_at": "2026-11-03T07:17:28Z"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 17,
+          "started_at": "2026-11-03T07:17:28Z",
+          "completed_at": "2026-11-03T07:17:40Z"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 18,
+          "started_at": "2026-11-03T07:17:40Z",
+          "completed_at": "2026-11-03T07:19:11Z"
+        },
+        {
+          "name": "Retain exact-source evidence including failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-03T07:19:11Z",
+          "completed_at": "2026-11-03T07:19:12Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 38,
+          "started_at": "2026-11-03T07:19:12Z",
+          "completed_at": "2026-11-03T07:19:14Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 39,
+          "started_at": "2026-11-03T07:19:14Z",
+          "completed_at": "2026-11-03T07:19:14Z"
+        }
+      ]
+    },
+    {
+      "id": 125776839964,
+      "name": "owner-boundaries (windows-2025)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T07:05:06Z",
+      "completed_at": "2026-11-03T07:20:02Z",
+      "runner_name": "GitHub Actions 1000012244",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "windows-2025"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T07:05:07Z",
+          "completed_at": "2026-11-03T07:05:09Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T07:05:09Z",
+          "completed_at": "2026-11-03T07:05:20Z"
+        },
+        {
+          "name": "Verify exact hosted source and preserve input provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T07:05:20Z",
+          "completed_at": "2026-11-03T07:05:22Z"
+        },
+        {
+          "name": "Verify diagnostic analyzer negatives on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T07:05:22Z",
+          "completed_at": "2026-11-03T07:05:23Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T07:05:23Z",
+          "completed_at": "2026-11-03T07:05:35Z"
+        },
+        {
+          "name": "Verify independent exact format, signed scope and unchanged legacy contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T07:05:35Z",
+          "completed_at": "2026-11-03T07:06:40Z"
+        },
+        {
+          "name": "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T07:06:40Z",
+          "completed_at": "2026-11-03T07:06:59Z"
+        },
+        {
+          "name": "Select native codec prefix",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T07:06:59Z",
+          "completed_at": "2026-11-03T07:06:59Z"
+        },
+        {
+          "name": "Build the original pinned native codecs on Actions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T07:06:59Z",
+          "completed_at": "2026-11-03T07:09:17Z"
+        },
+        {
+          "name": "Verify native codec provenance",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T07:09:17Z",
+          "completed_at": "2026-11-03T07:09:17Z"
+        },
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 11,
+          "started_at": "2026-11-03T07:09:17Z",
+          "completed_at": "2026-11-03T07:12:56Z"
+        },
+        {
+          "name": "Verify actual receiver diagnostics, cleanup and cadence under the ordinary token",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T07:12:56Z",
+          "completed_at": "2026-11-03T07:12:56Z"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 13,
+          "started_at": "2026-11-03T07:12:56Z",
+          "completed_at": "2026-11-03T07:14:03Z"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 14,
+          "started_at": "2026-11-03T07:14:03Z",
+          "completed_at": "2026-11-03T07:15:53Z"
+        },
+        {
+          "name": "Verify actual signed Store v2 and exact v3 frozen media lifecycles",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-03T07:15:53Z",
+          "completed_at": "2026-11-03T07:16:38Z"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 16,
+          "started_at": "2026-11-03T07:16:38Z",
+          "completed_at": "2026-11-03T07:18:11Z"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 17,
+          "started_at": "2026-11-03T07:18:11Z",
+          "completed_at": "2026-11-03T07:18:23Z"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 18,
+          "started_at": "2026-11-03T07:18:23Z",
+          "completed_at": "2026-11-03T07:19:56Z"
+        },
+        {
+          "name": "Retain exact-source evidence including failures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-03T07:19:56Z",
+          "completed_at": "2026-11-03T07:19:57Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 38,
+          "started_at": "2026-11-03T07:19:57Z",
+          "completed_at": "2026-11-03T07:19:59Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 39,
+          "started_at": "2026-11-03T07:19:59Z",
+          "completed_at": "2026-11-03T07:19:59Z"
+        }
+      ]
+    },
+    {
+      "id": 125776840084,
+      "name": "native-peer-process (windows-2025)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T07:05:06Z",
+      "completed_at": "2026-11-03T07:07:36Z",
+      "runner_name": "GitHub Actions 1000012243",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "windows-2025"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T07:05:07Z",
+          "completed_at": "2026-11-03T07:05:08Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T07:05:08Z",
+          "completed_at": "2026-11-03T07:05:17Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T07:05:17Z",
+          "completed_at": "2026-11-03T07:05:30Z"
+        },
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 4,
+          "started_at": "2026-11-03T07:05:30Z",
+          "completed_at": "2026-11-03T07:07:31Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T07:07:31Z",
+          "completed_at": "2026-11-03T07:07:32Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T07:07:32Z",
+          "completed_at": "2026-11-03T07:07:34Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T07:07:34Z",
+          "completed_at": "2026-11-03T07:07:34Z"
+        }
+      ]
+    },
+    {
+      "id": 125776840093,
+      "name": "native-peer-process (ubuntu-24.04)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T07:05:06Z",
+      "completed_at": "2026-11-03T07:06:44Z",
+      "runner_name": "GitHub Actions 1000012245",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T07:05:07Z",
+          "completed_at": "2026-11-03T07:05:08Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T07:05:08Z",
+          "completed_at": "2026-11-03T07:05:11Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T07:05:11Z",
+          "completed_at": "2026-11-03T07:05:19Z"
+        },
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 4,
+          "started_at": "2026-11-03T07:05:19Z",
+          "completed_at": "2026-11-03T07:06:40Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T07:06:40Z",
+          "completed_at": "2026-11-03T07:06:41Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T07:06:41Z",
+          "completed_at": "2026-11-03T07:06:42Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T07:06:42Z",
+          "completed_at": "2026-11-03T07:06:42Z"
+        }
+      ]
+    }
+  ],
+  "artifact_count": 4,
+  "official_zip_verification_count": 4,
+  "independent_downloaded_file_count": 34.0,
+  "producer_payload_verification_count": 4.0,
+  "producer_command_log_verification_count": 0.0,
+  "artifacts": [
+    {
+      "id": 13212675370,
+      "name": "windows-media-owner-windows-2025-58e394842f38dc9ca6b954827b0daa6b55be4a94-1",
+      "official_digest": "sha256:fe2a1f3d5cf7e1859a4024ba1ff93c44f90ff6f3833ea52b3ebf9f5f905e25b1",
+      "zip_sha256": "fe2a1f3d5cf7e1859a4024ba1ff93c44f90ff6f3833ea52b3ebf9f5f905e25b1",
+      "zip_bytes": 29300,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 14,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "amf-boundary-tests.log",
+          "bytes": 49627,
+          "sha256": "60aa94945d467948fdf104cbbb841e7cc0ac1c272191e60ab207ea26eda2438f"
+        },
+        {
+          "path": "capture-precision-clippy.log",
+          "bytes": 3168,
+          "sha256": "9ce64531276453272311413106dc200ff110a860609f3301f70d25a0cf1d06a1"
+        },
+        {
+          "path": "compressed-native-tests.log",
+          "bytes": 37360,
+          "sha256": "4ad7f5b618c58eed73f9573bcf8438450fcb5a7a17a141a3c8e63d74cecaaa19"
+        },
+        {
+          "path": "daemon-hevc-selection-tests.log",
+          "bytes": 19860,
+          "sha256": "08443a02331b41bc70fb0c14d402f9b34eafc715e4b405fff32e61e089d2dec0"
+        },
+        {
+          "path": "desktop-clippy.log",
+          "bytes": 13500,
+          "sha256": "9beb04295420282d6f1d83ec6a3cb47bf3094a7fe4900bd9e6d007d6426abdda"
+        },
+        {
+          "path": "h264-output-geometry-tests.log",
+          "bytes": 1265,
+          "sha256": "c58074e755eacc319bb75d100eeff3527c97ced2a144527d2c1740bf9df4fce6"
+        },
+        {
+          "path": "hevc-backend-selection-tests.log",
+          "bytes": 588,
+          "sha256": "a3cfb9049342369e0a345e9b1eebcc72eb73d61ef28808f2630f52874e19734f"
+        },
+        {
+          "path": "hevc-mf-color-tests.log",
+          "bytes": 606,
+          "sha256": "2eefc832a7f428dec25d99758d9843d81aaa0898d98592e8edfac423923001da"
+        },
+        {
+          "path": "media-opt-in-config-tests.log",
+          "bytes": 14463,
+          "sha256": "68802e4e0d868a9eb8be5241bf7d2b81eaa2ea2151ca2ef35edf1157a2695f02"
+        },
+        {
+          "path": "media-provider-tests.log",
+          "bytes": 18893,
+          "sha256": "dbcf084443156f14d845ceb96d434b8e2617134445aca67c1eb06c8580ee117d"
+        },
+        {
+          "path": "mf-adapter-binding-tests.log",
+          "bytes": 841,
+          "sha256": "9bde604de49800b48b06a3a9aed80cbcfc32360aabe2d4881b35ef027a241172"
+        },
+        {
+          "path": "signed-store-media-tests.log",
+          "bytes": 3862,
+          "sha256": "3de385e2ee3b563c4015da89b8b6d88a66210dc2f1a343185fe1dca2d98996f2"
+        },
+        {
+          "path": "source-receipt.json",
+          "bytes": 689,
+          "sha256": "0c27fea41802555755974055a5b4215f9ba93180880759a4282852ee6f06a3ad"
+        },
+        {
+          "path": "wgc-float16-source-tests.log",
+          "bytes": 3611,
+          "sha256": "7f870a1c1e93a1c7a789b5df0aabde8bdf99bc594dfcbf99708958f1789f6a4a"
+        }
+      ],
+      "producer_payload_inventory_count": 0,
+      "producer_payload_verifications": [],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": false,
+      "producer_inventory_limitation": "Official ZIP verified and all extracted files independently hashed; this artifact has no producer payload inventory.",
+      "reports": [
+        {
+          "file": "source-receipt.json",
+          "source_claims": [
+            {
+              "field": "source_revision",
+              "value": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
+              "matches": true
+            },
+            {
+              "field": "workflow_revision",
+              "value": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": null,
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "source_receipt": {
+            "source_revision": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
+            "workflow_revision": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
+            "run_id": "41593952499",
+            "attempt": "1",
+            "runner_environment": "github-hosted",
+            "runner_os": "Windows",
+            "runner_label": "windows-2025",
+            "dependency_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+            "hardware_or_target_acceptance_claimed": false,
+            "tool_sources": {
+              "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+              "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+            }
+          }
+        }
+      ],
+      "test_logs": [
+        {
+          "file": "amf-boundary-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 70,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_amf::boundary_tests::requested_level_covers_exact_picture_rate_bitrate_and_dimension_boundaries ... ok",
+            "test windows_amf::boundary_tests::original_native_range_types_release_flags_and_null_device_are_strict ... ok",
+            "test windows_amf::boundary_tests::optional_legacy_properties_require_complete_consistent_absence ... ok",
+            "test windows_amf::boundary_tests::exact_base_layer_alias_requires_same_typed_descriptor_and_value ... ok"
+          ]
+        },
+        {
+          "file": "h264-output-geometry-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 73,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_gpu_presenter::geometry_tests::native_output_matches_real_sps_padding_and_rejects_unbound_or_conflicting_apertures ... ok"
+          ]
+        },
+        {
+          "file": "hevc-backend-selection-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 73,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test hevc_backend::tests::implementation_runtime_pairs_are_explicit_and_never_interchangeable ... ok"
+          ]
+        },
+        {
+          "file": "hevc-mf-color-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 73,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_mf::hevc_color_tests::supported_color_properties_must_roundtrip_and_mf_enums_remain_exact ... ok"
+          ]
+        },
+        {
+          "file": "mf-adapter-binding-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 72,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_mf::adapter_binding_tests::real_attributes_require_exact_luid_blob_and_both_adapter_parts ... ok",
+            "test windows_mf::adapter_binding_tests::exact_scoped_enumeration_allows_only_absent_optional_activation_identity ... ok"
+          ]
+        },
+        {
+          "file": "signed-store-media-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 10,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 71,
+              "elapsed_seconds": 10.58
+            }
+          ],
+          "case_lines": [
+            "test control::media_authority_tests::frozen_scope_requires_explicit_signed_approval_and_never_widens_from_latest_catalog ... ok",
+            "test control::media_authority_tests::internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets ... ok",
+            "test control::media_authority_tests::internal_software_candidate_rejects_account_peer_target_and_expiry ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_block_prepared_renewal_and_reconnection ... ok",
+            "test control::media_authority_tests::internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery ... ok",
+            "test control::media_authority_tests::management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publication_recovers ... ok",
+            "test control::media_authority_tests::v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_allow_reviewed_decision_but_block_initial_issuance ... ok",
+            "test control::media_authority_tests::signed_media_public_lifecycle_issues_renews_and_reconnects_without_scope_widening ... ok",
+            "test control::media_authority_tests::v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain ... ok"
+          ]
+        },
+        {
+          "file": "wgc-float16-source-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 5,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows::host::precision_source_tests::exact_float16_conversion_and_sticky_source_metadata_boundaries ... ok",
+            "test windows::host::precision_source_tests::independent_hdr_capture_requires_actual_hdr_output_and_exact_pq_conversion ... ok"
+          ]
+        }
+      ],
+      "retained_log_diagnostics": [
+        {
+          "file": "capture-precision-clippy.log",
+          "diagnostics": [
+            "error: using `contains()` instead of `iter().any()` is more efficient\r\n  --> crates\\protocol\\src\\network_migration.rs:87:12\r\n   |\r\n87 |         if self.digests().iter().any(|digest| *digest == [0; 32])\r\n   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `self.digests().contains(&[0; 32])`\r\n   |\r\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#manual_contains\r\n   = note: `-D clippy::manual-contains` implied by `-D warnings`\r\n   = help: to override `-D warnings` add `#[allow(clippy::manual_contains)]`",
+            "error: could not compile `nestlink-protocol` (lib) due to 1 previous error\r\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "compressed-native-tests.log",
+          "diagnostics": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope\r\n   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65\r\n    |\r\n118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),\r\n    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error\r\nwarning: build failed, waiting for other jobs to finish...\r\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "daemon-hevc-selection-tests.log",
+          "diagnostics": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope\r\n   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65\r\n    |\r\n118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),\r\n    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error\r\nwarning: build failed, waiting for other jobs to finish...\r\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "desktop-clippy.log",
+          "diagnostics": [
+            "error: using `contains()` instead of `iter().any()` is more efficient\r\n  --> crates\\protocol\\src\\network_migration.rs:87:12\r\n   |\r\n87 |         if self.digests().iter().any(|digest| *digest == [0; 32])\r\n   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `self.digests().contains(&[0; 32])`\r\n   |\r\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#manual_contains\r\n   = note: `-D clippy::manual-contains` implied by `-D warnings`\r\n   = help: to override `-D warnings` add `#[allow(clippy::manual_contains)]`",
+            "error: could not compile `nestlink-protocol` (lib) due to 1 previous error\r\nwarning: build failed, waiting for other jobs to finish...\r\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "media-opt-in-config-tests.log",
+          "diagnostics": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope\r\n   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65\r\n    |\r\n118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),\r\n    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error\r\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "media-provider-tests.log",
+          "diagnostics": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope\r\n   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65\r\n    |\r\n118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),\r\n    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error\r\nwarning: build failed, waiting for other jobs to finish...\r\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        }
+      ]
+    },
+    {
+      "id": 13211504593,
+      "name": "windows-media-owner-windows-2022-58e394842f38dc9ca6b954827b0daa6b55be4a94-1",
+      "official_digest": "sha256:f40789a2e4eee11a9fad46709817c5e321b5720b6df1c280ff46327478e89987",
+      "zip_sha256": "f40789a2e4eee11a9fad46709817c5e321b5720b6df1c280ff46327478e89987",
+      "zip_bytes": 29284,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 14,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "amf-boundary-tests.log",
+          "bytes": 49627,
+          "sha256": "dc913dffbca0af137999e5f83cc02f6e684f1f67df658f158d560b9177af7d45"
+        },
+        {
+          "path": "capture-precision-clippy.log",
+          "bytes": 3168,
+          "sha256": "6ad79c93ce3813267a3fe84b180995e4d116a41fcb1c2e8c511eaea1e39f9292"
+        },
+        {
+          "path": "compressed-native-tests.log",
+          "bytes": 37360,
+          "sha256": "bc37ab14578e33844f6e10cda3fc31653870cdd4776193c4589d8d16ef364c4d"
+        },
+        {
+          "path": "daemon-hevc-selection-tests.log",
+          "bytes": 19860,
+          "sha256": "bc6d8772919a3a708cf903407b9f4494c39b506a159a8e4626c3ab573dfb51c5"
+        },
+        {
+          "path": "desktop-clippy.log",
+          "bytes": 13619,
+          "sha256": "e55aba3e3b1be1d72c31ad5624e0cd89e7681f0f2df4a8d01fecbdd4cc0447f3"
+        },
+        {
+          "path": "h264-output-geometry-tests.log",
+          "bytes": 1265,
+          "sha256": "3266fc93309fbab86888c1e7c0a4bd86dfb8f807d36c0a389d52d12c00a6d6a7"
+        },
+        {
+          "path": "hevc-backend-selection-tests.log",
+          "bytes": 588,
+          "sha256": "8505d6b77dc53a529436117f66e3e22816caa2bee6f4e7c397e497bc851912f2"
+        },
+        {
+          "path": "hevc-mf-color-tests.log",
+          "bytes": 606,
+          "sha256": "aa08d7715e08c32035ab46a8e46bb8c92b20e654280bda2f85a45d0f8531efff"
+        },
+        {
+          "path": "media-opt-in-config-tests.log",
+          "bytes": 14463,
+          "sha256": "68802e4e0d868a9eb8be5241bf7d2b81eaa2ea2151ca2ef35edf1157a2695f02"
+        },
+        {
+          "path": "media-provider-tests.log",
+          "bytes": 18893,
+          "sha256": "ea2c32281d85d4563a8c3f9dd6cb86a9b88e3c6d098bd18b4eecbb7ac6235ee2"
+        },
+        {
+          "path": "mf-adapter-binding-tests.log",
+          "bytes": 841,
+          "sha256": "c30e99836021e2e0907d120e2555658c3f40978f5c3f4164f31046872ec77828"
+        },
+        {
+          "path": "signed-store-media-tests.log",
+          "bytes": 3861,
+          "sha256": "e2f35fd6e23bd395bc38960909cd3b8d9d2761fc0b0ea7a845e6ff2d6700f248"
+        },
+        {
+          "path": "source-receipt.json",
+          "bytes": 689,
+          "sha256": "4501f1346931d4c5caf05b3c4e260f80fdd2c9956ae903888416f02f96fa5030"
+        },
+        {
+          "path": "wgc-float16-source-tests.log",
+          "bytes": 3611,
+          "sha256": "bf908987b8cc28235ac0b0e7469acb2e0d42e1848eac92e374ede9d5d8d3f5cf"
+        }
+      ],
+      "producer_payload_inventory_count": 0,
+      "producer_payload_verifications": [],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": false,
+      "producer_inventory_limitation": "Official ZIP verified and all extracted files independently hashed; this artifact has no producer payload inventory.",
+      "reports": [
+        {
+          "file": "source-receipt.json",
+          "source_claims": [
+            {
+              "field": "source_revision",
+              "value": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
+              "matches": true
+            },
+            {
+              "field": "workflow_revision",
+              "value": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": null,
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "source_receipt": {
+            "source_revision": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
+            "workflow_revision": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
+            "run_id": "41593952499",
+            "attempt": "1",
+            "runner_environment": "github-hosted",
+            "runner_os": "Windows",
+            "runner_label": "windows-2022",
+            "dependency_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+            "hardware_or_target_acceptance_claimed": false,
+            "tool_sources": {
+              "scripts/network-rewrite-gpu-cadence.py": "f2741c39231d1a4e15982927a97daeff19caa7b687e1c38de8ee024bf397d876",
+              "tests/network/test_gpu_cadence.py": "bcd045a195f2de815ff1f3f00de635430877c000b3cfa498eb5ae2593bd73a35"
+            }
+          }
+        }
+      ],
+      "test_logs": [
+        {
+          "file": "amf-boundary-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 4,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 70,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_amf::boundary_tests::requested_level_covers_exact_picture_rate_bitrate_and_dimension_boundaries ... ok",
+            "test windows_amf::boundary_tests::original_native_range_types_release_flags_and_null_device_are_strict ... ok",
+            "test windows_amf::boundary_tests::optional_legacy_properties_require_complete_consistent_absence ... ok",
+            "test windows_amf::boundary_tests::exact_base_layer_alias_requires_same_typed_descriptor_and_value ... ok"
+          ]
+        },
+        {
+          "file": "h264-output-geometry-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 73,
+              "elapsed_seconds": 0.01
+            }
+          ],
+          "case_lines": [
+            "test windows_gpu_presenter::geometry_tests::native_output_matches_real_sps_padding_and_rejects_unbound_or_conflicting_apertures ... ok"
+          ]
+        },
+        {
+          "file": "hevc-backend-selection-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 73,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test hevc_backend::tests::implementation_runtime_pairs_are_explicit_and_never_interchangeable ... ok"
+          ]
+        },
+        {
+          "file": "hevc-mf-color-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 1,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 73,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows_mf::hevc_color_tests::supported_color_properties_must_roundtrip_and_mf_enums_remain_exact ... ok"
+          ]
+        },
+        {
+          "file": "mf-adapter-binding-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 72,
+              "elapsed_seconds": 0.01
+            }
+          ],
+          "case_lines": [
+            "test windows_mf::adapter_binding_tests::real_attributes_require_exact_luid_blob_and_both_adapter_parts ... ok",
+            "test windows_mf::adapter_binding_tests::exact_scoped_enumeration_allows_only_absent_optional_activation_identity ... ok"
+          ]
+        },
+        {
+          "file": "signed-store-media-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 10,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 71,
+              "elapsed_seconds": 9.95
+            }
+          ],
+          "case_lines": [
+            "test control::media_authority_tests::frozen_scope_requires_explicit_signed_approval_and_never_widens_from_latest_catalog ... ok",
+            "test control::media_authority_tests::internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets ... ok",
+            "test control::media_authority_tests::internal_software_candidate_rejects_account_peer_target_and_expiry ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_block_prepared_renewal_and_reconnection ... ok",
+            "test control::media_authority_tests::internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery ... ok",
+            "test control::media_authority_tests::management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publication_recovers ... ok",
+            "test control::media_authority_tests::v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_allow_reviewed_decision_but_block_initial_issuance ... ok",
+            "test control::media_authority_tests::signed_media_public_lifecycle_issues_renews_and_reconnects_without_scope_widening ... ok",
+            "test control::media_authority_tests::v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain ... ok"
+          ]
+        },
+        {
+          "file": "wgc-float16-source-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 2,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 5,
+              "elapsed_seconds": 0.0
+            }
+          ],
+          "case_lines": [
+            "test windows::host::precision_source_tests::independent_hdr_capture_requires_actual_hdr_output_and_exact_pq_conversion ... ok",
+            "test windows::host::precision_source_tests::exact_float16_conversion_and_sticky_source_metadata_boundaries ... ok"
+          ]
+        }
+      ],
+      "retained_log_diagnostics": [
+        {
+          "file": "capture-precision-clippy.log",
+          "diagnostics": [
+            "error: using `contains()` instead of `iter().any()` is more efficient\r\n  --> crates\\protocol\\src\\network_migration.rs:87:12\r\n   |\r\n87 |         if self.digests().iter().any(|digest| *digest == [0; 32])\r\n   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `self.digests().contains(&[0; 32])`\r\n   |\r\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#manual_contains\r\n   = note: `-D clippy::manual-contains` implied by `-D warnings`\r\n   = help: to override `-D warnings` add `#[allow(clippy::manual_contains)]`",
+            "error: could not compile `nestlink-protocol` (lib) due to 1 previous error\r\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "compressed-native-tests.log",
+          "diagnostics": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope\r\n   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65\r\n    |\r\n118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),\r\n    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error\r\nwarning: build failed, waiting for other jobs to finish...\r\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "daemon-hevc-selection-tests.log",
+          "diagnostics": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope\r\n   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65\r\n    |\r\n118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),\r\n    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error\r\nwarning: build failed, waiting for other jobs to finish...\r\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "desktop-clippy.log",
+          "diagnostics": [
+            "error: using `contains()` instead of `iter().any()` is more efficient\r\n  --> crates\\protocol\\src\\network_migration.rs:87:12\r\n   |\r\n87 |         if self.digests().iter().any(|digest| *digest == [0; 32])\r\n   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `self.digests().contains(&[0; 32])`\r\n   |\r\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#manual_contains\r\n   = note: `-D clippy::manual-contains` implied by `-D warnings`\r\n   = help: to override `-D warnings` add `#[allow(clippy::manual_contains)]`",
+            "error: could not compile `nestlink-protocol` (lib) due to 1 previous error\r\nwarning: build failed, waiting for other jobs to finish...\r\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "media-opt-in-config-tests.log",
+          "diagnostics": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope\r\n   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65\r\n    |\r\n118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),\r\n    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error\r\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        },
+        {
+          "file": "media-provider-tests.log",
+          "diagnostics": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope\r\n   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65\r\n    |\r\n118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),\r\n    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error\r\nwarning: build failed, waiting for other jobs to finish...\r\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        }
+      ]
+    },
+    {
+      "id": 13210829421,
+      "name": "native-peer-process-windows-2025-58e394842f38dc9ca6b954827b0daa6b55be4a94-1",
+      "official_digest": "sha256:a64c21dd42651e155bbc406bd91ed411f096906ff1b721f23adfe4f287390eaa",
+      "zip_sha256": "a64c21dd42651e155bbc406bd91ed411f096906ff1b721f23adfe4f287390eaa",
+      "zip_bytes": 6838,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 3,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "ipc-tests.log",
+          "bytes": 21570,
+          "sha256": "61939bb45991dc925cf8eac013c9163a033ff0e8f23b6ed357a807fdb55e6247"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 1715,
+          "sha256": "8d9b562afbce71df2e0d1ee817d330bc68a3a003c435964d03c3d53e75967cc4"
+        },
+        {
+          "path": "strict-peer-owner.log",
+          "bytes": 6256,
+          "sha256": "21165be5025b3d8dad7854d15c4f663ce5741bf4f710eace97baf67dcedf7a71"
+        }
+      ],
+      "producer_payload_inventory_count": 2,
+      "producer_payload_verifications": [
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "ipc-tests.log",
+          "bytes": 21570,
+          "sha256": "61939bb45991dc925cf8eac013c9163a033ff0e8f23b6ed357a807fdb55e6247",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "strict-peer-owner.log",
+          "bytes": 6256,
+          "sha256": "21165be5025b3d8dad7854d15c4f663ce5741bf4f710eace97baf67dcedf7a71",
+          "producer_matches": true
+        }
+      ],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": true,
+      "producer_inventory_limitation": null,
+      "reports": [
+        {
+          "file": "receipt.json",
+          "source_claims": [
+            {
+              "field": "source_revision",
+              "value": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": false,
+          "status": null,
+          "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+          "kind": null,
+          "failure": "AssertionError('strict-peer-owner failed; original diagnostic retained')",
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [
+            {
+              "name": "ipc-tests",
+              "return_code": 0,
+              "timed_out": null,
+              "timeout_seconds": null,
+              "elapsed_seconds": null
+            },
+            {
+              "name": "strict-peer-owner",
+              "return_code": 101,
+              "timed_out": null,
+              "timeout_seconds": null,
+              "elapsed_seconds": null
+            }
+          ],
+          "cases": [],
+          "acceptance_flags": {},
+          "runner_os": "Windows",
+          "runner_environment": "github-hosted",
+          "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        }
+      ],
+      "test_logs": [
+        {
+          "file": "ipc-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 27,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 0,
+              "elapsed_seconds": 0.8
+            }
+          ],
+          "case_lines": [
+            "test instance::tests::development_directories_keep_explicit_paths ... ok",
+            "test instance::tests::missing_invalid_and_duplicate_instance_markers_fail_closed ... ok",
+            "test instance::tests::reinstall_selects_a_fresh_namespace_and_preserves_old_private_bytes ... ok",
+            "test instance::tests::explicit_review_reads_public_descriptor_and_never_opens_key_bytes ... ok",
+            "test maintenance::tests::installation_recovery_is_observed_only_under_exclusive_ownership ... ok",
+            "test process_tests::child_native_tls_process ... ok",
+            "test maintenance::tests::repeated_desktop_start_activates_exact_state_directory ... ok",
+            "test maintenance::tests::startup_handoff_is_atomic_and_stable_lock_bytes_are_never_reset ... ok",
+            "test maintenance::tests::maintenance_fences_startup_and_waits_for_original_runtime_and_desktops ... ok",
+            "test process_tests::new_client_reuses_original_tcp_tls_when_old_daemon_has_no_native_pipe ... ok",
+            "test process_tests::original_tcp_tls_compatibility_has_no_native_process_proof ... ok",
+            "test process_tests::native_tls_drop_cancel_and_original_daemon_stop_fence_every_peer_clone ... ok",
+            "test process_tests::original_native_tls_peer_is_the_actual_child_and_exit_retires_its_handle ... ok",
+            "test tests::accepted_handshake_slots_are_bounded_and_stop_cancels_incomplete_tls ... ok",
+            "test tests::binary_video_round_trip_uses_the_authenticated_tls_stream_and_never_returns_to_json ... ok",
+            "test tests::duplex_owner_drop_wakes_idle_reader_and_retires_writer ... ok",
+            "test tests::cancelling_mid_video_payload_read_drops_the_zeroizing_buffer_and_retires_tls ... ok",
+            "test tests::cancelling_a_partial_frame_receive_permanently_retires_that_stream ... ok",
+            "test tests::duplex_partial_prefix_cancel_poison_is_shared_with_writer ... ok",
+            "test tests::non_loopback_or_unknown_endpoints_do_not_become_dial_targets ... ok",
+            "test tests::frame_lengths_fail_before_body_allocation_and_poison_the_stream ... ok",
+            "test tests::headless_session_owner_and_daemon_share_one_singleton_without_fake_endpoint ... ok",
+            "test tests::cancelling_a_backpressured_video_chunk_permanently_retires_the_tls_stream ... ok",
+            "test tests::real_tls_ipc_owns_singleton_and_shutdown_interrupts_idle_clients ... ok",
+            "test tests::stale_runtime_manifest_is_rejected_by_the_authenticated_daemon_hello ... ok",
+            "test tests::substituting_the_local_key_cannot_authenticate_to_a_live_daemon ... ok",
+            "test tests::video_payload_budget_and_wire_length_are_checked_before_payload_allocation ... ok"
+          ]
+        }
+      ],
+      "retained_log_diagnostics": [
+        {
+          "file": "strict-peer-owner.log",
+          "diagnostics": [
+            "error: using `contains()` instead of `iter().any()` is more efficient\n  --> crates\\protocol\\src\\network_migration.rs:87:12\n   |\n87 |         if self.digests().iter().any(|digest| *digest == [0; 32])\n   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `self.digests().contains(&[0; 32])`\n   |\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#manual_contains\n   = note: `-D clippy::manual-contains` implied by `-D warnings`\n   = help: to override `-D warnings` add `#[allow(clippy::manual_contains)]`",
+            "error: could not compile `nestlink-protocol` (lib) due to 1 previous error\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        }
+      ]
+    },
+    {
+      "id": 13210599769,
+      "name": "native-peer-process-ubuntu-24.04-58e394842f38dc9ca6b954827b0daa6b55be4a94-1",
+      "official_digest": "sha256:7d3ffe8b83165bec5bb4a7b0ed62cd478680189147dab0c58a617ae2b5426a4d",
+      "zip_sha256": "7d3ffe8b83165bec5bb4a7b0ed62cd478680189147dab0c58a617ae2b5426a4d",
+      "zip_bytes": 6467,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 3,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "ipc-tests.log",
+          "bytes": 20853,
+          "sha256": "8c5baaec05a38fed97a9babcb8cded623ab0f9a6aa78aa5cd2453a83c426d562"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 1403,
+          "sha256": "0d63fec9838f0264887e139d2f18b9e691ba36d46a5c65637b23d7aab3439a10"
+        },
+        {
+          "path": "strict-peer-owner.log",
+          "bytes": 6072,
+          "sha256": "ca340e5ea7fd32100c16285c5b06b6ab0d69ae3a5c1a20a16a3c6bb4e310843b"
+        }
+      ],
+      "producer_payload_inventory_count": 2,
+      "producer_payload_verifications": [
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "ipc-tests.log",
+          "bytes": 20853,
+          "sha256": "8c5baaec05a38fed97a9babcb8cded623ab0f9a6aa78aa5cd2453a83c426d562",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "receipt.json",
+          "inventory_kind": "files",
+          "path": "strict-peer-owner.log",
+          "bytes": 6072,
+          "sha256": "ca340e5ea7fd32100c16285c5b06b6ab0d69ae3a5c1a20a16a3c6bb4e310843b",
+          "producer_matches": true
+        }
+      ],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": true,
+      "producer_inventory_limitation": null,
+      "reports": [
+        {
+          "file": "receipt.json",
+          "source_claims": [
+            {
+              "field": "source_revision",
+              "value": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
+              "matches": true
+            }
+          ],
+          "source_before": null,
+          "source_after": null,
+          "passed": false,
+          "status": null,
+          "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim.",
+          "kind": null,
+          "failure": "AssertionError('strict-peer-owner failed; original diagnostic retained')",
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [
+            {
+              "name": "ipc-tests",
+              "return_code": 0,
+              "timed_out": null,
+              "timeout_seconds": null,
+              "elapsed_seconds": null
+            },
+            {
+              "name": "strict-peer-owner",
+              "return_code": 101,
+              "timed_out": null,
+              "timeout_seconds": null,
+              "elapsed_seconds": null
+            }
+          ],
+          "cases": [],
+          "acceptance_flags": {},
+          "runner_os": "Linux",
+          "runner_environment": "github-hosted",
+          "cargo_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        }
+      ],
+      "test_logs": [
+        {
+          "file": "ipc-tests.log",
+          "harness_count": 1,
+          "results": [
+            {
+              "result": "ok",
+              "passed": 24,
+              "failed": 0,
+              "ignored": 0,
+              "filtered": 0,
+              "elapsed_seconds": 0.28
+            }
+          ],
+          "case_lines": [
+            "test instance::tests::development_directories_keep_explicit_paths ... ok",
+            "test instance::tests::linked_or_group_writable_marker_is_rejected_without_changing_target ... ok",
+            "test instance::tests::missing_invalid_and_duplicate_instance_markers_fail_closed ... ok",
+            "test instance::tests::explicit_review_reads_public_descriptor_and_never_opens_key_bytes ... ok",
+            "test maintenance::tests::maintenance_rejects_a_link_without_touching_its_target ... ok",
+            "test instance::tests::reinstall_selects_a_fresh_namespace_and_preserves_old_private_bytes ... ok",
+            "test maintenance::tests::installation_recovery_is_observed_only_under_exclusive_ownership ... ok",
+            "test maintenance::tests::repeated_desktop_start_activates_exact_state_directory ... ok",
+            "test maintenance::tests::startup_handoff_is_atomic_and_stable_lock_bytes_are_never_reset ... ok",
+            "test maintenance::tests::maintenance_fences_startup_and_waits_for_original_runtime_and_desktops ... ok",
+            "test tests::accepted_handshake_slots_are_bounded_and_stop_cancels_incomplete_tls ... ok",
+            "test tests::binary_video_round_trip_uses_the_authenticated_tls_stream_and_never_returns_to_json ... ok",
+            "test tests::duplex_owner_drop_wakes_idle_reader_and_retires_writer ... ok",
+            "test tests::cancelling_a_partial_frame_receive_permanently_retires_that_stream ... ok",
+            "test tests::frame_lengths_fail_before_body_allocation_and_poison_the_stream ... ok",
+            "test tests::cancelling_mid_video_payload_read_drops_the_zeroizing_buffer_and_retires_tls ... ok",
+            "test tests::non_loopback_or_unknown_endpoints_do_not_become_dial_targets ... ok",
+            "test tests::headless_session_owner_and_daemon_share_one_singleton_without_fake_endpoint ... ok",
+            "test tests::duplex_partial_prefix_cancel_poison_is_shared_with_writer ... ok",
+            "test tests::stale_runtime_manifest_is_rejected_by_the_authenticated_daemon_hello ... ok",
+            "test tests::substituting_the_local_key_cannot_authenticate_to_a_live_daemon ... ok",
+            "test tests::real_tls_ipc_owns_singleton_and_shutdown_interrupts_idle_clients ... ok",
+            "test tests::video_payload_budget_and_wire_length_are_checked_before_payload_allocation ... ok",
+            "test tests::cancelling_a_backpressured_video_chunk_permanently_retires_the_tls_stream ... ok"
+          ]
+        }
+      ],
+      "retained_log_diagnostics": [
+        {
+          "file": "strict-peer-owner.log",
+          "diagnostics": [
+            "error: using `contains()` instead of `iter().any()` is more efficient\n  --> crates/protocol/src/network_migration.rs:87:12\n   |\n87 |         if self.digests().iter().any(|digest| *digest == [0; 32])\n   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `self.digests().contains(&[0; 32])`\n   |\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#manual_contains\n   = note: `-D clippy::manual-contains` implied by `-D warnings`\n   = help: to override `-D warnings` add `#[allow(clippy::manual_contains)]`",
+            "error: could not compile `nestlink-protocol` (lib) due to 1 previous error\n"
+          ],
+          "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Actions results apply only to this exact source SHA. Historical failures remain unchanged.",
+    "Producer executable/native-library inventories whose bytes are absent from the ZIP are supplier receipts, not independent verification of those binaries.",
+    "Hosted browser/media/network success does not establish physical GPU, real device, public NAT/HA, cross-day or release eligibility."
+  ],
+  "verification_summary": {
+    "job_count": 4,
+    "successful_jobs": 0,
+    "failed_jobs": 4,
+    "official_zips_verified": 4,
+    "downloaded_files_independently_hashed": 34.0,
+    "producer_payload_entries_independently_verified": 4.0,
+    "producer_command_log_entries_independently_verified": 0.0,
+    "producer_private_raw_digests_not_verified": 0,
+    "peer_processes": [
+      {
+        "artifact_id": 13210829421,
+        "name": "native-peer-process-windows-2025-58e394842f38dc9ca6b954827b0daa6b55be4a94-1",
+        "passed": false,
+        "failure": "AssertionError('strict-peer-owner failed; original diagnostic retained')",
+        "runner_os": "Windows",
+        "commands": [
+          {
+            "name": "ipc-tests",
+            "return_code": 0,
+            "timed_out": null,
+            "timeout_seconds": null,
+            "elapsed_seconds": null
+          },
+          {
+            "name": "strict-peer-owner",
+            "return_code": 101,
+            "timed_out": null,
+            "timeout_seconds": null,
+            "elapsed_seconds": null
+          }
+        ],
+        "producer_payloads_verified": 2,
+        "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim."
+      },
+      {
+        "artifact_id": 13210599769,
+        "name": "native-peer-process-ubuntu-24.04-58e394842f38dc9ca6b954827b0daa6b55be4a94-1",
+        "passed": false,
+        "failure": "AssertionError('strict-peer-owner failed; original diagnostic retained')",
+        "runner_os": "Linux",
+        "commands": [
+          {
+            "name": "ipc-tests",
+            "return_code": 0,
+            "timed_out": null,
+            "timeout_seconds": null,
+            "elapsed_seconds": null
+          },
+          {
+            "name": "strict-peer-owner",
+            "return_code": 101,
+            "timed_out": null,
+            "timeout_seconds": null,
+            "elapsed_seconds": null
+          }
+        ],
+        "producer_payloads_verified": 2,
+        "scope": "Original native IPC/TLS process handles, framing and cleanup. No shared GPU surface or physical media claim."
+      }
+    ],
+    "owner_boundaries": [
+      {
+        "job_id": 125776839668,
+        "name": "owner-boundaries (windows-2022)",
+        "conclusion": "failure",
+        "harness_count": 8,
+        "failed_steps": [
+          {
+            "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+            "number": 11,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Check the complete desktop owner code strictly",
+            "number": 13,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+            "number": 14,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+            "number": 16,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+            "number": 17,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+            "number": 18,
+            "conclusion": "failure"
+          }
+        ],
+        "diagnostic_count": 12,
+        "raw_log_sha256": "a610eadade8f29bdc69932b8667e5a50889d56e24a3e0e8d40ade31b8651485c"
+      },
+      {
+        "job_id": 125776839964,
+        "name": "owner-boundaries (windows-2025)",
+        "conclusion": "failure",
+        "harness_count": 8,
+        "failed_steps": [
+          {
+            "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+            "number": 11,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Check the complete desktop owner code strictly",
+            "number": 13,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+            "number": 14,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+            "number": 16,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+            "number": 17,
+            "conclusion": "failure"
+          },
+          {
+            "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+            "number": 18,
+            "conclusion": "failure"
+          }
+        ],
+        "diagnostic_count": 12,
+        "raw_log_sha256": "2fc2f447216d19ca0f20f3bdab6015e30e7b2d9d7ba07487bd759eaf6f8fa8ce"
+      }
+    ]
+  },
+  "interpretation": [
+    "The exact-source media-owner run failed. Original peer IPC tests and their subsequent strict clippy commands are recorded separately; a passing IPC test does not replace a failing strict owner check.",
+    "Linux and Windows 2025 peer receipts retain strict-peer-owner failure caused by clippy manual_contains at crates/protocol/src/network_migration.rs:87. The existing -D warnings gate is retained.",
+    "Windows 2022 and Windows 2025 owner logs retain E0599 at crates/sdk/src/network/routed/control/route_set/continuation/migration.rs:118, where PathClaims has no signing_message method. Affected production-boundary test programs did not compile, so their scenarios are not counted as executed.",
+    "Owner strict checks also retain the protocol manual_contains error. Original successful protocol and independently executed media-codec/presenter/format tests remain recorded without making any failed job pass.",
+    "Every available official ZIP and every actual downloaded file is independently hashed. Peer producer log entries are verified; owner source receipts have no payload manifest, so no producer payload inventory is invented for those bundles.",
+    "The separate successful 58e3948 media target-tools build is a different workflow with narrower dependencies; it does not change these owner failures. Physical GPU/HDR/capture/scanout, sustained media acceptance and release eligibility are not claimed. Later canonical API and lint fixes require new exact-source Actions evidence."
+  ],
+  "acceptance_claims": [],
+  "original_job_logs": [
+    {
+      "job_id": 125776839668,
+      "job_name": "owner-boundaries (windows-2022)",
+      "job_conclusion": "failure",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125776839668/logs",
+      "path": "job-125776839668.log",
+      "bytes": 441328,
+      "sha256": "a610eadade8f29bdc69932b8667e5a50889d56e24a3e0e8d40ade31b8651485c",
+      "compiler_or_lint_diagnostics": [
+        {
+          "line_in_original_log": 1954,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --test native_compressed -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/compressed-native-tests.log\"",
+          "diagnostic": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+            "   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65",
+            "    |",
+            "118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+            "    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "",
+            "   Compiling nestlink-operations v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\crates\\operations)",
+            "   Compiling nestlink-server v0.8.0-rc.1 (D:\\a\\NestLink\\NestLink\\apps\\server)",
+            "For more information about this error, try `rustc --explain E0599`.",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\""
+          ]
+        },
+        {
+          "line_in_original_log": 1963,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --test native_compressed -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/compressed-native-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "exit $LASTEXITCODE",
+            "shell: C:\\Program Files\\PowerShell\\7\\pwsh.EXE -command \". '{0}'\"",
+            "env:",
+            "  CARGO_INCREMENTAL: 0",
+            "  CARGO_PROFILE_DEV_DEBUG: 0",
+            "  CARGO_PROFILE_TEST_DEBUG: 0",
+            "  PYTHONDONTWRITEBYTECODE: 1",
+            "  RUST_BACKTRACE: 1"
+          ]
+        },
+        {
+          "line_in_original_log": 2351,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+          "diagnostic": [
+            "error: using `contains()` instead of `iter().any()` is more efficient",
+            "  --> crates\\protocol\\src\\network_migration.rs:87:12",
+            "   |",
+            "87 |         if self.digests().iter().any(|digest| *digest == [0; 32])",
+            "   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `self.digests().contains(&[0; 32])`",
+            "   |",
+            "   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#manual_contains",
+            "   = note: `-D clippy::manual-contains` implied by `-D warnings`",
+            "   = help: to override `-D warnings` add `#[allow(clippy::manual_contains)]`",
+            "",
+            "    Checking emath v0.34.3",
+            "    Checking anstyle-query v1.1.5",
+            "    Checking windows-threading v0.2.1"
+          ]
+        },
+        {
+          "line_in_original_log": 2384,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-protocol` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_mf::hevc_color_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/hevc-mf-color-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_mf::adapter_binding_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/mf-adapter-binding-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_amf::boundary_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/amf-boundary-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib hevc_backend:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/hevc-backend-selection-tests.log\""
+          ]
+        },
+        {
+          "line_in_original_log": 2984,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "diagnostic": [
+            "error: using `contains()` instead of `iter().any()` is more efficient",
+            "  --> crates\\protocol\\src\\network_migration.rs:87:12",
+            "   |",
+            "87 |         if self.digests().iter().any(|digest| *digest == [0; 32])",
+            "   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `self.digests().contains(&[0; 32])`",
+            "   |",
+            "   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#manual_contains",
+            "   = note: `-D clippy::manual-contains` implied by `-D warnings`",
+            "   = help: to override `-D warnings` add `#[allow(clippy::manual_contains)]`",
+            "",
+            "error: could not compile `nestlink-protocol` (lib) due to 1 previous error",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\""
+          ]
+        },
+        {
+          "line_in_original_log": 2994,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-protocol` (lib) due to 1 previous error",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+            "exit $LASTEXITCODE",
+            "shell: C:\\Program Files\\PowerShell\\7\\pwsh.EXE -command \". '{0}'\"",
+            "env:",
+            "  CARGO_INCREMENTAL: 0",
+            "  CARGO_PROFILE_DEV_DEBUG: 0",
+            "  CARGO_PROFILE_TEST_DEBUG: 0",
+            "  PYTHONDONTWRITEBYTECODE: 1",
+            "  RUST_BACKTRACE: 1",
+            "  CARGO_HOME: C:\\Users\\runneradmin\\.cargo"
+          ]
+        },
+        {
+          "line_in_original_log": 3508,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "diagnostic": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+            "   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65",
+            "    |",
+            "118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+            "    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "",
+            "For more information about this error, try `rustc --explain E0599`.",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }"
+          ]
+        },
+        {
+          "line_in_original_log": 3515,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib sdk_call::media_approval_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-approval-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --test media_opt_in -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-http-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon media_cli_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-cli-tests.log\"",
+            "exit $LASTEXITCODE",
+            "shell: C:\\Program Files\\PowerShell\\7\\pwsh.EXE -command \". '{0}'\""
+          ]
+        },
+        {
+          "line_in_original_log": 3863,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+          "diagnostic": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+            "   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65",
+            "    |",
+            "118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+            "    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "",
+            "For more information about this error, try `rustc --explain E0599`.",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-daemon -p nestlink-app-core -p nestlink-media-session --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-media-clippy.log\""
+          ]
+        },
+        {
+          "line_in_original_log": 3870,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-daemon -p nestlink-app-core -p nestlink-media-session --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-media-clippy.log\"",
+            "exit $LASTEXITCODE",
+            "shell: C:\\Program Files\\PowerShell\\7\\pwsh.EXE -command \". '{0}'\"",
+            "env:",
+            "  CARGO_INCREMENTAL: 0",
+            "  CARGO_PROFILE_DEV_DEBUG: 0",
+            "  CARGO_PROFILE_TEST_DEBUG: 0",
+            "  PYTHONDONTWRITEBYTECODE: 1"
+          ]
+        },
+        {
+          "line_in_original_log": 4327,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+          "diagnostic": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+            "   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65",
+            "    |",
+            "118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+            "    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "",
+            "For more information about this error, try `rustc --explain E0599`.",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:",
+            "  name: windows-media-owner-windows-2022-58e394842f38dc9ca6b954827b0daa6b55be4a94-1"
+          ]
+        },
+        {
+          "line_in_original_log": 4334,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:",
+            "  name: windows-media-owner-windows-2022-58e394842f38dc9ca6b954827b0daa6b55be4a94-1",
+            "  path: D:\\a\\_temp/media-owner-evidence/",
+            "  if-no-files-found: error",
+            "  retention-days: 30",
+            "  compression-level: 6",
+            "  overwrite: false",
+            "  include-hidden-files: false",
+            "  archive: true"
+          ]
+        }
+      ],
+      "harness_count": 8,
+      "harnesses": [
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-protocol --lib media_ -- --show-output",
+          "result": "ok",
+          "passed": 30,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 62,
+          "elapsed_seconds": 0.01,
+          "case_lines": [
+            "test media_authority::tests::announcement_withdrawal_is_explicit_and_backend_identity_is_not_defaulted ... ok",
+            "test media_authority::tests::canonical_format_roundtrip_rejects_trailing_unknown_flags_and_nonreduced_rate ... ok",
+            "test media_authority::tests::exact_hevc_scope_has_its_own_marker_digest_and_original_direction ... ok",
+            "test media_authority::tests::hdr_requires_v5_marker_and_independent_scope_and_approval_domain ... ok",
+            "test internal_software_media_candidate::tests::explicit_finite_candidate_requires_the_entire_exact_set_within_original_ceiling ... ok",
+            "test media_authority::tests::main10_v4_needs_its_own_marker_scope_and_approval_domain ... ok",
+            "test media_authority::tests::signed_scope_cannot_omit_marker_duplicate_or_change_crop_and_digest ... ok",
+            "test internal_software_media_candidate::tests::internal_candidate_policy_requires_every_exact_field_and_rejects_non_h264 ... ok",
+            "test media_format::tests::canonical_set_digest_ignores_wire_order_but_binds_every_format_field ... ok",
+            "test media_format::tests::empty_no_common_duplicates_and_excess_entries_are_distinct_outcomes ... ok",
+            "test media_format::tests::digest_has_stable_field_order_big_endian_encoding_and_domain ... ok",
+            "test media_format::tests::exact_intersection_does_not_invent_four_k_at_120_from_two_probed_modes ... ok",
+            "test media_format::tests::geometry_and_high_bit_depth_have_conservative_raw_budget ... ok",
+            "test media_format::tests::hdr_requires_independent_depth_primaries_and_transfer ... ok",
+            "test media_format::tests::hevc_display_area_cannot_hide_padded_coded_picture_limit ... ok",
+            "test media_format::tests::hdr_v5_cannot_be_decoded_as_main10_sdr_or_share_its_signed_catalog ... ok",
+            "test media_format::tests::hevc_display_rate_cannot_hide_padded_coded_sample_rate_limit ... ok",
+            "test media_format::tests::legacy_defaults_preserve_actual_distinct_color_conversions ... ok",
+            "test media_format::tests::level_picture_sample_rate_tier_and_bitrate_are_enforced ... ok",
+            "test media_format::tests::main10_and_444_are_independent_and_require_exact_intersection ... ok",
+            "test media_format::tests::independently_versioned_hevc_ptl_is_exact_and_cannot_change_v2_h264_bytes ... ok",
+            "test media_format::tests::main10_v4_preserves_v3_bytes_and_requires_exact_profile_depth_and_version ... ok",
+            "test media_format::tests::observed_h264_digest_binds_constraint_flags_and_crop_origin ... ok",
+            "test media_format::tests::rational_framerate_is_canonical_and_bounded ... ok",
+            "test media_format::tests::rgba16_budget_is_checked_independently_of_eight_bit_budget ... ok",
+            "test media_format::tests::syntax_support_is_not_a_backend_capability_announcement ... ok",
+            "test native_media_format::tests::exact_canonical_roundtrip_rejects_tail_kind_version_hash_and_truncation ... ok",
+            "test native_media_format::tests::proposal_ack_requires_exact_signed_format_and_binding_and_never_overwrites ... ok",
+            "test native_media_format::tests::exact_hevc_nlmf_preserves_all_ptl_bytes_and_rejects_changed_ack_and_legacy_set ... ok",
+            "test webrtc::tests::audio_media_cannot_be_requested_with_only_view_permission ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 73,
+          "elapsed_seconds": 0.01,
+          "case_lines": [
+            "test windows_gpu_presenter::geometry_tests::native_output_matches_real_sps_padding_and_rejects_unbound_or_conflicting_apertures ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 73,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_mf::hevc_color_tests::supported_color_properties_must_roundtrip_and_mf_enums_remain_exact ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 72,
+          "elapsed_seconds": 0.01,
+          "case_lines": [
+            "test windows_mf::adapter_binding_tests::real_attributes_require_exact_luid_blob_and_both_adapter_parts ... ok",
+            "test windows_mf::adapter_binding_tests::exact_scoped_enumeration_allows_only_absent_optional_activation_identity ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 70,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_amf::boundary_tests::requested_level_covers_exact_picture_rate_bitrate_and_dimension_boundaries ... ok",
+            "test windows_amf::boundary_tests::original_native_range_types_release_flags_and_null_device_are_strict ... ok",
+            "test windows_amf::boundary_tests::optional_legacy_properties_require_complete_consistent_absence ... ok",
+            "test windows_amf::boundary_tests::exact_base_layer_alias_requires_same_typed_descriptor_and_value ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 73,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test hevc_backend::tests::implementation_runtime_pairs_are_explicit_and_never_interchangeable ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 5,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows::host::precision_source_tests::independent_hdr_capture_requires_actual_hdr_output_and_exact_pq_conversion ... ok",
+            "test windows::host::precision_source_tests::exact_float16_conversion_and_sticky_source_metadata_boundaries ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+          "result": "ok",
+          "passed": 10,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 71,
+          "elapsed_seconds": 9.95,
+          "case_lines": [
+            "test control::media_authority_tests::frozen_scope_requires_explicit_signed_approval_and_never_widens_from_latest_catalog ... ok",
+            "test control::media_authority_tests::internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets ... ok",
+            "test control::media_authority_tests::internal_software_candidate_rejects_account_peer_target_and_expiry ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_block_prepared_renewal_and_reconnection ... ok",
+            "test control::media_authority_tests::internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery ... ok",
+            "test control::media_authority_tests::management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publication_recovers ... ok",
+            "test control::media_authority_tests::v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_allow_reviewed_decision_but_block_initial_issuance ... ok",
+            "test control::media_authority_tests::signed_media_public_lifecycle_issues_renews_and_reconnects_without_scope_widening ... ok",
+            "test control::media_authority_tests::v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain ... ok"
+          ]
+        }
+      ],
+      "orphan_case_lines_without_result": [],
+      "failed_steps": [
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "number": 11,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "number": 13,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "number": 14,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "number": 16,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "number": 17,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "number": 18,
+          "conclusion": "failure"
+        }
+      ],
+      "test_counts_are_per_invocation_and_may_repeat_cases": true
+    },
+    {
+      "job_id": 125776839964,
+      "job_name": "owner-boundaries (windows-2025)",
+      "job_conclusion": "failure",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125776839964/logs",
+      "path": "job-125776839964.log",
+      "bytes": 443946,
+      "sha256": "2fc2f447216d19ca0f20f3bdab6015e30e7b2d9d7ba07487bd759eaf6f8fa8ce",
+      "compiler_or_lint_diagnostics": [
+        {
+          "line_in_original_log": 1989,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --test native_compressed -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/compressed-native-tests.log\"",
+          "diagnostic": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+            "   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65",
+            "    |",
+            "118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+            "    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "",
+            "   Compiling tempfile v3.27.0",
+            "For more information about this error, try `rustc --explain E0599`.",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\""
+          ]
+        },
+        {
+          "line_in_original_log": 1997,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-ipc --test native_compressed -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/compressed-native-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+            "exit $LASTEXITCODE",
+            "shell: C:\\Program Files\\PowerShell\\7\\pwsh.EXE -command \". '{0}'\"",
+            "env:",
+            "  CARGO_INCREMENTAL: 0",
+            "  CARGO_PROFILE_DEV_DEBUG: 0",
+            "  CARGO_PROFILE_TEST_DEBUG: 0",
+            "  PYTHONDONTWRITEBYTECODE: 1",
+            "  RUST_BACKTRACE: 1"
+          ]
+        },
+        {
+          "line_in_original_log": 2381,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+          "diagnostic": [
+            "error: using `contains()` instead of `iter().any()` is more efficient",
+            "  --> crates\\protocol\\src\\network_migration.rs:87:12",
+            "   |",
+            "87 |         if self.digests().iter().any(|digest| *digest == [0; 32])",
+            "   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `self.digests().contains(&[0; 32])`",
+            "   |",
+            "   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#manual_contains",
+            "   = note: `-D clippy::manual-contains` implied by `-D warnings`",
+            "   = help: to override `-D warnings` add `#[allow(clippy::manual_contains)]`",
+            "",
+            "    Checking tungstenite v0.29.0",
+            "    Checking arc-swap v1.9.2",
+            "    Checking rtp v0.14.0"
+          ]
+        },
+        {
+          "line_in_original_log": 2414,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/desktop-clippy.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-protocol` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_mf::hevc_color_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/hevc-mf-color-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_mf::adapter_binding_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/mf-adapter-binding-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_amf::boundary_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/amf-boundary-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib hevc_backend:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/hevc-backend-selection-tests.log\""
+          ]
+        },
+        {
+          "line_in_original_log": 3014,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "diagnostic": [
+            "error: using `contains()` instead of `iter().any()` is more efficient",
+            "  --> crates\\protocol\\src\\network_migration.rs:87:12",
+            "   |",
+            "87 |         if self.digests().iter().any(|digest| *digest == [0; 32])",
+            "   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `self.digests().contains(&[0; 32])`",
+            "   |",
+            "   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#manual_contains",
+            "   = note: `-D clippy::manual-contains` implied by `-D warnings`",
+            "   = help: to override `-D warnings` add `#[allow(clippy::manual_contains)]`",
+            "",
+            "error: could not compile `nestlink-protocol` (lib) due to 1 previous error",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\""
+          ]
+        },
+        {
+          "line_in_original_log": 3024,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-protocol` (lib) due to 1 previous error",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+            "exit $LASTEXITCODE",
+            "shell: C:\\Program Files\\PowerShell\\7\\pwsh.EXE -command \". '{0}'\"",
+            "env:",
+            "  CARGO_INCREMENTAL: 0",
+            "  CARGO_PROFILE_DEV_DEBUG: 0",
+            "  CARGO_PROFILE_TEST_DEBUG: 0",
+            "  PYTHONDONTWRITEBYTECODE: 1",
+            "  RUST_BACKTRACE: 1",
+            "  CARGO_HOME: C:\\Users\\runneradmin\\.cargo"
+          ]
+        },
+        {
+          "line_in_original_log": 3538,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "diagnostic": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+            "   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65",
+            "    |",
+            "118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+            "    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "",
+            "For more information about this error, try `rustc --explain E0599`.",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }"
+          ]
+        },
+        {
+          "line_in_original_log": 3545,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_media_provider:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-provider-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib sdk_call::media_approval_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-approval-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --test media_opt_in -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-http-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon media_cli_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-cli-tests.log\"",
+            "exit $LASTEXITCODE",
+            "shell: C:\\Program Files\\PowerShell\\7\\pwsh.EXE -command \". '{0}'\""
+          ]
+        },
+        {
+          "line_in_original_log": 3893,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+          "diagnostic": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+            "   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65",
+            "    |",
+            "118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+            "    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "",
+            "For more information about this error, try `rustc --explain E0599`.",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-daemon -p nestlink-app-core -p nestlink-media-session --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-media-clippy.log\""
+          ]
+        },
+        {
+          "line_in_original_log": 3900,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib native_session::tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/media-opt-in-config-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+            "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+            "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+            "python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-daemon -p nestlink-app-core -p nestlink-media-session --all-targets -- -D warnings 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-media-clippy.log\"",
+            "exit $LASTEXITCODE",
+            "shell: C:\\Program Files\\PowerShell\\7\\pwsh.EXE -command \". '{0}'\"",
+            "env:",
+            "  CARGO_INCREMENTAL: 0",
+            "  CARGO_PROFILE_DEV_DEBUG: 0",
+            "  CARGO_PROFILE_TEST_DEBUG: 0",
+            "  PYTHONDONTWRITEBYTECODE: 1"
+          ]
+        },
+        {
+          "line_in_original_log": 4357,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+          "diagnostic": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+            "   --> crates\\sdk\\src\\network\\routed\\control\\route_set\\continuation\\migration.rs:118:65",
+            "    |",
+            "118 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+            "    |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "",
+            "For more information about this error, try `rustc --explain E0599`.",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:",
+            "  name: windows-media-owner-windows-2025-58e394842f38dc9ca6b954827b0daa6b55be4a94-1"
+          ]
+        },
+        {
+          "line_in_original_log": 4364,
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon native_video::hevc::tests:: -- --show-output --test-threads=1 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/daemon-hevc-selection-tests.log\"",
+          "diagnostic": [
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 1.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:",
+            "  name: windows-media-owner-windows-2025-58e394842f38dc9ca6b954827b0daa6b55be4a94-1",
+            "  path: D:\\a\\_temp/media-owner-evidence/",
+            "  if-no-files-found: error",
+            "  retention-days: 30",
+            "  compression-level: 6",
+            "  overwrite: false",
+            "  include-hidden-files: false",
+            "  archive: true"
+          ]
+        }
+      ],
+      "harness_count": 8,
+      "harnesses": [
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-protocol --lib media_ -- --show-output",
+          "result": "ok",
+          "passed": 30,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 62,
+          "elapsed_seconds": 0.01,
+          "case_lines": [
+            "test media_authority::tests::canonical_format_roundtrip_rejects_trailing_unknown_flags_and_nonreduced_rate ... ok",
+            "test media_authority::tests::announcement_withdrawal_is_explicit_and_backend_identity_is_not_defaulted ... ok",
+            "test media_authority::tests::exact_hevc_scope_has_its_own_marker_digest_and_original_direction ... ok",
+            "test internal_software_media_candidate::tests::explicit_finite_candidate_requires_the_entire_exact_set_within_original_ceiling ... ok",
+            "test media_authority::tests::hdr_requires_v5_marker_and_independent_scope_and_approval_domain ... ok",
+            "test internal_software_media_candidate::tests::internal_candidate_policy_requires_every_exact_field_and_rejects_non_h264 ... ok",
+            "test media_authority::tests::main10_v4_needs_its_own_marker_scope_and_approval_domain ... ok",
+            "test media_authority::tests::signed_scope_cannot_omit_marker_duplicate_or_change_crop_and_digest ... ok",
+            "test media_format::tests::canonical_set_digest_ignores_wire_order_but_binds_every_format_field ... ok",
+            "test media_format::tests::digest_has_stable_field_order_big_endian_encoding_and_domain ... ok",
+            "test media_format::tests::empty_no_common_duplicates_and_excess_entries_are_distinct_outcomes ... ok",
+            "test media_format::tests::exact_intersection_does_not_invent_four_k_at_120_from_two_probed_modes ... ok",
+            "test media_format::tests::geometry_and_high_bit_depth_have_conservative_raw_budget ... ok",
+            "test media_format::tests::hdr_requires_independent_depth_primaries_and_transfer ... ok",
+            "test media_format::tests::hevc_display_area_cannot_hide_padded_coded_picture_limit ... ok",
+            "test media_format::tests::hdr_v5_cannot_be_decoded_as_main10_sdr_or_share_its_signed_catalog ... ok",
+            "test media_format::tests::hevc_display_rate_cannot_hide_padded_coded_sample_rate_limit ... ok",
+            "test media_format::tests::level_picture_sample_rate_tier_and_bitrate_are_enforced ... ok",
+            "test media_format::tests::independently_versioned_hevc_ptl_is_exact_and_cannot_change_v2_h264_bytes ... ok",
+            "test media_format::tests::legacy_defaults_preserve_actual_distinct_color_conversions ... ok",
+            "test media_format::tests::main10_and_444_are_independent_and_require_exact_intersection ... ok",
+            "test media_format::tests::main10_v4_preserves_v3_bytes_and_requires_exact_profile_depth_and_version ... ok",
+            "test media_format::tests::observed_h264_digest_binds_constraint_flags_and_crop_origin ... ok",
+            "test media_format::tests::rational_framerate_is_canonical_and_bounded ... ok",
+            "test media_format::tests::rgba16_budget_is_checked_independently_of_eight_bit_budget ... ok",
+            "test media_format::tests::syntax_support_is_not_a_backend_capability_announcement ... ok",
+            "test native_media_format::tests::exact_canonical_roundtrip_rejects_tail_kind_version_hash_and_truncation ... ok",
+            "test native_media_format::tests::exact_hevc_nlmf_preserves_all_ptl_bytes_and_rejects_changed_ack_and_legacy_set ... ok",
+            "test native_media_format::tests::proposal_ack_requires_exact_signed_format_and_binding_and_never_overwrites ... ok",
+            "test webrtc::tests::audio_media_cannot_be_requested_with_only_view_permission ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 73,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_gpu_presenter::geometry_tests::native_output_matches_real_sps_padding_and_rejects_unbound_or_conflicting_apertures ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 73,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_mf::hevc_color_tests::supported_color_properties_must_roundtrip_and_mf_enums_remain_exact ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 72,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_mf::adapter_binding_tests::real_attributes_require_exact_luid_blob_and_both_adapter_parts ... ok",
+            "test windows_mf::adapter_binding_tests::exact_scoped_enumeration_allows_only_absent_optional_activation_identity ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 70,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows_amf::boundary_tests::requested_level_covers_exact_picture_rate_bitrate_and_dimension_boundaries ... ok",
+            "test windows_amf::boundary_tests::original_native_range_types_release_flags_and_null_device_are_strict ... ok",
+            "test windows_amf::boundary_tests::optional_legacy_properties_require_complete_consistent_absence ... ok",
+            "test windows_amf::boundary_tests::exact_base_layer_alias_requires_same_typed_descriptor_and_value ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 73,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test hevc_backend::tests::implementation_runtime_pairs_are_explicit_and_never_interchangeable ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_gpu_presenter::geometry_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/h264-output-geometry-tests.log\"",
+          "result": "ok",
+          "passed": 2,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 5,
+          "elapsed_seconds": 0.0,
+          "case_lines": [
+            "test windows::host::precision_source_tests::exact_float16_conversion_and_sticky_source_metadata_boundaries ... ok",
+            "test windows::host::precision_source_tests::independent_hdr_capture_requires_actual_hdr_output_and_exact_pq_conversion ... ok"
+          ]
+        },
+        {
+          "step_group": "python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --lib media_authority_tests:: -- --show-output 2>&1 | Tee-Object -FilePath \"$env:RUNNER_TEMP/media-owner-evidence/signed-store-media-tests.log\"",
+          "result": "ok",
+          "passed": 10,
+          "failed": 0,
+          "ignored": 0,
+          "filtered": 71,
+          "elapsed_seconds": 10.58,
+          "case_lines": [
+            "test control::media_authority_tests::frozen_scope_requires_explicit_signed_approval_and_never_widens_from_latest_catalog ... ok",
+            "test control::media_authority_tests::internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets ... ok",
+            "test control::media_authority_tests::internal_software_candidate_rejects_account_peer_target_and_expiry ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_block_prepared_renewal_and_reconnection ... ok",
+            "test control::media_authority_tests::internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery ... ok",
+            "test control::media_authority_tests::management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publication_recovers ... ok",
+            "test control::media_authority_tests::v3_exact_ptl_freezes_real_signed_announcements_and_uses_independent_approval_domain ... ok",
+            "test control::media_authority_tests::expired_or_withdrawn_announcements_allow_reviewed_decision_but_block_initial_issuance ... ok",
+            "test control::media_authority_tests::signed_media_public_lifecycle_issues_renews_and_reconnects_without_scope_widening ... ok",
+            "test control::media_authority_tests::v4_main10_exact_ptl_freezes_signed_scope_and_rejects_main8_approval_domain ... ok"
+          ]
+        }
+      ],
+      "orphan_case_lines_without_result": [],
+      "failed_steps": [
+        {
+          "name": "Verify actual two-TLS compressed delivery, decode credit reuse and joined cleanup",
+          "number": 11,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Check the complete desktop owner code strictly",
+          "number": 13,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact HEVC Main8 contract and original MF parser boundaries",
+          "number": 14,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify exact provider, hardware target conversion and compressed IPC boundaries",
+          "number": 16,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify explicit GPU encoder selector, actual config and exact local approval refusal boundaries",
+          "number": 17,
+          "conclusion": "failure"
+        },
+        {
+          "name": "Verify production HEVC selection and strict original daemon cleanup boundaries",
+          "number": 18,
+          "conclusion": "failure"
+        }
+      ],
+      "test_counts_are_per_invocation_and_may_repeat_cases": true
+    },
+    {
+      "job_id": 125776840084,
+      "job_name": "native-peer-process (windows-2025)",
+      "job_conclusion": "failure",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125776840084/logs",
+      "path": "job-125776840084.log",
+      "bytes": 43096,
+      "sha256": "f7efcdb8c25030628a31da0afb8c34a941625f003e04e4aa6dbdf122970e95a3",
+      "compiler_or_lint_diagnostics": [],
+      "harness_count": 0,
+      "harnesses": [],
+      "orphan_case_lines_without_result": [],
+      "failed_steps": [
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "number": 4,
+          "conclusion": "failure"
+        }
+      ],
+      "test_counts_are_per_invocation_and_may_repeat_cases": true
+    },
+    {
+      "job_id": 125776840093,
+      "job_name": "native-peer-process (ubuntu-24.04)",
+      "job_conclusion": "failure",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125776840093/logs",
+      "path": "job-125776840093.log",
+      "bytes": 42318,
+      "sha256": "dea0477d3251120615802caafde5b2c4c8849bc56c1e9fbe73af871fa577caa0",
+      "compiler_or_lint_diagnostics": [],
+      "harness_count": 0,
+      "harnesses": [],
+      "orphan_case_lines_without_result": [],
+      "failed_steps": [
+        {
+          "name": "Exercise the actual local TLS process owner and portable compatibility",
+          "number": 4,
+          "conclusion": "failure"
+        }
+      ],
+      "test_counts_are_per_invocation_and_may_repeat_cases": true
+    }
+  ],
+  "release_eligibility_claimed": false,
+  "independent_audit_execution": {
+    "kind": "local_artifact_bytes_only",
+    "source_builds_or_project_tests_run_locally": false,
+    "operations": [
+      "GitHub API metadata and ZIP downloads",
+      "official ZIP SHA256/size/run/source comparison",
+      "artifact extraction",
+      "PowerShell byte/SHA256 comparison of declared payloads and command logs",
+      "read-only parsing of existing Actions receipts and test logs"
+    ]
+  }
+}

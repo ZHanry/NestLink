@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "58e394842f38dc9ca6b954827b0daa6b55be4a94",
-  "checkpoint_kind": "signed_candidate_control_and_explicit_hdr_p010_sources_in_hosted_validation_original_inner_migration_and_444_in_progress",
+  "source_revision": "f0983d947f99bbfde344b68c4ebbdc04df526391",
+  "checkpoint_kind": "vp9_original_codec_sources_and_reviewed_locks_committed_production_v6_and_in_place_migration_in_progress",
   "active_tasks": [
     "W00",
     "W02",
@@ -53,14 +53,12 @@
     "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
   ],
   "unverified_assumptions": [
-    "895614e implements the bounded mutually signed original route-set standby control transcript; f8b8a2b applies its independently verified hosted formatting. Production in-place inner-connection migration, socket-driver transfer, dynamic path epochs and bounded drain remain implementation work. This control slice does not close W14 or AC22.",
-    "58e3948 adds independent opt-in v5 signed HDR PQ/BT2020/P010 capture, codec, original-process export, IPC and FP16/scRGB presenter paths plus an independent target diagnostic. Hosted compilation, format and boundary tests are pending. No actual HDR display or sustained performance acceptance is claimed.",
-    "4:4:4 remains an internal implementation gap. A separate explicit software VP9 profile1/I444 path reusing the pinned libvpx/libyuv components is being implemented; this will not establish HEVC 4:4:4 or GPU acceptance.",
-    "All nine original network jobs passed at 59abafc and all five original Web jobs passed at a1afd8b within their recorded laboratory scopes. Their exact official ZIPs and available producer payload inventories were independently verified; historical failures remain.",
-    "Complete Rust run 41588867968 at 59abafc finished 9 success/4 failure. Exact failed logs retain the desktop layout private-access compile errors and daemon strict-lint errors. Later 5505192/265193a source fixes require fresh full validation; the failed original run is not changed to passed.",
-    "Linux original resident case failed at public HTTPS system_dns after 63488ms in full59; Windows original four cases passed. Prior 9a52c41 dual-OS resident success stays separately retained and does not establish a root-cause fix.",
-    "Mandatory paired Windows, Android/iOS WireGuard, independent NAT/overlap, public fixed ingress, signing, mixed-version and cross-day 24-hour target evidence is still pending. These external needs do not conceal source gaps.",
-    "Explicit user decisions remain: preserve the Luanti 25-second display assertion and failed result; only the two newly incorrect terminal polling expectations were corrected to exact NativeVideoError::Unauthorized in f2987b3."
+    "f0983d9 adds real pinned libvpx VP9 profile1/sRGB/full/I444 primitives and a shared bounded software owner. Hosted lock run 41596360840 passed all three scopes; exact official ZIPs and all producer entries verified, with 1351 external package blocks unchanged. Only the product/browser media-codec local uuid edge changes. Real compilation and full v6 production chain remain pending.",
+    "Original in-place transport owner migration and its automatic bilateral production trigger are being implemented. Existing signed standby control is not complete W14/AC22 evidence.",
+    "58e3948 tools build run 41593772613 passed; all 169 files and 168 producer entries verified. Target twelve finite commands all failed: MF Main8 SPS primaries, AMF Main8 POC timing, Main10/HDR missing MF exact-adapter encoder or AMF P010 support. All raw failures remain. No target GPU/HDR qualification.",
+    "58e3948 owner run 41593952499 failed all four jobs at original SDK PathClaims API and strict manual_contains errors. Earlier successful scoped boundaries are retained without whole-task credit. Fixes 37a5f65/ca1e36a now undergo complete Rust/network/Web validation.",
+    "Mandatory paired targets, independent NAT/overlap, Android/iOS WireGuard, fixed public ingress, signing, mixed-version and cross-day 24-hour evidence remain pending. These external needs do not conceal internal source work.",
+    "User decisions retained: Luanti 25-second assertion and failed status stay; only two incorrect terminal polling expectations changed to exact Unauthorized; supply tampering inputs may change to VP9=false and add disabled VP9 encoder/RGB444 conversion rejection."
   ],
   "external_prerequisites": [
     {
@@ -90,12 +88,17 @@
     }
   ],
   "next_steps": [
-    "Import the exact-source 58e3948 hosted formatter patch after official ZIP/receipt verification; read its Windows media owner and diagnostic build results and repair actual failures without weakening original assertions.",
-    "Complete the original transport-owner in-place path migration and independent explicit 4:4:4 production path while hosted checks run; preserve current signed permission, deadline, cleanup and format ACK rules.",
-    "Dispatch complete original Rust and network workflows on the next reviewed formatted source, retain every failure and qualify exact-source fixes. Continue all independent implementation before requesting concrete target resources.",
-    "After all mandatory implementation and real-target evidence passes, freeze one clean-source candidate through the original publish gates and publish 0.8.0RC. Local and remote branches are main only."
+    "Import verified hosted product/browser locks and retain all four independently audited failure/build records.",
+    "Finish full signed v6 software RGB444 and automatic original in-place migration production paths; execute cross-platform codec/owner negatives in Actions.",
+    "Read exact ca1e36a complete Rust/network/Web results, repair failures, then validate next reviewed formatted source.",
+    "Freeze one clean-source release candidate only after every required implementation and target case passes; publish 0.8.0RC through existing gates. Local and remote branches are already main only."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/vp9-lock-f0983d9.json",
+    "docs/network-rewrite/evidence/web-native-build-failure-895614e.json",
+    "docs/network-rewrite/evidence/windows-media-owner-58e3948.json",
+    "docs/network-rewrite/evidence/windows-media-target-tools-58e3948.json",
+    "docs/network-rewrite/evidence/windows-hevc-target-58e3948.json",
     "docs/network-rewrite/evidence/format-82678e9.json",
     "docs/network-rewrite/evidence/format-895614e.json",
     "docs/network-rewrite/evidence/network-59abafc.json",
@@ -588,52 +591,27 @@
     }
   ],
   "current_validation_checkpoint": {
-    "recorded_at": "2026-11-03T14:19:58.7774877+08:00",
-    "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
-    "completed_scope": [
-      "Reviewed private host identity and recovery-window fixes plus explicit real media inspection/two-budget implementation are committed; target acceptance is not claimed.",
-      "Hosted formatter run 41588461255 succeeded for a1afd8b; official ZIP digest/size and all three producer entries verified, reviewed patch applied as 59abafc.",
-      "Original 9a resident run passed both OS four-case scopes with independently verified receipts.",
-      "Local and remote branch inventory queried: main only."
+    "recorded_at": "2026-11-03T15:37:15.5961872+08:00",
+    "source_revision": "f0983d947f99bbfde344b68c4ebbdc04df526391",
+    "release_state": "not_ready",
+    "new_tag_or_release_created": false,
+    "user_decisions": [
+      "Retain Luanti original 25-second failure.",
+      "Only two new incorrect None expectations corrected to exact Unauthorized.",
+      "Supply tampering input may use VP9=false and additionally reject disabled VP9 encoder/RGB444 conversion."
     ],
-    "retained_failures": [
-      "Original f24 Firefox 403 and subsequent 760 browser build E0433 failures.",
-      "Original 37ca0ac network compile and formatting failures.",
-      "Original Luanti 25-second failure and all eight AMF/MF target failures.",
-      "Prior resident DNS, capacity and original workflow failures remain in their historical evidence files."
-    ],
-    "implementation_remaining": [
-      "Full W14 production bilateral path migration and bounded drain.",
-      "Complete 4:4:4/HDR production chain and whole media qualification.",
-      "Remaining product lifecycle, independent security, full E2E, mixed versions and target evidence required by all 41 work packages and 70 acceptance groups."
-    ],
-    "pending_runs": {
-      "rust": {
-        "run_id": 41588867968,
-        "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
-        "state": "dispatched",
-        "whole_task_passed": false
-      },
-      "network": {
-        "run_id": 41588874179,
-        "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
-        "state": "dispatched",
-        "whole_task_passed": false
-      },
-      "windows_owner": {
-        "run_id": 41588898806,
-        "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
-        "state": "dispatched",
-        "whole_task_passed": false
-      },
-      "web": {
-        "run_id": 41588464893,
-        "source_revision": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
-        "state": "in_progress",
-        "whole_task_passed": false
-      }
+    "current_work": {
+      "core_audit": "Automatic bilateral migration and original transport owner transfer",
+      "baseline_ci": "Exact ca1e36a complete Rust/network/Web outcomes and receipts",
+      "mechanism_research": "Complete signed v6 RGB444 capture/receive/IPC production path",
+      "root": "Verified lock import and cross-platform VP9 owner validation"
     },
-    "qualification": "scoped_only_no_complete_task_or_release_claim"
+    "pending_runs": {
+      "network": 41596025365,
+      "web": 41596041323,
+      "rust": 41596020510
+    },
+    "qualification": "Scoped implementation and validation only; complete release conditions remain unsatisfied."
   },
   "release_state": "not_ready",
   "branch_cleanup": {
@@ -774,26 +752,20 @@
   ],
   "current_hosted_runs": {
     "rust": {
-      "run_id": 41588867968,
-      "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
-      "state": "dispatched",
+      "run_id": 41596020510,
+      "source_revision": "ca1e36a0773e9c5e253ed040a68f488b8a7353ad",
+      "state": "in_progress",
       "whole_task_passed": false
     },
     "network": {
-      "run_id": 41588874179,
-      "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
-      "state": "dispatched",
-      "whole_task_passed": false
-    },
-    "windows_owner": {
-      "run_id": 41588898806,
-      "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
-      "state": "dispatched",
+      "run_id": 41596025365,
+      "source_revision": "ca1e36a0773e9c5e253ed040a68f488b8a7353ad",
+      "state": "in_progress",
       "whole_task_passed": false
     },
     "web": {
-      "run_id": 41588464893,
-      "source_revision": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
+      "run_id": 41596041323,
+      "source_revision": "ca1e36a0773e9c5e253ed040a68f488b8a7353ad",
       "state": "in_progress",
       "whole_task_passed": false
     }
@@ -837,47 +809,27 @@
     }
   },
   "continuation_checkpoint": {
-    "at": "2026-11-03T14:19:58.7774877+08:00",
-    "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
+    "recorded_at": "2026-11-03T15:37:15.5961872+08:00",
+    "source_revision": "f0983d947f99bbfde344b68c4ebbdc04df526391",
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
+    "user_decisions": [
+      "Retain Luanti original 25-second failure.",
+      "Only two new incorrect None expectations corrected to exact Unauthorized.",
+      "Supply tampering input may use VP9=false and additionally reject disabled VP9 encoder/RGB444 conversion."
+    ],
     "current_work": {
-      "root": "Integrate and verify exact hosted source; preserve original failures and release gates",
-      "core_audit": "Production bilateral migration control and single transport owner",
-      "mechanism_research": "Independent real HDR capture and complete advanced format integration",
-      "baseline_ci": "Historical failure receipts and noncreating private host identity entry"
+      "core_audit": "Automatic bilateral migration and original transport owner transfer",
+      "baseline_ci": "Exact ca1e36a complete Rust/network/Web outcomes and receipts",
+      "mechanism_research": "Complete signed v6 RGB444 capture/receive/IPC production path",
+      "root": "Verified lock import and cross-platform VP9 owner validation"
     },
     "pending_runs": {
-      "rust": {
-        "run_id": 41588867968,
-        "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
-        "state": "dispatched",
-        "whole_task_passed": false
-      },
-      "network": {
-        "run_id": 41588874179,
-        "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
-        "state": "dispatched",
-        "whole_task_passed": false
-      },
-      "windows_owner": {
-        "run_id": 41588898806,
-        "source_revision": "59abafc3dc48a101de8320efebb1db511e83a11f",
-        "state": "dispatched",
-        "whole_task_passed": false
-      },
-      "web": {
-        "run_id": 41588464893,
-        "source_revision": "a1afd8b286826bf8d1e8d59709e49ac6faba6c90",
-        "state": "in_progress",
-        "whole_task_passed": false
-      }
+      "network": 41596025365,
+      "web": 41596041323,
+      "rust": 41596020510
     },
-    "user_decisions": [
-      "Retain original Luanti 25-second failure.",
-      "Only two new incorrect None expectations corrected to exact Unauthorized in f2987b3."
-    ],
-    "qualification": "Scoped implementation and validation only; mandatory source and target work remains."
+    "qualification": "Scoped implementation and validation only; complete release conditions remain unsatisfied."
   },
   "dispatch_corrections": [
     {

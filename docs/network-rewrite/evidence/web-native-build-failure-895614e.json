@@ -1,0 +1,1230 @@
+{
+  "schema_version": 1,
+  "kind": "production-web-native-exact-source-build-failure-independent-verification",
+  "recorded_at_utc": "2026-11-03T07:18:25.9017765Z",
+  "repository": "ZHanry/NestLink",
+  "source_revision": "895614e293c233b42810fd3bfa192c95dc04219a",
+  "run_id": 41592174628,
+  "run_attempt": 1,
+  "workflow": "Web production build",
+  "workflow_path": ".github/workflows/web-build.yml",
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41592174628",
+  "status": "completed",
+  "conclusion": "failure",
+  "metadata_files": [
+    {
+      "path": "run.json",
+      "bytes": 11717,
+      "sha256": "949d0ff09cfef044ed7e70375f117b62c99561583720dcb702e9d122d8898edc"
+    },
+    {
+      "path": "jobs.json",
+      "bytes": 16996,
+      "sha256": "414b12ac094c35e23e68acd866c7d88084f7589d1b20bd95b6b3f0e33edbd435"
+    },
+    {
+      "path": "artifacts.json",
+      "bytes": 2127,
+      "sha256": "5a8330c804e1348bd9aeb000223f24ec457d869c526f0ee48d5de6b42b6af787"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 125771170509,
+      "name": "Browser runner and observer contracts",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:48:07Z",
+      "completed_at": "2026-11-03T06:48:15Z",
+      "runner_name": "GitHub Actions 1000012235",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T06:48:08Z",
+          "completed_at": "2026-11-03T06:48:08Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T06:48:09Z",
+          "completed_at": "2026-11-03T06:48:11Z"
+        },
+        {
+          "name": "Check integration runner boundaries independently of the release build",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T06:48:11Z",
+          "completed_at": "2026-11-03T06:48:12Z"
+        },
+        {
+          "name": "Retain browser contract output",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T06:48:12Z",
+          "completed_at": "2026-11-03T06:48:13Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T06:48:13Z",
+          "completed_at": "2026-11-03T06:48:13Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T06:48:13Z",
+          "completed_at": "2026-11-03T06:48:13Z"
+        }
+      ]
+    },
+    {
+      "id": 125771170747,
+      "name": "release-site",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:48:08Z",
+      "completed_at": "2026-11-03T07:00:32Z",
+      "runner_name": "GitHub Actions 1000012236",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T06:48:09Z",
+          "completed_at": "2026-11-03T06:48:10Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T06:48:10Z",
+          "completed_at": "2026-11-03T06:48:12Z"
+        },
+        {
+          "name": "Verify source readback helper and initial checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T06:48:12Z",
+          "completed_at": "2026-11-03T06:48:14Z"
+        },
+        {
+          "name": "Check generated cross-platform UI tokens",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T06:48:14Z",
+          "completed_at": "2026-11-03T06:48:14Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T06:48:14Z",
+          "completed_at": "2026-11-03T06:48:23Z"
+        },
+        {
+          "name": "Install pinned WebAssembly build tools",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T06:48:23Z",
+          "completed_at": "2026-11-03T06:55:50Z"
+        },
+        {
+          "name": "Install verified Binaryen optimizer",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T06:55:50Z",
+          "completed_at": "2026-11-03T06:55:53Z"
+        },
+        {
+          "name": "Build the release site",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-03T06:55:53Z",
+          "completed_at": "2026-11-03T07:00:26Z"
+        },
+        {
+          "name": "Retain fixed Cargo.lock evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-03T07:00:26Z",
+          "completed_at": "2026-11-03T07:00:28Z"
+        },
+        {
+          "name": "Verify static output for Caddy",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-03T07:00:28Z",
+          "completed_at": "2026-11-03T07:00:28Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-03T07:00:28Z",
+          "completed_at": "2026-11-03T07:00:30Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-03T07:00:30Z",
+          "completed_at": "2026-11-03T07:00:30Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-03T07:00:30Z",
+          "completed_at": "2026-11-03T07:00:30Z"
+        }
+      ]
+    },
+    {
+      "id": 125775272777,
+      "name": "Production Web to native host (chrome)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T07:00:34Z",
+      "completed_at": "2026-11-03T07:05:23Z",
+      "runner_name": "GitHub Actions 1000012239",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T07:00:34Z",
+          "completed_at": "2026-11-03T07:00:36Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T07:00:36Z",
+          "completed_at": "2026-11-03T07:00:38Z"
+        },
+        {
+          "name": "Run actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T07:00:38Z",
+          "completed_at": "2026-11-03T07:00:39Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T07:00:39Z",
+          "completed_at": "2026-11-03T07:00:46Z"
+        },
+        {
+          "name": "Set ephemeral build locations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T07:00:46Z",
+          "completed_at": "2026-11-03T07:00:46Z"
+        },
+        {
+          "name": "Install native codec build tools",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T07:00:46Z",
+          "completed_at": "2026-11-03T07:00:58Z"
+        },
+        {
+          "name": "Build and verify reviewed native codecs on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T07:00:58Z",
+          "completed_at": "2026-11-03T07:01:22Z"
+        },
+        {
+          "name": "Build the optimized native host fixture on GitHub",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 8,
+          "started_at": "2026-11-03T07:01:22Z",
+          "completed_at": "2026-11-03T07:05:20Z"
+        },
+        {
+          "name": "Install pinned browser driver and TLS proxy",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-03T07:05:20Z",
+          "completed_at": "2026-11-03T07:05:20Z"
+        },
+        {
+          "name": "Select the runner's stable Chrome",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2026-11-03T07:05:20Z",
+          "completed_at": "2026-11-03T07:05:20Z"
+        },
+        {
+          "name": "Extract the reviewed stable Edge package without package install hooks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-11-03T07:05:20Z",
+          "completed_at": "2026-11-03T07:05:20Z"
+        },
+        {
+          "name": "Extract the SHA512-pinned official stable Firefox archive",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T07:05:20Z",
+          "completed_at": "2026-11-03T07:05:20Z"
+        },
+        {
+          "name": "Exercise real video, audio, input, files and cleanup",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13,
+          "started_at": "2026-11-03T07:05:20Z",
+          "completed_at": "2026-11-03T07:05:20Z"
+        },
+        {
+          "name": "Upload sanitized integration evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T07:05:20Z",
+          "completed_at": "2026-11-03T07:05:20Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-11-03T07:05:20Z",
+          "completed_at": "2026-11-03T07:05:20Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-11-03T07:05:20Z",
+          "completed_at": "2026-11-03T07:05:20Z"
+        }
+      ]
+    },
+    {
+      "id": 125775272789,
+      "name": "Production Web to native host (firefox)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T07:00:34Z",
+      "completed_at": "2026-11-03T07:07:26Z",
+      "runner_name": "GitHub Actions 1000012237",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T07:00:35Z",
+          "completed_at": "2026-11-03T07:00:36Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T07:00:36Z",
+          "completed_at": "2026-11-03T07:00:39Z"
+        },
+        {
+          "name": "Run actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T07:00:39Z",
+          "completed_at": "2026-11-03T07:00:40Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T07:00:40Z",
+          "completed_at": "2026-11-03T07:00:48Z"
+        },
+        {
+          "name": "Set ephemeral build locations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T07:00:48Z",
+          "completed_at": "2026-11-03T07:00:48Z"
+        },
+        {
+          "name": "Install native codec build tools",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T07:00:48Z",
+          "completed_at": "2026-11-03T07:01:02Z"
+        },
+        {
+          "name": "Build and verify reviewed native codecs on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T07:01:02Z",
+          "completed_at": "2026-11-03T07:01:36Z"
+        },
+        {
+          "name": "Build the optimized native host fixture on GitHub",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 8,
+          "started_at": "2026-11-03T07:01:36Z",
+          "completed_at": "2026-11-03T07:07:23Z"
+        },
+        {
+          "name": "Install pinned browser driver and TLS proxy",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-03T07:07:23Z",
+          "completed_at": "2026-11-03T07:07:23Z"
+        },
+        {
+          "name": "Select the runner's stable Chrome",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2026-11-03T07:07:23Z",
+          "completed_at": "2026-11-03T07:07:23Z"
+        },
+        {
+          "name": "Extract the reviewed stable Edge package without package install hooks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-11-03T07:07:23Z",
+          "completed_at": "2026-11-03T07:07:23Z"
+        },
+        {
+          "name": "Extract the SHA512-pinned official stable Firefox archive",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T07:07:23Z",
+          "completed_at": "2026-11-03T07:07:23Z"
+        },
+        {
+          "name": "Exercise real video, audio, input, files and cleanup",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13,
+          "started_at": "2026-11-03T07:07:23Z",
+          "completed_at": "2026-11-03T07:07:23Z"
+        },
+        {
+          "name": "Upload sanitized integration evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T07:07:23Z",
+          "completed_at": "2026-11-03T07:07:23Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-11-03T07:07:23Z",
+          "completed_at": "2026-11-03T07:07:23Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-11-03T07:07:23Z",
+          "completed_at": "2026-11-03T07:07:23Z"
+        }
+      ]
+    },
+    {
+      "id": 125775272855,
+      "name": "Production Web to native host (edge)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-03T07:00:34Z",
+      "completed_at": "2026-11-03T07:07:27Z",
+      "runner_name": "GitHub Actions 1000012238",
+      "runner_group_name": "GitHub Actions",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-03T07:00:35Z",
+          "completed_at": "2026-11-03T07:00:36Z"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-03T07:00:36Z",
+          "completed_at": "2026-11-03T07:00:39Z"
+        },
+        {
+          "name": "Run actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-03T07:00:39Z",
+          "completed_at": "2026-11-03T07:00:40Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-03T07:00:40Z",
+          "completed_at": "2026-11-03T07:00:48Z"
+        },
+        {
+          "name": "Set ephemeral build locations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-03T07:00:48Z",
+          "completed_at": "2026-11-03T07:00:49Z"
+        },
+        {
+          "name": "Install native codec build tools",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-03T07:00:49Z",
+          "completed_at": "2026-11-03T07:01:01Z"
+        },
+        {
+          "name": "Build and verify reviewed native codecs on GitHub",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-03T07:01:01Z",
+          "completed_at": "2026-11-03T07:01:35Z"
+        },
+        {
+          "name": "Build the optimized native host fixture on GitHub",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 8,
+          "started_at": "2026-11-03T07:01:35Z",
+          "completed_at": "2026-11-03T07:07:24Z"
+        },
+        {
+          "name": "Install pinned browser driver and TLS proxy",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-03T07:07:24Z",
+          "completed_at": "2026-11-03T07:07:24Z"
+        },
+        {
+          "name": "Select the runner's stable Chrome",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2026-11-03T07:07:24Z",
+          "completed_at": "2026-11-03T07:07:24Z"
+        },
+        {
+          "name": "Extract the reviewed stable Edge package without package install hooks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-11-03T07:07:24Z",
+          "completed_at": "2026-11-03T07:07:24Z"
+        },
+        {
+          "name": "Extract the SHA512-pinned official stable Firefox archive",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-03T07:07:24Z",
+          "completed_at": "2026-11-03T07:07:24Z"
+        },
+        {
+          "name": "Exercise real video, audio, input, files and cleanup",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13,
+          "started_at": "2026-11-03T07:07:24Z",
+          "completed_at": "2026-11-03T07:07:24Z"
+        },
+        {
+          "name": "Upload sanitized integration evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-03T07:07:24Z",
+          "completed_at": "2026-11-03T07:07:24Z"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-11-03T07:07:24Z",
+          "completed_at": "2026-11-03T07:07:25Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-11-03T07:07:25Z",
+          "completed_at": "2026-11-03T07:07:25Z"
+        }
+      ]
+    }
+  ],
+  "artifact_count": 3,
+  "official_zip_verification_count": 3,
+  "independent_downloaded_file_count": 13.0,
+  "producer_payload_verification_count": 4.0,
+  "producer_command_log_verification_count": 0.0,
+  "artifacts": [
+    {
+      "id": 13210607514,
+      "name": "nestlink-browser-contracts-895614e293c233b42810fd3bfa192c95dc04219a-1",
+      "official_digest": "sha256:ce7e5b7a6c9a096bcda9ce459fcf062a1230e3c9be44b29172304ed17b0b42c0",
+      "zip_sha256": "ce7e5b7a6c9a096bcda9ce459fcf062a1230e3c9be44b29172304ed17b0b42c0",
+      "zip_bytes": 4193,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 2,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "nestlink-browser-contracts-node.log",
+          "bytes": 17437,
+          "sha256": "9f533a204b6eacd5a2339d75df4159d1757f37c003d9f0511cde2d8831498268"
+        },
+        {
+          "path": "nestlink-browser-contracts-python.log",
+          "bytes": 124,
+          "sha256": "0f8511b5ec8c59956ffb62603b14b0b6a236f0ae4b1b99c593c87f9f2c5891a8"
+        }
+      ],
+      "producer_payload_inventory_count": 0,
+      "producer_payload_verifications": [],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": false,
+      "producer_inventory_limitation": "Official ZIP verified and all extracted files independently hashed; this artifact has no producer payload inventory.",
+      "reports": [],
+      "test_logs": []
+    },
+    {
+      "id": 13210239237,
+      "name": "nestlink-web-dist",
+      "official_digest": "sha256:b4030e6da3164e90e12b4dbfc02ab760a1f91c27057545fdf8f0f90560f20181",
+      "zip_sha256": "b4030e6da3164e90e12b4dbfc02ab760a1f91c27057545fdf8f0f90560f20181",
+      "zip_bytes": 2097137,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 6,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "icon-b3ee4ec4985dec9b.svg",
+          "bytes": 613,
+          "sha256": "3486f7a518d48da84a788abbb46ca9229214ddf40f8828dadf2ae2003712cfe8"
+        },
+        {
+          "path": "index.html",
+          "bytes": 1516,
+          "sha256": "054df6f1178532e843c974cc6fbc35414a5c8c30dd2b3dd6d28c06c29131baad"
+        },
+        {
+          "path": "nestlink-f43f6f6d346c1dcc.css",
+          "bytes": 35184,
+          "sha256": "6067f8ef83f0649e6cb2295b1c9fb2e60fc05d118af3394a8a22cb5396ef500d"
+        },
+        {
+          "path": "nestlink-tokens-a1d0281e245e43f9.css",
+          "bytes": 2046,
+          "sha256": "17c866f5f06cddca4c27be506a04e17118c32024906224772321d8191b5e1d22"
+        },
+        {
+          "path": "nestlink-web-8861228cd20bd310_bg.wasm",
+          "bytes": 6955818,
+          "sha256": "3d6ada2bfcb0a7b13d88c8492ec2b5393cee2d44db7b9f0784db8cbffe124a46"
+        },
+        {
+          "path": "nestlink-web-8861228cd20bd310.js",
+          "bytes": 88505,
+          "sha256": "92a0d599431bfc4f2ae324f1d08efefce9ec60e359466740421479cb1c31e58d"
+        }
+      ],
+      "producer_payload_inventory_count": 0,
+      "producer_payload_verifications": [],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": false,
+      "producer_inventory_limitation": "Official ZIP verified and all extracted files independently hashed; this artifact has no producer payload inventory.",
+      "reports": [],
+      "test_logs": []
+    },
+    {
+      "id": 13210189371,
+      "name": "release-web-source-lock-evidence-1",
+      "official_digest": "sha256:75072621cf62e8266993e5a190a805c20cab5e6008b609c870d2732c7512576d",
+      "zip_sha256": "75072621cf62e8266993e5a190a805c20cab5e6008b609c870d2732c7512576d",
+      "zip_bytes": 145831,
+      "official_digest_size_source_matches": true,
+      "downloaded_file_count": 5,
+      "independent_downloaded_file_inventory": [
+        {
+          "path": "after-metadata.lock",
+          "bytes": 209806,
+          "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        {
+          "path": "after.lock",
+          "bytes": 209806,
+          "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        {
+          "path": "before.lock",
+          "bytes": 209806,
+          "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+        },
+        {
+          "path": "Cargo.lock.diff",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "lock-evidence.json",
+          "bytes": 608,
+          "sha256": "ee249fe29ba61a37e54b4fdb433b4ca35164bf9629ddac0afc320a71f6e63d39"
+        }
+      ],
+      "producer_payload_inventory_count": 4,
+      "producer_payload_verifications": [
+        {
+          "producer_receipt": "lock-evidence.json",
+          "inventory_kind": "before",
+          "path": "before.lock",
+          "bytes": 209806,
+          "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "lock-evidence.json",
+          "inventory_kind": "after_metadata",
+          "path": "after-metadata.lock",
+          "bytes": 209806,
+          "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "lock-evidence.json",
+          "inventory_kind": "after",
+          "path": "after.lock",
+          "bytes": 209806,
+          "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+          "producer_matches": true
+        },
+        {
+          "producer_receipt": "lock-evidence.json",
+          "inventory_kind": "diff",
+          "path": "Cargo.lock.diff",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "producer_matches": true
+        }
+      ],
+      "producer_command_log_verification_count": 0,
+      "producer_unverified_digest_count": 0,
+      "producer_command_log_verifications": [],
+      "producer_inventory_available": true,
+      "producer_inventory_limitation": null,
+      "reports": [
+        {
+          "file": "lock-evidence.json",
+          "source_claims": [],
+          "source_before": null,
+          "source_after": null,
+          "passed": null,
+          "status": null,
+          "scope": null,
+          "kind": null,
+          "failure": null,
+          "error": null,
+          "limitations": null,
+          "build_provenance": null,
+          "execution_provenance": null,
+          "commands": [],
+          "cases": [],
+          "acceptance_flags": {},
+          "lock_evidence": {
+            "schema_version": 1,
+            "phase": "release-web-build",
+            "before": {
+              "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+              "bytes": 209806
+            },
+            "locked_metadata_no_deps_exit_code": 0,
+            "after_metadata": {
+              "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+              "bytes": 209806
+            },
+            "after": {
+              "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+              "bytes": 209806
+            },
+            "diff": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0,
+              "git_exit_code": 0
+            }
+          }
+        }
+      ],
+      "test_logs": []
+    }
+  ],
+  "limitations": [
+    "Actions results apply only to this exact source SHA. Historical failures remain unchanged.",
+    "Producer executable/native-library inventories whose bytes are absent from the ZIP are supplier receipts, not independent verification of those binaries.",
+    "Hosted browser/media/network success does not establish physical GPU, real device, public NAT/HA, cross-day or release eligibility."
+  ],
+  "verification_summary": {
+    "job_count": 5,
+    "successful_jobs": 2,
+    "failed_jobs": 3,
+    "official_zips_verified": 3,
+    "downloaded_files_independently_hashed": 13.0,
+    "producer_payload_entries_independently_verified": 4.0,
+    "producer_command_log_entries_independently_verified": 0.0,
+    "producer_private_raw_digests_not_verified": 0,
+    "actual_browser_execution_performed": false,
+    "published_receipts_manifest_generated": false,
+    "browser_fixture_builds": [
+      {
+        "job_id": 125775272777,
+        "name": "Production Web to native host (chrome)",
+        "conclusion": "failure",
+        "failed_steps": [
+          {
+            "name": "Build the optimized native host fixture on GitHub",
+            "number": 8,
+            "conclusion": "failure"
+          }
+        ],
+        "diagnostics": [
+          {
+            "line_in_original_log": 1759,
+            "step_group": "cargo build --release --locked --manifest-path scripts/fixtures/browser-native-host/Cargo.toml",
+            "diagnostic": [
+              "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+              "  --> /home/runner/work/NestLink/NestLink/crates/sdk/src/network/routed/control/route_set/continuation/migration.rs:81:65",
+              "   |",
+              "81 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+              "   |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+              "",
+              "   Compiling nestlink-media-session v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/media-session)",
+              "For more information about this error, try `rustc --explain E0599`.",
+              "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+              "warning: build failed, waiting for other jobs to finish...",
+              "##[error]Process completed with exit code 101.",
+              "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "with:"
+            ]
+          },
+          {
+            "line_in_original_log": 1767,
+            "step_group": "cargo build --release --locked --manifest-path scripts/fixtures/browser-native-host/Cargo.toml",
+            "diagnostic": [
+              "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+              "warning: build failed, waiting for other jobs to finish...",
+              "##[error]Process completed with exit code 101.",
+              "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "with:",
+              "  name: nestlink-browser-native-evidence-chrome",
+              "  path: /home/runner/work/_temp/nestlink-browser-native-evidence/",
+              "  if-no-files-found: warn",
+              "  retention-days: 14",
+              "  compression-level: 6",
+              "  overwrite: false",
+              "  include-hidden-files: false",
+              "  archive: true"
+            ]
+          }
+        ],
+        "raw_log_sha256": "332c25ca19f00724c667e3036347ccd9bd644ea89652714ec628381de3f6666e"
+      },
+      {
+        "job_id": 125775272789,
+        "name": "Production Web to native host (firefox)",
+        "conclusion": "failure",
+        "failed_steps": [
+          {
+            "name": "Build the optimized native host fixture on GitHub",
+            "number": 8,
+            "conclusion": "failure"
+          }
+        ],
+        "diagnostics": [
+          {
+            "line_in_original_log": 1760,
+            "step_group": "cargo build --release --locked --manifest-path scripts/fixtures/browser-native-host/Cargo.toml",
+            "diagnostic": [
+              "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+              "  --> /home/runner/work/NestLink/NestLink/crates/sdk/src/network/routed/control/route_set/continuation/migration.rs:81:65",
+              "   |",
+              "81 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+              "   |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+              "",
+              "For more information about this error, try `rustc --explain E0599`.",
+              "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+              "warning: build failed, waiting for other jobs to finish...",
+              "##[error]Process completed with exit code 101.",
+              "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "with:",
+              "  name: nestlink-browser-native-evidence-firefox"
+            ]
+          },
+          {
+            "line_in_original_log": 1767,
+            "step_group": "cargo build --release --locked --manifest-path scripts/fixtures/browser-native-host/Cargo.toml",
+            "diagnostic": [
+              "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+              "warning: build failed, waiting for other jobs to finish...",
+              "##[error]Process completed with exit code 101.",
+              "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "with:",
+              "  name: nestlink-browser-native-evidence-firefox",
+              "  path: /home/runner/work/_temp/nestlink-browser-native-evidence/",
+              "  if-no-files-found: warn",
+              "  retention-days: 14",
+              "  compression-level: 6",
+              "  overwrite: false",
+              "  include-hidden-files: false",
+              "  archive: true"
+            ]
+          }
+        ],
+        "raw_log_sha256": "9afa03fe1f7be80fae0cc8263e8f5adc0ae6d4ba3f265745ac15240c63a39fb6"
+      },
+      {
+        "job_id": 125775272855,
+        "name": "Production Web to native host (edge)",
+        "conclusion": "failure",
+        "failed_steps": [
+          {
+            "name": "Build the optimized native host fixture on GitHub",
+            "number": 8,
+            "conclusion": "failure"
+          }
+        ],
+        "diagnostics": [
+          {
+            "line_in_original_log": 1757,
+            "step_group": "cargo build --release --locked --manifest-path scripts/fixtures/browser-native-host/Cargo.toml",
+            "diagnostic": [
+              "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+              "  --> /home/runner/work/NestLink/NestLink/crates/sdk/src/network/routed/control/route_set/continuation/migration.rs:81:65",
+              "   |",
+              "81 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+              "   |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+              "",
+              "   Compiling nestlink-operations v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/operations)",
+              "   Compiling nestlink-turn-service v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/turn-service)",
+              "   Compiling nestlink-media-session v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/media-session)",
+              "For more information about this error, try `rustc --explain E0599`.",
+              "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+              "warning: build failed, waiting for other jobs to finish...",
+              "##[error]Process completed with exit code 101."
+            ]
+          },
+          {
+            "line_in_original_log": 1767,
+            "step_group": "cargo build --release --locked --manifest-path scripts/fixtures/browser-native-host/Cargo.toml",
+            "diagnostic": [
+              "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+              "warning: build failed, waiting for other jobs to finish...",
+              "##[error]Process completed with exit code 101.",
+              "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "with:",
+              "  name: nestlink-browser-native-evidence-edge",
+              "  path: /home/runner/work/_temp/nestlink-browser-native-evidence/",
+              "  if-no-files-found: warn",
+              "  retention-days: 14",
+              "  compression-level: 6",
+              "  overwrite: false",
+              "  include-hidden-files: false",
+              "  archive: true"
+            ]
+          }
+        ],
+        "raw_log_sha256": "9aa93b5619078882fdea1ce14c813768a72818e2534d09a1c1c087fa00b8577b"
+      }
+    ]
+  },
+  "interpretation": [
+    "Final result is failure: browser runner/observer contracts and release-site passed, while all three original Chrome, Firefox and Edge native-fixture build jobs failed.",
+    "Each native build retains E0599 at crates/sdk/src/network/routed/control/route_set/continuation/migration.rs:81: PathClaims has no signing_message method. nestlink-sdk library compilation exited 101.",
+    "Actual production browser scenarios were skipped after the native fixture failed to compile. No browser-native result or published-receipts.json exists for this source. The new sanitized public payload inventory is therefore not qualified by this run.",
+    "All three available official artifacts are independently verified. The release-site Cargo.lock before/after locked metadata/after build and zero-byte diff entries match their producer hashes.",
+    "The a1afd8b production Chrome/Firefox/Edge success and all earlier exact-source failures remain unchanged. A later code fix requires its own hosted run and evidence; no timeout, test or acceptance boundary is weakened here."
+  ],
+  "acceptance_claims": [],
+  "original_job_logs": [
+    {
+      "job_id": 125775272777,
+      "job_name": "Production Web to native host (chrome)",
+      "job_conclusion": "failure",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125775272777/logs",
+      "path": "job-125775272777.log",
+      "bytes": 150095,
+      "sha256": "332c25ca19f00724c667e3036347ccd9bd644ea89652714ec628381de3f6666e",
+      "compiler_or_lint_diagnostics": [
+        {
+          "line_in_original_log": 1759,
+          "step_group": "cargo build --release --locked --manifest-path scripts/fixtures/browser-native-host/Cargo.toml",
+          "diagnostic": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+            "  --> /home/runner/work/NestLink/NestLink/crates/sdk/src/network/routed/control/route_set/continuation/migration.rs:81:65",
+            "   |",
+            "81 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+            "   |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "",
+            "   Compiling nestlink-media-session v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/media-session)",
+            "For more information about this error, try `rustc --explain E0599`.",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 101.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:"
+          ]
+        },
+        {
+          "line_in_original_log": 1767,
+          "step_group": "cargo build --release --locked --manifest-path scripts/fixtures/browser-native-host/Cargo.toml",
+          "diagnostic": [
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 101.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:",
+            "  name: nestlink-browser-native-evidence-chrome",
+            "  path: /home/runner/work/_temp/nestlink-browser-native-evidence/",
+            "  if-no-files-found: warn",
+            "  retention-days: 14",
+            "  compression-level: 6",
+            "  overwrite: false",
+            "  include-hidden-files: false",
+            "  archive: true"
+          ]
+        }
+      ],
+      "harness_count": 0,
+      "harnesses": [],
+      "orphan_case_lines_without_result": [],
+      "failed_steps": [
+        {
+          "name": "Build the optimized native host fixture on GitHub",
+          "number": 8,
+          "conclusion": "failure"
+        }
+      ],
+      "test_counts_are_per_invocation_and_may_repeat_cases": true
+    },
+    {
+      "job_id": 125775272789,
+      "job_name": "Production Web to native host (firefox)",
+      "job_conclusion": "failure",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125775272789/logs",
+      "path": "job-125775272789.log",
+      "bytes": 150098,
+      "sha256": "9afa03fe1f7be80fae0cc8263e8f5adc0ae6d4ba3f265745ac15240c63a39fb6",
+      "compiler_or_lint_diagnostics": [
+        {
+          "line_in_original_log": 1760,
+          "step_group": "cargo build --release --locked --manifest-path scripts/fixtures/browser-native-host/Cargo.toml",
+          "diagnostic": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+            "  --> /home/runner/work/NestLink/NestLink/crates/sdk/src/network/routed/control/route_set/continuation/migration.rs:81:65",
+            "   |",
+            "81 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+            "   |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "",
+            "For more information about this error, try `rustc --explain E0599`.",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 101.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:",
+            "  name: nestlink-browser-native-evidence-firefox"
+          ]
+        },
+        {
+          "line_in_original_log": 1767,
+          "step_group": "cargo build --release --locked --manifest-path scripts/fixtures/browser-native-host/Cargo.toml",
+          "diagnostic": [
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 101.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:",
+            "  name: nestlink-browser-native-evidence-firefox",
+            "  path: /home/runner/work/_temp/nestlink-browser-native-evidence/",
+            "  if-no-files-found: warn",
+            "  retention-days: 14",
+            "  compression-level: 6",
+            "  overwrite: false",
+            "  include-hidden-files: false",
+            "  archive: true"
+          ]
+        }
+      ],
+      "harness_count": 0,
+      "harnesses": [],
+      "orphan_case_lines_without_result": [],
+      "failed_steps": [
+        {
+          "name": "Build the optimized native host fixture on GitHub",
+          "number": 8,
+          "conclusion": "failure"
+        }
+      ],
+      "test_counts_are_per_invocation_and_may_repeat_cases": true
+    },
+    {
+      "job_id": 125775272855,
+      "job_name": "Production Web to native host (edge)",
+      "job_conclusion": "failure",
+      "downloaded_from": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125775272855/logs",
+      "path": "job-125775272855.log",
+      "bytes": 150093,
+      "sha256": "9aa93b5619078882fdea1ce14c813768a72818e2534d09a1c1c087fa00b8577b",
+      "compiler_or_lint_diagnostics": [
+        {
+          "line_in_original_log": 1757,
+          "step_group": "cargo build --release --locked --manifest-path scripts/fixtures/browser-native-host/Cargo.toml",
+          "diagnostic": [
+            "error[E0599]: no method named `signing_message` found for reference `&PathClaims` in the current scope",
+            "  --> /home/runner/work/NestLink/NestLink/crates/sdk/src/network/routed/control/route_set/continuation/migration.rs:81:65",
+            "   |",
+            "81 |             path_grant: digest(&self.route.grants.path.claims().signing_message()?),",
+            "   |                                                                 ^^^^^^^^^^^^^^^ method not found in `&PathClaims`",
+            "",
+            "   Compiling nestlink-operations v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/operations)",
+            "   Compiling nestlink-turn-service v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/turn-service)",
+            "   Compiling nestlink-media-session v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/media-session)",
+            "For more information about this error, try `rustc --explain E0599`.",
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 101."
+          ]
+        },
+        {
+          "line_in_original_log": 1767,
+          "step_group": "cargo build --release --locked --manifest-path scripts/fixtures/browser-native-host/Cargo.toml",
+          "diagnostic": [
+            "error: could not compile `nestlink-sdk` (lib) due to 1 previous error",
+            "warning: build failed, waiting for other jobs to finish...",
+            "##[error]Process completed with exit code 101.",
+            "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "with:",
+            "  name: nestlink-browser-native-evidence-edge",
+            "  path: /home/runner/work/_temp/nestlink-browser-native-evidence/",
+            "  if-no-files-found: warn",
+            "  retention-days: 14",
+            "  compression-level: 6",
+            "  overwrite: false",
+            "  include-hidden-files: false",
+            "  archive: true"
+          ]
+        }
+      ],
+      "harness_count": 0,
+      "harnesses": [],
+      "orphan_case_lines_without_result": [],
+      "failed_steps": [
+        {
+          "name": "Build the optimized native host fixture on GitHub",
+          "number": 8,
+          "conclusion": "failure"
+        }
+      ],
+      "test_counts_are_per_invocation_and_may_repeat_cases": true
+    }
+  ],
+  "release_eligibility_claimed": false,
+  "independent_audit_execution": {
+    "kind": "local_artifact_bytes_only",
+    "source_builds_or_project_tests_run_locally": false,
+    "operations": [
+      "GitHub API metadata and ZIP downloads",
+      "official ZIP SHA256/size/run/source comparison",
+      "artifact extraction",
+      "PowerShell byte/SHA256 comparison of declared payloads and command logs",
+      "read-only parsing of existing Actions receipts and test logs"
+    ]
+  }
+}

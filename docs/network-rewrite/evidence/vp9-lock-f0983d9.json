@@ -1,0 +1,343 @@
+{
+  "schema_version": 1,
+  "kind": "reviewed-native-vp9-original-dependency-lock-derivation",
+  "source_revision": "f0983d947f99bbfde344b68c4ebbdc04df526391",
+  "run_id": 41596360840,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41596360840",
+  "runner_environment": "github-hosted",
+  "passed": true,
+  "scope": "Three exact lock graphs derived and metadata --locked verified only. No compilation or product acceptance claimed.",
+  "records": [
+    {
+      "artifact_name": "product-version-lock-browser-native-fixture-f0983d947f99bbfde344b68c4ebbdc04df526391-1",
+      "review_patch": "diff --git a/scripts/fixtures/browser-native-host/Cargo.lock b/scripts/fixtures/browser-native-host/Cargo.lock\nindex 7ace215..8138f62 100644\n--- a/scripts/fixtures/browser-native-host/Cargo.lock\n+++ b/scripts/fixtures/browser-native-host/Cargo.lock\n@@ -2205,6 +2205,7 @@ dependencies = [\n  \"serde\",\n  \"serde_json\",\n  \"sha2 0.10.9\",\n+ \"uuid\",\n  \"zeroize\",\n ]\n \n",
+      "retained_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\vp9-lock-f0983d9\\browser-native-fixture",
+      "external_blocks_verified": 477,
+      "official_archive_bytes": 306881,
+      "receipt": {
+        "schema_version": 1,
+        "purpose": "same-component-product-version-lock-derivation",
+        "repository": "ZHanry/NestLink",
+        "source_revision": "f0983d947f99bbfde344b68c4ebbdc04df526391",
+        "workflow": "ZHanry/NestLink/.github/workflows/network-version-lock.yml@refs/heads/main",
+        "workflow_revision": "f0983d947f99bbfde344b68c4ebbdc04df526391",
+        "run_id": "41596360840",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "scope": "browser-native-fixture",
+        "manifest": "scripts/fixtures/browser-native-host/Cargo.toml",
+        "version": "0.8.0-rc.1",
+        "before_lock_sha256": "a620eff0be7adc22889fc92cbeddfcb3cbd1b64caec9d5a1635936fb08a2e0dc",
+        "commands": [
+          {
+            "name": "cargo-local-workspace-update",
+            "argv": [
+              "cargo",
+              "update",
+              "--workspace",
+              "--manifest-path",
+              "/home/runner/work/NestLink/NestLink/scripts/fixtures/browser-native-host/Cargo.toml"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "locked-resolver-readback",
+            "argv": [
+              "cargo",
+              "metadata",
+              "--locked",
+              "--format-version",
+              "1",
+              "--manifest-path",
+              "/home/runner/work/NestLink/NestLink/scripts/fixtures/browser-native-host/Cargo.toml"
+            ],
+            "return_code": 0
+          }
+        ],
+        "external_packages_and_edges_unchanged": true,
+        "passed": true,
+        "product_compilation_performed": false,
+        "quality_or_acceptance_claimed": false,
+        "product_packages": [
+          "nestlink-app-core",
+          "nestlink-auth",
+          "nestlink-connectivity",
+          "nestlink-identity",
+          "nestlink-local-ipc",
+          "nestlink-media-codec",
+          "nestlink-media-session",
+          "nestlink-node",
+          "nestlink-operations",
+          "nestlink-platform-clipboard",
+          "nestlink-platform-files",
+          "nestlink-platform-input",
+          "nestlink-platform-network",
+          "nestlink-platform-security",
+          "nestlink-platform-session",
+          "nestlink-policy",
+          "nestlink-privileged",
+          "nestlink-protocol",
+          "nestlink-remote",
+          "nestlink-sdk",
+          "nestlink-server",
+          "nestlink-session",
+          "nestlink-storage",
+          "nestlink-transport-quic",
+          "nestlink-transport-stream",
+          "nestlink-transport-wss",
+          "nestlink-traversal",
+          "nestlink-turn-service"
+        ],
+        "files": [
+          {
+            "path": "Cargo.lock",
+            "bytes": 130664,
+            "sha256": "54f0a9ed888e3eb152e318ae1ea40df9dcecf4910b8503ab7cacb35efaae6f42"
+          },
+          {
+            "path": "before.lock",
+            "bytes": 130655,
+            "sha256": "a620eff0be7adc22889fc92cbeddfcb3cbd1b64caec9d5a1635936fb08a2e0dc"
+          },
+          {
+            "path": "cargo-generated.lock",
+            "bytes": 130664,
+            "sha256": "54f0a9ed888e3eb152e318ae1ea40df9dcecf4910b8503ab7cacb35efaae6f42"
+          },
+          {
+            "path": "cargo-local-workspace-update.log",
+            "bytes": 1111,
+            "sha256": "b9310578382e2c24c0e025151b07c43b1cb5b4f0d953cfdb6080c6386a19fe62"
+          },
+          {
+            "path": "locked-resolver-readback.log",
+            "bytes": 2620940,
+            "sha256": "54b74ee614235bd39e91c450998c4204caa7fc2d295b1b7729467ba182987180"
+          },
+          {
+            "path": "version-lock.patch",
+            "bytes": 360,
+            "sha256": "1267185b7a7d6494bfbd42873575169066cda89eeea0931169e69b1a2b41e8d4"
+          }
+        ]
+      },
+      "lock_path": "scripts/fixtures/browser-native-host/Cargo.lock",
+      "artifact_id": 13212860195,
+      "official_archive_sha256": "9685ea2f1ee8c38b296c283614d3a24ec5d7c51152f0f986e16e264d2ba17384"
+    },
+    {
+      "artifact_name": "product-version-lock-security-fuzz-f0983d947f99bbfde344b68c4ebbdc04df526391-1",
+      "review_patch": "",
+      "retained_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\vp9-lock-f0983d9\\security-fuzz",
+      "external_blocks_verified": 123,
+      "official_archive_bytes": 70332,
+      "receipt": {
+        "schema_version": 1,
+        "purpose": "same-component-product-version-lock-derivation",
+        "repository": "ZHanry/NestLink",
+        "source_revision": "f0983d947f99bbfde344b68c4ebbdc04df526391",
+        "workflow": "ZHanry/NestLink/.github/workflows/network-version-lock.yml@refs/heads/main",
+        "workflow_revision": "f0983d947f99bbfde344b68c4ebbdc04df526391",
+        "run_id": "41596360840",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "scope": "security-fuzz",
+        "manifest": "tests/security/fuzz/Cargo.toml",
+        "version": "0.8.0-rc.1",
+        "before_lock_sha256": "69973bd90336915e9254164bb90c0c00dcebead0d9734d33f6e695c937e8243f",
+        "commands": [
+          {
+            "name": "cargo-local-workspace-update",
+            "argv": [
+              "cargo",
+              "update",
+              "--workspace",
+              "--manifest-path",
+              "/home/runner/work/NestLink/NestLink/tests/security/fuzz/Cargo.toml"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "locked-resolver-readback",
+            "argv": [
+              "cargo",
+              "metadata",
+              "--locked",
+              "--format-version",
+              "1",
+              "--manifest-path",
+              "/home/runner/work/NestLink/NestLink/tests/security/fuzz/Cargo.toml"
+            ],
+            "return_code": 0
+          }
+        ],
+        "external_packages_and_edges_unchanged": true,
+        "passed": true,
+        "product_compilation_performed": false,
+        "quality_or_acceptance_claimed": false,
+        "product_packages": [
+          "nestlink-protocol"
+        ],
+        "files": [
+          {
+            "path": "Cargo.lock",
+            "bytes": 29262,
+            "sha256": "69973bd90336915e9254164bb90c0c00dcebead0d9734d33f6e695c937e8243f"
+          },
+          {
+            "path": "before.lock",
+            "bytes": 29262,
+            "sha256": "69973bd90336915e9254164bb90c0c00dcebead0d9734d33f6e695c937e8243f"
+          },
+          {
+            "path": "cargo-generated.lock",
+            "bytes": 29262,
+            "sha256": "69973bd90336915e9254164bb90c0c00dcebead0d9734d33f6e695c937e8243f"
+          },
+          {
+            "path": "cargo-local-workspace-update.log",
+            "bytes": 376,
+            "sha256": "5a7246120fdd16e0a05a3a7b0c11e8d436ac4e1dc4a734d93d74558d71ab3d9e"
+          },
+          {
+            "path": "locked-resolver-readback.log",
+            "bytes": 530022,
+            "sha256": "fd10e0183a373e96c7c08800254e4a5f07b91dd38a496d3f367f47f806fc7784"
+          },
+          {
+            "path": "version-lock.patch",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      "lock_path": "tests/security/fuzz/Cargo.lock",
+      "artifact_id": 13212551961,
+      "official_archive_sha256": "9d82268a39f5427e0ec3b714cd2379c9b808d8a5f47012e54e779501785c7496"
+    },
+    {
+      "artifact_name": "product-version-lock-product-f0983d947f99bbfde344b68c4ebbdc04df526391-1",
+      "review_patch": "diff --git a/Cargo.lock b/Cargo.lock\nindex ca4e6e8..e62de3f 100644\n--- a/Cargo.lock\n+++ b/Cargo.lock\n@@ -3878,6 +3878,7 @@ dependencies = [\n  \"serde_json\",\n  \"sha2 0.10.9\",\n  \"tempfile\",\n+ \"uuid\",\n  \"zeroize\",\n ]\n \n",
+      "retained_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\vp9-lock-f0983d9\\product",
+      "external_blocks_verified": 751,
+      "official_archive_bytes": 504382,
+      "receipt": {
+        "schema_version": 1,
+        "purpose": "same-component-product-version-lock-derivation",
+        "repository": "ZHanry/NestLink",
+        "source_revision": "f0983d947f99bbfde344b68c4ebbdc04df526391",
+        "workflow": "ZHanry/NestLink/.github/workflows/network-version-lock.yml@refs/heads/main",
+        "workflow_revision": "f0983d947f99bbfde344b68c4ebbdc04df526391",
+        "run_id": "41596360840",
+        "run_attempt": "1",
+        "runner_environment": "github-hosted",
+        "scope": "product",
+        "manifest": "Cargo.toml",
+        "version": "0.8.0-rc.1",
+        "before_lock_sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f",
+        "commands": [
+          {
+            "name": "cargo-local-workspace-update",
+            "argv": [
+              "cargo",
+              "update",
+              "--workspace",
+              "--manifest-path",
+              "/home/runner/work/NestLink/NestLink/Cargo.toml"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "locked-resolver-readback",
+            "argv": [
+              "cargo",
+              "metadata",
+              "--locked",
+              "--format-version",
+              "1",
+              "--manifest-path",
+              "/home/runner/work/NestLink/NestLink/Cargo.toml"
+            ],
+            "return_code": 0
+          }
+        ],
+        "external_packages_and_edges_unchanged": true,
+        "passed": true,
+        "product_compilation_performed": false,
+        "quality_or_acceptance_claimed": false,
+        "product_packages": [
+          "nestlink-app-core",
+          "nestlink-app-ipc",
+          "nestlink-auth",
+          "nestlink-connectivity",
+          "nestlink-daemon",
+          "nestlink-desktop",
+          "nestlink-identity",
+          "nestlink-local-ipc",
+          "nestlink-media-codec",
+          "nestlink-media-session",
+          "nestlink-node",
+          "nestlink-operations",
+          "nestlink-platform-audio",
+          "nestlink-platform-capture",
+          "nestlink-platform-clipboard",
+          "nestlink-platform-files",
+          "nestlink-platform-input",
+          "nestlink-platform-network",
+          "nestlink-platform-security",
+          "nestlink-platform-session",
+          "nestlink-platform-tray",
+          "nestlink-policy",
+          "nestlink-privileged",
+          "nestlink-protocol",
+          "nestlink-remote",
+          "nestlink-sdk",
+          "nestlink-server",
+          "nestlink-session",
+          "nestlink-storage",
+          "nestlink-transport-quic",
+          "nestlink-transport-stream",
+          "nestlink-transport-wss",
+          "nestlink-traversal",
+          "nestlink-turn-service",
+          "nestlink-web"
+        ],
+        "files": [
+          {
+            "path": "Cargo.lock",
+            "bytes": 209815,
+            "sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839"
+          },
+          {
+            "path": "before.lock",
+            "bytes": 209806,
+            "sha256": "573c9f593da545783035289ccb673aff022828b01fc4c77f4321af6520f17b8f"
+          },
+          {
+            "path": "cargo-generated.lock",
+            "bytes": 209815,
+            "sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839"
+          },
+          {
+            "path": "cargo-local-workspace-update.log",
+            "bytes": 470,
+            "sha256": "8c2535351966c49669592cee1f494a89d9ab98a6c50196da6411d8045936aed2"
+          },
+          {
+            "path": "locked-resolver-readback.log",
+            "bytes": 4277028,
+            "sha256": "dc78fd384f67e27214546212eebbf3d373bc766dc3ba8d7d7fcaf2786512ffa8"
+          },
+          {
+            "path": "version-lock.patch",
+            "bytes": 215,
+            "sha256": "06f1ffc6684c7c0a83c6b2161407d28f081ac1f2223e5d0211477d0e7ee97126"
+          }
+        ]
+      },
+      "lock_path": "Cargo.lock",
+      "artifact_id": 13212317358,
+      "official_archive_sha256": "c1f43a2d0f9f4dbe3be083c2b80aff583c0d6612a86700e83c24ccac3a119fe7"
+    }
+  ]
+}
