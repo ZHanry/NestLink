@@ -69,10 +69,14 @@ impl Drop for RelayOwner {
         self.request_close();
     }
 }
-struct RevokeOnDrop(Arc<RouteRevocation>);
+struct RevokeOnDrop(Arc<RouteRevocation>, quinn::Connection);
 impl Drop for RevokeOnDrop {
     fn drop(&mut self) {
         self.0.revoke();
+        // An abstract UDP receive failure can stop Quinn's endpoint driver
+        // without waking an already pending business read. Close the original
+        // inner connection as well, so revocation ends streams and datagrams.
+        self.1.close(0u32.into(), b"private route authority ended");
     }
 }
 
@@ -270,15 +274,24 @@ pub(super) async fn connect(
             .await?;
         return Err(SdkError::Trust);
     }
+    let connection = owner.connection()?.clone();
+    let mut failure = owner.transport.subscribe_failure();
     owner.observer = Some(TaskOwner::new(tokio::spawn(async move {
-        let _revoke = RevokeOnDrop(revocation);
+        let _revoke = RevokeOnDrop(revocation, connection);
         let mut tick = tokio::time::interval_at(
             Instant::now() + Duration::from_secs(1),
             Duration::from_secs(1),
         );
         tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
         loop {
-            tokio::select! {biased; _=tokio::time::sleep_until(fixed_deadline)=>return, _=tick.tick()=>{} }
+            if failure.borrow_and_update().is_some() {
+                return;
+            }
+            tokio::select! {biased;
+                _=tokio::time::sleep_until(fixed_deadline)=>return,
+                _=failure.changed()=>return,
+                _=tick.tick()=>{},
+            }
             let result = tokio::time::timeout_at(
                 fixed_deadline.min(Instant::now() + Duration::from_secs(2)),
                 crate::request::<PrivateServiceGrant>(
