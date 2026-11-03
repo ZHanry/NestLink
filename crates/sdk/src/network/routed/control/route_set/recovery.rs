@@ -176,6 +176,9 @@ fn cancellation_guard(
 impl ContinuousRouteSetSession {
     /// Invoke after application input/media/business cleanup. With no proposal,
     /// only an already failed recoverable generation may become a source.
+    /// A prepared migration's bounded physical-loss hold retains the business
+    /// lease temporarily; its actual failed original carrier can instead use
+    /// this same complete cleanup and independently authorized safe recovery.
     pub async fn into_recovery_source(
         mut self,
         sdk: &Sdk,
@@ -193,7 +196,11 @@ impl ContinuousRouteSetSession {
             }
             proposal.candidate_index
         } else {
-            if self.channels.lease_control().remaining().is_ok() {
+            let held_loss = self
+                .channels
+                .transport_owner_mut::<crate::network::routed::RemoteRouteOwner>()
+                .is_some_and(|owner| owner.transport.held_path_loss_deadline().is_some());
+            if self.channels.lease_control().remaining().is_ok() && !held_loss {
                 return Err(SdkError::Trust.into());
             }
             1 - self.selected

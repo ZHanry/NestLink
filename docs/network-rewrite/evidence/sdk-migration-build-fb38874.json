@@ -1,0 +1,2082 @@
+{
+  "schema_version": 1,
+  "kind": "sdk-migration-exact-source-build-failure-independent-verification",
+  "recorded_at_utc": "2026-11-03T09:08:59.9442824Z",
+  "repository": "ZHanry/NestLink",
+  "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+  "verification_summary": {
+    "run_count": 2,
+    "successful_runs": 0,
+    "failed_runs": 2,
+    "official_zips_verified": 2,
+    "actual_extracted_files_independently_hashed": 10,
+    "producer_payload_entries_independently_verified": 7,
+    "producer_command_log_entries_independently_verified": 6,
+    "complete_official_job_raw_logs_independently_hashed": 2,
+    "exact_git_source_blob_files_independently_hashed": 5,
+    "diagnostics_intended_cases": 6,
+    "diagnostics_actual_cases_executed": 0,
+    "sdk_drop_configured_trials": 20,
+    "sdk_drop_actual_trials_executed": 0,
+    "completed_runtime_rust_harnesses": 0,
+    "original_build_return_codes": [
+      101,
+      101
+    ],
+    "original_sdk_drop_orchestrator_step_return_code": 1,
+    "original_sdk_drop_strict_clippy_return_code": 101,
+    "source_defect": "E0433: too many leading `super` keywords",
+    "source_file": "crates/sdk/tests/network_relay/route_set/physical_loss.rs",
+    "source_line": 66,
+    "source_column": 36,
+    "producer_entry_sets_overlap_actual_files": true,
+    "different_workflows_and_producers_retained_separately": true
+  },
+  "exact_git_source_blob_inventory": [
+    {
+      "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+      "repository_path": "Cargo.lock",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 209815,
+      "sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+      "local_snapshot_file": "Cargo.lock"
+    },
+    {
+      "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+      "repository_path": ".github/workflows/network-migration-diagnostics.yml",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 6222,
+      "sha256": "a628485d7ca42e1bd7d1ac28366e17d966c0c7b5b9b87b0c90ae3f20e1e77e37",
+      "local_snapshot_file": ".github__workflows__network-migration-diagnostics.yml"
+    },
+    {
+      "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+      "repository_path": ".github/workflows/network-sdk-migration.yml",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 2587,
+      "sha256": "c50d64f84dca3df94d79dbdf1d4127c6f5dfaf5eef2de67bfcd251e8253c74e8",
+      "local_snapshot_file": ".github__workflows__network-sdk-migration.yml"
+    },
+    {
+      "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+      "repository_path": "scripts/network-rewrite-sdk-migration.py",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 18430,
+      "sha256": "3d1de8b1ccc216b413aeb468a4d4816ad20d21937653c5ce73236470bcc88c77",
+      "local_snapshot_file": "scripts__network-rewrite-sdk-migration.py"
+    },
+    {
+      "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+      "repository_path": "crates/sdk/tests/network_relay/route_set/physical_loss.rs",
+      "export_method": "git cat-file blob exact-revision:path; binary stdout copied without transcoding",
+      "bytes": 11799,
+      "sha256": "fc59192380c06cef1a68b020b41849a7b6c45490a4ca75c05c1c734db04f0852",
+      "local_snapshot_file": "crates__sdk__tests__network_relay__route_set__physical_loss.rs"
+    }
+  ],
+  "preexisting_diagnostics_download_comparison": [
+    {
+      "path": "build.log",
+      "bytes": 61042,
+      "sha256": "6bc5401c57b995bc8e39334bb3e5cffa65d2ffc1bbdebd3d20a63c5db0c132f2",
+      "matches_independently_verified_official_zip_payload": true
+    },
+    {
+      "path": "receipt.json",
+      "bytes": 1092,
+      "sha256": "d726e1dcca194d0e79c7e36b1bdfc433a2494f9f8d52b05675dd5ad8d9c43517",
+      "matches_independently_verified_official_zip_payload": true
+    }
+  ],
+  "runs": [
+    {
+      "schema_version": 1,
+      "kind": "exact-source-original-six-case-diagnostics-independent-verification",
+      "recorded_at_utc": "2026-11-03T09:04:47.2381201Z",
+      "repository": "ZHanry/NestLink",
+      "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+      "run_id": 41606958647,
+      "run_attempt": 1,
+      "workflow": "Original SDK migration failure diagnostics",
+      "workflow_path": ".github/workflows/network-migration-diagnostics.yml",
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41606958647",
+      "status": "completed",
+      "conclusion": "failure",
+      "metadata_files": [
+        {
+          "path": "run.json",
+          "bytes": 11777,
+          "sha256": "040faf4aa71f048b1ad2469abda1c9e7dfc450f0d2342bbc9d5812518e03366e"
+        },
+        {
+          "path": "jobs.json",
+          "bytes": 2475,
+          "sha256": "4a6708fb1f0af46ad4d35623e63c75a70949deaa0e6d42443d118d3735e447b9"
+        },
+        {
+          "path": "artifacts.json",
+          "bytes": 753,
+          "sha256": "8ab31d9be903bde04edf7930d296e0997f4be7a1682ad01fb1605922248be1ab"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 125819069914,
+          "name": "original-cases",
+          "status": "completed",
+          "conclusion": "failure",
+          "started_at": "2026-11-03T08:55:57Z",
+          "completed_at": "2026-11-03T08:59:36Z",
+          "runner_name": "GitHub Actions 1000012333",
+          "runner_group_name": "GitHub Actions",
+          "labels": [
+            "ubuntu-24.04"
+          ],
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1,
+              "started_at": "2026-11-03T08:55:58Z",
+              "completed_at": "2026-11-03T08:55:59Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2,
+              "started_at": "2026-11-03T08:55:59Z",
+              "completed_at": "2026-11-03T08:56:03Z"
+            },
+            {
+              "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3,
+              "started_at": "2026-11-03T08:56:03Z",
+              "completed_at": "2026-11-03T08:56:11Z"
+            },
+            {
+              "name": "Prepare the original pinned native build on the hosted runner",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4,
+              "started_at": "2026-11-03T08:56:11Z",
+              "completed_at": "2026-11-03T08:57:11Z"
+            },
+            {
+              "name": "Retain every original case independently, including abort diagnostics",
+              "status": "completed",
+              "conclusion": "failure",
+              "number": 5,
+              "started_at": "2026-11-03T08:57:11Z",
+              "completed_at": "2026-11-03T08:59:32Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 6,
+              "started_at": "2026-11-03T08:59:32Z",
+              "completed_at": "2026-11-03T08:59:34Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 12,
+              "started_at": "2026-11-03T08:59:34Z",
+              "completed_at": "2026-11-03T08:59:34Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 13,
+              "started_at": "2026-11-03T08:59:34Z",
+              "completed_at": "2026-11-03T08:59:34Z"
+            }
+          ]
+        }
+      ],
+      "artifact_count": 1,
+      "official_zip_verification_count": 1,
+      "independent_downloaded_file_count": 2.0,
+      "producer_payload_verification_count": 1.0,
+      "producer_command_log_verification_count": 0.0,
+      "artifacts": [
+        {
+          "id": 13217162853,
+          "name": "original-sdk-migration-fb3887448f007c1b1d39b5f30bfee533e2b4c216-1",
+          "official_digest": "sha256:3faff46810f19441ba9beaeb22ae37e0bd76247bfafb2ade4e7da55c12a49aa1",
+          "zip_sha256": "3faff46810f19441ba9beaeb22ae37e0bd76247bfafb2ade4e7da55c12a49aa1",
+          "zip_bytes": 9531,
+          "official_digest_size_source_matches": true,
+          "downloaded_file_count": 2,
+          "independent_downloaded_file_inventory": [
+            {
+              "path": "build.log",
+              "bytes": 61042,
+              "sha256": "6bc5401c57b995bc8e39334bb3e5cffa65d2ffc1bbdebd3d20a63c5db0c132f2"
+            },
+            {
+              "path": "receipt.json",
+              "bytes": 1092,
+              "sha256": "d726e1dcca194d0e79c7e36b1bdfc433a2494f9f8d52b05675dd5ad8d9c43517"
+            }
+          ],
+          "producer_payload_inventory_count": 1,
+          "producer_payload_verifications": [
+            {
+              "producer_receipt": "receipt.json",
+              "inventory_kind": "files",
+              "path": "build.log",
+              "bytes": 61042,
+              "sha256": "6bc5401c57b995bc8e39334bb3e5cffa65d2ffc1bbdebd3d20a63c5db0c132f2",
+              "producer_matches": true
+            }
+          ],
+          "producer_command_log_verification_count": 0,
+          "producer_unverified_digest_count": 0,
+          "producer_command_log_verifications": [],
+          "producer_inventory_available": true,
+          "producer_inventory_limitation": null,
+          "reports": [
+            {
+              "file": "receipt.json",
+              "source_claims": [
+                {
+                  "field": "source_revision",
+                  "value": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+                  "matches": true
+                },
+                {
+                  "field": "workflow_revision",
+                  "value": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+                  "matches": true
+                }
+              ],
+              "source_before": null,
+              "source_after": null,
+              "passed": false,
+              "status": null,
+              "scope": "Independent original SDK cases with unchanged assertions, deadlines and ordinary stack. Each log is streamed so a later abort cannot hide an earlier failure. This does not replace the complete network suite.",
+              "kind": null,
+              "failure": null,
+              "error": null,
+              "limitations": null,
+              "build_provenance": null,
+              "execution_provenance": null,
+              "commands": [
+                {
+                  "name": "build",
+                  "argv": [
+                    "cargo",
+                    "test",
+                    "--locked",
+                    "-p",
+                    "nestlink-sdk",
+                    "--test",
+                    "network_relay",
+                    "--no-run"
+                  ],
+                  "return_code": 101,
+                  "expected_return_codes": null,
+                  "timed_out": false,
+                  "timeout_seconds": null,
+                  "elapsed_seconds": null,
+                  "log": null,
+                  "log_bytes": null,
+                  "log_sha256": null
+                }
+              ],
+              "cases": [],
+              "acceptance_flags": {},
+              "runner_os": "Linux",
+              "runner_environment": "github-hosted",
+              "cargo_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839"
+            }
+          ],
+          "test_logs": [],
+          "retained_log_diagnostics": [
+            {
+              "file": "build.log",
+              "diagnostics": [
+                "error[E0433]: too many leading `super` keywords\n  --> crates/sdk/tests/network_relay/route_set/physical_loss.rs:66:36\n   |\n66 |     let mut second = super::super::super::chain::ChainNode::new(&f).await?;\n   |                                    ^^^^^ there are too many leading `super` keywords\n   |\nhelp: consider importing this struct\n   |\n 5 + use crate::chain::ChainNode;\n   |\nhelp: if you import `ChainNode`, refer to it directly\n   |\n66 -     let mut second = super::super::super::chain::ChainNode::new(&f).await?;\n66 +     let mut second = ChainNode::new(&f).await?;\n   |",
+                "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error\n"
+              ],
+              "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+            }
+          ]
+        }
+      ],
+      "limitations": [
+        "Actions results apply only to this exact source SHA. Historical failures remain unchanged.",
+        "Producer executable/native-library inventories whose bytes are absent from the ZIP are supplier receipts, not independent verification of those binaries.",
+        "Hosted browser/media/network success does not establish physical GPU, real device, public NAT/HA, cross-day or release eligibility."
+      ],
+      "producer_identity": {
+        "id": "original-six-case-diagnostics",
+        "workflow_path": ".github/workflows/network-migration-diagnostics.yml",
+        "receipt": "receipt.json",
+        "different_producer_from_other_run": true
+      },
+      "original_producer_receipt": {
+        "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+        "run_id": "41606958647",
+        "run_attempt": "1",
+        "workflow_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+        "runner_environment": "github-hosted",
+        "runner_os": "Linux",
+        "cargo_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839",
+        "stack_override": false,
+        "commands": [
+          {
+            "name": "build",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-sdk",
+              "--test",
+              "network_relay",
+              "--no-run"
+            ],
+            "return_code": 101,
+            "timed_out": false
+          }
+        ],
+        "passed": false,
+        "whole_acceptance_claimed": false,
+        "scope": "Independent original SDK cases with unchanged assertions, deadlines and ordinary stack. Each log is streamed so a later abort cannot hide an earlier failure. This does not replace the complete network suite.",
+        "files": [
+          {
+            "path": "build.log",
+            "bytes": 61042,
+            "sha256": "6bc5401c57b995bc8e39334bb3e5cffa65d2ffc1bbdebd3d20a63c5db0c132f2"
+          }
+        ]
+      },
+      "execution_scope": {
+        "intended_original_case_count": 6,
+        "intended_original_cases": [
+          "route_sets::authorization::current_node_or_original_path_revocation_stops_both_prepared_owners_without_migration",
+          "route_sets::continuation::input_and_video_use_bilateral_safe_recovery_with_real_release_and_no_old_queue_delivery",
+          "route_sets::continuation::one_endpoint_requests_migration_and_the_other_poll_responds_with_the_unique_signed_proposer",
+          "route_sets::continuation::signed_migration_keeps_original_inner_and_business_stream_after_old_carrier_release",
+          "route_sets::continuation::migrated_file_owner_keeps_safe_recovery_budget_after_transport_loss_and_guardian_cleanup",
+          "route_sets::recovery::full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_generation_without_replay"
+        ],
+        "actual_original_case_command_count": 0,
+        "actual_original_case_log_count": 0,
+        "actual_original_cases_executed": 0,
+        "actual_rust_harnesses_completed": 0,
+        "build_command": {
+          "name": "build",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-sdk",
+            "--test",
+            "network_relay",
+            "--no-run"
+          ],
+          "return_code": 101,
+          "timed_out": false
+        },
+        "build_gate_failed_before_case_loop": true,
+        "stack_override": false,
+        "whole_acceptance_claimed": false
+      },
+      "original_job_raw_logs": [
+        {
+          "job_id": 125819069914,
+          "job_name": "original-cases",
+          "official_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125819069914/logs",
+          "observation": {
+            "file": {
+              "path": "job-125819069914.log",
+              "bytes": 56482,
+              "sha256": "854ef58c7f50b7f6c0c128802e77ee0c01a19eeab703a1cefda495da6931d1ef"
+            },
+            "completed_rust_result_blocks": [],
+            "runtime_case_result_lines": [],
+            "compiler_diagnostics": [],
+            "retained_failure_contexts": [
+              {
+                "line": 619,
+                "group": "import hashlib, json, os, pathlib, re, subprocess",
+                "first_line": 616,
+                "lines": [
+                  "  CARGO_TERM_COLOR: always",
+                  "  NESTLINK_CODEC_PREFIX: /home/runner/work/_temp/migration-codecs/x86_64-unknown-linux-gnu",
+                  "##[endgroup]",
+                  "Traceback (most recent call last):",
+                  "  File \"/home/runner/work/_temp/001faa7a-afda-4f00-9cef-17115517d242.py\", line 53, in <module>",
+                  "    assert receipt['passed'], 'Original cases failed; all independent failure logs retained'",
+                  "           ~~~~~~~^^^^^^^^^^",
+                  "AssertionError: Original cases failed; all independent failure logs retained",
+                  "##[error]Process completed with exit code 1.",
+                  "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+                  "with:",
+                  "  name: original-sdk-migration-fb3887448f007c1b1d39b5f30bfee533e2b4c216-1",
+                  "  path: /home/runner/work/_temp/migration-original-diagnostics/",
+                  "  if-no-files-found: error",
+                  "  retention-days: 30",
+                  "  compression-level: 6",
+                  "  overwrite: false",
+                  "  include-hidden-files: false",
+                  "  archive: true",
+                  "env:",
+                  "  CARGO_INCREMENTAL: 0",
+                  "  CARGO_PROFILE_DEV_DEBUG: 0",
+                  "  CARGO_PROFILE_TEST_DEBUG: 0"
+                ]
+              },
+              {
+                "line": 623,
+                "group": "import hashlib, json, os, pathlib, re, subprocess",
+                "first_line": 620,
+                "lines": [
+                  "  File \"/home/runner/work/_temp/001faa7a-afda-4f00-9cef-17115517d242.py\", line 53, in <module>",
+                  "    assert receipt['passed'], 'Original cases failed; all independent failure logs retained'",
+                  "           ~~~~~~~^^^^^^^^^^",
+                  "AssertionError: Original cases failed; all independent failure logs retained",
+                  "##[error]Process completed with exit code 1.",
+                  "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+                  "with:",
+                  "  name: original-sdk-migration-fb3887448f007c1b1d39b5f30bfee533e2b4c216-1",
+                  "  path: /home/runner/work/_temp/migration-original-diagnostics/",
+                  "  if-no-files-found: error",
+                  "  retention-days: 30",
+                  "  compression-level: 6",
+                  "  overwrite: false",
+                  "  include-hidden-files: false",
+                  "  archive: true",
+                  "env:",
+                  "  CARGO_INCREMENTAL: 0",
+                  "  CARGO_PROFILE_DEV_DEBUG: 0",
+                  "  CARGO_PROFILE_TEST_DEBUG: 0",
+                  "  PYTHONDONTWRITEBYTECODE: 1",
+                  "  EXPECTED_SOURCE: fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+                  "  CARGO_HOME: /home/runner/.cargo",
+                  "  CARGO_TERM_COLOR: always"
+                ]
+              },
+              {
+                "line": 624,
+                "group": "import hashlib, json, os, pathlib, re, subprocess",
+                "first_line": 621,
+                "lines": [
+                  "    assert receipt['passed'], 'Original cases failed; all independent failure logs retained'",
+                  "           ~~~~~~~^^^^^^^^^^",
+                  "AssertionError: Original cases failed; all independent failure logs retained",
+                  "##[error]Process completed with exit code 1.",
+                  "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+                  "with:",
+                  "  name: original-sdk-migration-fb3887448f007c1b1d39b5f30bfee533e2b4c216-1",
+                  "  path: /home/runner/work/_temp/migration-original-diagnostics/",
+                  "  if-no-files-found: error",
+                  "  retention-days: 30",
+                  "  compression-level: 6",
+                  "  overwrite: false",
+                  "  include-hidden-files: false",
+                  "  archive: true",
+                  "env:",
+                  "  CARGO_INCREMENTAL: 0",
+                  "  CARGO_PROFILE_DEV_DEBUG: 0",
+                  "  CARGO_PROFILE_TEST_DEBUG: 0",
+                  "  PYTHONDONTWRITEBYTECODE: 1",
+                  "  EXPECTED_SOURCE: fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+                  "  CARGO_HOME: /home/runner/.cargo",
+                  "  CARGO_TERM_COLOR: always",
+                  "  NESTLINK_CODEC_PREFIX: /home/runner/work/_temp/migration-codecs/x86_64-unknown-linux-gnu"
+                ]
+              }
+            ],
+            "cargo_json_errors": [],
+            "cargo_json_build_finished": [],
+            "cargo_json_target_executables": [],
+            "original_step_exit_codes": [
+              {
+                "group": "import hashlib, json, os, pathlib, re, subprocess",
+                "return_code": 1,
+                "line": 624
+              }
+            ]
+          },
+          "failed_steps": [
+            {
+              "name": "Retain every original case independently, including abort diagnostics",
+              "number": 5,
+              "conclusion": "failure"
+            }
+          ]
+        }
+      ],
+      "uploaded_log_observations": [
+        {
+          "file": {
+            "path": "build.log",
+            "bytes": 61042,
+            "sha256": "6bc5401c57b995bc8e39334bb3e5cffa65d2ffc1bbdebd3d20a63c5db0c132f2"
+          },
+          "completed_rust_result_blocks": [],
+          "runtime_case_result_lines": [],
+          "compiler_diagnostics": [
+            "error[E0433]: too many leading `super` keywords",
+            "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error"
+          ],
+          "retained_failure_contexts": [
+            {
+              "line": 1183,
+              "group": null,
+              "first_line": 1180,
+              "lines": [
+                "   Compiling nestlink-server v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/apps/server)",
+                "   Compiling nestlink-sdk v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/sdk)",
+                "   Compiling nestlink-platform-files v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/platform-files)",
+                "error[E0433]: too many leading `super` keywords",
+                "  --> crates/sdk/tests/network_relay/route_set/physical_loss.rs:66:36",
+                "   |",
+                "66 |     let mut second = super::super::super::chain::ChainNode::new(&f).await?;",
+                "   |                                    ^^^^^ there are too many leading `super` keywords",
+                "   |",
+                "help: consider importing this struct",
+                "   |",
+                " 5 + use crate::chain::ChainNode;",
+                "   |",
+                "help: if you import `ChainNode`, refer to it directly",
+                "   |",
+                "66 -     let mut second = super::super::super::chain::ChainNode::new(&f).await?;",
+                "66 +     let mut second = ChainNode::new(&f).await?;",
+                "   |",
+                "",
+                "For more information about this error, try `rustc --explain E0433`.",
+                "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error",
+                ""
+              ]
+            },
+            {
+              "line": 1200,
+              "group": null,
+              "first_line": 1197,
+              "lines": [
+                "   |",
+                "",
+                "For more information about this error, try `rustc --explain E0433`.",
+                "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error",
+                ""
+              ]
+            }
+          ],
+          "cargo_json_errors": [],
+          "cargo_json_build_finished": [],
+          "cargo_json_target_executables": [],
+          "original_step_exit_codes": []
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "kind": "exact-source-production-sdk-automatic-relay-drop-independent-verification",
+      "recorded_at_utc": "2026-11-03T09:04:47.3840419Z",
+      "repository": "ZHanry/NestLink",
+      "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+      "run_id": 41606962833,
+      "run_attempt": 1,
+      "workflow": "Production SDK relay DROP migration",
+      "workflow_path": ".github/workflows/network-sdk-migration.yml",
+      "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41606962833",
+      "status": "completed",
+      "conclusion": "failure",
+      "metadata_files": [
+        {
+          "path": "run.json",
+          "bytes": 11755,
+          "sha256": "4f0505eb37c643690975d8b02707766fdf68556dadb650435bf82c210a064d38"
+        },
+        {
+          "path": "jobs.json",
+          "bytes": 3097,
+          "sha256": "e94569c5c67c316c52354bdc0fc3af8c3bb31ecac99565c5ec03aeffefc236ab"
+        },
+        {
+          "path": "artifacts.json",
+          "bytes": 753,
+          "sha256": "c8de5c1628e93dcbf01fc65c1c1ac28daa56fad80396424bafb00b81211245dd"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 125819086885,
+          "name": "automatic-sdk-relay-drop",
+          "status": "completed",
+          "conclusion": "failure",
+          "started_at": "2026-11-03T08:56:00Z",
+          "completed_at": "2026-11-03T09:01:02Z",
+          "runner_name": "GitHub Actions 1000012334",
+          "runner_group_name": "GitHub Actions",
+          "labels": [
+            "ubuntu-24.04"
+          ],
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1,
+              "started_at": "2026-11-03T08:56:01Z",
+              "completed_at": "2026-11-03T08:56:02Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2,
+              "started_at": "2026-11-03T08:56:02Z",
+              "completed_at": "2026-11-03T08:56:05Z"
+            },
+            {
+              "name": "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3,
+              "started_at": "2026-11-03T08:56:05Z",
+              "completed_at": "2026-11-03T08:56:13Z"
+            },
+            {
+              "name": "Set the existing SDK native codec location",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4,
+              "started_at": "2026-11-03T08:56:13Z",
+              "completed_at": "2026-11-03T08:56:13Z"
+            },
+            {
+              "name": "Prepare the existing SDK native build inputs",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5,
+              "started_at": "2026-11-03T08:56:13Z",
+              "completed_at": "2026-11-03T08:56:28Z"
+            },
+            {
+              "name": "Build and verify the locked existing native codecs on GitHub",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 6,
+              "started_at": "2026-11-03T08:56:28Z",
+              "completed_at": "2026-11-03T08:57:22Z"
+            },
+            {
+              "name": "Exercise twenty fresh original authorities through actual relay DROP and automatic SDK polling",
+              "status": "completed",
+              "conclusion": "failure",
+              "number": 7,
+              "started_at": "2026-11-03T08:57:22Z",
+              "completed_at": "2026-11-03T08:59:46Z"
+            },
+            {
+              "name": "Strict lint for the production SDK and original relay cases",
+              "status": "completed",
+              "conclusion": "failure",
+              "number": 8,
+              "started_at": "2026-11-03T08:59:46Z",
+              "completed_at": "2026-11-03T09:00:58Z"
+            },
+            {
+              "name": "Retain exact source, nft counters, original inner binding, approved files and physical receipts",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9,
+              "started_at": "2026-11-03T09:00:58Z",
+              "completed_at": "2026-11-03T09:00:59Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 18,
+              "started_at": "2026-11-03T09:00:59Z",
+              "completed_at": "2026-11-03T09:01:00Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 19,
+              "started_at": "2026-11-03T09:01:00Z",
+              "completed_at": "2026-11-03T09:01:00Z"
+            }
+          ]
+        }
+      ],
+      "artifact_count": 1,
+      "official_zip_verification_count": 1,
+      "independent_downloaded_file_count": 8.0,
+      "producer_payload_verification_count": 6.0,
+      "producer_command_log_verification_count": 6.0,
+      "artifacts": [
+        {
+          "id": 13217297473,
+          "name": "network-sdk-migration-fb3887448f007c1b1d39b5f30bfee533e2b4c216-1",
+          "official_digest": "sha256:2401b46b47eaad1f8fdce1be4f4c41dec68e118c3f2bee891a9473a2c588d8bc",
+          "zip_sha256": "2401b46b47eaad1f8fdce1be4f4c41dec68e118c3f2bee891a9473a2c588d8bc",
+          "zip_bytes": 55539,
+          "official_digest_size_source_matches": true,
+          "downloaded_file_count": 8,
+          "independent_downloaded_file_inventory": [
+            {
+              "path": "001-network-tool-index.log",
+              "bytes": 506,
+              "sha256": "404986e43ab1dffd63027a1fd4766e377bf1d60475b5b700907fd1bcc8e110d0"
+            },
+            {
+              "path": "002-network-tools.log",
+              "bytes": 592,
+              "sha256": "a3e252d98bcb4cf7729c50a0c88b82e60d0d9a62c1f2bdb035d83bc5092a1383"
+            },
+            {
+              "path": "003-rust-version.log",
+              "bytes": 453,
+              "sha256": "7f42255a2b74c27ee2ceea28e65503e845598446e5275729803bf4f39c1c3816"
+            },
+            {
+              "path": "004-cargo-version.log",
+              "bytes": 107,
+              "sha256": "63a5182752f7ea601ef7532be49c1e5dd6687599038d604ef5d2ce748502359c"
+            },
+            {
+              "path": "005-kernel.log",
+              "bytes": 192,
+              "sha256": "e17665eeffbc138fce6ab6993a2d2b3c028efbd1ebfe41e4070878c40ca1725d"
+            },
+            {
+              "path": "006-build-production-sdk-test.log",
+              "bytes": 574053,
+              "sha256": "4e8ee0afb97436a548bf78344bb0aa887620864186f94e3067c3dc1eb488a9c0"
+            },
+            {
+              "path": "production-sdk-migration-evidence.json",
+              "bytes": 7258,
+              "sha256": "e9ede41bed5845939d3092ec14f9e1abf8d26acba9a01a71e69e67ea667c700d"
+            },
+            {
+              "path": "strict-clippy.log",
+              "bytes": 39375,
+              "sha256": "7c268664babf5fbd17215923ed30556b251ea51c6810573e58fb7b371d053394"
+            }
+          ],
+          "producer_payload_inventory_count": 6,
+          "producer_payload_verifications": [
+            {
+              "producer_receipt": "production-sdk-migration-evidence.json",
+              "inventory_kind": "files",
+              "path": "001-network-tool-index.log",
+              "bytes": 506,
+              "sha256": "404986e43ab1dffd63027a1fd4766e377bf1d60475b5b700907fd1bcc8e110d0",
+              "producer_matches": true
+            },
+            {
+              "producer_receipt": "production-sdk-migration-evidence.json",
+              "inventory_kind": "files",
+              "path": "002-network-tools.log",
+              "bytes": 592,
+              "sha256": "a3e252d98bcb4cf7729c50a0c88b82e60d0d9a62c1f2bdb035d83bc5092a1383",
+              "producer_matches": true
+            },
+            {
+              "producer_receipt": "production-sdk-migration-evidence.json",
+              "inventory_kind": "files",
+              "path": "003-rust-version.log",
+              "bytes": 453,
+              "sha256": "7f42255a2b74c27ee2ceea28e65503e845598446e5275729803bf4f39c1c3816",
+              "producer_matches": true
+            },
+            {
+              "producer_receipt": "production-sdk-migration-evidence.json",
+              "inventory_kind": "files",
+              "path": "004-cargo-version.log",
+              "bytes": 107,
+              "sha256": "63a5182752f7ea601ef7532be49c1e5dd6687599038d604ef5d2ce748502359c",
+              "producer_matches": true
+            },
+            {
+              "producer_receipt": "production-sdk-migration-evidence.json",
+              "inventory_kind": "files",
+              "path": "005-kernel.log",
+              "bytes": 192,
+              "sha256": "e17665eeffbc138fce6ab6993a2d2b3c028efbd1ebfe41e4070878c40ca1725d",
+              "producer_matches": true
+            },
+            {
+              "producer_receipt": "production-sdk-migration-evidence.json",
+              "inventory_kind": "files",
+              "path": "006-build-production-sdk-test.log",
+              "bytes": 574053,
+              "sha256": "4e8ee0afb97436a548bf78344bb0aa887620864186f94e3067c3dc1eb488a9c0",
+              "producer_matches": true
+            }
+          ],
+          "producer_command_log_verification_count": 6,
+          "producer_unverified_digest_count": 0,
+          "producer_command_log_verifications": [
+            {
+              "producer_receipt": "production-sdk-migration-evidence.json",
+              "inventory_kind": "commands.log",
+              "path": "001-network-tool-index.log",
+              "bytes": 506,
+              "sha256": "404986e43ab1dffd63027a1fd4766e377bf1d60475b5b700907fd1bcc8e110d0",
+              "producer_matches": true
+            },
+            {
+              "producer_receipt": "production-sdk-migration-evidence.json",
+              "inventory_kind": "commands.log",
+              "path": "002-network-tools.log",
+              "bytes": 592,
+              "sha256": "a3e252d98bcb4cf7729c50a0c88b82e60d0d9a62c1f2bdb035d83bc5092a1383",
+              "producer_matches": true
+            },
+            {
+              "producer_receipt": "production-sdk-migration-evidence.json",
+              "inventory_kind": "commands.log",
+              "path": "003-rust-version.log",
+              "bytes": 453,
+              "sha256": "7f42255a2b74c27ee2ceea28e65503e845598446e5275729803bf4f39c1c3816",
+              "producer_matches": true
+            },
+            {
+              "producer_receipt": "production-sdk-migration-evidence.json",
+              "inventory_kind": "commands.log",
+              "path": "004-cargo-version.log",
+              "bytes": 107,
+              "sha256": "63a5182752f7ea601ef7532be49c1e5dd6687599038d604ef5d2ce748502359c",
+              "producer_matches": true
+            },
+            {
+              "producer_receipt": "production-sdk-migration-evidence.json",
+              "inventory_kind": "commands.log",
+              "path": "005-kernel.log",
+              "bytes": 192,
+              "sha256": "e17665eeffbc138fce6ab6993a2d2b3c028efbd1ebfe41e4070878c40ca1725d",
+              "producer_matches": true
+            },
+            {
+              "producer_receipt": "production-sdk-migration-evidence.json",
+              "inventory_kind": "commands.log",
+              "path": "006-build-production-sdk-test.log",
+              "bytes": 574053,
+              "sha256": "4e8ee0afb97436a548bf78344bb0aa887620864186f94e3067c3dc1eb488a9c0",
+              "producer_matches": true
+            }
+          ],
+          "producer_inventory_available": true,
+          "producer_inventory_limitation": null,
+          "reports": [
+            {
+              "file": "production-sdk-migration-evidence.json",
+              "source_claims": [
+                {
+                  "field": "build_provenance.source_revision",
+                  "value": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+                  "matches": true
+                }
+              ],
+              "source_before": null,
+              "source_after": null,
+              "passed": false,
+              "status": null,
+              "scope": null,
+              "kind": "nestlink-production-sdk-automatic-relay-drop",
+              "failure": "RuntimeError: build-production-sdk-test failed; retained command log is authoritative",
+              "error": null,
+              "limitations": [
+                "Controlled loopback relay DROP exercises production SDK, four signed phases, original inner Quinn connection and real approved OS FileRead",
+                "Network p95 <=3s is unchanged and measured conservatively from before fault-controller dispatch to all fresh file bytes verified",
+                "No public NAT, independent relay-process crash, native Windows input/media presentation, interactive p95 <=5s, adaptive PMTU or full cancellation/poller matrix qualification"
+              ],
+              "build_provenance": {
+                "repository": "ZHanry/NestLink",
+                "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+                "workflow": "Production SDK relay DROP migration",
+                "workflow_path": ".github/workflows/network-sdk-migration.yml",
+                "workflow_ref": "ZHanry/NestLink/.github/workflows/network-sdk-migration.yml@refs/heads/main",
+                "workflow_sha": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+                "job": "automatic-sdk-relay-drop",
+                "run_id": "41606962833",
+                "run_attempt": "1",
+                "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41606962833",
+                "runner": {
+                  "environment": "github-hosted",
+                  "name": "GitHub Actions 1000012334",
+                  "os": "Linux",
+                  "architecture": "X64"
+                },
+                "source_before": {
+                  "expected_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+                  "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+                  "exact_source": true,
+                  "clean": true,
+                  "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                  "status_raw_bytes": 0,
+                  "status": [],
+                  "dependency_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839"
+                },
+                "source_after": {
+                  "expected_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+                  "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+                  "exact_source": true,
+                  "clean": true,
+                  "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                  "status_raw_bytes": 0,
+                  "status": [],
+                  "dependency_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839"
+                },
+                "executable": null
+              },
+              "execution_provenance": {
+                "environment": "github-hosted-linux-owned-network-namespace",
+                "process_uid": 1001,
+                "runner_namespace": "net:[4026531833]",
+                "trials": 20,
+                "exact_ignored_test": "route_sets::physical_loss::automatic_original_inner_survives_real_relay_drop_within_original_authority"
+              },
+              "commands": [
+                {
+                  "name": "001-network-tool-index",
+                  "argv": [
+                    "sudo",
+                    "-n",
+                    "apt-get",
+                    "update"
+                  ],
+                  "return_code": 0,
+                  "expected_return_codes": [
+                    0
+                  ],
+                  "timed_out": false,
+                  "timeout_seconds": 180,
+                  "elapsed_seconds": 1.62,
+                  "log": "001-network-tool-index.log",
+                  "log_bytes": 506,
+                  "log_sha256": "404986e43ab1dffd63027a1fd4766e377bf1d60475b5b700907fd1bcc8e110d0"
+                },
+                {
+                  "name": "002-network-tools",
+                  "argv": [
+                    "sudo",
+                    "-n",
+                    "apt-get",
+                    "install",
+                    "-y",
+                    "--no-install-recommends",
+                    "iproute2",
+                    "tcpdump",
+                    "util-linux",
+                    "nftables"
+                  ],
+                  "return_code": 0,
+                  "expected_return_codes": [
+                    0
+                  ],
+                  "timed_out": false,
+                  "timeout_seconds": 180,
+                  "elapsed_seconds": 0.516,
+                  "log": "002-network-tools.log",
+                  "log_bytes": 592,
+                  "log_sha256": "a3e252d98bcb4cf7729c50a0c88b82e60d0d9a62c1f2bdb035d83bc5092a1383"
+                },
+                {
+                  "name": "003-rust-version",
+                  "argv": [
+                    "rustc",
+                    "--version",
+                    "--verbose"
+                  ],
+                  "return_code": 0,
+                  "expected_return_codes": [
+                    0
+                  ],
+                  "timed_out": false,
+                  "timeout_seconds": 60,
+                  "elapsed_seconds": 1.016,
+                  "log": "003-rust-version.log",
+                  "log_bytes": 453,
+                  "log_sha256": "7f42255a2b74c27ee2ceea28e65503e845598446e5275729803bf4f39c1c3816"
+                },
+                {
+                  "name": "004-cargo-version",
+                  "argv": [
+                    "cargo",
+                    "--version"
+                  ],
+                  "return_code": 0,
+                  "expected_return_codes": [
+                    0
+                  ],
+                  "timed_out": false,
+                  "timeout_seconds": 60,
+                  "elapsed_seconds": 0.032,
+                  "log": "004-cargo-version.log",
+                  "log_bytes": 107,
+                  "log_sha256": "63a5182752f7ea601ef7532be49c1e5dd6687599038d604ef5d2ce748502359c"
+                },
+                {
+                  "name": "005-kernel",
+                  "argv": [
+                    "uname",
+                    "-a"
+                  ],
+                  "return_code": 0,
+                  "expected_return_codes": [
+                    0
+                  ],
+                  "timed_out": false,
+                  "timeout_seconds": 60,
+                  "elapsed_seconds": 0.002,
+                  "log": "005-kernel.log",
+                  "log_bytes": 192,
+                  "log_sha256": "e17665eeffbc138fce6ab6993a2d2b3c028efbd1ebfe41e4070878c40ca1725d"
+                },
+                {
+                  "name": "006-build-production-sdk-test",
+                  "argv": [
+                    "cargo",
+                    "test",
+                    "--locked",
+                    "-p",
+                    "nestlink-sdk",
+                    "--test",
+                    "network_relay",
+                    "--no-run",
+                    "--message-format=json"
+                  ],
+                  "return_code": 101,
+                  "expected_return_codes": [
+                    0
+                  ],
+                  "timed_out": false,
+                  "timeout_seconds": 1800,
+                  "elapsed_seconds": 139.486,
+                  "log": "006-build-production-sdk-test.log",
+                  "log_bytes": 574053,
+                  "log_sha256": "4e8ee0afb97436a548bf78344bb0aa887620864186f94e3067c3dc1eb488a9c0"
+                }
+              ],
+              "cases": [],
+              "acceptance_flags": {
+                "production_migration_protocol_exercised": false,
+                "w14_complete": false,
+                "ac22_passed": false
+              }
+            }
+          ],
+          "test_logs": [],
+          "retained_log_diagnostics": [
+            {
+              "file": "006-build-production-sdk-test.log",
+              "diagnostics": [
+                "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error\n{\"reason\":\"build-finished\",\"success\":false}\n"
+              ],
+              "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+            },
+            {
+              "file": "strict-clippy.log",
+              "diagnostics": [
+                "error[E0433]: too many leading `super` keywords\n  --> crates/sdk/tests/network_relay/route_set/physical_loss.rs:66:36\n   |\n66 |     let mut second = super::super::super::chain::ChainNode::new(&f).await?;\n   |                                    ^^^^^ there are too many leading `super` keywords\n   |\nhelp: consider importing this struct\n   |\n 5 + use crate::chain::ChainNode;\n   |\nhelp: if you import `ChainNode`, refer to it directly\n   |\n66 -     let mut second = super::super::super::chain::ChainNode::new(&f).await?;\n66 +     let mut second = ChainNode::new(&f).await?;\n   |",
+                "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error\n"
+              ],
+              "classification": "Retained compiler/lint output only; producer command return codes and original test results determine outcome."
+            }
+          ]
+        }
+      ],
+      "limitations": [
+        "Actions results apply only to this exact source SHA. Historical failures remain unchanged.",
+        "Producer executable/native-library inventories whose bytes are absent from the ZIP are supplier receipts, not independent verification of those binaries.",
+        "Hosted browser/media/network success does not establish physical GPU, real device, public NAT/HA, cross-day or release eligibility."
+      ],
+      "producer_identity": {
+        "id": "production-sdk-automatic-relay-drop",
+        "workflow_path": ".github/workflows/network-sdk-migration.yml",
+        "receipt": "production-sdk-migration-evidence.json",
+        "different_producer_from_other_run": true
+      },
+      "original_producer_receipt": {
+        "schema_version": 1,
+        "kind": "nestlink-production-sdk-automatic-relay-drop",
+        "passed": false,
+        "failure": "RuntimeError: build-production-sdk-test failed; retained command log is authoritative",
+        "production_migration_protocol_exercised": false,
+        "w14_complete": false,
+        "ac22_passed": false,
+        "build_provenance": {
+          "repository": "ZHanry/NestLink",
+          "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+          "workflow": "Production SDK relay DROP migration",
+          "workflow_path": ".github/workflows/network-sdk-migration.yml",
+          "workflow_ref": "ZHanry/NestLink/.github/workflows/network-sdk-migration.yml@refs/heads/main",
+          "workflow_sha": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+          "job": "automatic-sdk-relay-drop",
+          "run_id": "41606962833",
+          "run_attempt": "1",
+          "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41606962833",
+          "runner": {
+            "environment": "github-hosted",
+            "name": "GitHub Actions 1000012334",
+            "os": "Linux",
+            "architecture": "X64"
+          },
+          "source_before": {
+            "expected_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+            "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+            "exact_source": true,
+            "clean": true,
+            "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "status_raw_bytes": 0,
+            "status": [],
+            "dependency_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839"
+          },
+          "source_after": {
+            "expected_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+            "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+            "exact_source": true,
+            "clean": true,
+            "status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "status_raw_bytes": 0,
+            "status": [],
+            "dependency_lock_sha256": "1af73ed88055136ad0bac70cd78a26eb9fe5423b2a90826f8a3a135bfc762839"
+          },
+          "executable": null
+        },
+        "execution_provenance": {
+          "environment": "github-hosted-linux-owned-network-namespace",
+          "process_uid": 1001,
+          "runner_namespace": "net:[4026531833]",
+          "trials": 20,
+          "exact_ignored_test": "route_sets::physical_loss::automatic_original_inner_survives_real_relay_drop_within_original_authority"
+        },
+        "slice": null,
+        "commands": [
+          {
+            "name": "001-network-tool-index",
+            "argv": [
+              "sudo",
+              "-n",
+              "apt-get",
+              "update"
+            ],
+            "started_at": "2026-11-03T08:57:23Z",
+            "timeout_seconds": 180,
+            "log": "001-network-tool-index.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T08:57:24Z",
+            "elapsed_seconds": 1.62,
+            "log_bytes": 506,
+            "log_sha256": "404986e43ab1dffd63027a1fd4766e377bf1d60475b5b700907fd1bcc8e110d0",
+            "expected_return_codes": [
+              0
+            ]
+          },
+          {
+            "name": "002-network-tools",
+            "argv": [
+              "sudo",
+              "-n",
+              "apt-get",
+              "install",
+              "-y",
+              "--no-install-recommends",
+              "iproute2",
+              "tcpdump",
+              "util-linux",
+              "nftables"
+            ],
+            "started_at": "2026-11-03T08:57:24Z",
+            "timeout_seconds": 180,
+            "log": "002-network-tools.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T08:57:25Z",
+            "elapsed_seconds": 0.516,
+            "log_bytes": 592,
+            "log_sha256": "a3e252d98bcb4cf7729c50a0c88b82e60d0d9a62c1f2bdb035d83bc5092a1383",
+            "expected_return_codes": [
+              0
+            ]
+          },
+          {
+            "name": "003-rust-version",
+            "argv": [
+              "rustc",
+              "--version",
+              "--verbose"
+            ],
+            "started_at": "2026-11-03T08:57:25Z",
+            "timeout_seconds": 60,
+            "log": "003-rust-version.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T08:57:26Z",
+            "elapsed_seconds": 1.016,
+            "log_bytes": 453,
+            "log_sha256": "7f42255a2b74c27ee2ceea28e65503e845598446e5275729803bf4f39c1c3816",
+            "expected_return_codes": [
+              0
+            ]
+          },
+          {
+            "name": "004-cargo-version",
+            "argv": [
+              "cargo",
+              "--version"
+            ],
+            "started_at": "2026-11-03T08:57:26Z",
+            "timeout_seconds": 60,
+            "log": "004-cargo-version.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T08:57:26Z",
+            "elapsed_seconds": 0.032,
+            "log_bytes": 107,
+            "log_sha256": "63a5182752f7ea601ef7532be49c1e5dd6687599038d604ef5d2ce748502359c",
+            "expected_return_codes": [
+              0
+            ]
+          },
+          {
+            "name": "005-kernel",
+            "argv": [
+              "uname",
+              "-a"
+            ],
+            "started_at": "2026-11-03T08:57:26Z",
+            "timeout_seconds": 60,
+            "log": "005-kernel.log",
+            "return_code": 0,
+            "timed_out": false,
+            "finished_at": "2026-11-03T08:57:26Z",
+            "elapsed_seconds": 0.002,
+            "log_bytes": 192,
+            "log_sha256": "e17665eeffbc138fce6ab6993a2d2b3c028efbd1ebfe41e4070878c40ca1725d",
+            "expected_return_codes": [
+              0
+            ]
+          },
+          {
+            "name": "006-build-production-sdk-test",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "-p",
+              "nestlink-sdk",
+              "--test",
+              "network_relay",
+              "--no-run",
+              "--message-format=json"
+            ],
+            "started_at": "2026-11-03T08:57:26Z",
+            "timeout_seconds": 1800,
+            "log": "006-build-production-sdk-test.log",
+            "return_code": 101,
+            "timed_out": false,
+            "finished_at": "2026-11-03T08:59:46Z",
+            "elapsed_seconds": 139.486,
+            "log_bytes": 574053,
+            "log_sha256": "4e8ee0afb97436a548bf78344bb0aa887620864186f94e3067c3dc1eb488a9c0",
+            "expected_return_codes": [
+              0
+            ]
+          }
+        ],
+        "processes": [],
+        "files": [
+          {
+            "path": "001-network-tool-index.log",
+            "bytes": 506,
+            "sha256": "404986e43ab1dffd63027a1fd4766e377bf1d60475b5b700907fd1bcc8e110d0"
+          },
+          {
+            "path": "002-network-tools.log",
+            "bytes": 592,
+            "sha256": "a3e252d98bcb4cf7729c50a0c88b82e60d0d9a62c1f2bdb035d83bc5092a1383"
+          },
+          {
+            "path": "003-rust-version.log",
+            "bytes": 453,
+            "sha256": "7f42255a2b74c27ee2ceea28e65503e845598446e5275729803bf4f39c1c3816"
+          },
+          {
+            "path": "004-cargo-version.log",
+            "bytes": 107,
+            "sha256": "63a5182752f7ea601ef7532be49c1e5dd6687599038d604ef5d2ce748502359c"
+          },
+          {
+            "path": "005-kernel.log",
+            "bytes": 192,
+            "sha256": "e17665eeffbc138fce6ab6993a2d2b3c028efbd1ebfe41e4070878c40ca1725d"
+          },
+          {
+            "path": "006-build-production-sdk-test.log",
+            "bytes": 574053,
+            "sha256": "4e8ee0afb97436a548bf78344bb0aa887620864186f94e3067c3dc1eb488a9c0"
+          }
+        ],
+        "limitations": [
+          "Controlled loopback relay DROP exercises production SDK, four signed phases, original inner Quinn connection and real approved OS FileRead",
+          "Network p95 <=3s is unchanged and measured conservatively from before fault-controller dispatch to all fresh file bytes verified",
+          "No public NAT, independent relay-process crash, native Windows input/media presentation, interactive p95 <=5s, adaptive PMTU or full cancellation/poller matrix qualification"
+        ]
+      },
+      "execution_scope": {
+        "configured_trial_count": 20,
+        "configured_trials_are_not_executed_trials": true,
+        "actual_drop_trials_executed": 0,
+        "actual_trial_receipt_count": 0,
+        "actual_original_authorities_created_for_trials": 0,
+        "actual_sdk_runtime_process_count": 0,
+        "actual_rust_harnesses_completed": 0,
+        "executable": null,
+        "slice": null,
+        "processes": [],
+        "build_command": {
+          "name": "006-build-production-sdk-test",
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "nestlink-sdk",
+            "--test",
+            "network_relay",
+            "--no-run",
+            "--message-format=json"
+          ],
+          "started_at": "2026-11-03T08:57:26Z",
+          "timeout_seconds": 1800,
+          "log": "006-build-production-sdk-test.log",
+          "return_code": 101,
+          "timed_out": false,
+          "finished_at": "2026-11-03T08:59:46Z",
+          "elapsed_seconds": 139.486,
+          "log_bytes": 574053,
+          "log_sha256": "4e8ee0afb97436a548bf78344bb0aa887620864186f94e3067c3dc1eb488a9c0",
+          "expected_return_codes": [
+            0
+          ]
+        },
+        "successful_setup_commands": [
+          {
+            "name": "001-network-tool-index",
+            "argv": [
+              "sudo",
+              "-n",
+              "apt-get",
+              "update"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "002-network-tools",
+            "argv": [
+              "sudo",
+              "-n",
+              "apt-get",
+              "install",
+              "-y",
+              "--no-install-recommends",
+              "iproute2",
+              "tcpdump",
+              "util-linux",
+              "nftables"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "003-rust-version",
+            "argv": [
+              "rustc",
+              "--version",
+              "--verbose"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "004-cargo-version",
+            "argv": [
+              "cargo",
+              "--version"
+            ],
+            "return_code": 0
+          },
+          {
+            "name": "005-kernel",
+            "argv": [
+              "uname",
+              "-a"
+            ],
+            "return_code": 0
+          }
+        ],
+        "strict_clippy": {
+          "argv": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "-p",
+            "nestlink-sdk",
+            "--test",
+            "network_relay",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "return_code": 101,
+          "return_code_evidence": "Official job raw log after strict-clippy invocation",
+          "producer_command_manifest_entry_absent": true,
+          "uploaded_log_independently_hashed": true,
+          "failure_is_same_original_E0433_compile_blocker": true
+        },
+        "production_migration_protocol_exercised": false,
+        "w14_complete": false,
+        "ac22_passed": false
+      },
+      "original_job_raw_logs": [
+        {
+          "job_id": 125819086885,
+          "job_name": "automatic-sdk-relay-drop",
+          "official_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/jobs/125819086885/logs",
+          "observation": {
+            "file": {
+              "path": "job-125819086885.log",
+              "bytes": 153948,
+              "sha256": "304d7de07241d667725908203e31d643465e8a21f7f5912e476565a2b2ae0dc7"
+            },
+            "completed_rust_result_blocks": [],
+            "runtime_case_result_lines": [],
+            "compiler_diagnostics": [
+              "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error",
+              "error[E0433]: too many leading `super` keywords",
+              "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error"
+            ],
+            "retained_failure_contexts": [
+              {
+                "line": 831,
+                "group": "python -B scripts/network-rewrite-sdk-migration.py --output \"/home/runner/work/_temp/network-sdk-migration-evidence\"",
+                "first_line": 828,
+                "lines": [
+                  "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///home/runner/work/NestLink/NestLink/apps/server#nestlink-server@0.8.0-rc.1\",\"manifest_path\":\"/home/runner/work/NestLink/NestLink/apps/server/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"nestlink_server\",\"src_path\":\"/home/runner/work/NestLink/NestLink/apps/server/src/lib.rs\",\"edition\":\"2024\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":0,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/home/runner/work/NestLink/NestLink/target/debug/deps/libnestlink_server-5c19b05b23deda3b.rlib\",\"/home/runner/work/NestLink/NestLink/target/debug/deps/libnestlink_server-5c19b05b23deda3b.rmeta\"],\"executable\":null,\"fresh\":false}",
+                  "{\"reason\":\"compiler-message\",\"package_id\":\"path+file:///home/runner/work/NestLink/NestLink/crates/sdk#nestlink-sdk@0.8.0-rc.1\",\"manifest_path\":\"/home/runner/work/NestLink/NestLink/crates/sdk/Cargo.toml\",\"target\":{\"kind\":[\"test\"],\"crate_types\":[\"bin\"],\"name\":\"network_relay\",\"src_path\":\"/home/runner/work/NestLink/NestLink/crates/sdk/tests/network_relay.rs\",\"edition\":\"2024\",\"doc\":false,\"doctest\":false,\"test\":true},\"message\":{\"rendered\":\"error[E0433]: too many leading `super` keywords\\n  --> crates/sdk/tests/network_relay/route_set/physical_loss.rs:66:36\\n   |\\n66 |     let mut second = super::super::super::chain::ChainNode::new(&f).await?;\\n   |                                    ^^^^^ there are too many leading `super` keywords\\n   |\\nhelp: consider importing this struct\\n   |\\n 5 + use crate::chain::ChainNode;\\n   |\\nhelp: if you import `ChainNode`, refer to it directly\\n   |\\n66 -     let mut second = super::super::super::chain::ChainNode::new(&f).await?;\\n66 +     let mut second = ChainNode::new(&f).await?;\\n   |\\n\\n\",\"$message_type\":\"diagnostic\",\"children\":[{\"children\":[],\"code\":null,\"level\":\"help\",\"message\":\"consider importing this struct\",\"rendered\":null,\"spans\":[{\"byte_end\":296,\"byte_start\":296,\"column_end\":1,\"column_start\":1,\"expansion\":null,\"file_name\":\"crates/sdk/tests/network_relay/route_set/physical_loss.rs\",\"is_primary\":true,\"label\":null,\"line_end\":5,\"line_start\":5,\"suggested_replacement\":\"use crate::chain::ChainNode;\\n\",\"suggestion_applicability\":\"MaybeIncorrect\",\"text\":[{\"highlight_end\":1,\"highlight_start\":1,\"text\":\"use super::*;\"}]}]},{\"children\":[],\"code\":null,\"level\":\"help\",\"message\":\"if you import `ChainNode`, refer to it directly\",\"rendered\":null,\"spans\":[{\"byte_end\":3035,\"byte_start\":3007,\"column_end\":50,\"column_start\":22,\"expansion\":null,\"file_name\":\"crates/sdk/tests/network_relay/route_set/physical_loss.rs\",\"is_primary\":true,\"label\":null,\"line_end\":66,\"line_start\":66,\"suggested_replacement\":\"\",\"suggestion_applicability\":\"Unspecified\",\"text\":[{\"highlight_end\":50,\"highlight_start\":22,\"text\":\"    let mut second = super::super::super::chain::ChainNode::new(&f).await?;\"}]}]}],\"level\":\"error\",\"message\":\"too many leading `super` keywords\",\"spans\":[{\"byte_end\":3026,\"byte_start\":3021,\"column_end\":41,\"column_start\":36,\"expansion\":null,\"file_name\":\"crates/sdk/tests/network_relay/route_set/physical_loss.rs\",\"is_primary\":true,\"label\":\"there are too many leading `super` keywords\",\"line_end\":66,\"line_start\":66,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"text\":[{\"highlight_end\":41,\"highlight_start\":36,\"text\":\"    let mut second = super::super::super::chain::ChainNode::new(&f).await?;\"}]}],\"code\":{\"code\":\"E0433\",\"explanation\":\"An undeclared crate, module, or type was used.\\n\\nErroneous code example:\\n\\n```compile_fail,E0433\\nlet map = HashMap::new();\\n// error: failed to resolve: use of undeclared type `HashMap`\\n```\\n\\nPlease verify you didn't misspell the type/module's name or that you didn't\\nforget to import it:\\n\\n```\\nuse std::collections::HashMap; // HashMap has been imported.\\nlet map: HashMap<u32, u32> = HashMap::new(); // So it can be used!\\n```\\n\\nIf you've expected to use a crate name:\\n\\n```compile_fail\\nuse ferris_wheel::BigO;\\n// error: failed to resolve: use of undeclared module or unlinked crate\\n```\\n\\nMake sure the crate has been added as a dependency in `Cargo.toml`.\\n\\nTo use a module from your current crate, add the `crate::` prefix to the path.\\n\"}}}",
+                  "{\"reason\":\"compiler-message\",\"package_id\":\"path+file:///home/runner/work/NestLink/NestLink/crates/sdk#nestlink-sdk@0.8.0-rc.1\",\"manifest_path\":\"/home/runner/work/NestLink/NestLink/crates/sdk/Cargo.toml\",\"target\":{\"kind\":[\"test\"],\"crate_types\":[\"bin\"],\"name\":\"network_relay\",\"src_path\":\"/home/runner/work/NestLink/NestLink/crates/sdk/tests/network_relay.rs\",\"edition\":\"2024\",\"doc\":false,\"doctest\":false,\"test\":true},\"message\":{\"rendered\":\"For more information about this error, try `rustc --explain E0433`.\\n\",\"$message_type\":\"diagnostic\",\"children\":[],\"level\":\"failure-note\",\"message\":\"For more information about this error, try `rustc --explain E0433`.\",\"spans\":[],\"code\":null}}",
+                  "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error",
+                  "{\"reason\":\"build-finished\",\"success\":false}",
+                  "",
+                  "{\"argv\": [\"cargo\", \"test\", \"--locked\", \"-p\", \"nestlink-sdk\", \"--test\", \"network_relay\", \"--no-run\", \"--message-format=json\"], \"elapsed_seconds\": 139.486, \"finished_at\": \"2026-11-03T08:59:46Z\", \"log\": \"006-build-production-sdk-test.log\", \"log_bytes\": 574053, \"log_sha256\": \"4e8ee0afb97436a548bf78344bb0aa887620864186f94e3067c3dc1eb488a9c0\", \"name\": \"006-build-production-sdk-test\", \"return_code\": 101, \"started_at\": \"2026-11-03T08:57:26Z\", \"timed_out\": false, \"timeout_seconds\": 1800}",
+                  "{",
+                  "  \"passed\": false,",
+                  "  \"failure\": \"RuntimeError: build-production-sdk-test failed; retained command log is authoritative\",",
+                  "  \"evidence\": \"/home/runner/work/_temp/network-sdk-migration-evidence\"",
+                  "}",
+                  "##[error]Process completed with exit code 1.",
+                  "##[group]Run set -o pipefail",
+                  "set -o pipefail",
+                  "mkdir -p \"$RUNNER_TEMP/network-sdk-migration-evidence\"",
+                  "cargo clippy --locked -p nestlink-sdk --test network_relay -- -D warnings 2>&1 | tee \"$RUNNER_TEMP/network-sdk-migration-evidence/strict-clippy.log\"",
+                  "shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}",
+                  "env:",
+                  "  CARGO_INCREMENTAL: 0",
+                  "  CARGO_PROFILE_DEV_DEBUG: 0",
+                  "  CARGO_PROFILE_TEST_DEBUG: 0",
+                  "  PYTHONDONTWRITEBYTECODE: 1"
+                ]
+              },
+              {
+                "line": 840,
+                "group": "python -B scripts/network-rewrite-sdk-migration.py --output \"/home/runner/work/_temp/network-sdk-migration-evidence\"",
+                "first_line": 837,
+                "lines": [
+                  "  \"failure\": \"RuntimeError: build-production-sdk-test failed; retained command log is authoritative\",",
+                  "  \"evidence\": \"/home/runner/work/_temp/network-sdk-migration-evidence\"",
+                  "}",
+                  "##[error]Process completed with exit code 1.",
+                  "##[group]Run set -o pipefail",
+                  "set -o pipefail",
+                  "mkdir -p \"$RUNNER_TEMP/network-sdk-migration-evidence\"",
+                  "cargo clippy --locked -p nestlink-sdk --test network_relay -- -D warnings 2>&1 | tee \"$RUNNER_TEMP/network-sdk-migration-evidence/strict-clippy.log\"",
+                  "shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}",
+                  "env:",
+                  "  CARGO_INCREMENTAL: 0",
+                  "  CARGO_PROFILE_DEV_DEBUG: 0",
+                  "  CARGO_PROFILE_TEST_DEBUG: 0",
+                  "  PYTHONDONTWRITEBYTECODE: 1",
+                  "  RUST_BACKTRACE: 1",
+                  "  CARGO_HOME: /home/runner/.cargo",
+                  "  CARGO_TERM_COLOR: always",
+                  "  NESTLINK_CODEC_PREFIX: /home/runner/work/_temp/nestlink-codecs/x86_64-unknown-linux-gnu",
+                  "##[endgroup]",
+                  "    Checking cfg-if v1.0.5",
+                  "    Checking libc v0.2.190",
+                  "    Checking typenum v1.20.1",
+                  "    Checking subtle v2.6.1"
+                ]
+              },
+              {
+                "line": 1560,
+                "group": "set -o pipefail",
+                "first_line": 1557,
+                "lines": [
+                  "    Checking nestlink-server v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/apps/server)",
+                  "    Checking tempfile v3.27.0",
+                  "    Checking nestlink-sdk v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/sdk)",
+                  "error[E0433]: too many leading `super` keywords",
+                  "  --> crates/sdk/tests/network_relay/route_set/physical_loss.rs:66:36",
+                  "   |",
+                  "66 |     let mut second = super::super::super::chain::ChainNode::new(&f).await?;",
+                  "   |                                    ^^^^^ there are too many leading `super` keywords",
+                  "   |",
+                  "help: consider importing this struct",
+                  "   |",
+                  " 5 + use crate::chain::ChainNode;",
+                  "   |",
+                  "help: if you import `ChainNode`, refer to it directly",
+                  "   |",
+                  "66 -     let mut second = super::super::super::chain::ChainNode::new(&f).await?;",
+                  "66 +     let mut second = ChainNode::new(&f).await?;",
+                  "   |",
+                  "",
+                  "For more information about this error, try `rustc --explain E0433`.",
+                  "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error",
+                  "##[error]Process completed with exit code 101.",
+                  "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+                ]
+              },
+              {
+                "line": 1577,
+                "group": "set -o pipefail",
+                "first_line": 1574,
+                "lines": [
+                  "   |",
+                  "",
+                  "For more information about this error, try `rustc --explain E0433`.",
+                  "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error",
+                  "##[error]Process completed with exit code 101.",
+                  "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+                  "with:",
+                  "  name: network-sdk-migration-fb3887448f007c1b1d39b5f30bfee533e2b4c216-1",
+                  "  path: /home/runner/work/_temp/network-sdk-migration-evidence/",
+                  "  if-no-files-found: error",
+                  "  retention-days: 30",
+                  "  compression-level: 6",
+                  "  overwrite: false",
+                  "  include-hidden-files: false",
+                  "  archive: true",
+                  "env:",
+                  "  CARGO_INCREMENTAL: 0",
+                  "  CARGO_PROFILE_DEV_DEBUG: 0",
+                  "  CARGO_PROFILE_TEST_DEBUG: 0",
+                  "  PYTHONDONTWRITEBYTECODE: 1",
+                  "  RUST_BACKTRACE: 1",
+                  "  CARGO_HOME: /home/runner/.cargo",
+                  "  CARGO_TERM_COLOR: always"
+                ]
+              },
+              {
+                "line": 1578,
+                "group": "set -o pipefail",
+                "first_line": 1575,
+                "lines": [
+                  "",
+                  "For more information about this error, try `rustc --explain E0433`.",
+                  "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error",
+                  "##[error]Process completed with exit code 101.",
+                  "##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+                  "with:",
+                  "  name: network-sdk-migration-fb3887448f007c1b1d39b5f30bfee533e2b4c216-1",
+                  "  path: /home/runner/work/_temp/network-sdk-migration-evidence/",
+                  "  if-no-files-found: error",
+                  "  retention-days: 30",
+                  "  compression-level: 6",
+                  "  overwrite: false",
+                  "  include-hidden-files: false",
+                  "  archive: true",
+                  "env:",
+                  "  CARGO_INCREMENTAL: 0",
+                  "  CARGO_PROFILE_DEV_DEBUG: 0",
+                  "  CARGO_PROFILE_TEST_DEBUG: 0",
+                  "  PYTHONDONTWRITEBYTECODE: 1",
+                  "  RUST_BACKTRACE: 1",
+                  "  CARGO_HOME: /home/runner/.cargo",
+                  "  CARGO_TERM_COLOR: always",
+                  "  NESTLINK_CODEC_PREFIX: /home/runner/work/_temp/nestlink-codecs/x86_64-unknown-linux-gnu"
+                ]
+              }
+            ],
+            "cargo_json_errors": [
+              {
+                "line": 829,
+                "package_id": "path+file:///home/runner/work/NestLink/NestLink/crates/sdk#nestlink-sdk@0.8.0-rc.1",
+                "target": {
+                  "kind": [
+                    "test"
+                  ],
+                  "crate_types": [
+                    "bin"
+                  ],
+                  "name": "network_relay",
+                  "src_path": "/home/runner/work/NestLink/NestLink/crates/sdk/tests/network_relay.rs",
+                  "edition": "2024",
+                  "doc": false,
+                  "doctest": false,
+                  "test": true
+                },
+                "message": {
+                  "rendered": "error[E0433]: too many leading `super` keywords\n  --> crates/sdk/tests/network_relay/route_set/physical_loss.rs:66:36\n   |\n66 |     let mut second = super::super::super::chain::ChainNode::new(&f).await?;\n   |                                    ^^^^^ there are too many leading `super` keywords\n   |\nhelp: consider importing this struct\n   |\n 5 + use crate::chain::ChainNode;\n   |\nhelp: if you import `ChainNode`, refer to it directly\n   |\n66 -     let mut second = super::super::super::chain::ChainNode::new(&f).await?;\n66 +     let mut second = ChainNode::new(&f).await?;\n   |\n\n",
+                  "$message_type": "diagnostic",
+                  "children": [
+                    {
+                      "children": [],
+                      "code": null,
+                      "level": "help",
+                      "message": "consider importing this struct",
+                      "rendered": null,
+                      "spans": [
+                        {
+                          "byte_end": 296,
+                          "byte_start": 296,
+                          "column_end": 1,
+                          "column_start": 1,
+                          "expansion": null,
+                          "file_name": "crates/sdk/tests/network_relay/route_set/physical_loss.rs",
+                          "is_primary": true,
+                          "label": null,
+                          "line_end": 5,
+                          "line_start": 5,
+                          "suggested_replacement": "use crate::chain::ChainNode;\n",
+                          "suggestion_applicability": "MaybeIncorrect",
+                          "text": [
+                            {
+                              "highlight_end": 1,
+                              "highlight_start": 1,
+                              "text": "use super::*;"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "children": [],
+                      "code": null,
+                      "level": "help",
+                      "message": "if you import `ChainNode`, refer to it directly",
+                      "rendered": null,
+                      "spans": [
+                        {
+                          "byte_end": 3035,
+                          "byte_start": 3007,
+                          "column_end": 50,
+                          "column_start": 22,
+                          "expansion": null,
+                          "file_name": "crates/sdk/tests/network_relay/route_set/physical_loss.rs",
+                          "is_primary": true,
+                          "label": null,
+                          "line_end": 66,
+                          "line_start": 66,
+                          "suggested_replacement": "",
+                          "suggestion_applicability": "Unspecified",
+                          "text": [
+                            {
+                              "highlight_end": 50,
+                              "highlight_start": 22,
+                              "text": "    let mut second = super::super::super::chain::ChainNode::new(&f).await?;"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "level": "error",
+                  "message": "too many leading `super` keywords",
+                  "spans": [
+                    {
+                      "byte_end": 3026,
+                      "byte_start": 3021,
+                      "column_end": 41,
+                      "column_start": 36,
+                      "expansion": null,
+                      "file_name": "crates/sdk/tests/network_relay/route_set/physical_loss.rs",
+                      "is_primary": true,
+                      "label": "there are too many leading `super` keywords",
+                      "line_end": 66,
+                      "line_start": 66,
+                      "suggested_replacement": null,
+                      "suggestion_applicability": null,
+                      "text": [
+                        {
+                          "highlight_end": 41,
+                          "highlight_start": 36,
+                          "text": "    let mut second = super::super::super::chain::ChainNode::new(&f).await?;"
+                        }
+                      ]
+                    }
+                  ],
+                  "code": {
+                    "code": "E0433",
+                    "explanation": "An undeclared crate, module, or type was used.\n\nErroneous code example:\n\n```compile_fail,E0433\nlet map = HashMap::new();\n// error: failed to resolve: use of undeclared type `HashMap`\n```\n\nPlease verify you didn't misspell the type/module's name or that you didn't\nforget to import it:\n\n```\nuse std::collections::HashMap; // HashMap has been imported.\nlet map: HashMap<u32, u32> = HashMap::new(); // So it can be used!\n```\n\nIf you've expected to use a crate name:\n\n```compile_fail\nuse ferris_wheel::BigO;\n// error: failed to resolve: use of undeclared module or unlinked crate\n```\n\nMake sure the crate has been added as a dependency in `Cargo.toml`.\n\nTo use a module from your current crate, add the `crate::` prefix to the path.\n"
+                  }
+                }
+              }
+            ],
+            "cargo_json_build_finished": [
+              {
+                "line": 832,
+                "success": false
+              }
+            ],
+            "cargo_json_target_executables": [],
+            "original_step_exit_codes": [
+              {
+                "group": "python -B scripts/network-rewrite-sdk-migration.py --output \"/home/runner/work/_temp/network-sdk-migration-evidence\"",
+                "return_code": 1,
+                "line": 840
+              },
+              {
+                "group": "set -o pipefail",
+                "return_code": 101,
+                "line": 1578
+              }
+            ]
+          },
+          "failed_steps": [
+            {
+              "name": "Exercise twenty fresh original authorities through actual relay DROP and automatic SDK polling",
+              "number": 7,
+              "conclusion": "failure"
+            },
+            {
+              "name": "Strict lint for the production SDK and original relay cases",
+              "number": 8,
+              "conclusion": "failure"
+            }
+          ]
+        }
+      ],
+      "uploaded_log_observations": [
+        {
+          "file": {
+            "path": "001-network-tool-index.log",
+            "bytes": 506,
+            "sha256": "404986e43ab1dffd63027a1fd4766e377bf1d60475b5b700907fd1bcc8e110d0"
+          },
+          "completed_rust_result_blocks": [],
+          "runtime_case_result_lines": [],
+          "compiler_diagnostics": [],
+          "retained_failure_contexts": [],
+          "cargo_json_errors": [],
+          "cargo_json_build_finished": [],
+          "cargo_json_target_executables": [],
+          "original_step_exit_codes": []
+        },
+        {
+          "file": {
+            "path": "002-network-tools.log",
+            "bytes": 592,
+            "sha256": "a3e252d98bcb4cf7729c50a0c88b82e60d0d9a62c1f2bdb035d83bc5092a1383"
+          },
+          "completed_rust_result_blocks": [],
+          "runtime_case_result_lines": [],
+          "compiler_diagnostics": [],
+          "retained_failure_contexts": [],
+          "cargo_json_errors": [],
+          "cargo_json_build_finished": [],
+          "cargo_json_target_executables": [],
+          "original_step_exit_codes": []
+        },
+        {
+          "file": {
+            "path": "003-rust-version.log",
+            "bytes": 453,
+            "sha256": "7f42255a2b74c27ee2ceea28e65503e845598446e5275729803bf4f39c1c3816"
+          },
+          "completed_rust_result_blocks": [],
+          "runtime_case_result_lines": [],
+          "compiler_diagnostics": [],
+          "retained_failure_contexts": [],
+          "cargo_json_errors": [],
+          "cargo_json_build_finished": [],
+          "cargo_json_target_executables": [],
+          "original_step_exit_codes": []
+        },
+        {
+          "file": {
+            "path": "004-cargo-version.log",
+            "bytes": 107,
+            "sha256": "63a5182752f7ea601ef7532be49c1e5dd6687599038d604ef5d2ce748502359c"
+          },
+          "completed_rust_result_blocks": [],
+          "runtime_case_result_lines": [],
+          "compiler_diagnostics": [],
+          "retained_failure_contexts": [],
+          "cargo_json_errors": [],
+          "cargo_json_build_finished": [],
+          "cargo_json_target_executables": [],
+          "original_step_exit_codes": []
+        },
+        {
+          "file": {
+            "path": "005-kernel.log",
+            "bytes": 192,
+            "sha256": "e17665eeffbc138fce6ab6993a2d2b3c028efbd1ebfe41e4070878c40ca1725d"
+          },
+          "completed_rust_result_blocks": [],
+          "runtime_case_result_lines": [],
+          "compiler_diagnostics": [],
+          "retained_failure_contexts": [],
+          "cargo_json_errors": [],
+          "cargo_json_build_finished": [],
+          "cargo_json_target_executables": [],
+          "original_step_exit_codes": []
+        },
+        {
+          "file": {
+            "path": "006-build-production-sdk-test.log",
+            "bytes": 574053,
+            "sha256": "4e8ee0afb97436a548bf78344bb0aa887620864186f94e3067c3dc1eb488a9c0"
+          },
+          "completed_rust_result_blocks": [],
+          "runtime_case_result_lines": [],
+          "compiler_diagnostics": [
+            "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error"
+          ],
+          "retained_failure_contexts": [
+            {
+              "line": 1475,
+              "group": null,
+              "first_line": 1472,
+              "lines": [
+                "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///home/runner/work/NestLink/NestLink/apps/server#nestlink-server@0.8.0-rc.1\",\"manifest_path\":\"/home/runner/work/NestLink/NestLink/apps/server/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"nestlink_server\",\"src_path\":\"/home/runner/work/NestLink/NestLink/apps/server/src/lib.rs\",\"edition\":\"2024\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":0,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/home/runner/work/NestLink/NestLink/target/debug/deps/libnestlink_server-5c19b05b23deda3b.rlib\",\"/home/runner/work/NestLink/NestLink/target/debug/deps/libnestlink_server-5c19b05b23deda3b.rmeta\"],\"executable\":null,\"fresh\":false}",
+                "{\"reason\":\"compiler-message\",\"package_id\":\"path+file:///home/runner/work/NestLink/NestLink/crates/sdk#nestlink-sdk@0.8.0-rc.1\",\"manifest_path\":\"/home/runner/work/NestLink/NestLink/crates/sdk/Cargo.toml\",\"target\":{\"kind\":[\"test\"],\"crate_types\":[\"bin\"],\"name\":\"network_relay\",\"src_path\":\"/home/runner/work/NestLink/NestLink/crates/sdk/tests/network_relay.rs\",\"edition\":\"2024\",\"doc\":false,\"doctest\":false,\"test\":true},\"message\":{\"rendered\":\"error[E0433]: too many leading `super` keywords\\n  --> crates/sdk/tests/network_relay/route_set/physical_loss.rs:66:36\\n   |\\n66 |     let mut second = super::super::super::chain::ChainNode::new(&f).await?;\\n   |                                    ^^^^^ there are too many leading `super` keywords\\n   |\\nhelp: consider importing this struct\\n   |\\n 5 + use crate::chain::ChainNode;\\n   |\\nhelp: if you import `ChainNode`, refer to it directly\\n   |\\n66 -     let mut second = super::super::super::chain::ChainNode::new(&f).await?;\\n66 +     let mut second = ChainNode::new(&f).await?;\\n   |\\n\\n\",\"$message_type\":\"diagnostic\",\"children\":[{\"children\":[],\"code\":null,\"level\":\"help\",\"message\":\"consider importing this struct\",\"rendered\":null,\"spans\":[{\"byte_end\":296,\"byte_start\":296,\"column_end\":1,\"column_start\":1,\"expansion\":null,\"file_name\":\"crates/sdk/tests/network_relay/route_set/physical_loss.rs\",\"is_primary\":true,\"label\":null,\"line_end\":5,\"line_start\":5,\"suggested_replacement\":\"use crate::chain::ChainNode;\\n\",\"suggestion_applicability\":\"MaybeIncorrect\",\"text\":[{\"highlight_end\":1,\"highlight_start\":1,\"text\":\"use super::*;\"}]}]},{\"children\":[],\"code\":null,\"level\":\"help\",\"message\":\"if you import `ChainNode`, refer to it directly\",\"rendered\":null,\"spans\":[{\"byte_end\":3035,\"byte_start\":3007,\"column_end\":50,\"column_start\":22,\"expansion\":null,\"file_name\":\"crates/sdk/tests/network_relay/route_set/physical_loss.rs\",\"is_primary\":true,\"label\":null,\"line_end\":66,\"line_start\":66,\"suggested_replacement\":\"\",\"suggestion_applicability\":\"Unspecified\",\"text\":[{\"highlight_end\":50,\"highlight_start\":22,\"text\":\"    let mut second = super::super::super::chain::ChainNode::new(&f).await?;\"}]}]}],\"level\":\"error\",\"message\":\"too many leading `super` keywords\",\"spans\":[{\"byte_end\":3026,\"byte_start\":3021,\"column_end\":41,\"column_start\":36,\"expansion\":null,\"file_name\":\"crates/sdk/tests/network_relay/route_set/physical_loss.rs\",\"is_primary\":true,\"label\":\"there are too many leading `super` keywords\",\"line_end\":66,\"line_start\":66,\"suggested_replacement\":null,\"suggestion_applicability\":null,\"text\":[{\"highlight_end\":41,\"highlight_start\":36,\"text\":\"    let mut second = super::super::super::chain::ChainNode::new(&f).await?;\"}]}],\"code\":{\"code\":\"E0433\",\"explanation\":\"An undeclared crate, module, or type was used.\\n\\nErroneous code example:\\n\\n```compile_fail,E0433\\nlet map = HashMap::new();\\n// error: failed to resolve: use of undeclared type `HashMap`\\n```\\n\\nPlease verify you didn't misspell the type/module's name or that you didn't\\nforget to import it:\\n\\n```\\nuse std::collections::HashMap; // HashMap has been imported.\\nlet map: HashMap<u32, u32> = HashMap::new(); // So it can be used!\\n```\\n\\nIf you've expected to use a crate name:\\n\\n```compile_fail\\nuse ferris_wheel::BigO;\\n// error: failed to resolve: use of undeclared module or unlinked crate\\n```\\n\\nMake sure the crate has been added as a dependency in `Cargo.toml`.\\n\\nTo use a module from your current crate, add the `crate::` prefix to the path.\\n\"}}}",
+                "{\"reason\":\"compiler-message\",\"package_id\":\"path+file:///home/runner/work/NestLink/NestLink/crates/sdk#nestlink-sdk@0.8.0-rc.1\",\"manifest_path\":\"/home/runner/work/NestLink/NestLink/crates/sdk/Cargo.toml\",\"target\":{\"kind\":[\"test\"],\"crate_types\":[\"bin\"],\"name\":\"network_relay\",\"src_path\":\"/home/runner/work/NestLink/NestLink/crates/sdk/tests/network_relay.rs\",\"edition\":\"2024\",\"doc\":false,\"doctest\":false,\"test\":true},\"message\":{\"rendered\":\"For more information about this error, try `rustc --explain E0433`.\\n\",\"$message_type\":\"diagnostic\",\"children\":[],\"level\":\"failure-note\",\"message\":\"For more information about this error, try `rustc --explain E0433`.\",\"spans\":[],\"code\":null}}",
+                "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error",
+                "{\"reason\":\"build-finished\",\"success\":false}",
+                ""
+              ]
+            }
+          ],
+          "cargo_json_errors": [
+            {
+              "line": 1473,
+              "package_id": "path+file:///home/runner/work/NestLink/NestLink/crates/sdk#nestlink-sdk@0.8.0-rc.1",
+              "target": {
+                "kind": [
+                  "test"
+                ],
+                "crate_types": [
+                  "bin"
+                ],
+                "name": "network_relay",
+                "src_path": "/home/runner/work/NestLink/NestLink/crates/sdk/tests/network_relay.rs",
+                "edition": "2024",
+                "doc": false,
+                "doctest": false,
+                "test": true
+              },
+              "message": {
+                "rendered": "error[E0433]: too many leading `super` keywords\n  --> crates/sdk/tests/network_relay/route_set/physical_loss.rs:66:36\n   |\n66 |     let mut second = super::super::super::chain::ChainNode::new(&f).await?;\n   |                                    ^^^^^ there are too many leading `super` keywords\n   |\nhelp: consider importing this struct\n   |\n 5 + use crate::chain::ChainNode;\n   |\nhelp: if you import `ChainNode`, refer to it directly\n   |\n66 -     let mut second = super::super::super::chain::ChainNode::new(&f).await?;\n66 +     let mut second = ChainNode::new(&f).await?;\n   |\n\n",
+                "$message_type": "diagnostic",
+                "children": [
+                  {
+                    "children": [],
+                    "code": null,
+                    "level": "help",
+                    "message": "consider importing this struct",
+                    "rendered": null,
+                    "spans": [
+                      {
+                        "byte_end": 296,
+                        "byte_start": 296,
+                        "column_end": 1,
+                        "column_start": 1,
+                        "expansion": null,
+                        "file_name": "crates/sdk/tests/network_relay/route_set/physical_loss.rs",
+                        "is_primary": true,
+                        "label": null,
+                        "line_end": 5,
+                        "line_start": 5,
+                        "suggested_replacement": "use crate::chain::ChainNode;\n",
+                        "suggestion_applicability": "MaybeIncorrect",
+                        "text": [
+                          {
+                            "highlight_end": 1,
+                            "highlight_start": 1,
+                            "text": "use super::*;"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "children": [],
+                    "code": null,
+                    "level": "help",
+                    "message": "if you import `ChainNode`, refer to it directly",
+                    "rendered": null,
+                    "spans": [
+                      {
+                        "byte_end": 3035,
+                        "byte_start": 3007,
+                        "column_end": 50,
+                        "column_start": 22,
+                        "expansion": null,
+                        "file_name": "crates/sdk/tests/network_relay/route_set/physical_loss.rs",
+                        "is_primary": true,
+                        "label": null,
+                        "line_end": 66,
+                        "line_start": 66,
+                        "suggested_replacement": "",
+                        "suggestion_applicability": "Unspecified",
+                        "text": [
+                          {
+                            "highlight_end": 50,
+                            "highlight_start": 22,
+                            "text": "    let mut second = super::super::super::chain::ChainNode::new(&f).await?;"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "level": "error",
+                "message": "too many leading `super` keywords",
+                "spans": [
+                  {
+                    "byte_end": 3026,
+                    "byte_start": 3021,
+                    "column_end": 41,
+                    "column_start": 36,
+                    "expansion": null,
+                    "file_name": "crates/sdk/tests/network_relay/route_set/physical_loss.rs",
+                    "is_primary": true,
+                    "label": "there are too many leading `super` keywords",
+                    "line_end": 66,
+                    "line_start": 66,
+                    "suggested_replacement": null,
+                    "suggestion_applicability": null,
+                    "text": [
+                      {
+                        "highlight_end": 41,
+                        "highlight_start": 36,
+                        "text": "    let mut second = super::super::super::chain::ChainNode::new(&f).await?;"
+                      }
+                    ]
+                  }
+                ],
+                "code": {
+                  "code": "E0433",
+                  "explanation": "An undeclared crate, module, or type was used.\n\nErroneous code example:\n\n```compile_fail,E0433\nlet map = HashMap::new();\n// error: failed to resolve: use of undeclared type `HashMap`\n```\n\nPlease verify you didn't misspell the type/module's name or that you didn't\nforget to import it:\n\n```\nuse std::collections::HashMap; // HashMap has been imported.\nlet map: HashMap<u32, u32> = HashMap::new(); // So it can be used!\n```\n\nIf you've expected to use a crate name:\n\n```compile_fail\nuse ferris_wheel::BigO;\n// error: failed to resolve: use of undeclared module or unlinked crate\n```\n\nMake sure the crate has been added as a dependency in `Cargo.toml`.\n\nTo use a module from your current crate, add the `crate::` prefix to the path.\n"
+                }
+              }
+            }
+          ],
+          "cargo_json_build_finished": [
+            {
+              "line": 1476,
+              "success": false
+            }
+          ],
+          "cargo_json_target_executables": [],
+          "original_step_exit_codes": []
+        },
+        {
+          "file": {
+            "path": "strict-clippy.log",
+            "bytes": 39375,
+            "sha256": "7c268664babf5fbd17215923ed30556b251ea51c6810573e58fb7b371d053394"
+          },
+          "completed_rust_result_blocks": [],
+          "runtime_case_result_lines": [],
+          "compiler_diagnostics": [
+            "error[E0433]: too many leading `super` keywords",
+            "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error"
+          ],
+          "retained_failure_contexts": [
+            {
+              "line": 705,
+              "group": null,
+              "first_line": 702,
+              "lines": [
+                "    Checking nestlink-server v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/apps/server)",
+                "    Checking tempfile v3.27.0",
+                "    Checking nestlink-sdk v0.8.0-rc.1 (/home/runner/work/NestLink/NestLink/crates/sdk)",
+                "error[E0433]: too many leading `super` keywords",
+                "  --> crates/sdk/tests/network_relay/route_set/physical_loss.rs:66:36",
+                "   |",
+                "66 |     let mut second = super::super::super::chain::ChainNode::new(&f).await?;",
+                "   |                                    ^^^^^ there are too many leading `super` keywords",
+                "   |",
+                "help: consider importing this struct",
+                "   |",
+                " 5 + use crate::chain::ChainNode;",
+                "   |",
+                "help: if you import `ChainNode`, refer to it directly",
+                "   |",
+                "66 -     let mut second = super::super::super::chain::ChainNode::new(&f).await?;",
+                "66 +     let mut second = ChainNode::new(&f).await?;",
+                "   |",
+                "",
+                "For more information about this error, try `rustc --explain E0433`.",
+                "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error",
+                ""
+              ]
+            },
+            {
+              "line": 722,
+              "group": null,
+              "first_line": 719,
+              "lines": [
+                "   |",
+                "",
+                "For more information about this error, try `rustc --explain E0433`.",
+                "error: could not compile `nestlink-sdk` (test \"network_relay\") due to 1 previous error",
+                ""
+              ]
+            }
+          ],
+          "cargo_json_errors": [],
+          "cargo_json_build_finished": [],
+          "cargo_json_target_executables": [],
+          "original_step_exit_codes": []
+        }
+      ]
+    }
+  ],
+  "interpretation": [
+    "Both original exact-source runs failed at compilation of nestlink-sdk test network_relay. The diagnostics build and production SDK DROP build are separate producer invocations of the same source defect, not two independent runtime failures. Original diagnostic contexts and the Cargo JSON E0433 primary span at physical_loss.rs:66:36 are retained.",
+    "The original-case diagnostics workflow intended six independently executed original cases with ordinary stack and unchanged assertions/deadlines. Its receipt contains only a failed --no-run build command (101, not timed out). No case command or case log exists; all six intended runtime cases have zero execution. The workflow source bytes and original six names are retained independently.",
+    "The production SDK DROP receipt belongs to a different workflow and producer. Its execution_provenance.trials=20 is configuration, not execution evidence. The build fails with 101 before an executable is selected or run_slice begins: executable=null, slice=null and processes=[]. Actual DROP trials, runtime SDK processes, trial receipts and trial authorities are all zero. No p95, automatic polling, four signed phases, original inner connection preservation, packet/nft capture, approved FileRead or physical cleanup behavior is claimed from this build failure.",
+    "The DROP orchestrator enclosing step exits 1 after the failed build; its subsequent independent strict cargo clippy invocation exits 101 with the same E0433. strict-clippy.log was generated after the producer receipt/files manifest and has no producer digest entry. It is nevertheless included in the official verified ZIP and independently hashed as an actual uploaded file. Successful tool/version/kernel setup commands are retained only as setup observations.",
+    "Both GitHub official ZIP sizes/digests and exact run/source identities match. All ten extracted files, seven producer payload entries and six producer command-log entries match actual bytes; these overlapping entry sets are not extra distinct files. Both complete official job raw logs are independently hashed. The prior diagnostics download matches the independently verified official payload byte for byte.",
+    "Cargo.lock, both workflow definitions, the SDK DROP producer script and physical_loss.rs are exported as raw blobs from the exact Git revision and independently hashed without line-ending or encoding changes. The exact Cargo.lock SHA256 matches both producer claims, including SDK DROP before/after source snapshots. Clean source snapshots remain producer claims about runner state; local Git source verification does not claim to independently observe that private runner filesystem.",
+    "All original false acceptance flags are preserved. Later source repairs do not change these historical failures. There are no completed runtime harnesses or runtime business-case passes in either run. No assertion, selector, stack size, timeout, public HTTPS trust, ingress/late/PTS/capture or Luanti threshold is changed. Local work is official metadata/log/ZIP download, extraction, raw Git blob export, hashing and read-only parsing only; no project compiler, formatter, lint, test or target program is executed locally."
+  ],
+  "acceptance_claims": [],
+  "release_eligibility_claimed": false,
+  "independent_audit_execution": {
+    "kind": "local_artifact_and_exact_git_blob_bytes_only",
+    "source_builds_or_project_tests_run_locally": false,
+    "operations": [
+      "GitHub official metadata and completed job raw log downloads",
+      "official ZIP SHA256/size/run/source comparison",
+      "artifact extraction and actual-byte inventories",
+      "producer receipt and command-log digest comparisons",
+      "exact Git blob binary export and Cargo.lock comparison",
+      "read-only compiler JSON and original receipt/log parsing"
+    ]
+  }
+}

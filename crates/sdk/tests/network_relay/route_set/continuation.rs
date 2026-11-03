@@ -632,7 +632,7 @@ async fn original_inner_migration(
     drop(rebind(&standby)?);
     assert!(controller_observation.snapshot().stopped);
     assert!(host_observation.snapshot().stopped);
-    second.finish().await?;
+    second.finish_revoked().await?;
     f.finish().await?;
     Ok(())
 }

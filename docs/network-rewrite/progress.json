@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
-  "checkpoint_kind": "hosted_format_import_and_complete_historical_804c117_failures_retained",
+  "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
+  "checkpoint_kind": "verified_media_v6_and_completed_drop_trials_recovery_hold_followup_pending_hosted",
   "active_tasks": [
     "W00",
     "W02",
@@ -53,12 +53,10 @@
     "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
   ],
   "unverified_assumptions": [
-    "Exact3b91 original independent migration diagnostics run41605119008 completed failure: one safe Input/Video recovery passed, four normal failures and one recovery stack abort. Original archive, all producer file hashes and official job log retained; no whole acceptance claim.",
-    "Source repair releases the additional old_gate Arc before awaiting actual UDP cleanup; the extra Arc retained Hub/raw/outer Connection and formed a two-second cleanup cycle. Both authorize futures now have explicit heap boundaries to address the ordinary-stack abort; exact hosted rerun required.",
-    "The new current-node revoke fixture observes exact production PermissionDenied and the original fixed message, then joins listener and verifies actual UDP rebind. Existing safety, timing and physical release assertions remain unchanged. The old failure is retained.",
-    "The new explicitly opted-in Quinn900ms idle/200ms keepalive and external nft DROP controller require exact-source hosted execution. Twenty fresh authorities retain original inner exporter, business generation, group and lease deadlines; conservative three-second all-file-byte bound is unchanged.",
-    "Both native IPC jobs passed on1c851e1 in media run41604572853; complete Windows owner jobs remain running. Canonical UUID positive fixture repair preserves validation and every assertion.",
-    "Original media target failures, Luanti25s failure, external public HTTPS DNS fixture failure, full target/NAT/mobile/signing/24h acceptance remain open."
+    "Exact1c851e1 media run41604572853 completed all4jobs success. Official4ZIP/72file/8source/4producer-log hashes independently verified. Both Windows29actual Rust invocations passed, including exact v3-v6 renewal and actual VP9 Core ACK/AU/decoded export; Linux24/Windows27 native IPC and strict lint passed. Core fixture uses an in-memory bridge, not full desktop/TLS/scanout/steady performance qualification.",
+    "Exact308e221 original six-case run41607835980 completed2pass/4fail. Current-node revocation and safe Input/Video passed. The three retained-inner business cases reached their final explicit-revocation fixture cleanup, now corrected to the exact denial observer without changing business assertions. Recovery no longer overflows its ordinary stack and now fails because a real migration hold kept the lease live; production None-source admission now recognizes only a still-valid held-loss fact on its actual original carrier.",
+    "Exact308e221 actual nft DROP run41607840510 completed all20trials in the experiment step. Workflow failed later strict Clippy because the new revoked fixture used expect_err; replaced with a fallible exact-error extraction retaining error-kind/message assertions. Complete producer/provenance/p95/raw capture review is in progress; no whole W14/AC22 claim.",
+    "Original Luanti25s failure, media hardware/HDR failures, public HTTPS target fixture failures, independent NAT/mobile/full target/signing/24h evidence remain open."
   ],
   "external_prerequisites": [
     {
@@ -88,12 +86,14 @@
     }
   ],
   "next_steps": [
-    "Push this reviewed SDK/owner repair and generate first-party formatting patch only on hosted Actions; verify and import the exact artifact.",
-    "Execute original six independent migration diagnostics and twenty-trial production SDK actual nft DROP on exact committed source; retain failures and fix product causes without relaxing assertions.",
-    "Freeze complete804c117 Rust and1c851e1 media results; run complete network/Rust matrices on the formatted integrated source.",
-    "Continue other ready production/target work; only create0.8.0RC after all actual qualification gates are met. Local and remote branches remain main only."
+    "Push minimal actual held-loss recovery/strict cleanup fixes; run exact original six cases, actual20trial DROP and hosted source formatting.",
+    "Complete current308e221 integrated workflow evidence without relabeling failures; import only verified formatting output for new source.",
+    "Run full final-source required checks and assemble one same-source candidate only when original gates pass.",
+    "Execute verified new VP9 direction tools on the authorized ordinary Windows target; preserve all original hardware/25s failures and complete remaining resources/target qualifications before public release."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/sdk-migration-build-fb38874.json",
+    "docs/network-rewrite/evidence/windows-media-owner-1c851e1.json",
     "docs/network-rewrite/evidence/format-fb38874.json",
     "docs/network-rewrite/evidence/full-rust-core-804c117.json",
     "docs/network-rewrite/evidence/migration-original-3b91a37.json",
@@ -829,32 +829,57 @@
     }
   },
   "continuation_checkpoint": {
-    "recorded_at": "2026-11-03T16:54:02.748076+08:00",
-    "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+    "recorded_at": "2026-11-03T17:14:12.811372+08:00",
+    "source_revision": "308e221007abe4369b44630f88acf13a46412bbb",
     "source_is_pre_commit_parent": true,
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
     "user_decisions": [
-      "Retain Luanti original25s check and failure.",
-      "Only two new incorrect None expectations may be corrected to exact Unauthorized.",
+      "Retain original Luanti25s check and failure.",
+      "Only two new incorrect None expectations may become exact Unauthorized.",
       "Tampering input may use VP9=false and additionally reject disabled VP9 encoder/RGB444 conversion."
     ],
     "current_work": {
-      "root": "Reviewed actual nft controller, scoped source evidence and pending exact hosted integration.",
-      "core_audit": "Old gate physical owner deadlock, explicit opted-in Quinn liveness and ordinary-stack proof boundary source repairs complete; awaiting hosted results.",
-      "baseline_ci": "Final complete804c117 Rust provenance and all original failures.",
-      "mechanism_research": "Final complete1c851e1 original Windows media/IPC provenance."
+      "root": "Reviewed complete original cleanup/hold fixes, new same-source integrated checks and actual direction target tools.",
+      "core_audit": "Shared revoked-node fixture branch and real held-loss recovery admission repaired; awaiting exact hosted validation.",
+      "baseline_ci": "Independently verify308e221 twenty-trial nft/pcap/physical source evidence and original six-case failure records.",
+      "mechanism_research": "1c851e1 full Windows/Linux media source evidence complete and frozen."
     },
     "pending_runs": {
-      "media_1c851e1": 41604572853,
-      "sdk_migration_fb38874": 41606962833,
-      "migration_original_fb38874": 41606958647
+      "network": 41607845137,
+      "web": 41607849879,
+      "rust": 41607995461,
+      "linux_package": 41608003071,
+      "upgrade": 41608031912,
+      "windows_target_tools": 41608290304
     },
-    "completed_failed_runs": {
-      "migration_original_3b91a37": 41605119008,
-      "network_804c117": 41602670513
+    "completed_scoped_runs": {
+      "media_1c851e1": {
+        "run_id": 41604572853,
+        "conclusion": "success",
+        "whole_task_passed": false
+      },
+      "sdk_drop_308e221": {
+        "run_id": 41607840510,
+        "conclusion": "failure",
+        "experiment_step": "success",
+        "whole_task_passed": false
+      },
+      "migration_original_308e221": {
+        "run_id": 41607835980,
+        "conclusion": "failure",
+        "whole_task_passed": false
+      },
+      "secret_scan_308e221": {
+        "run_id": 41608053751,
+        "conclusion": "success"
+      },
+      "codeql_308e221": {
+        "run_id": 41608059750,
+        "conclusion": "success"
+      }
     },
-    "qualification": "Partial source work and scoped evidence only. Mandatory target and release gates remain unsatisfied."
+    "qualification": "Scoped production paths and laboratory trials only; exact final-source and mandatory target/release conditions remain unmet."
   },
   "dispatch_corrections": [
     {

@@ -137,6 +137,15 @@ After a retained-file migration the old allocation is fully released and is
 not replayed as another standby. A later failure uses the existing independently
 authorized safe-recovery rules; no poll refreshes group lifetime or quota.
 
+An actual failed original carrier may also enter the existing complete safe
+recovery while its prepared-migration hold is still active. That hold keeps
+the business lease temporarily live, so a successful lease read alone cannot
+mean the old physical path is healthy. The original owner must expose its
+still-current held-loss deadline, which independently checks live authority
+and the fixed two-second limit. Healthy paths without that observation remain
+ineligible. The same complete shutdown, physical cleanup, original recovery
+budget, authenticated management readback and fresh business proof still apply.
+
 Source regressions cover canonical packet/request bounds, signature tampering,
 phase replay, lost final-confirmation retry, clock rollback, terminal revocation,
 hold expiry and nonrenewing drain. Real pinned QUIC and HTTP/two-NodeControl
