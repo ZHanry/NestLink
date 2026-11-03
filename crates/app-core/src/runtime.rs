@@ -5844,10 +5844,32 @@ fn map_dial_failure(error: DialError) -> Failure {
         DialError::NetworkChanged => Failure::local(FailureKind::NetworkChanged),
         DialError::Expired => Failure::local(FailureKind::PermitExpired),
         DialError::Cancelled => Failure::local(FailureKind::NativeSessionCancelled),
-        DialError::Failed { code, .. } => Failure {
-            kind: FailureKind::Transport,
-            status: None,
-            code: Some(code),
+        DialError::Failed { code, failures } => {
+            // Preserve bounded failure categories without exporting addresses,
+            // peer identifiers or raw transport/HTTP errors into diagnostics.
+            eprintln!("native candidate race failed code={code:?} attempts={}", failures.len());
+            for failure in failures.iter().take(nestlink_protocol::CANDIDATE_COUNT as usize) {
+                let stage = match failure.stage.as_str() {
+                    "path-policy" => "path-policy",
+                    "transport-policy" => "transport-policy",
+                    "address-policy" => "address-policy",
+                    "relay-authority" => "relay-authority",
+                    "node-quic-inner-tls" => "node-quic-inner-tls",
+                    "quic-tls" => "quic-tls",
+                    "direct-tcp-tls" => "direct-tcp-tls",
+                    "wss-inner-tls" => "wss-inner-tls",
+                    "unsupported-webrtc" => "unsupported-webrtc",
+                    "timeout" => "timeout",
+                    _ => "other",
+                };
+                eprintln!("native candidate failure stage={stage} transport={:?} kind={:?} code={:?}",
+                    failure.candidate.transport, failure.candidate.kind, failure.code);
+            }
+            Failure {
+                kind: FailureKind::Transport,
+                status: None,
+                code: Some(code),
+            }
         },
         DialError::Binding | DialError::Setup | DialError::Contract(_) => {
             Failure::local(FailureKind::NativeSessionUnavailable)
