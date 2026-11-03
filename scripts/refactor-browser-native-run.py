@@ -39,7 +39,7 @@ PNG_RECEIPTS = (
 )
 NEGOTIATION_EVENTS = frozenset((
     "ice_remote_response_unmatched", "ice_remote_packet_unmatched", "dtls_flight",
-    "peer_state", "ice_start_failed", "dtls_start_failed",
+    "peer_state", "ice_start_failed", "dtls_start_failed", "ice_signal_publish",
 ))
 PUBLIC_PEER_STATE = re.compile(
     r"(?:ICE connection state changed: (?:new|checking|connected|completed|failed|disconnected|closed)"
@@ -159,6 +159,21 @@ def publish_negotiation_events(source, output):
         detail = value.get("detail")
         if event["event"] == "peer_state" and isinstance(detail, str) and PUBLIC_PEER_STATE.fullmatch(detail):
             event["detail"] = detail
+        if event["event"] == "ice_signal_publish":
+            summary = value.get("summary")
+            counters = ("network_generation", "sequence", "description_sequence", "lease_sequence", "candidate_count")
+            if (not isinstance(summary, dict)
+                    or any(type(summary.get(key)) is not int or not 0 <= summary[key] <= 2**63 - 1 for key in counters)
+                    or summary["candidate_count"] > 64
+                    or type(summary.get("end_of_candidates")) is not bool
+                    or type(value.get("accepted")) is not bool
+                    or type(value.get("invalid_snapshot")) is not bool):
+                continue
+            status = value.get("http_status")
+            if status is not None and (type(status) is not int or not 100 <= status <= 599):
+                continue
+            event["summary"] = {key: summary[key] for key in (*counters, "end_of_candidates")}
+            event.update(accepted=value["accepted"], invalid_snapshot=value["invalid_snapshot"], http_status=status)
         events.append(event)
         if len(events) == 200:
             break

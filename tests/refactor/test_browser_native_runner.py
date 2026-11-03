@@ -454,6 +454,31 @@ class NativeRunnerTests(unittest.TestCase):
             RUNNER.publish_negotiation_events(source, output)
             self.assertEqual(len(output.read_text(encoding="utf-8").splitlines()), 200)
 
+    def test_ice_publish_diagnostics_keep_only_typed_counts_and_http_result(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, output = root / "native.log", root / "events.jsonl"
+            summary = {"network_generation": 1, "sequence": 2, "description_sequence": 1,
+                       "lease_sequence": 1, "candidate_count": 3, "end_of_candidates": True,
+                       "sdp": "never-publish", "candidate_profile": {"secret": "never-publish"}}
+            record = {"event": "ice_signal_publish", "elapsed_since_first_event_ms": 4,
+                      "summary": summary, "accepted": False, "invalid_snapshot": True,
+                      "http_status": 403, "detail": "never-publish"}
+            records = [record]
+            for invalid in (True, -1, 2**63, "never-publish"):
+                records.append({**record, "summary": {**summary, "sequence": invalid}})
+            records += [{**record, "http_status": True}, {**record, "http_status": 999},
+                        {**record, "accepted": "never-publish"},
+                        {**record, "summary": {**summary, "candidate_count": 65}}]
+            source.write_text("\n".join(json.dumps(item) for item in records), encoding="utf-8")
+            RUNNER.publish_negotiation_events(source, output)
+            events = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(len(events), 1)
+            self.assertEqual(events[0]["summary"]["candidate_count"], 3)
+            self.assertEqual(events[0]["http_status"], 403)
+            self.assertTrue(events[0]["invalid_snapshot"])
+            self.assertNotIn("never-publish", output.read_text(encoding="utf-8"))
+
     def test_proxy_only_accepts_explicit_loopback_origins(self):
         self.assertEqual(RUNNER.loopback_port("https://127.0.0.1:49321", "https"), 49321)
         for origin in ("http://127.0.0.1:49321", "https://localhost:49321", "https://example.com:443",

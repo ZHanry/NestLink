@@ -1,0 +1,257 @@
+{
+  "schema_version": 1,
+  "source_revision": "f24b79f0c8baa00ad398636868c513624b0707cc",
+  "run_id": 41577474838,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41577474838",
+  "scope": "Original full hosted Firefox production Web/native case, retained actual failure. Chrome and Edge job conclusions are workflow observations only; their payloads are not verified by this record.",
+  "workflow_conclusion": "failure",
+  "job_conclusions": {
+    "release_site": "success",
+    "chrome": "success",
+    "firefox": "failure",
+    "browser_contracts": "success",
+    "edge": "success"
+  },
+  "official_artifact": {
+    "id": 13205485045,
+    "node_id": "MDg6QXJ0aWZhY3QxMzIwNTQ4NTA0NQ==",
+    "name": "nestlink-browser-native-evidence-firefox",
+    "size_in_bytes": 253065,
+    "url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13205485045",
+    "archive_download_url": "https://api.github.com/repos/ZHanry/NestLink/actions/artifacts/13205485045/zip",
+    "expired": false,
+    "digest": "sha256:74e78bcdba299be7d6b789ce244666e264a6cf97e04f44fb8fbdbd289cce4824",
+    "created_at": "2026-11-03T04:45:03Z",
+    "updated_at": "2026-11-03T04:45:03Z",
+    "expires_at": "2026-11-17T04:45:02Z",
+    "workflow_run": {
+      "id": 41577474838,
+      "repository_id": 1423035582,
+      "head_repository_id": 1423035582,
+      "head_branch": "main",
+      "head_sha": "f24b79f0c8baa00ad398636868c513624b0707cc"
+    }
+  },
+  "official_zip_digest_size_and_source_verified": true,
+  "producer_payload_manifest_available": false,
+  "whole_task_passed": false,
+  "browser_passed": false,
+  "runner_result": {
+    "schema_version": 1,
+    "passed": false,
+    "github_sha": "f24b79f0c8baa00ad398636868c513624b0707cc",
+    "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+    "started_unix_ms": 1793680943866,
+    "global_trust_modified": false,
+    "browser_product": "firefox",
+    "exit_codes": {
+      "browser": 1,
+      "native": 1
+    },
+    "validation_failures": [
+      "process-exit",
+      "workspace-ui-passed",
+      "workspace-ui-active-layouts-sizes",
+      "workspace-ui-steady-layout-samples",
+      "workspace-ui-trusted-action-coverage",
+      "workspace-ui-close-after-cleanup",
+      "workspace-ui-screenshots",
+      "browser-passed",
+      "browser-browser_peers_closed",
+      "browser-persistent_controller_preserved",
+      "browser-ui_cleanup_complete",
+      "browser-page_errors",
+      "browser-errors",
+      "video-duration",
+      "actual-video-counters",
+      "actual-opus-counters",
+      "steady-signed-renewals",
+      "renewal-sequence",
+      "browser-data-passed",
+      "browser-data-focus_loss_release_observed",
+      "browser-data-panel_close_revoked_approvals",
+      "browser-data-private_stage_removed",
+      "browser-data-upload_acknowledged_by_actual_ui",
+      "browser-data-terminal_key_held_before_disconnect",
+      "browser-data-terminal_key_released",
+      "browser-data-browser_storage_lock_released",
+      "browser-data-owned_saved_file_removed",
+      "browser-data-download_observers_closed",
+      "native-connected",
+      "native-capture_reset",
+      "native-audio_reset",
+      "native-audio_cleanup_succeeded",
+      "native-media-production",
+      "native-data-passed",
+      "native-data-input_device_dropped",
+      "native-data-input_exercised",
+      "native-data-files_exact",
+      "native-input-release",
+      "workers-read_finished",
+      "workers-write_finished",
+      "workers-transfers_physically_clean",
+      "workers-owner_dropped",
+      "workers-read_error",
+      "workers-write_error",
+      "workers-write_cleanup_error",
+      "workers-read_cleanup_timed_out",
+      "workers-write_cleanup_timed_out"
+    ],
+    "cleanup": {
+      "browser_forced": false,
+      "native_forced": false,
+      "process_errors": [],
+      "owned_processes_stopped": true,
+      "download_directory_empty_after_probe": true,
+      "private_directory_removed": true
+    },
+    "error": null,
+    "inputs": {
+      "native_sha256": "10882e904b11a875f7abe7c393ddf267b605b5ec757b3537e6c45ac8d09cdd96",
+      "caddy_sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+      "site_index_sha256": "d988fd4249667aa71883d9c76d82ec80bc5d7f9f0a5dd87a89177cb1310597ef",
+      "runner_sha256": "5a5da41336dc0e1a122f079b090ee3fe0bace6213e77194d943d6c4028540c83"
+    },
+    "browser_source": {
+      "browser_product": "firefox",
+      "version": "159.0",
+      "source_url": "https://archive.mozilla.org/pub/firefox/releases/159.0/linux-x86_64/en-US/firefox-159.0.tar.xz",
+      "checksums_url": "https://archive.mozilla.org/pub/firefox/releases/159.0/SHA512SUMS",
+      "archive_sha512": "d81bb0b4334cd3e1add28102c8cad149d80a5441f96389a469f48d6268d53a8b2cf8582f1de946a44c9c088c526adbd006e1a8be1ac188ca43dfd15ae2d684c0",
+      "archive_verified": true,
+      "executable_version": "Mozilla Firefox 159.0",
+      "executable_sha256": "de3f1f70c111692fce304c7af83a7bf2e6f4bc8033191ea8b8ccc25f1aa122ed",
+      "lock_sha256": "8784f4168f63610fc8a7f5b6756c086755cd6100059abe337fb97f3d3aa000d3",
+      "github_run_id": "41577474838",
+      "github_run_attempt": "1",
+      "github_sha": "f24b79f0c8baa00ad398636868c513624b0707cc",
+      "runner": "Linux"
+    },
+    "automation": {
+      "puppeteer_core_version": "25.14.0",
+      "protocol": "webDriverBiDi"
+    },
+    "tls_verified_exact_leaf_and_ip_san": true,
+    "finished_unix_ms": 1793681102492
+  },
+  "native_result": {
+    "audio_chunks": 0,
+    "audio_cleanup_succeeded": false,
+    "audio_enabled": true,
+    "audio_reset": false,
+    "capture_frames": 0,
+    "capture_prepared": true,
+    "capture_reset": false,
+    "capture_starts": 0,
+    "cleanup_failed": false,
+    "connected": false,
+    "diagnostic": {
+      "elapsed_ms": 417,
+      "peer": null,
+      "source": "WebRtcSdkFailure(ManagementRejected)",
+      "stage": "AnswerNextOffer"
+    },
+    "failure": "Some(Transport)",
+    "scope": "Local synthetic-capture Core/WebRTC integration, not installed-platform acceptance"
+  },
+  "signal_events": [
+    {
+      "elapsed_ms": 122392,
+      "method": "GET",
+      "operation": "signals",
+      "phase": "end",
+      "side": "native",
+      "status": 200
+    },
+    {
+      "elapsed_ms": 122395,
+      "method": "POST",
+      "operation": "signals",
+      "phase": "end",
+      "side": "native",
+      "status": 204
+    },
+    {
+      "elapsed_ms": 122396,
+      "method": "POST",
+      "operation": "signals",
+      "phase": "end",
+      "side": "native",
+      "status": 403
+    }
+  ],
+  "files": [
+    {
+      "bytes": 50910,
+      "path": "browser-report-failure.png",
+      "sha256": "89da7e9e2d9930e709e114b20d45c6d5899970fc86d9bfd822287d1d0b9baff5"
+    },
+    {
+      "bytes": 0,
+      "path": "browser-report-progress.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 89019,
+      "path": "browser-report-tunnel-editor.png",
+      "sha256": "db666482272d806109a2186b8f2f055ecf40fbb75b7d05005f9791297438321a"
+    },
+    {
+      "bytes": 129905,
+      "path": "browser-report-workspace.png",
+      "sha256": "89b31443622b4e850b9293072ffc4e3866d7f8841ea5397bfefc11b16ba21f2f"
+    },
+    {
+      "bytes": 74945,
+      "path": "browser-report.json",
+      "sha256": "8f1c1a3d937a5c66162c6f3b64761d28b1d5f57d660a4499a566625050e068a3"
+    },
+    {
+      "bytes": 554,
+      "path": "data-result.json",
+      "sha256": "4948672d942ac6ca961c81582923b9693abdc3079a51d094b95370db85e30071"
+    },
+    {
+      "bytes": 297,
+      "path": "database-cleanup.json",
+      "sha256": "bc7665d7004a905fd6a0b7d73ff9b61fea7fe4c21a01df9df10974b61411ace5"
+    },
+    {
+      "bytes": 536,
+      "path": "host-result.json",
+      "sha256": "608de00362c14c38c639dfd8fdc91323d8d3bf0779a1bd4ba09baabbb8db6c35"
+    },
+    {
+      "bytes": 144,
+      "path": "host-start-gate.json",
+      "sha256": "f961be5b784eaa2398ec919e3483f0bc3a1b2ca7e14189a3e28eb31af5abd513"
+    },
+    {
+      "bytes": 0,
+      "path": "input-records.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 23409,
+      "path": "management-stages.jsonl",
+      "sha256": "3ef0931bc60189cb7b16dc28c7a4f129431228303df2d6d3b85955dba9c9766b"
+    },
+    {
+      "bytes": 732,
+      "path": "negotiation-events.jsonl",
+      "sha256": "cce0c821c6c453ad9d01c71886811dc40801acae85fc11f19aff806cff9d2067"
+    },
+    {
+      "bytes": 3734,
+      "path": "runner-result.json",
+      "sha256": "b59efbaf30e0f6851fc3ea609b76899f1c6d6eb3873d748132b49af52236cc9d"
+    }
+  ],
+  "raw_directory": "C:\\Users\\Zhang\\.codex\\tmp\\nestlink-resume-20261103\\web-firefox-f24-verified",
+  "findings": [
+    "Original Firefox full flow failed: no decoded video/audio or live data acceptance. Retained error is Waiting failed: 35000ms exceeded; no deadline relaxed.",
+    "Original account/space/network/setup management controls completed within their recorded UI scope. They do not convert the overall failed browser/media flow into a pass.",
+    "First native signal POST returned204, second403. Old evidence has no exact rejected snapshot count/errorcode; no causal claim is made. New source separately corrects snapshot completion sampling and adds fixed-label observations.",
+    "Chrome/Edge job success is read from official run; no complete release/target qualification. Previous failures and original Luanti25second check retained."
+  ]
+}

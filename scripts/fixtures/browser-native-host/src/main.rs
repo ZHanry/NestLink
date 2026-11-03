@@ -66,7 +66,8 @@ static NEGOTIATION_LOG: NegotiationLog = NegotiationLog(AtomicUsize::new(0));
 static NEGOTIATION_STARTED: OnceLock<Instant> = OnceLock::new();
 impl log::Log for NegotiationLog {
     fn enabled(&self, metadata: &log::Metadata<'_>) -> bool {
-        metadata.target() == "dtls::handshaker"
+        metadata.target() == "nestlink_sdk::webrtc_host::ice_snapshot"
+            || metadata.target() == "dtls::handshaker"
             || (metadata.target() == "webrtc::peer_connection"
                 && metadata.level() <= log::Level::Info)
             || (metadata.target() == "webrtc::peer_connection::peer_connection_internal"
@@ -80,6 +81,21 @@ impl log::Log for NegotiationLog {
             return;
         }
         let message = record.args().to_string();
+        if record.target() == "nestlink_sdk::webrtc_host::ice_snapshot" {
+            // Decode only the SDK's typed, address-free summary. Arbitrary log
+            // messages and extra JSON fields never enter the retained record.
+            if let Ok(value) = serde_json::from_str::<serde_json::Value>(&message)
+                && let Ok(summary) = serde_json::from_value::<nestlink_protocol::diagnostics::SignalSummary>(value["summary"].clone())
+                && let (Some(accepted), Some(invalid_snapshot)) = (value["accepted"].as_bool(), value["invalid_snapshot"].as_bool())
+                && self.0.fetch_add(1, Ordering::Relaxed) < 200
+            {
+                let status = value["http_status"].as_u64().filter(|status| (100..=599).contains(status));
+                eprintln!("{}", json!({"event":"ice_signal_publish", "summary":summary,
+                    "accepted":accepted, "invalid_snapshot":invalid_snapshot, "http_status":status,
+                    "elapsed_since_first_event_ms":NEGOTIATION_STARTED.get_or_init(Instant::now).elapsed().as_millis()}));
+            }
+            return;
+        }
         // Audited log sites in locked dtls 0.13.0 / webrtc 0.14.0: retain
         // flight/state transitions and manager startup failures only. Never
         // enable general SDP, candidate, packet or cryptographic debug logs.

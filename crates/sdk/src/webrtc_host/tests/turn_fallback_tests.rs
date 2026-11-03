@@ -15,6 +15,38 @@ use nestlink_protocol::{
 use reqwest::StatusCode;
 use std::sync::atomic::AtomicU64;
 
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn actual_fast_gathering_snapshots_remain_cumulative_through_completion() -> TestResult {
+    for _ in 0..8 {
+        let peer = make_browser_peer().await?;
+        let observed = async {
+            let mut gathered = peer.gathering_complete_promise().await;
+            peer.set_local_description(peer.create_offer(None).await?).await?;
+            let mut cursor = nestlink_protocol::ice::IceSnapshotCursor::default();
+            loop {
+                let (description, complete) = local_ice_description(&peer).await?;
+                let snapshot = nestlink_protocol::ice::snapshot(&description.sdp, 1, complete)?;
+                let _ = cursor.apply(&snapshot)?;
+                if complete {
+                    assert!(!snapshot.candidates.is_empty());
+                    let _ = gathered.recv().await;
+                    let (final_description, final_complete) = local_ice_description(&peer).await?;
+                    assert!(final_complete);
+                    let final_snapshot = nestlink_protocol::ice::snapshot(&final_description.sdp, 1, true)?;
+                    assert!(cursor.apply(&final_snapshot)?.is_empty());
+                    break;
+                }
+                tokio::task::yield_now().await;
+            }
+            Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+        };
+        let result = tokio::time::timeout(Duration::from_secs(10), observed).await;
+        peer.close().await?;
+        result??;
+    }
+    Ok(())
+}
+
 #[tokio::test]
 async fn trickle_answers_before_slow_stun_and_completes_a_signed_direct_connection() -> TestResult {
     for paths in [PathSet::DIRECT, PathSet::BOTH] {

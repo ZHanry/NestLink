@@ -3367,10 +3367,13 @@ mod wasm {
                 .ok_or(PeerError::SignalRejected)?;
             let claims = self.permit.claims();
             let ice = if self.trickle_enabled() {
+                // This description was read by the caller. A later gathering
+                // state cannot certify that earlier snapshot as complete; the
+                // next pump reads the current SDP and publishes completion.
                 let ice = nestlink_protocol::ice::snapshot(
                     &description.sdp,
                     next,
-                    self.peer.ice_gathering_state() == RtcIceGatheringState::Complete,
+                    false,
                 )
                 .map_err(|_| PeerError::SignalRejected)?;
                 description.sdp = nestlink_protocol::ice::without_candidates(&description.sdp);
@@ -3439,6 +3442,7 @@ mod wasm {
                 return Ok(());
             };
             self.ensure_live()?;
+            let gathering_complete = self.peer.ice_gathering_state() == RtcIceGatheringState::Complete;
             let local = self
                 .peer
                 .local_description()
@@ -3446,7 +3450,7 @@ mod wasm {
             let snapshot = nestlink_protocol::ice::snapshot(
                 &local.sdp(),
                 signal.description_sequence(),
-                self.peer.ice_gathering_state() == RtcIceGatheringState::Complete,
+                gathering_complete,
             )
             .map_err(|_| PeerError::SignalRejected)?;
             if signal.ice.as_ref() == Some(&snapshot) {

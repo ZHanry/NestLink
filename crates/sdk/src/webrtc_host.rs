@@ -130,6 +130,33 @@ const PATH_AUTHORITY_POLL: Duration = Duration::from_millis(50);
 const MAX_VIDEO_FRAME_AGE: Duration = Duration::from_millis(250);
 const AUDIO_FRAME_DURATION: Duration = Duration::from_millis(20);
 
+fn record_local_ice_publish(
+    summary: nestlink_protocol::diagnostics::SignalSummary,
+    result: &Result<(), SdkError>,
+) {
+    let status = match result {
+        Err(SdkError::Api(status, _)) => Some(status.as_u16()),
+        Ok(()) => Some(204),
+        _ => None,
+    };
+    log::info!(target: "nestlink_sdk::webrtc_host::ice_snapshot", "{}",
+        serde_json::json!({"event":"ice_signal_publish", "summary":summary,
+            "accepted":result.is_ok(), "http_status":status,
+            "invalid_snapshot":matches!(result, Err(SdkError::Api(_, nestlink_protocol::ErrorCode::InvalidMessage)))}));
+}
+
+async fn local_ice_description(
+    peer: &RTCPeerConnection,
+) -> Result<(RTCSessionDescription, bool), WebRtcHostError> {
+    // Completion must precede the SDP read. Gathering can finish while
+    // local_description awaits its locks; sampling it afterwards can mark
+    // an older, partial candidate set complete and make its next signed
+    // cumulative snapshot fail the receiver's immutable-completion check.
+    let complete = peer.ice_gathering_state() == RTCIceGatheringState::Complete;
+    let description = peer.local_description().await.ok_or(WebRtcHostError::InvalidOffer)?;
+    Ok((description, complete))
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum WebRtcHostError {
     #[error("SDK operation failed: {0}")]
@@ -1902,11 +1929,7 @@ impl WebRtcHostPeer {
         {
             return Err(WebRtcHostError::GatherTimeout);
         }
-        let local = self
-            .peer
-            .local_description()
-            .await
-            .ok_or(WebRtcHostError::InvalidOffer)?;
+        let (local, gathering_complete) = local_ice_description(&self.peer).await?;
         validate_media_sdp(&local.sdp, &permit.claims().permissions)?;
         self.validate_video_answer(&local.sdp)?;
         nestlink_protocol::webrtc::video::validate_answer(&remote.sdp, &local.sdp)?;
@@ -1945,7 +1968,7 @@ impl WebRtcHostPeer {
                 Some(nestlink_protocol::ice::snapshot(
                     &local.sdp,
                     sequence,
-                    self.peer.ice_gathering_state() == RTCIceGatheringState::Complete,
+                    gathering_complete,
                 )?)
             } else {
                 None
@@ -1963,8 +1986,9 @@ impl WebRtcHostPeer {
         self.local_ice_signal = answer_payload.ice.as_ref().map(|_| answer_payload.clone());
         let signal_summary =
             nestlink_protocol::diagnostics::SignalSummary::from_payload(&answer_payload);
-        sdk.publish_signal(installation, permit, answer_payload)
-            .await?;
+        let published = sdk.publish_signal(installation, permit, answer_payload).await;
+        record_local_ice_publish(signal_summary, &published);
+        published?;
         self.diagnostics.signal(true, signal_summary);
         self.diagnostics
             .mark(|value| &mut value.answer_published_ms);
@@ -1975,7 +1999,7 @@ impl WebRtcHostPeer {
                 .lines()
                 .filter(|line| line.starts_with("a=candidate:"))
                 .count(),
-            self.peer.ice_gathering_state() == RTCIceGatheringState::Complete,
+            gathering_complete,
         );
         self.refresh_turn_allocation(sdk, installation, permit, false)
             .await?;
@@ -2057,15 +2081,11 @@ impl WebRtcHostPeer {
             return Ok(());
         };
         self.ensure_open()?;
-        let local = self
-            .peer
-            .local_description()
-            .await
-            .ok_or(WebRtcHostError::InvalidOffer)?;
+        let (local, gathering_complete) = local_ice_description(&self.peer).await?;
         let snapshot = nestlink_protocol::ice::snapshot(
             &local.sdp,
             signal.description_sequence(),
-            self.peer.ice_gathering_state() == RTCIceGatheringState::Complete,
+            gathering_complete,
         )?;
         if signal.ice.as_ref() == Some(&snapshot) {
             return Ok(());
@@ -2083,8 +2103,12 @@ impl WebRtcHostPeer {
             self.diagnostics
                 .candidates(true, ice.candidates.len(), ice.end_of_candidates);
         }
-        sdk.publish_signal(installation, &permit, signal.clone())
-            .await?;
+        let published = sdk.publish_signal(installation, &permit, signal.clone()).await;
+        record_local_ice_publish(
+            nestlink_protocol::diagnostics::SignalSummary::from_payload(&signal),
+            &published,
+        );
+        published?;
         self.diagnostics.signal(
             true,
             nestlink_protocol::diagnostics::SignalSummary::from_payload(&signal),
