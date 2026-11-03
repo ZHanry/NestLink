@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "3b91a37875c742a1d46ccecb35c03dfced8b8918",
-  "checkpoint_kind": "production_sdk_drop_harness_and_original_physical_owner_deadlock_repair_pending_hosted_validation",
+  "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
+  "checkpoint_kind": "hosted_format_import_and_complete_historical_804c117_failures_retained",
   "active_tasks": [
     "W00",
     "W02",
@@ -94,6 +94,8 @@
     "Continue other ready production/target work; only create0.8.0RC after all actual qualification gates are met. Local and remote branches remain main only."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/format-fb38874.json",
+    "docs/network-rewrite/evidence/full-rust-core-804c117.json",
     "docs/network-rewrite/evidence/migration-original-3b91a37.json",
     "docs/network-rewrite/evidence/network-804c117.json",
     "docs/network-rewrite/evidence/format-3c4c50a.json",
@@ -828,7 +830,7 @@
   },
   "continuation_checkpoint": {
     "recorded_at": "2026-11-03T16:54:02.748076+08:00",
-    "source_revision": "3b91a37875c742a1d46ccecb35c03dfced8b8918",
+    "source_revision": "fb3887448f007c1b1d39b5f30bfee533e2b4c216",
     "source_is_pre_commit_parent": true,
     "release_state": "not_ready",
     "new_tag_or_release_created": false,
@@ -844,8 +846,9 @@
       "mechanism_research": "Final complete1c851e1 original Windows media/IPC provenance."
     },
     "pending_runs": {
-      "rust_804c117": 41602483359,
-      "media_1c851e1": 41604572853
+      "media_1c851e1": 41604572853,
+      "sdk_migration_fb38874": 41606962833,
+      "migration_original_fb38874": 41606958647
     },
     "completed_failed_runs": {
       "migration_original_3b91a37": 41605119008,

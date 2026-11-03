@@ -6,11 +6,11 @@ use super::*;
 mod authorization;
 #[path = "route_set/continuation.rs"]
 mod continuation;
-#[path = "route_set/recovery.rs"]
-mod recovery;
 #[cfg(target_os = "linux")]
 #[path = "route_set/physical_loss.rs"]
 mod physical_loss;
+#[path = "route_set/recovery.rs"]
+mod recovery;
 use nestlink_protocol::{
     api::{NetworkRemoteRouteSetMemberRequest, NetworkRemoteRouteSetRequest},
     network::GrantClaims,

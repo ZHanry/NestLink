@@ -350,7 +350,11 @@ async fn authorize_remote_observed<'a>(
             .await
         } else {
             Box::pin(nestlink_remote::quic::authorize(
-                connection, None, setup, &local.identity, peer_key,
+                connection,
+                None,
+                setup,
+                &local.identity,
+                peer_key,
             ))
             .await
         }

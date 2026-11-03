@@ -78,7 +78,13 @@ impl AdjacencyEndpoint {
         identity: &InstallationIdentity,
         remote: PeerId,
     ) -> Result<Self> {
-        Self::bind_node_version(address, identity, remote, super::DatagramVersion::One, false)
+        Self::bind_node_version(
+            address,
+            identity,
+            remote,
+            super::DatagramVersion::One,
+            false,
+        )
     }
     /// Explicit opt-in for an original migration route-set member. Quinn's
     /// own idle detection must finish within the original ten-second node
@@ -97,7 +103,13 @@ impl AdjacencyEndpoint {
         identity: &InstallationIdentity,
         remote: PeerId,
     ) -> Result<Self> {
-        Self::bind_node_version(address, identity, remote, super::DatagramVersion::Two, false)
+        Self::bind_node_version(
+            address,
+            identity,
+            remote,
+            super::DatagramVersion::Two,
+            false,
+        )
     }
     fn bind_node_version(
         address: SocketAddr,

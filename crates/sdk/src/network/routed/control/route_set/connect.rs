@@ -104,7 +104,11 @@ impl Sdk {
             .find(|address| address.is_ipv4() == bind.is_ipv4())
             .ok_or(SdkError::Invalid)?;
         let mut pending = if migratable {
-            routed::AdjacencyEndpoint::bind_migratable_node(bind, &local.identity, candidate.relay())
+            routed::AdjacencyEndpoint::bind_migratable_node(
+                bind,
+                &local.identity,
+                candidate.relay(),
+            )
         } else {
             routed::AdjacencyEndpoint::bind_node(bind, &local.identity, candidate.relay())
         }

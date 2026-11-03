@@ -140,7 +140,12 @@ impl RoutedTransport {
         // pollers. The original raw carrier and both demux queues remain owned.
         wait_socket_released(&mut pending.released, deadline)
             .await
-            .map_err(|error| io::Error::new(error.kind(), format!("migration candidate endpoint release: {error}")))?;
+            .map_err(|error| {
+                io::Error::new(
+                    error.kind(),
+                    format!("migration candidate endpoint release: {error}"),
+                )
+            })?;
         pending
             .raw
             .as_ref()
@@ -189,9 +194,12 @@ impl RoutedTransport {
         // No timer restart on cancellation: the deadline remains in old_gate.
         tokio::time::sleep_until(drain_until).await;
         if let Some(old) = &mut self.draining {
-            old.close_and_wait_boxed(deadline)
-                .await
-                .map_err(|error| io::Error::new(error.kind(), format!("migration old carrier cleanup: {error}")))?;
+            old.close_and_wait_boxed(deadline).await.map_err(|error| {
+                io::Error::new(
+                    error.kind(),
+                    format!("migration old carrier cleanup: {error}"),
+                )
+            })?;
         }
         self.draining = None;
         let connection = self.connection()?;

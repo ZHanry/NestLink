@@ -181,9 +181,12 @@ impl ChainNode {
                 stopped.changed().await?;
             }
             Ok::<_, tokio::sync::watch::error::RecvError>(())
-        }).await??;
+        })
+        .await??;
         assert!(self.control.authorize(NodeRole::NodeRelay, false).is_err());
-        self.listener.close_and_wait(Instant::now() + Duration::from_secs(5)).await?;
+        self.listener
+            .close_and_wait(Instant::now() + Duration::from_secs(5))
+            .await?;
         drop(UdpSocket::bind(address)?);
         Ok(())
     }
