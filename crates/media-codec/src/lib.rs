@@ -6,6 +6,8 @@ mod quality;
 mod scale;
 mod video;
 mod vp8;
+mod vp9;
+mod vp9_direction_probe;
 pub use h264::{H264AccessUnit, H264EncodingLimits, H264Geometry, H264SpsInfo, H264Validator};
 pub use opus::{OpusConfig, OpusDecoder, OpusEncoder};
 pub use quality::{ReceiverCondition, VideoQuality};
@@ -15,6 +17,8 @@ pub use video::{
     h264_hardware_available, probe_h264_encoder,
 };
 pub use vp8::{EncodedVideo, VideoConfig, Vp8Decoder, Vp8Encoder};
+pub use vp9::{Vp9Rgb444Decoder, Vp9Rgb444Encoder, validate_vp9_rgb444_keyframe};
+pub use vp9_direction_probe::{Vp9Rgb444DirectionProbe, probe_vp9_rgb444_direction};
 #[cfg(windows)]
 mod windows_mf;
 #[cfg(windows)]
@@ -94,7 +98,8 @@ pub use cpu_direction_probe::{CpuDirectionProbe, probe_cpu_decode, probe_cpu_enc
 mod execution;
 pub use execution::{
     ExecutionDirection, ExecutionIdentity, ExecutionOutput, ExecutionReceipt, ExecutionTicket,
-    H264ExecutionTarget, SoftwareH264Execution,
+    H264ExecutionTarget, SoftwareH264Execution, SoftwareExecution, SoftwareExecutionTarget,
+    Vp9Rgb444ExecutionTarget,
 };
 #[cfg(windows)]
 mod hevc_direction_probe;

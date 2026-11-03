@@ -171,7 +171,7 @@ pub fn execution_receipt_matches(
     format: VideoFormat,
 ) -> io::Result<()> {
     receipt.check_current()?;
-    if receipt.target() != h264_execution_target(format, receipt.target().config())? {
+    if receipt.target() != h264_execution_target(format, receipt.target().config())?.into() {
         return Err(io::Error::other(
             "live execution differs from signed format",
         ));

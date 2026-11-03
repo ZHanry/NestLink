@@ -47,6 +47,12 @@ pub enum VideoEncoder {
     H264(H264Encoder),
 }
 impl VideoEncoder {
+    pub fn with_vp9_rgb444_execution_target(target: crate::Vp9Rgb444ExecutionTarget) -> io::Result<Self> {
+        Ok(Self::Execution {
+            broker: crate::SoftwareExecution::start(crate::ExecutionDirection::Encode, target)?,
+            last: None,
+        })
+    }
     pub fn with_execution_target(target: crate::H264ExecutionTarget) -> io::Result<Self> {
         Ok(Self::Execution {
             broker: crate::SoftwareH264Execution::start(crate::ExecutionDirection::Encode, target)?,
@@ -116,7 +122,7 @@ impl VideoEncoder {
             Self::Execution { broker, last } => last
                 .as_ref()
                 .and_then(|_| broker.current().ok())
-                .map(|value| value.target().sps()),
+                .and_then(|value| value.target().h264().map(|target| target.sps())),
             Self::Vp8(_) => None,
             #[cfg(windows)]
             Self::H264(codec) => codec.inner.sps_info(),
@@ -230,6 +236,12 @@ pub enum VideoDecoder {
     H264(H264Decoder),
 }
 impl VideoDecoder {
+    pub fn with_vp9_rgb444_execution_target(target: crate::Vp9Rgb444ExecutionTarget) -> io::Result<Self> {
+        Ok(Self::Execution {
+            broker: crate::SoftwareExecution::start(crate::ExecutionDirection::Decode, target)?,
+            last: None,
+        })
+    }
     pub fn with_execution_target(target: crate::H264ExecutionTarget) -> io::Result<Self> {
         Ok(Self::Execution {
             broker: crate::SoftwareH264Execution::start(crate::ExecutionDirection::Decode, target)?,

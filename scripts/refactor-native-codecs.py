@@ -35,8 +35,8 @@ SUPPORTED = (
     "x86_64-unknown-linux-gnu",
     "aarch64-unknown-linux-gnu",
 )
-FEATURES = {"vp8": True, "vp8_encoder": True, "vp8_decoder": True, "vp9": False, "libyuv_i420_to_bgra": True, "opus_float": True, "opus_fixed_point": False, "opus_dred": False, "opus_deep_plc": False, "opus_osce": False, "opus_custom_modes": False, "opus_nonthreadsafe_pseudostack": False}
-LIBYUV = {"name": "libyuv", "version": "1711", "commit": "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1", "repository": "https://chromium.googlesource.com/libyuv/libyuv", "parent_source": "libvpx", "path": "third_party/libyuv", "license": "BSD-3-Clause", "source_files": ["convert_argb.cc", "cpu_id.cc", "planar_functions.cc", "row_any.cc", "row_common.cc", "row_gcc.cc", "row_win.cc", "row_neon.cc", "row_neon64.cc", "row_msa.cc", "scale_any.cc", "scale_common.cc", "scale_gcc.cc", "scale_win.cc", "scale_neon.cc", "scale_neon64.cc", "scale_msa.cc"]}
+FEATURES = {"vp8": True, "vp8_encoder": True, "vp8_decoder": True, "vp9": True, "vp9_encoder": True, "vp9_decoder": True, "libyuv_rgb444": True, "libyuv_i420_to_bgra": True, "opus_float": True, "opus_fixed_point": False, "opus_dred": False, "opus_deep_plc": False, "opus_osce": False, "opus_custom_modes": False, "opus_nonthreadsafe_pseudostack": False}
+LIBYUV = {"name": "libyuv", "version": "1711", "commit": "a37e7bfece9e0676ae90a1700b0ec85b0f4f22a1", "repository": "https://chromium.googlesource.com/libyuv/libyuv", "parent_source": "libvpx", "path": "third_party/libyuv", "license": "BSD-3-Clause", "source_files": ["convert_argb.cc", "convert_from_argb.cc", "cpu_id.cc", "planar_functions.cc", "row_any.cc", "row_common.cc", "row_gcc.cc", "row_win.cc", "row_neon.cc", "row_neon64.cc", "row_msa.cc", "scale_any.cc", "scale_common.cc", "scale_gcc.cc", "scale_win.cc", "scale_neon.cc", "scale_neon64.cc", "scale_msa.cc"]}
 HASH = re.compile(r"[0-9a-f]{64}\Z")
 POISON_FLAGS = ("CFLAGS", "CXXFLAGS", "CPPFLAGS", "LDFLAGS", "ASFLAGS", "CC", "CXX", "LD", "AR", "AS", "CROSS", "CL", "_CL_", "CMAKE_ARGS", "CMAKE_TOOLCHAIN_FILE", "CMAKE_PROJECT_INCLUDE", "CMAKE_PROJECT_INCLUDE_BEFORE")
 
@@ -383,7 +383,7 @@ def check_features(vpx_header, opus_cache, opus_header, compile_commands, target
     windows = target.endswith("windows-msvc")
     vpx = dict(re.findall(r"^#define\s+([A-Z0-9_]+)\s+([01])\s*$", vpx_header, re.M))
     arch_macro = "VPX_ARCH_AARCH64" if target.startswith("aarch64-") else "VPX_ARCH_X86_64"
-    expected = {"CONFIG_VP8": "1", "CONFIG_VP8_ENCODER": "1", "CONFIG_VP8_DECODER": "1", "CONFIG_VP9": "0", "CONFIG_REALTIME_ONLY": "1", "CONFIG_SHARED": "0", "CONFIG_STATIC": "1", arch_macro: "1"}
+    expected = {"CONFIG_VP8": "1", "CONFIG_VP8_ENCODER": "1", "CONFIG_VP8_DECODER": "1", "CONFIG_VP9": "1", "CONFIG_VP9_ENCODER": "1", "CONFIG_VP9_DECODER": "1", "CONFIG_REALTIME_ONLY": "1", "CONFIG_SHARED": "0", "CONFIG_STATIC": "1", arch_macro: "1"}
     if windows:
         expected["CONFIG_STATIC_MSVCRT"] = "0"
     for name, value in expected.items():
@@ -598,7 +598,7 @@ def build(args, lock):
         build_dir = work / "build" / spec["name"]
         build_dir.mkdir(parents=True)
         if spec["name"] == "libvpx":
-            options = ["--enable-vp8", "--enable-vp8-encoder", "--enable-vp8-decoder", "--disable-vp9", "--enable-static", "--disable-shared", "--enable-realtime-only", "--disable-examples", "--disable-tools", "--disable-docs", "--disable-unit-tests", "--disable-webm-io", "--disable-libyuv", "--disable-postproc", "--disable-vp9-postproc", "--target=" + lock["targets"][args.target]["vpx_target"]]
+            options = ["--enable-vp8", "--enable-vp8-encoder", "--enable-vp8-decoder", "--enable-vp9", "--enable-vp9-encoder", "--enable-vp9-decoder", "--enable-static", "--disable-shared", "--enable-realtime-only", "--disable-examples", "--disable-tools", "--disable-docs", "--disable-unit-tests", "--disable-webm-io", "--disable-libyuv", "--disable-postproc", "--disable-vp9-postproc", "--target=" + lock["targets"][args.target]["vpx_target"]]
             if args.target.startswith("x86_64"):
                 options.append("--as=nasm")
             options += ["--disable-static-msvcrt"] if windows else ["--enable-pic", "--prefix=" + str(prefix), "--libdir=" + str(prefix / "lib")]

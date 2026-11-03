@@ -72,7 +72,7 @@ jobs:
                       result = subprocess.run(args,stdout=stream,stderr=subprocess.STDOUT,timeout=1200)
                   receipt['commands'].append({'name':name,'argv':args,'return_code':result.returncode})
                   assert result.returncode == 0, name+' failed'
-              names = ['windows-cpu-direction-probe','windows-controller-direction-probe','windows-hevc-direction-probe','windows-amf-hevc-direction-probe','windows-hdr10-direction-probe']
+              names = ['windows-cpu-direction-probe','windows-controller-direction-probe','windows-hevc-direction-probe','windows-amf-hevc-direction-probe','windows-hdr10-direction-probe','vp9-rgb444-direction-probe']
               for name in names:
                   shutil.copyfile(pathlib.Path('target/release/examples')/(name+'.exe'),output/(name+'.exe'))
               shutil.copyfile('LICENSE',output/'LICENSE')

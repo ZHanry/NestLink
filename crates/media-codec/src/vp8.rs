@@ -88,12 +88,12 @@ fn bridge_error(action: &str, code: i32) -> io::Error {
     };
     io::Error::new(kind, format!("VP8 {action} failed (bridge status {code})"))
 }
-struct PacketSink {
-    pts: u64,
-    packet: Option<EncodedVideo>,
-    error: Option<io::Error>,
+pub(crate) struct PacketSink {
+    pub(crate) pts: u64,
+    pub(crate) packet: Option<EncodedVideo>,
+    pub(crate) error: Option<io::Error>,
 }
-unsafe extern "C" fn packet_callback(
+pub(crate) unsafe extern "C" fn packet_callback(
     user: *mut c_void,
     data: *const u8,
     length: usize,
@@ -112,7 +112,7 @@ unsafe extern "C" fn packet_callback(
         {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
-                "invalid VP8 output packet",
+                "invalid software video output packet",
             ));
         }
         // SAFETY: the C bridge invokes us before its next libvpx call, while
@@ -128,7 +128,7 @@ unsafe extern "C" fn packet_callback(
         });
         Ok(())
     }))
-    .unwrap_or_else(|_| Err(io::Error::other("VP8 output callback panicked")));
+    .unwrap_or_else(|_| Err(io::Error::other("software video output callback panicked")));
     if let Err(error) = result {
         sink.error = Some(error);
         1

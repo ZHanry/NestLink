@@ -30,7 +30,7 @@ fn main() -> io::Result<()> {
         "native codec target not supported"
     );
     let mut bridge = cc::Build::new();
-    bridge.include(&include).files(["src/vp8.c", "src/opus.c"]);
+    bridge.include(&include).files(["src/vp8.c", "src/vp9.c", "src/opus.c"]);
     bridge.warnings(true).warnings_into_errors(true);
     bridge.std("c11");
     if target == "windows" {
@@ -84,7 +84,7 @@ fn main() -> io::Result<()> {
         println!("cargo:rustc-link-lib=stdc++");
         println!("cargo:rustc-link-lib=pthread");
     }
-    for path in ["src/vp8.c", "src/opus.c"] {
+    for path in ["src/vp8.c", "src/vp9.c", "src/opus.c"] {
         println!("cargo:rerun-if-changed={path}");
     }
     println!("cargo:rerun-if-changed=build_support.rs");

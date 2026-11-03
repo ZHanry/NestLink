@@ -199,7 +199,7 @@ class NativeSupplyTests(unittest.TestCase):
                 SUPPLY.write_json(prefix / SUPPLY.RECEIPT, changed)
                 with self.subTest(field=field), self.assertRaises(SUPPLY.SupplyError):
                     SUPPLY.verify_receipt(prefix, TARGET, SUPPLY.DEFAULT_LOCK)
-            for field, value in [("vp9", True), ("vp8", 1)]:
+            for field, value in [("vp9", False), ("vp9_encoder", False), ("libyuv_rgb444", False), ("vp8", 1)]:
                 changed = json.loads(json.dumps(receipt))
                 changed["features"][field] = value
                 SUPPLY.write_json(prefix / SUPPLY.RECEIPT, changed)
