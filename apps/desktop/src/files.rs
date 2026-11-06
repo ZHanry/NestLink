@@ -247,33 +247,33 @@ impl FilePanel {
         }
         let mut command = None;
         crate::widgets::surface(ui).show(ui, |ui| {
-                ui.set_min_width(ui.available_width());
-                ui.strong(text(english, "会话文件传输", "Session file transfer"));
-                ui.add_space(12.);
-                if session.is_host {
-                    self.host(ui, english, &session, &mut command);
-                } else {
-                    self.controller(ui, english, &session, &mut command);
+            ui.set_min_width(ui.available_width());
+            ui.strong(text(english, "会话文件传输", "Session file transfer"));
+            ui.add_space(12.);
+            if session.is_host {
+                self.host(ui, english, &session, &mut command);
+            } else {
+                self.controller(ui, english, &session, &mut command);
+            }
+            self.task_list(ui, english, &mut command);
+            if let Some(message) = &self.message {
+                ui.label(message);
+            }
+            if self.picker.is_some() {
+                ui.label(text(
+                    english,
+                    "正在等待系统文件选择器",
+                    "Waiting for the system file selector",
+                ));
+                if ui
+                    .button(text(english, "取消选择", "Cancel selection"))
+                    .clicked()
+                {
+                    self.picker = None;
                 }
-                self.task_list(ui, english, &mut command);
-                if let Some(message) = &self.message {
-                    ui.label(message);
-                }
-                if self.picker.is_some() {
-                    ui.label(text(
-                        english,
-                        "正在等待系统文件选择器",
-                        "Waiting for the system file selector",
-                    ));
-                    if ui
-                        .button(text(english, "取消选择", "Cancel selection"))
-                        .clicked()
-                    {
-                        self.picker = None;
-                    }
-                    ui.ctx().request_repaint_after(Duration::from_millis(100));
-                }
-            });
+                ui.ctx().request_repaint_after(Duration::from_millis(100));
+            }
+        });
         if command.is_some() {
             self.pending = true;
             self.pending_since = Some(Instant::now());
