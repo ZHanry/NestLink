@@ -22,6 +22,9 @@ RESIDENT_TESTS = {
     "pending_original_listener_eof_stop_logout_and_identity_change_join_actual_socket",
     "resident_quic_original_http_consume_real_pixels_files_rebuild_and_eof",
     "resident_tls_original_http_consume_real_pixels_files_rebuild_and_ipc_exit",
+    "support::https::tests::dns_preparation_stops_at_three_attempts",
+    "support::https::tests::dns_preparation_returns_only_the_ready_origin",
+    "support::https::tests::registration_io_and_sdk_failures_are_never_retried",
 }
 CORE_TESTS = {
     "independent_offline_app_core_quic_delivers_pixels_and_actual_file_after_online_expiry",
@@ -152,7 +155,7 @@ def main():
             ("daemon-download-consent-unit", ["-p", "nestlink-daemon", "--bin", "nestlink-daemon", "native_files::tests::download_consent_outlives_the_destination_ack_and_still_honors_session_revoke"], 1, None),
             ("daemon-entry-unit", ["-p", "nestlink-daemon", "--bin", "nestlink-daemon", "entry_tests::"], 1, None),
             ("desktop-layout", ["-p", "nestlink-desktop", "--lib", "layout_tests::independent_offline_"], 2, None),
-            ("resident", ["-p", "nestlink-daemon", "--test", "offline_remote_resident"], 4, RESIDENT_TESTS),
+            ("resident", ["-p", "nestlink-daemon", "--test", "offline_remote_resident"], len(RESIDENT_TESTS), RESIDENT_TESTS),
             ("resident-platform-owner", ["-p", "nestlink-daemon", "--test", "offline_resident_platform_owner"], 1, {"original_platform_owner_is_exclusive_cancel_safe_and_released_after_shutdown_or_drop"}),
         ]
         if os.name != "nt":

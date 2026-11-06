@@ -4,7 +4,7 @@
 use super::{Result, Sdk};
 use axum::{http::Method, response::IntoResponse};
 use std::{
-    io::{self, Read, Seek, SeekFrom},
+    io::{self, Read, Seek, SeekFrom, Write},
     net::SocketAddr,
     path::{Path, PathBuf},
     process::Stdio,
@@ -14,6 +14,48 @@ use std::{
     },
     time::{Duration, Instant},
 };
+
+// This is an external fixture preparation failure, before any SDK login or
+// product assertion. Keep it distinct from registration, TLS and SDK failures.
+#[derive(Debug)]
+struct DnsReadinessTimeout(String);
+impl std::fmt::Display for DnsReadinessTimeout {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            formatter,
+            "temporary public-PKI HTTPS fixture DNS was not ready: {}",
+            self.0
+        )
+    }
+}
+impl std::error::Error for DnsReadinessTimeout {}
+
+fn setup_diagnostic(message: std::fmt::Arguments<'_>) {
+    // libtest hides eprintln! output for successful tests. Write the original
+    // preparation failures directly so a recovered fixture still retains them.
+    let _ = writeln!(std::io::stderr().lock(), "{message}");
+}
+
+async fn prepare_with_dns_retry<T, F, Fut>(mut prepare: F) -> Result<T>
+where
+    F: FnMut(usize) -> Fut,
+    Fut: std::future::Future<Output = Result<T>>,
+{
+    const MAX_ATTEMPTS: usize = 3;
+    let mut attempt = 1;
+    loop {
+        let result = prepare(attempt).await;
+        match &result {
+            Err(error) if error.is::<DnsReadinessTimeout>() && attempt < MAX_ATTEMPTS => {
+                setup_diagnostic(format_args!(
+                    "original_https_fixture_retry completed_attempt={attempt} maximum_attempts={MAX_ATTEMPTS} category=system_dns_before_product_setup reason={error}"
+                ));
+                attempt += 1;
+            }
+            _ => return result,
+        }
+    }
+}
 
 // Keep a bounded copy in the original harness stderr before TempDir cleanup.
 // This observes setup failure only: the original resolver, trust and deadlines
@@ -30,12 +72,12 @@ impl Drop for StartupDiagnostic {
         if self.complete {
             return;
         }
-        eprintln!(
+        setup_diagnostic(format_args!(
             "original_https_fixture_failed stage={} elapsed_ms={} origin={:?}",
             self.stage,
             self.started.elapsed().as_millis(),
             self.origin
-        );
+        ));
         let tail = (|| -> io::Result<Vec<u8>> {
             let mut file = std::fs::File::open(&self.log)?;
             let start = file.metadata()?.len().saturating_sub(16_384);
@@ -45,20 +87,22 @@ impl Drop for StartupDiagnostic {
             Ok(bytes)
         })();
         match tail {
-            Ok(bytes) => eprintln!(
+            Ok(bytes) => setup_diagnostic(format_args!(
                 "original_https_fixture_tunnel_log_tail={}",
                 String::from_utf8_lossy(&bytes)
-            ),
-            Err(error) => eprintln!("original_https_fixture_tunnel_log_error={error}"),
+            )),
+            Err(error) => setup_diagnostic(format_args!(
+                "original_https_fixture_tunnel_log_error={error}"
+            )),
         }
         #[cfg(target_os = "linux")]
         if let Ok(file) = std::fs::File::open("/etc/resolv.conf") {
             let mut bytes = Vec::new();
             if file.take(4096).read_to_end(&mut bytes).is_ok() {
-                eprintln!(
+                setup_diagnostic(format_args!(
                     "original_https_fixture_system_resolver={}",
                     String::from_utf8_lossy(&bytes)
-                );
+                ));
             }
         }
     }
@@ -197,9 +241,17 @@ pub(super) async fn start(
     upstream: SocketAddr,
     area: &Path,
 ) -> Result<(tokio::process::Child, String)> {
+    prepare_with_dns_retry(|attempt| start_once(upstream, area, attempt)).await
+}
+
+async fn start_once(
+    upstream: SocketAddr,
+    area: &Path,
+    attempt: usize,
+) -> Result<(tokio::process::Child, String)> {
     let tool = std::env::var_os("NESTLINK_OFFLINE_RESIDENT_CLOUDFLARED")
         .ok_or_else(|| io::Error::other("the hosted pinned HTTPS fixture tool is required"))?;
-    let log = area.join("https-tunnel.log");
+    let log = area.join(format!("https-tunnel-attempt-{attempt}.log"));
     let output = std::fs::File::create(&log)?;
     let mut child = tokio::process::Command::new(tool)
         .args([
@@ -295,16 +347,74 @@ pub(super) async fn start(
             Err(error) => error.to_string(),
         };
         if Instant::now() >= deadline {
-            return Err(io::Error::new(
-                io::ErrorKind::TimedOut,
-                format!("temporary public-PKI HTTPS fixture DNS was not ready: {diagnostic}"),
-            )
-            .into());
+            // Reap this unusable external fixture before another can start.
+            // Cleanup failure is not a DNS preparation failure and is not retried.
+            child.kill().await.map_err(|error| {
+                io::Error::other(format!("unready HTTPS fixture cleanup failed: {error}"))
+            })?;
+            return Err(DnsReadinessTimeout(diagnostic).into());
         }
         tokio::time::sleep(Duration::from_millis(250)).await;
     }
     diagnostic.complete = true;
+    setup_diagnostic(format_args!(
+        "original_https_fixture_ready attempt={attempt} origin={origin}"
+    ));
     Ok((child, origin))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn dns_preparation_stops_at_three_attempts() {
+        let mut attempts = Vec::new();
+        let result = prepare_with_dns_retry(|attempt| {
+            attempts.push(attempt);
+            std::future::ready(Err::<(), _>(DnsReadinessTimeout("not ready".into()).into()))
+        })
+        .await;
+        assert_eq!(attempts, [1, 2, 3]);
+        assert!(result.unwrap_err().is::<DnsReadinessTimeout>());
+    }
+
+    #[tokio::test]
+    async fn dns_preparation_returns_only_the_ready_origin() {
+        let mut attempts = Vec::new();
+        let result = prepare_with_dns_retry(|attempt| {
+            attempts.push(attempt);
+            std::future::ready(if attempt == 3 {
+                Ok("prepared origin")
+            } else {
+                Err(DnsReadinessTimeout("not ready".into()).into())
+            })
+        })
+        .await;
+        assert_eq!(attempts, [1, 2, 3]);
+        assert_eq!(result.unwrap(), "prepared origin");
+    }
+
+    #[tokio::test]
+    async fn registration_io_and_sdk_failures_are_never_retried() {
+        let errors: Vec<Box<dyn std::error::Error + Send + Sync>> = vec![
+            io::Error::new(io::ErrorKind::TimedOut, "registration timed out").into(),
+            io::Error::other("fixture cleanup failed").into(),
+            nestlink_sdk::SdkError::Timeout.into(),
+        ];
+        for error in errors {
+            let expected = error.to_string();
+            let mut error = Some(error);
+            let mut attempts = Vec::new();
+            let result = prepare_with_dns_retry(|attempt| {
+                attempts.push(attempt);
+                std::future::ready(Err::<(), _>(error.take().unwrap()))
+            })
+            .await;
+            assert_eq!(attempts, [1]);
+            assert_eq!(result.unwrap_err().to_string(), expected);
+        }
+    }
 }
 
 pub(super) async fn login(
