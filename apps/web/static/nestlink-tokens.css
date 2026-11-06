@@ -23,7 +23,7 @@
   --text-section: 16px;
   --control-height: 34px;
   --row-height: 64px;
-  --content-padding: 28px;
+  --content-padding: 32px;
   --sidebar-width: 214px;
   --sidebar-width-compact: 76px;
   --mobile-padding: 16px;
@@ -60,7 +60,7 @@
     --text-section: 16px;
     --control-height: 34px;
     --row-height: 64px;
-    --content-padding: 28px;
+    --content-padding: 32px;
     --sidebar-width: 214px;
     --sidebar-width-compact: 76px;
     --mobile-padding: 16px;
