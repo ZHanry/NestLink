@@ -18,7 +18,11 @@ impl DesktopApp {
                 .frame(widgets::modal_frame(context))
                 .show(context, |ui| {
                     ui.set_width(440_f32.min(context.content_rect().width() - 64.));
-                    ui.heading(self.t("审计保留策略", "Audit retention"));
+                    widgets::modal_heading(
+                        ui,
+                        self.t("审计保留策略", "Audit retention"),
+                        self.english,
+                    );
                     ui.label(self.t(
                         "保留期限缩短后，过期历史会按服务器策略清理。",
                         "Shortening retention allows the server to prune expired history.",
@@ -76,7 +80,7 @@ impl DesktopApp {
             let mut cancel = false;
             let response=egui::Modal::new(egui::Id::new("relay-quota")).frame(widgets::modal_frame(context)).show(context,|ui| {
                 ui.set_width(460_f32.min(context.content_rect().width()-64.));
-                ui.heading(self.t("中继配额", "Relay quotas"));
+                widgets::modal_heading(ui, self.t("中继配额", "Relay quotas"), self.english);
                 ui.label(self.t("配额由控制中心执行，变更可能影响现有连接。", "The control center enforces these quotas. Changes can affect existing connections."));
                 ui.add_space(18.);
                 egui::Grid::new("relay-quota-form").spacing([22.,16.]).show(ui,|ui| {

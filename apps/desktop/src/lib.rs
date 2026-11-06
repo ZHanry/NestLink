@@ -2200,7 +2200,11 @@ impl DesktopApp {
             .frame(widgets::modal_frame(context))
             .show(context, |ui| {
                 ui.set_width(420.);
-                ui.heading(self.t("确认操作", "Confirm action"));
+                if widgets::modal_heading(ui, self.t("确认操作", "Confirm action"), self.english)
+                {
+                    cancelled = true;
+                    return;
+                }
                 if let Some((message, _)) = &self.pending_confirmation {
                     ui.label(message);
                 }

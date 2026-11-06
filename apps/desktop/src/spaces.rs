@@ -329,7 +329,7 @@ impl SpacePanel {
                 let context=ui.ctx().clone();
                 let response=egui::Modal::new(egui::Id::new("space-create-join")).frame(widgets::modal_frame(&context)).show(&context,|ui|{
                     ui.set_width(440_f32.min(context.content_rect().width()-64.));
-                    ui.heading(match self.create_dialog { 1 => t(english,"创建空间","Create space"), 3 => t(english,"添加空间设备","Add a space device"), _ => t(english,"加入空间","Join space") });
+                    widgets::modal_heading(ui, match self.create_dialog { 1 => t(english,"创建空间","Create space"), 3 => t(english,"添加空间设备","Add a space device"), _ => t(english,"加入空间","Join space") }, english);
                     let mut submission = None;
                     let mut submit_label = t(english, "创建空间", "Create space");
                     if self.create_dialog == 1 {
@@ -542,7 +542,14 @@ impl SpacePanel {
             egui::Modal::new(egui::Id::new("space-confirmation"))
                 .frame(widgets::modal_frame(ui.ctx()))
                 .show(ui.ctx(), |ui| {
-                    ui.heading(t(english, "确认空间操作", "Confirm space operation"));
+                    if widgets::modal_heading(
+                        ui,
+                        t(english, "确认空间操作", "Confirm space operation"),
+                        english,
+                    ) {
+                        no = true;
+                        return;
+                    }
                     ui.label(message);
                     (no, yes) = widgets::dialog_actions(
                         ui,

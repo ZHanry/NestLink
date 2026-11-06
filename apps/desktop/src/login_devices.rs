@@ -158,7 +158,11 @@ impl DesktopApp {
                 .frame(widgets::modal_frame(&context))
                 .show(&context, |ui| {
                     ui.set_width(420_f32.min(context.content_rect().width() - 64.));
-                    ui.heading(self.t("登录设备详情", "Login device details"));
+                    widgets::modal_heading(
+                        ui,
+                        self.t("登录设备详情", "Login device details"),
+                        self.english,
+                    );
                     ui.strong(device_name(session));
                     ui.label(format!(
                         "{} · {}",

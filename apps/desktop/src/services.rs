@@ -935,15 +935,13 @@ impl ServicePanel {
             let context = ui.ctx().clone();
             egui::Modal::new(egui::Id::new("local-service-target")).frame(widgets::modal_frame(&context)).show(&context, |ui| {
             ui.set_width((context.content_rect().width() - 48.).clamp(280., 620.));
-            close_target = ui.button(t("关闭目标批准", "Close target approval")).clicked();
+            close_target = widgets::modal_heading(ui, t("在本机批准服务目标", "Approve a service target on this device"), english);
+            if close_target { return; }
             egui::ScrollArea::vertical().id_salt("local-target-scroll")
                 .max_height(context.content_rect().height() * 0.65).show(ui, |ui| {
             ui.add_space(14.);
             ui.separator();
-            ui.heading(t(
-                "在本机批准服务目标",
-                "Approve a service target on this device",
-            ));
+
             let selected = snapshot
                 .selected_service
                 .data
@@ -1185,6 +1183,7 @@ impl ServicePanel {
             let context = ui.ctx().clone();
             egui::Modal::new(egui::Id::new("revoke-service")).frame(widgets::modal_frame(&context)).show(&context, |ui| {
             ui.set_width(420.);
+            if widgets::modal_heading(ui, t("撤销服务", "Revoke service"), english) { self.revoke = None; return; }
             let id = view.id.clone();
             let revision = view.revision;
             ui.separator();
@@ -1214,7 +1213,7 @@ impl ServicePanel {
             let mut close = false;
             egui::Modal::new(egui::Id::new("service-editor")).frame(widgets::modal_frame(&context)).show(&context, |ui| {
             ui.set_width((context.content_rect().width() - 48.).clamp(280., 620.));
-            ui.heading(t("入口配置", "Ingress configuration"));
+            if widgets::modal_heading(ui, t("入口配置", "Ingress configuration"), english) { close = true; return; }
             egui::ScrollArea::vertical().id_salt("service-editor-scroll")
                 .max_height(context.content_rect().height() * 0.6).show(ui, |ui| {
             ui.add_enabled_ui(!busy, |ui| {
@@ -1307,7 +1306,15 @@ impl ServicePanel {
             egui::Modal::new(egui::Id::new("discard-service-draft"))
                 .frame(widgets::modal_frame(ui.ctx()))
                 .show(ui.ctx(), |ui| {
-                    ui.heading(t("放弃未保存的修改？", "Discard unsaved changes?"));
+                    ui.set_width(420_f32.min(ui.ctx().content_rect().width() - 64.));
+                    if widgets::modal_heading(
+                        ui,
+                        t("放弃未保存的修改？", "Discard unsaved changes?"),
+                        english,
+                    ) {
+                        keep = true;
+                        return;
+                    }
                     (keep, discard) = widgets::dialog_actions(
                         ui,
                         t("继续编辑", "Keep editing"),

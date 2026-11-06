@@ -83,12 +83,11 @@ impl DesktopApp {
                 .frame(widgets::modal_frame(context))
                 .show(context, |ui| {
                     ui.set_width(520_f32.min(context.content_rect().width() - 64.));
-                    ui.horizontal(|ui| {
-                        ui.heading(self.t("搜索设备与功能", "Search devices and actions"));
-                        if ui.button("×").clicked() {
-                            self.workspace.search_open = false;
-                        }
-                    });
+                    widgets::modal_heading(
+                        ui,
+                        self.t("搜索设备与功能", "Search devices and actions"),
+                        self.english,
+                    );
                     let search = ui.add(
                         egui::TextEdit::singleline(&mut self.workspace.search)
                             .desired_width(f32::INFINITY)
@@ -143,7 +142,7 @@ impl DesktopApp {
         if self.workspace.help_open {
             let response=egui::Modal::new(egui::Id::new("workspace-help")).frame(widgets::modal_frame(context)).show(context,|ui|{
                 ui.set_width(460_f32.min(context.content_rect().width()-64.));
-                ui.heading("NestLink");
+                widgets::modal_heading(ui, "NestLink", self.english);
                 ui.label(format!("{} · Windows",env!("CARGO_PKG_VERSION")));
                 ui.add_space(10.);
                 ui.label(self.t("远程桌面用于控制与会话文件传输；内网穿透管理本机和其他已授权设备的服务；网络空间管理私有组网和成员授权；设备管理查看账号登录。", "Remote desktop provides control and session file transfer. Tunnels manage local and authorized remote services. Spaces manage private networking and member grants. Devices manages account logins."));
@@ -160,7 +159,11 @@ impl DesktopApp {
                 .frame(widgets::modal_frame(context))
                 .show(context, |ui| {
                     ui.set_width(420_f32.min(context.content_rect().width() - 64.));
-                    ui.heading(self.t("退出 NestLink？", "Exit NestLink?"));
+                    widgets::modal_heading(
+                        ui,
+                        self.t("退出 NestLink？", "Exit NestLink?"),
+                        self.english,
+                    );
                     ui.label(self.t(
                         "退出会结束本用户的远程会话与本机后台服务。",
                         "Exiting ends this user's remote sessions and local background services.",

@@ -264,7 +264,7 @@ impl DesktopApp {
                 .frame(widgets::modal_frame(&context))
                 .show(&context, |ui| {
                     ui.set_width(440_f32.min(context.content_rect().width() - 64.));
-                    ui.heading(self.t("修改密码", "Change password"));
+                    widgets::modal_heading(ui, self.t("修改密码", "Change password"), self.english);
                     widgets::secret_field(
                         ui,
                         self.t("当前密码", "Current password"),
@@ -370,7 +370,11 @@ impl DesktopApp {
                 .frame(widgets::modal_frame(&context))
                 .show(&context, |ui| {
                     ui.set_width(440_f32.min(context.content_rect().width() - 64.));
-                    ui.heading(self.t("创建普通账号", "Create a standard account"));
+                    widgets::modal_heading(
+                        ui,
+                        self.t("创建普通账号", "Create a standard account"),
+                        self.english,
+                    );
                     widgets::field(
                         ui,
                         self.t("账号名称", "Account name"),

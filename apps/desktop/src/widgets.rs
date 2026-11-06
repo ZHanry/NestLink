@@ -527,6 +527,43 @@ pub fn modal_frame(context: &egui::Context) -> egui::Frame {
         .inner_margin(24)
         .corner_radius(17)
 }
+/// Match the prototype title row and dismiss through the caller's cancel path.
+pub fn modal_heading(ui: &mut egui::Ui, title: &str, english: bool) -> bool {
+    let close = ui
+        .horizontal_top(|ui| {
+            let width = (ui.available_width() - 48.).max(100.);
+            ui.allocate_ui_with_layout(
+                egui::vec2(width, 32.),
+                egui::Layout::top_down(egui::Align::Min),
+                |ui| {
+                    ui.add(
+                        egui::Label::new(
+                            egui::RichText::new(title).font(crate::theme::heading_font(20.)),
+                        )
+                        .wrap(),
+                    );
+                },
+            );
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+                crate::icons::tool_button(
+                    ui,
+                    NavIcon::Close,
+                    if english {
+                        "Close dialog"
+                    } else {
+                        "关闭弹窗"
+                    },
+                )
+            })
+            .inner
+        })
+        .inner;
+    if close.clicked() {
+        ui.close();
+    }
+    ui.add_space(8.);
+    close.clicked()
+}
 /// Dialog actions keep the prototype's compact widths and right alignment.
 pub fn dialog_actions(
     ui: &mut egui::Ui,
@@ -868,6 +905,77 @@ pub fn utc_time(seconds: u64) -> String {
 #[cfg(test)]
 mod utc_tests {
     use super::egui;
+
+    #[test]
+    fn modal_close_dismisses_without_submitting_in_both_themes_and_window_sizes() {
+        for size in [egui::vec2(760., 560.), egui::vec2(1440., 960.)] {
+            for dark in [false, true] {
+                let context = egui::Context::default();
+                crate::theme::fonts(&context).expect("system UI fonts");
+                let tokens = crate::theme::tokens().expect("UI tokens");
+                crate::theme::apply(&context, &tokens, dark);
+                let mut close_position = egui::Pos2::ZERO;
+                let mut submitted = false;
+                let mut closed = false;
+                for frame in 0..6 {
+                    let events = match frame {
+                        3 => vec![
+                            egui::Event::PointerMoved(close_position),
+                            egui::Event::PointerButton {
+                                pos: close_position,
+                                button: egui::PointerButton::Primary,
+                                pressed: true,
+                                modifiers: egui::Modifiers::NONE,
+                            },
+                        ],
+                        4 => vec![egui::Event::PointerButton {
+                            pos: close_position,
+                            button: egui::PointerButton::Primary,
+                            pressed: false,
+                            modifiers: egui::Modifiers::NONE,
+                        }],
+                        _ => vec![],
+                    };
+                    let _ = context.run_ui(
+                        egui::RawInput {
+                            screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, size)),
+                            time: Some(frame as f64 / 10.),
+                            events,
+                            ..Default::default()
+                        },
+                        |_| {
+                            let response = egui::Modal::new(egui::Id::new("close-regression"))
+                                .frame(super::modal_frame(&context))
+                                .show(&context, |ui| {
+                                    ui.set_width(440.);
+                                    close_position = egui::pos2(
+                                        ui.available_rect_before_wrap().right() - 17.,
+                                        ui.cursor().min.y + 14.,
+                                    );
+                                    super::modal_heading(
+                                        ui,
+                                        "创建空间 / Create a network space",
+                                        false,
+                                    );
+                                    ui.label("Unsaved form draft");
+                                    let (_, save) =
+                                        super::dialog_actions(ui, "Cancel", "Save", true);
+                                    submitted |= save;
+                                });
+                            closed |= response.should_close();
+                            assert!(
+                                response.response.rect.height() < 240.,
+                                "The title action must not consume the modal viewport"
+                            );
+                            assert!(response.response.rect.contains(close_position));
+                        },
+                    );
+                }
+                assert!(closed, "The visible close control must dismiss the modal");
+                assert!(!submitted, "Closing must never submit the form");
+            }
+        }
+    }
 
     #[test]
     fn page_and_settings_actions_do_not_consume_the_scroll_viewport() {
