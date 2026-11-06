@@ -5,6 +5,7 @@ use nestlink_auth::{
 };
 use nestlink_protocol::api::AuditActor;
 pub use nestlink_protocol::api::{AccountView, Principal};
+mod login_sessions;
 mod password_work;
 pub use password_work::{
     LoginSnapshot, LoginVerification, MemberDraft, PasswordReplacement, PasswordSnapshot,

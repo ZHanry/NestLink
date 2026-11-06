@@ -597,6 +597,10 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v3/auth/restore", post(restore_login))
         .route("/api/v3/auth/logout", post(logout))
         .route("/api/v3/auth/me", get(me))
+        .route(
+            "/api/v3/auth/sessions/{id}",
+            axum::routing::delete(revoke_login_session),
+        )
         .route("/api/v3/auth/password", put(password))
         .route("/api/v3/accounts", get(accounts).post(create_account))
         .route("/api/v3/accounts/{id}", delete(disable_account))
@@ -1067,6 +1071,7 @@ async fn server_identity_proof(
 }
 async fn login(
     State(state): State<AppState>,
+    headers: HeaderMap,
     Json(body): Json<Login>,
 ) -> Result<Response, ApiError> {
     // User-controlled names never become unbounded rate-cache keys.
@@ -1096,6 +1101,41 @@ async fn login(
                 &vault,
             )
         })
+        .await?;
+    let agent = headers
+        .get(header::USER_AGENT)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    let client = if agent.contains("NestLink/") {
+        "桌面 / SDK"
+    } else if agent.contains("Edg/") {
+        "Web · Microsoft Edge"
+    } else if agent.contains("Chrome/") {
+        "Web · Google Chrome"
+    } else if agent.contains("Firefox/") {
+        "Web · Firefox"
+    } else {
+        "Web / API"
+    };
+    let platform = if agent.contains("Windows") || agent.contains("windows") {
+        "Windows"
+    } else if agent.contains("Linux") || agent.contains("linux") {
+        "Linux"
+    } else {
+        ""
+    };
+    let name = headers
+        .get("x-nestlink-device-name")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| URL_SAFE_NO_PAD.decode(v).ok())
+        .and_then(|v| String::from_utf8(v).ok())
+        .filter(|v| v.len() <= 128 && !v.chars().any(char::is_control))
+        .unwrap_or_default();
+    let actor = grant.principal.clone();
+    let client = client.to_owned();
+    let platform = platform.to_owned();
+    state
+        .db(move |store| store.record_login_metadata(&actor, &name, &client, &platform, now()?))
         .await?;
     login_response(&state, grant)
 }
@@ -1141,9 +1181,31 @@ async fn me(State(state): State<AppState>, headers: HeaderMap) -> Result<Json<Va
     state
         .db(move |s| {
             let principal = s.authenticate(&token, now()?)?;
-            Ok(Json(json!({"principal":principal})))
+            let sessions = s.login_sessions(&principal, now()?)?;
+            Ok(Json(json!({"principal":principal,"sessions":sessions,"session_management_available":true})))
         })
         .await
+}
+async fn revoke_login_session(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    axum::extract::Path(id): axum::extract::Path<String>,
+) -> Result<StatusCode, ApiError> {
+    let token = access(&headers)?;
+    let account = state
+        .db(move |store| {
+            let actor = store.authenticate(&token, now()?)?;
+            store.revoke_login_session(&actor, &id, now()?)?;
+            Ok(actor.account_id)
+        })
+        .await?;
+    state.emit(
+        "authentication_changed",
+        None,
+        Some(vec![account]),
+        json!({}),
+    );
+    Ok(StatusCode::NO_CONTENT)
 }
 async fn logout(State(state): State<AppState>, headers: HeaderMap) -> Result<Response, ApiError> {
     let token = access(&headers)?;

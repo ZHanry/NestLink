@@ -12,6 +12,58 @@ struct Workspace {
     root: Option<egui::accesskit::NodeId>,
 }
 
+#[test]
+fn approved_navigation_exposes_admin_and_files_stay_inside_remote_desktop() {
+    let mut workspace = Workspace::new(enrolled_snapshot());
+    let size = egui::vec2(1280., 900.);
+    for _ in 0..5 {
+        workspace.frame(size, vec![]);
+    }
+    for label in ["账号管理", "网络策略与配额", "转发节点", "审计记录"] {
+        assert_eq!(
+            workspace.bounds(label).len(),
+            1,
+            "missing expanded admin entry: {label}"
+        );
+    }
+    assert!(workspace.bounds("更多").is_empty());
+    workspace.click(size, "文件传输");
+    assert!(workspace.bounds("发起连接").is_empty());
+    assert_eq!(workspace.bounds("选择远程设备").len(), 1);
+    workspace.click(size, "选择远程设备");
+    assert!(workspace.app.remote.permissions[5] && workspace.app.remote.permissions[6]);
+    assert_eq!(workspace.bounds("发起连接").len(), 1);
+}
+
+#[test]
+fn account_login_devices_never_offer_device_enrollment_or_identity_revocation() {
+    let mut snapshot = enrolled_snapshot();
+    snapshot.security.data = Some(Arc::new(nestlink_protocol::api::MeResponse {
+        principal: snapshot.principal.clone().expect("principal"),
+        sessions: vec![nestlink_protocol::api::LoginSessionView {
+            session_id: "00000000-0000-4000-8000-000000000080".into(),
+            device_name: Some("My login workstation".into()),
+            client: Some("Windows desktop".into()),
+            platform: Some("Windows".into()),
+            created_at: None,
+            last_active_at: None,
+            expires_at: u64::MAX,
+            current: true,
+        }],
+        session_management_available: true,
+    }));
+    let mut workspace = Workspace::new(snapshot);
+    workspace.app.screen = Screen::Devices;
+    let size = egui::vec2(1280., 900.);
+    for _ in 0..5 {
+        workspace.frame(size, vec![]);
+    }
+    assert_eq!(workspace.label_bounds("My login workstation").len(), 1);
+    assert_eq!(workspace.bounds("退出登录").len(), 1);
+    assert!(workspace.bounds("登记").is_empty());
+    assert!(workspace.bounds("撤销").is_empty());
+}
+
 fn independent_offline_snapshot() -> Snapshot {
     let mut snapshot = Snapshot::default();
     let request_id = "00000000-0000-4000-8000-000000000030".to_owned();
@@ -1084,7 +1136,7 @@ fn bounded_remote_workspace_keeps_connection_action_visible_after_section_change
         for _ in 0..5 {
             workspace.frame(size, Vec::new());
         }
-        let baseline = workspace.bounds("进入桌面");
+        let baseline = workspace.bounds("发起连接");
         assert_eq!(baseline.len(), 1);
         let viewport = egui::Rect::from_min_size(egui::Pos2::ZERO, size);
         assert!(
@@ -1105,12 +1157,12 @@ fn bounded_remote_workspace_keeps_connection_action_visible_after_section_change
         );
         workspace.click(size, "本机访问");
         assert!(
-            workspace.bounds("进入桌面").is_empty(),
+            workspace.bounds("发起连接").is_empty(),
             "host settings did not replace the device workspace"
         );
-        workspace.click(size, "连接设备");
+        workspace.click(size, "远程控制");
         workspace.frame(size, Vec::new());
-        assert_eq!(workspace.bounds("进入桌面"), baseline);
+        assert_eq!(workspace.bounds("发起连接"), baseline);
         for revision in 1..8 {
             let mut snapshot = enrolled_snapshot();
             snapshot.revision = revision;
@@ -1130,7 +1182,7 @@ fn bounded_remote_workspace_keeps_connection_action_visible_after_section_change
             workspace.app.bridge.layout_snapshot(snapshot);
             workspace.frame(size, Vec::new());
             assert_eq!(
-                workspace.bounds("进入桌面"),
+                workspace.bounds("发起连接"),
                 baseline,
                 "polling moved the anchored connect action"
             );
@@ -1150,7 +1202,7 @@ fn remote_workspace_controls_stay_still_between_frames() {
         for _ in 0..5 {
             workspace.frame(size, Vec::new());
         }
-        let labels = ["进入桌面", "刷新"];
+        let labels = ["发起连接", "刷新"];
         let baseline: Vec<_> = labels.iter().map(|label| workspace.bounds(label)).collect();
         assert!(
             baseline.iter().all(|rects| !rects.is_empty()),
@@ -1266,7 +1318,7 @@ fn refreshing_an_empty_device_list_keeps_the_connection_controls_in_place() {
     for _ in 0..5 {
         workspace.frame(size, Vec::new());
     }
-    let baseline = workspace.bounds("进入桌面");
+    let baseline = workspace.bounds("发起连接");
     assert_eq!(baseline.len(), 1);
     for frame in 0..10 {
         let mut snapshot = empty();
@@ -1276,7 +1328,7 @@ fn refreshing_an_empty_device_list_keeps_the_connection_controls_in_place() {
         workspace.app.bridge.layout_snapshot(snapshot);
         workspace.frame(size, Vec::new());
         assert_eq!(
-            workspace.bounds("进入桌面"),
+            workspace.bounds("发起连接"),
             baseline,
             "empty list refresh moved the connection controls"
         );
@@ -1292,7 +1344,7 @@ fn incoming_requests_and_browser_host_lifecycle_do_not_push_device_controls() {
     for _ in 0..5 {
         workspace.frame(size, Vec::new());
     }
-    let labels = ["进入桌面", "系统声音", "刷新"];
+    let labels = ["发起连接", "系统声音", "刷新"];
     let baseline: Vec<_> = labels.iter().map(|label| workspace.bounds(label)).collect();
     for phase in 0..12 {
         let mut snapshot = enrolled_snapshot();
@@ -1644,7 +1696,7 @@ fn selecting_devices_and_refreshing_long_names_keep_the_entry_visible_and_fixed(
         for _ in 0..5 {
             workspace.frame(size, Vec::new());
         }
-        let baseline = workspace.bounds("进入桌面");
+        let baseline = workspace.bounds("发起连接");
         assert_eq!(baseline.len(), 1);
         assert!(
             egui::Rect::from_min_size(egui::Pos2::ZERO, size - egui::vec2(0., 104.))
@@ -1692,7 +1744,7 @@ fn selecting_devices_and_refreshing_long_names_keep_the_entry_visible_and_fixed(
             workspace.app.bridge.layout_snapshot(snapshot);
             workspace.frame(size, Vec::new());
             assert_eq!(
-                workspace.bounds("进入桌面"),
+                workspace.bounds("发起连接"),
                 baseline,
                 "selection or name moved the entry at {size:?}"
             );

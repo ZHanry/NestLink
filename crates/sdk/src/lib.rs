@@ -178,6 +178,12 @@ impl Sdk {
         let client = Client::builder();
         #[cfg(not(target_arch = "wasm32"))]
         let client = client
+            .user_agent(format!(
+                "NestLink/{} ({})",
+                env!("CARGO_PKG_VERSION"),
+                std::env::consts::OS
+            ))
+            .default_headers(desktop_display_headers())
             .redirect(reqwest::redirect::Policy::none())
             .timeout(Duration::from_secs(15));
         let client = client.build()?;
@@ -213,6 +219,12 @@ impl Sdk {
         let client = Client::builder();
         #[cfg(not(target_arch = "wasm32"))]
         let client = client
+            .user_agent(format!(
+                "NestLink/{} ({})",
+                env!("CARGO_PKG_VERSION"),
+                std::env::consts::OS
+            ))
+            .default_headers(desktop_display_headers())
             .redirect(reqwest::redirect::Policy::none())
             .timeout(Duration::from_secs(15));
         let client = client.build()?;
@@ -583,6 +595,19 @@ impl Sdk {
         let controller = decode_key(&keys.controller_public_key, &claims.controller_key_sha256)?;
         let host = decode_key(&keys.host_public_key, &claims.host_key_sha256)?;
         Ok(if is_controller { host } else { controller })
+    }
+    pub async fn revoke_login_session(&self, session_id: &str) -> Result<(), SdkError> {
+        if !valid_id(session_id) {
+            return Err(SdkError::Invalid);
+        }
+        self.call::<(), serde_json::Value>(
+            Method::DELETE,
+            &format!("/auth/sessions/{session_id}"),
+            None,
+            true,
+        )
+        .await
+        .map(|_| ())
     }
     pub async fn create_account(
         &self,
@@ -1481,4 +1506,20 @@ fn decode_response<R: DeserializeOwned>(
         return Ok(None);
     }
     Ok(Some(serde_json::from_slice(bytes)?))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn desktop_display_headers() -> reqwest::header::HeaderMap {
+    let mut headers = reqwest::header::HeaderMap::new();
+    if let Some(name) = std::env::var_os("COMPUTERNAME")
+        .and_then(|v| v.into_string().ok())
+        .filter(|v| v.len() <= 128 && !v.chars().any(char::is_control))
+    {
+        if let Ok(value) =
+            reqwest::header::HeaderValue::from_str(&URL_SAFE_NO_PAD.encode(name.as_bytes()))
+        {
+            headers.insert("x-nestlink-device-name", value);
+        }
+    }
+    headers
 }

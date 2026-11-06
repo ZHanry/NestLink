@@ -27,7 +27,7 @@ impl DesktopApp {
             .show(ui, |ui| {
                 ui.set_min_width(440.);
                 TableBuilder::new(ui)
-                    .striped(true)
+                    .striped(false)
                     .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                     .column(Column::remainder().at_least(180.))
                     .column(Column::initial(100.).at_least(75.))
@@ -112,7 +112,7 @@ impl DesktopApp {
             .show(ui, |ui| {
                 ui.set_min_width(440.);
                 TableBuilder::new(ui)
-                    .striped(true)
+                    .striped(false)
                     .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                     .column(Column::remainder().at_least(160.))
                     .column(Column::initial(110.))

@@ -11,6 +11,16 @@ pub enum Icon {
     Refresh,
     Audio,
     Close,
+    Spaces,
+    Network,
+    Server,
+    Audit,
+    Shield,
+    Bell,
+    Help,
+    Theme,
+    Minimize,
+    Maximize,
 }
 
 /// Display the original PNG asset, shared with the window and tray icon.
@@ -116,6 +126,81 @@ pub fn paint(ui: &egui::Ui, icon: Icon, center: Pos2, size: f32, color: Color32)
             line((3., 15.), (3., 9.));
             line((18., 7.), (21., 12.));
             line((21., 12.), (18., 17.));
+        }
+        Icon::Minimize => {
+            line((5., 12.), (19., 12.));
+        }
+        Icon::Maximize => {
+            rect((5., 5.), (19., 19.), 1.);
+        }
+        Icon::Spaces | Icon::Network => {
+            rect((8., 2.), (16., 8.), 1.);
+            rect((2., 16.), (9., 22.), 1.);
+            rect((15., 16.), (22., 22.), 1.);
+            line((12., 8.), (12., 12.));
+            line((5., 12.), (19., 12.));
+            line((5., 12.), (5., 16.));
+            line((19., 12.), (19., 16.));
+        }
+        Icon::Server => {
+            rect((3., 3.), (21., 10.), 2.);
+            rect((3., 14.), (21., 21.), 2.);
+            line((6., 6.), (8., 6.));
+            line((6., 17.), (8., 17.));
+        }
+        Icon::Audit => {
+            rect((5., 2.), (20., 22.), 2.);
+            for y in [7., 12., 17.] {
+                line((9., y), (16., y));
+            }
+        }
+        Icon::Shield => {
+            ui.painter().add(egui::Shape::closed_line(
+                vec![
+                    p(12., 2.),
+                    p(21., 6.),
+                    p(19., 16.),
+                    p(12., 22.),
+                    p(5., 16.),
+                    p(3., 6.),
+                ],
+                stroke,
+            ));
+            line((8., 12.), (11., 15.));
+            line((11., 15.), (16., 9.));
+        }
+        Icon::Bell => {
+            ui.painter().add(egui::Shape::line(
+                vec![
+                    p(5., 17.),
+                    p(7., 14.),
+                    p(7., 7.),
+                    p(10., 4.),
+                    p(14., 4.),
+                    p(17., 7.),
+                    p(17., 14.),
+                    p(19., 17.),
+                    p(5., 17.),
+                ],
+                stroke,
+            ));
+            line((10., 21.), (14., 21.));
+        }
+        Icon::Help => {
+            ui.painter().circle_stroke(center, 9. * scale, stroke);
+            line((9., 8.), (12., 6.));
+            line((12., 6.), (15., 9.));
+            line((15., 9.), (12., 12.));
+            line((12., 12.), (12., 14.));
+            ui.painter().circle_filled(p(12., 18.), scale, color);
+        }
+        Icon::Theme => {
+            ui.painter().circle_stroke(center, 5. * scale, stroke);
+            for (x, y) in [(12., 1.), (12., 23.), (1., 12.), (23., 12.)] {
+                let v = p(x, y) - center;
+                ui.painter()
+                    .line_segment([center + v * 0.75, center + v], stroke);
+            }
         }
         Icon::Close => {
             line((6., 6.), (18., 18.));

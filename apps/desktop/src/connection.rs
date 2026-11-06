@@ -6,7 +6,8 @@ use nestlink_app_ipc::wire::Command;
 impl DesktopApp {
     pub(crate) fn connection_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.add_space(32.);
-        ui.horizontal(|ui| {
+        ui.horizontal_top(|ui| {
+            if ui.available_width()>1050. { self.login_brand_panel(ui); }
             ui.add_space(((ui.available_width() - 460.) / 2.).max(0.));
             ui.vertical(|ui| {
                 ui.set_max_width(460.);
@@ -27,7 +28,7 @@ impl DesktopApp {
                 egui::Frame::new().fill(ui.visuals().window_fill)
                     .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
                     .inner_margin(24)
-                    .corner_radius(8)
+                    .corner_radius(13)
                     .show(ui, |ui| {
                         ui.set_width((ui.available_width()).min(412.));
                         ui.label(self.t("服务器地址", "Server address"));
@@ -373,7 +374,8 @@ impl DesktopApp {
 
     pub(crate) fn sign_in_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.add_space(32.);
-        ui.horizontal(|ui| {
+        ui.horizontal_top(|ui| {
+            if ui.available_width()>1050. { self.login_brand_panel(ui); }
             ui.add_space(((ui.available_width() - 460.) / 2.).max(0.));
             ui.vertical(|ui| {
                 ui.set_max_width(460.);
@@ -394,7 +396,7 @@ impl DesktopApp {
                 egui::Frame::new().fill(ui.visuals().window_fill)
                     .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
                     .inner_margin(24)
-                    .corner_radius(8)
+                    .corner_radius(13)
                     .show(ui, |ui| {
                         ui.set_width((ui.available_width()).min(412.));
                         if let Some(server) = &snapshot.server {

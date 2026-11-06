@@ -3,59 +3,59 @@
   "product": "NestLink",
   "light": {
     "primary": "#7850B2",
-    "primary_text": "#653F9B",
-    "canvas": "#F4F6F9",
-    "sidebar": "#ECEEF3",
+    "primary_text": "#7043AA",
+    "canvas": "#F6F5FA",
+    "sidebar": "#EEEBF5",
     "surface": "#FFFFFF",
-    "text": "#14171F",
-    "muted": "#525B6C",
-    "border": "#858DA0",
-    "danger": "#A81E1E"
+    "text": "#292333",
+    "muted": "#797184",
+    "border": "#EBE6F0",
+    "danger": "#BF5364"
   },
   "dark": {
-    "primary": "#B697E3",
-    "primary_text": "#C8AEED",
-    "canvas": "#14171F",
-    "sidebar": "#1C202B",
-    "surface": "#242936",
-    "text": "#F0F3F8",
-    "muted": "#BCC3D2",
-    "border": "#8390A6",
-    "danger": "#FF9393"
+    "primary": "#AC86DB",
+    "primary_text": "#C3A2ED",
+    "canvas": "#1C1922",
+    "sidebar": "#211C2B",
+    "surface": "#25212D",
+    "text": "#EEE8F5",
+    "muted": "#B2A7BD",
+    "border": "#393140",
+    "danger": "#EF98AB"
   },
   "type": {
-    "body": 15,
-    "small": 12,
+    "body": 13,
+    "small": 11,
     "title": 24,
-    "section": 18,
+    "section": 16,
     "family": "OS UI font with a system-installed Chinese fallback; no unreviewed fonts bundled",
     "css_family": "\"Segoe UI Variable Text\", \"Segoe UI\", \"Microsoft YaHei UI\", system-ui, sans-serif",
     "css_code_family": "ui-monospace, \"Cascadia Code\", Consolas, monospace"
   },
   "layout": {
-    "desktop_width": 1200,
-    "desktop_height": 800,
+    "desktop_width": 1440,
+    "desktop_height": 960,
     "minimum_width": 760,
     "minimum_height": 560,
-    "sidebar_width": 180,
-    "sidebar_width_compact": 160,
-    "content_padding": 20,
-    "row_height": 56,
-    "control_height": 40
+    "sidebar_width": 214,
+    "sidebar_width_compact": 76,
+    "content_padding": 28,
+    "row_height": 64,
+    "control_height": 34
   },
   "spacing": {
     "egui_item_horizontal": 10,
-    "egui_item_vertical": 9,
+    "egui_item_vertical": 10,
     "egui_button_horizontal": 12,
-    "egui_button_vertical": 9,
+    "egui_button_vertical": 7,
     "mobile_screen_padding": 24,
     "web_mobile_padding": 16
   },
   "shape": {
-    "control": 6,
-    "panel": 8,
-    "window": 10,
-    "sheet": 8
+    "control": 8,
+    "panel": 13,
+    "window": 17,
+    "sheet": 10
   },
   "state": {
     "primary_action_text": {
@@ -63,16 +63,16 @@
       "dark": "#231833"
     },
     "focus": {
-      "light": "#653F9B",
-      "dark": "#C8AEED"
+      "light": "#7850B2",
+      "dark": "#C3A2ED"
     },
     "warning": {
-      "light": "#945200",
-      "dark": "#F5BB64"
+      "light": "#A27321",
+      "dark": "#DFBC77"
     },
     "success": {
-      "light": "#116841",
-      "dark": "#78DEA9"
+      "light": "#278361",
+      "dark": "#82C6A7"
     },
     "danger_action": {
       "light": "#A81E1E",
@@ -90,7 +90,8 @@
   "navigation": [
     "远程桌面",
     "内网穿透",
-    "设备"
+    "网络空间",
+    "设备管理"
   ],
-  "principles": "Windows and Web workspaces for intranet tunneling and remote desktop. Preserve the original purple linked-N logo. Two primary tasks, fixed connection and tunnel action areas, independent scrolling bodies, and only observed connection states. Status polling never moves pointer targets. Gemini CLI design reviewed against actual capabilities."
+  "principles": "Approved 0.8.1 RC lilac Windows design. Remote control includes file transfer; tunnels have local and authorized other-device scopes; spaces manage private networking and membership; device management enumerates account logins. All admin entries stay expanded. Real state and explicit authorization are preserved."
 }

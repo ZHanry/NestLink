@@ -19,6 +19,9 @@ const MAX_CA_BUNDLE_FILE_BYTES: usize = 192 * 1024;
 #[derive(Default)]
 pub(crate) struct ServicePanel {
     generation: u64,
+    scope_others: bool,
+    host_filter: String,
+    search: String,
     draft: Option<Draft>,
     draft_baseline: Option<String>,
     discard_confirmation: bool,
@@ -519,7 +522,7 @@ impl ServicePanel {
         let busy =
             snapshot.services.loading.is_some() || snapshot.selected_service.loading.is_some();
         ui.horizontal(|ui| {
-            ui.heading(t("隧道入口", "Tunnel entries"));
+            ui.heading(t("内网穿透", "Tunnels"));
             if ui
                 .add_enabled(!busy, egui::Button::new(t("刷新", "Refresh")))
                 .clicked()
@@ -534,28 +537,134 @@ impl ServicePanel {
                 .add_enabled(
                     !busy,
                     egui::Button::new(
-                        egui::RichText::new(t("新建隧道", "New tunnel"))
-                            .color(ui.visuals().selection.stroke.color),
+                        egui::RichText::new(if self.scope_others {
+                            t("配置其他设备穿透", "Configure remote tunnel")
+                        } else {
+                            t("配置本机穿透", "Configure local tunnel")
+                        })
+                        .color(ui.visuals().selection.stroke.color),
                     )
                     .fill(ui.visuals().selection.bg_fill),
                 )
                 .clicked()
             {
-                self.draft_baseline = Some(Draft::new(snapshot).fingerprint());
-                self.draft = Some(Draft::new(snapshot));
+                let mut draft = Draft::new(snapshot);
+                if self.scope_others {
+                    draft.host = if !self.host_filter.is_empty() {
+                        self.host_filter.clone()
+                    } else {
+                        snapshot
+                            .devices
+                            .data
+                            .as_deref()
+                            .into_iter()
+                            .flatten()
+                            .find(|d| {
+                                !d.revoked
+                                    && snapshot
+                                        .installation
+                                        .as_ref()
+                                        .is_none_or(|local| local.device_id != d.device.id)
+                            })
+                            .map(|d| d.device.id.clone())
+                            .unwrap_or_default()
+                    };
+                }
+                self.draft_baseline = Some(draft.fingerprint());
+                self.draft = Some(draft);
                 self.error = None;
             }
         });
         ui.label(t(
-            "把内网服务发布到访问入口。支持 TCP、UDP、HTTP 和 HTTPS。",
+            "配置本机的穿透，或管理已获授权的其他设备的穿透服务。",
             "Publish an intranet service through an access entry. TCP, UDP, HTTP and HTTPS are supported.",
         ));
+        ui.add_space(14.);
+        ui.horizontal(|ui| {
+            if widgets::tab(ui, !self.scope_others, t("本机穿透", "This computer")).clicked() {
+                self.scope_others = false;
+                self.host_filter.clear();
+            }
+            if widgets::tab(ui, self.scope_others, t("其他设备穿透", "Other devices")).clicked()
+            {
+                self.scope_others = true;
+            }
+        });
+        ui.separator();
+        ui.add_space(12.);
+        ui.horizontal_wrapped(|ui| {
+            ui.add(
+                egui::TextEdit::singleline(&mut self.search)
+                    .hint_text(t("搜索穿透配置…", "Search tunnels…"))
+                    .char_limit(128),
+            );
+            if self.scope_others {
+                egui::ComboBox::from_id_salt("tunnel-host-filter")
+                    .selected_text(
+                        snapshot
+                            .devices
+                            .data
+                            .as_deref()
+                            .into_iter()
+                            .flatten()
+                            .find(|d| d.device.id == self.host_filter)
+                            .map(|d| d.device.name.as_str())
+                            .unwrap_or(t("全部其他设备", "All other devices")),
+                    )
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(
+                            &mut self.host_filter,
+                            String::new(),
+                            t("全部其他设备", "All other devices"),
+                        );
+                        for device in snapshot
+                            .devices
+                            .data
+                            .as_deref()
+                            .into_iter()
+                            .flatten()
+                            .filter(|d| {
+                                !d.revoked
+                                    && snapshot
+                                        .installation
+                                        .as_ref()
+                                        .is_none_or(|local| local.device_id != d.device.id)
+                            })
+                        {
+                            ui.selectable_value(
+                                &mut self.host_filter,
+                                device.device.id.clone(),
+                                &device.device.name,
+                            );
+                        }
+                    });
+            }
+        });
         widgets::section(ui, &snapshot.services, english);
         widgets::section(ui, &snapshot.selected_service, english);
         if let Some(page) = &snapshot.services.data {
-            if page.services.is_empty() {
+            let visible: Vec<_> = page
+                .services
+                .iter()
+                .filter(|view| {
+                    let local = snapshot
+                        .installation
+                        .as_ref()
+                        .is_some_and(|id| id.device_id == view.definition.host_device_id);
+                    local != self.scope_others
+                        && (self.host_filter.is_empty()
+                            || !self.scope_others
+                            || self.host_filter == view.definition.host_device_id)
+                        && view
+                            .definition
+                            .name
+                            .to_lowercase()
+                            .contains(&self.search.to_lowercase())
+                })
+                .collect();
+            if visible.is_empty() {
                 ui.add_space(16.);
-                egui::Frame::new().fill(ui.visuals().window_fill).inner_margin(24).corner_radius(8)
+                egui::Frame::new().fill(ui.visuals().window_fill).inner_margin(24).corner_radius(13)
                     .stroke(ui.visuals().widgets.noninteractive.bg_stroke).show(ui, |ui| {
                         ui.heading(t("创建第一个内网入口", "Create your first tunnel"));
                         ui.label(t("先选择 Windows 主机、协议和访问入口，再在目标电脑上确认本机服务地址。", "Choose a Windows host, protocol and access entry, then confirm the local service address on the host."));
@@ -582,7 +691,7 @@ impl ServicePanel {
                                     ui.strong(label);
                                 }
                                 ui.end_row();
-                                for view in &page.services {
+                                for view in visible {
                                     ui.vertical(|ui| {
                                         ui.add(
                                             egui::Label::new(
@@ -1112,7 +1221,10 @@ impl ServicePanel {
                 .max_height(context.content_rect().height() * 0.6).show(ui, |ui| {
             ui.add_enabled_ui(!busy, |ui| {
             widgets::field(ui, t("服务名称", "Service name"), &mut draft.name, 128);
-            widgets::field(ui, t("主机设备 ID", "Host device ID"), &mut draft.host, 36);
+            ui.label(t("宿主设备", "Host device"));
+            egui::ComboBox::from_id_salt("tunnel-editor-host").selected_text(snapshot.devices.data.as_deref().into_iter().flatten().find(|d|d.device.id==draft.host).map(|d|d.device.name.as_str()).unwrap_or(t("选择宿主设备", "Choose host"))).show_ui(ui,|ui|{
+                for device in snapshot.devices.data.as_deref().into_iter().flatten().filter(|d|!d.revoked){ui.selectable_value(&mut draft.host,device.device.id.clone(),&device.device.name);}
+            });
             widgets::field(ui, t("边缘节点 ID", "Edge node ID"), &mut draft.edge, 36);
             ui.small(t("节点 ID 由管理员提供。目标地址只在主机本机批准时选择。", "Your administrator supplies the node ID. The target address is chosen locally on the host."));
             egui::ComboBox::from_id_salt("service-protocol")

@@ -35,8 +35,17 @@ pub fn fixed_region<R>(
 
 pub fn nav_button(ui: &mut egui::Ui, icon: NavIcon, text: &str, selected: bool) -> egui::Response {
     let compact = ui.available_width() < 110.;
-    let (rect, response) =
-        ui.allocate_exact_size(egui::vec2(ui.available_width(), 52.), egui::Sense::click());
+    let (rect, response) = ui.allocate_exact_size(
+        egui::vec2(
+            ui.available_width(),
+            if ui.ctx().content_rect().height() < 700. {
+                32.
+            } else {
+                44.
+            },
+        ),
+        egui::Sense::click(),
+    );
     response.widget_info(|| {
         egui::WidgetInfo::selected(
             egui::WidgetType::SelectableLabel,
@@ -48,18 +57,11 @@ pub fn nav_button(ui: &mut egui::Ui, icon: NavIcon, text: &str, selected: bool) 
     let visuals = ui.style().interact_selectable(&response, selected);
     if selected || response.hovered() || response.has_focus() {
         let fill = if selected {
-            ui.visuals().selection.bg_fill.gamma_multiply(0.09)
+            ui.visuals().window_fill
         } else {
             visuals.weak_bg_fill
         };
-        ui.painter().rect_filled(rect, 6., fill);
-    }
-    if selected {
-        ui.painter().rect_filled(
-            egui::Rect::from_min_size(rect.min + egui::vec2(0., 14.), egui::vec2(3., 24.)),
-            2.,
-            ui.visuals().selection.bg_fill,
-        );
+        ui.painter().rect_filled(rect, 9., fill);
     }
     if response.has_focus() {
         ui.painter().rect_stroke(
@@ -72,34 +74,28 @@ pub fn nav_button(ui: &mut egui::Ui, icon: NavIcon, text: &str, selected: bool) 
     let color = if selected {
         ui.visuals().hyperlink_color
     } else {
-        visuals.text_color()
+        ui.visuals().weak_text_color()
     };
     crate::icons::paint(
         ui,
         icon,
         if compact {
-            egui::pos2(rect.center().x, rect.top() + 17.)
+            rect.center()
         } else {
             rect.left_center() + egui::vec2(23., 0.)
         },
         20.,
         color,
     );
-    ui.painter().with_clip_rect(rect).text(
-        if compact {
-            egui::pos2(rect.center().x, rect.bottom() - 11.)
-        } else {
-            rect.left_center() + egui::vec2(44., 0.)
-        },
-        if compact {
-            egui::Align2::CENTER_CENTER
-        } else {
-            egui::Align2::LEFT_CENTER
-        },
-        text,
-        egui::FontId::proportional(if compact { 11. } else { 15. }),
-        color,
-    );
+    if !compact {
+        ui.painter().with_clip_rect(rect).text(
+            rect.left_center() + egui::vec2(44., 0.),
+            egui::Align2::LEFT_CENTER,
+            text,
+            egui::FontId::proportional(13.),
+            color,
+        );
+    }
     response.on_hover_text(text)
 }
 
@@ -512,4 +508,61 @@ mod tests {
         assert!(egui::text_edit::TextEditState::load(&context, id).is_none());
         Ok(())
     }
+}
+
+/// White or deep-purple surface shared by pages and forms.
+pub fn surface(ui: &egui::Ui) -> egui::Frame {
+    egui::Frame::new()
+        .fill(ui.visuals().window_fill)
+        .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
+        .corner_radius(13)
+        .inner_margin(20)
+}
+pub fn page_heading(ui: &mut egui::Ui, title: &str, description: &str) {
+    if ui.ctx().content_rect().height() < 700. {
+        ui.label(egui::RichText::new(title).size(22.).strong());
+        ui.add_space(6.);
+        return;
+    }
+    ui.label(egui::RichText::new(title).size(24.).strong());
+    ui.label(
+        egui::RichText::new(description)
+            .size(12.)
+            .color(ui.visuals().weak_text_color()),
+    );
+    ui.add_space(18.);
+}
+pub fn notice(ui: &mut egui::Ui, text: &str) {
+    egui::Frame::new()
+        .fill(ui.visuals().selection.bg_fill.gamma_multiply(0.08))
+        .corner_radius(8)
+        .inner_margin(14)
+        .show(ui, |ui| {
+            ui.set_min_width(ui.available_width());
+            ui.label(
+                egui::RichText::new(text)
+                    .small()
+                    .color(ui.visuals().hyperlink_color),
+            );
+        });
+}
+pub fn tab(ui: &mut egui::Ui, selected: bool, text: &str) -> egui::Response {
+    let color = if selected {
+        ui.visuals().hyperlink_color
+    } else {
+        ui.visuals().weak_text_color()
+    };
+    let response = ui.add(
+        egui::Button::new(egui::RichText::new(text).color(color))
+            .frame(false)
+            .min_size(egui::vec2(90., 34.)),
+    );
+    if selected {
+        ui.painter().hline(
+            response.rect.x_range(),
+            response.rect.bottom(),
+            egui::Stroke::new(2., ui.visuals().selection.bg_fill),
+        );
+    }
+    response
 }

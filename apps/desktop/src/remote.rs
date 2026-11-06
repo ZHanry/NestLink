@@ -20,6 +20,7 @@ enum RemoteTab {
     Devices,
     Sessions,
     Host,
+    Files,
 }
 
 pub(crate) struct RemoteForm {
@@ -171,7 +172,7 @@ impl DesktopApp {
                         .fill(ui.visuals().window_fill)
                         .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
                         .inner_margin(14)
-                        .corner_radius(8)
+                        .corner_radius(13)
                         .show(ui, |ui| self.remote_device_list(ui, snapshot, local_id));
                 },
             );
@@ -364,7 +365,7 @@ impl DesktopApp {
         egui::Frame::new()
             .fill(ui.visuals().window_fill)
             .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
-            .corner_radius(8)
+            .corner_radius(13)
             .inner_margin(14)
             .show(ui, |ui| {
                 egui::Panel::bottom("remote-connection-actions")
@@ -385,7 +386,7 @@ impl DesktopApp {
                             }
                         } else if widgets::primary_button(
                             ui,
-                            self.t("进入桌面", "Enter desktop"),
+                            self.t("发起连接", "Request connection"),
                             ready,
                         )
                         .clicked()
@@ -394,7 +395,7 @@ impl DesktopApp {
                         }
                     });
                 egui::Panel::top("remote-device-heading")
-                    .exact_size(84.)
+                    .exact_size(if ui.ctx().content_rect().height()<700. {60.} else {84.})
                     .resizable(false)
                     .show_separator_line(false)
                     .frame(egui::Frame::new())
@@ -565,7 +566,28 @@ impl DesktopApp {
         self.remote.reconcile_one_time_password_context(snapshot);
     }
 
+    pub(crate) fn show_remote_requests(&mut self) {
+        self.remote.tab = RemoteTab::Sessions;
+    }
+    pub(crate) fn remote_host_settings(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+        self.remote_password_host_panel(ui, snapshot);
+        if let Some(command) =
+            self.privileged_panel
+                .show(ui, snapshot, self.english, self.connected)
+        {
+            let submission = self.bridge.submit_tracked(snapshot.generation, command);
+            self.privileged_panel.submitted(submission);
+        }
+    }
     pub(crate) fn remote_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+        widgets::page_heading(
+            ui,
+            self.t("远程桌面", "Remote desktop"),
+            self.t(
+                "远程控制其他设备，并在获准的会话中传输文件。",
+                "Control remote devices and transfer files within an authorized session.",
+            ),
+        );
         reconcile_host_selection(&mut self.remote, snapshot);
         let waiting = incoming_requests(snapshot).count();
         let local_id = snapshot
@@ -583,7 +605,14 @@ impl DesktopApp {
         widgets::fixed_region(
             ui,
             "local-identity-and-inbox",
-            egui::vec2(workspace_width, 66.),
+            egui::vec2(
+                workspace_width,
+                if ui.ctx().content_rect().height() < 700. {
+                    52.
+                } else {
+                    66.
+                },
+            ),
             |ui| {
                 ui.horizontal_top(|ui| {
                     let actions = if self.english { 268. } else { 228. };
@@ -697,18 +726,21 @@ impl DesktopApp {
             |ui| {
                 ui.horizontal(|ui| {
                     for (tab, zh, en) in [
-                        (RemoteTab::Devices, "连接设备", "Connect"),
-                        (RemoteTab::Sessions, "会话记录", "Sessions"),
-                        (RemoteTab::Host, "本机访问", "Host access"),
+                        (RemoteTab::Devices, "远程控制", "Remote control"),
+                        (RemoteTab::Files, "文件传输", "File transfer"),
                     ] {
-                        if ui
-                            .selectable_label(self.remote.tab == tab, self.t(zh, en))
-                            .clicked()
-                        {
+                        if widgets::tab(ui, self.remote.tab == tab, self.t(zh, en)).clicked() {
                             self.remote.tab = tab;
                         }
                     }
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if ui.button(self.t("本机访问", "Host access")).clicked() {
+                            self.remote.tab = RemoteTab::Host;
+                        }
+                        if ui.button(self.t("会话记录", "Sessions")).clicked() {
+                            self.remote.tab = RemoteTab::Sessions;
+                        }
+
                         if ui
                             .add_enabled(
                                 snapshot.devices.loading.is_none()
@@ -805,6 +837,20 @@ impl DesktopApp {
         }
         match self.remote.tab {
             RemoteTab::Devices => self.remote_device_picker(ui, snapshot),
+            RemoteTab::Files => {
+                egui::ScrollArea::vertical().id_salt("remote-workspace-files").auto_shrink([false,false]).show(ui,|ui|{
+                    widgets::notice(ui,self.t("文件传输属于远程会话。只显示对方已批准的共享目录；连接授权中分别选择文件读取与写入权限。", "File transfer belongs to a remote session and shows only approved shared directories. Request file read and write permissions in the connection approval."));
+                    ui.add_space(16.);
+                    self.transfer_panels(ui,snapshot);
+                    if snapshot.native_session.data.is_none(){
+                        widgets::surface(ui).show(ui,|ui|{
+                            ui.heading(self.t("连接远程设备后传输文件", "Connect a remote device to transfer files"));
+                            ui.label(self.t("建立获准的远程会话后，在这里选择共享目录、发送文件和查看传输任务。", "After an authorized remote session is established, choose shared folders, send files and view transfers here."));
+                            if widgets::primary_button(ui,self.t("选择远程设备", "Choose remote device"),true).clicked(){self.remote.permissions[5]=true;self.remote.permissions[6]=true;self.remote.tab=RemoteTab::Devices;}
+                        });
+                    }
+                });
+            }
             RemoteTab::Sessions => {
                 egui::ScrollArea::vertical()
                     .id_salt("remote-session-records")
@@ -1001,7 +1047,7 @@ impl DesktopApp {
             return;
         };
         ui.add_space(8.);
-        egui::Frame::group(ui.style()).show(ui, |ui| {
+        widgets::surface(ui).show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {
                 ui.label(egui::RichText::new(self.t("当前会话", "Current session")).strong());
                 ui.label(match session.status {
@@ -1279,7 +1325,7 @@ impl DesktopApp {
         );
         ui.add_space(8.);
         ui.push_id(("browser-host-session", &host.request_id, host.connection_generation), |ui| {
-        egui::Frame::group(ui.style()).show(ui, |ui| {
+        widgets::surface(ui).show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {
                 ui.label(
                     egui::RichText::new(self.t("浏览器查看会话", "Browser viewing session"))

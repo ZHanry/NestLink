@@ -122,6 +122,7 @@ pub fn apply(context: &egui::Context, tokens: &Tokens, dark: bool) {
     visuals.hyperlink_color = color(&palette.primary_text);
     visuals.error_fg_color = color(&palette.danger);
     visuals.warn_fg_color = color(warning);
+    visuals.window_stroke = egui::Stroke::new(1., color(&palette.border));
     visuals.window_corner_radius = egui::CornerRadius::same(tokens.shape.window);
     visuals.menu_corner_radius = egui::CornerRadius::same(tokens.shape.sheet);
     visuals.widgets.noninteractive.bg_fill = color(&palette.surface);

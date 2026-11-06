@@ -22,6 +22,8 @@ struct Pending {
 pub(crate) struct SpacePanel {
     context: String,
     selected: Option<String>,
+    tab: usize,
+    create_dialog: u8,
     cursor: SpacePageCursor,
     name: String,
     account: String,
@@ -41,6 +43,8 @@ impl Default for SpacePanel {
     fn default() -> Self {
         Self {
             context: String::new(),
+            tab: 0,
+            create_dialog: 0,
             selected: None,
             cursor: Default::default(),
             name: String::new(),
@@ -201,8 +205,24 @@ impl SpacePanel {
         let mut network_command = None;
         let mut confirmation = None;
         let busy = self.pending.is_some();
-        ui.heading(t(english, "网络空间", "Network spaces"));
-        ui.label(t(english, "空间管理成员和设备。远控、文件、服务与本机目标仍需分别授权。", "Spaces manage people and devices. Remote control, files, services and local targets each require separate authorization."));
+        widgets::page_heading(
+            ui,
+            t(english, "网络空间", "Network spaces"),
+            t(
+                english,
+                "管理多设备的私有组网、空间成员与服务访问权限。",
+                "Manage private networking, space membership and service grants.",
+            ),
+        );
+        widgets::notice(
+            ui,
+            t(
+                english,
+                "网络空间用于多设备组网和成员授权。当前账号的登录设备请在「设备管理」查看。",
+                "Spaces organize private networks and member grants. Account logins are managed in Login devices.",
+            ),
+        );
+        ui.add_space(16.);
         if let Some(message) = &self.message {
             ui.label(message);
         }
@@ -215,27 +235,38 @@ impl SpacePanel {
                     self.cursor = Default::default(); action = Some(SpaceAction::Read { space_id: id.clone(), cursor: self.cursor.clone() });
                 }
             });
-            egui::CollapsingHeader::new(t(english, "创建或加入空间", "Create or join a space")).show(ui, |ui| {
-                widgets::field(ui, t(english, "新空间名称", "New space name"), &mut self.name, 80);
-                if ui.add_enabled(!self.name.trim().is_empty(), egui::Button::new(t(english, "创建空间", "Create space"))).clicked() {
-                    self.cursor = Default::default(); action = Some(SpaceAction::Create { name: self.name.trim().into() });
-                }
-                widgets::secret_field(ui, t(english, "一次性邀请链接", "One-use invitation link"), &mut self.incoming, "space-invitation", snapshot.generation, 2048);
-                ui.small(t(english, "邀请仅由当前控制中心验证。接受链接不会切换控制中心，也不会授予远控权限。", "The current control center validates the invitation. Accepting a link neither switches the control center nor grants remote-control permission."));
-                if ui.add_enabled(invitation_parts(&self.incoming).is_some(), egui::Button::new(t(english, "接受邀请", "Accept invitation"))).clicked()
-                    && let Some((space_id, invitation_id, token)) = invitation_parts(&self.incoming) {
-                    self.cursor = Default::default(); action = Some(SpaceAction::Accept { space_id, invitation_id, token });
-                }
+            ui.horizontal(|ui|{
+                if ui.button(t(english,"创建空间","Create space")).clicked(){self.create_dialog=1;}
+                if ui.button(t(english,"加入空间","Join space")).clicked(){self.create_dialog=2;}
             });
-            if let Some(spaces) = &snapshot.spaces.data {
-                egui::ComboBox::from_id_salt("space-selection").selected_text(spaces.iter().find(|space| self.selected.as_deref() == Some(space.space_id.as_str())).map(|space| space.name.as_str()).unwrap_or(t(english, "选择空间", "Choose space"))).show_ui(ui, |ui| {
-                    for space in spaces.iter() {
-                        if ui.selectable_label(self.selected.as_deref() == Some(space.space_id.as_str()), format!("{} · {}{}", space.name, role_name(space.role, english), if space.archived { t(english, " · 已归档", " · archived") } else { "" })).clicked() {
-                            self.cursor = Default::default(); action = Some(SpaceAction::Read { space_id: space.space_id.clone(), cursor: self.cursor.clone() });
+            if self.create_dialog!=0 {
+                let context=ui.ctx().clone();
+                let response=egui::Modal::new(egui::Id::new("space-create-join")).show(&context,|ui|{
+                    ui.set_width(440_f32.min(context.content_rect().width()-64.));
+                    ui.heading(if self.create_dialog==1{t(english,"创建空间","Create space")}else{t(english,"加入空间","Join space")});
+                    if self.create_dialog==1 {
+                        widgets::field(ui,t(english,"空间名称","Space name"),&mut self.name,80);
+                        if widgets::primary_button(ui,t(english,"创建空间","Create space"),!self.name.trim().is_empty()).clicked(){self.cursor=Default::default();action=Some(SpaceAction::Create{name:self.name.trim().into()});self.create_dialog=0;}
+                    } else {
+                        widgets::secret_field(ui,t(english,"一次性邀请链接","One-use invitation link"),&mut self.incoming,"space-invitation",snapshot.generation,2048);
+                        if widgets::primary_button(ui,t(english,"接受邀请","Accept invitation"),invitation_parts(&self.incoming).is_some()).clicked() && let Some((space_id,invitation_id,token))=invitation_parts(&self.incoming){self.cursor=Default::default();action=Some(SpaceAction::Accept{space_id,invitation_id,token});self.create_dialog=0;}
+                    }
+                    if ui.button(t(english,"取消","Cancel")).clicked(){self.create_dialog=0;self.incoming.zeroize();}
+                });if response.should_close(){self.create_dialog=0;self.incoming.zeroize();}
+            }
+            let sidebar_width=if ui.available_width()>900. {220.} else {166.};
+            let detail_width=(ui.available_width()-sidebar_width-16.).max(260.);
+            ui.horizontal_top(|ui|{
+                ui.vertical(|ui|{
+                    ui.set_width(sidebar_width);
+                    if let Some(spaces)=&snapshot.spaces.data {
+                        for space in spaces.iter(){
+                            let label=format!("{}\n{}",space.name,role_name(space.role,english));
+                            if ui.add_sized([sidebar_width,76.],egui::Button::new(label).selected(self.selected.as_deref()==Some(space.space_id.as_str()))).clicked(){self.cursor=Default::default();action=Some(SpaceAction::Read{space_id:space.space_id.clone(),cursor:self.cursor.clone()});}
                         }
                     }
                 });
-            }
+                ui.vertical(|ui|{ui.set_width(detail_width);widgets::surface(ui).show(ui,|ui|{
             widgets::section(ui, &snapshot.selected_space, english);
             let details = snapshot.selected_space.data.as_ref().filter(|details| self.context == snapshot.space_context
                 && self.selected.as_deref() == Some(details.space.space_id.as_str()));
@@ -245,6 +276,8 @@ impl SpacePanel {
                 ui.separator();
                 ui.strong(format!("{} · {}", space.name, role_name(space.role, english)));
                 ui.small(format!("revision {} · policy {}", space.revision, space.policy_epoch));
+                ui.horizontal_wrapped(|ui|{for (index,zh,en) in [(0,"空间设备","Space devices"),(1,"空间成员","Members"),(2,"受管网络","Managed networks"),(3,"服务授权","Service grants")]{if widgets::tab(ui,self.tab==index,t(english,zh,en)).clicked(){self.tab=index;}}});
+                ui.separator();
                 egui::CollapsingHeader::new(t(english, "空间身份与本机信任", "Space identity and local trust")).show(ui, |ui| {
                     ui.label(format!("{}: {}", t(english, "部署", "Deployment"), space.deployment_id));
                     ui.label(format!("{}: {}", t(english, "空间", "Space"), space.space_id));
@@ -252,8 +285,8 @@ impl SpacePanel {
                     ui.small(t(english, "请与管理员通过可信渠道核验此公钥。读取目录不会修改本机批准的空间公钥或网络范围。", "Verify this key with the administrator through a trusted channel. Reading the directory does not change this device's approved space key or network scope."));
                 });
                 ui.add_enabled_ui(!space.archived, |ui| {
-                    network_command = self.network.show(ui, snapshot, details, english, runtime);
-                    egui::CollapsingHeader::new(t(english, "设备", "Devices")).default_open(true).show(ui, |ui| {
+                    if self.tab==2 { network_command = self.network.show(ui, snapshot, details, english, runtime); }
+                    if self.tab==0 { ui.strong(t(english,"空间设备","Space devices"));
                         if let Some(devices) = &snapshot.devices.data {
                             egui::ComboBox::from_id_salt("space-join-device").selected_text(devices.iter().find(|device| device.device.id == self.installation).map(|device| device.device.name.as_str()).unwrap_or(t(english, "选择已登记设备", "Choose a registered device"))).show_ui(ui, |ui| {
                                 for device in devices.iter().filter(|device| !device.revoked) { ui.selectable_value(&mut self.installation, device.device.id.clone(), &device.device.name); }
@@ -275,8 +308,8 @@ impl SpacePanel {
                             && ui.button(t(english, "下一页设备", "Next devices")).clicked() {
                             self.cursor.after_device = Some(next.clone()); action = Some(SpaceAction::Read { space_id: space.space_id.clone(), cursor: self.cursor.clone() });
                         }
-                    });
-                    egui::CollapsingHeader::new(t(english, "成员与角色", "Members and roles")).show(ui, |ui| {
+                    }
+                    if self.tab==1 { ui.strong(t(english,"空间成员","Members"));
                         for member in &details.members { ui.label(format!("{} · {} · {}", member.name, role_name(member.role, english), if member.active { t(english, "有效", "active") } else { t(english, "已移除", "removed") })); }
                         if manager {
                             egui::ComboBox::from_id_salt("space-member").selected_text(details.members.iter().find(|member| member.account_id == self.account).map(|member| member.name.as_str()).unwrap_or(t(english, "选择成员", "Choose member"))).show_ui(ui, |ui| {
@@ -301,8 +334,8 @@ impl SpacePanel {
                             && ui.button(t(english, "下一页成员", "Next members")).clicked() {
                             self.cursor.after_member = Some(next.clone()); action = Some(SpaceAction::Read { space_id: space.space_id.clone(), cursor: self.cursor.clone() });
                         }
-                    });
-                    if manager {
+                    }
+                    if manager && self.tab==1 {
                         egui::CollapsingHeader::new(t(english, "一次性邀请", "One-use invitations")).show(ui, |ui| {
                             ui.label(t(english, "邀请使用上面选择的角色；所有者不能通过邀请授予。", "Invitations use the role selected above; ownership cannot be granted by invitation."));
                             widgets::field(ui, t(english, "限定账号编号（可选）", "Restrict to account ID (optional)"), &mut self.invitation_target, 36);
@@ -326,7 +359,7 @@ impl SpacePanel {
                             }
                         });
                     }
-                    self.service.show(ui, snapshot, details, english, &mut action, &mut confirmation);
+                    if self.tab==3 { self.service.show(ui, snapshot, details, english, &mut action, &mut confirmation); }
                     if space.role == SpaceRole::Owner && ui.button(t(english, "归档空间", "Archive space")).clicked() {
                         confirmation = Some((t(english, "归档此空间并撤销全部空间设备和邀请？", "Archive this space and revoke all space devices and invitations?").into(), SpaceAction::Archive { space_id: space.space_id.clone(), request: SpaceRevisionRequest { expected_revision: space.revision } }));
                     }
@@ -337,6 +370,8 @@ impl SpacePanel {
                     if let Some(audit) = &snapshot.space_audit.data { for entry in audit.iter() { ui.small(format!("{} · {} · {}", entry.sequence, entry.action, entry.at_unix_ms)); } }
                 }
             }
+                });});
+            });
         });
         if !self.issued.is_empty() {
             ui.separator();

@@ -18,6 +18,7 @@ mod layout_diagnostics;
 mod layout_tests;
 mod lists;
 mod local_session_window;
+mod login_devices;
 mod management;
 mod native_displays;
 mod native_input;
@@ -36,6 +37,7 @@ mod spaces;
 pub mod theme;
 mod tray;
 mod widgets;
+mod workspace;
 
 use bridge::{Bridge, InputLayoutUpdate, Notice, VideoUpdate};
 use eframe::egui;
@@ -144,6 +146,7 @@ pub struct DesktopApp {
     tray: Option<tray::Tray>,
     screen: Screen,
     workspace_attached: bool,
+    workspace: workspace::WorkspaceState,
     english: bool,
     dark: bool,
     connected: bool,
@@ -239,6 +242,9 @@ impl DesktopApp {
         message: Option<String>,
         message_tone: MessageTone,
     ) -> Self {
+        let workspace = workspace::WorkspaceState::read(&directory);
+        let dark = workspace.preferences.dark;
+        let english = workspace.preferences.english;
         Self {
             bridge,
             directory: directory.clone(),
@@ -246,8 +252,9 @@ impl DesktopApp {
             tray,
             screen: Screen::Server,
             workspace_attached: false,
-            english: false,
-            dark: false,
+            workspace,
+            english,
+            dark,
             connected: false,
             exiting: false,
             hidden: false,
@@ -349,6 +356,11 @@ impl DesktopApp {
         self.credentials.clear();
         self.sensitive.take();
         self.pending_confirmation.take();
+        self.workspace.search_open = false;
+        self.workspace.search.clear();
+        self.workspace.selected_login = None;
+        self.workspace.account_create_open = false;
+        self.workspace.password_open = false;
         self.remote = remote::RemoteForm::default();
         self.remote_tools_open = false;
         self.service_panel = services::ServicePanel::default();
@@ -2264,6 +2276,10 @@ impl eframe::App for DesktopApp {
     }
     fn ui(&mut self, parent: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let context = parent.ctx().clone();
+        if self.workspace.preferences.follow_system {
+            self.dark = context.system_theme() == Some(egui::Theme::Dark);
+        }
+        theme::apply(&context, &self.tokens, self.dark);
         let snapshot = self.bridge.snapshot();
         self.layout_diagnostics
             .begin_frame(snapshot.revision, self.remote.browser_host_details);
@@ -2279,13 +2295,18 @@ impl eframe::App for DesktopApp {
             context.global_style().visuals.panel_fill,
         );
         self.show_remote_viewport(&context, &snapshot);
-        self.navigation(&context, parent, &snapshot);
         self.workspace_toolbar(parent, &snapshot);
+        if snapshot.principal.is_some() || snapshot.native_offline.is_some() {
+            self.navigation(&context, parent, &snapshot);
+        }
         egui::Panel::bottom("operation-notification")
-            .exact_size(44.)
+            .exact_size(if self.message.is_some() { 44. } else { 0. })
             .resizable(false)
             .show_separator_line(false)
-            .frame(egui::Frame::new().inner_margin(egui::Margin::symmetric(12, 8)))
+            .frame(egui::Frame::new().inner_margin(egui::Margin::symmetric(
+                12,
+                if self.message.is_some() { 8 } else { 0 },
+            )))
             .show_inside(parent, |ui| {
                 ui.spacing_mut().interact_size.y = 28.;
                 ui.spacing_mut().button_padding.y = 4.;
@@ -2360,6 +2381,7 @@ impl eframe::App for DesktopApp {
                 ui.spacing_mut().button_padding.y = 2.;
                 ui.horizontal(|ui| {
                     ui.set_min_height(26.);
+                    ui.small(format!("v{}", env!("CARGO_PKG_VERSION")));
                     ui.small(self.t(
                         if self.connected {
                             "本机服务已连接"
@@ -2392,7 +2414,11 @@ impl eframe::App for DesktopApp {
             .frame(
                 egui::Frame::new()
                     .fill(context.global_style().visuals.panel_fill)
-                    .inner_margin(self.tokens.layout.content_padding.round() as i8),
+                    .inner_margin(if context.content_rect().height() < 700. {
+                        16
+                    } else {
+                        self.tokens.layout.content_padding.round() as i8
+                    }),
             )
             .show_inside(parent, |ui| {
                 if snapshot.native_offline.is_some() {
@@ -2422,7 +2448,9 @@ impl eframe::App for DesktopApp {
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
                         ui.add_enabled_ui(self.connected && !self.exiting, |ui| {
-                            if self.screen == Screen::Server
+                            if self.screen == Screen::Server && snapshot.principal.is_some() {
+                                self.settings_page(ui, &snapshot);
+                            } else if self.screen == Screen::Server
                                 || snapshot
                                     .server
                                     .as_ref()
@@ -2439,7 +2467,7 @@ impl eframe::App for DesktopApp {
                                     Screen::Remote => self.remote_page(ui, &snapshot),
                                     Screen::Services => self.services_page(ui, &snapshot),
                                     Screen::Spaces => self.spaces_page(ui, &snapshot),
-                                    Screen::Devices => self.devices_page(ui, &snapshot),
+                                    Screen::Devices => self.login_devices_page(ui, &snapshot),
                                     Screen::Security => self.security_page(ui, &snapshot),
                                     Screen::Accounts => self.accounts_page(ui, &snapshot),
                                     Screen::Network => self.network_page(ui, &snapshot),
@@ -2453,6 +2481,7 @@ impl eframe::App for DesktopApp {
             });
         self.show_connection_task(&context, &snapshot);
         self.confirmations(&context, &snapshot);
+        self.workspace_dialogs(&context, &snapshot);
         self.layout_diagnostics
             .finish_frame(&self.directory, &context);
     }

@@ -1,11 +1,13 @@
+pub use crate::network_access::{NetworkAccessRequest, NetworkAccessStart, NetworkAccessView};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-pub use crate::network_access::{NetworkAccessRequest, NetworkAccessStart, NetworkAccessView};
 
 /// Deployment-administrator controls. These never grant business or IP access.
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-pub struct NetworkAuthorityRequest { pub expected_revision: u64 }
+pub struct NetworkAuthorityRequest {
+    pub expected_revision: u64,
+}
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct NetworkMemberRequest {
@@ -29,7 +31,9 @@ pub struct NetworkIssueRequest {
 }
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-pub struct NetworkRevokeGrantRequest { pub expected_revision: u64 }
+pub struct NetworkRevokeGrantRequest {
+    pub expected_revision: u64,
+}
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct NetworkPolicyView {
@@ -545,6 +549,21 @@ pub struct LoginResponse {
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct MeResponse {
     pub principal: Principal,
+    #[serde(default)]
+    pub sessions: Vec<LoginSessionView>,
+    #[serde(default)]
+    pub session_management_available: bool,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+pub struct LoginSessionView {
+    pub session_id: String,
+    pub device_name: Option<String>,
+    pub client: Option<String>,
+    pub platform: Option<String>,
+    pub created_at: Option<u64>,
+    pub last_active_at: Option<u64>,
+    pub expires_at: u64,
+    pub current: bool,
 }
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct AccountView {
@@ -1042,9 +1061,9 @@ impl NodeRelayAttributes {
         if self.region.as_ref().is_some_and(|region| {
             region.is_empty()
                 || region.len() > 32
-                || !region.bytes().all(|byte| {
-                    byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-'
-                })
+                || !region
+                    .bytes()
+                    .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
         }) || self.cost_weight.is_some_and(|weight| weight > 1_000_000)
         {
             return Err(crate::ContractError::new(

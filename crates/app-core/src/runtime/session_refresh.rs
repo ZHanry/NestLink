@@ -91,6 +91,19 @@ impl Actor {
             if let Some(principal) = &self.view.principal {
                 self.view.security.data = Some(Arc::new(nestlink_protocol::api::MeResponse {
                     principal: principal.clone(),
+                    sessions: self
+                        .view
+                        .security
+                        .data
+                        .as_ref()
+                        .map(|s| s.sessions.clone())
+                        .unwrap_or_default(),
+                    session_management_available: self
+                        .view
+                        .security
+                        .data
+                        .as_ref()
+                        .is_some_and(|s| s.session_management_available),
                 }));
             }
             self.install_deadline();

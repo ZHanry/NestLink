@@ -1,0 +1,41 @@
+name: Windows desktop UI regression
+on:
+  push:
+    branches: [ui/0.8.1-rc-desktop]
+  pull_request:
+    paths: ['apps/desktop/**', 'config/ui-tokens.json', 'crates/storage/src/accounts/**', 'crates/storage/migrations/052_account_login_metadata.sql', '.github/workflows/desktop-ui.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: desktop-ui-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native-ui:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_DEBUG: '0'
+      CARGO_PROFILE_TEST_DEBUG: '0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: '1.96.0'
+      - name: Install native dependencies and CJK fonts
+        run: sudo apt-get update && sudo apt-get install --yes build-essential cmake ninja-build nasm perl pkg-config libpipewire-0.3-dev libasound2-dev libwayland-dev libxkbcommon-dev libgl1-mesa-dev libudev-dev fonts-noto-cjk
+      - name: Build pinned media dependencies
+        run: python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/codec-sources" --work-dir "$RUNNER_TEMP/native-codecs" --jobs 4
+      - name: Apply the reviewed codec prefix
+        run: echo "NESTLINK_CODEC_PREFIX=$RUNNER_TEMP/native-codecs/x86_64-unknown-linux-gnu" >> "$GITHUB_ENV"
+      - name: Check formatting
+        run: cargo fmt --all --check
+      - name: Compile production desktop and server
+        run: cargo check --locked -p nestlink-desktop -p nestlink-server
+      - name: Run native UI geometry, authorization and login regressions
+        run: cargo test --locked -p nestlink-desktop --lib -p nestlink-storage --test control
+      - name: Check desktop warnings
+        run: cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings

@@ -69,6 +69,9 @@ pub enum Action {
     },
     #[serde(deserialize_with = "empty_action")]
     RefreshSession,
+    RevokeLoginSession {
+        session_id: String,
+    },
     Load {
         page: Page,
     },
@@ -251,7 +254,7 @@ impl Action {
     pub fn kind(&self) -> OperationKind {
         match self {
             Self::SignIn { .. } => OperationKind::SignIn,
-            Self::RefreshSession => OperationKind::Refresh,
+            Self::RefreshSession | Self::RevokeLoginSession { .. } => OperationKind::Refresh,
             Self::PreviewNativeSpace { .. } | Self::ConfirmNativeSpace { .. } => {
                 OperationKind::ManageSpace
             }
@@ -460,6 +463,7 @@ impl Action {
                     && choice.paths.len() <= 2
             }
             Self::RevokeDevice { device_id } => valid_id(device_id),
+            Self::RevokeLoginSession { session_id } => valid_id(session_id),
             Self::DisableAccount { account_id } => valid_id(account_id),
             Self::RevokeNode { node_id } => valid_id(node_id),
             Self::StartNativeSession {
@@ -537,9 +541,10 @@ impl Action {
                 | crate::SpaceAction::RevokeServiceRule { .. } => SectionKey::SpaceServices,
                 _ => SectionKey::SelectedSpace,
             },
-            Self::SignIn { .. } | Self::RefreshSession | Self::ChangePassword { .. } => {
-                SectionKey::Security
-            }
+            Self::SignIn { .. }
+            | Self::RefreshSession
+            | Self::ChangePassword { .. }
+            | Self::RevokeLoginSession { .. } => SectionKey::Security,
             Self::LoadServiceEdgeNamespace { .. } | Self::SetServiceEdgeNamespace { .. } => {
                 SectionKey::ServiceEdgeNamespace
             }

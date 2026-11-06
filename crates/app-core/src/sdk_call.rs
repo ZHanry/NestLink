@@ -318,6 +318,10 @@ async fn execute(
             write(sdk.login(username, password, factor), effect, fence).await?;
             patches.push(Patch::Security(security(sdk, fence).await?));
         }
+        Action::RevokeLoginSession { session_id } => {
+            write(sdk.revoke_login_session(&session_id), effect, fence).await?;
+            patches.push(Patch::Security(security(sdk, fence).await?));
+        }
         Action::RefreshSession => {
             write(sdk.refresh(), effect, fence).await?;
             patches.push(Patch::Security(security(sdk, fence).await?));

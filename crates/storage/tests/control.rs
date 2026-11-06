@@ -16,6 +16,8 @@ const PASSWORD: &str = "integration-only-password";
 mod auditing;
 #[path = "control/browser_readiness.rs"]
 mod browser_readiness;
+#[path = "control/login_sessions.rs"]
+mod login_sessions;
 #[path = "control/media_authority.rs"]
 mod media_authority;
 #[path = "control/native_ice_capabilities.rs"]

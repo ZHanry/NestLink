@@ -3,6 +3,7 @@ use eframe::egui;
 use nestlink_app_core::{Action, OperationStatus, Page, Snapshot};
 use nestlink_app_ipc::wire::Command;
 use nestlink_protocol::api::{NetworkPolicy, PolicyUpdate};
+use zeroize::Zeroize;
 
 pub(crate) struct PolicyDraft {
     revision: u64,
@@ -87,7 +88,8 @@ struct EdgeNamespaceDraft {
     quic: String,
 }
 impl DesktopApp {
-    pub(crate) fn devices_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+    #[allow(dead_code)]
+    pub(crate) fn registered_devices_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.horizontal(|ui| {
             ui.heading(self.t("设备", "Devices"));
             if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
@@ -153,42 +155,64 @@ impl DesktopApp {
             ));
         }
         ui.add_space(20.);
-        egui::CollapsingHeader::new(self.t("安全操作", "Security actions")).show(ui, |ui| {
-            widgets::secret_field(
-                ui,
-                self.t("当前密码", "Current password"),
-                &mut self.credentials.password,
-                "password",
-                self.generation,
-                1024,
-            );
-            let ready =
-                snapshot.security.loading.is_none() && !self.credentials.password.is_empty();
-            widgets::secret_field(
-                ui,
-                self.t("新密码（至少 12 字节）", "New password (at least 12 bytes)"),
-                &mut self.credentials.new_password,
-                "new-password",
-                self.generation,
-                1024,
-            );
-            if ui
-                .add_enabled(
-                    ready && self.credentials.new_password.len() >= 12,
-                    egui::Button::new(self.t("修改密码并注销", "Change password and sign out")),
-                )
-                .clicked()
-            {
-                let action = Action::ChangePassword {
-                    current_password: widgets::take_secret(&mut self.credentials.password),
-                    new_password: widgets::take_secret(&mut self.credentials.new_password),
-                    factor: None,
-                };
-                self.sensitive.take();
-                self.action(snapshot, action);
-                widgets::clear_secret_widgets(ui.ctx(), self.generation);
+        if ui.button(self.t("修改密码", "Change password")).clicked() {
+            self.workspace.password_open = true;
+        }
+        if ui
+            .button(self.t("管理账号登录设备", "Manage login devices"))
+            .clicked()
+        {
+            self.navigate(Screen::Devices, snapshot);
+        }
+        if self.workspace.password_open {
+            let context = ui.ctx().clone();
+            let response =
+                egui::Modal::new(egui::Id::new("account-password")).show(&context, |ui| {
+                    ui.set_width(440_f32.min(context.content_rect().width() - 64.));
+                    ui.heading(self.t("修改密码", "Change password"));
+                    widgets::secret_field(
+                        ui,
+                        self.t("当前密码", "Current password"),
+                        &mut self.credentials.password,
+                        "password",
+                        self.generation,
+                        1024,
+                    );
+                    let ready = snapshot.security.loading.is_none()
+                        && !self.credentials.password.is_empty();
+                    widgets::secret_field(
+                        ui,
+                        self.t("新密码（至少 12 字节）", "New password (at least 12 bytes)"),
+                        &mut self.credentials.new_password,
+                        "new-password",
+                        self.generation,
+                        1024,
+                    );
+                    if ui
+                        .add_enabled(
+                            ready && self.credentials.new_password.len() >= 12,
+                            egui::Button::new(
+                                self.t("修改密码并注销", "Change password and sign out"),
+                            ),
+                        )
+                        .clicked()
+                    {
+                        let action = Action::ChangePassword {
+                            current_password: widgets::take_secret(&mut self.credentials.password),
+                            new_password: widgets::take_secret(&mut self.credentials.new_password),
+                            factor: None,
+                        };
+                        self.sensitive.take();
+                        self.action(snapshot, action);
+                        widgets::clear_secret_widgets(ui.ctx(), self.generation);
+                    }
+                });
+            if response.should_close() {
+                self.workspace.password_open = false;
+                self.credentials.password.zeroize();
+                self.credentials.new_password.zeroize();
             }
-        });
+        }
         ui.add_space(18.);
         egui::CollapsingHeader::new(self.t("本次运行的操作", "Operations in this run")).show(
             ui,
@@ -228,9 +252,14 @@ impl DesktopApp {
             }
         });
         widgets::section(ui, &snapshot.accounts, self.english);
-        egui::CollapsingHeader::new(self.t("创建普通账号", "Create a standard account")).show(
-            ui,
-            |ui| {
+        if ui.button(self.t("创建账号", "Create account")).clicked() {
+            self.workspace.account_create_open = true;
+        }
+        if self.workspace.account_create_open {
+            let context = ui.ctx().clone();
+            let response = egui::Modal::new(egui::Id::new("account-create")).show(&context, |ui| {
+                ui.set_width(440_f32.min(context.content_rect().width() - 64.));
+                ui.heading(self.t("创建普通账号", "Create a standard account"));
                 widgets::field(
                     ui,
                     self.t("账号名称", "Account name"),
@@ -260,12 +289,20 @@ impl DesktopApp {
                     let username = self.account_name.trim().into();
                     let password = widgets::take_secret(&mut self.credentials.new_password);
                     self.action(snapshot, Action::CreateAccount { username, password });
+                    self.workspace.account_create_open = false;
                     widgets::clear_secret_widgets(ui.ctx(), self.generation);
                 }
-            },
-        );
+            });
+            if response.should_close() {
+                self.workspace.account_create_open = false;
+                self.credentials.new_password.zeroize();
+            }
+        }
         ui.add_space(18.);
-        self.accounts_table(ui, snapshot);
+        widgets::surface(ui).show(ui, |ui| {
+            ui.set_min_width(ui.available_width());
+            self.accounts_table(ui, snapshot);
+        });
     }
     pub(crate) fn network_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.horizontal(|ui| {
@@ -444,7 +481,7 @@ impl DesktopApp {
             }
             for view in nodes.iter() {
                 ui.push_id(&view.node.id, |ui| {
-                    egui::Frame::group(ui.style()).show(ui, |ui| {
+                    widgets::surface(ui).show(ui, |ui| {
                         ui.horizontal_wrapped(|ui| {
                             ui.label(egui::RichText::new(&view.node.name).strong());
                             ui.label(self.t(
@@ -788,7 +825,7 @@ impl DesktopApp {
                 ui.label(self.t("此页没有审计记录。", "This page has no audit records."));
             }
             for entry in &page.entries {
-                egui::Frame::group(ui.style()).show(ui, |ui| {
+                widgets::surface(ui).show(ui, |ui| {
                     ui.horizontal_wrapped(|ui| {
                         ui.label(format!("#{}", entry.sequence));
                         ui.label(egui::RichText::new(&entry.event).strong());
