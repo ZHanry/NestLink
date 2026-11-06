@@ -412,7 +412,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn dns_preparation_stops_at_three_attempts() {
+    async fn dns_preparation_stops_at_three_attempts() -> Result {
         let mut attempts = Vec::new();
         let result = prepare_with_dns_retry(|attempt| {
             attempts.push(attempt);
@@ -420,11 +420,15 @@ mod tests {
         })
         .await;
         assert_eq!(attempts, [1, 2, 3]);
-        assert!(result.unwrap_err().is::<DnsReadinessTimeout>());
+        let Err(error) = result else {
+            return Err(io::Error::other("unready DNS preparation returned success").into());
+        };
+        assert!(error.is::<DnsReadinessTimeout>());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn dns_preparation_returns_only_the_ready_origin() {
+    async fn dns_preparation_returns_only_the_ready_origin() -> Result {
         let mut attempts = Vec::new();
         let result = prepare_with_dns_retry(|attempt| {
             attempts.push(attempt);
@@ -436,11 +440,12 @@ mod tests {
         })
         .await;
         assert_eq!(attempts, [1, 2, 3]);
-        assert_eq!(result.unwrap(), "prepared origin");
+        assert_eq!(result?, "prepared origin");
+        Ok(())
     }
 
     #[tokio::test]
-    async fn registration_io_and_sdk_failures_are_never_retried() {
+    async fn registration_io_and_sdk_failures_are_never_retried() -> Result {
         let errors: Vec<Box<dyn std::error::Error + Send + Sync>> = vec![
             io::Error::new(io::ErrorKind::TimedOut, "registration timed out").into(),
             io::Error::other("fixture cleanup failed").into(),
@@ -452,11 +457,18 @@ mod tests {
             let mut attempts = Vec::new();
             let result = prepare_with_dns_retry(|attempt| {
                 attempts.push(attempt);
-                std::future::ready(Err::<(), _>(error.take().unwrap()))
+                std::future::ready(Err::<(), _>(match error.take() {
+                    Some(error) => error,
+                    None => io::Error::other("unexpected setup retry").into(),
+                }))
             })
             .await;
             assert_eq!(attempts, [1]);
-            assert_eq!(result.unwrap_err().to_string(), expected);
+            let Err(error) = result else {
+                return Err(io::Error::other("failed preparation returned success").into());
+            };
+            assert_eq!(error.to_string(), expected);
         }
+        Ok(())
     }
 }
