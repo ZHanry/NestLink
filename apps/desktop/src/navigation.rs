@@ -104,6 +104,10 @@ impl DesktopApp {
                                 .inner_margin(12)
                                 .show(ui, |ui| {
                                     ui.set_min_width(ui.available_width());
+                                    // Information rows do not need the normal
+                                    // button height, which overflows this footer
+                                    // with Windows UI font metrics.
+                                    ui.spacing_mut().interact_size.y = 20.;
                                     let verified = self.connected
                                         && snapshot.server.as_ref().is_some_and(|server| {
                                             server.verified_health.is_some()
@@ -127,7 +131,7 @@ impl DesktopApp {
                                                 muted
                                             },
                                         );
-                                        ui.small(self.t(
+                                        let status = self.t(
                                             if verified {
                                                 "控制中心已连接"
                                             } else {
@@ -138,7 +142,12 @@ impl DesktopApp {
                                             } else {
                                                 "Control center disconnected"
                                             },
-                                        ));
+                                        );
+                                        ui.add(
+                                            egui::Label::new(RichText::new(status).small())
+                                                .truncate(),
+                                        )
+                                        .on_hover_text(status);
                                     });
                                     let origin = snapshot
                                         .server

@@ -56,3 +56,65 @@ jobs:
           if-no-files-found: warn
       - name: Check desktop warnings
         run: cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings
+
+  windows-native-ui:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    env:
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_DEBUG: '0'
+      CARGO_PROFILE_TEST_DEBUG: '0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: '1.96.0'
+          components: clippy
+      - id: msys
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
+        with:
+          msystem: MSYS
+          install: make perl diffutils gawk sed grep coreutils nasm
+          cache: false
+      - name: Build pinned MSVC media dependencies
+        run: python scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir "${{ runner.temp }}/codec-sources" --work-dir "${{ runner.temp }}/native-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe" --jobs 4
+      - name: Prepare ordinary-token UI regression inputs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $testUserSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+          $codecRoot = Join-Path $env:RUNNER_TEMP 'native-codecs/x86_64-pc-windows-msvc'
+          $testTemp = Join-Path $env:RUNNER_TEMP 'nestlink-normal-ui-temp'
+          New-Item -ItemType Directory -Path $testTemp -Force | Out-Null
+          $testInputs = @(
+            @{ Path = (Join-Path $env:USERPROFILE '.rustup'); Access = 'RX' },
+            @{ Path = (Join-Path $env:USERPROFILE '.cargo'); Access = 'M' },
+            @{ Path = $env:GITHUB_WORKSPACE; Access = 'M' },
+            @{ Path = $codecRoot; Access = 'RX' },
+            @{ Path = $testTemp; Access = 'M' }
+          )
+          foreach ($testInput in $testInputs) {
+            & icacls $testInput.Path /grant "*${testUserSid}:(OI)(CI)$($testInput.Access)" /T /Q
+            if ($LASTEXITCODE -ne 0) { throw 'Could not prepare ordinary-token UI inputs' }
+          }
+          "NESTLINK_CODEC_PREFIX=$codecRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TEMP=$testTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TMP=$testTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "NESTLINK_UI_REVIEW_DIR=$testTemp/ui-review" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Verify ordinary Windows identity
+        run: python scripts/refactor-windows-normal-user.py python scripts/refactor-windows-normal-user.py --check
+      - name: Compile production Windows desktop and server
+        run: python scripts/refactor-windows-normal-user.py cargo check --locked -p nestlink-desktop -p nestlink-server
+      - name: Run Windows fonts, geometry, interaction and login regressions
+        run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-desktop --lib -p nestlink-storage --test control -- --test-threads=1
+      - name: Retain Windows synthetic native frames
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: desktop-ui-windows-frames-${{ github.sha }}
+          path: ${{ env.NESTLINK_UI_REVIEW_DIR }}
+          if-no-files-found: warn
+      - name: Check Windows desktop warnings
+        run: python scripts/refactor-windows-normal-user.py cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings
