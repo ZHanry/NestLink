@@ -3,8 +3,8 @@
 #[cfg(feature = "logging")]
 use crate::log::{debug, trace};
 use crate::{
-    Error, IfKind, InterfaceId, Result,
     dns_parser::{DnsIncoming, DnsOutgoing, DnsRecordBox, DnsRecordExt, DnsSrv, RRType, ScopedIp},
+    Error, IfKind, InterfaceId, Result,
 };
 use if_addrs::{IfAddr, Interface};
 use std::net::Ipv6Addr;
@@ -1553,9 +1553,9 @@ impl ResolvedService {
 #[cfg(test)]
 mod tests {
     use super::{
-        DnsRegistry, Instant, ServiceInfo, TxtProperty, decode_txt, encode_txt, u8_slice_to_hex,
+        decode_txt, encode_txt, u8_slice_to_hex, DnsRegistry, Instant, ServiceInfo, TxtProperty,
     };
-    use crate::dns_parser::{CLASS_IN, DnsOutgoing, DnsPointer, FLAGS_QR_RESPONSE, RRType};
+    use crate::dns_parser::{DnsOutgoing, DnsPointer, RRType, CLASS_IN, FLAGS_QR_RESPONSE};
     use crate::{IfKind, IfPredicate};
     use if_addrs::{IfAddr, IfOperStatus, Ifv4Addr, Ifv6Addr, Interface};
     use std::net::{Ipv4Addr, Ipv6Addr};
@@ -1830,12 +1830,10 @@ mod tests {
             &[(long_key.as_str(), "")][..],
         );
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("exceeding the 255-byte limit")
-        );
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("exceeding the 255-byte limit"));
 
         // A property exactly at 255 bytes should succeed.
         // key (250 bytes) + "=" (1 byte) + value (4 bytes) = 255 bytes.

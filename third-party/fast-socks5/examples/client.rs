@@ -4,7 +4,7 @@ extern crate log;
 
 use anyhow::Context;
 use fast_socks5::client::Config;
-use fast_socks5::{Result, client::Socks5Stream};
+use fast_socks5::{client::Socks5Stream, Result};
 use structopt::StructOpt;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 

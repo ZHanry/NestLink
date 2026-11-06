@@ -24,9 +24,7 @@ async fn test_socks5_connection() -> io::Result<()> {
         let bytes_read = stream.read(&mut buf).await.expect("Read request");
         assert_eq!(
             &buf[..bytes_read],
-            &[
-                0x05, 0x01, 0x00, 0x03, 0x05, b't', b'e', b'.', b's', b't', 0x00, 0x50
-            ]
+            &[0x05, 0x01, 0x00, 0x03, 0x05, b't', b'e', b'.', b's', b't', 0x00, 0x50]
         );
         stream
             .write_all(&[0x05, 0x00, 0x00, 0x01, 0xff, 0x00, 0x00, 0x01, 0x00, 0x50])

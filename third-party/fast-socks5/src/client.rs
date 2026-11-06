@@ -1,9 +1,9 @@
 use crate::read_exact;
 use crate::util::stream::{tcp_connect, tcp_connect_with_timeout};
-use crate::util::target_addr::{TargetAddr, ToTargetAddr, read_address};
+use crate::util::target_addr::{read_address, TargetAddr, ToTargetAddr};
 use crate::{
-    AuthenticationMethod, ReplyError, Result, Socks5Command, SocksError, consts, new_udp_header,
-    parse_udp_request,
+    consts, new_udp_header, parse_udp_request, AuthenticationMethod, ReplyError, Result,
+    Socks5Command, SocksError,
 };
 use anyhow::Context;
 use std::io;
@@ -269,7 +269,7 @@ where
     async fn request_header(&mut self, cmd: Socks5Command) -> Result<()> {
         let mut packet = [0u8; MAX_ADDR_LEN + 3];
         let padding; // maximum len of the headers sent
-        // build our request packet with (socks version, Command, reserved)
+                     // build our request packet with (socks version, Command, reserved)
         packet[..3].copy_from_slice(&[consts::SOCKS5_VERSION, cmd.as_u8(), 0x00]);
 
         match self.target_addr.as_ref() {
