@@ -90,13 +90,71 @@ impl DesktopApp {
             .show_inside(parent, |ui| {
                 ui.spacing_mut().item_spacing.y = if short { 2. } else { 4. };
                 egui::Panel::bottom("navigation-footer")
-                    .exact_size(if short { 112. } else { 150. })
+                    .exact_size(if short { 112. } else { 224. })
                     .resizable(false)
                     .show_separator_line(false)
                     .frame(egui::Frame::new())
                     .show_inside(ui, |ui| {
                         ui.spacing_mut().item_spacing.y = 3.;
                         let signed_in = snapshot.principal.is_some();
+                        if !short && !compact {
+                            egui::Frame::new()
+                                .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
+                                .corner_radius(9)
+                                .inner_margin(12)
+                                .show(ui, |ui| {
+                                    ui.set_min_width(ui.available_width());
+                                    let verified = self.connected
+                                        && snapshot.server.as_ref().is_some_and(|server| {
+                                            server.verified_health.is_some()
+                                                && server.error.is_none()
+                                        });
+                                    ui.horizontal(|ui| {
+                                        let (rect, _) = ui.allocate_exact_size(
+                                            egui::vec2(6., 6.),
+                                            egui::Sense::hover(),
+                                        );
+                                        ui.painter().circle_filled(
+                                            rect.center(),
+                                            3.,
+                                            if verified {
+                                                theme::color(if self.dark {
+                                                    "#82C6A7"
+                                                } else {
+                                                    "#278361"
+                                                })
+                                            } else {
+                                                muted
+                                            },
+                                        );
+                                        ui.small(self.t(
+                                            if verified {
+                                                "控制中心已连接"
+                                            } else {
+                                                "控制中心未连接"
+                                            },
+                                            if verified {
+                                                "Control center connected"
+                                            } else {
+                                                "Control center disconnected"
+                                            },
+                                        ));
+                                    });
+                                    let origin = snapshot
+                                        .server
+                                        .as_ref()
+                                        .map(|server| server.origin.as_str())
+                                        .unwrap_or("—");
+                                    ui.add(
+                                        egui::Label::new(
+                                            RichText::new(origin).size(10.).color(muted),
+                                        )
+                                        .truncate(),
+                                    )
+                                    .on_hover_text(origin);
+                                });
+                            ui.add_space(9.);
+                        }
                         ui.add_enabled_ui(signed_in && self.connected && !self.exiting, |ui| {
                             if widgets::nav_button(
                                 ui,
@@ -125,7 +183,64 @@ impl DesktopApp {
                             .as_ref()
                             .map(|p| p.name.as_str())
                             .unwrap_or(self.t("尚未登录", "Sign in"));
-                        if widgets::nav_button(ui, Icon::Account, label, false).clicked() {
+                        let account_clicked = if compact || short {
+                            widgets::nav_button(ui, Icon::Account, label, false).clicked()
+                        } else {
+                            let (rect, response) = ui.allocate_exact_size(
+                                egui::vec2(ui.available_width(), 46.),
+                                egui::Sense::click(),
+                            );
+                            response.widget_info(|| {
+                                egui::WidgetInfo::labeled(
+                                    egui::WidgetType::Button,
+                                    ui.is_enabled(),
+                                    label,
+                                )
+                            });
+                            let center = rect.left_center() + egui::vec2(26., 0.);
+                            ui.painter().circle_filled(
+                                center,
+                                16.,
+                                ui.visuals().selection.bg_fill.gamma_multiply(0.16),
+                            );
+                            let initial: String =
+                                label.chars().take(2).flat_map(char::to_uppercase).collect();
+                            ui.painter().text(
+                                center,
+                                egui::Align2::CENTER_CENTER,
+                                initial,
+                                theme::heading_font(11.),
+                                ui.visuals().hyperlink_color,
+                            );
+                            let painter = ui.painter().with_clip_rect(rect);
+                            painter.text(
+                                rect.min + egui::vec2(52., 15.),
+                                egui::Align2::LEFT_CENTER,
+                                label,
+                                theme::heading_font(12.),
+                                ui.visuals().text_color(),
+                            );
+                            painter.text(
+                                rect.min + egui::vec2(52., 34.),
+                                egui::Align2::LEFT_CENTER,
+                                self.t(
+                                    if snapshot.principal.as_ref().is_some_and(|p| p.is_admin) {
+                                        "个人账号 · 管理员"
+                                    } else {
+                                        "个人账号"
+                                    },
+                                    if snapshot.principal.as_ref().is_some_and(|p| p.is_admin) {
+                                        "Account · Admin"
+                                    } else {
+                                        "Personal account"
+                                    },
+                                ),
+                                egui::FontId::proportional(10.),
+                                muted,
+                            );
+                            response.on_hover_text(label).clicked()
+                        };
+                        if account_clicked {
                             if signed_in {
                                 self.navigate(Screen::Security, snapshot);
                             } else {
@@ -150,7 +265,7 @@ impl DesktopApp {
                         });
                     }
                 });
-                ui.add_space(if short { 12. } else { 26. });
+                ui.add_space(if short { 12. } else { 36. });
                 egui::ScrollArea::vertical()
                     .id_salt("sidebar-navigation")
                     .auto_shrink([false, false])

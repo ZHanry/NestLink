@@ -30,6 +30,7 @@ pub(crate) struct RemoteForm {
     pub(super) flow: Option<crate::remote_flow::ConnectionFlow>,
     pub(super) next_inbox_poll: std::time::Instant,
     search: String,
+    inspector_tab: usize,
     pub(super) permissions: [bool; 7],
     pub(super) path: String,
     pub(super) relay_node: String,
@@ -55,6 +56,7 @@ impl Default for RemoteForm {
             flow: None,
             next_inbox_poll: std::time::Instant::now(),
             search: String::new(),
+            inspector_tab: 0,
             permissions: [true, false, false, false, false, false, false],
             path: "direct_preferred".into(),
             relay_node: String::new(),
@@ -411,11 +413,13 @@ impl DesktopApp {
                 request_id: session.request_id.clone(),
                 connection_generation: session.connection_generation,
             });
+        let spacious =
+            ui.ctx().content_rect().width() >= 1000. && ui.ctx().content_rect().height() >= 700.;
         egui::Frame::new()
             .fill(ui.visuals().window_fill)
             .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
             .corner_radius(13)
-            .inner_margin(14)
+            .inner_margin(if spacious { 26 } else { 14 })
             .show(ui, |ui| {
                 egui::Panel::bottom("remote-connection-actions")
                     .exact_size(56.)
@@ -457,14 +461,14 @@ impl DesktopApp {
                         });
                     });
                 egui::Panel::top("remote-device-heading")
-                    .exact_size(if ui.ctx().content_rect().height()<700. {66.} else {84.})
+                    .exact_size(if ui.ctx().content_rect().height()<700. {66.} else if spacious {142.} else {84.})
                     .resizable(false)
                     .show_separator_line(false)
                     .frame(egui::Frame::new())
                     .show_inside(ui, |ui| {
                         ui.spacing_mut().item_spacing.y=3.;
                         ui.horizontal(|ui| {
-                        icons::badge(ui,Icon::Monitor,if ui.ctx().content_rect().height()<700. {38.} else {52.});
+                        icons::badge(ui,Icon::Monitor,if ui.ctx().content_rect().height()<700. {38.} else if spacious {64.} else {52.});
                         ui.vertical(|ui| {
                         ui.add(
                             egui::Label::new(
@@ -478,7 +482,7 @@ impl DesktopApp {
                             .truncate(),
                         );
                         let subtitle = selected
-                            .map(|view| view.device.id.as_str())
+                            .map(|view| view.device.platform.as_str())
                             .unwrap_or(self.t("从左侧设备列表选择", "Choose from the list"));
                         ui.add(
                             egui::Label::new(
@@ -520,12 +524,43 @@ impl DesktopApp {
                         };
                         ui.add(egui::Label::new(egui::RichText::new(status).small()).truncate())
                             .on_hover_text(status);
+                        if spacious {
+                            ui.add_space(8.);
+                            ui.horizontal(|ui| {
+                                for (index, zh, en) in [(0, "远程连接", "Connection"), (1, "设备信息", "Device details"), (2, "访问权限", "Access permissions")] {
+                                    if widgets::tab(ui, self.remote.inspector_tab == index, self.t(zh, en)).clicked() { self.remote.inspector_tab = index; }
+                                }
+                            });
+                        }
                         ui.separator();
                     });
                 egui::ScrollArea::vertical()
                     .id_salt("remote-connection-options")
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
+                        if spacious && self.remote.inspector_tab == 1 {
+                            if let Some(view) = selected {
+                                ui.strong(self.t("设备信息", "Device details"));
+                                ui.label(&view.device.name);
+                                ui.small(self.t("设备标识", "Device ID"));
+                                ui.monospace(&view.device.id);
+                                ui.small(self.t("平台", "Platform"));
+                                ui.label(&view.device.platform);
+                                ui.small(self.t("登记信息不代表当前在线，连接后确认实际可用状态。", "Enrollment does not imply online. Availability is checked during connection."));
+                            } else { ui.label(self.t("从左侧设备列表选择一台电脑。", "Choose a computer from the list.")); }
+                            return;
+                        }
+                        if spacious && self.remote.inspector_tab == 0 {
+                            ui.small(self.t("可请求的会话权限", "Requested session permissions"));
+                            ui.columns(2, |columns| {
+                                if widgets::capability_option(&mut columns[0], Icon::Monitor, if self.english { "View only" } else { "仅查看" }, !self.remote.permissions[1], if self.english { "Host approval" } else { "首次批准" }).clicked() { self.remote.permissions[1] = false; }
+                                if widgets::capability_option(&mut columns[1], Icon::Devices, if self.english { "Control" } else { "控制键鼠" }, self.remote.permissions[1], if self.english { "Separate approval" } else { "独立授权" }).clicked() { self.remote.permissions[1] = !self.remote.permissions[1]; }
+                                if widgets::capability_option(&mut columns[0], Icon::Audio, if self.english { "System audio" } else { "系统声音" }, self.remote.permissions[2], if self.remote.permissions[2] { if self.english { "Requested" } else { "本次申请" } } else if self.english { "Separate approval" } else { "独立授权" }).clicked() { self.remote.permissions[2] = !self.remote.permissions[2]; }
+                                if widgets::capability_option(&mut columns[1], Icon::Audit, if self.english { "Clipboard sync" } else { "剪贴板同步" }, self.remote.permissions[5] || self.remote.permissions[6], if self.english { "Separate approval" } else { "独立授权" }).clicked() { self.remote.inspector_tab = 2; }
+                            });
+                            ui.add_space(10.);
+                            ui.small(self.t("选择本次需要的权限，对方批准后即可进入远程桌面。文件与剪贴板的细分权限在「访问权限」中设置。", "Choose the permissions for this connection. The host must approve them. Configure individual file and clipboard permissions under Access permissions."));
+                        } else {
                         ui.small(self.t("本次连接的权限", "Permissions for this connection"));
                         ui.horizontal(|ui| {
                             if ui
@@ -567,6 +602,7 @@ impl DesktopApp {
                                     }
                                 });
                             });
+                        }
                         egui::CollapsingHeader::new(self.t("连接选项", "Connection options")).show(
                             ui,
                             |ui| {
@@ -937,7 +973,7 @@ impl DesktopApp {
                         widgets::surface(ui).show(ui,|ui|{
                             ui.heading(self.t("连接远程设备后传输文件", "Connect a remote device to transfer files"));
                             ui.label(self.t("建立获准的远程会话后，在这里选择共享目录、发送文件和查看传输任务。", "After an authorized remote session is established, choose shared folders, send files and view transfers here."));
-                            if widgets::primary_button(ui,self.t("选择远程设备", "Choose remote device"),true).clicked(){self.remote.permissions[5]=true;self.remote.permissions[6]=true;self.remote.tab=RemoteTab::Devices;}
+                            if widgets::primary_button(ui,self.t("选择远程设备", "Choose remote device"),true).clicked(){self.remote.permissions[(Permission::FileRead as usize)-1]=true;self.remote.permissions[(Permission::FileWrite as usize)-1]=true;self.remote.tab=RemoteTab::Devices;}
                         });
                     }
                 });

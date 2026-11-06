@@ -42,6 +42,12 @@ fn export_synthetic_desktop_review_frames() {
             let mut workspace = Workspace::new(snapshot.clone());
             workspace.app.space_panel.select_review_space(&snapshot);
             workspace.app.screen = screen;
+            workspace.app.remote.host_device_id = snapshot
+                .devices
+                .data
+                .as_ref()
+                .and_then(|devices| devices.get(1))
+                .map(|view| view.device.id.clone());
             workspace.app.dark = dark;
             theme::apply(&workspace.context, &workspace.app.tokens, dark);
             for _ in 0..24 {
@@ -210,7 +216,15 @@ fn approved_navigation_exposes_admin_and_files_stay_inside_remote_desktop() {
     assert!(workspace.bounds("发起连接").is_empty());
     assert_eq!(workspace.bounds("选择远程设备").len(), 1);
     workspace.click(size, "选择远程设备");
-    assert!(workspace.app.remote.permissions[5] && workspace.app.remote.permissions[6]);
+    assert_eq!(
+        super::remote::selected(&workspace.app.remote.permissions),
+        vec![
+            nestlink_protocol::Permission::View as i32,
+            nestlink_protocol::Permission::FileRead as i32,
+            nestlink_protocol::Permission::FileWrite as i32
+        ],
+        "file entry must request file permissions without adding clipboard permissions"
+    );
     workspace.frame(size, vec![]);
     workspace.frame(size, vec![]);
     assert_eq!(workspace.bounds("发起连接").len(), 1);

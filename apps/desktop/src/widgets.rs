@@ -527,6 +527,60 @@ pub fn modal_frame(context: &egui::Context) -> egui::Frame {
         .inner_margin(24)
         .corner_radius(17)
 }
+pub fn capability_option(
+    ui: &mut egui::Ui,
+    icon: NavIcon,
+    label: &str,
+    selected: bool,
+    caption: &str,
+) -> egui::Response {
+    let (rect, response) =
+        ui.allocate_exact_size(egui::vec2(ui.available_width(), 40.), egui::Sense::click());
+    response.widget_info(|| {
+        egui::WidgetInfo::selected(egui::WidgetType::Checkbox, ui.is_enabled(), selected, label)
+    });
+    let border = if response.has_focus() {
+        egui::Stroke::new(1.5, ui.visuals().hyperlink_color)
+    } else {
+        ui.visuals().widgets.noninteractive.bg_stroke
+    };
+    let fill = if response.hovered() {
+        ui.visuals().widgets.hovered.weak_bg_fill
+    } else {
+        ui.visuals().window_fill
+    };
+    ui.painter()
+        .rect(rect, 7., fill, border, egui::StrokeKind::Inside);
+    crate::icons::paint(
+        ui,
+        icon,
+        rect.left_center() + egui::vec2(20., 0.),
+        16.,
+        ui.visuals().hyperlink_color,
+    );
+    let painter = ui.painter().with_clip_rect(rect.shrink(8.));
+    painter.text(
+        rect.left_center() + egui::vec2(36., 0.),
+        egui::Align2::LEFT_CENTER,
+        label,
+        egui::FontId::proportional(12.),
+        ui.visuals().text_color(),
+    );
+    if rect.width() > 235. {
+        painter.text(
+            rect.right_center() - egui::vec2(12., 0.),
+            egui::Align2::RIGHT_CENTER,
+            caption,
+            egui::FontId::proportional(10.),
+            if selected {
+                ui.visuals().hyperlink_color
+            } else {
+                ui.visuals().weak_text_color()
+            },
+        );
+    }
+    response.on_hover_text(format!("{label} · {caption}"))
+}
 pub fn theme_choice(ui: &mut egui::Ui, label: &str, mode: usize, selected: bool) -> egui::Response {
     let (rect, response) = ui.allocate_exact_size(egui::vec2(138., 116.), egui::Sense::click());
     response.widget_info(|| {
