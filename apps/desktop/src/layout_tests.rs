@@ -1299,7 +1299,10 @@ impl Workspace {
             |ui| {
                 if self.session_surface {
                     let snapshot = self.app.bridge.snapshot();
-                    self.session_action = self.app.remote_viewport_contents(ui, &snapshot);
+                    // Match the production independent viewport's central frame and background.
+                    egui::CentralPanel::default().show_inside(ui, |ui| {
+                        self.session_action = self.app.remote_viewport_contents(ui, &snapshot);
+                    });
                 } else {
                     self.app.ui(ui, &mut eframe::Frame::_new_kittest());
                 }
