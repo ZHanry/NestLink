@@ -911,8 +911,10 @@ mod utc_tests {
         for size in [egui::vec2(760., 560.), egui::vec2(1440., 960.)] {
             for dark in [false, true] {
                 let context = egui::Context::default();
-                crate::theme::fonts(&context).expect("system UI fonts");
-                let tokens = crate::theme::tokens().expect("UI tokens");
+                crate::theme::fonts(&context)
+                    .unwrap_or_else(|error| panic!("system UI fonts: {error}"));
+                let tokens =
+                    crate::theme::tokens().unwrap_or_else(|error| panic!("UI tokens: {error}"));
                 crate::theme::apply(&context, &tokens, dark);
                 let mut close_position = egui::Pos2::ZERO;
                 let mut submitted = false;
