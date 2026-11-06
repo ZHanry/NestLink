@@ -1038,6 +1038,7 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
     );
 }
 
+#[track_caller]
 fn namespace_submission(workspace: &Workspace) -> u64 {
     while let Some((submission, command)) = workspace.app.bridge.layout_submission() {
         if matches!(

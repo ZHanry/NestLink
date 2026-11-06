@@ -541,11 +541,17 @@ pub fn page_header<R>(
 ) -> R {
     ui.horizontal_top(|ui| {
         let heading_width = (ui.available_width() - actions_width - 12.).max(160.);
-        ui.allocate_ui(egui::vec2(heading_width, 1.), |ui| {
-            page_heading(ui, title, description);
-        });
-        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), actions)
-            .inner
+        ui.allocate_ui_with_layout(
+            egui::vec2(heading_width, 1.),
+            egui::Layout::top_down(egui::Align::Min),
+            |ui| page_heading(ui, title, description),
+        );
+        ui.allocate_ui_with_layout(
+            egui::vec2(actions_width, 40.),
+            egui::Layout::right_to_left(egui::Align::Center),
+            actions,
+        )
+        .inner
     })
     .inner
 }
@@ -567,14 +573,21 @@ pub fn settings_row<R>(
 ) -> R {
     ui.horizontal(|ui| {
         let text_width = (ui.available_width() - actions_width - 12.).max(140.);
-        ui.allocate_ui(egui::vec2(text_width, 60.), |ui| {
-            ui.set_min_height(60.);
-            ui.spacing_mut().item_spacing.y = 5.;
-            ui.strong(title);
-            ui.small(description);
-        });
-        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), actions)
-            .inner
+        ui.allocate_ui_with_layout(
+            egui::vec2(text_width, 60.),
+            egui::Layout::top_down(egui::Align::Min),
+            |ui| {
+                ui.spacing_mut().item_spacing.y = 5.;
+                ui.strong(title);
+                ui.small(description);
+            },
+        );
+        ui.allocate_ui_with_layout(
+            egui::vec2(actions_width, 60.),
+            egui::Layout::right_to_left(egui::Align::Center),
+            actions,
+        )
+        .inner
     })
     .inner
 }
@@ -652,6 +665,45 @@ pub fn utc_time(seconds: u64) -> String {
 
 #[cfg(test)]
 mod utc_tests {
+    #[test]
+    fn page_and_settings_actions_do_not_consume_the_scroll_viewport() {
+        for size in [egui::vec2(760., 560.), egui::vec2(1440., 960.)] {
+            let context = egui::Context::default();
+            for _ in 0..3 {
+                let _ = context.run_ui(
+                    egui::RawInput {
+                        screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, size)),
+                        ..Default::default()
+                    },
+                    |ui| {
+                        egui::ScrollArea::vertical().show(ui, |ui| {
+                            let top = ui.cursor().min.y;
+                            let action = super::page_header(
+                                ui,
+                                "Page title",
+                                "Page description",
+                                90.,
+                                |ui| ui.button("Refresh"),
+                            );
+                            assert!(action.rect.bottom() < top + 80.);
+                            assert!(ui.cursor().min.y < top + 120.);
+                            let top = ui.cursor().min.y;
+                            let action = super::settings_row(
+                                ui,
+                                "Setting title",
+                                "Setting description",
+                                90.,
+                                |ui| ui.button("Edit"),
+                            );
+                            assert!(action.rect.bottom() < top + 80.);
+                            assert!(ui.cursor().min.y < top + 100.);
+                        });
+                    },
+                );
+            }
+        }
+    }
+
     #[test]
     fn audit_times_cover_epoch_leap_day_and_out_of_range_values() {
         assert_eq!(super::utc_time(0), "1970-01-01 00:00:00");
