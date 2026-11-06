@@ -527,6 +527,107 @@ pub fn modal_frame(context: &egui::Context) -> egui::Frame {
         .inner_margin(24)
         .corner_radius(17)
 }
+pub fn theme_choice(ui: &mut egui::Ui, label: &str, mode: usize, selected: bool) -> egui::Response {
+    let (rect, response) = ui.allocate_exact_size(egui::vec2(138., 116.), egui::Sense::click());
+    response.widget_info(|| {
+        egui::WidgetInfo::selected(
+            egui::WidgetType::SelectableLabel,
+            ui.is_enabled(),
+            selected,
+            label,
+        )
+    });
+    let border = if selected || response.has_focus() {
+        egui::Stroke::new(2., ui.visuals().hyperlink_color)
+    } else {
+        ui.visuals().widgets.noninteractive.bg_stroke
+    };
+    ui.painter().rect(
+        rect,
+        9.,
+        ui.visuals().window_fill,
+        border,
+        egui::StrokeKind::Inside,
+    );
+    let preview = egui::Rect::from_min_max(
+        rect.min + egui::vec2(5., 5.),
+        rect.max - egui::vec2(5., 34.),
+    );
+    let light = crate::theme::color("#F6F5FA");
+    let dark = crate::theme::color("#1C1922");
+    ui.painter()
+        .rect_filled(preview, 6., if mode == 1 { dark } else { light });
+    if mode == 2 {
+        ui.painter().rect_filled(
+            egui::Rect::from_min_max(preview.center_top(), preview.right_bottom()),
+            0.,
+            dark,
+        );
+    }
+    ui.painter().rect_filled(
+        egui::Rect::from_min_size(preview.min, egui::vec2(34., preview.height())),
+        5.,
+        crate::theme::color(if mode == 1 { "#342B40" } else { "#E5DDEE" }),
+    );
+    ui.painter().rect_filled(
+        egui::Rect::from_min_size(preview.min + egui::vec2(45., 15.), egui::vec2(62., 44.)),
+        4.,
+        crate::theme::color(if mode == 1 { "#393140" } else { "#FFFFFF" }),
+    );
+    ui.painter().text(
+        rect.left_bottom() + egui::vec2(12., -15.),
+        egui::Align2::LEFT_CENTER,
+        label,
+        egui::FontId::proportional(12.),
+        ui.visuals().text_color(),
+    );
+    if selected {
+        ui.painter().circle_filled(
+            rect.right_bottom() + egui::vec2(-16., -15.),
+            4.,
+            ui.visuals().hyperlink_color,
+        );
+    }
+    response
+}
+
+pub fn toggle(ui: &mut egui::Ui, value: &mut bool, label: &str) -> egui::Response {
+    let (rect, mut response) = ui.allocate_exact_size(egui::vec2(34., 20.), egui::Sense::click());
+    if response.clicked() {
+        *value = !*value;
+        response.mark_changed();
+    }
+    response.widget_info(|| {
+        egui::WidgetInfo::selected(egui::WidgetType::Checkbox, ui.is_enabled(), *value, label)
+    });
+    let fill = ui
+        .visuals()
+        .selection
+        .bg_fill
+        .gamma_multiply(if *value { 1. } else { 0.28 });
+    ui.painter().rect_filled(rect, 10., fill);
+    ui.painter().circle_filled(
+        egui::pos2(
+            if *value {
+                rect.right() - 10.
+            } else {
+                rect.left() + 10.
+            },
+            rect.center().y,
+        ),
+        7.,
+        egui::Color32::WHITE,
+    );
+    if response.has_focus() {
+        ui.painter().rect_stroke(
+            rect.expand(3.),
+            12.,
+            egui::Stroke::new(1., ui.visuals().hyperlink_color),
+            egui::StrokeKind::Outside,
+        );
+    }
+    response.on_hover_text(label)
+}
 pub fn page_heading(ui: &mut egui::Ui, title: &str, description: &str) {
     if ui.ctx().content_rect().height() < 700. {
         ui.label(egui::RichText::new(title).font(crate::theme::heading_font(22.)));

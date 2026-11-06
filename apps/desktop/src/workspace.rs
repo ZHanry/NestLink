@@ -28,6 +28,7 @@ pub(crate) struct Preferences {
     pub follow_system: bool,
     pub english: bool,
     pub compact: bool,
+    pub reduced_motion: bool,
 }
 
 impl WorkspaceState {
@@ -182,13 +183,172 @@ impl DesktopApp {
         }
     }
 
+    fn appearance_settings(&mut self, ui: &mut egui::Ui) {
+        widgets::surface(ui).show(ui, |ui| {
+            ui.set_min_width(ui.available_width());
+            ui.strong(self.t("外观", "Appearance"));
+            ui.small(self.t(
+                "柔和的紫色，让熟悉的工作台焕然一新。",
+                "A soft purple appearance for your everyday workspace.",
+            ));
+            ui.add_space(12.);
+            let current = if self.workspace.preferences.follow_system {
+                2
+            } else {
+                usize::from(self.dark)
+            };
+            ui.horizontal_wrapped(|ui| {
+                for (index, zh, en) in [
+                    (0, "浅色", "Light"),
+                    (1, "深色", "Dark"),
+                    (2, "跟随系统", "System"),
+                ] {
+                    if widgets::theme_choice(ui, self.t(zh, en), index, current == index).clicked()
+                    {
+                        self.workspace.preferences.follow_system = index == 2;
+                        self.dark = if index == 2 {
+                            ui.ctx().system_theme() == Some(egui::Theme::Dark)
+                        } else {
+                            index == 1
+                        };
+                        self.save_appearance();
+                    }
+                }
+            });
+            ui.add_space(12.);
+            widgets::settings_row(
+                ui,
+                self.t("品牌强调色", "Brand accent"),
+                self.t(
+                    "与原版 NestLink LOGO 一致的品牌紫。",
+                    "The purple accent matches the original NestLink logo.",
+                ),
+                160.,
+                |ui| {
+                    ui.colored_label(
+                        ui.visuals().hyperlink_color,
+                        self.t("品牌紫 #7850B2", "Brand purple #7850B2"),
+                    );
+                },
+            );
+            ui.separator();
+            widgets::settings_row(
+                ui,
+                self.t("界面密度", "Density"),
+                self.t(
+                    "在舒适阅读与信息容量间取得平衡。",
+                    "Balance comfortable reading and information density.",
+                ),
+                150.,
+                |ui| {
+                    let previous = self.workspace.preferences.compact;
+                    egui::ComboBox::from_id_salt("appearance-density")
+                        .width(110.)
+                        .selected_text(self.t(
+                            if previous { "紧凑" } else { "舒适" },
+                            if previous { "Compact" } else { "Comfortable" },
+                        ))
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(
+                                &mut self.workspace.preferences.compact,
+                                false,
+                                if self.english {
+                                    "Comfortable"
+                                } else {
+                                    "舒适"
+                                },
+                            );
+                            ui.selectable_value(
+                                &mut self.workspace.preferences.compact,
+                                true,
+                                if self.english { "Compact" } else { "紧凑" },
+                            );
+                        });
+                    if previous != self.workspace.preferences.compact {
+                        self.save_appearance();
+                    }
+                },
+            );
+            ui.separator();
+            widgets::settings_row(
+                ui,
+                self.t("减少动态效果", "Reduce motion"),
+                self.t(
+                    "减少界面切换与展开动画。",
+                    "Reduce interface transition and expansion animations.",
+                ),
+                80.,
+                |ui| {
+                    let label = if self.english {
+                        "Reduce motion"
+                    } else {
+                        "减少动态效果"
+                    };
+                    if widgets::toggle(ui, &mut self.workspace.preferences.reduced_motion, label)
+                        .changed()
+                    {
+                        self.save_appearance();
+                    }
+                },
+            );
+        });
+        ui.add_space(18.);
+        widgets::surface(ui).show(ui, |ui| {
+            ui.set_min_width(ui.available_width());
+            ui.strong(self.t("语言与格式", "Language and format"));
+            ui.small(self.t(
+                "使用 Windows 系统字体，清晰显示中文与连接信息。",
+                "System fonts keep text and connection details clear.",
+            ));
+            widgets::settings_row(
+                ui,
+                self.t("显示语言", "Display language"),
+                self.t(
+                    "在简体中文与 English 之间切换。",
+                    "Choose Simplified Chinese or English.",
+                ),
+                150.,
+                |ui| {
+                    let previous = self.english;
+                    egui::ComboBox::from_id_salt("appearance-language")
+                        .width(120.)
+                        .selected_text(if self.english {
+                            "English"
+                        } else {
+                            "简体中文"
+                        })
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut self.english, false, "简体中文");
+                            ui.selectable_value(&mut self.english, true, "English");
+                        });
+                    if previous != self.english {
+                        self.save_appearance();
+                    }
+                },
+            );
+            ui.separator();
+            widgets::settings_row(
+                ui,
+                self.t("时间格式", "Time format"),
+                self.t(
+                    "登录与审计详情显示明确的 UTC 时间。",
+                    "Login and audit details show explicit UTC timestamps.",
+                ),
+                100.,
+                |ui| {
+                    ui.small("UTC · 24h");
+                },
+            );
+        });
+    }
+
     pub(crate) fn settings_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         widgets::page_heading(
             ui,
-            self.t("设置", "Settings"),
+            self.t("按你的方式，保持连接", "Stay connected, your way"),
             self.t(
-                "外观、语言、控制中心与本机连接设置。",
-                "Appearance, language, control center and local connectivity.",
+                "让 NestLink 更贴合你的日常习惯。",
+                "Make NestLink fit your daily routine.",
             ),
         );
         let labels = if self.english {
@@ -203,66 +363,58 @@ impl DesktopApp {
         } else {
             [
                 "外观与语言",
-                "常规",
+                "常规设置",
                 "控制中心",
                 "远控与权限",
                 "网络与代理",
                 "关于 NestLink",
             ]
         };
+        let icons = [
+            crate::icons::Icon::Theme,
+            crate::icons::Icon::Settings,
+            crate::icons::Icon::Server,
+            crate::icons::Icon::Monitor,
+            crate::icons::Icon::Network,
+            crate::icons::Icon::Help,
+        ];
         ui.horizontal_top(|ui| {
             ui.vertical(|ui| {
-                ui.set_width(if ui.ctx().content_rect().width()<1000. {126.} else {170.});
-                for (index,label) in labels.iter().enumerate() {
-                    if ui.add_sized([ui.available_width(),42.],egui::Button::new(*label).selected(self.workspace.settings_tab==index)).clicked() {self.workspace.settings_tab=index;}
+                ui.set_width(if ui.ctx().content_rect().width() < 1000. { 126. } else { 180. });
+                ui.spacing_mut().item_spacing.y = 4.;
+                for (index, label) in labels.iter().enumerate() {
+                    let selected = self.workspace.settings_tab == index;
+                    ui.scope(|ui| {
+                        ui.visuals_mut().window_fill = ui.visuals().faint_bg_color;
+                        if widgets::nav_button(ui, icons[index], label, selected).clicked() { self.workspace.settings_tab = index; }
+                    });
                 }
             });
             ui.add_space(12.);
             ui.vertical(|ui| {
-        widgets::surface(ui).show(ui,|ui|{
-            ui.set_min_width(ui.available_width());
-            match self.workspace.settings_tab {
-                0 => {
-                    ui.strong(self.t("外观主题", "Appearance"));
-                    ui.label(self.t("选择与 NestLink 品牌一致的淡紫色或深紫色界面。", "Choose NestLink's lilac or deep-purple appearance."));
-                    ui.add_space(14.);
-                    let current=if self.workspace.preferences.follow_system {2} else {usize::from(self.dark)};
-                    ui.horizontal_wrapped(|ui|{
-                        for (index,zh,en) in [(0,"淡紫浅色","Lilac light"),(1,"深紫深色","Deep purple"),(2,"跟随系统","System")]{
-                            if ui.add_sized([120.,60.],egui::Button::new(self.t(zh,en)).selected(current==index)).clicked(){
-                                self.workspace.preferences.follow_system=index==2;
-                                self.dark=if index==2 {ui.ctx().system_theme()==Some(egui::Theme::Dark)} else {index==1};
-                                theme::apply(ui.ctx(),&self.tokens,self.dark);self.save_appearance();
-                            }
+                if self.workspace.settings_tab == 0 { self.appearance_settings(ui); return; }
+                widgets::surface(ui).show(ui, |ui| {
+                    ui.set_min_width(ui.available_width());
+                    match self.workspace.settings_tab {
+                        1 => {
+                            ui.strong(self.t("常规设置", "General"));
+                            ui.label(self.t("关闭主窗口后保留托盘入口，已授权会话与本机服务由守护进程继续管理。", "Closing the main window keeps the tray available. The daemon continues managing authorized sessions and local services."));
+                            ui.add_space(14.);
+                            if ui.button(self.t("打开登录设备管理", "Manage login devices")).clicked() { self.navigate(Screen::Devices, snapshot); }
+                            if ui.button(self.t("退出 NestLink", "Exit NestLink")).clicked() { self.workspace.exit_open = true; }
                         }
-                    });
-                    ui.add_space(22.);ui.separator();
-                    ui.horizontal(|ui| {
-                        ui.label(self.t("界面密度", "Density"));
-                        if ui.selectable_label(!self.workspace.preferences.compact,self.t("舒适", "Comfortable")).clicked(){self.workspace.preferences.compact=false;self.save_appearance();}
-                        if ui.selectable_label(self.workspace.preferences.compact,self.t("紧凑", "Compact")).clicked(){self.workspace.preferences.compact=true;self.save_appearance();}
-                    });
-                    ui.horizontal(|ui|{ui.label(self.t("界面语言", "Language"));if ui.selectable_label(!self.english,"简体中文").clicked(){self.english=false;self.save_appearance();}
-if ui.selectable_label(self.english,"English").clicked(){self.english=true;self.save_appearance();}});
-                }
-                1=>{
-                    ui.strong(self.t("常规", "General"));
-                    ui.label(self.t("关闭主窗口后保留托盘入口，已授权会话与本机服务由守护进程继续管理。", "Closing the main window keeps the tray available. The daemon continues managing authorized sessions and local services."));
-                    ui.add_space(14.);
-                    if ui.button(self.t("打开登录设备管理", "Manage login devices")).clicked(){self.navigate(Screen::Devices,snapshot);}
-                    if ui.button(self.t("退出 NestLink", "Exit NestLink")).clicked(){self.workspace.exit_open=true;}
-                }
-                2=>{self.connection_page(ui,snapshot);}
-                3=>{self.remote_host_settings(ui,snapshot);}
-                4=>{self.local_network_settings(ui,snapshot);}
-                _=>{
-                    ui.heading("NestLink");ui.label(RichText::new(format!("v{}",env!("CARGO_PKG_VERSION"))).color(ui.visuals().hyperlink_color));
-                    ui.label(self.t("Windows 桌面端 · 内网穿透与远程桌面", "Windows desktop · Tunnels and remote desktop"));
-                    ui.hyperlink_to("GitHub / Releases","https://github.com/ZHanry/NestLink/releases");
-                    if ui.button(self.t("检查当前连接状态", "Refresh connection state")).clicked(){self.load(snapshot,Page::AccountSecurity);}
-                }
-            }
-        });
+                        2 => self.connection_page(ui, snapshot),
+                        3 => self.remote_host_settings(ui, snapshot),
+                        4 => self.local_network_settings(ui, snapshot),
+                        _ => {
+                            ui.heading("NestLink");
+                            ui.label(RichText::new(format!("v{}", env!("CARGO_PKG_VERSION"))).color(ui.visuals().hyperlink_color));
+                            ui.label(self.t("Windows 桌面端 · 内网穿透与远程桌面", "Windows desktop · Tunnels and remote desktop"));
+                            ui.hyperlink_to("GitHub / Releases", "https://github.com/ZHanry/NestLink/releases");
+                            if ui.button(self.t("检查当前连接状态", "Refresh connection state")).clicked() { self.load(snapshot, Page::AccountSecurity); }
+                        }
+                    }
+                });
             });
         });
     }

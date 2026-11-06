@@ -2288,6 +2288,13 @@ impl eframe::App for DesktopApp {
             self.dark = context.system_theme() == Some(egui::Theme::Dark);
         }
         theme::apply(&context, &self.tokens, self.dark);
+        context.global_style_mut(|style| {
+            style.animation_time = if self.workspace.preferences.reduced_motion {
+                0.
+            } else {
+                0.1
+            };
+        });
         if self.workspace.preferences.compact {
             context.global_style_mut(|style| {
                 style.spacing.item_spacing.y = 5.;
