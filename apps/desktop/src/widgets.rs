@@ -665,6 +665,8 @@ pub fn utc_time(seconds: u64) -> String {
 
 #[cfg(test)]
 mod utc_tests {
+    use super::egui;
+
     #[test]
     fn page_and_settings_actions_do_not_consume_the_scroll_viewport() {
         for size in [egui::vec2(760., 560.), egui::vec2(1440., 960.)] {
