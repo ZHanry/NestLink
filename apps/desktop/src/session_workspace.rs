@@ -269,17 +269,16 @@ impl DesktopApp {
                             }
                         },
                     );
-                    if let Some(cleanup) = &self.remote_window_cleanup {
-                        if ui
+                    if let Some(cleanup) = &self.remote_window_cleanup
+                        && ui
                             .add_enabled(
                                 cleanup.error.is_some() && self.connected,
                                 egui::Button::new(self.t("重试清理", "Retry cleanup"))
                                     .min_size(egui::vec2(228., 40.)),
                             )
                             .clicked()
-                        {
-                            action = RemoteViewportAction::Retry;
-                        }
+                    {
+                        action = RemoteViewportAction::Retry;
                     }
                 });
             });
