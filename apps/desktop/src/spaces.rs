@@ -267,6 +267,7 @@ impl SpacePanel {
                     }
                 });
                 ui.vertical(|ui|{ui.set_width(detail_width);widgets::surface(ui).show(ui,|ui|{
+            ui.set_min_width(ui.available_width());
             widgets::section(ui, &snapshot.selected_space, english);
             let details = snapshot.selected_space.data.as_ref().filter(|details| self.context == snapshot.space_context
                 && self.selected.as_deref() == Some(details.space.space_id.as_str()));

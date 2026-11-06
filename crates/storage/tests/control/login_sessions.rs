@@ -28,6 +28,15 @@ fn login_devices_are_owned_sessions_and_revocation_preserves_registered_devices(
     let member_sessions = store.login_sessions(&member, 1002)?;
     assert_eq!(member_sessions.len(), 1);
     assert_eq!(member_sessions[0].session_id, member.session_id);
+    store.authenticate(second.access_token.expose(), 1070)?;
+    let activity = store.login_sessions(&admin, 1071)?;
+    assert_eq!(
+        activity
+            .iter()
+            .find(|s| s.session_id == second.principal.session_id)
+            .and_then(|s| s.last_active_at),
+        Some(1070)
+    );
     assert!(matches!(
         store.revoke_login_session(&admin, &member.session_id, 1002),
         Err(StorageError::Forbidden)

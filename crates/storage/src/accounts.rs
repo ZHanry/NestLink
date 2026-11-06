@@ -91,8 +91,10 @@ impl Store {
         if access.len() != 43 {
             return Err(StorageError::Unauthorized);
         }
-        self.connection.query_row("SELECT a.id,s.id,a.name,x.is_admin,s.access_expires FROM management_sessions s JOIN accounts a ON a.id=s.account_id JOIN account_security x ON x.account_id=a.id JOIN deployment d ON d.singleton=1 WHERE s.access_sha256=?1 AND s.access_expires>?2 AND s.revoked=0 AND a.disabled=0 AND s.security_epoch=d.security_epoch",
-            params![token_hash("access",access),now],|r|Ok(Principal{account_id:r.get(0)?,session_id:r.get(1)?,name:r.get(2)?,is_admin:r.get(3)?,access_expires:r.get(4)?})).optional()?.ok_or(StorageError::Unauthorized)
+        let actor=self.connection.query_row("SELECT a.id,s.id,a.name,x.is_admin,s.access_expires FROM management_sessions s JOIN accounts a ON a.id=s.account_id JOIN account_security x ON x.account_id=a.id JOIN deployment d ON d.singleton=1 WHERE s.access_sha256=?1 AND s.access_expires>?2 AND s.revoked=0 AND a.disabled=0 AND s.security_epoch=d.security_epoch",
+            params![token_hash("access",access),now],|r|Ok(Principal{account_id:r.get(0)?,session_id:r.get(1)?,name:r.get(2)?,is_admin:r.get(3)?,access_expires:r.get(4)?})).optional()?.ok_or(StorageError::Unauthorized)?;
+        self.touch_login_metadata(&actor.session_id, now)?;
+        Ok(actor)
     }
     pub fn refresh_login(
         &mut self,
@@ -350,6 +352,9 @@ mod password_only_migration {
         store.connection.execute_batch(
             "DROP TABLE network_direct_recovery_lineage; DROP VIEW all_relay_capacity; DROP TABLE private_service_relay_hops; DROP TABLE private_service_usage_reports; DROP TABLE private_service_leases; DROP TABLE private_service_hosts; DROP TABLE private_service_acl; DROP TABLE service_exposures; DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; DROP TABLE network_remote_chain_topology_bindings; DROP TABLE network_topology_publisher_exports; DROP TABLE network_route_exports; DROP TABLE network_remote_route_set_members; DROP TABLE network_remote_route_sets; DROP TABLE network_remote_chain_hops; DROP TABLE network_remote_chains; DROP TABLE network_topology_changes; DROP TABLE network_topology_cursors; DROP TABLE network_topology_heads; DROP TABLE network_topology_publishers; DROP TABLE node_relay_attributes; DROP TABLE space_service_rules; DROP TABLE space_service_bindings; DROP TABLE network_space_audit; DROP TABLE network_space_invitations; DROP TABLE network_space_members; DROP TABLE network_spaces; DROP TABLE network_remote_relays; DROP TABLE network_remote_paths; DROP TABLE network_grant_revocations; DROP TABLE network_grants; DROP TABLE network_memberships; DROP TABLE network_authority_key_history; DROP TABLE network_authorities; DROP TABLE remote_media_scopes; DROP TABLE device_media_announcements; DROP TABLE management_refresh_receipts; DROP INDEX remote_pending_inbox;",
         )?;
+        store
+            .connection
+            .execute("DROP TABLE management_login_metadata", [])?;
         store.connection.pragma_update(None, "user_version", 20)?;
         let Store { connection, .. } = store;
         let mut migrated = Store::initialize(connection, &deployment)?;

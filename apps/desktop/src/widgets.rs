@@ -579,3 +579,27 @@ pub fn metric(ui: &mut egui::Ui, title: &str, value: &str, caption: &str) {
         ui.small(caption);
     });
 }
+
+/// UTC civil time without adding another runtime dependency.
+pub fn utc_time(seconds: u64) -> String {
+    if seconds > 253_402_300_799 {
+        return "—".into();
+    }
+    let days = (seconds / 86400) as i64 + 719468;
+    let era = days / 146097;
+    let doe = days - era * 146097;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    let mut year = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = mp + if mp < 10 { 3 } else { -9 };
+    year += i64::from(month <= 2);
+    let time = seconds % 86400;
+    format!(
+        "{year:04}-{month:02}-{day:02} {:02}:{:02}:{:02}",
+        time / 3600,
+        time / 60 % 60,
+        time % 60
+    )
+}

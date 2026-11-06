@@ -15,6 +15,9 @@ pub(crate) struct WorkspaceState {
     pub account_create_open: bool,
     pub password_open: bool,
     pub exit_open: bool,
+    pub audit_filter: String,
+    pub retention_draft: Option<(u64, u64)>,
+    pub quota_draft: Option<nestlink_protocol::api::RelayQuota>,
     pub preferences: Preferences,
 }
 
@@ -67,6 +70,7 @@ impl DesktopApp {
     }
 
     pub(crate) fn workspace_dialogs(&mut self, context: &egui::Context, snapshot: &Snapshot) {
+        self.management_dialogs(context, snapshot);
         if snapshot.principal.is_some()
             && context.input_mut(|input| input.consume_key(egui::Modifiers::CTRL, egui::Key::K))
         {

@@ -95,7 +95,10 @@ impl DesktopApp {
                     ui.small(format!(
                         "{} {}",
                         security.sessions.len(),
-                        self.t("个有效登录", "active logins")
+                        self.t(
+                            "条有效登录记录（最多显示 100 条）",
+                            "active login records (up to 100 shown)"
+                        )
                     ));
                 });
             });

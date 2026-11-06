@@ -62,7 +62,7 @@ impl ReviewCapture {
                 )
             })
             .collect();
-        let value = json!({"kind":"synthetic-egui-frame", "pixels_per_point":output.pixels_per_point,"textures":textures,"meshes":meshes});
+        let value = json!({"kind":"synthetic-egui-frame", "size":[context.content_rect().width(),context.content_rect().height()], "pixels_per_point":output.pixels_per_point,"textures":textures,"meshes":meshes});
         std::fs::write(path, serde_json::to_vec(&value).expect("review JSON"))
             .expect("review frame");
     }

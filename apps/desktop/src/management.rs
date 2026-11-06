@@ -459,6 +459,13 @@ impl DesktopApp {
             egui::RichText::new(self.t("中继配额与实际计量", "Relay quota and actual usage"))
                 .strong(),
         );
+        if let Some(quota) = &snapshot.relay_quota.data
+            && ui
+                .button(self.t("调整中继配额", "Edit relay quotas"))
+                .clicked()
+        {
+            self.workspace.quota_draft = Some(**quota);
+        }
         widgets::section(ui, &snapshot.relay_quota, self.english);
         widgets::section(ui, &snapshot.relay_usage, self.english);
         if let Some(quota) = &snapshot.relay_quota.data {
@@ -871,6 +878,24 @@ impl DesktopApp {
                 self.load(snapshot, Page::AuditRetention);
             }
         });
+        ui.horizontal_wrapped(|ui| {
+            ui.add(
+                egui::TextEdit::singleline(&mut self.workspace.audit_filter)
+                    .hint_text(if self.english {
+                        "Filter this page by event or resource"
+                    } else {
+                        "筛选本页事件或关联对象…"
+                    })
+                    .char_limit(128),
+            );
+            if let Some(retention) = &snapshot.audit_retention.data
+                && ui.button(self.t("保留策略", "Retention policy")).clicked()
+            {
+                self.workspace.retention_draft =
+                    Some((retention.revision, retention.retention_seconds));
+            }
+        });
+        ui.add_space(14.);
         widgets::section(ui, &snapshot.audit_retention, self.english);
         if let Some(retention) = &snapshot.audit_retention.data {
             ui.small(format!(
@@ -889,19 +914,83 @@ impl DesktopApp {
             if page.entries.is_empty() {
                 ui.label(self.t("此页没有审计记录。", "This page has no audit records."));
             }
-            for entry in &page.entries {
-                widgets::surface(ui).show(ui, |ui| {
-                    ui.horizontal_wrapped(|ui| {
-                        ui.label(format!("#{}", entry.sequence));
-                        ui.label(egui::RichText::new(&entry.event).strong());
-                        ui.small(format!("{} UTC ms", entry.created_at_unix_ms));
+            let query = self.workspace.audit_filter.trim().to_lowercase();
+            widgets::surface(ui).show(ui, |ui| {
+                ui.set_min_width(ui.available_width());
+                egui::ScrollArea::horizontal()
+                    .id_salt("audit-table-scroll")
+                    .show(ui, |ui| {
+                        ui.set_min_width(720.);
+                        egui::Grid::new("audit-table")
+                            .num_columns(5)
+                            .min_col_width(75.)
+                            .max_col_width(240.)
+                            .spacing([20., 18.])
+                            .show(ui, |ui| {
+                                for heading in [
+                                    self.t("时间（UTC）", "Time (UTC)"),
+                                    self.t("事件", "Event"),
+                                    self.t("关联对象", "Resource"),
+                                    self.t("操作者", "Actor"),
+                                    self.t("记录序号", "Sequence"),
+                                ] {
+                                    ui.strong(heading);
+                                }
+                                ui.end_row();
+                                for entry in page.entries.iter().filter(|entry| {
+                                    query.is_empty()
+                                        || entry.event.to_lowercase().contains(&query)
+                                        || entry.resource_id.to_lowercase().contains(&query)
+                                }) {
+                                    ui.small(widgets::utc_time(entry.created_at_unix_ms / 1000));
+                                    ui.add(egui::Label::new(&entry.event).truncate())
+                                        .on_hover_text(&entry.event);
+                                    ui.add(
+                                        egui::Label::new(
+                                            egui::RichText::new(&entry.resource_id)
+                                                .monospace()
+                                                .small(),
+                                        )
+                                        .truncate(),
+                                    )
+                                    .on_hover_text(&entry.resource_id);
+                                    let actor = match &entry.actor {
+                                        nestlink_protocol::api::AuditActor::Management {
+                                            account_id,
+                                            ..
+                                        }
+                                        | nestlink_protocol::api::AuditActor::Device {
+                                            account_id,
+                                            ..
+                                        }
+                                        | nestlink_protocol::api::AuditActor::DeviceCredential {
+                                            account_id,
+                                            ..
+                                        } => account_id.as_str(),
+                                        nestlink_protocol::api::AuditActor::Node {
+                                            node_id,
+                                            ..
+                                        } => node_id.as_str(),
+                                        nestlink_protocol::api::AuditActor::Legacy => {
+                                            self.t("历史记录", "Legacy")
+                                        }
+                                        nestlink_protocol::api::AuditActor::LocalOperator => {
+                                            self.t("本机操作者", "Local operator")
+                                        }
+                                        nestlink_protocol::api::AuditActor::Unauthenticated => {
+                                            self.t("未认证", "Unauthenticated")
+                                        }
+                                    };
+                                    ui.add(egui::Label::new(actor).truncate()).on_hover_text(
+                                        serde_json::to_string(&entry.actor).unwrap_or_default(),
+                                    );
+                                    ui.small(format!("#{}", entry.sequence));
+                                    ui.end_row();
+                                }
+                            });
                     });
-                    ui.monospace(&entry.resource_id);
-                    if let Ok(actor) = serde_json::to_string(&entry.actor) {
-                        ui.small(actor);
-                    }
-                });
-            }
+            });
+            ui.add_space(12.);
             if page.more
                 && ui
                     .add_enabled(

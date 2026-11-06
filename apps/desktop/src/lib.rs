@@ -22,6 +22,7 @@ mod lists;
 mod local_session_window;
 mod login_devices;
 mod management;
+mod management_dialogs;
 mod native_displays;
 mod native_input;
 mod native_network;
@@ -363,6 +364,9 @@ impl DesktopApp {
         self.workspace.selected_login = None;
         self.workspace.account_create_open = false;
         self.workspace.password_open = false;
+        self.workspace.audit_filter.clear();
+        self.workspace.retention_draft = None;
+        self.workspace.quota_draft = None;
         self.remote = remote::RemoteForm::default();
         self.remote_tools_open = false;
         self.service_panel = services::ServicePanel::default();

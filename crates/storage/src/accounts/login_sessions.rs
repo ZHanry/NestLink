@@ -3,6 +3,10 @@ use nestlink_protocol::api::LoginSessionView;
 use rusqlite::params;
 
 impl Store {
+    pub(super) fn touch_login_metadata(&self, session: &str, now: u64) -> Result<(), StorageError> {
+        self.connection.execute("UPDATE management_login_metadata SET last_active_at=?1 WHERE session_id=?2 AND last_active_at<?3",params![now,session,now.saturating_sub(60)])?;
+        Ok(())
+    }
     /// Bounded display metadata. These strings never confer device or network authority.
     pub fn record_login_metadata(
         &self,
@@ -29,7 +33,7 @@ impl Store {
         now: u64,
     ) -> Result<Vec<LoginSessionView>, StorageError> {
         self.validate_access(actor, now)?;
-        self.connection.execute("UPDATE management_login_metadata SET last_active_at=?1 WHERE session_id=?2 AND last_active_at<?1-60",params![now,actor.session_id])?;
+        self.touch_login_metadata(&actor.session_id, now)?;
         let mut statement=self.connection.prepare("SELECT s.id,m.device_name,m.client,m.platform,m.created_at,m.last_active_at,s.refresh_expires FROM management_sessions s JOIN deployment d ON d.singleton=1 LEFT JOIN management_login_metadata m ON m.session_id=s.id WHERE s.account_id=?1 AND s.revoked=0 AND s.refresh_expires>?2 AND s.security_epoch=d.security_epoch ORDER BY (s.id=?3) DESC,coalesce(m.last_active_at,0) DESC,s.id LIMIT 100")?;
         let entries = statement
             .query_map(params![actor.account_id, now, actor.session_id], |row| {
