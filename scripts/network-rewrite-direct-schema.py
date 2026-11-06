@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Execute an unchanged pinned schema-50 Store against a real schema-51 lineage.
+"""Execute an unchanged pinned schema-50 Store against a schema-52 database with real direct lineage.
 
 Runs only in hosted network-upgrade Actions. Private database, identities and
 credentials never enter the artifact; command receipts and hashes do.
@@ -72,7 +72,7 @@ def main():
     report = {"schema_version": 1, "passed": False, "failure": None,
               "build_provenance": identity, "source_before": before, "commands": commands,
               "old_source_revision": OLD_SOURCE, "old_store_source_modified": False,
-              "acceptance_claims": [], "limitations": ["Real schema-50 Store library and schema-51 direct lineage only; no installed upgrade or complete acceptance claim"]}
+              "acceptance_claims": [], "limitations": ["Real schema-50 Store library and schema-52 direct lineage only; no installed upgrade or complete acceptance claim"]}
 
     def run(name, argv, cwd=ROOT, timeout=1200):
         entry = EVIDENCE.run_command(name, [str(arg) for arg in argv], cwd, args.output, commands, timeout)
@@ -97,7 +97,7 @@ def main():
             inspection_before = snapshot(fixture)
             require(not any((fixture / ("control.sqlite3" + suffix)).exists() for suffix in ("-wal", "-shm")), "current fixture did not checkpoint and close")
             with closing(sqlite3.connect("file:" + str(fixture / "control.sqlite3") + "?mode=ro&immutable=1", uri=True)) as database:
-                require(database.execute("PRAGMA user_version").fetchone()[0] == 51, "fixture is not actual schema 51")
+                require(database.execute("PRAGMA user_version").fetchone()[0] == 52, "fixture is not actual schema 52")
                 require(database.execute("SELECT count(*) FROM network_direct_recovery_lineage").fetchone()[0] == 1, "real dual-signed child lineage missing")
             report["inspection_fixture_before"] = inspection_before
             report["inspection_fixture_after"] = snapshot(fixture)

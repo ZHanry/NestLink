@@ -99,6 +99,16 @@ fn invitation_parts(value: &str) -> Option<(String, String, Secret)> {
 }
 
 impl SpacePanel {
+    #[cfg(test)]
+    pub(crate) fn select_review_space(&mut self, snapshot: &Snapshot) {
+        self.context = snapshot.space_context.clone();
+        self.selected = snapshot
+            .selected_space
+            .data
+            .as_ref()
+            .map(|v| v.space.space_id.clone());
+    }
+
     pub(crate) fn context_matches(&self, snapshot: &Snapshot) -> bool {
         self.context == snapshot.space_context
     }

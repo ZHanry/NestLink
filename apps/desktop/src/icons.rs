@@ -23,6 +23,14 @@ pub enum Icon {
     Maximize,
 }
 
+pub fn tool_button(ui: &mut egui::Ui, icon: Icon, label: &str) -> egui::Response {
+    let response = button(ui, icon, "");
+    response.widget_info(|| {
+        egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), label)
+    });
+    response.on_hover_text(label)
+}
+
 /// Display the original PNG asset, shared with the window and tray icon.
 pub fn brand(ui: &egui::Ui, rect: egui::Rect) {
     let id = egui::Id::new("nestlink-original-brand-texture");

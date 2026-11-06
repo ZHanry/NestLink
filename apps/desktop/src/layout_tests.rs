@@ -33,16 +33,118 @@ fn export_synthetic_desktop_review_frames() {
         ("audit", Screen::Audit),
         ("settings", Screen::Server),
     ] {
-        let mut workspace = Workspace::new(enrolled_snapshot());
-        workspace.app.screen = screen;
+        for (mode, size, dark) in [
+            ("light", egui::vec2(1440., 960.), false),
+            ("dark", egui::vec2(1440., 960.), true),
+            ("small", egui::vec2(760., 560.), false),
+        ] {
+            let snapshot = review_snapshot();
+            let mut workspace = Workspace::new(snapshot.clone());
+            workspace.app.space_panel.select_review_space(&snapshot);
+            workspace.app.screen = screen;
+            workspace.app.dark = dark;
+            theme::apply(&workspace.context, &workspace.app.tokens, dark);
+            for _ in 0..5 {
+                workspace.frame(size, vec![]);
+            }
+            workspace.review.write(
+                &workspace.context,
+                workspace.last_output.as_ref().expect("rendered output"),
+                &directory.join(format!("{name}-{mode}.json")),
+            );
+        }
+    }
+    for (name, dialog) in [
+        ("quota", 0),
+        ("retention", 1),
+        ("account-create", 2),
+        ("password", 3),
+    ] {
+        let snapshot = review_snapshot();
+        let mut workspace = Workspace::new(snapshot.clone());
+        workspace.app.screen = Screen::Network;
+        match dialog {
+            0 => {
+                workspace.app.workspace.quota_draft =
+                    snapshot.relay_quota.data.as_ref().map(|q| **q)
+            }
+            1 => workspace.app.workspace.retention_draft = Some((1, 2_592_000)),
+            2 => workspace.app.workspace.account_create_open = true,
+            _ => workspace.app.workspace.password_open = true,
+        }
         for _ in 0..5 {
-            workspace.frame(egui::vec2(1440., 960.), vec![]);
+            workspace.frame(egui::vec2(760., 560.), vec![]);
         }
         workspace.review.write(
             &workspace.context,
             workspace.last_output.as_ref().expect("rendered output"),
-            &directory.join(format!("{name}.json")),
+            &directory.join(format!("dialog-{name}.json")),
         );
+    }
+}
+
+/// Synthetic presentation fixtures only; never loaded by the production app.
+fn review_snapshot() -> Snapshot {
+    use serde_json::{from_value, json};
+    let mut snapshot = enrolled_snapshot();
+    snapshot.security.data=Some(Arc::new(from_value(json!({"principal":snapshot.principal,"session_management_available":true,"sessions":[
+        {"session_id":"session","device_name":"我的工作电脑","client":"Windows desktop","platform":"Windows","created_at":1793900000_u64,"last_active_at":1793930000_u64,"expires_at":1794000000_u64,"current":true},
+        {"session_id":"browser-session","device_name":"办公室浏览器","client":"Web","platform":"Windows","created_at":1793800000_u64,"last_active_at":1793929000_u64,"expires_at":1794000000_u64,"current":false}
+    ]})).expect("review login data")));
+    snapshot.accounts.data = Some(Arc::new(
+        from_value(json!([
+            {"id":"account","name":"Admin","is_admin":true,"disabled":false},
+            {"id":"member","name":"工作账号","is_admin":false,"disabled":false},
+            {"id":"old-member","name":"已停用账号","is_admin":false,"disabled":true}
+        ]))
+        .expect("review accounts"),
+    ));
+    snapshot.policy.data=Some(Arc::new(from_value(json!({"revision":1,"policy":{"server_forwarding":"disabled","peer_path_mode":"direct_preferred","public_ingress":"explicit"}})).expect("review policy")));
+    snapshot.path_limits.data = Some(Arc::new(vec![]));
+    snapshot.relay_quota.data=Some(Arc::new(from_value(json!({"revision":1,"limits":{"max_allocations":32,"max_account_endpoints":64,"bytes_per_second":10485760,"bytes_per_allocation":1073741824}})).expect("review quota")));
+    snapshot.relay_usage.data=Some(Arc::new(from_value(json!({"runtime_id":"review","report_sequence":4,"quota_revision":1,"allocations":3,"endpoints":6,"admitted_bytes":268435456,"closed_allocations":2})).expect("review usage")));
+    snapshot.nodes.data=Some(Arc::new(from_value(json!([
+        {"node":{"id":"entry-a","name":"华东入口","public_key":"","roles":[2],"max_connections":256,"bytes_per_second":10485760},"revoked":false,"last_issued_at_unix_ms":1793930000000_u64,"runtime_id":"a","runtime_generation":3},
+        {"node":{"id":"relay-b","name":"备用中继","public_key":"","roles":[1],"max_connections":128,"bytes_per_second":5242880},"revoked":false,"last_issued_at_unix_ms":1793930000000_u64,"runtime_id":"b","runtime_generation":1},
+        {"node":{"id":"retired-c","name":"已撤销节点","public_key":"","roles":[1],"max_connections":128,"bytes_per_second":5242880},"revoked":true,"last_issued_at_unix_ms":1793930000000_u64,"runtime_id":null,"runtime_generation":0}
+    ])).expect("review nodes")));
+    snapshot.audit.data=Some(Arc::new(from_value(json!({"entries":[
+        {"sequence":2,"event":"login_revoked","resource_id":"browser-session","security_epoch":1,"created_at_unix_ms":1793930000000_u64,"actor":{"kind":"management","account_id":"account","session_id":"session"}},
+        {"sequence":1,"event":"device_enrolled","resource_id":"工作电脑","security_epoch":1,"created_at_unix_ms":1793920000000_u64,"actor":{"kind":"management","account_id":"account","session_id":"session"}}
+    ],"security_epoch":1,"next_sequence":2,"high_watermark":2,"pruned_through":0,"history_pruned":false,"more":false})).expect("review audit")));
+    snapshot.audit_retention.data=Some(Arc::new(from_value(json!({"revision":1,"retention_seconds":2592000,"high_watermark":2,"pruned_through":0,"last_cleanup_at_unix_ms":1793930000000_u64})).expect("review retention")));
+    let space = json!({"space_id":"review-space","deployment_id":"deployment","authority_public_key":"","name":"我的工作空间","archived":false,"revision":1,"policy_epoch":1,"observed_at_unix_ms":1793930000000_u64,"role":"owner","member_epoch":1});
+    snapshot.spaces.data = Some(Arc::new(from_value(json!([space])).expect("review spaces")));
+    snapshot.space_context = "synthetic-review".into();
+    snapshot.selected_space.data=Some(Arc::new(from_value(json!({"space":space,"members":[{"account_id":"account","name":"Admin","role":"owner","member_epoch":1,"active":true}],"devices":[{"installation_id":"00000000-0000-4000-8000-000000000001","account_id":"account","name":"我的工作电脑","role":"member","membership_epoch":1,"active":true}],"invitations":[],"next_member":null,"next_device":null,"next_invitation":null})).expect("review space details")));
+    snapshot.services.data=Some(Arc::new(from_value(json!({"security_epoch":1,"services":[{"id":"review-service","account_id":"account","management_session_id":"session","revision":1,"definition":{"name":"项目文档","host_device_id":"00000000-0000-4000-8000-000000000001","edge_node_id":"entry-a","requested_ingress":{"protocol":"https","hostname":"docs.example.test"},"allowed_sources":[{"address":"192.0.2.0","prefix":24}],"limits":{"maximum_connections":16,"bytes_per_second":1048576,"maximum_bytes":1073741824,"idle_timeout_seconds":60}},"definition_sha256":"","approval":"pending","target_id":null,"target_sha256":null,"approval_expires_at_unix_ms":null,"publication":"not_published"}],"next_id":null,"more":false})).expect("review services")));
+    snapshot
+}
+
+#[test]
+fn native_status_and_expanded_navigation_fit_supported_window_sizes() {
+    for size in [
+        egui::vec2(760., 560.),
+        egui::vec2(1000., 640.),
+        egui::vec2(1440., 960.),
+    ] {
+        let mut workspace = Workspace::new(enrolled_snapshot());
+        for _ in 0..5 {
+            workspace.frame(size, vec![]);
+        }
+        let frame = egui::Rect::from_min_size(egui::Pos2::ZERO, size);
+        for label in [concat!("v", env!("CARGO_PKG_VERSION")), "审计记录"] {
+            let bounds = if label.starts_with('v') {
+                workspace.label_bounds(label)
+            } else {
+                workspace.bounds(label)
+            };
+            assert_eq!(bounds.len(), 1, "missing {label}");
+            assert!(
+                frame.contains_rect(bounds[0]),
+                "{label} outside {size:?}: {bounds:?}"
+            );
+        }
     }
 }
 
@@ -53,6 +155,12 @@ fn approved_navigation_exposes_admin_and_files_stay_inside_remote_desktop() {
     for _ in 0..5 {
         workspace.frame(size, vec![]);
     }
+    let status = workspace.label_bounds(concat!("v", env!("CARGO_PKG_VERSION")));
+    assert_eq!(status.len(), 1);
+    assert!(
+        egui::Rect::from_min_size(egui::Pos2::ZERO, size).contains_rect(status[0]),
+        "status outside native frame: {status:?}"
+    );
     for label in ["账号管理", "网络策略与配额", "转发节点", "审计记录"] {
         assert_eq!(
             workspace.bounds(label).len(),

@@ -451,6 +451,32 @@ impl FilePanel {
         session: &FileSession,
         command: &mut Option<NativeFileCommand>,
     ) {
+        if ui.available_width() >= 680. && session.read && session.write {
+            ui.columns(2, |columns| {
+                crate::widgets::surface(&columns[0]).show(&mut columns[0], |ui| {
+                    ui.strong(text(english, "远程设备 · 下载", "Remote device · Download"));
+                    ui.add_space(12.);
+                    self.download_panel(ui, english, session, command);
+                });
+                crate::widgets::surface(&columns[1]).show(&mut columns[1], |ui| {
+                    ui.strong(text(english, "本机文件 · 上传", "Local files · Upload"));
+                    ui.add_space(12.);
+                    self.upload_panel(ui, english, session, command);
+                });
+            });
+        } else {
+            self.download_panel(ui, english, session, command);
+            self.upload_panel(ui, english, session, command);
+        }
+    }
+
+    fn download_panel(
+        &mut self,
+        ui: &mut egui::Ui,
+        english: bool,
+        session: &FileSession,
+        command: &mut Option<NativeFileCommand>,
+    ) {
         if session.read {
             if ui
                 .add_enabled(
@@ -587,6 +613,15 @@ impl FilePanel {
                 });
             }
         }
+    }
+
+    fn upload_panel(
+        &mut self,
+        ui: &mut egui::Ui,
+        english: bool,
+        session: &FileSession,
+        command: &mut Option<NativeFileCommand>,
+    ) {
         if session.write {
             ui.separator();
             if ui

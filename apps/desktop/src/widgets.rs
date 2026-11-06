@@ -603,3 +603,14 @@ pub fn utc_time(seconds: u64) -> String {
         time % 60
     )
 }
+
+#[cfg(test)]
+mod utc_tests {
+    #[test]
+    fn audit_times_cover_epoch_leap_day_and_out_of_range_values() {
+        assert_eq!(super::utc_time(0), "1970-01-01 00:00:00");
+        assert_eq!(super::utc_time(951_827_696), "2000-02-29 12:34:56");
+        assert_eq!(super::utc_time(253_402_300_799), "9999-12-31 23:59:59");
+        assert_eq!(super::utc_time(u64::MAX), "—");
+    }
+}

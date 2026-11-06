@@ -544,83 +544,20 @@ impl DesktopApp {
             if nodes.is_empty() {
                 ui.label(self.t("尚无登记节点。", "No nodes are registered."));
             }
-            for view in nodes.iter() {
-                ui.push_id(&view.node.id, |ui| {
-                    widgets::surface(ui).show(ui, |ui| {
-                        ui.horizontal_wrapped(|ui| {
-                            ui.label(egui::RichText::new(&view.node.name).strong());
-                            ui.label(self.t(
-                                if view.revoked {
-                                    "已撤销"
-                                } else {
-                                    "已登记"
-                                },
-                                if view.revoked {
-                                    "Revoked"
-                                } else {
-                                    "Registered"
-                                },
-                            ));
-                            if ui.button(self.t("查看计量", "Usage")).clicked() {
-                                self.action(
-                                    snapshot,
-                                    Action::LoadNodeUsage {
-                                        node_id: view.node.id.clone(),
-                                        after_generation: 0,
-                                        limit: 50,
-                                    },
-                                );
-                            }
-                            if !view.revoked
-                                && ui
-                                    .add_enabled(
-                                        snapshot.nodes.loading.is_none(),
-                                        egui::Button::new(self.t("撤销", "Revoke")),
-                                    )
-                                    .clicked()
-                            {
-                                self.pending_confirmation = Some((
-                                    format!(
-                                        "{} {}",
-                                        self.t("撤销节点：", "Revoke node:"),
-                                        view.node.name
-                                    ),
-                                    Command::Submit {
-                                        action: Action::RevokeNode {
-                                            node_id: view.node.id.clone(),
-                                        },
-                                    },
-                                ));
-                            }
-                        });
-                        ui.monospace(&view.node.id);
-                        if !view.revoked
-                            && view.node.roles.contains(&2)
-                            && snapshot.principal.as_ref().is_some_and(|p| p.is_admin)
-                            && ui
-                                .button(self.t("公网入口配置", "Public ingress configuration"))
-                                .clicked()
-                        {
-                            self.edge_namespace = EdgeNamespacePanel {
-                                node_id: Some(view.node.id.clone()),
-                                ..Default::default()
-                            };
-                            self.submit_edge_namespace(
-                                snapshot,
-                                Action::LoadServiceEdgeNamespace {
-                                    node_id: view.node.id.clone(),
-                                },
-                                false,
-                            );
-                        }
-                        ui.small(format!(
-                            "{} connections · {} B/s · generation {}",
-                            view.node.max_connections,
-                            view.node.bytes_per_second,
-                            view.runtime_generation
-                        ));
-                    });
+            let count = if ui.available_width() >= 1080. {
+                3
+            } else if ui.available_width() >= 700. {
+                2
+            } else {
+                1
+            };
+            for row in nodes.chunks(count) {
+                ui.columns(count, |columns| {
+                    for (column, view) in columns.iter_mut().zip(row) {
+                        self.node_card(column, snapshot, view);
+                    }
                 });
+                ui.add_space(14.);
             }
         }
         self.edge_namespace_panel(ui, snapshot);
@@ -649,6 +586,88 @@ impl DesktopApp {
             }
         }
     }
+    fn node_card(
+        &mut self,
+        ui: &mut egui::Ui,
+        snapshot: &Snapshot,
+        view: &nestlink_protocol::api::NodeView,
+    ) {
+        ui.push_id(&view.node.id, |ui| {
+            widgets::surface(ui).show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    ui.label(egui::RichText::new(&view.node.name).strong());
+                    ui.label(self.t(
+                        if view.revoked {
+                            "已撤销"
+                        } else {
+                            "已登记"
+                        },
+                        if view.revoked {
+                            "Revoked"
+                        } else {
+                            "Registered"
+                        },
+                    ));
+                    if ui.button(self.t("查看计量", "Usage")).clicked() {
+                        self.action(
+                            snapshot,
+                            Action::LoadNodeUsage {
+                                node_id: view.node.id.clone(),
+                                after_generation: 0,
+                                limit: 50,
+                            },
+                        );
+                    }
+                    if !view.revoked
+                        && ui
+                            .add_enabled(
+                                snapshot.nodes.loading.is_none(),
+                                egui::Button::new(self.t("撤销", "Revoke")),
+                            )
+                            .clicked()
+                    {
+                        self.pending_confirmation = Some((
+                            format!(
+                                "{} {}",
+                                self.t("撤销节点：", "Revoke node:"),
+                                view.node.name
+                            ),
+                            Command::Submit {
+                                action: Action::RevokeNode {
+                                    node_id: view.node.id.clone(),
+                                },
+                            },
+                        ));
+                    }
+                });
+                ui.monospace(&view.node.id);
+                if !view.revoked
+                    && view.node.roles.contains(&2)
+                    && snapshot.principal.as_ref().is_some_and(|p| p.is_admin)
+                    && ui
+                        .button(self.t("公网入口配置", "Public ingress configuration"))
+                        .clicked()
+                {
+                    self.edge_namespace = EdgeNamespacePanel {
+                        node_id: Some(view.node.id.clone()),
+                        ..Default::default()
+                    };
+                    self.submit_edge_namespace(
+                        snapshot,
+                        Action::LoadServiceEdgeNamespace {
+                            node_id: view.node.id.clone(),
+                        },
+                        false,
+                    );
+                }
+                ui.small(format!(
+                    "{} connections · {} B/s · generation {}",
+                    view.node.max_connections, view.node.bytes_per_second, view.runtime_generation
+                ));
+            });
+        });
+    }
+
     fn edge_namespace_panel(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         use nestlink_protocol::service_plane::publication::{
             ServiceEdgeNamespace, ServiceEdgeNamespaceUpdate,

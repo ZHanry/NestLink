@@ -1,7 +1,7 @@
 name: Windows desktop UI regression
 on:
   push:
-    branches: [ui/0.8.1-rc-desktop]
+    branches: [main, ui/0.8.1-rc-desktop]
   pull_request:
     paths: ['apps/desktop/**', 'config/ui-tokens.json', 'crates/storage/src/accounts/**', 'crates/storage/migrations/052_account_login_metadata.sql', '.github/workflows/desktop-ui.yml']
   workflow_dispatch:

@@ -83,3 +83,39 @@ impl Store {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn schema_51_upgrade_preserves_login_and_does_not_invent_legacy_metadata()
+    -> Result<(), StorageError> {
+        const CREDENTIAL: &str = "owned-migration-fixture-only";
+        let deployment = nestlink_auth::random_id();
+        let mut store = Store::in_memory(&deployment)?;
+        let vault = nestlink_auth::VaultKey::from_bytes([37; 32]);
+        let dummy = nestlink_auth::hash_password(CREDENTIAL)?;
+        store.bootstrap_admin("migration-user", CREDENTIAL)?;
+        let login = store.login("migration-user", CREDENTIAL, None, 1000, &vault, &dummy)?;
+        store
+            .connection
+            .execute("DROP TABLE management_login_metadata", [])?;
+        store.connection.pragma_update(None, "user_version", 51)?;
+        let Store { connection, .. } = store;
+        let migrated = Store::initialize(connection, &deployment)?;
+        let actor = migrated.authenticate(login.access_token.expose(), 1001)?;
+        let sessions = migrated.login_sessions(&actor, 1001)?;
+        assert_eq!(sessions.len(), 1);
+        assert!(sessions[0].current);
+        assert!(sessions[0].created_at.is_none());
+        assert!(sessions[0].device_name.is_none());
+        assert_eq!(
+            migrated
+                .connection
+                .pragma_query_value(None, "user_version", |r| r.get::<_, u32>(0))?,
+            52
+        );
+        Ok(())
+    }
+}

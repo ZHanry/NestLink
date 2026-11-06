@@ -94,6 +94,7 @@ impl DesktopApp {
                     .show_separator_line(false)
                     .frame(egui::Frame::new())
                     .show_inside(ui, |ui| {
+                        ui.spacing_mut().item_spacing.y = 3.;
                         let signed_in = snapshot.principal.is_some();
                         ui.add_enabled_ui(signed_in && self.connected && !self.exiting, |ui| {
                             if widgets::nav_button(
@@ -250,59 +251,91 @@ impl DesktopApp {
                             .send_viewport_cmd(egui::ViewportCommand::Maximized(!maximized));
                     }
                     ui.with_layout(egui::Layout::right_to_left(Align::Center), |ui| {
-                        if icons::button(ui, Icon::Close, "")
-                            .on_hover_text(self.t("关闭", "Close"))
-                            .clicked()
+                        if icons::tool_button(
+                            ui,
+                            Icon::Close,
+                            self.t("关闭主窗口", "Close main window"),
+                        )
+                        .clicked()
                         {
                             ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
                         }
-                        if icons::button(ui, Icon::Maximize, "")
-                            .on_hover_text(self.t("最大化 / 还原", "Maximize / restore"))
-                            .clicked()
+                        if icons::tool_button(
+                            ui,
+                            Icon::Maximize,
+                            self.t("最大化 / 还原", "Maximize / restore"),
+                        )
+                        .clicked()
                         {
                             let maximized = ui.input(|i| i.viewport().maximized.unwrap_or(false));
                             ui.ctx()
                                 .send_viewport_cmd(egui::ViewportCommand::Maximized(!maximized));
                         }
-                        if icons::button(ui, Icon::Minimize, "")
-                            .on_hover_text(self.t("最小化", "Minimize"))
+                        if icons::tool_button(ui, Icon::Minimize, self.t("最小化", "Minimize"))
                             .clicked()
                         {
                             ui.ctx()
                                 .send_viewport_cmd(egui::ViewportCommand::Minimized(true));
                         }
                         ui.separator();
-                        if icons::button(ui, Icon::Theme, "")
-                            .on_hover_text(self.t("切换浅色 / 深色", "Switch appearance"))
-                            .clicked()
+                        if icons::tool_button(
+                            ui,
+                            Icon::Theme,
+                            self.t("切换浅色 / 深色", "Switch appearance"),
+                        )
+                        .clicked()
                         {
                             self.workspace.preferences.follow_system = false;
                             self.dark = !self.dark;
                             theme::apply(ui.ctx(), &self.tokens, self.dark);
                             self.save_appearance();
                         }
-                        if icons::button(ui, Icon::Help, "")
-                            .on_hover_text(self.t("帮助与关于", "Help and about"))
-                            .clicked()
+                        if icons::tool_button(
+                            ui,
+                            Icon::Help,
+                            self.t("帮助与关于", "Help and about"),
+                        )
+                        .clicked()
                         {
                             self.workspace.help_open = true;
                         }
-                        if icons::button(ui, Icon::Bell, "")
-                            .on_hover_text(self.t("连接请求", "Connection requests"))
+                        if snapshot.principal.is_some() {
+                            if icons::tool_button(
+                                ui,
+                                Icon::Bell,
+                                self.t("连接请求", "Connection requests"),
+                            )
                             .clicked()
-                        {
-                            self.navigate(Screen::Remote, snapshot);
-                            self.show_remote_requests();
+                            {
+                                self.navigate(Screen::Remote, snapshot);
+                                self.show_remote_requests();
+                            }
+                            if ui
+                                .button(if ui.available_width() > 350. {
+                                    self.t(
+                                        "搜索设备与功能  Ctrl K",
+                                        "Search devices / actions  Ctrl K",
+                                    )
+                                } else {
+                                    self.t("搜索", "Search")
+                                })
+                                .clicked()
+                            {
+                                self.workspace.search_open = true;
+                            }
                         }
-                        if ui
-                            .button(if ui.available_width() > 350. {
-                                self.t("搜索设备与功能  Ctrl K", "Search devices / actions  Ctrl K")
-                            } else {
-                                self.t("搜索", "Search")
-                            })
-                            .clicked()
-                        {
-                            self.workspace.search_open = true;
+                        let drag = ui.interact(
+                            ui.available_rect_before_wrap(),
+                            ui.id().with("titlebar-drag"),
+                            egui::Sense::click_and_drag(),
+                        );
+                        if drag.drag_started() {
+                            ui.ctx().send_viewport_cmd(egui::ViewportCommand::StartDrag);
+                        }
+                        if drag.double_clicked() {
+                            let maximized = ui.input(|i| i.viewport().maximized.unwrap_or(false));
+                            ui.ctx()
+                                .send_viewport_cmd(egui::ViewportCommand::Maximized(!maximized));
                         }
                     });
                 });

@@ -13,6 +13,7 @@ impl DesktopApp {
         }
         if let Some((revision, mut seconds)) = self.workspace.retention_draft {
             let mut save = false;
+            let mut cancel = false;
             let response = egui::Modal::new(egui::Id::new("audit-retention")).show(context, |ui| {
                 ui.set_width(440_f32.min(context.content_rect().width() - 64.));
                 ui.heading(self.t("审计保留策略", "Audit retention"));
@@ -31,19 +32,24 @@ impl DesktopApp {
                     self.t("天", "days")
                 ));
                 ui.add_space(18.);
-                save = widgets::primary_button(
-                    ui,
-                    self.t("保存保留策略", "Save retention policy"),
-                    snapshot.audit_retention.loading.is_none()
-                        && snapshot
-                            .audit_retention
-                            .data
-                            .as_ref()
-                            .is_some_and(|v| v.revision == revision),
-                )
-                .clicked();
+                ui.horizontal(|ui| {
+                    cancel = ui.button(self.t("取消", "Cancel")).clicked();
+                    save = widgets::primary_button(
+                        ui,
+                        self.t("保存保留策略", "Save retention policy"),
+                        self.connected
+                            && !self.exiting
+                            && snapshot.audit_retention.loading.is_none()
+                            && snapshot
+                                .audit_retention
+                                .data
+                                .as_ref()
+                                .is_some_and(|v| v.revision == revision),
+                    )
+                    .clicked();
+                });
             });
-            self.workspace.retention_draft = if response.should_close() || save {
+            self.workspace.retention_draft = if response.should_close() || save || cancel {
                 None
             } else {
                 Some((revision, seconds))
@@ -68,6 +74,7 @@ impl DesktopApp {
         }
         if let Some(mut draft) = self.workspace.quota_draft {
             let mut save = false;
+            let mut cancel = false;
             let response=egui::Modal::new(egui::Id::new("relay-quota")).show(context,|ui| {
                 ui.set_width(460_f32.min(context.content_rect().width()-64.));
                 ui.heading(self.t("中继配额", "Relay quotas"));
@@ -80,9 +87,12 @@ impl DesktopApp {
                     ui.label(self.t("每次分配流量上限（B）", "Bytes per allocation"));ui.add(egui::DragValue::new(&mut draft.limits.bytes_per_allocation).range(1..=1_099_511_627_776_u64));ui.end_row();
                 });
                 ui.add_space(18.);
-                save=widgets::primary_button(ui,self.t("保存中继配额", "Save relay quotas"),snapshot.relay_quota.loading.is_none()&&snapshot.relay_quota.data.as_ref().is_some_and(|v|v.revision==draft.revision)).clicked();
+                ui.horizontal(|ui| {
+                    cancel=ui.button(self.t("取消", "Cancel")).clicked();
+                    save=widgets::primary_button(ui,self.t("保存中继配额", "Save relay quotas"),self.connected && !self.exiting && snapshot.relay_quota.loading.is_none()&&snapshot.relay_quota.data.as_ref().is_some_and(|v|v.revision==draft.revision)).clicked();
+                });
             });
-            self.workspace.quota_draft = if response.should_close() || save {
+            self.workspace.quota_draft = if response.should_close() || save || cancel {
                 None
             } else {
                 Some(draft)
