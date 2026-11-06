@@ -553,7 +553,10 @@ pub fn page_header<R>(
         ui.allocate_ui_with_layout(
             egui::vec2(heading_width, 1.),
             egui::Layout::top_down(egui::Align::Min),
-            |ui| page_heading(ui, title, description),
+            |ui| {
+                ui.set_min_width(heading_width);
+                page_heading(ui, title, description);
+            },
         );
         ui.allocate_ui_with_layout(
             egui::vec2(actions_width, 40.),
@@ -586,6 +589,7 @@ pub fn settings_row<R>(
             egui::vec2(text_width, 60.),
             egui::Layout::top_down(egui::Align::Min),
             |ui| {
+                ui.set_min_size(egui::vec2(text_width, 60.));
                 ui.spacing_mut().item_spacing.y = 5.;
                 ui.strong(title);
                 ui.small(description);
@@ -691,6 +695,7 @@ mod utc_tests {
                     |ui| {
                         egui::ScrollArea::vertical().show(ui, |ui| {
                             let top = ui.cursor().min.y;
+                            let right = ui.available_rect_before_wrap().right();
                             let action = super::page_header(
                                 ui,
                                 "Page title",
@@ -699,6 +704,7 @@ mod utc_tests {
                                 |ui| ui.button("Refresh"),
                             );
                             assert!(action.rect.bottom() < top + 80.);
+                            assert!((right - action.rect.right()).abs() < 30.);
                             assert!(ui.cursor().min.y < top + 120.);
                             let top = ui.cursor().min.y;
                             let action = super::settings_row(
@@ -709,6 +715,7 @@ mod utc_tests {
                                 |ui| ui.button("Edit"),
                             );
                             assert!(action.rect.bottom() < top + 80.);
+                            assert!((right - action.rect.right()).abs() < 30.);
                             assert!(ui.cursor().min.y < top + 100.);
                         });
                     },

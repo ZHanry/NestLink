@@ -282,6 +282,7 @@ impl SpacePanel {
                 egui::vec2(heading_width, 1.),
                 egui::Layout::top_down(egui::Align::Min),
                 |ui| {
+                    ui.set_min_width(heading_width);
                     widgets::page_heading(
                         ui,
                         t(english, "网络空间", "Network spaces"),
