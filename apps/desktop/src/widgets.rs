@@ -566,3 +566,16 @@ pub fn tab(ui: &mut egui::Ui, selected: bool, text: &str) -> egui::Response {
     }
     response
 }
+
+/// A measured value from a live snapshot, with a separate descriptive label.
+pub fn metric(ui: &mut egui::Ui, title: &str, value: &str, caption: &str) {
+    surface(ui).show(ui, |ui| {
+        ui.set_min_width(ui.available_width());
+        ui.small(title);
+        ui.add_space(10.);
+        ui.add(egui::Label::new(egui::RichText::new(value).size(23.).strong()).truncate())
+            .on_hover_text(value);
+        ui.add_space(6.);
+        ui.small(caption);
+    });
+}

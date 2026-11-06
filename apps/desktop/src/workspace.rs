@@ -67,7 +67,9 @@ impl DesktopApp {
     }
 
     pub(crate) fn workspace_dialogs(&mut self, context: &egui::Context, snapshot: &Snapshot) {
-        if context.input_mut(|input| input.consume_key(egui::Modifiers::CTRL, egui::Key::K)) {
+        if snapshot.principal.is_some()
+            && context.input_mut(|input| input.consume_key(egui::Modifiers::CTRL, egui::Key::K))
+        {
             self.workspace.search_open = true;
         }
         if self.workspace.search_open {
@@ -201,17 +203,15 @@ impl DesktopApp {
                 "关于 NestLink",
             ]
         };
-        ui.horizontal_wrapped(|ui| {
-            for (index, label) in labels.iter().enumerate() {
-                if ui
-                    .selectable_label(self.workspace.settings_tab == index, *label)
-                    .clicked()
-                {
-                    self.workspace.settings_tab = index;
+        ui.horizontal_top(|ui| {
+            ui.vertical(|ui| {
+                ui.set_width(if ui.ctx().content_rect().width()<1000. {126.} else {170.});
+                for (index,label) in labels.iter().enumerate() {
+                    if ui.add_sized([ui.available_width(),42.],egui::Button::new(*label).selected(self.workspace.settings_tab==index)).clicked() {self.workspace.settings_tab=index;}
                 }
-            }
-        });
-        ui.add_space(18.);
+            });
+            ui.add_space(12.);
+            ui.vertical(|ui| {
         widgets::surface(ui).show(ui,|ui|{
             ui.set_min_width(ui.available_width());
             match self.workspace.settings_tab {
@@ -230,6 +230,11 @@ impl DesktopApp {
                         }
                     });
                     ui.add_space(22.);ui.separator();
+                    ui.horizontal(|ui| {
+                        ui.label(self.t("界面密度", "Density"));
+                        if ui.selectable_label(!self.workspace.preferences.compact,self.t("舒适", "Comfortable")).clicked(){self.workspace.preferences.compact=false;self.save_appearance();}
+                        if ui.selectable_label(self.workspace.preferences.compact,self.t("紧凑", "Compact")).clicked(){self.workspace.preferences.compact=true;self.save_appearance();}
+                    });
                     ui.horizontal(|ui|{ui.label(self.t("界面语言", "Language"));if ui.selectable_label(!self.english,"简体中文").clicked(){self.english=false;self.save_appearance();}if ui.selectable_label(self.english,"English").clicked(){self.english=true;self.save_appearance();}});
                 }
                 1=>{
@@ -249,6 +254,8 @@ impl DesktopApp {
                     if ui.button(self.t("检查当前连接状态", "Refresh connection state")).clicked(){self.load(snapshot,Page::AccountSecurity);}
                 }
             }
+        });
+            });
         });
     }
 }

@@ -43,6 +43,8 @@ pub(crate) struct RemoteForm {
     one_time_password: Zeroizing<String>,
     one_time_password_context: Option<OneTimePasswordContext>,
     pub(super) browser_host_details: bool,
+    #[cfg(test)]
+    pub(super) entry_clip: Option<egui::Rect>,
 }
 impl Default for RemoteForm {
     fn default() -> Self {
@@ -66,6 +68,8 @@ impl Default for RemoteForm {
             one_time_password: Zeroizing::default(),
             one_time_password_context: None,
             browser_host_details: false,
+            #[cfg(test)]
+            entry_clip: None,
         }
     }
 }
@@ -374,6 +378,8 @@ impl DesktopApp {
                     .show_separator_line(false)
                     .frame(egui::Frame::new())
                     .show_inside(ui, |ui| {
+                        #[cfg(test)]
+                        { self.remote.entry_clip = Some(ui.clip_rect()); }
                         if let Some(target) = target {
                             if widgets::primary_button(
                                 ui,
@@ -842,6 +848,12 @@ impl DesktopApp {
                     widgets::notice(ui,self.t("文件传输属于远程会话。只显示对方已批准的共享目录；连接授权中分别选择文件读取与写入权限。", "File transfer belongs to a remote session and shows only approved shared directories. Request file read and write permissions in the connection approval."));
                     ui.add_space(16.);
                     self.session_file_panel(ui);
+                    if snapshot.native_session.data.is_some() && !self.file_panel.session().is_some_and(|session|session.read||session.write) {
+                        widgets::surface(ui).show(ui,|ui| {
+                            ui.heading(self.t("本次会话未开放文件权限", "File access is not granted"));
+                            ui.label(self.t("需要结束当前会话，在新的连接请求中选择文件读取或写入，由对方批准后使用。", "End the current session and request file read or write access in a new connection. The host must approve it."));
+                        });
+                    }
                     if snapshot.native_session.data.is_none(){
                         widgets::surface(ui).show(ui,|ui|{
                             ui.heading(self.t("连接远程设备后传输文件", "Connect a remote device to transfer files"));

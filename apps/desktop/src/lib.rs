@@ -15,6 +15,8 @@ mod host_notice;
 mod icons;
 mod layout_diagnostics;
 #[cfg(test)]
+mod layout_review;
+#[cfg(test)]
 mod layout_tests;
 mod lists;
 mod local_session_window;
@@ -2280,6 +2282,12 @@ impl eframe::App for DesktopApp {
             self.dark = context.system_theme() == Some(egui::Theme::Dark);
         }
         theme::apply(&context, &self.tokens, self.dark);
+        if self.workspace.preferences.compact {
+            context.global_style_mut(|style| {
+                style.spacing.item_spacing.y = 5.;
+                style.spacing.button_padding.y = 6.;
+            });
+        }
         let snapshot = self.bridge.snapshot();
         self.layout_diagnostics
             .begin_frame(snapshot.revision, self.remote.browser_host_details);

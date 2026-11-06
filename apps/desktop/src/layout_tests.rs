@@ -10,6 +10,40 @@ struct Workspace {
     app: DesktopApp,
     nodes: HashMap<egui::accesskit::NodeId, egui::accesskit::Node>,
     root: Option<egui::accesskit::NodeId>,
+    review: crate::layout_review::ReviewCapture,
+    last_output: Option<egui::FullOutput>,
+}
+
+#[test]
+fn export_synthetic_desktop_review_frames() {
+    let Some(directory) = std::env::var_os("NESTLINK_UI_REVIEW_DIR") else {
+        return;
+    };
+    let directory = PathBuf::from(directory);
+    std::fs::create_dir_all(&directory).expect("review directory");
+    for (name, screen) in [
+        ("remote", Screen::Remote),
+        ("tunnels", Screen::Services),
+        ("spaces", Screen::Spaces),
+        ("logins", Screen::Devices),
+        ("security", Screen::Security),
+        ("accounts", Screen::Accounts),
+        ("policy", Screen::Network),
+        ("nodes", Screen::Nodes),
+        ("audit", Screen::Audit),
+        ("settings", Screen::Server),
+    ] {
+        let mut workspace = Workspace::new(enrolled_snapshot());
+        workspace.app.screen = screen;
+        for _ in 0..5 {
+            workspace.frame(egui::vec2(1440., 960.), vec![]);
+        }
+        workspace.review.write(
+            &workspace.context,
+            workspace.last_output.as_ref().expect("rendered output"),
+            &directory.join(format!("{name}.json")),
+        );
+    }
 }
 
 #[test]
@@ -32,6 +66,8 @@ fn approved_navigation_exposes_admin_and_files_stay_inside_remote_desktop() {
     assert_eq!(workspace.bounds("选择远程设备").len(), 1);
     workspace.click(size, "选择远程设备");
     assert!(workspace.app.remote.permissions[5] && workspace.app.remote.permissions[6]);
+    workspace.frame(size, vec![]);
+    workspace.frame(size, vec![]);
     assert_eq!(workspace.bounds("发起连接").len(), 1);
 }
 
@@ -986,6 +1022,8 @@ impl Workspace {
             app,
             nodes: HashMap::new(),
             root: None,
+            review: Default::default(),
+            last_output: None,
         }
     }
 
@@ -993,7 +1031,7 @@ impl Workspace {
         // The native runner drains bridge replies in App::logic before ui.
         // Exercise that same state transition without maintenance/tray work.
         self.app.notices(&self.context);
-        let output = self.context.run_ui(
+        let mut output = self.context.run_ui(
             egui::RawInput {
                 screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, size)),
                 events,
@@ -1004,11 +1042,16 @@ impl Workspace {
         let update = output
             .platform_output
             .accesskit_update
+            .take()
             .expect("accessibility tree");
         if let Some(tree) = update.tree {
             self.root = Some(tree.root);
         }
         self.nodes.extend(update.nodes);
+        if std::env::var_os("NESTLINK_UI_REVIEW_DIR").is_some() {
+            self.review.frame(&output);
+            self.last_output = Some(output);
+        }
     }
 
     fn bounds(&self, label: &str) -> Vec<egui::Rect> {
@@ -1699,7 +1742,12 @@ fn selecting_devices_and_refreshing_long_names_keep_the_entry_visible_and_fixed(
         let baseline = workspace.bounds("发起连接");
         assert_eq!(baseline.len(), 1);
         assert!(
-            egui::Rect::from_min_size(egui::Pos2::ZERO, size - egui::vec2(0., 104.))
+            workspace
+                .app
+                .remote
+                .entry_clip
+                .expect("actual connection footer clip")
+                .intersect(egui::Rect::from_min_size(egui::Pos2::ZERO, size))
                 .contains_rect(baseline[0]),
             "desktop entry is clipped at {size:?}: {baseline:?}"
         );

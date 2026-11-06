@@ -18,6 +18,7 @@ jobs:
       CARGO_INCREMENTAL: '0'
       CARGO_PROFILE_DEV_DEBUG: '0'
       CARGO_PROFILE_TEST_DEBUG: '0'
+      NESTLINK_UI_REVIEW_DIR: /tmp/nestlink-ui-review
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -46,5 +47,12 @@ jobs:
         run: cargo check --locked -p nestlink-desktop -p nestlink-server
       - name: Run native UI geometry, authorization and login regressions
         run: cargo test --locked -p nestlink-desktop --lib -p nestlink-storage --test control
+      - name: Retain synthetic native frames for visual review
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: desktop-ui-frames-${{ github.sha }}
+          path: /tmp/nestlink-ui-review/
+          if-no-files-found: warn
       - name: Check desktop warnings
         run: cargo clippy --locked -p nestlink-desktop --all-targets -- -D warnings
