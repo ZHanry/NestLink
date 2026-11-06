@@ -51,7 +51,7 @@ def read_tokens(path):
         for key in ("primary", "primary_text", "canvas", "sidebar", "surface", "text", "muted", "border", "danger"):
             color_value(palette.get(key), f"{mode}.{key}")
     state = object_value(tokens.get("state"), "state")
-    for key in ("primary_action_text", "focus", "warning", "success", "danger_action", "danger_action_text"):
+    for key in ("primary_action_text", "focus", "warning", "success", "danger_action", "danger_action_text", "danger_soft"):
         pair = object_value(state.get(key), f"state.{key}")
         for mode in ("light", "dark"):
             color_value(pair.get(mode), f"state.{key}.{mode}")

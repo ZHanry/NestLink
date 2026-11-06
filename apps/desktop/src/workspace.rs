@@ -10,6 +10,7 @@ pub(crate) struct WorkspaceState {
     pub search: String,
     pub help_open: bool,
     pub settings_tab: usize,
+    pub remote_session_tool: usize,
     pub devices_view: usize,
     pub selected_login: Option<String>,
     pub account_create_open: bool,

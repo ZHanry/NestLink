@@ -74,6 +74,10 @@
       "light": "#278361",
       "dark": "#82C6A7"
     },
+    "danger_soft": {
+      "light": "#FCEEF1",
+      "dark": "#432C36"
+    },
     "danger_action": {
       "light": "#A81E1E",
       "dark": "#742C36"

@@ -10,6 +10,9 @@ pub enum Icon {
     Settings,
     Refresh,
     Audio,
+    Files,
+    Clipboard,
+    Keyboard,
     Close,
     Spaces,
     Network,
@@ -145,6 +148,32 @@ pub fn paint(ui: &egui::Ui, icon: Icon, center: Pos2, size: f32, color: Color32)
             line((3., 15.), (3., 9.));
             line((18., 7.), (21., 12.));
             line((21., 12.), (18., 17.));
+        }
+        Icon::Files => {
+            ui.painter().add(egui::Shape::closed_line(
+                vec![
+                    p(3., 5.),
+                    p(9., 5.),
+                    p(12., 8.),
+                    p(21., 8.),
+                    p(21., 21.),
+                    p(3., 21.),
+                ],
+                stroke,
+            ));
+        }
+        Icon::Clipboard => {
+            rect((5., 4.), (19., 22.), 2.);
+            rect((9., 2.), (15., 6.), 1.);
+        }
+        Icon::Keyboard => {
+            rect((2., 5.), (22., 19.), 2.);
+            for y in [9., 12.] {
+                for x in [6., 10., 14., 18.] {
+                    line((x, y), (x + 0.5, y));
+                }
+            }
+            line((7., 16.), (17., 16.));
         }
         Icon::Minimize => {
             line((5., 12.), (19., 12.));

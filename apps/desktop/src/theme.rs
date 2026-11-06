@@ -66,6 +66,7 @@ pub struct StateColors {
     pub warning: ColorPair,
     pub success: ColorPair,
     pub danger_action: ColorPair,
+    pub danger_soft: ColorPair,
     pub danger_action_text: ColorPair,
 }
 #[derive(Deserialize)]

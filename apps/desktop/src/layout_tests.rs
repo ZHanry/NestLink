@@ -12,6 +12,8 @@ struct Workspace {
     root: Option<egui::accesskit::NodeId>,
     review: crate::layout_review::ReviewCapture,
     last_output: Option<egui::FullOutput>,
+    session_surface: bool,
+    session_action: RemoteViewportAction,
 }
 
 #[test]
@@ -59,6 +61,23 @@ fn export_synthetic_desktop_review_frames() {
                 &directory.join(format!("{name}-{mode}.json")),
             );
         }
+    }
+    for (mode, size, dark) in [
+        ("light", egui::vec2(1440., 960.), false),
+        ("dark", egui::vec2(1440., 960.), true),
+        ("small", egui::vec2(760., 560.), false),
+    ] {
+        let mut workspace = session_workspace();
+        workspace.app.dark = dark;
+        theme::apply(&workspace.context, &workspace.app.tokens, dark);
+        for _ in 0..24 {
+            workspace.frame(size, vec![]);
+        }
+        workspace.review.write(
+            &workspace.context,
+            workspace.last_output.as_ref().expect("session output"),
+            &directory.join(format!("session-{mode}.json")),
+        );
     }
     for (name, dialog) in [
         ("quota", 0),
@@ -263,6 +282,70 @@ fn account_login_devices_never_offer_device_enrollment_or_identity_revocation() 
     assert_eq!(workspace.bounds("退出登录").len(), 1);
     assert!(workspace.bounds("登记").is_empty());
     assert!(workspace.bounds("撤销").is_empty());
+}
+
+fn session_workspace() -> Workspace {
+    let snapshot = independent_offline_snapshot();
+    let mut workspace = Workspace::new(snapshot);
+    workspace.session_surface = true;
+    workspace.app.remote_viewport_target = Some(RemoteViewportTarget {
+        request_id: "00000000-0000-4000-8000-000000000030".into(),
+        connection_generation: 4,
+    });
+    workspace
+}
+
+#[test]
+fn session_toolbar_keeps_disconnect_visible_and_tools_do_not_submit_commands() {
+    for size in [egui::vec2(760., 560.), egui::vec2(1440., 960.)] {
+        for dark in [false, true] {
+            for english in [false, true] {
+                let mut workspace = session_workspace();
+                workspace.app.dark = dark;
+                workspace.app.english = english;
+                theme::apply(&workspace.context, &workspace.app.tokens, dark);
+                workspace.app.bridge.layout_enable_commands();
+                for _ in 0..5 {
+                    workspace.frame(size, vec![]);
+                }
+                let disconnect = if english { "Disconnect" } else { "断开" };
+                let baseline = workspace.bounds(disconnect);
+                assert_eq!(baseline.len(), 1);
+                assert!(
+                    egui::Rect::from_min_size(egui::Pos2::ZERO, size).contains_rect(baseline[0])
+                );
+                assert!(baseline[0].right() > size.x - 32.);
+                assert!(baseline[0].bottom() < 72.);
+                for (zh, en, tool) in [
+                    ("会话文件", "Session files", 1),
+                    ("会话剪贴板", "Session clipboard", 2),
+                    ("选择显示器", "Choose display", 3),
+                    ("键鼠控制", "Keyboard and mouse", 4),
+                    ("会话音频", "Session audio", 5),
+                    ("会话设置", "Session settings", 0),
+                ] {
+                    workspace.click(size, if english { en } else { zh });
+                    assert!(workspace.app.remote_tools_open);
+                    assert_eq!(workspace.app.workspace.remote_session_tool, tool);
+                    assert!(!workspace.app.native_control_enabled);
+                    assert_eq!(
+                        workspace.bounds(disconnect),
+                        baseline,
+                        "opening tools moved disconnect"
+                    );
+                }
+                assert!(
+                    workspace.app.bridge.layout_submission().is_none(),
+                    "presentation tools must not submit session actions"
+                );
+                workspace.click(size, disconnect);
+                assert!(
+                    workspace.session_action == RemoteViewportAction::Close,
+                    "disconnect must use the existing cleanup action"
+                );
+            }
+        }
+    }
 }
 
 fn independent_offline_snapshot() -> Snapshot {
@@ -1190,6 +1273,8 @@ impl Workspace {
             root: None,
             review: Default::default(),
             last_output: None,
+            session_surface: false,
+            session_action: RemoteViewportAction::None,
         }
     }
 
@@ -1203,7 +1288,14 @@ impl Workspace {
                 events,
                 ..Default::default()
             },
-            |ui| self.app.ui(ui, &mut eframe::Frame::_new_kittest()),
+            |ui| {
+                if self.session_surface {
+                    let snapshot = self.app.bridge.snapshot();
+                    self.session_action = self.app.remote_viewport_contents(ui, &snapshot);
+                } else {
+                    self.app.ui(ui, &mut eframe::Frame::_new_kittest());
+                }
+            },
         );
         let update = output
             .platform_output
