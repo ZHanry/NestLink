@@ -308,6 +308,14 @@ fn session_toolbar_keeps_disconnect_visible_and_tools_do_not_submit_commands() {
                 for _ in 0..5 {
                     workspace.frame(size, vec![]);
                 }
+                // The normal notice loop polls clipboard authorization on session attach.
+                // Consume only that read-only initialization before testing tool clicks.
+                let initial = workspace.app.bridge.layout_submission();
+                assert!(matches!(
+                    initial,
+                    Some((_, Command::GetNativeClipboardStatus))
+                ));
+                assert!(workspace.app.bridge.layout_submission().is_none());
                 let disconnect = if english { "Disconnect" } else { "断开" };
                 let baseline = workspace.bounds(disconnect);
                 assert_eq!(baseline.len(), 1);
