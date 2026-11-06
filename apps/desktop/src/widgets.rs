@@ -539,12 +539,14 @@ pub fn capability_option(
     response.widget_info(|| {
         egui::WidgetInfo::selected(egui::WidgetType::Checkbox, ui.is_enabled(), selected, label)
     });
-    let border = if response.has_focus() {
+    let border = if response.has_focus() || selected {
         egui::Stroke::new(1.5, ui.visuals().hyperlink_color)
     } else {
         ui.visuals().widgets.noninteractive.bg_stroke
     };
-    let fill = if response.hovered() {
+    let fill = if selected {
+        ui.visuals().selection.bg_fill.gamma_multiply(0.08)
+    } else if response.hovered() {
         ui.visuals().widgets.hovered.weak_bg_fill
     } else {
         ui.visuals().window_fill
