@@ -1,4 +1,4 @@
-name: Publish same-source 0.8.0RC preview
+name: Publish same-source 0.8.1RC preview
 on:
   workflow_dispatch:
     inputs:

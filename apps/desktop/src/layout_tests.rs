@@ -128,22 +128,25 @@ fn native_status_and_expanded_navigation_fit_supported_window_sizes() {
         egui::vec2(1000., 640.),
         egui::vec2(1440., 960.),
     ] {
-        let mut workspace = Workspace::new(enrolled_snapshot());
-        for _ in 0..5 {
-            workspace.frame(size, vec![]);
-        }
-        let frame = egui::Rect::from_min_size(egui::Pos2::ZERO, size);
-        for label in [concat!("v", env!("CARGO_PKG_VERSION")), "审计记录"] {
-            let bounds = if label.starts_with('v') {
-                workspace.label_bounds(label)
-            } else {
-                workspace.bounds(label)
-            };
-            assert_eq!(bounds.len(), 1, "missing {label}");
-            assert!(
-                frame.contains_rect(bounds[0]),
-                "{label} outside {size:?}: {bounds:?}"
-            );
+        for scale in [1., 1.25, 1.5] {
+            let mut workspace = Workspace::new(enrolled_snapshot());
+            workspace.context.set_pixels_per_point(scale);
+            for _ in 0..5 {
+                workspace.frame(size, vec![]);
+            }
+            let frame = egui::Rect::from_min_size(egui::Pos2::ZERO, size);
+            for label in [concat!("v", env!("CARGO_PKG_VERSION")), "审计记录"] {
+                let bounds = if label.starts_with('v') {
+                    workspace.label_bounds(label)
+                } else {
+                    workspace.bounds(label)
+                };
+                assert_eq!(bounds.len(), 1, "missing {label}");
+                assert!(
+                    frame.contains_rect(bounds[0]),
+                    "{label} outside {size:?}: {bounds:?}"
+                );
+            }
         }
     }
 }

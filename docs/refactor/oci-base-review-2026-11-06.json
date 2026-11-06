@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "image": "ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852",
+  "upstream": "docker.io/library/ubuntu:24.04",
+  "checked_at": "2026-11-06T04:55:15.742Z",
+  "index_bytes": 6688,
+  "index_digest": "sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852",
+  "verification": "Registry Docker-Content-Digest matched raw SHA-256; immutable digest readback identical",
+  "platforms": [
+    {
+      "digest": "sha256:78d4744ead1f5b19b04d0df558ab182a5300903900755e515b2ca4d10eb2044d",
+      "platform": {
+        "architecture": "amd64",
+        "os": "linux"
+      }
+    },
+    {
+      "digest": "sha256:19cad59657037cffa0ac9a48107019b768900ff1071140965827513ac866bd5e",
+      "platform": {
+        "architecture": "arm64",
+        "os": "linux",
+        "variant": "v8"
+      }
+    }
+  ],
+  "qualification": "Candidate base review only; not a product runtime acceptance result"
+}

@@ -1514,12 +1514,10 @@ fn desktop_display_headers() -> reqwest::header::HeaderMap {
     if let Some(name) = std::env::var_os("COMPUTERNAME")
         .and_then(|v| v.into_string().ok())
         .filter(|v| v.len() <= 128 && !v.chars().any(char::is_control))
-    {
-        if let Ok(value) =
+        && let Ok(value) =
             reqwest::header::HeaderValue::from_str(&URL_SAFE_NO_PAD.encode(name.as_bytes()))
-        {
-            headers.insert("x-nestlink-device-name", value);
-        }
+    {
+        headers.insert("x-nestlink-device-name", value);
     }
     headers
 }

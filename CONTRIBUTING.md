@@ -8,6 +8,6 @@ NestLink 定位为内网穿透 + 远程桌面。产品客户端仅 Windows 桌�
 
 运行 `python scripts/check-secrets.py`，CI 另外使用 Gitleaks。不要提交凭据、个人部署配置、构建缓存、安装包或设备诊断数据。保留源代码与验收证据的准确边界。
 
-验收结论必须绑定实际源码或固定产物。开发回归不替代真实桌面画面、键鼠、直连、内网服务、安装维护和长稳验收；未执行的项目保持 pending。仅在全部适用验收完成后发布 0.7.0 RC。
+验收结论必须绑定实际源码或固定产物。开发回归不替代真实桌面画面、键鼠、直连、内网服务、安装维护和长稳验收；未执行的项目保持 pending。0.8.1 RC 的 UI 发布授权要求先完成固定 Windows 产物的本机验证；既有网络、硬件、签名失败与 pending 记录按原范围保留，不能借改版标成通过。正式资格仍要求全部适用验收。
 
 English: contribute against `main`, describe the resulting behavior and actual validation, and retain the Apache-2.0 license. Windows and Web are the supported clients; Linux provides backend services. Distribution builds and packaging run on GitHub Actions. Keep versions consistent, secrets out of source, and acceptance claims limited to recorded evidence.

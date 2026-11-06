@@ -16,7 +16,7 @@ Windows 端登记本机、发布内网服务并提供远程桌面；Web 端用�
 
 远控优先自动选择物理网卡直连，受网络限制时保留受授权的中继能力；实际路径必须如实显示。HTTP、HTTPS、TCP、UDP 服务发布带来源 ACL、配额和撤销控制。部署见[服务端说明](docs/refactor/SERVER.md)，跨网配置见[连接说明](docs/REMOTE-CONNECTION.md)。
 
-当前开发目标为 **0.8.0RC**（`0.8.0-rc.1`），完整范围和进度见[网络重构交付要求](docs/network-rewrite/RELEASE-0.8.0-RC.md)。源码包含新增空间、受管网络、Linux 无图形组网/网关、标准 WireGuard 客户端接入与有限离线路径，全部功能仍须逐项验收。已发布版本保留其原 Release 与证据。候选构建成功不代表远控、安装或公网验收通过；必须完成绑定同一源码和产物的实际桌面画面、键鼠、直连及报告验收后，才发布 RC。Windows Authenticode、更新和 OCI 签名状态按构建材料如实记录，开发候选不能进入生产更新通道。
+当前目标为 **0.8.1RC**（`0.8.1-rc.1`），Windows 淡紫色界面改版、入口职责与升级说明见 [0.8.1 RC 说明](docs/RELEASE-0.8.1-RC.md)。设备管理使用当前账号的独立登录会话，文件传输归入远程桌面。既有[网络重构范围与验收记录](docs/network-rewrite/RELEASE-0.8.0-RC.md)保留；本次发布授权不将原失败或未执行项改成通过。实际发布状态及固定产物摘要以 GitHub Release 为准。本机 UI 验证须针对固定 Windows 产物完成。Windows Authenticode、Linux 更新和 OCI 正式签名未配置，预览候选不进入生产自动更新。
 
 全部发行构建和打包在 GitHub Actions 执行，使用者电脑与部署服务器只运行下载并核验过的产物。工作流从同一干净提交生成 Windows、Web、后端、源码、SBOM、许可证与材料包。当前平台范围以 [product-scope.json](config/product-scope.json) 为准；Android 源码、JNI、APK 和 CI 已移除，旧平台记录仅作为历史证据保留。
 

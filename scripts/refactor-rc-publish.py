@@ -435,8 +435,12 @@ def deferred_status(source_root, revision, checksum):
     require(policy.get("schema_version") == 1 and policy.get("repository") == REPOSITORY
             and policy.get("version") == VERSION and policy.get("prerelease_only") is True
             and policy.get("production_update_eligible") is False
-            and policy.get("authorization") == "这些发布后我再自己验收",
-            "Missing explicit user deferral policy for this prerelease")
+            and policy.get("authorization") == "这些发布后我再自己验收"
+            and policy.get("authorization_version") == "0.8.0-rc.1"
+            and policy.get("current_publication_authorization") == "完全按照这个UI开始改吧，改完发布"
+            and isinstance(policy.get("required_before_publication"), list)
+            and len(policy["required_before_publication"]) == 3,
+            "Missing historical deferral or current UI publication requirements")
     tasks = json.loads(inputs[paths[1]], object_pairs_hook=unique_fields)
     require({item["id"] for item in tasks["tasks"]} == {f"W{i:02d}" for i in range(41)}
             and len(tasks["tasks"]) == 41
@@ -466,18 +470,27 @@ def deferred_acceptance(bundle, revision, checksum, source_root):
 
 def deferred_release_body(revision, checksum):
     return ("NestLink 0.8.1RC（0.8.1-rc.1）预览版。\n\n"
-            "本版按用户明确要求先发布，真机、手机、独立公网/NAT、固定双入口和跨日验收由用户发布后完成。"
-            "全功能、性能和正式发布资格尚未通过；各工作包与70组用例的真实状态见 rc-acceptance-status.json。\n\n"
-            "新增空间与分项授权、统一承载与安全恢复、私有服务与名称、TUN/子网、标准 WireGuard、"
-            "浏览器网关、多入口与有限离线入口。Windows/Web/Linux 制品由同一源码在 GitHub Actions 构建。\n\n"
+            "本版为 Windows 桌面界面改版，按已确认的淡紫色原型实施并保留原版 LOGO。"
+            "原有网络、硬件与性能验收的失败和 pending 继续保留，不因 UI 发布变成通过；"
+            "各工作包与70组网络用例的真实状态见 rc-acceptance-status.json。\n\n"
+            "主要变化：\n"
+            "- 统一窗口栏、淡紫侧栏、页面、按钮、表格、表单、弹窗和空状态；支持明暗主题、语言与本机外观偏好。\n"
+            "- 远程桌面包含控制与文件传输；内网穿透区分本机和其他获授权设备，支持卡片/列表。\n"
+            "- 网络空间管理私有组网、成员和设备关系与服务授权；账号管理、网络策略与配额、转发节点、审计记录全部展开。\n"
+            "- 设备管理使用真实账号登录会话，可单独退出 Windows/Web 登录；退出不会删除登记身份或空间成员。\n"
+            "- schema 52 增加独立登录展示元数据；旧记录未知字段不伪造，最近活动按成功鉴权节流更新。\n\n"
+            "Windows/Web/Linux 制品由同一源码在 GitHub Actions 构建。合成 egui 布局审查不等同于 Windows 桌面、键鼠或跨网验收。\n\n"
             "已知限制与待验：\n"
             "- Luanti 25秒断线显示检查失败，原检查、门槛和失败证据保留。\n"
             "- 第二台 Windows、GPU/H.264/HEVC/HDR、持续媒体性能及 VPN 共存仍需真机验收。\n"
             "- Android/iOS 标准 WireGuard、两处独立公网/NAT、固定入口与双 edge HA、配对网络性能和跨日24小时长稳待验。\n"
             "- Windows Authenticode、Linux更新和OCI正式签名未配置。本版不进入生产自动更新。\n\n"
+            "- 文件传输仍依赖已获准的远程会话，当前媒体栈要求画面权限；独立纯文件会话尚未提供。\n\n"
             "升级前备份；服务器、Web与双方客户端一起升级。已写入新授权状态后使用前向修复，"
             "不要恢复旧授权数据库快照。恢复登录不会恢复屏幕、输入或文件授权。\n\n"
             "范围、操作及回滚：https://github.com/ZHanry/NestLink/blob/" + revision
+            + "/docs/RELEASE-0.8.1-RC.md\n"
+            "原网络范围与历史证据：https://github.com/ZHanry/NestLink/blob/" + revision
             + "/docs/network-rewrite/RELEASE-0.8.0-RC.md\n"
             "部署：https://github.com/ZHanry/NestLink/blob/" + revision + "/docs/REMOTE-CONNECTION.md\n\n"
             "Source commit: " + revision + ".\n"

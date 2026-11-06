@@ -783,6 +783,16 @@ class DeferredRCPublicationTests(RCPublicationTests):
             P.promote(self.args, self.github)
         self.assertEqual(self.github.writes, [])
 
+    def test_historical_deferral_does_not_substitute_for_current_ui_authorization(self):
+        self.enable_deferred()
+        path=self.args.source_root / P.DEFERRED_POLICY
+        policy=json.loads(path.read_bytes())
+        del policy['current_publication_authorization']
+        path.write_text(json.dumps(policy),encoding='utf-8')
+        with self.assertRaises(ValueError):
+            P.promote(self.args,self.github)
+        self.assertEqual(self.github.writes, [])
+
     def test_forged_pass_or_different_manifest_refuses_remote_writes(self):
         self.enable_deferred()
         path = self.args.bundle / P.DEFERRED_NAME

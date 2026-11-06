@@ -190,6 +190,29 @@ jobs:
               compiler = next(pathlib.Path(os.environ[key]) / "Inno Setup 6/ISCC.exe" for key in ("ProgramFiles(x86)", "ProgramFiles") if (pathlib.Path(os.environ[key]) / "Inno Setup 6/ISCC.exe").is_file())
               collect += ["--iscc", str(compiler)]
           subprocess.run(collect, check=True, timeout=900)
+      - name: Compile fixed Windows native UI regression executable for local testing
+        if: runner.os == 'Windows'
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, shutil, subprocess
+          scratch=pathlib.Path(os.environ['RUNNER_TEMP'])
+          output=scratch/'windows-ui-tests'
+          output.mkdir()
+          command=['cargo','test','--release','--locked','--target',os.environ['RUST_TARGET'],'-p','nestlink-desktop','--lib','--no-run','--message-format=json']
+          result=subprocess.run(command,stdout=subprocess.PIPE,text=True,check=True,timeout=1200)
+          binaries=[v['executable'] for line in result.stdout.splitlines() if line.startswith('{') and (v:=json.loads(line)).get('reason')=='compiler-artifact' and v.get('executable') and v.get('profile',{}).get('test')]
+          assert len(binaries)==1
+          executable=output/'nestlink-desktop-ui-tests.exe'
+          shutil.copyfile(binaries[0],executable)
+          (output/'provenance.json').write_text(json.dumps({'source_revision':os.environ['CANDIDATE_SOURCE'],'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'sha256':hashlib.sha256(executable.read_bytes()).hexdigest(),'bytes':executable.stat().st_size,'purpose':'Synthetic native layout and interaction regressions on the user Windows computer; not OS screen capture or remote-control acceptance'},indent=2)+'\n')
+      - name: Retain Windows native UI executable for local testing
+        if: runner.os == 'Windows' && !cancelled()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: windows-native-ui-tests-${{ inputs.source_revision }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/windows-ui-tests
+          if-no-files-found: error
+          retention-days: 30
       - name: Retain native source, lock and build failures
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
