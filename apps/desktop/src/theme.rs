@@ -86,6 +86,9 @@ pub fn color(value: &str) -> Color32 {
         .map(|rgb| Color32::from_rgb((rgb >> 16) as u8, (rgb >> 8) as u8, rgb as u8))
         .unwrap_or(Color32::GRAY)
 }
+pub fn heading_font(size: f32) -> FontId {
+    FontId::new(size, FontFamily::Name("system-heading".into()))
+}
 pub fn apply(context: &egui::Context, tokens: &Tokens, dark: bool) {
     context.set_theme(if dark {
         egui::Theme::Dark
@@ -243,6 +246,35 @@ pub fn fonts(context: &egui::Context) -> io::Result<bool> {
     definition
         .families
         .insert(FontFamily::Proportional, names.clone());
+    #[cfg(windows)]
+    let bold_paths = {
+        let windows = PathBuf::from(std::env::var_os("WINDIR").unwrap_or_default()).join("Fonts");
+        vec![windows.join("segoeuib.ttf"), windows.join("msyhbd.ttc")]
+    };
+    #[cfg(not(windows))]
+    let bold_paths = vec![
+        PathBuf::from("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
+        PathBuf::from("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"),
+    ];
+    let mut heading_names = Vec::new();
+    for (index, path) in bold_paths.into_iter().enumerate() {
+        if std::fs::metadata(&path).is_ok_and(|metadata| {
+            metadata.is_file() && metadata.len() <= 64 * 1024 * 1024
+        }) && let Ok(data) = std::fs::read(path)
+            && data.len() <= 64 * 1024 * 1024
+        {
+            let name = format!("system-bold-{index}");
+            definition
+                .font_data
+                .insert(name.clone(), Arc::new(FontData::from_owned(data)));
+            heading_names.push(name);
+        }
+    }
+    heading_names.extend(names.clone());
+    definition.families.insert(
+        FontFamily::Name("system-heading".into()),
+        heading_names,
+    );
     definition
         .families
         .entry(FontFamily::Monospace)

@@ -79,7 +79,7 @@ impl DesktopApp {
         if self.workspace.search_open {
             let mut destination = None;
             let response =
-                egui::Modal::new(egui::Id::new("workspace-search")).show(context, |ui| {
+                egui::Modal::new(egui::Id::new("workspace-search")).frame(widgets::modal_frame(context)).show(context, |ui| {
                     ui.set_width(520_f32.min(context.content_rect().width() - 64.));
                     ui.horizontal(|ui| {
                         ui.heading(self.t("搜索设备与功能", "Search devices and actions"));
@@ -139,7 +139,7 @@ impl DesktopApp {
             }
         }
         if self.workspace.help_open {
-            let response=egui::Modal::new(egui::Id::new("workspace-help")).show(context,|ui|{
+            let response=egui::Modal::new(egui::Id::new("workspace-help")).frame(widgets::modal_frame(context)).show(context,|ui|{
                 ui.set_width(460_f32.min(context.content_rect().width()-64.));
                 ui.heading("NestLink");
                 ui.label(format!("{} · Windows",env!("CARGO_PKG_VERSION")));
@@ -154,7 +154,7 @@ impl DesktopApp {
             }
         }
         if self.workspace.exit_open {
-            let response = egui::Modal::new(egui::Id::new("workspace-exit")).show(context, |ui| {
+            let response = egui::Modal::new(egui::Id::new("workspace-exit")).frame(widgets::modal_frame(context)).show(context, |ui| {
                 ui.set_width(420_f32.min(context.content_rect().width() - 64.));
                 ui.heading(self.t("退出 NestLink？", "Exit NestLink?"));
                 ui.label(self.t(

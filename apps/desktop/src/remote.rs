@@ -473,8 +473,7 @@ impl DesktopApp {
                                         .map(|view| view.device.name.as_str())
                                         .unwrap_or(self.t("选择一台电脑", "Select a computer")),
                                 )
-                                .size(22.)
-                                .strong(),
+                                .font(theme::heading_font(20.)),
                             )
                             .truncate(),
                         );
@@ -735,6 +734,10 @@ impl DesktopApp {
                     ui.set_min_width(ui.available_width());
                     ui.horizontal_top(|ui| {
                         let actions = if self.english { 268. } else { 228. };
+                        let has_badge = ui.ctx().content_rect().width() >= 1000.;
+                        if has_badge {
+                            icons::badge(ui, Icon::Monitor, 42.);
+                        }
                         let identity_width = (ui.available_width() - actions - 16.).max(140.);
                         widgets::fixed_region(
                             ui,

@@ -41,7 +41,7 @@ pub fn nav_button(ui: &mut egui::Ui, icon: NavIcon, text: &str, selected: bool) 
             if ui.ctx().content_rect().height() < 700. {
                 32.
             } else {
-                44.
+                42.
             },
         ),
         egui::Sense::click(),
@@ -92,7 +92,11 @@ pub fn nav_button(ui: &mut egui::Ui, icon: NavIcon, text: &str, selected: bool) 
             rect.left_center() + egui::vec2(44., 0.),
             egui::Align2::LEFT_CENTER,
             text,
-            egui::FontId::proportional(13.),
+            if selected {
+                crate::theme::heading_font(12.)
+            } else {
+                egui::FontId::proportional(12.)
+            },
             color,
         );
     }
@@ -518,13 +522,18 @@ pub fn surface(ui: &egui::Ui) -> egui::Frame {
         .corner_radius(13)
         .inner_margin(20)
 }
+pub fn modal_frame(context: &egui::Context) -> egui::Frame {
+    egui::Frame::popup(&context.style())
+        .inner_margin(24)
+        .corner_radius(17)
+}
 pub fn page_heading(ui: &mut egui::Ui, title: &str, description: &str) {
     if ui.ctx().content_rect().height() < 700. {
-        ui.label(egui::RichText::new(title).size(22.).strong());
+        ui.label(egui::RichText::new(title).font(crate::theme::heading_font(22.)));
         ui.add_space(6.);
         return;
     }
-    ui.label(egui::RichText::new(title).size(24.).strong());
+    ui.label(egui::RichText::new(title).font(crate::theme::heading_font(24.)));
     ui.label(
         egui::RichText::new(description)
             .size(12.)
@@ -671,6 +680,8 @@ mod utc_tests {
     fn page_and_settings_actions_do_not_consume_the_scroll_viewport() {
         for size in [egui::vec2(760., 560.), egui::vec2(1440., 960.)] {
             let context = egui::Context::default();
+            crate::theme::fonts(&context)
+                .unwrap_or_else(|error| panic!("system UI fonts: {error}"));
             for _ in 0..3 {
                 let _ = context.run_ui(
                     egui::RawInput {

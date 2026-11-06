@@ -278,7 +278,7 @@ impl SpacePanel {
         let busy = self.pending.is_some();
         ui.horizontal_top(|ui| {
             let heading_width = (ui.available_width() - 230.).max(180.);
-            ui.allocate_ui(egui::vec2(heading_width, 1.), |ui| {
+            ui.allocate_ui_with_layout(egui::vec2(heading_width, 1.), egui::Layout::top_down(egui::Align::Min), |ui| {
                 widgets::page_heading(
                     ui,
                     t(english, "网络空间", "Network spaces"),
@@ -322,30 +322,46 @@ impl SpacePanel {
         ui.add_enabled_ui(!busy && self.confirmation.is_none(), |ui| {
             if self.create_dialog!=0 {
                 let context=ui.ctx().clone();
-                let response=egui::Modal::new(egui::Id::new("space-create-join")).show(&context,|ui|{
+                let response=egui::Modal::new(egui::Id::new("space-create-join")).frame(widgets::modal_frame(&context)).show(&context,|ui|{
                     ui.set_width(440_f32.min(context.content_rect().width()-64.));
                     ui.heading(match self.create_dialog { 1 => t(english,"创建空间","Create space"), 3 => t(english,"添加空间设备","Add a space device"), _ => t(english,"加入空间","Join space") });
-                    if self.create_dialog==1 {
-                        widgets::field(ui,t(english,"空间名称","Space name"),&mut self.name,80);
-                        if widgets::primary_button(ui,t(english,"创建空间","Create space"),!self.name.trim().is_empty()).clicked(){self.cursor=Default::default();action=Some(SpaceAction::Create{name:self.name.trim().into()});self.create_dialog=0;}
+                    let mut submission = None;
+                    let mut submit_label = t(english, "创建空间", "Create space");
+                    if self.create_dialog == 1 {
+                        widgets::field(ui, t(english, "空间名称", "Space name"), &mut self.name, 80);
+                        if !self.name.trim().is_empty() {
+                            submission = Some(SpaceAction::Create { name: self.name.trim().into() });
+                        }
                     } else if self.create_dialog == 2 {
-                        widgets::secret_field(ui,t(english,"一次性邀请链接","One-use invitation link"),&mut self.incoming,"space-invitation",snapshot.generation,2048);
-                        if widgets::primary_button(ui,t(english,"接受邀请","Accept invitation"),invitation_parts(&self.incoming).is_some()).clicked() && let Some((space_id,invitation_id,token))=invitation_parts(&self.incoming){self.cursor=Default::default();action=Some(SpaceAction::Accept{space_id,invitation_id,token});self.create_dialog=0;}
+                        submit_label = t(english, "接受邀请", "Accept invitation");
+                        widgets::secret_field(ui, t(english, "一次性邀请链接", "One-use invitation link"), &mut self.incoming, "space-invitation", snapshot.generation, 2048);
+                        if let Some((space_id, invitation_id, token)) = invitation_parts(&self.incoming) {
+                            submission = Some(SpaceAction::Accept { space_id, invitation_id, token });
+                        }
                     } else if let Some(details) = snapshot.selected_space.data.as_ref().filter(|details| self.context == snapshot.space_context && self.selected.as_deref() == Some(details.space.space_id.as_str()) && !details.space.archived) {
+                        submit_label = t(english, "加入或重新加入设备", "Join or rejoin device");
                         ui.label(t(english, "选择已登记设备。加入空间不会自动授予远控或文件权限。", "Choose a registered device. Space membership does not grant desktop or file access."));
                         if let Some(devices) = &snapshot.devices.data {
                             egui::ComboBox::from_id_salt("space-join-device").selected_text(devices.iter().find(|device| device.device.id == self.installation).map(|device| device.device.name.as_str()).unwrap_or(t(english, "选择已登记设备", "Choose a registered device"))).show_ui(ui, |ui| {
                                 for device in devices.iter().filter(|device| !device.revoked) { ui.selectable_value(&mut self.installation, device.device.id.clone(), &device.device.name); }
                             });
-                            let eligible = devices.iter().any(|device| device.device.id == self.installation && !device.revoked);
-                            let epoch = details.devices.iter().find(|device| device.installation_id == self.installation).map_or(0, |device| device.membership_epoch);
-                            if widgets::primary_button(ui, t(english, "加入或重新加入设备", "Join or rejoin device"), eligible).clicked() {
-                                action = Some(SpaceAction::JoinDevice { space_id: details.space.space_id.clone(), request: SpaceDeviceJoin { expected_revision: details.space.revision, expected_membership_epoch: epoch, installation_id: self.installation.clone() } });
-                                self.create_dialog = 0;
+                            if devices.iter().any(|device| device.device.id == self.installation && !device.revoked) {
+                                let epoch = details.devices.iter().find(|device| device.installation_id == self.installation).map_or(0, |device| device.membership_epoch);
+                                submission = Some(SpaceAction::JoinDevice { space_id: details.space.space_id.clone(), request: SpaceDeviceJoin { expected_revision: details.space.revision, expected_membership_epoch: epoch, installation_id: self.installation.clone() } });
                             }
                         }
                     }
-                    if ui.button(t(english,"取消","Cancel")).clicked(){self.create_dialog=0;self.incoming.zeroize();}
+                    ui.add_space(18.);
+                    ui.separator();
+                    ui.allocate_ui_with_layout(egui::vec2(ui.available_width(), 42.), egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if widgets::action_button(ui, submit_label, submission.is_some()).clicked() {
+                            self.cursor = Default::default();
+                            action = submission;
+                            self.create_dialog = 0;
+                            self.incoming.zeroize();
+                        }
+                        if ui.button(t(english, "取消", "Cancel")).clicked() { self.create_dialog = 0; self.incoming.zeroize(); }
+                    });
                 });if response.should_close(){self.create_dialog=0;self.incoming.zeroize();}
             }
             let sidebar_width=if ui.available_width()>900. {234.} else {156.};
@@ -376,7 +392,7 @@ impl SpacePanel {
                     let (badge, _) = ui.allocate_exact_size(egui::vec2(44., 44.), egui::Sense::hover());
                     ui.painter().rect_filled(badge, 10., ui.visuals().selection.bg_fill.gamma_multiply(0.1));
                     icons::paint(ui, icons::Icon::Spaces, badge.center(), 24., ui.visuals().hyperlink_color);
-                    ui.allocate_ui(egui::vec2((ui.available_width()-48.).max(100.), 44.), |ui| {
+                    ui.allocate_ui_with_layout(egui::vec2((ui.available_width()-48.).max(100.), 44.), egui::Layout::top_down(egui::Align::Min), |ui| {
                         ui.add(egui::Label::new(egui::RichText::new(&space.name).size(20.).strong()).truncate()).on_hover_text(&space.name);
                         ui.small(role_name(space.role, english));
                     });
@@ -403,7 +419,7 @@ impl SpacePanel {
                                 let (badge, _) = ui.allocate_exact_size(egui::vec2(40., 40.), egui::Sense::hover());
                                 ui.painter().rect_filled(badge, 9., ui.visuals().faint_bg_color);
                                 icons::paint(ui, icons::Icon::Monitor, badge.center(), 22., ui.visuals().weak_text_color());
-                                ui.allocate_ui(egui::vec2((ui.available_width()-140.).max(80.), 44.), |ui| {
+                                ui.allocate_ui_with_layout(egui::vec2((ui.available_width()-140.).max(80.), 44.), egui::Layout::top_down(egui::Align::Min), |ui| {
                                     ui.add(egui::Label::new(egui::RichText::new(&device.name).strong()).truncate()).on_hover_text(&device.name);
                                     ui.small(format!("{} · {}", role_name(device.role, english), if device.active { t(english, "成员关系有效", "Active membership") } else { t(english, "已撤销", "Revoked") }));
                                 });
@@ -518,7 +534,7 @@ impl SpacePanel {
         if let Some((message, _)) = &self.confirmation {
             let mut yes = false;
             let mut no = false;
-            egui::Modal::new(egui::Id::new("space-confirmation")).show(ui.ctx(), |ui| {
+            egui::Modal::new(egui::Id::new("space-confirmation")).frame(widgets::modal_frame(ui.ctx())).show(ui.ctx(), |ui| {
                 ui.heading(t(english, "确认空间操作", "Confirm space operation"));
                 ui.label(message);
                 ui.horizontal(|ui| {

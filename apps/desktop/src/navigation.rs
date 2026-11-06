@@ -88,6 +88,7 @@ impl DesktopApp {
                     .inner_margin(egui::Margin::symmetric(13, if short { 12 } else { 24 })),
             )
             .show_inside(parent, |ui| {
+                ui.spacing_mut().item_spacing.y = if short { 2. } else { 4. };
                 egui::Panel::bottom("navigation-footer")
                     .exact_size(if short { 112. } else { 150. })
                     .resizable(false)
@@ -133,6 +134,9 @@ impl DesktopApp {
                         }
                     });
                 ui.horizontal(|ui| {
+                    if !compact {
+                        ui.add_space(13.);
+                    }
                     if compact {
                         ui.add_space(6.);
                     }
@@ -141,7 +145,7 @@ impl DesktopApp {
                     icons::brand(ui, rect);
                     if !compact {
                         ui.vertical(|ui| {
-                            ui.label(RichText::new("NestLink").size(22.).strong());
+                            ui.label(RichText::new("NestLink").font(theme::heading_font(21.)));
                             ui.label(RichText::new("STAY CONNECTED").size(9.).color(muted));
                         });
                     }

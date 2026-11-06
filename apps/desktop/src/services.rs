@@ -978,7 +978,7 @@ impl ServicePanel {
         let mut close_target = false;
         if let Some(target) = &mut self.local_target {
             let context = ui.ctx().clone();
-            egui::Modal::new(egui::Id::new("local-service-target")).show(&context, |ui| {
+            egui::Modal::new(egui::Id::new("local-service-target")).frame(widgets::modal_frame(&context)).show(&context, |ui| {
             ui.set_width((context.content_rect().width() - 48.).clamp(280., 620.));
             close_target = ui.button(t("关闭目标批准", "Close target approval")).clicked();
             egui::ScrollArea::vertical().id_salt("local-target-scroll")
@@ -1228,7 +1228,7 @@ impl ServicePanel {
         }
         if let Some(view) = self.revoke.clone() {
             let context = ui.ctx().clone();
-            egui::Modal::new(egui::Id::new("revoke-service")).show(&context, |ui| {
+            egui::Modal::new(egui::Id::new("revoke-service")).frame(widgets::modal_frame(&context)).show(&context, |ui| {
             ui.set_width(420.);
             let id = view.id.clone();
             let revision = view.revision;
@@ -1261,7 +1261,7 @@ impl ServicePanel {
         if let Some(draft) = &mut self.draft {
             let context = ui.ctx().clone();
             let mut close = false;
-            egui::Modal::new(egui::Id::new("service-editor")).show(&context, |ui| {
+            egui::Modal::new(egui::Id::new("service-editor")).frame(widgets::modal_frame(&context)).show(&context, |ui| {
             ui.set_width((context.content_rect().width() - 48.).clamp(280., 620.));
             ui.heading(t("入口配置", "Ingress configuration"));
             egui::ScrollArea::vertical().id_salt("service-editor-scroll")
@@ -1353,7 +1353,7 @@ impl ServicePanel {
         if self.discard_confirmation {
             let mut discard = false;
             let mut keep = false;
-            egui::Modal::new(egui::Id::new("discard-service-draft")).show(ui.ctx(), |ui| {
+            egui::Modal::new(egui::Id::new("discard-service-draft")).frame(widgets::modal_frame(ui.ctx())).show(ui.ctx(), |ui| {
                 ui.heading(t("放弃未保存的修改？", "Discard unsaved changes?"));
                 keep = ui.button(t("继续编辑", "Keep editing")).clicked();
                 discard = ui.button(t("放弃修改", "Discard changes")).clicked();

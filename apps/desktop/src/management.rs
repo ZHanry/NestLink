@@ -261,7 +261,7 @@ impl DesktopApp {
             let context = ui.ctx().clone();
             let mut cancel = false;
             let response =
-                egui::Modal::new(egui::Id::new("account-password")).show(&context, |ui| {
+                egui::Modal::new(egui::Id::new("account-password")).frame(widgets::modal_frame(&context)).show(&context, |ui| {
                     ui.set_width(440_f32.min(context.content_rect().width() - 64.));
                     ui.heading(self.t("修改密码", "Change password"));
                     widgets::secret_field(
@@ -365,7 +365,7 @@ impl DesktopApp {
         if self.workspace.account_create_open {
             let context = ui.ctx().clone();
             let mut cancel = false;
-            let response = egui::Modal::new(egui::Id::new("account-create")).show(&context, |ui| {
+            let response = egui::Modal::new(egui::Id::new("account-create")).frame(widgets::modal_frame(&context)).show(&context, |ui| {
                 ui.set_width(440_f32.min(context.content_rect().width() - 64.));
                 ui.heading(self.t("创建普通账号", "Create a standard account"));
                 widgets::field(

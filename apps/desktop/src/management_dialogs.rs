@@ -14,7 +14,7 @@ impl DesktopApp {
         if let Some((revision, mut seconds)) = self.workspace.retention_draft {
             let mut save = false;
             let mut cancel = false;
-            let response = egui::Modal::new(egui::Id::new("audit-retention")).show(context, |ui| {
+            let response = egui::Modal::new(egui::Id::new("audit-retention")).frame(widgets::modal_frame(context)).show(context, |ui| {
                 ui.set_width(440_f32.min(context.content_rect().width() - 64.));
                 ui.heading(self.t("审计保留策略", "Audit retention"));
                 ui.label(self.t(
@@ -75,7 +75,7 @@ impl DesktopApp {
         if let Some(mut draft) = self.workspace.quota_draft {
             let mut save = false;
             let mut cancel = false;
-            let response=egui::Modal::new(egui::Id::new("relay-quota")).show(context,|ui| {
+            let response=egui::Modal::new(egui::Id::new("relay-quota")).frame(widgets::modal_frame(context)).show(context,|ui| {
                 ui.set_width(460_f32.min(context.content_rect().width()-64.));
                 ui.heading(self.t("中继配额", "Relay quotas"));
                 ui.label(self.t("配额由控制中心执行，变更可能影响现有连接。", "The control center enforces these quotas. Changes can affect existing connections."));
