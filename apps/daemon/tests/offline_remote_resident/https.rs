@@ -363,6 +363,50 @@ async fn start_once(
     Ok((child, origin))
 }
 
+pub(super) async fn login(
+    origin: &str,
+    deployment: &str,
+    issuer: [u8; 32],
+    account: &str,
+    password: &nestlink_auth::Secret,
+) -> Result<Sdk> {
+    let deadline = Instant::now() + Duration::from_secs(20);
+    let mut sdk = loop {
+        match Sdk::connect(
+            origin,
+            nestlink_sdk::DeploymentTrust {
+                deployment_id: deployment.into(),
+                permit_issuer: issuer,
+            },
+            false,
+        )
+        .await
+        {
+            Ok(sdk) => break sdk,
+            Err(error)
+                if Instant::now() < deadline
+                    && match &error {
+                        nestlink_sdk::SdkError::Transport(_) | nestlink_sdk::SdkError::Timeout => {
+                            true
+                        }
+                        nestlink_sdk::SdkError::Api(status, _) => status.is_server_error(),
+                        _ => false,
+                    } =>
+            {
+                tokio::time::sleep(Duration::from_millis(250)).await
+            }
+            Err(error) => return Err(error.into()),
+        }
+    };
+    sdk.login(
+        account.into(),
+        nestlink_auth::Secret::from_text(password.expose().into()),
+        None,
+    )
+    .await?;
+    Ok(sdk)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -415,48 +459,4 @@ mod tests {
             assert_eq!(result.unwrap_err().to_string(), expected);
         }
     }
-}
-
-pub(super) async fn login(
-    origin: &str,
-    deployment: &str,
-    issuer: [u8; 32],
-    account: &str,
-    password: &nestlink_auth::Secret,
-) -> Result<Sdk> {
-    let deadline = Instant::now() + Duration::from_secs(20);
-    let mut sdk = loop {
-        match Sdk::connect(
-            origin,
-            nestlink_sdk::DeploymentTrust {
-                deployment_id: deployment.into(),
-                permit_issuer: issuer,
-            },
-            false,
-        )
-        .await
-        {
-            Ok(sdk) => break sdk,
-            Err(error)
-                if Instant::now() < deadline
-                    && match &error {
-                        nestlink_sdk::SdkError::Transport(_) | nestlink_sdk::SdkError::Timeout => {
-                            true
-                        }
-                        nestlink_sdk::SdkError::Api(status, _) => status.is_server_error(),
-                        _ => false,
-                    } =>
-            {
-                tokio::time::sleep(Duration::from_millis(250)).await
-            }
-            Err(error) => return Err(error.into()),
-        }
-    };
-    sdk.login(
-        account.into(),
-        nestlink_auth::Secret::from_text(password.expose().into()),
-        None,
-    )
-    .await?;
-    Ok(sdk)
 }
