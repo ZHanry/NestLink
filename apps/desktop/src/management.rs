@@ -283,13 +283,14 @@ impl DesktopApp {
                         self.generation,
                         1024,
                     );
-                    if widgets::primary_button(
+                    let (cancel_clicked, save_clicked) = widgets::dialog_actions(
                         ui,
+                        self.t("取消", "Cancel"),
                         self.t("修改密码并注销", "Change password and sign out"),
                         ready && self.credentials.new_password.len() >= 12,
-                    )
-                    .clicked()
-                    {
+                    );
+                    cancel = cancel_clicked;
+                    if save_clicked {
                         let action = Action::ChangePassword {
                             current_password: widgets::take_secret(&mut self.credentials.password),
                             new_password: widgets::take_secret(&mut self.credentials.new_password),
@@ -299,7 +300,6 @@ impl DesktopApp {
                         self.action(snapshot, action);
                         widgets::clear_secret_widgets(ui.ctx(), self.generation);
                     }
-                    cancel = ui.button(self.t("取消", "Cancel")).clicked();
                 });
             if cancel || response.should_close() {
                 self.workspace.password_open = false;
@@ -388,22 +388,22 @@ impl DesktopApp {
                         self.generation,
                         1024,
                     );
-                    if widgets::primary_button(
+                    let (cancel_clicked, create_clicked) = widgets::dialog_actions(
                         ui,
+                        self.t("取消", "Cancel"),
                         self.t("创建账号", "Create account"),
                         snapshot.accounts.loading.is_none()
                             && !self.account_name.trim().is_empty()
                             && self.credentials.new_password.len() >= 12,
-                    )
-                    .clicked()
-                    {
+                    );
+                    cancel = cancel_clicked;
+                    if create_clicked {
                         let username = self.account_name.trim().into();
                         let password = widgets::take_secret(&mut self.credentials.new_password);
                         self.action(snapshot, Action::CreateAccount { username, password });
                         self.workspace.account_create_open = false;
                         widgets::clear_secret_widgets(ui.ctx(), self.generation);
                     }
-                    cancel = ui.button(self.t("取消", "Cancel")).clicked();
                 });
             if cancel || response.should_close() {
                 self.workspace.account_create_open = false;

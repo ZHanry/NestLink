@@ -24,7 +24,18 @@ pub enum Icon {
 }
 
 pub fn tool_button(ui: &mut egui::Ui, icon: Icon, label: &str) -> egui::Response {
-    let response = button(ui, icon, "");
+    let response = ui.add(
+        egui::Button::new("")
+            .frame(false)
+            .min_size(egui::vec2(34., 28.)),
+    );
+    paint(
+        ui,
+        icon,
+        response.rect.center(),
+        16.,
+        ui.style().interact(&response).text_color(),
+    );
     response.widget_info(|| {
         egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), label)
     });

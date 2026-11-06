@@ -527,6 +527,34 @@ pub fn modal_frame(context: &egui::Context) -> egui::Frame {
         .inner_margin(24)
         .corner_radius(17)
 }
+/// Dialog actions keep the prototype's compact widths and right alignment.
+pub fn dialog_actions(
+    ui: &mut egui::Ui,
+    cancel: &str,
+    confirm: &str,
+    enabled: bool,
+) -> (bool, bool) {
+    ui.add_space(12.);
+    ui.separator();
+    ui.add_space(6.);
+    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+        let confirm_clicked = ui
+            .add_enabled(
+                enabled,
+                egui::Button::new(
+                    egui::RichText::new(confirm).color(ui.visuals().selection.stroke.color),
+                )
+                .fill(ui.visuals().selection.bg_fill)
+                .min_size(egui::vec2(104., 34.)),
+            )
+            .clicked();
+        let cancel_clicked = ui
+            .add(egui::Button::new(cancel).min_size(egui::vec2(64., 34.)))
+            .clicked();
+        (cancel_clicked, confirm_clicked)
+    })
+    .inner
+}
 pub fn capability_option(
     ui: &mut egui::Ui,
     icon: NavIcon,

@@ -34,22 +34,19 @@ impl DesktopApp {
                         self.t("天", "days")
                     ));
                     ui.add_space(18.);
-                    ui.horizontal(|ui| {
-                        cancel = ui.button(self.t("取消", "Cancel")).clicked();
-                        save = widgets::primary_button(
-                            ui,
-                            self.t("保存保留策略", "Save retention policy"),
-                            self.connected
-                                && !self.exiting
-                                && snapshot.audit_retention.loading.is_none()
-                                && snapshot
-                                    .audit_retention
-                                    .data
-                                    .as_ref()
-                                    .is_some_and(|v| v.revision == revision),
-                        )
-                        .clicked();
-                    });
+                    (cancel, save) = widgets::dialog_actions(
+                        ui,
+                        self.t("取消", "Cancel"),
+                        self.t("保存保留策略", "Save retention policy"),
+                        self.connected
+                            && !self.exiting
+                            && snapshot.audit_retention.loading.is_none()
+                            && snapshot
+                                .audit_retention
+                                .data
+                                .as_ref()
+                                .is_some_and(|v| v.revision == revision),
+                    );
                 });
             self.workspace.retention_draft = if response.should_close() || save || cancel {
                 None
@@ -89,10 +86,7 @@ impl DesktopApp {
                     ui.label(self.t("每次分配流量上限（B）", "Bytes per allocation"));ui.add(egui::DragValue::new(&mut draft.limits.bytes_per_allocation).range(1..=1_099_511_627_776_u64));ui.end_row();
                 });
                 ui.add_space(18.);
-                ui.horizontal(|ui| {
-                    cancel=ui.button(self.t("取消", "Cancel")).clicked();
-                    save=widgets::primary_button(ui,self.t("保存中继配额", "Save relay quotas"),self.connected && !self.exiting && snapshot.relay_quota.loading.is_none()&&snapshot.relay_quota.data.as_ref().is_some_and(|v|v.revision==draft.revision)).clicked();
-                });
+                (cancel, save) = widgets::dialog_actions(ui, self.t("取消", "Cancel"), self.t("保存中继配额", "Save relay quotas"), self.connected && !self.exiting && snapshot.relay_quota.loading.is_none() && snapshot.relay_quota.data.as_ref().is_some_and(|v|v.revision==draft.revision));
             });
             self.workspace.quota_draft = if response.should_close() || save || cancel {
                 None

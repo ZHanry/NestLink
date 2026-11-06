@@ -1194,11 +1194,8 @@ impl ServicePanel {
                 view.definition.name
             ));
             ui.label(t("该服务的目标批准将失效，恢复使用需要重新配置和批准。", "Its target approval will be invalidated. Reusing it requires a new configuration and approval."));
-            ui.horizontal(|ui| {
-                if ui
-                    .add_enabled(!busy, egui::Button::new(t("确认撤销", "Confirm revoke")))
-                    .clicked()
-                {
+            let (cancel, revoke) = widgets::dialog_actions(ui, t("取消", "Cancel"), t("确认撤销", "Confirm revoke"), !busy);
+                if revoke {
                     command = Some(Command::Submit {
                         action: Action::RevokeService {
                             service_id: id,
@@ -1207,10 +1204,9 @@ impl ServicePanel {
                     });
                     self.revoke = None;
                 }
-                if ui.button(t("取消", "Cancel")).clicked() {
+                if cancel {
                     self.revoke = None;
                 }
-            });
             });
         }
         if let Some(draft) = &mut self.draft {
@@ -1312,8 +1308,12 @@ impl ServicePanel {
                 .frame(widgets::modal_frame(ui.ctx()))
                 .show(ui.ctx(), |ui| {
                     ui.heading(t("放弃未保存的修改？", "Discard unsaved changes?"));
-                    keep = ui.button(t("继续编辑", "Keep editing")).clicked();
-                    discard = ui.button(t("放弃修改", "Discard changes")).clicked();
+                    (keep, discard) = widgets::dialog_actions(
+                        ui,
+                        t("继续编辑", "Keep editing"),
+                        t("放弃修改", "Discard changes"),
+                        true,
+                    );
                 });
             if discard {
                 self.draft = None;

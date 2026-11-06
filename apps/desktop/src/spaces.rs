@@ -544,10 +544,12 @@ impl SpacePanel {
                 .show(ui.ctx(), |ui| {
                     ui.heading(t(english, "确认空间操作", "Confirm space operation"));
                     ui.label(message);
-                    ui.horizontal(|ui| {
-                        yes = ui.button(t(english, "确认", "Confirm")).clicked();
-                        no = ui.button(t(english, "取消", "Cancel")).clicked();
-                    });
+                    (no, yes) = widgets::dialog_actions(
+                        ui,
+                        t(english, "取消", "Cancel"),
+                        t(english, "确认", "Confirm"),
+                        true,
+                    );
                 });
             if yes {
                 action = self.confirmation.take().map(|(_, action)| action);

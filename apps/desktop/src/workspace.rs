@@ -1,5 +1,5 @@
 //! Native presentation state only. Account, network and session state stays in the daemon.
-use crate::{DesktopApp, MessageTone, Screen, theme, widgets};
+use crate::{DesktopApp, MessageTone, Screen, widgets};
 use eframe::egui::{self, RichText};
 use nestlink_app_core::{Page, Snapshot};
 use serde::{Deserialize, Serialize};
@@ -166,16 +166,18 @@ impl DesktopApp {
                         "Exiting ends this user's remote sessions and local background services.",
                     ));
                     ui.add_space(18.);
-                    ui.separator();
-                    ui.horizontal(|ui| {
-                        if ui.button(self.t("取消", "Cancel")).clicked() {
-                            self.workspace.exit_open = false;
-                        }
-                        if ui.button(self.t("退出程序", "Exit application")).clicked() {
-                            self.workspace.exit_open = false;
-                            self.exit(snapshot, context);
-                        }
-                    });
+                    let (cancel, exit) = widgets::dialog_actions(
+                        ui,
+                        self.t("取消", "Cancel"),
+                        self.t("退出程序", "Exit application"),
+                        true,
+                    );
+                    if cancel || exit {
+                        self.workspace.exit_open = false;
+                    }
+                    if exit {
+                        self.exit(snapshot, context);
+                    }
                 });
             if response.should_close() {
                 self.workspace.exit_open = false;

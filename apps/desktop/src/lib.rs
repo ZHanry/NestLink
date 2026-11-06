@@ -2204,10 +2204,12 @@ impl DesktopApp {
                 if let Some((message, _)) = &self.pending_confirmation {
                     ui.label(message);
                 }
-                ui.horizontal(|ui| {
-                    approved = ui.button(self.t("确认", "Confirm")).clicked();
-                    cancelled = ui.button(self.t("取消", "Cancel")).clicked();
-                });
+                (cancelled, approved) = widgets::dialog_actions(
+                    ui,
+                    self.t("取消", "Cancel"),
+                    self.t("确认", "Confirm"),
+                    true,
+                );
             });
         if approved {
             if let Some((_, command)) = self.pending_confirmation.take() {
