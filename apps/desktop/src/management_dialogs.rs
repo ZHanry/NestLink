@@ -14,41 +14,43 @@ impl DesktopApp {
         if let Some((revision, mut seconds)) = self.workspace.retention_draft {
             let mut save = false;
             let mut cancel = false;
-            let response = egui::Modal::new(egui::Id::new("audit-retention")).frame(widgets::modal_frame(context)).show(context, |ui| {
-                ui.set_width(440_f32.min(context.content_rect().width() - 64.));
-                ui.heading(self.t("审计保留策略", "Audit retention"));
-                ui.label(self.t(
-                    "保留期限缩短后，过期历史会按服务器策略清理。",
-                    "Shortening retention allows the server to prune expired history.",
-                ));
-                ui.add_space(18.);
-                ui.horizontal(|ui| {
-                    ui.label(self.t("保留秒数", "Retention in seconds"));
-                    ui.add(egui::DragValue::new(&mut seconds).range(3600..=31_536_000));
+            let response = egui::Modal::new(egui::Id::new("audit-retention"))
+                .frame(widgets::modal_frame(context))
+                .show(context, |ui| {
+                    ui.set_width(440_f32.min(context.content_rect().width() - 64.));
+                    ui.heading(self.t("审计保留策略", "Audit retention"));
+                    ui.label(self.t(
+                        "保留期限缩短后，过期历史会按服务器策略清理。",
+                        "Shortening retention allows the server to prune expired history.",
+                    ));
+                    ui.add_space(18.);
+                    ui.horizontal(|ui| {
+                        ui.label(self.t("保留秒数", "Retention in seconds"));
+                        ui.add(egui::DragValue::new(&mut seconds).range(3600..=31_536_000));
+                    });
+                    ui.small(format!(
+                        "{:.1} {}",
+                        seconds as f64 / 86400.,
+                        self.t("天", "days")
+                    ));
+                    ui.add_space(18.);
+                    ui.horizontal(|ui| {
+                        cancel = ui.button(self.t("取消", "Cancel")).clicked();
+                        save = widgets::primary_button(
+                            ui,
+                            self.t("保存保留策略", "Save retention policy"),
+                            self.connected
+                                && !self.exiting
+                                && snapshot.audit_retention.loading.is_none()
+                                && snapshot
+                                    .audit_retention
+                                    .data
+                                    .as_ref()
+                                    .is_some_and(|v| v.revision == revision),
+                        )
+                        .clicked();
+                    });
                 });
-                ui.small(format!(
-                    "{:.1} {}",
-                    seconds as f64 / 86400.,
-                    self.t("天", "days")
-                ));
-                ui.add_space(18.);
-                ui.horizontal(|ui| {
-                    cancel = ui.button(self.t("取消", "Cancel")).clicked();
-                    save = widgets::primary_button(
-                        ui,
-                        self.t("保存保留策略", "Save retention policy"),
-                        self.connected
-                            && !self.exiting
-                            && snapshot.audit_retention.loading.is_none()
-                            && snapshot
-                                .audit_retention
-                                .data
-                                .as_ref()
-                                .is_some_and(|v| v.revision == revision),
-                    )
-                    .clicked();
-                });
-            });
             self.workspace.retention_draft = if response.should_close() || save || cancel {
                 None
             } else {

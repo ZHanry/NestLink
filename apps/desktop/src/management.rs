@@ -260,8 +260,9 @@ impl DesktopApp {
         if self.workspace.password_open {
             let context = ui.ctx().clone();
             let mut cancel = false;
-            let response =
-                egui::Modal::new(egui::Id::new("account-password")).frame(widgets::modal_frame(&context)).show(&context, |ui| {
+            let response = egui::Modal::new(egui::Id::new("account-password"))
+                .frame(widgets::modal_frame(&context))
+                .show(&context, |ui| {
                     ui.set_width(440_f32.min(context.content_rect().width() - 64.));
                     ui.heading(self.t("修改密码", "Change password"));
                     widgets::secret_field(
@@ -365,43 +366,45 @@ impl DesktopApp {
         if self.workspace.account_create_open {
             let context = ui.ctx().clone();
             let mut cancel = false;
-            let response = egui::Modal::new(egui::Id::new("account-create")).frame(widgets::modal_frame(&context)).show(&context, |ui| {
-                ui.set_width(440_f32.min(context.content_rect().width() - 64.));
-                ui.heading(self.t("创建普通账号", "Create a standard account"));
-                widgets::field(
-                    ui,
-                    self.t("账号名称", "Account name"),
-                    &mut self.account_name,
-                    128,
-                );
-                widgets::secret_field(
-                    ui,
-                    self.t(
-                        "初始密码（至少 12 字节）",
-                        "Initial password (at least 12 bytes)",
-                    ),
-                    &mut self.credentials.new_password,
-                    "account-password",
-                    self.generation,
-                    1024,
-                );
-                if widgets::primary_button(
-                    ui,
-                    self.t("创建账号", "Create account"),
-                    snapshot.accounts.loading.is_none()
-                        && !self.account_name.trim().is_empty()
-                        && self.credentials.new_password.len() >= 12,
-                )
-                .clicked()
-                {
-                    let username = self.account_name.trim().into();
-                    let password = widgets::take_secret(&mut self.credentials.new_password);
-                    self.action(snapshot, Action::CreateAccount { username, password });
-                    self.workspace.account_create_open = false;
-                    widgets::clear_secret_widgets(ui.ctx(), self.generation);
-                }
-                cancel = ui.button(self.t("取消", "Cancel")).clicked();
-            });
+            let response = egui::Modal::new(egui::Id::new("account-create"))
+                .frame(widgets::modal_frame(&context))
+                .show(&context, |ui| {
+                    ui.set_width(440_f32.min(context.content_rect().width() - 64.));
+                    ui.heading(self.t("创建普通账号", "Create a standard account"));
+                    widgets::field(
+                        ui,
+                        self.t("账号名称", "Account name"),
+                        &mut self.account_name,
+                        128,
+                    );
+                    widgets::secret_field(
+                        ui,
+                        self.t(
+                            "初始密码（至少 12 字节）",
+                            "Initial password (at least 12 bytes)",
+                        ),
+                        &mut self.credentials.new_password,
+                        "account-password",
+                        self.generation,
+                        1024,
+                    );
+                    if widgets::primary_button(
+                        ui,
+                        self.t("创建账号", "Create account"),
+                        snapshot.accounts.loading.is_none()
+                            && !self.account_name.trim().is_empty()
+                            && self.credentials.new_password.len() >= 12,
+                    )
+                    .clicked()
+                    {
+                        let username = self.account_name.trim().into();
+                        let password = widgets::take_secret(&mut self.credentials.new_password);
+                        self.action(snapshot, Action::CreateAccount { username, password });
+                        self.workspace.account_create_open = false;
+                        widgets::clear_secret_widgets(ui.ctx(), self.generation);
+                    }
+                    cancel = ui.button(self.t("取消", "Cancel")).clicked();
+                });
             if cancel || response.should_close() {
                 self.workspace.account_create_open = false;
                 self.credentials.new_password.zeroize();

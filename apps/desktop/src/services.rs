@@ -1353,11 +1353,13 @@ impl ServicePanel {
         if self.discard_confirmation {
             let mut discard = false;
             let mut keep = false;
-            egui::Modal::new(egui::Id::new("discard-service-draft")).frame(widgets::modal_frame(ui.ctx())).show(ui.ctx(), |ui| {
-                ui.heading(t("放弃未保存的修改？", "Discard unsaved changes?"));
-                keep = ui.button(t("继续编辑", "Keep editing")).clicked();
-                discard = ui.button(t("放弃修改", "Discard changes")).clicked();
-            });
+            egui::Modal::new(egui::Id::new("discard-service-draft"))
+                .frame(widgets::modal_frame(ui.ctx()))
+                .show(ui.ctx(), |ui| {
+                    ui.heading(t("放弃未保存的修改？", "Discard unsaved changes?"));
+                    keep = ui.button(t("继续编辑", "Keep editing")).clicked();
+                    discard = ui.button(t("放弃修改", "Discard changes")).clicked();
+                });
             if discard {
                 self.draft = None;
                 self.error = None;

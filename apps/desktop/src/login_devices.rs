@@ -154,8 +154,9 @@ impl DesktopApp {
             .find(|s| Some(&s.session_id) == self.workspace.selected_login.as_ref())
         {
             let context = ui.ctx().clone();
-            let response =
-                egui::Modal::new(egui::Id::new("login-device-details")).frame(widgets::modal_frame(&context)).show(&context, |ui| {
+            let response = egui::Modal::new(egui::Id::new("login-device-details"))
+                .frame(widgets::modal_frame(&context))
+                .show(&context, |ui| {
                     ui.set_width(420_f32.min(context.content_rect().width() - 64.));
                     ui.heading(self.t("登录设备详情", "Login device details"));
                     ui.strong(device_name(session));

@@ -278,17 +278,21 @@ impl SpacePanel {
         let busy = self.pending.is_some();
         ui.horizontal_top(|ui| {
             let heading_width = (ui.available_width() - 230.).max(180.);
-            ui.allocate_ui_with_layout(egui::vec2(heading_width, 1.), egui::Layout::top_down(egui::Align::Min), |ui| {
-                widgets::page_heading(
-                    ui,
-                    t(english, "网络空间", "Network spaces"),
-                    t(
-                        english,
-                        "管理多设备的私有组网、空间成员与服务访问权限。",
-                        "Manage private networking, space membership and service grants.",
-                    ),
-                );
-            });
+            ui.allocate_ui_with_layout(
+                egui::vec2(heading_width, 1.),
+                egui::Layout::top_down(egui::Align::Min),
+                |ui| {
+                    widgets::page_heading(
+                        ui,
+                        t(english, "网络空间", "Network spaces"),
+                        t(
+                            english,
+                            "管理多设备的私有组网、空间成员与服务访问权限。",
+                            "Manage private networking, space membership and service grants.",
+                        ),
+                    );
+                },
+            );
             ui.add_enabled_ui(!busy && self.confirmation.is_none(), |ui| {
                 if ui.button(t(english, "加入空间", "Join space")).clicked() {
                     self.create_dialog = 2;
@@ -534,14 +538,16 @@ impl SpacePanel {
         if let Some((message, _)) = &self.confirmation {
             let mut yes = false;
             let mut no = false;
-            egui::Modal::new(egui::Id::new("space-confirmation")).frame(widgets::modal_frame(ui.ctx())).show(ui.ctx(), |ui| {
-                ui.heading(t(english, "确认空间操作", "Confirm space operation"));
-                ui.label(message);
-                ui.horizontal(|ui| {
-                    yes = ui.button(t(english, "确认", "Confirm")).clicked();
-                    no = ui.button(t(english, "取消", "Cancel")).clicked();
+            egui::Modal::new(egui::Id::new("space-confirmation"))
+                .frame(widgets::modal_frame(ui.ctx()))
+                .show(ui.ctx(), |ui| {
+                    ui.heading(t(english, "确认空间操作", "Confirm space operation"));
+                    ui.label(message);
+                    ui.horizontal(|ui| {
+                        yes = ui.button(t(english, "确认", "Confirm")).clicked();
+                        no = ui.button(t(english, "取消", "Cancel")).clicked();
+                    });
                 });
-            });
             if yes {
                 action = self.confirmation.take().map(|(_, action)| action);
             }

@@ -78,8 +78,9 @@ impl DesktopApp {
         }
         if self.workspace.search_open {
             let mut destination = None;
-            let response =
-                egui::Modal::new(egui::Id::new("workspace-search")).frame(widgets::modal_frame(context)).show(context, |ui| {
+            let response = egui::Modal::new(egui::Id::new("workspace-search"))
+                .frame(widgets::modal_frame(context))
+                .show(context, |ui| {
                     ui.set_width(520_f32.min(context.content_rect().width() - 64.));
                     ui.horizontal(|ui| {
                         ui.heading(self.t("搜索设备与功能", "Search devices and actions"));
@@ -154,25 +155,27 @@ impl DesktopApp {
             }
         }
         if self.workspace.exit_open {
-            let response = egui::Modal::new(egui::Id::new("workspace-exit")).frame(widgets::modal_frame(context)).show(context, |ui| {
-                ui.set_width(420_f32.min(context.content_rect().width() - 64.));
-                ui.heading(self.t("退出 NestLink？", "Exit NestLink?"));
-                ui.label(self.t(
-                    "退出会结束本用户的远程会话与本机后台服务。",
-                    "Exiting ends this user's remote sessions and local background services.",
-                ));
-                ui.add_space(18.);
-                ui.separator();
-                ui.horizontal(|ui| {
-                    if ui.button(self.t("取消", "Cancel")).clicked() {
-                        self.workspace.exit_open = false;
-                    }
-                    if ui.button(self.t("退出程序", "Exit application")).clicked() {
-                        self.workspace.exit_open = false;
-                        self.exit(snapshot, context);
-                    }
+            let response = egui::Modal::new(egui::Id::new("workspace-exit"))
+                .frame(widgets::modal_frame(context))
+                .show(context, |ui| {
+                    ui.set_width(420_f32.min(context.content_rect().width() - 64.));
+                    ui.heading(self.t("退出 NestLink？", "Exit NestLink?"));
+                    ui.label(self.t(
+                        "退出会结束本用户的远程会话与本机后台服务。",
+                        "Exiting ends this user's remote sessions and local background services.",
+                    ));
+                    ui.add_space(18.);
+                    ui.separator();
+                    ui.horizontal(|ui| {
+                        if ui.button(self.t("取消", "Cancel")).clicked() {
+                            self.workspace.exit_open = false;
+                        }
+                        if ui.button(self.t("退出程序", "Exit application")).clicked() {
+                            self.workspace.exit_open = false;
+                            self.exit(snapshot, context);
+                        }
+                    });
                 });
-            });
             if response.should_close() {
                 self.workspace.exit_open = false;
             }

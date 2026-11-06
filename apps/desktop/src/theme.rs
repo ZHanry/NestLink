@@ -258,9 +258,9 @@ pub fn fonts(context: &egui::Context) -> io::Result<bool> {
     ];
     let mut heading_names = Vec::new();
     for (index, path) in bold_paths.into_iter().enumerate() {
-        if std::fs::metadata(&path).is_ok_and(|metadata| {
-            metadata.is_file() && metadata.len() <= 64 * 1024 * 1024
-        }) && let Ok(data) = std::fs::read(path)
+        if std::fs::metadata(&path)
+            .is_ok_and(|metadata| metadata.is_file() && metadata.len() <= 64 * 1024 * 1024)
+            && let Ok(data) = std::fs::read(path)
             && data.len() <= 64 * 1024 * 1024
         {
             let name = format!("system-bold-{index}");
@@ -271,10 +271,9 @@ pub fn fonts(context: &egui::Context) -> io::Result<bool> {
         }
     }
     heading_names.extend(names.clone());
-    definition.families.insert(
-        FontFamily::Name("system-heading".into()),
-        heading_names,
-    );
+    definition
+        .families
+        .insert(FontFamily::Name("system-heading".into()), heading_names);
     definition
         .families
         .entry(FontFamily::Monospace)

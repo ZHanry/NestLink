@@ -2196,17 +2196,19 @@ impl DesktopApp {
         }
         let mut approved = false;
         let mut cancelled = false;
-        egui::Modal::new(egui::Id::new("confirm-action")).frame(widgets::modal_frame(context)).show(context, |ui| {
-            ui.set_width(420.);
-            ui.heading(self.t("确认操作", "Confirm action"));
-            if let Some((message, _)) = &self.pending_confirmation {
-                ui.label(message);
-            }
-            ui.horizontal(|ui| {
-                approved = ui.button(self.t("确认", "Confirm")).clicked();
-                cancelled = ui.button(self.t("取消", "Cancel")).clicked();
+        egui::Modal::new(egui::Id::new("confirm-action"))
+            .frame(widgets::modal_frame(context))
+            .show(context, |ui| {
+                ui.set_width(420.);
+                ui.heading(self.t("确认操作", "Confirm action"));
+                if let Some((message, _)) = &self.pending_confirmation {
+                    ui.label(message);
+                }
+                ui.horizontal(|ui| {
+                    approved = ui.button(self.t("确认", "Confirm")).clicked();
+                    cancelled = ui.button(self.t("取消", "Cancel")).clicked();
+                });
             });
-        });
         if approved {
             if let Some((_, command)) = self.pending_confirmation.take() {
                 self.send(snapshot, command);
