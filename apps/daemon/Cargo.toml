@@ -35,7 +35,7 @@ zeroize.workspace = true
 
 [dev-dependencies]
 tempfile = "=3.27.0"
-nestlink-server = { path = "../server", version = "=0.8.0-rc.1" }
+nestlink-server = { path = "../server", version = "=0.8.1-rc.1" }
 nestlink-storage.workspace = true
 axum.workspace = true
 

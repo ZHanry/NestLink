@@ -246,9 +246,10 @@ impl FilePanel {
             return None;
         }
         let mut command = None;
-        egui::CollapsingHeader::new(text(english, "文件", "Files"))
-            .id_salt("native-file-panel")
-            .show(ui, |ui| {
+        crate::widgets::surface(ui).show(ui, |ui| {
+                ui.set_min_width(ui.available_width());
+                ui.strong(text(english, "会话文件传输", "Session file transfer"));
+                ui.add_space(12.);
                 if session.is_host {
                     self.host(ui, english, &session, &mut command);
                 } else {
@@ -970,11 +971,17 @@ impl super::DesktopApp {
         {
             self.send_recovery_command(snapshot.generation, command);
         }
-        if let Some(command) = self.file_panel.show(ui, self.english) {
-            self.send_file_command(command);
-        }
+        self.session_file_panel(ui);
         if let Some(command) = self.clipboard_panel.show(ui, self.english) {
             self.send_clipboard_command(snapshot.generation, command);
+        }
+    }
+
+    pub(crate) fn session_file_panel(&mut self, ui: &mut egui::Ui) {
+        if self.connected
+            && let Some(command) = self.file_panel.show(ui, self.english)
+        {
+            self.send_file_command(command);
         }
     }
 }

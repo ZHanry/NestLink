@@ -27,7 +27,7 @@ import zipfile
 
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
-VERSION = "0.8.0-rc.1"
+VERSION = "0.8.1-rc.1"
 TAG = "v" + VERSION
 MAX_ASSET_BYTES = 2 * 1024**3
 MANIFEST_NAME = "candidate-build-manifest.json"
@@ -465,7 +465,7 @@ def deferred_acceptance(bundle, revision, checksum, source_root):
 
 
 def deferred_release_body(revision, checksum):
-    return ("NestLink 0.8.0RC（0.8.0-rc.1）预览版。\n\n"
+    return ("NestLink 0.8.1RC（0.8.1-rc.1）预览版。\n\n"
             "本版按用户明确要求先发布，真机、手机、独立公网/NAT、固定双入口和跨日验收由用户发布后完成。"
             "全功能、性能和正式发布资格尚未通过；各工作包与70组用例的真实状态见 rc-acceptance-status.json。\n\n"
             "新增空间与分项授权、统一承载与安全恢复、私有服务与名称、TUN/子网、标准 WireGuard、"
@@ -582,7 +582,7 @@ def verify_tag(github, revision):
 
 
 def validate_release(release, plan):
-    name = "NestLink 0.8.0RC" if plan.get("deferred_target_acceptance") else "NestLink " + VERSION
+    name = "NestLink 0.8.1RC" if plan.get("deferred_target_acceptance") else "NestLink " + VERSION
     require(isinstance(release, dict) and type(release.get("id")) is int and release["id"] > 0
             and release.get("tag_name") == TAG and type(release.get("draft")) is bool
             and release.get("prerelease") is True and release.get("name") == name
@@ -699,7 +699,7 @@ def promote(args, github=None):
         require(verify_tag(github, plan["source_revision"]), "Created RC tag failed readback")
     if release is None:
         release = github.request("POST", base + "/releases", value={"tag_name": TAG, "target_commitish": plan["source_revision"],
-            "name": "NestLink 0.8.0RC" if plan["deferred_target_acceptance"] else "NestLink " + VERSION,
+            "name": "NestLink 0.8.1RC" if plan["deferred_target_acceptance"] else "NestLink " + VERSION,
             "body": plan["body"], "draft": True, "prerelease": True, "make_latest": "false"})
         mutated = True
         validate_release(release, plan)

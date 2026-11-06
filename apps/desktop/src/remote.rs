@@ -841,7 +841,7 @@ impl DesktopApp {
                 egui::ScrollArea::vertical().id_salt("remote-workspace-files").auto_shrink([false,false]).show(ui,|ui|{
                     widgets::notice(ui,self.t("文件传输属于远程会话。只显示对方已批准的共享目录；连接授权中分别选择文件读取与写入权限。", "File transfer belongs to a remote session and shows only approved shared directories. Request file read and write permissions in the connection approval."));
                     ui.add_space(16.);
-                    self.transfer_panels(ui,snapshot);
+                    self.session_file_panel(ui);
                     if snapshot.native_session.data.is_none(){
                         widgets::surface(ui).show(ui,|ui|{
                             ui.heading(self.t("连接远程设备后传输文件", "Connect a remote device to transfer files"));

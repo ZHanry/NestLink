@@ -1,9 +1,9 @@
 use crate::read_exact;
 use crate::util::stream::{tcp_connect, tcp_connect_with_timeout};
-use crate::util::target_addr::{read_address, TargetAddr, ToTargetAddr};
+use crate::util::target_addr::{TargetAddr, ToTargetAddr, read_address};
 use crate::{
-    consts, new_udp_header, parse_udp_request, AuthenticationMethod, ReplyError, Result,
-    Socks5Command, SocksError,
+    AuthenticationMethod, ReplyError, Result, Socks5Command, SocksError, consts, new_udp_header,
+    parse_udp_request,
 };
 use anyhow::Context;
 use std::io;
@@ -269,7 +269,7 @@ where
     async fn request_header(&mut self, cmd: Socks5Command) -> Result<()> {
         let mut packet = [0u8; MAX_ADDR_LEN + 3];
         let padding; // maximum len of the headers sent
-                     // build our request packet with (socks version, Command, reserved)
+        // build our request packet with (socks version, Command, reserved)
         packet[..3].copy_from_slice(&[consts::SOCKS5_VERSION, cmd.as_u8(), 0x00]);
 
         match self.target_addr.as_ref() {
@@ -416,7 +416,12 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Socks5Datagram<S> {
     where
         U: ToSocketAddrs,
     {
-        Self::bind_internal(backing_socket, Self::create_out_sock(client_bind_addr).await?, None).await
+        Self::bind_internal(
+            backing_socket,
+            Self::create_out_sock(client_bind_addr).await?,
+            None,
+        )
+        .await
     }
     /// Creates a UDP socket bound to the specified address which will have its
     /// traffic routed through the specified proxy. The given username and password
@@ -434,13 +439,15 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Socks5Datagram<S> {
             username: username.to_owned(),
             password: password.to_owned(),
         };
-        Self::bind_internal(backing_socket, Self::create_out_sock(client_bind_addr).await?, Some(auth)).await
+        Self::bind_internal(
+            backing_socket,
+            Self::create_out_sock(client_bind_addr).await?,
+            Some(auth),
+        )
+        .await
     }
     /// Use a UdpSocket already created rather than creating a whole new `UdpSocket::bind`.
-    pub async fn use_socket(
-        backing_socket: S,
-        out_sock: UdpSocket,
-    ) -> Result<Socks5Datagram<S>> {
+    pub async fn use_socket(backing_socket: S, out_sock: UdpSocket) -> Result<Socks5Datagram<S>> {
         Self::bind_internal(backing_socket, out_sock, None).await
     }
     /// Same as `use_socket` but with credentials.
@@ -471,8 +478,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Socks5Datagram<S> {
         backing_socket: S,
         out_sock: UdpSocket,
         auth: Option<AuthenticationMethod>,
-    ) -> Result<Socks5Datagram<S>>
-    {
+    ) -> Result<Socks5Datagram<S>> {
         // Init socks5 stream.
         let mut proxy_stream =
             Socks5Stream::use_stream(backing_socket, auth, Config::default()).await?;

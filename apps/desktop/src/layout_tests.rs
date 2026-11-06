@@ -922,7 +922,7 @@ fn enrolled_snapshot() -> Snapshot {
             error: None,
             verified_health: Some(HealthResponse {
                 product: "NestLink".into(),
-                version: "0.8.0-rc.1".into(),
+                version: "0.8.1-rc.1".into(),
                 api_base: "/api".into(),
                 alpn: "test".into(),
                 deployment_id: "deployment".into(),

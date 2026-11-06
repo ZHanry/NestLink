@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "repository": "ZHanry/NestLink",
-  "version": "0.8.0-rc.1",
+  "version": "0.8.1-rc.1",
   "authorization": "这些发布后我再自己验收",
   "authorization_context": "用户要求公开发布0.8.0RC，并明确把第二台Windows、手机、公网/NAT、固定入口和跨日现场验收安排到发布后。此授权不将失败、未执行或未完成功能改成通过。",
   "prerelease_only": true,

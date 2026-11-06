@@ -4,7 +4,7 @@ extern crate log;
 
 use anyhow::Context;
 use fast_socks5::client::Config;
-use fast_socks5::{client::Socks5Stream, Result};
+use fast_socks5::{Result, client::Socks5Stream};
 use structopt::StructOpt;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
@@ -60,18 +60,22 @@ async fn spawn_socks_client() -> Result<()> {
 
     // Creating a SOCKS stream to the target address through the socks server
     let mut socks = match opt.username {
-        Some(username) => Socks5Stream::connect_with_password(
-            opt.socks_server,
-            opt.target_addr,
-            opt.target_port,
-            username,
-            opt.password.expect("Please fill the password"),
-            config,
-        )
-            .await?,
-
-        _ => Socks5Stream::connect(opt.socks_server, opt.target_addr, opt.target_port, config)
+        Some(username) => {
+            Socks5Stream::connect_with_password(
+                opt.socks_server,
+                opt.target_addr,
+                opt.target_port,
+                username,
+                opt.password.expect("Please fill the password"),
+                config,
+            )
             .await?
+        }
+
+        _ => {
+            Socks5Stream::connect(opt.socks_server, opt.target_addr, opt.target_port, config)
+                .await?
+        }
     };
 
     // Once connection is completed, can start to communicate with the server
