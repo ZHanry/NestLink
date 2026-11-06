@@ -523,7 +523,7 @@ pub fn surface(ui: &egui::Ui) -> egui::Frame {
         .inner_margin(20)
 }
 pub fn modal_frame(context: &egui::Context) -> egui::Frame {
-    egui::Frame::popup(&context.style())
+    egui::Frame::popup(&context.global_style())
         .inner_margin(24)
         .corner_radius(17)
 }
