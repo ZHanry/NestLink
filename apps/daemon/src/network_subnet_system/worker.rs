@@ -214,7 +214,12 @@ async fn serve(
                     let now=tokio::time::Instant::now();challenges.retain(|(_,expires)|*expires>now);challenges.push_back((sequence,now+Duration::from_secs(5)));
                     if challenges.len()>8 {return Err(io::Error::other("subnet observation challenge queue exceeded its fixed bound").into());}
                     tokio::time::timeout_at(deadline.min(observation_deadline).min(now+Duration::from_millis(250)),pipe::frame(&mut writer,&pipe::challenge_frame(sequence))).await??;
-                    if tokio::time::timeout_at(deadline.min(observation_deadline).min(tokio::time::Instant::now()+Duration::from_secs(2)),configuration(plan)).await??!=expected {return Err(io::Error::other("exact owned subnet kernel configuration changed").into());}observed=tokio::time::Instant::now();
+                    let current=tokio::time::timeout_at(deadline.min(observation_deadline).min(tokio::time::Instant::now()+Duration::from_secs(2)),configuration(plan)).await??;
+                    if current!=expected {
+                        let changed=["tun","lan","wireguard","addresses","routes","firewall"].into_iter().filter(|key|current[*key]!=expected[*key]).collect::<Vec<_>>().join(", ");
+                        return Err(io::Error::other(format!("exact owned subnet kernel configuration changed ({changed})")).into());
+                    }
+                    observed=tokio::time::Instant::now();
                 }
             },
             packet=reader.frame()=>{
