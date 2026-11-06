@@ -39,7 +39,7 @@
     "minimum_height": 560,
     "sidebar_width": 214,
     "sidebar_width_compact": 76,
-    "content_padding": 28,
+    "content_padding": 32,
     "row_height": 64,
     "control_height": 34
   },

@@ -659,21 +659,25 @@ impl ServicePanel {
                         }
                     });
             }
-            if ui
-                .selectable_label(self.cards_view, t("卡片", "Cards"))
-                .clicked()
-            {
-                self.cards_view = true;
-            }
-            if ui
-                .selectable_label(!self.cards_view, t("列表", "List"))
-                .clicked()
-            {
-                self.cards_view = false;
-            }
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui
+                    .selectable_label(self.cards_view, t("卡片", "Cards"))
+                    .clicked()
+                {
+                    self.cards_view = true;
+                }
+                if ui
+                    .selectable_label(!self.cards_view, t("列表", "List"))
+                    .clicked()
+                {
+                    self.cards_view = false;
+                }
+            });
         });
-        ui.add_space(14.);
-        widgets::section(ui, &snapshot.services, english);
+        ui.add_space(8.);
+        if snapshot.services.data.is_none() || snapshot.services.error.is_some() {
+            widgets::section(ui, &snapshot.services, english);
+        }
         if snapshot.selected_service.data.is_some()
             || snapshot.selected_service.loading.is_some()
             || snapshot.selected_service.error.is_some()
@@ -715,93 +719,44 @@ impl ServicePanel {
                         egui::ScrollArea::horizontal()
                             .id_salt("tunnel-directory-scroll")
                             .show(ui, |ui| {
-                                ui.set_min_width(560.);
-                                egui::Grid::new("service-directory")
-                                    .min_col_width(72.)
-                                    .max_col_width(220.)
-                                    .num_columns(4)
+                                ui.set_min_width(900.);
+                                egui_extras::TableBuilder::new(ui)
                                     .striped(false)
-                                    .spacing([20., 14.])
-                                    .show(ui, |ui| {
-                                        for label in [
-                                            t("隧道 / 目标设备", "Tunnel / host"),
-                                            t("访问入口", "Access entry"),
-                                            t("状态", "Status"),
-                                            t("操作", "Actions"),
-                                        ] {
-                                            ui.strong(label);
+                                    .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+                                    .column(egui_extras::Column::remainder().at_least(170.))
+                                    .column(egui_extras::Column::exact(72.))
+                                    .column(egui_extras::Column::remainder().at_least(210.))
+                                    .column(egui_extras::Column::exact(150.))
+                                    .column(egui_extras::Column::initial(150.))
+                                    .column(egui_extras::Column::exact(76.))
+                                    .header(40., |mut header| {
+                                        for label in [t("穿透配置 / 宿主设备", "Tunnel / host"), t("协议", "Protocol"), t("访问入口", "Access entry"), t("状态", "Status"), t("允许的来源", "Allowed sources"), t("操作", "Actions")] {
+                                            header.col(|ui| { ui.small(label); });
                                         }
-                                        ui.end_row();
+                                    })
+                                    .body(|mut body| {
                                         for view in visible {
-                                            ui.vertical(|ui| {
-                                                ui.add(
-                                                    egui::Label::new(
-                                                        egui::RichText::new(&view.definition.name)
-                                                            .strong(),
-                                                    )
-                                                    .truncate(),
-                                                )
-                                                .on_hover_text(&view.definition.name);
-                                                let host = snapshot
-                                                    .devices
-                                                    .data
-                                                    .as_deref()
-                                                    .into_iter()
-                                                    .flatten()
-                                                    .find(|device| {
-                                                        device.device.id
-                                                            == view.definition.host_device_id
-                                                    })
-                                                    .map(|device| device.device.name.as_str())
-                                                    .unwrap_or(&view.definition.host_device_id);
-                                                ui.add(
-                                                    egui::Label::new(
-                                                        egui::RichText::new(host)
-                                                            .small()
-                                                            .color(ui.visuals().weak_text_color()),
-                                                    )
-                                                    .truncate(),
-                                                )
-                                                .on_hover_text(host);
-                                            });
-                                            ui.label(ingress_label(
-                                                &view.definition.requested_ingress,
-                                            ));
-                                            ui.vertical(|ui| {
-                                                ui.label(match view.publication {
-                                                    ServicePublicationStatus::NotPublished => {
-                                                        t("未发布", "Not published")
-                                                    }
-                                                    ServicePublicationStatus::Published => {
-                                                        t("已发布", "Published")
-                                                    }
-                                                    ServicePublicationStatus::Stopping => {
-                                                        t("正在停止", "Stopping")
-                                                    }
+                                            body.row(68., |mut row| {
+                                                row.col(|ui| { ui.vertical(|ui| {
+                                                    ui.add(egui::Label::new(egui::RichText::new(&view.definition.name).strong()).truncate()).on_hover_text(&view.definition.name);
+                                                    let host = snapshot.devices.data.as_deref().into_iter().flatten().find(|device| device.device.id == view.definition.host_device_id).map(|device|device.device.name.as_str()).unwrap_or(&view.definition.host_device_id);
+                                                    ui.add(egui::Label::new(egui::RichText::new(host).small().color(ui.visuals().weak_text_color())).truncate()).on_hover_text(host);
+                                                }); });
+                                                row.col(|ui| {
+                                                    let protocol = match &view.definition.requested_ingress { ServiceIngress::Http {..} => "HTTP", ServiceIngress::Https {..} => "HTTPS", ServiceIngress::Tcp {..} => "TCP", ServiceIngress::Udp {..} => "UDP" };
+                                                    ui.colored_label(ui.visuals().hyperlink_color, protocol);
                                                 });
-                                                ui.small(match view.approval {
-                                                    ServiceApprovalState::Pending => t(
-                                                        "等待本机目标批准",
-                                                        "Awaiting local target approval",
-                                                    ),
-                                                    ServiceApprovalState::ApprovedTarget => {
-                                                        t("目标已批准", "Target approved")
-                                                    }
-                                                    ServiceApprovalState::Invalidated => t(
-                                                        "目标批准已失效",
-                                                        "Target approval invalidated",
-                                                    ),
-                                                    ServiceApprovalState::Revoked => {
-                                                        t("已撤销", "Revoked")
-                                                    }
+                                                row.col(|ui| { ui.add(egui::Label::new(egui::RichText::new(ingress_label(&view.definition.requested_ingress)).small().monospace().color(ui.visuals().hyperlink_color)).truncate()).on_hover_text(ingress_label(&view.definition.requested_ingress)); });
+                                                row.col(|ui| { ui.vertical(|ui| {
+                                                    ui.label(match view.publication { ServicePublicationStatus::NotPublished => t("未发布", "Not published"), ServicePublicationStatus::Published => t("已发布", "Published"), ServicePublicationStatus::Stopping => t("正在停止", "Stopping") });
+                                                    ui.small(match view.approval { ServiceApprovalState::Pending => t("等待本机目标批准", "Awaiting local target approval"), ServiceApprovalState::ApprovedTarget => t("目标已批准", "Target approved"), ServiceApprovalState::Invalidated => t("目标批准已失效", "Target approval invalidated"), ServiceApprovalState::Revoked => t("已撤销", "Revoked") });
+                                                }); });
+                                                row.col(|ui| {
+                                                    let sources = view.definition.allowed_sources.iter().map(|source|format!("{}/{}",source.address,source.prefix)).collect::<Vec<_>>().join(", ");
+                                                    ui.add(egui::Label::new(egui::RichText::new(if sources.is_empty() { t("按服务授权", "Service authorization") } else { &sources }).small()).truncate()).on_hover_text(sources);
                                                 });
+                                                row.col(|ui| { if let Some(next) = self.directory_actions(ui, snapshot, view, busy, english) { command = Some(next); } });
                                             });
-                                            if let Some(next) = self.directory_actions(
-                                                ui, snapshot, view, busy, english,
-                                            ) {
-                                                command = Some(next);
-                                            }
-                                            ui.end_row();
                                         }
                                     });
                             });

@@ -320,7 +320,7 @@ impl SpacePanel {
                 "Spaces organize private networks and member grants. Account logins are managed in Login devices.",
             ),
         );
-        ui.add_space(16.);
+        ui.add_space(8.);
         if let Some(message) = &self.message {
             ui.label(message);
         }
@@ -375,15 +375,14 @@ impl SpacePanel {
                 ui.spacing_mut().item_spacing.x = 16.;
                 ui.vertical(|ui|{
                     ui.set_width(sidebar_width);
-                    ui.horizontal(|ui| {
-                        ui.strong(t(english, "我的空间", "My spaces"));
-                        if icons::tool_button(ui, icons::Icon::Refresh, t(english, "读取我的空间", "Read my spaces")).clicked() { self.cursor = Default::default(); action = Some(SpaceAction::List); }
-                    });
                     if let Some(spaces)=&snapshot.spaces.data {
                         for space in spaces.iter(){
                             if space_card(ui, space, self.selected.as_deref()==Some(space.space_id.as_str()), english, sidebar_width).clicked(){self.cursor=Default::default();action=Some(SpaceAction::Read{space_id:space.space_id.clone(),cursor:self.cursor.clone()});}
                         }
                     }
+                    ui.horizontal(|ui| {
+                        if icons::tool_button(ui, icons::Icon::Refresh, t(english, "读取我的空间", "Read my spaces")).clicked() { self.cursor = Default::default(); action = Some(SpaceAction::List); }
+                    });
                     widgets::section(ui, &snapshot.spaces, english);
                 });
                 ui.vertical(|ui|{ui.set_width(detail_width);widgets::surface(ui).show(ui,|ui|{
@@ -425,6 +424,7 @@ impl SpacePanel {
                                 ui.painter().rect_filled(badge, 9., ui.visuals().faint_bg_color);
                                 icons::paint(ui, icons::Icon::Monitor, badge.center(), 22., ui.visuals().weak_text_color());
                                 ui.allocate_ui_with_layout(egui::vec2((ui.available_width()-140.).max(80.), 44.), egui::Layout::top_down(egui::Align::Min), |ui| {
+                                    ui.set_min_width(ui.available_width());
                                     ui.add(egui::Label::new(egui::RichText::new(&device.name).strong()).truncate()).on_hover_text(&device.name);
                                     ui.small(format!("{} · {}", role_name(device.role, english), if device.active { t(english, "成员关系有效", "Active membership") } else { t(english, "已撤销", "Revoked") }));
                                 });

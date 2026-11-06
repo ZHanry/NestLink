@@ -762,6 +762,10 @@ pub fn settings_row<R>(
 pub fn notice(ui: &mut egui::Ui, text: &str) {
     egui::Frame::new()
         .fill(ui.visuals().selection.bg_fill.gamma_multiply(0.08))
+        .stroke(egui::Stroke::new(
+            1.,
+            ui.visuals().selection.bg_fill.gamma_multiply(0.2),
+        ))
         .corner_radius(8)
         .inner_margin(14)
         .show(ui, |ui| {

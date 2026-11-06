@@ -666,7 +666,10 @@ impl DesktopApp {
     pub(crate) fn nodes_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         widgets::page_header(
             ui,
-            self.t("转发节点", "Relay nodes"),
+            self.t(
+                "转发节点，连接的另一条路",
+                "Relay nodes, another way to connect",
+            ),
             self.t(
                 "管理公网入口与中继节点，按实际能力提供连接。",
                 "Manage public entries and relay nodes using their registered capabilities.",
@@ -700,6 +703,8 @@ impl DesktopApp {
                 ui.add_space(14.);
             }
         }
+        ui.add_space(10.);
+        widgets::notice(ui, self.t("节点可用不代表会话已经使用中继。连接路径仅在会话完成路径选择后显示。", "Node availability does not mean a session is relayed. The actual path is shown after session path selection."));
         widgets::section(ui, &snapshot.nodes, self.english);
         self.edge_namespace_panel(ui, snapshot);
         if snapshot.node_usage.data.is_some()
@@ -772,6 +777,26 @@ impl DesktopApp {
                 ));
                 ui.separator();
                 ui.horizontal_wrapped(|ui| {
+                    if !view.revoked
+                        && view.node.roles.contains(&2)
+                        && snapshot.principal.as_ref().is_some_and(|p| p.is_admin)
+                        && ui
+                            .button(self.t("公网入口配置", "Public ingress configuration"))
+                            .clicked()
+                    {
+                        self.edge_namespace = EdgeNamespacePanel {
+                            node_id: Some(view.node.id.clone()),
+                            ..Default::default()
+                        };
+                        self.submit_edge_namespace(
+                            snapshot,
+                            Action::LoadServiceEdgeNamespace {
+                                node_id: view.node.id.clone(),
+                            },
+                            false,
+                        );
+                    }
+
                     if ui.button(self.t("查看计量", "Usage")).clicked() {
                         self.action(
                             snapshot,
@@ -804,25 +829,6 @@ impl DesktopApp {
                         ));
                     }
                 });
-                if !view.revoked
-                    && view.node.roles.contains(&2)
-                    && snapshot.principal.as_ref().is_some_and(|p| p.is_admin)
-                    && ui
-                        .button(self.t("公网入口配置", "Public ingress configuration"))
-                        .clicked()
-                {
-                    self.edge_namespace = EdgeNamespacePanel {
-                        node_id: Some(view.node.id.clone()),
-                        ..Default::default()
-                    };
-                    self.submit_edge_namespace(
-                        snapshot,
-                        Action::LoadServiceEdgeNamespace {
-                            node_id: view.node.id.clone(),
-                        },
-                        false,
-                    );
-                }
                 ui.add(
                     egui::Label::new(egui::RichText::new(&view.node.id).small().monospace())
                         .truncate(),
