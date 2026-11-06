@@ -300,9 +300,7 @@ impl ServiceInfo {
     /// IPv6 behavior, DNS TTLs, cache, probing and shutdown remain unchanged.
     pub fn set_routable_publication_interface(&mut self, index: Option<u32>) -> Result<()> {
         if index == Some(0) {
-            return Err(Error::Msg(
-                "routable publication interface must be nonzero".into(),
-            ));
+            return Err(Error::Msg("routable publication interface must be nonzero".into()));
         }
         self.routable_publication_interface = index;
         Ok(())
@@ -976,13 +974,7 @@ pub(crate) fn decode_txt(txt: &[u8]) -> Vec<TxtProperty> {
 
         let offset_end = offset + length;
         if offset_end > txt.len() {
-            debug!(
-                "DNS TXT record contains invalid data: Size given for property would be out of range. (offset={}, length={}, offset_end={}, record length={})",
-                offset,
-                length,
-                offset_end,
-                txt.len()
-            );
+            debug!("DNS TXT record contains invalid data: Size given for property would be out of range. (offset={}, length={}, offset_end={}, record length={})", offset, length, offset_end, txt.len());
             break; // Skipping the rest of the record content, as the size for this property would already be out of range.
         }
         let kv_bytes = &txt[offset..offset_end];
@@ -1566,27 +1558,18 @@ mod tests {
         use super::MyIntf;
         use std::{collections::HashSet, net::IpAddr};
         let interface = |index| MyIntf {
-            name: "selected-lan".into(),
-            index,
+            name: "selected-lan".into(), index,
             addrs: HashSet::from([IfAddr::V4(Ifv4Addr {
                 ip: Ipv4Addr::new(192, 168, 42, 2),
                 netmask: Ipv4Addr::new(255, 255, 255, 0),
                 broadcast: Some(Ipv4Addr::new(192, 168, 42, 255)),
                 prefixlen: 24,
             })]),
-            max_packet_size_v4: 1500,
-            max_packet_size_v6: 1500,
+            max_packet_size_v4: 1500, max_packet_size_v6: 1500,
         };
         let remote = IpAddr::V4(Ipv4Addr::new(10, 44, 0, 9));
-        let mut info = ServiceInfo::new(
-            "_http._tcp.local.",
-            "proxy",
-            "proxy.local.",
-            remote,
-            8080,
-            None::<std::collections::HashMap<String, String>>,
-        )
-        .unwrap();
+        let mut info = ServiceInfo::new("_http._tcp.local.", "proxy", "proxy.local.", remote,
+                                        8080, None::<std::collections::HashMap<String, String>>).unwrap();
         assert!(info.get_addrs_on_my_intf_v4(&interface(2)).is_empty());
         assert!(info.set_routable_publication_interface(Some(0)).is_err());
         info.set_routable_publication_interface(Some(2)).unwrap();
@@ -1595,18 +1578,9 @@ mod tests {
         info.set_routable_publication_interface(None).unwrap();
         assert!(info.get_addrs_on_my_intf_v4(&interface(2)).is_empty());
         for address in ["0.0.0.0", "127.0.0.1", "224.0.0.251", "255.255.255.255"] {
-            let mut rejected = ServiceInfo::new(
-                "_http._tcp.local.",
-                "proxy",
-                "proxy.local.",
-                address,
-                8080,
-                None::<std::collections::HashMap<String, String>>,
-            )
-            .unwrap();
-            rejected
-                .set_routable_publication_interface(Some(2))
-                .unwrap();
+            let mut rejected = ServiceInfo::new("_http._tcp.local.", "proxy", "proxy.local.", address,
+                8080, None::<std::collections::HashMap<String, String>>).unwrap();
+            rejected.set_routable_publication_interface(Some(2)).unwrap();
             assert!(rejected.get_addrs_on_my_intf_v4(&interface(2)).is_empty());
         }
     }

@@ -60,22 +60,18 @@ async fn spawn_socks_client() -> Result<()> {
 
     // Creating a SOCKS stream to the target address through the socks server
     let mut socks = match opt.username {
-        Some(username) => {
-            Socks5Stream::connect_with_password(
-                opt.socks_server,
-                opt.target_addr,
-                opt.target_port,
-                username,
-                opt.password.expect("Please fill the password"),
-                config,
-            )
-            .await?
-        }
+        Some(username) => Socks5Stream::connect_with_password(
+            opt.socks_server,
+            opt.target_addr,
+            opt.target_port,
+            username,
+            opt.password.expect("Please fill the password"),
+            config,
+        )
+            .await?,
 
-        _ => {
-            Socks5Stream::connect(opt.socks_server, opt.target_addr, opt.target_port, config)
-                .await?
-        }
+        _ => Socks5Stream::connect(opt.socks_server, opt.target_addr, opt.target_port, config)
+            .await?
     };
 
     // Once connection is completed, can start to communicate with the server

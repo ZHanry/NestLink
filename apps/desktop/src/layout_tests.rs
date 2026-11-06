@@ -44,7 +44,7 @@ fn export_synthetic_desktop_review_frames() {
             workspace.app.screen = screen;
             workspace.app.dark = dark;
             theme::apply(&workspace.context, &workspace.app.tokens, dark);
-            for _ in 0..5 {
+            for _ in 0..24 {
                 workspace.frame(size, vec![]);
             }
             workspace.review.write(
@@ -62,7 +62,12 @@ fn export_synthetic_desktop_review_frames() {
     ] {
         let snapshot = review_snapshot();
         let mut workspace = Workspace::new(snapshot.clone());
-        workspace.app.screen = Screen::Network;
+        workspace.app.screen = match dialog {
+            1 => Screen::Audit,
+            2 => Screen::Accounts,
+            3 => Screen::Security,
+            _ => Screen::Network,
+        };
         match dialog {
             0 => {
                 workspace.app.workspace.quota_draft =
@@ -72,13 +77,42 @@ fn export_synthetic_desktop_review_frames() {
             2 => workspace.app.workspace.account_create_open = true,
             _ => workspace.app.workspace.password_open = true,
         }
-        for _ in 0..5 {
+        for _ in 0..24 {
             workspace.frame(egui::vec2(760., 560.), vec![]);
         }
         workspace.review.write(
             &workspace.context,
             workspace.last_output.as_ref().expect("rendered output"),
             &directory.join(format!("dialog-{name}.json")),
+        );
+    }
+    for (name, screen, control) in [
+        ("remote-files", Screen::Remote, "文件传输"),
+        ("remote-host", Screen::Remote, "本机访问"),
+        ("remote-sessions", Screen::Remote, "会话记录"),
+        ("space-members", Screen::Spaces, "空间成员"),
+        ("space-network", Screen::Spaces, "受管网络"),
+        ("space-grants", Screen::Spaces, "服务授权"),
+        ("dialog-space-create", Screen::Spaces, "创建空间"),
+        ("dialog-space-join", Screen::Spaces, "加入空间"),
+        ("dialog-space-device", Screen::Spaces, "添加设备"),
+    ] {
+        let snapshot = review_snapshot();
+        let mut workspace = Workspace::new(snapshot.clone());
+        workspace.app.space_panel.select_review_space(&snapshot);
+        workspace.app.screen = screen;
+        let size = egui::vec2(1440., 960.);
+        for _ in 0..24 {
+            workspace.frame(size, vec![]);
+        }
+        workspace.click(size, control);
+        for _ in 0..24 {
+            workspace.frame(size, vec![]);
+        }
+        workspace.review.write(
+            &workspace.context,
+            workspace.last_output.as_ref().expect("rendered output"),
+            &directory.join(format!("{name}.json")),
         );
     }
 }
@@ -99,7 +133,7 @@ fn review_snapshot() -> Snapshot {
         ]))
         .expect("review accounts"),
     ));
-    snapshot.policy.data=Some(Arc::new(from_value(json!({"revision":1,"policy":{"server_forwarding":"disabled","peer_path_mode":"direct_preferred","public_ingress":"explicit"}})).expect("review policy")));
+    snapshot.policy.data=Some(Arc::new(from_value(json!({"revision":1,"policy":{"server_forwarding":"deny","peer_path_mode":"direct_preferred","public_ingress":"disabled"}})).expect("review policy")));
     snapshot.path_limits.data = Some(Arc::new(vec![]));
     snapshot.relay_quota.data=Some(Arc::new(from_value(json!({"revision":1,"limits":{"max_allocations":32,"max_account_endpoints":64,"bytes_per_second":10485760,"bytes_per_allocation":1073741824}})).expect("review quota")));
     snapshot.relay_usage.data=Some(Arc::new(from_value(json!({"runtime_id":"review","report_sequence":4,"quota_revision":1,"allocations":3,"endpoints":6,"admitted_bytes":268435456,"closed_allocations":2})).expect("review usage")));

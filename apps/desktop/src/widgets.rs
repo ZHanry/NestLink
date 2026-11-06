@@ -532,6 +532,52 @@ pub fn page_heading(ui: &mut egui::Ui, title: &str, description: &str) {
     );
     ui.add_space(18.);
 }
+pub fn page_header<R>(
+    ui: &mut egui::Ui,
+    title: &str,
+    description: &str,
+    actions_width: f32,
+    actions: impl FnOnce(&mut egui::Ui) -> R,
+) -> R {
+    ui.horizontal_top(|ui| {
+        let heading_width = (ui.available_width() - actions_width - 12.).max(160.);
+        ui.allocate_ui(egui::vec2(heading_width, 1.), |ui| {
+            page_heading(ui, title, description);
+        });
+        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), actions)
+            .inner
+    })
+    .inner
+}
+
+pub fn action_button(ui: &mut egui::Ui, text: &str, enabled: bool) -> egui::Response {
+    ui.add_enabled(
+        enabled,
+        egui::Button::new(egui::RichText::new(text).color(ui.visuals().selection.stroke.color))
+            .fill(ui.visuals().selection.bg_fill)
+            .min_size(egui::vec2(96., 34.)),
+    )
+}
+pub fn settings_row<R>(
+    ui: &mut egui::Ui,
+    title: &str,
+    description: &str,
+    actions_width: f32,
+    actions: impl FnOnce(&mut egui::Ui) -> R,
+) -> R {
+    ui.horizontal(|ui| {
+        let text_width = (ui.available_width() - actions_width - 12.).max(140.);
+        ui.allocate_ui(egui::vec2(text_width, 60.), |ui| {
+            ui.set_min_height(60.);
+            ui.spacing_mut().item_spacing.y = 5.;
+            ui.strong(title);
+            ui.small(description);
+        });
+        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), actions)
+            .inner
+    })
+    .inner
+}
 pub fn notice(ui: &mut egui::Ui, text: &str) {
     egui::Frame::new()
         .fill(ui.visuals().selection.bg_fill.gamma_multiply(0.08))

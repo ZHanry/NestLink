@@ -84,7 +84,7 @@ class ProductScopeTests(unittest.TestCase):
         self.assertEqual({item["platform"] for item in signing["artifacts"]}, {"windows"})
         checks = module("refactor-required-checks")
         self.assertEqual(set(checks.WORKFLOWS),
-                         {"rust-core.yml", "web-build.yml", "secret-scan.yml", "codeql.yml",
+                         {"rust-core.yml", "web-build.yml", "secret-scan.yml", "codeql.yml", "desktop-ui.yml",
                           "network-rewrite.yml", "linux-network-package.yml", "network-upgrade.yml"})
 
 

@@ -11,6 +11,37 @@ pub(crate) struct PolicyDraft {
     path: String,
     ingress: String,
 }
+
+fn policy_choice(value: &str, english: bool) -> &str {
+    match (value, english) {
+        ("allow", false) => "允许转发",
+        ("allow", true) => "Allow forwarding",
+        ("deny", false) => "禁止转发",
+        ("deny", true) => "Deny forwarding",
+        ("direct_only", false) => "仅直连",
+        ("direct_only", true) => "Direct only",
+        ("direct_preferred", false) => "优先直连",
+        ("direct_preferred", true) => "Prefer direct",
+        ("relay_only", false) => "仅中继",
+        ("relay_only", true) => "Relay only",
+        ("disabled", false) => "已关闭",
+        ("disabled", true) => "Disabled",
+        ("enabled", false) => "已启用",
+        ("enabled", true) => "Enabled",
+        _ => value,
+    }
+}
+
+fn policy_description(id: &str, english: bool) -> &'static str {
+    match (id, english) {
+        ("forwarding", false) => "控制经服务器转发的业务连接。",
+        ("forwarding", true) => "Control business traffic through the server.",
+        ("peer-path", false) => "选择已授权会话允许使用的连接路径。",
+        ("peer-path", true) => "Choose the paths allowed for authorized sessions.",
+        ("ingress", false) => "控制公网服务入口是否可用。",
+        _ => "Control whether public service entries are available.",
+    }
+}
 #[derive(Default)]
 pub(crate) struct EdgeNamespacePanel {
     node_id: Option<String>,
@@ -124,58 +155,111 @@ impl DesktopApp {
         self.devices_table(ui, snapshot);
     }
     pub(crate) fn security_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        widgets::page_heading(
+        widgets::page_header(
             ui,
             self.t("账号与安全", "Account and security"),
             self.t(
-                "管理账号登录、访问权限与受信设备。",
-                "Manage account logins, access permissions and trusted devices.",
+                "管理账号密码、登录状态和登录设备。",
+                "Manage your password, sign-in status and login devices.",
             ),
+            90.,
+            |ui| {
+                if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
+                    .clicked()
+                {
+                    self.load(snapshot, Page::AccountSecurity);
+                }
+            },
         );
-        ui.horizontal(|ui| {
-            if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
-                .clicked()
-            {
-                self.load(snapshot, Page::AccountSecurity);
-            }
-        });
         widgets::surface(ui).show(ui, |ui| {
             ui.set_min_width(ui.available_width());
-            widgets::section(ui, &snapshot.security, self.english);
             if let Some(security) = &snapshot.security.data {
-                ui.label(&security.principal.name);
+                ui.horizontal(|ui| {
+                    crate::icons::badge(ui, crate::icons::Icon::Account, 52.);
+                    ui.vertical(|ui| {
+                        ui.label(
+                            egui::RichText::new(&security.principal.name)
+                                .size(20.)
+                                .strong(),
+                        );
+                        ui.small(if security.principal.is_admin {
+                            self.t("管理员账号", "Administrator account")
+                        } else {
+                            self.t("普通账号", "Standard account")
+                        });
+                    });
+                });
             }
-            ui.horizontal_wrapped(|ui| {
-                if ui.button(self.t("刷新登录期限", "Refresh login")).clicked() {
-                    self.action(snapshot, Action::RefreshSession);
-                }
-                if ui.button(self.t("注销账号", "Sign out")).clicked() {
-                    self.clear_private_view(ui.ctx());
-                    self.send(snapshot, Command::Logout);
-                    self.screen = Screen::Remote;
-                }
-            });
-            if let Some(confirmed) = snapshot.logout_confirmed
-                && !confirmed
-            {
-                ui.label(self.t(
-                    "本地登录信息已清除，服务器注销未确认。",
-                    "Local credentials were cleared; server logout was not confirmed.",
-                ));
-            }
-            ui.add_space(20.);
-            if ui.button(self.t("修改密码", "Change password")).clicked() {
-                self.workspace.password_open = true;
-            }
-            if ui
-                .button(self.t("管理账号登录设备", "Manage login devices"))
-                .clicked()
-            {
-                self.navigate(Screen::Devices, snapshot);
+            widgets::section(ui, &snapshot.security, self.english);
+        });
+        ui.add_space(16.);
+        widgets::surface(ui).show(ui, |ui| {
+            ui.set_min_width(ui.available_width());
+            widgets::settings_row(
+                ui,
+                self.t("账号登录", "Account sign-in"),
+                self.t(
+                    "续期当前登录，或退出此电脑的账号登录。",
+                    "Renew this sign-in or sign out on this computer.",
+                ),
+                220.,
+                |ui| {
+                    if ui.button(self.t("注销账号", "Sign out")).clicked() {
+                        self.clear_private_view(ui.ctx());
+                        self.send(snapshot, Command::Logout);
+                        self.screen = Screen::Remote;
+                    }
+                    if ui.button(self.t("刷新登录期限", "Refresh login")).clicked() {
+                        self.action(snapshot, Action::RefreshSession);
+                    }
+                },
+            );
+            ui.separator();
+            widgets::settings_row(
+                ui,
+                self.t("账号密码", "Account password"),
+                self.t(
+                    "修改密码后需要重新登录。",
+                    "Sign in again after changing your password.",
+                ),
+                130.,
+                |ui| {
+                    if ui.button(self.t("修改密码", "Change password")).clicked() {
+                        self.workspace.password_open = true;
+                    }
+                },
+            );
+            ui.separator();
+            widgets::settings_row(
+                ui,
+                self.t("登录设备", "Login devices"),
+                self.t(
+                    "查看并单独退出当前账号的 Windows 和 Web 登录。",
+                    "Review and revoke this account's Windows and Web logins.",
+                ),
+                200.,
+                |ui| {
+                    if ui
+                        .button(self.t("管理账号登录设备", "Manage login devices"))
+                        .clicked()
+                    {
+                        self.navigate(Screen::Devices, snapshot);
+                    }
+                },
+            );
+            if snapshot.logout_confirmed == Some(false) {
+                widgets::notice(
+                    ui,
+                    self.t(
+                        "本地登录信息已清除，服务器注销未确认。",
+                        "Local credentials were cleared; server logout was not confirmed.",
+                    ),
+                );
             }
         });
         if self.workspace.password_open {
             let context = ui.ctx().clone();
+            let mut cancel = false;
             let response =
                 egui::Modal::new(egui::Id::new("account-password")).show(&context, |ui| {
                     ui.set_width(440_f32.min(context.content_rect().width() - 64.));
@@ -198,14 +282,12 @@ impl DesktopApp {
                         self.generation,
                         1024,
                     );
-                    if ui
-                        .add_enabled(
-                            ready && self.credentials.new_password.len() >= 12,
-                            egui::Button::new(
-                                self.t("修改密码并注销", "Change password and sign out"),
-                            ),
-                        )
-                        .clicked()
+                    if widgets::primary_button(
+                        ui,
+                        self.t("修改密码并注销", "Change password and sign out"),
+                        ready && self.credentials.new_password.len() >= 12,
+                    )
+                    .clicked()
                     {
                         let action = Action::ChangePassword {
                             current_password: widgets::take_secret(&mut self.credentials.password),
@@ -216,11 +298,13 @@ impl DesktopApp {
                         self.action(snapshot, action);
                         widgets::clear_secret_widgets(ui.ctx(), self.generation);
                     }
+                    cancel = ui.button(self.t("取消", "Cancel")).clicked();
                 });
-            if response.should_close() {
+            if cancel || response.should_close() {
                 self.workspace.password_open = false;
                 self.credentials.password.zeroize();
                 self.credentials.new_password.zeroize();
+                widgets::clear_secret_widgets(ui.ctx(), self.generation);
             }
         }
         ui.add_space(18.);
@@ -253,27 +337,34 @@ impl DesktopApp {
         );
     }
     pub(crate) fn accounts_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        widgets::page_heading(
+        widgets::page_header(
             ui,
             self.t("账号管理", "Accounts"),
             self.t(
                 "管理控制中心的账号、角色和登录状态。",
                 "Manage control-center accounts, roles and access.",
             ),
-        );
-        ui.horizontal(|ui| {
-            if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
+            200.,
+            |ui| {
+                if widgets::action_button(
+                    ui,
+                    self.t("创建账号", "Create account"),
+                    snapshot.accounts.loading.is_none(),
+                )
                 .clicked()
-            {
-                self.load(snapshot, Page::Accounts);
-            }
-        });
-        widgets::section(ui, &snapshot.accounts, self.english);
-        if ui.button(self.t("创建账号", "Create account")).clicked() {
-            self.workspace.account_create_open = true;
-        }
+                {
+                    self.workspace.account_create_open = true;
+                }
+                if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
+                    .clicked()
+                {
+                    self.load(snapshot, Page::Accounts);
+                }
+            },
+        );
         if self.workspace.account_create_open {
             let context = ui.ctx().clone();
+            let mut cancel = false;
             let response = egui::Modal::new(egui::Id::new("account-create")).show(&context, |ui| {
                 ui.set_width(440_f32.min(context.content_rect().width() - 64.));
                 ui.heading(self.t("创建普通账号", "Create a standard account"));
@@ -294,14 +385,14 @@ impl DesktopApp {
                     self.generation,
                     1024,
                 );
-                if ui
-                    .add_enabled(
-                        snapshot.accounts.loading.is_none()
-                            && !self.account_name.trim().is_empty()
-                            && self.credentials.new_password.len() >= 12,
-                        egui::Button::new(self.t("创建账号", "Create account")),
-                    )
-                    .clicked()
+                if widgets::primary_button(
+                    ui,
+                    self.t("创建账号", "Create account"),
+                    snapshot.accounts.loading.is_none()
+                        && !self.account_name.trim().is_empty()
+                        && self.credentials.new_password.len() >= 12,
+                )
+                .clicked()
                 {
                     let username = self.account_name.trim().into();
                     let password = widgets::take_secret(&mut self.credentials.new_password);
@@ -309,40 +400,118 @@ impl DesktopApp {
                     self.workspace.account_create_open = false;
                     widgets::clear_secret_widgets(ui.ctx(), self.generation);
                 }
+                cancel = ui.button(self.t("取消", "Cancel")).clicked();
             });
-            if response.should_close() {
+            if cancel || response.should_close() {
                 self.workspace.account_create_open = false;
                 self.credentials.new_password.zeroize();
+                widgets::clear_secret_widgets(ui.ctx(), self.generation);
             }
         }
-        ui.add_space(18.);
         widgets::surface(ui).show(ui, |ui| {
             ui.set_min_width(ui.available_width());
             self.accounts_table(ui, snapshot);
         });
+        ui.add_space(16.);
+        widgets::notice(ui, self.t("账号角色决定控制中心的管理资格，设备和会话权限仍需分别授权。", "Account roles determine control-center administration. Device and session access still require separate authorization."));
+        widgets::section(ui, &snapshot.accounts, self.english);
     }
     pub(crate) fn network_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        widgets::page_heading(
+        widgets::page_header(
             ui,
             self.t("网络策略与配额", "Policy and quotas"),
             self.t(
                 "查看实际资源用量，并管理连接路径与访问策略。",
                 "Review actual resource usage and manage connection policies.",
             ),
-        );
-        ui.horizontal(|ui| {
-            if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
+            230.,
+            |ui| {
+                if widgets::action_button(
+                    ui,
+                    self.t("调整中继配额", "Edit relay quotas"),
+                    snapshot.relay_quota.data.is_some(),
+                )
                 .clicked()
-            {
-                self.load(snapshot, Page::Policy);
-                self.load(snapshot, Page::RelayQuota);
-                self.load(snapshot, Page::RelayUsage);
-                self.load(snapshot, Page::PathLimits);
+                {
+                    self.workspace.quota_draft = snapshot.relay_quota.data.as_ref().map(|q| **q);
+                }
+                if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
+                    .clicked()
+                {
+                    for page in [
+                        Page::Policy,
+                        Page::RelayQuota,
+                        Page::RelayUsage,
+                        Page::PathLimits,
+                    ] {
+                        self.load(snapshot, page);
+                    }
+                }
+            },
+        );
+        if let Some(quota) = &snapshot.relay_quota.data {
+            let usage = snapshot.relay_usage.data.as_ref();
+            ui.columns(3, |uis| {
+                widgets::metric(
+                    &mut uis[0],
+                    self.t("当前中继分配", "Relay allocations"),
+                    &format!(
+                        "{} / {}",
+                        usage.map_or_else(|| "—".into(), |u| u.allocations.to_string()),
+                        quota.limits.max_allocations
+                    ),
+                    self.t("实际分配 / 允许上限", "Allocated / allowed"),
+                );
+                widgets::metric(
+                    &mut uis[1],
+                    self.t("当前端点", "Endpoints"),
+                    &format!(
+                        "{} / {}",
+                        usage.map_or_else(|| "—".into(), |u| u.endpoints.to_string()),
+                        quota.limits.max_account_endpoints
+                    ),
+                    self.t("实际端点 / 允许上限", "Active / allowed"),
+                );
+                widgets::metric(
+                    &mut uis[2],
+                    self.t("中继速率上限", "Relay rate limit"),
+                    &format!(
+                        "{:.1} Mbps",
+                        quota.limits.bytes_per_second as f64 * 8. / 1_000_000.
+                    ),
+                    self.t("服务端配额", "Server quota"),
+                );
+            });
+            if usage.is_none() {
+                widgets::notice(
+                    ui,
+                    self.t(
+                        "当前计量尚未读取，请刷新后查看已用数量。",
+                        "Usage has not been loaded. Refresh to view measured counters.",
+                    ),
+                );
             }
-        });
-        widgets::section(ui, &snapshot.policy, self.english);
+        }
+
+        ui.add_space(20.);
+        if ui.available_width() >= 950. {
+            ui.columns(2, |columns| {
+                self.policy_card(&mut columns[0], snapshot);
+                self.path_limits_card(&mut columns[1], snapshot);
+            });
+        } else {
+            self.policy_card(ui, snapshot);
+            ui.add_space(16.);
+            self.path_limits_card(ui, snapshot);
+        }
+        widgets::section(ui, &snapshot.relay_quota, self.english);
+        widgets::section(ui, &snapshot.relay_usage, self.english);
+    }
+    fn policy_card(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         widgets::surface(ui).show(ui, |ui| {
             ui.set_min_width(ui.available_width());
+            ui.strong(self.t("全局路径策略", "Global connection policy"));
+            ui.add_space(12.);
             if let Some(policy) = &snapshot.policy.data {
                 if self.policy.is_none() {
                     self.policy = Some(PolicyDraft {
@@ -355,7 +524,6 @@ impl DesktopApp {
                 let mut save = None;
                 let mut reset = false;
                 if let Some(draft) = &mut self.policy {
-                    ui.small(format!("Revision {}", draft.revision));
                     if draft.revision != policy.revision {
                         ui.label(if self.english {
                             "The server revision changed. Reload the draft before saving."
@@ -395,15 +563,28 @@ impl DesktopApp {
                             &["disabled", "enabled"][..],
                         ),
                     ] {
-                        egui::ComboBox::from_id_salt(id)
-                            .selected_text(value.as_str())
-                            .width(220.)
-                            .show_ui(ui, |ui| {
-                                for choice in choices {
-                                    ui.selectable_value(value, (*choice).into(), *choice);
-                                }
-                            });
-                        ui.small(label);
+                        ui.horizontal(|ui| {
+                            ui.allocate_ui(
+                                egui::vec2((ui.available_width() - 202.).max(90.), 54.),
+                                |ui| {
+                                    ui.strong(label);
+                                    ui.small(policy_description(id, self.english));
+                                },
+                            );
+                            egui::ComboBox::from_id_salt(id)
+                                .selected_text(policy_choice(value, self.english))
+                                .width(180.)
+                                .show_ui(ui, |ui| {
+                                    for choice in choices {
+                                        ui.selectable_value(
+                                            value,
+                                            (*choice).into(),
+                                            policy_choice(choice, self.english),
+                                        );
+                                    }
+                                });
+                        });
+                        ui.separator();
                     }
                     ui.horizontal(|ui| {
                         if ui
@@ -453,93 +634,49 @@ impl DesktopApp {
                     self.policy = None;
                 }
             }
+            widgets::section(ui, &snapshot.policy, self.english);
         });
-        ui.add_space(18.);
-        ui.label(
-            egui::RichText::new(self.t("中继配额与实际计量", "Relay quota and actual usage"))
-                .strong(),
-        );
-        if let Some(quota) = &snapshot.relay_quota.data
-            && ui
-                .button(self.t("调整中继配额", "Edit relay quotas"))
-                .clicked()
-        {
-            self.workspace.quota_draft = Some(**quota);
-        }
-        widgets::section(ui, &snapshot.relay_quota, self.english);
-        widgets::section(ui, &snapshot.relay_usage, self.english);
-        if let Some(quota) = &snapshot.relay_quota.data {
-            let usage = snapshot.relay_usage.data.as_ref();
-            ui.columns(3, |uis| {
-                widgets::metric(
-                    &mut uis[0],
-                    self.t("当前中继分配", "Relay allocations"),
-                    &format!(
-                        "{} / {}",
-                        usage.map_or_else(|| "—".into(), |u| u.allocations.to_string()),
-                        quota.limits.max_allocations
-                    ),
-                    self.t("实际分配 / 允许上限", "Allocated / allowed"),
-                );
-                widgets::metric(
-                    &mut uis[1],
-                    self.t("当前端点", "Endpoints"),
-                    &format!(
-                        "{} / {}",
-                        usage.map_or_else(|| "—".into(), |u| u.endpoints.to_string()),
-                        quota.limits.max_account_endpoints
-                    ),
-                    self.t("实际端点 / 允许上限", "Active / allowed"),
-                );
-                widgets::metric(
-                    &mut uis[2],
-                    self.t("中继速率上限", "Relay rate limit"),
-                    &format!("{} B/s", quota.limits.bytes_per_second),
-                    self.t("服务端配额", "Server quota"),
-                );
-            });
-            if usage.is_none() {
-                widgets::notice(
-                    ui,
-                    self.t(
-                        "当前计量尚未读取，请刷新后查看已用数量。",
-                        "Usage has not been loaded. Refresh to view measured counters.",
-                    ),
-                );
-            }
-        }
-        ui.add_space(18.);
-        ui.label(egui::RichText::new(self.t("分层路径限制", "Scoped path limits")).strong());
-        widgets::section(ui, &snapshot.path_limits, self.english);
+    }
+    fn path_limits_card(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         widgets::surface(ui).show(ui, |ui| {
             ui.set_min_width(ui.available_width());
+            ui.strong(self.t("分层路径限制", "Scoped path limits"));
+            ui.add_space(12.);
             if let Some(limits) = &snapshot.path_limits.data {
-                for limit in limits.iter() {
-                    ui.label(format!(
-                        "{} · {} · {}",
-                        limit.scope, limit.resource_id, limit.path_mode
+                if limits.is_empty() {
+                    ui.label(self.t(
+                        "没有单独设置的路径限制。",
+                        "No additional scoped path limits.",
                     ));
                 }
+                for limit in limits.iter() {
+                    ui.horizontal_wrapped(|ui| {
+                        ui.strong(format!("{} · {}", limit.scope, limit.resource_id));
+                        ui.label(policy_choice(&limit.path_mode, self.english));
+                    });
+                    ui.separator();
+                }
             }
+            widgets::section(ui, &snapshot.path_limits, self.english);
         });
     }
     pub(crate) fn nodes_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        widgets::page_heading(
+        widgets::page_header(
             ui,
             self.t("转发节点", "Relay nodes"),
             self.t(
                 "管理公网入口与中继节点，按实际能力提供连接。",
                 "Manage public entries and relay nodes using their registered capabilities.",
             ),
+            90.,
+            |ui| {
+                if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
+                    .clicked()
+                {
+                    self.load(snapshot, Page::Nodes);
+                }
+            },
         );
-        ui.horizontal(|ui| {
-            if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
-                .clicked()
-            {
-                self.load(snapshot, Page::Nodes);
-            }
-        });
-        widgets::section(ui, &snapshot.nodes, self.english);
         if let Some(nodes) = &snapshot.nodes.data {
             if nodes.is_empty() {
                 ui.label(self.t("尚无登记节点。", "No nodes are registered."));
@@ -560,8 +697,14 @@ impl DesktopApp {
                 ui.add_space(14.);
             }
         }
+        widgets::section(ui, &snapshot.nodes, self.english);
         self.edge_namespace_panel(ui, snapshot);
-        widgets::section(ui, &snapshot.node_usage, self.english);
+        if snapshot.node_usage.data.is_some()
+            || snapshot.node_usage.loading.is_some()
+            || snapshot.node_usage.error.is_some()
+        {
+            widgets::section(ui, &snapshot.node_usage, self.english);
+        }
         if let Some(usage) = &snapshot.node_usage.data {
             ui.monospace(&usage.node_id);
             for entry in &usage.entries {
@@ -594,20 +737,38 @@ impl DesktopApp {
     ) {
         ui.push_id(&view.node.id, |ui| {
             widgets::surface(ui).show(ui, |ui| {
+                ui.set_min_width(ui.available_width());
+                ui.set_min_height(250.);
+                crate::icons::badge(ui, crate::icons::Icon::Server, 44.);
+                ui.add(
+                    egui::Label::new(egui::RichText::new(&view.node.name).size(18.).strong())
+                        .truncate(),
+                )
+                .on_hover_text(&view.node.name);
+                ui.small(if view.revoked {
+                    self.t("已撤销节点", "Revoked node")
+                } else {
+                    self.t(
+                        "已登记 · 可用性由实际连接确认",
+                        "Registered · availability checked on connection",
+                    )
+                });
+                ui.small(format!(
+                    "{}  ·  {:.1} Mbps",
+                    if view.node.roles.contains(&2) {
+                        self.t("公网入口", "Public entry")
+                    } else {
+                        self.t("中继节点", "Relay node")
+                    },
+                    view.node.bytes_per_second as f64 * 8. / 1_000_000.
+                ));
+                ui.small(format!(
+                    "{} {}",
+                    self.t("连接上限", "Connection limit"),
+                    view.node.max_connections
+                ));
+                ui.separator();
                 ui.horizontal_wrapped(|ui| {
-                    ui.label(egui::RichText::new(&view.node.name).strong());
-                    ui.label(self.t(
-                        if view.revoked {
-                            "已撤销"
-                        } else {
-                            "已登记"
-                        },
-                        if view.revoked {
-                            "Revoked"
-                        } else {
-                            "Registered"
-                        },
-                    ));
                     if ui.button(self.t("查看计量", "Usage")).clicked() {
                         self.action(
                             snapshot,
@@ -640,7 +801,6 @@ impl DesktopApp {
                         ));
                     }
                 });
-                ui.monospace(&view.node.id);
                 if !view.revoked
                     && view.node.roles.contains(&2)
                     && snapshot.principal.as_ref().is_some_and(|p| p.is_admin)
@@ -660,9 +820,13 @@ impl DesktopApp {
                         false,
                     );
                 }
-                ui.small(format!(
-                    "{} connections · {} B/s · generation {}",
-                    view.node.max_connections, view.node.bytes_per_second, view.runtime_generation
+                ui.add(
+                    egui::Label::new(egui::RichText::new(&view.node.id).small().monospace())
+                        .truncate(),
+                )
+                .on_hover_text(format!(
+                    "{} · generation {}",
+                    view.node.id, view.runtime_generation
                 ));
             });
         });
@@ -874,32 +1038,41 @@ impl DesktopApp {
         }
     }
     pub(crate) fn audit_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        widgets::page_heading(
+        widgets::page_header(
             ui,
             self.t("审计记录", "Audit log"),
             self.t(
                 "查看账号、授权和配置变更的真实记录。",
                 "Review recorded account, authorization and configuration changes.",
             ),
+            250.,
+            |ui| {
+                if let Some(retention) = &snapshot.audit_retention.data
+                    && ui.button(self.t("保留策略", "Retention policy")).clicked()
+                {
+                    self.workspace.retention_draft =
+                        Some((retention.revision, retention.retention_seconds));
+                }
+                if ui
+                    .button(self.t("刷新首批", "Refresh first page"))
+                    .clicked()
+                {
+                    self.action(
+                        snapshot,
+                        Action::LoadAudit {
+                            after_sequence: 0,
+                            limit: 50,
+                        },
+                    );
+                    self.load(snapshot, Page::AuditRetention);
+                }
+            },
         );
-        ui.horizontal(|ui| {
-            if ui
-                .button(self.t("刷新首批", "Refresh first page"))
-                .clicked()
-            {
-                self.action(
-                    snapshot,
-                    Action::LoadAudit {
-                        after_sequence: 0,
-                        limit: 50,
-                    },
-                );
-                self.load(snapshot, Page::AuditRetention);
-            }
-        });
         ui.horizontal_wrapped(|ui| {
             ui.add(
                 egui::TextEdit::singleline(&mut self.workspace.audit_filter)
+                    .desired_width(320.)
+                    .margin(egui::vec2(10., 8.))
                     .hint_text(if self.english {
                         "Filter this page by event or resource"
                     } else {
@@ -907,22 +1080,16 @@ impl DesktopApp {
                     })
                     .char_limit(128),
             );
-            if let Some(retention) = &snapshot.audit_retention.data
-                && ui.button(self.t("保留策略", "Retention policy")).clicked()
-            {
-                self.workspace.retention_draft =
-                    Some((retention.revision, retention.retention_seconds));
+            if let Some(retention) = &snapshot.audit_retention.data {
+                ui.small(format!(
+                    "{} {} {}",
+                    self.t("记录保留", "Retain records for"),
+                    retention.retention_seconds / 86_400,
+                    self.t("天", "days")
+                ));
             }
         });
-        ui.add_space(14.);
-        widgets::section(ui, &snapshot.audit_retention, self.english);
-        if let Some(retention) = &snapshot.audit_retention.data {
-            ui.small(format!(
-                "{} seconds · revision {} · pruned through {}",
-                retention.retention_seconds, retention.revision, retention.pruned_through
-            ));
-        }
-        widgets::section(ui, &snapshot.audit, self.english);
+        ui.add_space(12.);
         if let Some(page) = &snapshot.audit.data {
             if page.history_pruned {
                 ui.label(self.t(
@@ -1027,6 +1194,8 @@ impl DesktopApp {
                 );
             }
         }
+        widgets::section(ui, &snapshot.audit, self.english);
+        widgets::section(ui, &snapshot.audit_retention, self.english);
     }
 }
 

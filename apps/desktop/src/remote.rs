@@ -286,19 +286,20 @@ impl DesktopApp {
                         let response = ui
                             .add_sized(
                                 egui::vec2(ui.available_width(), 66.),
-                                egui::Button::new((
-                                    egui::Atom {
-                                        size: Some(egui::vec2(34., 34.)),
-                                        ..Default::default()
-                                    },
-                                    egui::RichText::new(format!(
-                                        "{}\n{}",
-                                        view.device.name, view.device.platform
+                                egui::Button::new("")
+                                    .fill(if selected {
+                                        ui.visuals().selection.bg_fill.gamma_multiply(0.1)
+                                    } else {
+                                        ui.visuals().window_fill
+                                    })
+                                    .stroke(egui::Stroke::new(
+                                        1.,
+                                        if selected {
+                                            ui.visuals().hyperlink_color.gamma_multiply(0.4)
+                                        } else {
+                                            ui.visuals().widgets.noninteractive.bg_stroke.color
+                                        },
                                     )),
-                                    egui::Atom::grow(),
-                                ))
-                                .selected(selected)
-                                .wrap_mode(egui::TextWrapMode::Truncate),
                             )
                             .on_hover_text(format!(
                                 "{}\n{}\n{}",
@@ -318,6 +319,25 @@ impl DesktopApp {
                             response.rect.left_center() + egui::vec2(24., 0.),
                             21.,
                             ui.visuals().hyperlink_color,
+                        );
+                        let text_rect = egui::Rect::from_min_max(
+                            response.rect.min + egui::vec2(50., 8.),
+                            response.rect.max - egui::vec2(12., 8.),
+                        );
+                        let painter = ui.painter().with_clip_rect(text_rect);
+                        painter.text(
+                            text_rect.min + egui::vec2(0., 14.),
+                            egui::Align2::LEFT_CENTER,
+                            &view.device.name,
+                            egui::FontId::proportional(13.),
+                            ui.visuals().text_color(),
+                        );
+                        painter.text(
+                            text_rect.min + egui::vec2(0., 35.),
+                            egui::Align2::LEFT_CENTER,
+                            &view.device.platform,
+                            egui::FontId::proportional(11.),
+                            ui.visuals().weak_text_color(),
                         );
                         if response.clicked() {
                             self.remote.host_device_id = Some(view.device.id.clone());
@@ -538,13 +558,15 @@ impl DesktopApp {
                         );
                         ui.add_space(10.);
                         widgets::surface(ui).show(ui, |ui| {
+                                ui.set_min_width(ui.available_width());
                                 ui.strong(self.t("文件与剪贴板", "Files and clipboard"));
-                                for index in 3..7 {
-                                    ui.checkbox(
-                                        &mut self.remote.permissions[index],
-                                        widgets::permissions(&[(index + 1) as i32], self.english),
-                                    );
-                                }
+                                ui.columns(2, |columns| {
+                                    for (column, indices) in [(0, [3, 4]), (1, [5, 6])] {
+                                        for index in indices {
+                                            columns[column].checkbox(&mut self.remote.permissions[index], widgets::permissions(&[(index + 1) as i32], self.english));
+                                        }
+                                    }
+                                });
                             });
                         egui::CollapsingHeader::new(self.t("连接选项", "Connection options")).show(
                             ui,
@@ -719,6 +741,9 @@ impl DesktopApp {
                             "local-identity",
                             egui::vec2(identity_width, 48.),
                             |ui| {
+                                ui.spacing_mut().item_spacing.y = 3.;
+                                ui.spacing_mut().interact_size.y = 22.;
+                                ui.spacing_mut().button_padding.y = 2.;
                                 ui.add(
                                     egui::Label::new(
                                         egui::RichText::new(format!(
@@ -728,7 +753,7 @@ impl DesktopApp {
                                                 .map(|view| view.device.name.clone())
                                                 .unwrap_or_else(local_computer_name)
                                         ))
-                                        .size(18.)
+                                        .size(16.)
                                         .strong(),
                                     )
                                     .truncate(),

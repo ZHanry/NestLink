@@ -132,10 +132,39 @@ impl DesktopApp {
                     })
                     .body(|mut body| {
                         for account in accounts.iter() {
-                            body.row(56., |mut row| {
+                            body.row(64., |mut row| {
                                 row.col(|ui| {
+                                    let (avatar, _) = ui.allocate_exact_size(
+                                        egui::vec2(34., 34.),
+                                        egui::Sense::hover(),
+                                    );
+                                    ui.painter().circle_filled(
+                                        avatar.center(),
+                                        17.,
+                                        ui.visuals().selection.bg_fill.gamma_multiply(0.14),
+                                    );
+                                    let initials = account
+                                        .name
+                                        .chars()
+                                        .take(2)
+                                        .collect::<String>()
+                                        .to_uppercase();
+                                    ui.painter().text(
+                                        avatar.center(),
+                                        egui::Align2::CENTER_CENTER,
+                                        initials,
+                                        egui::FontId::proportional(12.),
+                                        ui.visuals().hyperlink_color,
+                                    );
                                     ui.label(RichText::new(&account.name).strong())
                                         .on_hover_text(&account.id);
+                                    if snapshot
+                                        .principal
+                                        .as_ref()
+                                        .is_some_and(|principal| principal.account_id == account.id)
+                                    {
+                                        ui.small(self.t("当前账号", "Current account"));
+                                    }
                                 });
                                 row.col(|ui| {
                                     ui.label(self.t(

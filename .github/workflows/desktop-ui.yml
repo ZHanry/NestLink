@@ -28,7 +28,7 @@ jobs:
           toolchain: '1.96.0'
           components: rustfmt, clippy
       - name: Check formatting
-        run: cargo fmt --all --check
+        run: python3 scripts/format-first-party.py --check
       - name: Generate management API contract for review
         run: cargo xtask contract --write
       - name: Retain generated API contract

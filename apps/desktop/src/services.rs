@@ -20,7 +20,7 @@ const MAX_CA_BUNDLE_FILE_BYTES: usize = 192 * 1024;
 pub(crate) struct ServicePanel {
     generation: u64,
     scope_others: bool,
-    list_view: bool,
+    cards_view: bool,
     host_filter: String,
     search: String,
     draft: Option<Draft>,
@@ -522,65 +522,68 @@ impl ServicePanel {
         let mut command = None;
         let busy =
             snapshot.services.loading.is_some() || snapshot.selected_service.loading.is_some();
-        ui.horizontal(|ui| {
-            ui.heading(t("内网穿透", "Tunnels"));
-            if ui
-                .add_enabled(!busy, egui::Button::new(t("刷新", "Refresh")))
-                .clicked()
-            {
-                command = Some(Command::Submit {
-                    action: Action::Load {
-                        page: Page::Services,
-                    },
-                });
-            }
-            if ui
-                .add_enabled(
-                    !busy,
-                    egui::Button::new(
-                        egui::RichText::new(if self.scope_others {
-                            t("配置其他设备穿透", "Configure remote tunnel")
-                        } else {
-                            t("配置本机穿透", "Configure local tunnel")
-                        })
-                        .color(ui.visuals().selection.stroke.color),
-                    )
-                    .fill(ui.visuals().selection.bg_fill),
-                )
-                .clicked()
-            {
-                let mut draft = Draft::new(snapshot);
-                if self.scope_others {
-                    draft.host = if !self.host_filter.is_empty() {
-                        self.host_filter.clone()
-                    } else {
-                        snapshot
-                            .devices
-                            .data
-                            .as_deref()
-                            .into_iter()
-                            .flatten()
-                            .find(|d| {
-                                !d.revoked
-                                    && snapshot
-                                        .installation
-                                        .as_ref()
-                                        .is_none_or(|local| local.device_id != d.device.id)
-                            })
-                            .map(|d| d.device.id.clone())
-                            .unwrap_or_default()
-                    };
+        widgets::page_header(
+            ui,
+            t("内网穿透", "Tunnels"),
+            t(
+                "配置本机的穿透，或管理已获授权的其他设备的穿透服务。",
+                "Configure this computer's tunnels and manage services on other authorized devices.",
+            ),
+            270.,
+            |ui| {
+                if ui
+                    .add_enabled(!busy, egui::Button::new(t("刷新", "Refresh")))
+                    .clicked()
+                {
+                    command = Some(Command::Submit {
+                        action: Action::Load {
+                            page: Page::Services,
+                        },
+                    });
                 }
-                self.draft_baseline = Some(draft.fingerprint());
-                self.draft = Some(draft);
-                self.error = None;
-            }
-        });
-        ui.label(t(
-            "配置本机的穿透，或管理已获授权的其他设备的穿透服务。",
-            "Publish an intranet service through an access entry. TCP, UDP, HTTP and HTTPS are supported.",
-        ));
-        ui.add_space(14.);
+                if ui
+                    .add_enabled(
+                        !busy,
+                        egui::Button::new(
+                            egui::RichText::new(if self.scope_others {
+                                t("配置其他设备穿透", "Configure remote tunnel")
+                            } else {
+                                t("配置本机穿透", "Configure local tunnel")
+                            })
+                            .color(ui.visuals().selection.stroke.color),
+                        )
+                        .fill(ui.visuals().selection.bg_fill),
+                    )
+                    .clicked()
+                {
+                    let mut draft = Draft::new(snapshot);
+                    if self.scope_others {
+                        draft.host = if !self.host_filter.is_empty() {
+                            self.host_filter.clone()
+                        } else {
+                            snapshot
+                                .devices
+                                .data
+                                .as_deref()
+                                .into_iter()
+                                .flatten()
+                                .find(|d| {
+                                    !d.revoked
+                                        && snapshot
+                                            .installation
+                                            .as_ref()
+                                            .is_none_or(|local| local.device_id != d.device.id)
+                                })
+                                .map(|d| d.device.id.clone())
+                                .unwrap_or_default()
+                        };
+                    }
+                    self.draft_baseline = Some(draft.fingerprint());
+                    self.draft = Some(draft);
+                    self.error = None;
+                }
+            },
+        );
         ui.horizontal(|ui| {
             if widgets::tab(ui, !self.scope_others, t("本机穿透", "This computer")).clicked() {
                 self.scope_others = false;
@@ -593,10 +596,26 @@ impl ServicePanel {
         });
         ui.separator();
         ui.add_space(12.);
+        if !self.scope_others {
+            widgets::surface(ui).show(ui, |ui| {
+                ui.set_min_width(ui.available_width());
+                ui.horizontal(|ui| {
+                    crate::icons::badge(ui, crate::icons::Icon::Monitor, 40.);
+                    ui.vertical(|ui| {
+                        let local = snapshot.installation.as_ref().and_then(|id| snapshot.devices.data.as_deref()?.iter().find(|device| device.device.id == id.device_id));
+                        ui.strong(local.map(|device| device.device.name.as_str()).unwrap_or(t("本机", "This computer")));
+                        ui.small(t("本地目标由此电脑提供，每项配置单独批准与启停。", "Local targets are provided by this computer. Each configuration has separate approval and lifecycle."));
+                    });
+                });
+            });
+            ui.add_space(8.);
+        }
         ui.horizontal_wrapped(|ui| {
             ui.add(
                 egui::TextEdit::singleline(&mut self.search)
                     .hint_text(t("搜索穿透配置…", "Search tunnels…"))
+                    .desired_width(260.)
+                    .margin(egui::vec2(10., 8.))
                     .char_limit(128),
             );
             if self.scope_others {
@@ -640,24 +659,27 @@ impl ServicePanel {
                         }
                     });
             }
-        });
-        ui.horizontal(|ui| {
             if ui
-                .selectable_label(!self.list_view, t("卡片", "Cards"))
+                .selectable_label(self.cards_view, t("卡片", "Cards"))
                 .clicked()
             {
-                self.list_view = false;
+                self.cards_view = true;
             }
             if ui
-                .selectable_label(self.list_view, t("列表", "List"))
+                .selectable_label(!self.cards_view, t("列表", "List"))
                 .clicked()
             {
-                self.list_view = true;
+                self.cards_view = false;
             }
         });
         ui.add_space(14.);
         widgets::section(ui, &snapshot.services, english);
-        widgets::section(ui, &snapshot.selected_service, english);
+        if snapshot.selected_service.data.is_some()
+            || snapshot.selected_service.loading.is_some()
+            || snapshot.selected_service.error.is_some()
+        {
+            widgets::section(ui, &snapshot.selected_service, english);
+        }
         if let Some(page) = &snapshot.services.data {
             let visible: Vec<_> = page
                 .services
@@ -687,8 +709,9 @@ impl ServicePanel {
                         ui.small(t("只有节点确认发布后，才显示入口已发布。", "An entry is shown as published only after the node confirms it."));
                     });
             } else {
-                if self.list_view {
+                if !self.cards_view {
                     widgets::surface(ui).show(ui, |ui| {
+                        ui.set_min_width(ui.available_width());
                         egui::ScrollArea::horizontal()
                             .id_salt("tunnel-directory-scroll")
                             .show(ui, |ui| {
@@ -1476,34 +1499,6 @@ fn default_local_protocol(ingress: &ServiceIngress) -> &'static str {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn local_ca_reader_accepts_bounded_der_and_pem_bundles() {
-        assert_eq!(parse_ca_bundle(vec![1, 2, 3]), Ok(vec![vec![1, 2, 3]]));
-        assert_eq!(
-            parse_ca_bundle(
-                b"-----BEGIN CERTIFICATE-----\nAQID\n-----END CERTIFICATE-----\n\n-----BEGIN CERTIFICATE-----\nBAUG\n-----END CERTIFICATE-----\n".to_vec(),
-            ),
-            Ok(vec![vec![1, 2, 3], vec![4, 5, 6]]),
-        );
-    }
-
-    #[test]
-    fn local_ca_reader_rejects_malformed_and_unbounded_bundles() {
-        assert!(
-            parse_ca_bundle(
-                b"-----BEGIN PRIVATE KEY-----\nAQID\n-----END PRIVATE KEY-----".to_vec(),
-            )
-            .is_err()
-        );
-        assert!(parse_ca_bundle(vec![0; 16_385]).is_err());
-        assert!(parse_ca_bundle(vec![0; MAX_CA_BUNDLE_FILE_BYTES + 1]).is_err());
-    }
-}
-
 impl ServicePanel {
     fn directory_actions(
         &mut self,
@@ -1580,5 +1575,33 @@ impl ServicePanel {
         });
 
         command
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn local_ca_reader_accepts_bounded_der_and_pem_bundles() {
+        assert_eq!(parse_ca_bundle(vec![1, 2, 3]), Ok(vec![vec![1, 2, 3]]));
+        assert_eq!(
+            parse_ca_bundle(
+                b"-----BEGIN CERTIFICATE-----\nAQID\n-----END CERTIFICATE-----\n\n-----BEGIN CERTIFICATE-----\nBAUG\n-----END CERTIFICATE-----\n".to_vec(),
+            ),
+            Ok(vec![vec![1, 2, 3], vec![4, 5, 6]]),
+        );
+    }
+
+    #[test]
+    fn local_ca_reader_rejects_malformed_and_unbounded_bundles() {
+        assert!(
+            parse_ca_bundle(
+                b"-----BEGIN PRIVATE KEY-----\nAQID\n-----END PRIVATE KEY-----".to_vec(),
+            )
+            .is_err()
+        );
+        assert!(parse_ca_bundle(vec![0; 16_385]).is_err());
+        assert!(parse_ca_bundle(vec![0; MAX_CA_BUNDLE_FILE_BYTES + 1]).is_err());
     }
 }

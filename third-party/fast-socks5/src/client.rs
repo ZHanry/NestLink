@@ -416,12 +416,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Socks5Datagram<S> {
     where
         U: ToSocketAddrs,
     {
-        Self::bind_internal(
-            backing_socket,
-            Self::create_out_sock(client_bind_addr).await?,
-            None,
-        )
-        .await
+        Self::bind_internal(backing_socket, Self::create_out_sock(client_bind_addr).await?, None).await
     }
     /// Creates a UDP socket bound to the specified address which will have its
     /// traffic routed through the specified proxy. The given username and password
@@ -439,15 +434,13 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Socks5Datagram<S> {
             username: username.to_owned(),
             password: password.to_owned(),
         };
-        Self::bind_internal(
-            backing_socket,
-            Self::create_out_sock(client_bind_addr).await?,
-            Some(auth),
-        )
-        .await
+        Self::bind_internal(backing_socket, Self::create_out_sock(client_bind_addr).await?, Some(auth)).await
     }
     /// Use a UdpSocket already created rather than creating a whole new `UdpSocket::bind`.
-    pub async fn use_socket(backing_socket: S, out_sock: UdpSocket) -> Result<Socks5Datagram<S>> {
+    pub async fn use_socket(
+        backing_socket: S,
+        out_sock: UdpSocket,
+    ) -> Result<Socks5Datagram<S>> {
         Self::bind_internal(backing_socket, out_sock, None).await
     }
     /// Same as `use_socket` but with credentials.
@@ -478,7 +471,8 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Socks5Datagram<S> {
         backing_socket: S,
         out_sock: UdpSocket,
         auth: Option<AuthenticationMethod>,
-    ) -> Result<Socks5Datagram<S>> {
+    ) -> Result<Socks5Datagram<S>>
+    {
         // Init socks5 stream.
         let mut proxy_stream =
             Socks5Stream::use_stream(backing_socket, auth, Config::default()).await?;

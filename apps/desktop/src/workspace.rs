@@ -239,7 +239,8 @@ impl DesktopApp {
                         if ui.selectable_label(!self.workspace.preferences.compact,self.t("舒适", "Comfortable")).clicked(){self.workspace.preferences.compact=false;self.save_appearance();}
                         if ui.selectable_label(self.workspace.preferences.compact,self.t("紧凑", "Compact")).clicked(){self.workspace.preferences.compact=true;self.save_appearance();}
                     });
-                    ui.horizontal(|ui|{ui.label(self.t("界面语言", "Language"));if ui.selectable_label(!self.english,"简体中文").clicked(){self.english=false;self.save_appearance();}if ui.selectable_label(self.english,"English").clicked(){self.english=true;self.save_appearance();}});
+                    ui.horizontal(|ui|{ui.label(self.t("界面语言", "Language"));if ui.selectable_label(!self.english,"简体中文").clicked(){self.english=false;self.save_appearance();}
+if ui.selectable_label(self.english,"English").clicked(){self.english=true;self.save_appearance();}});
                 }
                 1=>{
                     ui.strong(self.t("常规", "General"));
