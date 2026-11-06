@@ -316,14 +316,11 @@ impl DesktopApp {
                             if self.file_panel.session().is_none_or(|session| !session.read && !session.write) {
                                 ui.label(self.t("本次会话未授权文件传输，或文件通道尚未就绪。", "File transfer is not authorized or the file channel is not ready for this session."));
                             }
-                            if self.connected {
-                                if let Some(command) = self.recovery_panel.show(ui, self.english, self.file_panel.session()) { self.send_recovery_command(snapshot.generation, command); }
-                                self.session_file_panel(ui);
-                            }
+                            self.session_files_panel(ui, snapshot);
                         }
                         2 => {
                             ui.small(self.t("仅在本次会话获得剪贴板授权且通道就绪时可用。", "Available when this session authorizes clipboard access and its channel is ready."));
-                            if self.connected && let Some(command) = self.clipboard_panel.show(ui, self.english) { self.send_clipboard_command(snapshot.generation, command); }
+                            self.session_clipboard_panel(ui, snapshot);
                         }
                         3 => self.native_display_panel(ui, snapshot),
                         4 => {

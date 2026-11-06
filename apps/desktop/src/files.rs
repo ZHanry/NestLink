@@ -1000,6 +1000,18 @@ impl super::DesktopApp {
         if !self.connected {
             return;
         }
+        self.session_files_panel(ui, snapshot);
+        self.session_clipboard_panel(ui, snapshot);
+    }
+
+    pub(crate) fn session_files_panel(
+        &mut self,
+        ui: &mut egui::Ui,
+        snapshot: &nestlink_app_core::Snapshot,
+    ) {
+        if !self.connected {
+            return;
+        }
         if let Some(command) = self
             .recovery_panel
             .show(ui, self.english, self.file_panel.session())
@@ -1007,6 +1019,16 @@ impl super::DesktopApp {
             self.send_recovery_command(snapshot.generation, command);
         }
         self.session_file_panel(ui);
+    }
+
+    pub(crate) fn session_clipboard_panel(
+        &mut self,
+        ui: &mut egui::Ui,
+        snapshot: &nestlink_app_core::Snapshot,
+    ) {
+        if !self.connected {
+            return;
+        }
         if let Some(command) = self.clipboard_panel.show(ui, self.english) {
             self.send_clipboard_command(snapshot.generation, command);
         }
