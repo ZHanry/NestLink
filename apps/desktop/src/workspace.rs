@@ -429,7 +429,7 @@ impl DesktopApp {
 impl DesktopApp {
     pub(crate) fn login_brand_panel(&self, ui: &mut egui::Ui) {
         let width = ui.available_width() * 0.5;
-        let height = (ui.ctx().content_rect().height() - 140.).clamp(520., 920.);
+        let height = ui.clip_rect().height().clamp(520., 1500.);
         widgets::fixed_region(ui, "login-brand-story", egui::vec2(width, height), |ui| {
             let rect = ui.max_rect();
             ui.painter().rect_filled(
@@ -459,28 +459,55 @@ impl DesktopApp {
                 .strong(),
             );
             story.add_space(16.);
-            story.label(RichText::new(self.t("连接你的控制中心，让远程桌面、内网服务与协作空间，自然融入每一天。", "Connect your control center. Bring remote desktops, private services and shared spaces into every day.")).color(ui.visuals().weak_text_color()));
-            story.add_space(40.);
-            story.horizontal(|ui| {
-                ui.add_space(((content.width() - 220.) / 2.).max(0.));
-                for (index, icon) in [widgets::NavIcon::Devices, widgets::NavIcon::Monitor]
-                    .into_iter()
-                    .enumerate()
-                {
-                    if index == 1 {
-                        let (logo, _) =
-                            ui.allocate_exact_size(egui::vec2(49., 49.), egui::Sense::hover());
-                        crate::icons::brand(ui, logo);
-                        ui.add_space(10.);
-                    }
-                    let (tile, _) =
-                        ui.allocate_exact_size(egui::vec2(65., 65.), egui::Sense::hover());
-                    ui.painter()
-                        .rect_filled(tile, 16., ui.visuals().window_fill);
-                    crate::icons::paint(ui, icon, tile.center(), 22., ui.visuals().hyperlink_color);
-                    ui.add_space(10.);
-                }
+            story.scope(|ui| {
+                ui.set_max_width(310.);
+                ui.label(RichText::new(self.t("连接你的控制中心，让远程桌面、内网服务与协作空间，自然融入每一天。", "Connect your control center. Bring remote desktops, private services and shared spaces into every day.")).color(ui.visuals().weak_text_color()));
             });
+            story.add_space(40.);
+            widgets::fixed_region(
+                &mut story,
+                "login-device-graphic",
+                egui::vec2(content.width(), 110.),
+                |ui| {
+                    let graphic = ui.max_rect();
+                    let stroke =
+                        egui::Stroke::new(1., ui.visuals().widgets.inactive.bg_stroke.color);
+                    ui.painter().line_segment(
+                        [
+                            egui::pos2(graphic.left() + graphic.width() * 0.12, graphic.center().y),
+                            egui::pos2(
+                                graphic.right() - graphic.width() * 0.12,
+                                graphic.center().y,
+                            ),
+                        ],
+                        stroke,
+                    );
+                    for (offset, icon) in [
+                        (-70., widgets::NavIcon::Devices),
+                        (70., widgets::NavIcon::Monitor),
+                    ] {
+                        let tile = egui::Rect::from_center_size(
+                            graphic.center() + egui::vec2(offset, 0.),
+                            egui::vec2(65., 65.),
+                        );
+                        ui.painter()
+                            .rect_filled(tile, 16., ui.visuals().window_fill);
+                        ui.painter()
+                            .rect_stroke(tile, 16., stroke, egui::StrokeKind::Inside);
+                        crate::icons::paint(
+                            ui,
+                            icon,
+                            tile.center(),
+                            22.,
+                            ui.visuals().hyperlink_color,
+                        );
+                    }
+                    crate::icons::brand(
+                        ui,
+                        egui::Rect::from_center_size(graphic.center(), egui::vec2(49., 49.)),
+                    );
+                },
+            );
             let footer = egui::Rect::from_min_max(
                 egui::pos2(content.left(), content.bottom() - 36.),
                 content.max,

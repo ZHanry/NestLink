@@ -10,6 +10,9 @@ impl DesktopApp {
             if ui.available_width()>900. { self.login_brand_panel(ui); }
             ui.add_space(((ui.available_width() - 330.) / 2.).max(0.));
             ui.vertical(|ui| {
+                if ui.ctx().content_rect().height() < 700. {
+                    ui.spacing_mut().item_spacing.y = 4.;
+                }
                 ui.set_width(330.);
                 ui.add_space(((ui.ctx().content_rect().height() - 620.) / 2.).max(0.));
                 ui.label(RichText::new("WELCOME BACK").size(10.).color(ui.visuals().hyperlink_color));
@@ -374,6 +377,9 @@ impl DesktopApp {
             if ui.available_width()>900. { self.login_brand_panel(ui); }
             ui.add_space(((ui.available_width() - 330.) / 2.).max(0.));
             ui.vertical(|ui| {
+                if ui.ctx().content_rect().height() < 700. {
+                    ui.spacing_mut().item_spacing.y = 4.;
+                }
                 ui.set_width(330.);
                 ui.add_space(((ui.ctx().content_rect().height() - 620.) / 2.).max(0.));
                 ui.label(RichText::new("WELCOME BACK").size(10.).color(ui.visuals().hyperlink_color));

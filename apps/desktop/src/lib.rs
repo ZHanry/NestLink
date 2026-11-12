@@ -2168,6 +2168,8 @@ impl eframe::App for DesktopApp {
                     })
                     .inner_margin(if context.content_rect().height() < 700. {
                         16
+                    } else if snapshot.authentication != Authentication::SignedIn {
+                        22
                     } else {
                         self.tokens.layout.content_padding.round() as i8
                     }),

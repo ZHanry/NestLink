@@ -22,7 +22,7 @@ def main():
     assert not subprocess.check_output(['git', 'status', '--porcelain=v1', '--untracked-files=all'], cwd=root)
     assert tomllib.loads((root/'Cargo.toml').read_text())['workspace']['dependencies']['rusqlite'] == {
         'version': '=0.41.0', 'default-features': False,
-        'features': ['cache', 'bundled', 'backup', 'serialize']}
+        'features': ['cache', 'bundled', 'backup', 'serialize', 'fallible_uint']}
     manifest = root/{'product': 'Cargo.toml', 'browser-native-fixture': 'scripts/fixtures/browser-native-host/Cargo.toml',
                      'security-fuzz': 'tests/security/fuzz/Cargo.toml'}[args.scope]
     lock = manifest.with_name('Cargo.lock')
