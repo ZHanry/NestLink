@@ -258,7 +258,9 @@ mod listener_tests {
         let requested: SocketAddr = "127.0.0.1:0".parse()?;
         let (udp, reserved_tcp, occupied) =
             finish_listener_bind(requested, UdpSocket::bind(requested).await?).await?;
-        let error = finish_listener_bind(occupied, udp).await.unwrap_err();
+        let Err(error) = finish_listener_bind(occupied, udp).await else {
+            return Err("explicit TCP collision unexpectedly succeeded".into());
+        };
         assert!(
             matches!(error, SpaceDnsError::ListenerBind { transport: "TCP", source }
             if source.kind() == std::io::ErrorKind::AddrInUse)
