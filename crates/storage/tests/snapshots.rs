@@ -55,7 +55,7 @@ fn snapshot_refuses_foreign_version_and_missing_existing_database() -> Result {
     std::fs::write(&missing, [])?;
     assert!(Store::open_existing(&missing, &random_id()).is_err());
     assert_eq!(missing.metadata()?.len(), 0);
-    let foreign = Connection::open_in_memory()?;
+    let mut foreign = Connection::open_in_memory()?;
     foreign.execute_batch("CREATE TABLE foreign_data(id INTEGER);")?;
     foreign.pragma_update(None, "application_id", APPLICATION_ID)?;
     foreign.pragma_update(None, "user_version", 99)?;

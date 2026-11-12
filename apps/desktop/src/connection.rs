@@ -18,7 +18,7 @@ impl DesktopApp {
                 ui.label(RichText::new("WELCOME BACK").size(10.).color(ui.visuals().hyperlink_color));
                 ui.add_space(12.);
                 ui.horizontal(|ui| {
-                    ui.heading(self.t("连接你的控制中心", "Connect your control center"));
+                    ui.label(RichText::new(self.t("连接你的控制中心", "Connect your control center")).font(crate::theme::heading_font(25.)));
                 });
                 ui.add_space(8.);
                 ui.label(
@@ -372,22 +372,23 @@ impl DesktopApp {
     }
 
     pub(crate) fn sign_in_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+        let compact = ui.ctx().content_rect().height() < 700.;
         ui.add_space(0.);
         ui.horizontal_top(|ui| {
             if ui.available_width()>900. { self.login_brand_panel(ui); }
             ui.add_space(((ui.available_width() - 330.) / 2.).max(0.));
             ui.vertical(|ui| {
-                if ui.ctx().content_rect().height() < 700. {
+                if compact {
                     ui.spacing_mut().item_spacing.y = 4.;
                 }
                 ui.set_width(330.);
                 ui.add_space(((ui.ctx().content_rect().height() - 620.) / 2.).max(0.));
                 ui.label(RichText::new("WELCOME BACK").size(10.).color(ui.visuals().hyperlink_color));
-                ui.add_space(12.);
+                ui.add_space(if compact { 8. } else { 12. });
                 ui.horizontal(|ui| {
-                    ui.heading(self.t("连接你的控制中心", "Connect your control center"));
+                    ui.label(RichText::new(self.t("连接你的控制中心", "Connect your control center")).font(crate::theme::heading_font(25.)));
                 });
-                ui.add_space(8.);
+                ui.add_space(if compact { 6. } else { 8. });
                 ui.label(
                     RichText::new(self.t(
                         "连接你的 Windows 电脑，访问内网服务。",
@@ -395,14 +396,14 @@ impl DesktopApp {
                     ))
                     .color(ui.visuals().weak_text_color()),
                 );
-                ui.add_space(28.);
+                ui.add_space(if compact { 16. } else { 28. });
                 egui::Frame::new().inner_margin(0)
                     .show(ui, |ui| {
                         ui.set_width(330.);
                         if let Some(server) = &snapshot.server {
                             ui.small(self.t("当前控制中心", "Current control center"));
                             ui.add(egui::Label::new(egui::RichText::new(&server.origin).strong()).truncate()).on_hover_text(&server.origin);
-                            ui.add_space(12.);
+                            ui.add_space(if compact { 8. } else { 12. });
                         }
                         widgets::field(
                             ui,
@@ -419,7 +420,7 @@ impl DesktopApp {
                             self.generation,
                             1024,
                         );
-                        ui.add_space(14.);
+                        ui.add_space(if compact { 8. } else { 14. });
                         ui.checkbox(
                             &mut self.credentials.remember_login,
                             if self.english {
@@ -468,18 +469,19 @@ impl DesktopApp {
                             self.action(snapshot, action);
                         }
                         let status_width = ui.available_width();
-                        widgets::fixed_region(ui, "sign-in-status", egui::vec2(status_width, 56.), |ui| {
+                        let status_height = if compact { 44. } else { 56. };
+                        widgets::fixed_region(ui, "sign-in-status", egui::vec2(status_width, status_height), |ui| {
                             if signing_in {
                                 ui.horizontal(|ui| { ui.spinner(); ui.label(self.t("正在验证账号…", "Verifying your account…")); });
                             }
                             if let Some(error) = &snapshot.authentication_error {
-                                egui::ScrollArea::vertical().id_salt("sign-in-error").max_height(56.).show(ui, |ui| {
+                                egui::ScrollArea::vertical().id_salt("sign-in-error").max_height(status_height).show(ui, |ui| {
                                     ui.colored_label(ui.visuals().error_fg_color, widgets::failure(error, self.english));
                                 });
                             }
                         });
                     });
-                ui.add_space(16.);
+                ui.add_space(if compact { 4. } else { 16. });
                 if ui
                     .button(self.t("连接其他服务器", "Connect to another server"))
                     .clicked()

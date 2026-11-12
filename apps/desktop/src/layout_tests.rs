@@ -230,29 +230,40 @@ fn entry_screens_do_not_render_setup_or_authenticated_settings() {
                     (true, true) => "Sign in",
                 };
                 let bounds = workspace.bounds(primary);
+                let entry_viewport =
+                    egui::Rect::from_min_max(egui::pos2(0., 40.), egui::pos2(size.x, size.y - 30.));
                 assert_eq!(bounds.len(), 1, "entry primary action: {primary}");
                 assert!(
-                    egui::Rect::from_min_size(egui::Pos2::ZERO, size).contains_rect(bounds[0]),
+                    entry_viewport.contains_rect(bounds[0]),
                     "entry primary action is clipped: {bounds:?}"
                 );
                 if verified {
-                    for label in [
-                        if english {
-                            "Connect to another server"
-                        } else {
-                            "连接其他服务器"
-                        },
-                        if english {
-                            "Sign in again; the session is no longer valid. (HTTP 401)"
-                        } else {
-                            "登录已失效，请重新登录。 (HTTP 401)"
-                        },
+                    for (label, is_label) in [
+                        (
+                            if english {
+                                "Connect to another server"
+                            } else {
+                                "连接其他服务器"
+                            },
+                            false,
+                        ),
+                        (
+                            if english {
+                                "Sign in again; the session is no longer valid. (HTTP 401)"
+                            } else {
+                                "登录已失效，请重新登录。 (HTTP 401)"
+                            },
+                            true,
+                        ),
                     ] {
-                        let bounds = workspace.bounds(label);
+                        let bounds = if is_label {
+                            workspace.label_bounds(label)
+                        } else {
+                            workspace.bounds(label)
+                        };
                         assert_eq!(bounds.len(), 1, "missing entry recovery control: {label}");
                         assert!(
-                            egui::Rect::from_min_size(egui::Pos2::ZERO, size)
-                                .contains_rect(bounds[0]),
+                            entry_viewport.contains_rect(bounds[0]),
                             "entry recovery control is clipped: {label} {bounds:?}"
                         );
                     }

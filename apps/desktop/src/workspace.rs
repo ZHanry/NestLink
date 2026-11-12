@@ -447,7 +447,7 @@ impl DesktopApp {
                 let (rect, _) = ui.allocate_exact_size(egui::vec2(43., 43.), egui::Sense::hover());
                 crate::icons::brand(ui, rect);
                 ui.add_space(8.);
-                ui.label(RichText::new("NestLink").size(25.).strong());
+                ui.label(RichText::new("NestLink").font(crate::theme::heading_font(25.)));
             });
             story.add_space(68.);
             story.label(
@@ -455,8 +455,7 @@ impl DesktopApp {
                     "熟悉的设备，\n不受距离限制。",
                     "Familiar devices,\nwithout distance.",
                 ))
-                .size(33.)
-                .strong(),
+                .font(crate::theme::heading_font(33.)),
             );
             story.add_space(16.);
             story.scope(|ui| {

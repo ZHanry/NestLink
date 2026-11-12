@@ -49,6 +49,7 @@ async function sessions(page, sibling, args, report) {
   try {
     await page.locator(card + ' button').click();
     await page.waitForSelector('.task-dialog[open]', { visible: true });
+    await page.screenshot({ path: args.report.replace(/\.json$/, '-dialog-signout-device.png'), fullPage: false });
     await page.locator('.confirmation-actions .secondary').click();
     check(deletes === 0 && await page.$(card), 'Cancel must preserve the actual session without a DELETE');
     facts.cancel_keeps_session = true;
@@ -99,6 +100,31 @@ async function pages(page, args, report) {
     check(layout.sidebar_color === 'rgb(238, 235, 245)', 'Sidebar must use the approved lilac token');
     await page.screenshot({ path: args.report.replace(/\.json$/, '-console-' + name + '.png'), fullPage: false });
     facts.pages.push({ name, ...layout });
+    if (name === 'spaces') {
+      for (const action of ['create', 'join']) {
+        await page.locator('[data-space-action="' + action + '"]').click();
+        await page.waitForSelector('.task-dialog[open]', { visible: true });
+        await page.screenshot({ path: args.report.replace(/\.json$/, '-dialog-space-' + action + '.png'), fullPage: false });
+        await page.locator('.task-dialog[open] .confirmation-actions .secondary').click();
+        await page.waitForFunction(() => !document.querySelector('.task-dialog[open]'));
+      }
+    }
+    if (name === 'accounts') {
+      let creates = 0;
+      const observe = request => { if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/v3/accounts') creates++; };
+      page.on('request', observe);
+      try {
+        await page.locator('[data-action="create-account"]').click();
+        await page.waitForSelector('.task-dialog[open] .account-create-form', { visible: true });
+        await page.locator('#new-account').fill('cancelled-review-draft');
+        await page.locator('#new-account-password').fill('CancelledReviewOnly123!');
+        await page.screenshot({ path: args.report.replace(/\.json$/, '-dialog-create-account.png'), fullPage: false });
+        await page.locator('.account-create-form .confirmation-actions .secondary').click();
+        await page.waitForFunction(() => !document.querySelector('.task-dialog[open]'));
+        check(creates === 0 && await page.$eval('#new-account-password', element => element.value === ''), 'Cancelling account creation must clear the password without creating an account');
+        facts.account_create_cancel_is_safe = true;
+      } finally { page.off('request', observe); }
+    }
   }
   await page.locator('.language-selector button[lang="en"]').click();
   await page.locator('[data-section="desktop"]').click();

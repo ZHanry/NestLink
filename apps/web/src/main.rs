@@ -324,6 +324,16 @@ fn App() -> impl IntoView {
 
     let account_name = RwSignal::new(String::new());
     let account_password = RwSignal::new(String::new());
+    let account_create_open = RwSignal::new(false);
+    let account_create_error = RwSignal::new(String::new());
+    let close_account_create = Callback::new(move |()| {
+        if !busy.get_untracked() {
+            account_create_open.set(false);
+            account_name.set(String::new());
+            account_password.set(String::new());
+            account_create_error.set(String::new());
+        }
+    });
     let load_revision = RwSignal::new(0_u64);
     let session_revision = RwSignal::new(0_u64);
     let remote_target = RwSignal::new(None::<RemoteTarget>);
@@ -349,6 +359,8 @@ fn App() -> impl IntoView {
 
         account_name.set(String::new());
         account_password.set(String::new());
+        account_create_open.set(false);
+        account_create_error.set(String::new());
         session_revision.set(session_revision.get_untracked().saturating_add(1));
         load_revision.set(load_revision.get_untracked().saturating_add(1));
     });
@@ -1014,6 +1026,7 @@ fn App() -> impl IntoView {
         let name = account_name.get_untracked().trim().to_owned();
         let pass = account_password.get_untracked();
         account_password.set(String::new());
+        account_create_error.set(String::new());
         busy.set(true);
         error.set(String::new());
         let auth_sdk = sdk.clone();
@@ -1026,6 +1039,7 @@ fn App() -> impl IntoView {
             {
                 Ok(_) => {
                     account_name.set(String::new());
+                    account_create_open.set(false);
                     notice.set(t("账号已创建。", "Account created.").into());
                     busy.set(false);
                     load.run(Section::Accounts.key().to_owned());
@@ -1036,7 +1050,7 @@ fn App() -> impl IntoView {
                         account_auth_failure.run(auth_sdk);
                         return;
                     }
-                    error.set(nestlink_web::localized_detail!(
+                    account_create_error.set(nestlink_web::localized_detail!(
                         "账号未创建：{}",
                         "Account was not created: {}",
                         problem.message
@@ -1197,14 +1211,20 @@ fn App() -> impl IntoView {
                                         </form>
                                     })}
                                     {move || (section.get() == Section::Accounts && is_admin).then(|| view! {
-                                        <form class="inline-create" on:submit=create_account>
-                                            <div><h2>{move || t("创建账号", "Create account")}</h2><p>{move || t("新账号默认不具备管理员权限。", "New accounts do not have administrator permissions by default.")}</p></div>
-                                            <label for="new-account">{move || t("账号名", "Account name")}</label>
-                                            <input id="new-account" autocomplete="off" disabled=move || busy.get() prop:value=move || account_name.get() on:input=move |event| account_name.set(event_target_value(&event)) />
-                                            <label for="new-account-password">{move || t("初始密码", "Initial password")}</label>
-                                            <input id="new-account-password" type="password" autocomplete="new-password" disabled=move || busy.get() prop:value=move || account_password.get() on:input=move |event| account_password.set(event_target_value(&event)) />
-                                            <button class="secondary" type="submit" disabled=move || busy.get()>{move || t("创建账号", "Create account")}</button>
-                                        </form>
+                                        <div class="account-toolbar"><button class="primary" type="button" data-action="create-account" disabled=move || busy.get() on:click=move |_| account_create_open.set(true)>{move || t("创建账号", "Create account")}</button></div>
+                                        <TaskDialog open=Signal::derive(move || account_create_open.get()) label=Signal::derive(move || t("创建账号", "Create account").to_owned()) on_close=close_account_create>
+                                            <form class="account-create-form" on:submit=create_account>
+                                                <header class="dialog-head"><h2>{move || t("创建账号", "Create account")}</h2><p>{move || t("新账号默认不具备管理员权限。", "New accounts do not have administrator permissions by default.")}</p></header>
+                                                <div class="dialog-body form-stack">
+                                                    <label for="new-account">{move || t("账号名", "Account name")}</label>
+                                                    <input id="new-account" autocomplete="off" required=true maxlength="128" disabled=move || busy.get() prop:value=move || account_name.get() on:input=move |event| account_name.set(event_target_value(&event)) />
+                                                    <label for="new-account-password">{move || t("初始密码", "Initial password")}</label>
+                                                    <input id="new-account-password" type="password" autocomplete="new-password" required=true maxlength="1024" disabled=move || busy.get() prop:value=move || account_password.get() on:input=move |event| account_password.set(event_target_value(&event)) />
+                                                    <p class="form-error" role="alert">{move || account_create_error.get()}</p>
+                                                </div>
+                                                <footer class="confirmation-actions"><button class="secondary" type="button" disabled=move || busy.get() on:click=move |_| close_account_create.run(())>{move || t("取消", "Cancel")}</button><button class="primary" type="submit" disabled=move || busy.get()>{move || if busy.get() { t("正在创建…", "Creating…") } else { t("创建账号", "Create account") }}</button></footer>
+                                            </form>
+                                        </TaskDialog>
                                     })}
                                     <div hidden=move || section.get() == Section::Network><div class="section-heading list-heading">
                                         <div><h2>{move || list_heading(section.get())}</h2><p>{move || localized_format!("{} 项", "{} items", rows.with(Vec::len))}</p></div>
