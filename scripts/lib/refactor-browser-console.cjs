@@ -83,6 +83,7 @@ async function sessions(page, sibling, args, report) {
 async function pages(page, args, report) {
   const facts = report.console_ui;
   facts.pages = [];
+  facts.card_layouts = [];
   await page.setViewport({ width: 1440, height: 1000 });
   await page.locator('.language-selector button[lang="zh-CN"]').click();
   for (const name of ['desktop','services','spaces','devices','accounts','network','nodes','audit']) {
@@ -100,6 +101,39 @@ async function pages(page, args, report) {
     check(layout.sidebar_color === 'rgb(238, 235, 245)', 'Sidebar must use the approved lilac token');
     await page.screenshot({ path: args.report.replace(/\.json$/, '-console-' + name + '.png'), fullPage: false });
     facts.pages.push({ name, ...layout });
+    if (name === 'devices') {
+      // Observe the real account cards at desktop, compact and phone widths.
+      // Current-session badges, names and timestamps must not move their peers.
+      for (const viewport of [{ width: 1440, height: 1000 }, { width: 900, height: 800 }, { width: 390, height: 844 }]) {
+        await page.setViewport(viewport);
+        const cards = await page.$$eval('.login-device-card', elements => elements.map(element => {
+          const rect = element.getBoundingClientRect();
+          const button = element.querySelector('button').getBoundingClientRect();
+          const facts = element.querySelector('dl').getBoundingClientRect();
+          const value = element.querySelector('dd').getBoundingClientRect();
+          const title = element.querySelector('h3').getBoundingClientRect();
+          return { x: rect.x, y: rect.y, width: rect.width, height: rect.height,
+            action_top: button.top - rect.top, action_bottom: button.bottom - rect.top,
+            facts_top: facts.top - rect.top, value_left: value.left - rect.left,
+            title_top: title.top - rect.top, button_inside: button.left >= rect.left && button.right <= rect.right
+              && button.top >= facts.bottom && button.bottom <= rect.bottom,
+            current_in_footer: !element.querySelector('.current-device') || !!element.querySelector('.login-device-actions .current-device') };
+        }));
+        check(cards.length >= 3, 'Real login cards required for alignment review');
+        for (const card of cards) {
+          check(card.button_inside && card.current_in_footer, 'Device action or badge escaped its card');
+          for (const field of ['width', 'height', 'action_top', 'action_bottom', 'facts_top', 'value_left', 'title_top'])
+            check(Number.isFinite(card[field]) && Math.abs(card[field] - cards[0][field]) <= 1,
+              'Login cards do not share the same ' + field + ' at ' + viewport.width);
+        }
+        check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Login cards overflow the page');
+        facts.card_layouts.push({ viewport, cards });
+        if (viewport.width !== 1440)
+          await page.screenshot({ path: args.report.replace(/\.json$/, '-devices-' + viewport.width + '.png'), fullPage: false });
+      }
+      await page.setViewport({ width: 1440, height: 1000 });
+      facts.login_cards_aligned = true;
+    }
     if (name === 'spaces') {
       for (const action of ['create', 'join']) {
         await page.locator('[data-space-action="' + action + '"]').click();

@@ -35,6 +35,7 @@ JSON_RECEIPTS = (
 JSONL_RECEIPTS = ("management-stages.jsonl", "input-records.jsonl")
 PNG_RECEIPTS = (
     "browser-report-signin.png", "browser-report-login-devices.png",
+    "browser-report-devices-900.png", "browser-report-devices-390.png",
     "browser-report-dialog-signout-device.png", "browser-report-dialog-create-account.png",
     "browser-report-dialog-space-create.png", "browser-report-dialog-space-join.png",
     *("browser-report-console-" + name + ".png" for name in (
@@ -70,7 +71,7 @@ CONSOLE_UI_FIELDS = (
     "passed", "entry_is_focused", "navigation_matches_prototype", "real_login_sessions",
     "cancel_keeps_session", "other_session_revoked_and_read_back",
     "revoked_browser_requires_signin", "current_session_preserved", "all_pages_reviewable",
-    "account_create_cancel_is_safe",
+    "account_create_cancel_is_safe", "login_cards_aligned",
 )
 AUTHORITY_UI_FIELDS = (
     "passed", "revision_epoch_bound", "rotation_advances_and_changes_key",

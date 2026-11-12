@@ -387,7 +387,7 @@ fn approved_navigation_exposes_admin_and_files_stay_inside_remote_desktop() {
 }
 
 #[test]
-fn account_login_devices_never_offer_device_enrollment_or_identity_revocation() {
+fn account_login_devices_keep_aligned_cards_without_identity_actions() {
     let mut snapshot = enrolled_snapshot();
     snapshot.security.data = Some(Arc::new(nestlink_protocol::api::MeResponse {
         principal: snapshot.principal.clone().expect("principal"),
@@ -403,16 +403,43 @@ fn account_login_devices_never_offer_device_enrollment_or_identity_revocation() 
         }],
         session_management_available: true,
     }));
-    let mut workspace = Workspace::new(snapshot);
-    workspace.app.screen = Screen::Devices;
-    let size = egui::vec2(1280., 900.);
-    for _ in 0..5 {
-        workspace.frame(size, vec![]);
+    let security = Arc::make_mut(snapshot.security.data.as_mut().expect("security"));
+    let mut other = security.sessions[0].clone();
+    other.session_id = "00000000-0000-4000-8000-000000000081".into();
+    other.device_name = Some("Long browser device name ".repeat(30));
+    other.client = Some("Web browser".into());
+    other.current = false;
+    other.created_at = Some(1_800_000_000);
+    other.last_active_at = Some(1_800_000_100);
+    security.sessions.push(other);
+    for size in [egui::vec2(1280., 900.), egui::vec2(1440., 960.)] {
+        let mut workspace = Workspace::new(snapshot.clone());
+        workspace.app.screen = Screen::Devices;
+        for _ in 0..5 {
+            workspace.frame(size, vec![]);
+        }
+        assert_eq!(workspace.label_bounds("My login workstation").len(), 1);
+        let details = workspace.bounds("登录详情");
+        assert_eq!(details.len(), 2);
+        assert!(
+            (details[0].top() - details[1].top()).abs() < 0.5,
+            "current badge or long name moved actions: {details:?}"
+        );
+        let signed_in = workspace.label_bounds("登录时间");
+        assert_eq!(signed_in.len(), 2);
+        assert!(
+            (signed_in[0].top() - signed_in[1].top()).abs() < 0.5,
+            "facts lost their baseline: {signed_in:?}"
+        );
+        for action in ["退出登录", "退出此设备"] {
+            let bounds = workspace.bounds(action);
+            assert_eq!(bounds.len(), 1);
+            assert!((bounds[0].top() - details[0].top()).abs() < 0.5);
+            assert!(egui::Rect::from_min_size(egui::Pos2::ZERO, size).contains_rect(bounds[0]));
+        }
+        assert!(workspace.bounds("登记").is_empty());
+        assert!(workspace.bounds("撤销").is_empty());
     }
-    assert_eq!(workspace.label_bounds("My login workstation").len(), 1);
-    assert_eq!(workspace.bounds("退出登录").len(), 1);
-    assert!(workspace.bounds("登记").is_empty());
-    assert!(workspace.bounds("撤销").is_empty());
 }
 
 fn session_workspace() -> Workspace {

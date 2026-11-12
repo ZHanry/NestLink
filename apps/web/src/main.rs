@@ -1211,7 +1211,6 @@ fn App() -> impl IntoView {
                                         </form>
                                     })}
                                     {move || (section.get() == Section::Accounts && is_admin).then(|| view! {
-                                        <div class="account-toolbar"><button class="primary" type="button" data-action="create-account" disabled=move || busy.get() on:click=move |_| account_create_open.set(true)>{move || t("创建账号", "Create account")}</button></div>
                                         <TaskDialog open=Signal::derive(move || account_create_open.get()) label=Signal::derive(move || t("创建账号", "Create account").to_owned()) on_close=close_account_create>
                                             <form class="account-create-form" on:submit=create_account>
                                                 <header class="dialog-head"><h2>{move || t("创建账号", "Create account")}</h2><p>{move || t("新账号默认不具备管理员权限。", "New accounts do not have administrator permissions by default.")}</p></header>
@@ -1228,6 +1227,9 @@ fn App() -> impl IntoView {
                                     })}
                                     <div hidden=move || section.get() == Section::Network><div class="section-heading list-heading">
                                         <div><h2>{move || list_heading(section.get())}</h2><p>{move || localized_format!("{} 项", "{} items", rows.with(Vec::len))}</p></div>
+                                        {move || (section.get() == Section::Accounts && is_admin).then(|| view! {
+                                            <button class="primary" type="button" data-action="create-account" disabled=move || busy.get() on:click=move |_| account_create_open.set(true)>{move || t("创建账号", "Create account")}</button>
+                                        })}
                                     </div>
                                     <div class="records" aria-live="polite">
                                         <Show when=move || rows.with(Vec::is_empty)><p class="empty-state">{move || empty_text.get().current()}</p></Show>

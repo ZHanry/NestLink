@@ -84,13 +84,14 @@ impl DesktopApp {
         });
         ui.add_space(18.);
         if self.workspace.devices_view == 0 {
-            let columns = if ui.available_width() > 1000. {
+            let columns: usize = if ui.available_width() > 1000. {
                 3
             } else if ui.available_width() > 620. {
                 2
             } else {
                 1
             };
+            let columns = columns.min(security.sessions.len().max(1));
             for chunk in security.sessions.chunks(columns) {
                 ui.columns(columns, |uis| {
                     for (index, session) in chunk.iter().enumerate() {
@@ -176,51 +177,97 @@ impl DesktopApp {
         snapshot: &Snapshot,
         session: &LoginSessionView,
     ) {
-        icons::badge(
+        // Identity, facts and actions have separate budgets. A current-session
+        // badge or a long device name cannot move another card's action row.
+        widgets::fixed_region(
             ui,
-            if session
-                .client
-                .as_deref()
-                .is_some_and(|v| v.starts_with("Web"))
-            {
-                Icon::Network
-            } else {
-                Icon::Monitor
+            ("login-card", &session.session_id),
+            egui::vec2(ui.available_width(), 188.),
+            |ui| {
+                let card = ui.max_rect();
+                widgets::fixed_region(ui, "identity", egui::vec2(card.width(), 48.), |ui| {
+                    ui.horizontal(|ui| {
+                        icons::badge(
+                            ui,
+                            if session
+                                .client
+                                .as_deref()
+                                .is_some_and(|v| v.starts_with("Web"))
+                            {
+                                Icon::Network
+                            } else {
+                                Icon::Monitor
+                            },
+                            40.,
+                        );
+                        ui.vertical(|ui| {
+                            ui.add(
+                                egui::Label::new(RichText::new(device_name(session)).strong())
+                                    .truncate(),
+                            )
+                            .on_hover_text(device_name(session));
+                            ui.add(
+                                egui::Label::new(
+                                    RichText::new(format!(
+                                        "{} · {}",
+                                        session.platform.as_deref().unwrap_or("—"),
+                                        session.client.as_deref().unwrap_or("—")
+                                    ))
+                                    .small()
+                                    .weak(),
+                                )
+                                .truncate(),
+                            );
+                        });
+                    });
+                });
+                for (label, value) in [
+                    (
+                        self.t("登录时间", "Signed in"),
+                        activity(session.created_at, self.english),
+                    ),
+                    (
+                        self.t("最近活动", "Last activity"),
+                        activity(session.last_active_at, self.english),
+                    ),
+                ] {
+                    widgets::fixed_region(ui, label, egui::vec2(card.width(), 20.), |ui| {
+                        ui.horizontal(|ui| {
+                            ui.allocate_ui_with_layout(
+                                egui::vec2(76., 20.),
+                                egui::Layout::left_to_right(egui::Align::Center),
+                                |ui| {
+                                    ui.small(RichText::new(label).weak());
+                                },
+                            );
+                            ui.add(egui::Label::new(RichText::new(&value).small()).truncate())
+                                .on_hover_text(&value);
+                        });
+                    });
+                }
+                let footer = egui::Rect::from_min_max(
+                    egui::pos2(card.left(), card.bottom() - 52.),
+                    card.max,
+                );
+                ui.scope_builder(egui::UiBuilder::new().max_rect(footer), |ui| {
+                    ui.separator();
+                    ui.horizontal(|ui| {
+                        if session.current {
+                            ui.colored_label(
+                                ui.visuals().hyperlink_color,
+                                RichText::new(self.t("当前设备", "This device")).small(),
+                            );
+                        }
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            self.login_signout_button(ui, snapshot, session);
+                            if ui.button(self.t("登录详情", "Details")).clicked() {
+                                self.workspace.selected_login = Some(session.session_id.clone());
+                            }
+                        });
+                    });
+                });
             },
-            40.,
         );
-        ui.add_space(10.);
-        ui.add(egui::Label::new(RichText::new(device_name(session)).strong()).truncate());
-        ui.small(format!(
-            "{} · {}",
-            session.platform.as_deref().unwrap_or("—"),
-            session.client.as_deref().unwrap_or("—")
-        ));
-        if session.current {
-            ui.colored_label(
-                ui.visuals().hyperlink_color,
-                self.t("当前设备", "This device"),
-            );
-        }
-        ui.add_space(12.);
-        ui.small(format!(
-            "{}   {}",
-            self.t("登录时间", "Signed in"),
-            activity(session.created_at, self.english)
-        ));
-        ui.small(format!(
-            "{}   {}",
-            self.t("最近活动", "Last activity"),
-            activity(session.last_active_at, self.english)
-        ));
-        ui.add_space(12.);
-        ui.separator();
-        ui.horizontal_wrapped(|ui| {
-            if ui.button(self.t("登录详情", "Details")).clicked() {
-                self.workspace.selected_login = Some(session.session_id.clone());
-            }
-            self.login_signout_button(ui, snapshot, session);
-        });
     }
     fn login_signout_button(
         &mut self,

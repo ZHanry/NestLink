@@ -119,16 +119,29 @@ pub(super) fn LoginDevicesPanel(
                     let target = session.clone();
                     let title = session.device_name.as_deref().filter(|v| !v.is_empty())
                         .or(session.client.as_deref()).unwrap_or(t("未命名登录", "Unnamed sign-in")).to_owned();
+                    let platform = session.platform.as_deref().unwrap_or_default();
+                    let client = session.client.as_deref().unwrap_or_default();
+                    let subtitle = if client == title || client.is_empty() {
+                        platform.to_owned()
+                    } else if platform.is_empty() {
+                        client.to_owned()
+                    } else {
+                        format!("{platform} · {client}")
+                    };
                     let created = session.created_at.map(|time| format_time(time.saturating_mul(1000)));
                     let active = session.last_active_at.map(|time| format_time(time.saturating_mul(1000)));
                     view! {
                         <article class="login-device-card" data-login-session=session.session_id>
-                            <div class="device-symbol"><super::WorkspaceIcon kind=super::Section::Devices /></div>
-                            <h3>{title}</h3><p class="muted">{session.platform.unwrap_or_default()} " · " {session.client.unwrap_or_default()}</p>
-                            {session.current.then(|| view! { <span class="current-device">{move || t("当前设备", "This device")}</span> })}
+                            <header class="login-device-head">
+                                <div class="device-symbol"><super::WorkspaceIcon kind=super::Section::Devices /></div>
+                                <div class="login-device-identity"><h3 title=title.clone()>{title}</h3><p class="muted" title=subtitle.clone()>{subtitle}</p></div>
+                            </header>
                             <dl><dt>{move || t("登录时间", "Signed in")}</dt><dd>{move || created.as_ref().map(|v| v.current()).unwrap_or_else(|| t("未记录", "Not recorded").into())}</dd>
                                 <dt>{move || t("最近活动", "Last active")}</dt><dd>{move || active.as_ref().map(|v| v.current()).unwrap_or_else(|| t("未记录", "Not recorded").into())}</dd></dl>
-                            <button class="danger-soft" type="button" disabled=move || busy.get() || !available.get() on:click=move |_| pending.set(Some(target.clone()))>{move || t("退出此设备", "Sign out device")}</button>
+                            <footer class="login-device-actions">
+                                {session.current.then(|| view! { <span class="current-device">{move || t("当前设备", "This device")}</span> })}
+                                <button class="danger-soft" type="button" disabled=move || busy.get() || !available.get() on:click=move |_| pending.set(Some(target.clone()))>{move || t("退出此设备", "Sign out device")}</button>
+                            </footer>
                         </article>
                     }
                 }).collect_view()}
