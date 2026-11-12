@@ -169,6 +169,8 @@ async function run(page, ready, report, { engine, disconnectedEvent, duringRateW
     check(await recipient.$(field('device')) === null, 'Replay failure retained a writable snapshot');
     check(await recipient.$eval(field('incoming'), element => element.value) === link, 'Rejected invitation draft was lost');
     facts.invitation_single_use = true;
+    await click(recipient, '.task-dialog[open] .confirmation-actions .secondary', 'Cancel');
+    await recipient.waitForFunction(() => !document.querySelector('.task-dialog[open]'));
 
     facts.stage = 'conflict_and_roles';
     await page.bringToFront();
