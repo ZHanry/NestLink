@@ -358,7 +358,8 @@ async function main() {
       await sibling.locator('.entry-panel button.primary').click();
       await sibling.waitForSelector('button.record', { visible: true });
       await consoleUi.sessions(page, sibling, args, report);
-      await sibling.waitForFunction(() => document.querySelector('.entry-panel button.primary')?.disabled === false && !document.querySelector('#username'));
+      await sibling.waitForFunction(() => document.querySelector('.entry-panel button.primary')?.disabled === false
+        && document.querySelector('#username')?.value === '' && !document.querySelector('.workspace'));
       report.concurrent_login = { same_account: true, shared_browser_context: true, second_page_signed_out: true };
     } finally {
       await sibling.close();

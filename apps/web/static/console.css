@@ -136,9 +136,9 @@
 .dialog-close { position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 7px; color: var(--subtle); background: transparent; font-size: 22px; cursor: pointer; }
 .dialog-close:hover { background: var(--selection); color: var(--plum-ink); }
 .account-toolbar { display: flex; justify-content: end; margin-bottom: 20px; }
-.task-dialog:has(.account-create-form) { width: min(520px, calc(100vw - 32px)); padding: 0; overflow: hidden; }
-.account-create-form { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; max-height: calc(100dvh - 32px); }
-.account-create-form .dialog-head { padding-right: 60px; }
-.account-create-form .dialog-body { overflow: auto; padding: 24px 26px; margin: 0; }
-.account-create-form .form-error { margin: 0; }
-.account-create-form .confirmation-actions { margin: 0; padding: 18px 26px; }
+.task-dialog:has(.account-create-form, .space-dialog-form) { width: min(520px, calc(100vw - 32px)); padding: 0; overflow: hidden; }
+.account-create-form, .space-dialog-form { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; max-height: calc(100dvh - 32px); }
+:is(.account-create-form, .space-dialog-form) .dialog-head { padding-right: 60px; }
+:is(.account-create-form, .space-dialog-form) .dialog-body { overflow: auto; padding: 24px 26px; margin: 0; }
+:is(.account-create-form, .space-dialog-form) .form-error { margin: 0; }
+:is(.account-create-form, .space-dialog-form) .confirmation-actions { margin: 0; padding: 18px 26px; }

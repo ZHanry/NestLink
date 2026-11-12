@@ -127,6 +127,14 @@ pub(super) fn SpacesPanel(
     let busy = RwSignal::new(false);
     let problem = RwSignal::new(String::new());
     let message = RwSignal::new(String::new());
+    let close_dialog = Callback::new(move |()| {
+        if !busy.get_untracked() {
+            dialog.set(0);
+            name.set(String::new());
+            incoming_link.set(String::new());
+            problem.set(String::new());
+        }
+    });
     let alive = Arc::new(AtomicBool::new(true));
     let cleanup = alive.clone();
     on_cleanup(move || cleanup.store(false, Ordering::Release));
@@ -486,15 +494,26 @@ pub(super) fn SpacesPanel(
                         </div>
                 </div></div>
                 <Show when=move || dialog.get()!=0>
-                    <super::TaskDialog open=Signal::derive(move || dialog.get()!=0) label=Signal::derive(move || if dialog.get()==1 { t("创建空间","Create space") } else { t("加入空间","Join space") }.to_owned()) on_close=Callback::new(move |()| dialog.set(0))>
-                        <h2>{move || if dialog.get()==1 { t("创建空间","Create space") } else { t("加入空间","Join space") }}</h2>
-                        <div class="form-stack" hidden=move || dialog.get()!=1>            <label>{move || t("新空间名称", "New space name")}<input data-space-field="name" maxlength="80" prop:value=move || name.get() disabled=move || busy.get() on:input=move |event| name.set(event_target_value(&event)) /></label>
-                <button type="button" class="primary" disabled=move || busy.get() || name.get().trim().is_empty() on:click=move |_| request.run(Command::Create)>{move || t("创建空间", "Create space")}</button>
-    </div><div class="form-stack" hidden=move || dialog.get()!=2>            <label>{move || t("一次性邀请链接", "One-use invitation link")}<input data-space-field="incoming" type="password" autocomplete="off" prop:value=move || incoming_link.get() disabled=move || busy.get() on:input=move |event| incoming_link.set(event_target_value(&event)) /></label>
-                <button type="button" class="secondary" disabled=move || busy.get() || invitation_parts(&incoming_link.get()).is_none() on:click=move |_| request.run(Command::Accept)>{move || t("接受邀请加入空间", "Accept invitation")}</button>
-    </div>
-                        <Show when=move || !problem.get().is_empty()><p class="feedback error" role="alert">{move || problem.get()}</p></Show>
-                        <div class="confirmation-actions"><button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| dialog.set(0)>{move || t("取消", "Cancel")}</button></div>
+                    <super::TaskDialog open=Signal::derive(move || dialog.get()!=0) label=Signal::derive(move || if dialog.get()==1 { t("创建空间","Create space") } else { t("加入空间","Join space") }.to_owned()) on_close=close_dialog>
+                        <form class="space-dialog-form" on:submit=move |event: leptos::ev::SubmitEvent| {
+                            event.prevent_default();
+                            if dialog.get_untracked()==1 && !name.get_untracked().trim().is_empty() {
+                                request.run(Command::Create);
+                            } else if dialog.get_untracked()==2 && invitation_parts(&incoming_link.get_untracked()).is_some() {
+                                request.run(Command::Accept);
+                            }
+                        }>
+                            <header class="dialog-head"><h2>{move || if dialog.get()==1 { t("创建空间","Create space") } else { t("加入空间","Join space") }}</h2></header>
+                            <div class="dialog-body form-stack">
+                                <label hidden=move || dialog.get()!=1>{move || t("新空间名称", "New space name")}<input data-space-field="name" maxlength="80" prop:value=move || name.get() disabled=move || busy.get() on:input=move |event| name.set(event_target_value(&event)) /></label>
+                                <label hidden=move || dialog.get()!=2>{move || t("一次性邀请链接", "One-use invitation link")}<input data-space-field="incoming" type="password" autocomplete="off" prop:value=move || incoming_link.get() disabled=move || busy.get() on:input=move |event| incoming_link.set(event_target_value(&event)) /></label>
+                                <p class="form-error" role="alert">{move || problem.get()}</p>
+                            </div>
+                            <footer class="confirmation-actions">
+                                <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| close_dialog.run(())>{move || t("取消", "Cancel")}</button>
+                                <button type="submit" class="primary" disabled=move || busy.get() || if dialog.get()==1 { name.get().trim().is_empty() } else { invitation_parts(&incoming_link.get()).is_none() }>{move || if busy.get() { t("正在提交…", "Submitting…") } else if dialog.get()==1 { t("创建空间", "Create space") } else { t("接受邀请加入空间", "Accept invitation") }}</button>
+                            </footer>
+                        </form>
                     </super::TaskDialog>
                 </Show>
                             <Show when=move || !issued_link.get().is_empty()>
