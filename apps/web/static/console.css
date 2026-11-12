@@ -34,19 +34,19 @@
 .task-dialog > h2 { margin-bottom: 12px; }
 .task-dialog > p { overflow-wrap: anywhere; }
 .login-devices { padding-bottom: 24px; }
-.account-summary { display: flex; align-items: center; gap: 16px; padding: 22px; margin-bottom: 24px; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--paper); }
+.account-summary { display: flex; align-items: center; gap: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--paper); }
 .account-summary > .workspace-icon { width: 42px; height: 42px; padding: 10px; border-radius: 10px; background: var(--selection); color: var(--plum-ink); }
 .account-summary h2 { margin-bottom: 4px; }
 .account-summary p { margin: 0; color: var(--subtle); font-size: 12px; }
 .account-summary .status-label { margin-left: auto; flex-shrink: 0; }
 .login-device-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: stretch; grid-auto-rows: 1fr; gap: 20px; }
-.login-device-card { display: grid; grid-template-rows: 48px 1fr auto; gap: 22px; min-width: 0; padding: 22px; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--paper); box-shadow: 0 2px 4px #29233303; }
-.login-device-head { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.login-device-card { display: grid; grid-template-rows: 48px 1fr auto; gap: 20px; min-width: 0; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--paper); box-shadow: 0 2px 4px #29233303; }
+.login-device-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .login-device-card .device-symbol { flex: 0 0 40px; width: 40px; height: 40px; border: 0; border-radius: 10px; color: var(--plum-ink); background: var(--selection); }
 .login-device-card .device-symbol .workspace-icon { width: 21px; height: 21px; }
 .login-device-identity { min-width: 0; }
 .login-device-card h3 { margin: 0 0 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; line-height: 20px; }
-.login-device-card .muted { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; line-height: 18px; }
+.login-device-card .muted { min-height: 18px; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; line-height: 18px; }
 .login-device-card dl { grid-template-columns: 70px minmax(0, 1fr); align-content: start; gap: 10px 12px; margin: 0; line-height: 1.6; }
 .login-device-card dd { font-variant-numeric: tabular-nums; }
 .login-device-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 51px; padding-top: 16px; border-top: 1px solid var(--line); }

@@ -134,7 +134,7 @@ pub(super) fn LoginDevicesPanel(
                         <article class="login-device-card" data-login-session=session.session_id>
                             <header class="login-device-head">
                                 <div class="device-symbol"><super::WorkspaceIcon kind=super::Section::Devices /></div>
-                                <div class="login-device-identity"><h3 title=title.clone()>{title}</h3><p class="muted" title=subtitle.clone()>{subtitle}</p></div>
+                                <div class="login-device-identity"><h3 title=title.clone()>{title.clone()}</h3><p class="muted" title=subtitle.clone()>{subtitle.clone()}</p></div>
                             </header>
                             <dl><dt>{move || t("登录时间", "Signed in")}</dt><dd>{move || created.as_ref().map(|v| v.current()).unwrap_or_else(|| t("未记录", "Not recorded").into())}</dd>
                                 <dt>{move || t("最近活动", "Last active")}</dt><dd>{move || active.as_ref().map(|v| v.current()).unwrap_or_else(|| t("未记录", "Not recorded").into())}</dd></dl>

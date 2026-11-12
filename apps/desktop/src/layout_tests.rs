@@ -403,7 +403,8 @@ fn account_login_devices_keep_aligned_cards_without_identity_actions() {
         }],
         session_management_available: true,
     }));
-    let security = Arc::make_mut(snapshot.security.data.as_mut().expect("security"));
+    let security = Arc::get_mut(snapshot.security.data.as_mut().expect("security"))
+        .expect("exclusive security fixture");
     let mut other = security.sessions[0].clone();
     other.session_id = "00000000-0000-4000-8000-000000000081".into();
     other.device_name = Some("Long browser device name ".repeat(30));
