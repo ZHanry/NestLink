@@ -369,10 +369,8 @@ async function main() {
     await relayAttributesUi.run(page, ready, report, { engine: args.engine, disconnectedEvent: CDPSessionEvent.Disconnected });
     await spacesUi.run(page, ready, report, { engine: args.engine,
       disconnectedEvent: CDPSessionEvent.Disconnected,
-      duringRateWindow: async () => {
-        await consoleUi.pages(page, args, report);
-        await setupUi.runInDedicatedPage(page, ready, report);
-      } });
+      duringRateWindow: () => setupUi.runInDedicatedPage(page, ready, report,
+        reviewPage => consoleUi.pages(reviewPage, args, report)) });
     await workspaceUi.workspaces(page, args, report);
     check(await page.$$eval('button.record', nodes => nodes.length) === 1, 'Fixture must initially expose only its own native host');
     await page.locator('button.record').click();

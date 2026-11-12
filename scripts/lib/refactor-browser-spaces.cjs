@@ -200,14 +200,11 @@ async function run(page, ready, report, { engine, disconnectedEvent, duringRateW
     // sequence must wait for the original window instead of raising the limit
     // or accepting 429 as a successful mutation.
     // Use the existing mandatory rate-window wait for page/dialog review and
-    // independent read-only onboarding checks. Navigation may unmount this
-    // panel, so reopen it and reread current server state before continuing.
-    // The original bearer and 61-second rate rule remain unchanged.
+    // read-only onboarding checks in a separate signed-in page. This panel's
+    // state, bearer and original 61-second rate rule remain unchanged.
     if (duringRateWindow) await duringRateWindow();
     await new Promise(resolve => setTimeout(resolve, Math.max(0, 61_000 - (Date.now() - windowStarted))));
-    await security(page);
-    await settled(page);
-    await read(page, name);
+    await page.bringToFront(); await read(page, name);
     await action(page, 'Revoke invitation', 'DELETE', active.base + '/invitations/' + delegated.body.invitation.invitation_id);
     await page.select(field('account'), account);
     await action(page, 'Remove member and their space devices', 'DELETE', active.base + '/people/' + account);

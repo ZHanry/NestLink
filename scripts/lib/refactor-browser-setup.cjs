@@ -122,14 +122,23 @@ async function run(page, ready, report) {
     page.off('request', observe);
   }
 }
-async function runInDedicatedPage(controller, ready, report) {
+async function runInDedicatedPage(controller, ready, report, review) {
   const page = await controller.browserContext().newPage();
   page.setDefaultTimeout(12000);
   page.on('pageerror', error => report.page_errors.push(String(error.message).slice(0, 500)));
+  const observe = response => {
+    const url = new URL(response.url());
+    if (url.origin === ready.origin && url.pathname.startsWith('/api/v3/') && response.status() >= 400) {
+      report.api_failures.push({ path: url.pathname, status: response.status() });
+    }
+  };
+  page.on('response', observe);
   try {
     await signIn(page, ready);
+    if (review) await review(page);
     await run(page, ready, report);
   } finally {
+    page.off('response', observe);
     await page.close();
     if (report.setup_guide_ui) report.setup_guide_ui.dedicated_page_closed = page.isClosed();
     await controller.bringToFront();
