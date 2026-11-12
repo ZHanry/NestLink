@@ -386,7 +386,7 @@ impl DesktopApp {
                 ui.label(RichText::new("WELCOME BACK").size(10.).color(ui.visuals().hyperlink_color));
                 ui.add_space(if compact { 8. } else { 12. });
                 ui.horizontal(|ui| {
-                    ui.label(RichText::new(self.t("连接你的控制中心", "Connect your control center")).font(crate::theme::heading_font(25.)));
+                    ui.label(RichText::new(self.t("连接你的控制中心", "Connect your control center")).font(crate::theme::heading_font(if compact { 22. } else { 25. })));
                 });
                 ui.add_space(if compact { 6. } else { 8. });
                 ui.label(
@@ -396,7 +396,7 @@ impl DesktopApp {
                     ))
                     .color(ui.visuals().weak_text_color()),
                 );
-                ui.add_space(if compact { 16. } else { 28. });
+                ui.add_space(if compact { 12. } else { 28. });
                 egui::Frame::new().inner_margin(0)
                     .show(ui, |ui| {
                         ui.set_width(330.);
@@ -481,7 +481,7 @@ impl DesktopApp {
                             }
                         });
                     });
-                ui.add_space(if compact { 4. } else { 16. });
+                ui.add_space(if compact { 0. } else { 16. });
                 if ui
                     .button(self.t("连接其他服务器", "Connect to another server"))
                     .clicked()
