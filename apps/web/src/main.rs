@@ -1913,6 +1913,7 @@ fn TaskDialog(
     view! {
         <dialog class="task-dialog" node_ref=dialog aria-label=move || label.get()
             on:cancel=move |event: leptos::ev::Event| { event.prevent_default(); on_close.run(()); }>
+            <button type="button" class="dialog-close" aria-label=move || t("关闭对话框", "Close dialog") on:click=move |_| on_close.run(())>"×"</button>
             {children()}
         </dialog>
     }

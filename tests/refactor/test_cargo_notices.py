@@ -114,7 +114,7 @@ class NoticeTests(unittest.TestCase):
                     self.assertEqual(index['packages'][0]['files'][0]['upstream_url'], entry['files'][0]['upstream_url'])
 
     def test_sqlite_official_release_source_is_exactly_scoped(self):
-        item = {'name': 'libsqlite3-sys', 'version': '0.35.0'}
+        item = {'name': 'libsqlite3-sys', 'version': '0.39.1'}
         checksum = N.SQLITE_CRATE_ARCHIVE_SHA256
         entry = {
             'path': N.SQLITE_NOTICE_PATH,

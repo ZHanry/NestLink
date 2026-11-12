@@ -69,11 +69,11 @@ REVIEWED_LICENSE_URLS = {
     'tachys': 'https://raw.githubusercontent.com/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE',
     'objc2-foundation': 'https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt',
 }
-SQLITE_UPSTREAM_RELEASE_URL = 'https://www.sqlite.org/2025/sqlite-amalgamation-3500200.zip'
-SQLITE_UPSTREAM_RELEASE_SHA256 = '387991de2834b5da2894119ff4173a9ea0779ea55ebcf53d9a40b24d1dc2484e'
-SQLITE_NOTICE_PATH = 'packaging/notices/cargo-upstream/sqlite-3.50.2-PUBLIC-DOMAIN.txt'
+SQLITE_UPSTREAM_RELEASE_URL = 'https://www.sqlite.org/2026/sqlite-amalgamation-3540100.zip'
+SQLITE_UPSTREAM_RELEASE_SHA256 = '0a9c8e34352dad46006aa82836d5383bff9dc6bc9ce5a60553c05aa30e6ad1f9'
+SQLITE_NOTICE_PATH = 'packaging/notices/cargo-upstream/sqlite-3.54.1-PUBLIC-DOMAIN.txt'
 SQLITE_NOTICE_SHA256 = 'ad89cf5f9a0ca133418eae187ae954f2805fd3261aa00716642ed93fc7f3892d'
-SQLITE_CRATE_ARCHIVE_SHA256 = '133c182a6a2c87864fe97778797e46c7e999672690dc9fa3ee8e241aa4a9c13f'
+SQLITE_CRATE_ARCHIVE_SHA256 = '14a5f01b87b92705d07b433c06f96cbc764637d81a0bffb5734ce17cf0f9a2b3'
 
 
 class MissingNotices(ValueError):
@@ -93,7 +93,7 @@ def reviewed_supplement_source(item, archive_sha256, value):
         return True
     return (
         item.get('name') == 'libsqlite3-sys'
-        and item.get('version') == '0.35.0'
+        and item.get('version') == '0.39.1'
         and archive_sha256 == SQLITE_CRATE_ARCHIVE_SHA256
         and value.get('path') == SQLITE_NOTICE_PATH
         and url == SQLITE_UPSTREAM_RELEASE_URL

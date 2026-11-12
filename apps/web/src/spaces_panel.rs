@@ -448,7 +448,8 @@ pub(super) fn SpacesPanel(
                         view! { <div><span>{device.name} " · " {role_name(device.role)} {if device.active { " · active" } else { " · revoked" }}</span><button type="button" class="secondary" disabled=move || busy.get() || !device.active on:click=move |_| request.run(Command::RemoveDevice(id.clone(), epoch))>{move || t("移除设备", "Remove device")}</button></div> }
                     }).collect_view()}
     </div>
-                        <div class="space-tab-body form-stack" role="tabpanel" hidden=move || tab.get()!=1>                <Show when=move || details.get().is_some_and(|details| matches!(details.space.role, SpaceRole::Owner | SpaceRole::Admin) && !details.space.archived)>
+                        <div class="space-tab-body form-stack" role="tabpanel" hidden=move || tab.get()!=1>
+                            <Show when=move || details.get().is_some_and(|current| !matches!(current.space.role, SpaceRole::Owner | SpaceRole::Admin))><p class="muted">{move || t("成员角色由空间所有者或管理员管理。", "Space owners and administrators manage member roles.")}</p>{move || details.get().into_iter().flat_map(|current| current.members).map(|member| view! { <div class="space-row"><strong>{member.name}</strong><span>{role_name(member.role)}</span></div> }).collect_view()}</Show>                <Show when=move || details.get().is_some_and(|details| matches!(details.space.role, SpaceRole::Owner | SpaceRole::Admin) && !details.space.archived)>
                         <label>{move || t("空间成员", "Space member")}<select data-space-field="account" prop:value=move || account.get() disabled=move || busy.get() on:change=move |event| account.set(event_target_value(&event))>
                             <option value="">{move || t("选择成员", "Choose a member")}</option>
                             {move || details.get().into_iter().flat_map(|details| details.members).map(|member| view! { <option value=member.account_id>{member.name} " · " {role_name(member.role)} {if member.active { "" } else { " · revoked" }}</option> }).collect_view()}
@@ -456,7 +457,7 @@ pub(super) fn SpacesPanel(
                         <label>{move || t("成员或邀请角色", "Member or invitation role")}<select data-space-field="role" prop:value=move || selected_role.get() disabled=move || busy.get() on:change=move |event| selected_role.set(event_target_value(&event))>
                             <option value="member">"member"</option><option value="guest">"guest"</option>
 
-                            <Show when=move || details.get().is_some_and(|current| !matches!(current.space.role, SpaceRole::Owner | SpaceRole::Admin))><p class="muted">{move || t("成员角色由空间所有者或管理员管理。", "Space owners and administrators manage member roles.")}</p>{move || details.get().into_iter().flat_map(|current| current.members).map(|member| view! { <div class="space-row"><strong>{member.name}</strong><span>{role_name(member.role)}</span></div> }).collect_view()}</Show>
+
                                             <Show when=move || details.get().is_some_and(|details| details.space.role == SpaceRole::Owner)><option value="admin">"admin"</option><option value="owner">{move || t("转让所有权（仅已有成员）", "Transfer ownership (existing member only)")}</option></Show>
                         </select></label>
                         <button type="button" class="primary" disabled=move || busy.get() || account.get().is_empty() on:click=move |_| request.run(Command::UpdateMember)>{move || t("保存角色或转让所有权", "Save role or transfer ownership")}</button>
@@ -492,6 +493,8 @@ pub(super) fn SpacesPanel(
     </div><div class="form-stack" hidden=move || dialog.get()!=2>            <label>{move || t("一次性邀请链接", "One-use invitation link")}<input data-space-field="incoming" type="password" autocomplete="off" prop:value=move || incoming_link.get() disabled=move || busy.get() on:input=move |event| incoming_link.set(event_target_value(&event)) /></label>
                 <button type="button" class="secondary" disabled=move || busy.get() || invitation_parts(&incoming_link.get()).is_none() on:click=move |_| request.run(Command::Accept)>{move || t("接受邀请加入空间", "Accept invitation")}</button>
     </div>
+                        <Show when=move || !problem.get().is_empty()><p class="feedback error" role="alert">{move || problem.get()}</p></Show>
+                        <div class="confirmation-actions"><button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| dialog.set(0)>{move || t("取消", "Cancel")}</button></div>
                     </super::TaskDialog>
                 </Show>
                             <Show when=move || !issued_link.get().is_empty()>

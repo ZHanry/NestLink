@@ -130,3 +130,8 @@
   .managed-network { padding: 14px; }
   .entry-shell { margin-top: 28px; }
 }
+
+.task-dialog { position: fixed; }
+.task-dialog > h2 { padding-right: 36px; }
+.dialog-close { position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 7px; color: var(--subtle); background: transparent; font-size: 22px; cursor: pointer; }
+.dialog-close:hover { background: var(--selection); color: var(--plum-ink); }

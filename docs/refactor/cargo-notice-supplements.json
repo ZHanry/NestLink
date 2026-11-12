@@ -1175,16 +1175,16 @@
     },
     {
       "name": "libsqlite3-sys",
-      "version": "0.35.0",
-      "archive_sha256": "133c182a6a2c87864fe97778797e46c7e999672690dc9fa3ee8e241aa4a9c13f",
+      "version": "0.39.1",
+      "archive_sha256": "14a5f01b87b92705d07b433c06f96cbc764637d81a0bffb5734ce17cf0f9a2b3",
       "license_declared": "MIT",
-      "review_basis": "The exact locked libsqlite3-sys 0.35.0 crate embeds sqlite3.c and sqlite3.h byte-identical to the official SQLite 3.50.2 sqlite.org amalgamation ZIP (SHA-256 387991de2834b5da2894119ff4173a9ea0779ea55ebcf53d9a40b24d1dc2484e); source ID 2025-06-28 14:00:48 2af157d77fb1304a74176eaee7fbc7c7e932d946bf25325e9c26c91db19e3079. The original public-domain blessing is preserved as attribution; the Rust wrapper separately retains MIT. This excerpt is not represented as a full license text. See docs/refactor/build-input-provenance-2026-10-16.md.",
+      "review_basis": "The exact locked libsqlite3-sys 0.39.1 crate embeds sqlite3.c and sqlite3.h byte-identical to the official SQLite 3.54.1 sqlite.org amalgamation ZIP (SHA-256 0a9c8e34352dad46006aa82836d5383bff9dc6bc9ce5a60553c05aa30e6ad1f9); source ID 2026-10-16 14:45:20 555e07ef33f69a0957d24d8e555b702464a131d6f1607f4c3c1e4551e8e6ca76. The original public-domain blessing is preserved as attribution; the Rust wrapper separately retains MIT. This excerpt is not represented as a full license text. See docs/refactor/rc2-dependency-security-review-2026-11-12.md.",
       "files": [
         {
-          "path": "packaging/notices/cargo-upstream/sqlite-3.50.2-PUBLIC-DOMAIN.txt",
+          "path": "packaging/notices/cargo-upstream/sqlite-3.54.1-PUBLIC-DOMAIN.txt",
           "sha256": "ad89cf5f9a0ca133418eae187ae954f2805fd3261aa00716642ed93fc7f3892d",
-          "upstream_url": "https://www.sqlite.org/2025/sqlite-amalgamation-3500200.zip",
-          "upstream_archive_sha256": "387991de2834b5da2894119ff4173a9ea0779ea55ebcf53d9a40b24d1dc2484e",
+          "upstream_url": "https://www.sqlite.org/2026/sqlite-amalgamation-3540100.zip",
+          "upstream_archive_sha256": "0a9c8e34352dad46006aa82836d5383bff9dc6bc9ce5a60553c05aa30e6ad1f9",
           "full_license_text": false
         }
       ]
