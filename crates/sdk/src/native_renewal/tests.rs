@@ -199,7 +199,7 @@ fn session(
     evidence: &NativeMediaEvidence,
     role: EndpointRole,
     clock: &RuntimeClock,
-) -> Result<Session> {
+) -> Result<(Session, u64)> {
     let c = permit.claims();
     let sample = clock.sample()?;
     let binding = SessionBinding {
@@ -235,7 +235,7 @@ fn session(
         MEDIA_REGRESSION_REQUEST_ID,
     )?;
     session.cap_deadline_ms(sample.monotonic_ms + 5000)?;
-    Ok(session)
+    Ok((session, sample.monotonic_ms))
 }
 async fn exercise(lost_response: bool) -> Result {
     let deployment = random_id();
@@ -353,8 +353,10 @@ async fn exercise(lost_response: bool) -> Result {
     let clock_h = RuntimeClock::default();
     let evidence_c = evidence(&old, EndpointRole::Controller);
     let evidence_h = evidence(&old, EndpointRole::Host);
-    let mut session_c = session(old.clone(), &evidence_c, EndpointRole::Controller, &clock_c)?;
-    let mut session_h = session(old.clone(), &evidence_h, EndpointRole::Host, &clock_h)?;
+    let (mut session_c, activated_c) =
+        session(old.clone(), &evidence_c, EndpointRole::Controller, &clock_c)?;
+    let (mut session_h, activated_h) =
+        session(old.clone(), &evidence_h, EndpointRole::Host, &clock_h)?;
     let (c, h) = tokio::io::duplex(131072);
     let (mut cr, mut cw) = split(c);
     let (mut hr, mut hw) = split(h);
@@ -437,6 +439,16 @@ async fn exercise(lost_response: bool) -> Result {
         sequence_c.clone(),
         &source_c.evidence,
     )?;
+    // This fixture caps the initial lease to five seconds, triggering renewal
+    // immediately. The in-memory proof exchange can finish in the same clock
+    // millisecond as activation; the session correctly rejects that timestamp
+    // as a replay. Start a distinct request on both real clocks, without moving
+    // either deadline or relaxing the strictly increasing request check.
+    while lease_c.renewal_clock()?.monotonic_ms <= activated_c
+        || lease_h.renewal_clock()?.monotonic_ms <= activated_h
+    {
+        tokio::time::sleep(Duration::from_millis(1)).await;
+    }
     // The host polls its private port repeatedly without preparing/signing when
     // there is no Offer. The controller is the sole issuance initiator.
     let host_round = async {
