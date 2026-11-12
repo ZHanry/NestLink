@@ -232,6 +232,9 @@ impl DesktopApp {
                     ),
                 ] {
                     widgets::fixed_region(ui, label, egui::vec2(card.width(), 20.), |ui| {
+                        // A facts row contains text only. The global button
+                        // height would center its labels below this row's clip.
+                        ui.spacing_mut().interact_size.y = 20.;
                         ui.horizontal(|ui| {
                             ui.allocate_ui_with_layout(
                                 egui::vec2(76., 20.),

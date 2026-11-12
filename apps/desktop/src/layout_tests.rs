@@ -432,6 +432,27 @@ fn account_login_devices_keep_aligned_cards_without_identity_actions() {
             (signed_in[0].top() - signed_in[1].top()).abs() < 0.5,
             "facts lost their baseline: {signed_in:?}"
         );
+        let mut visible_facts = 0;
+        for shape in &workspace.last_output.as_ref().expect("card output").shapes {
+            let egui::Shape::Text(text) = &shape.shape else {
+                continue;
+            };
+            let value = text.galley.text();
+            if matches!(value, "登录时间" | "最近活动" | "未记录") || value.ends_with(" UTC")
+            {
+                let bounds = text.galley.rect.translate(text.pos.to_vec2());
+                assert!(
+                    shape.clip_rect.expand(0.5).contains_rect(bounds),
+                    "card fact text is clipped: {value}: {bounds:?} in {:?}",
+                    shape.clip_rect
+                );
+                visible_facts += 1;
+            }
+        }
+        assert_eq!(
+            visible_facts, 8,
+            "both cards must paint all fact labels and values"
+        );
         for action in ["退出登录", "退出此设备"] {
             let bounds = workspace.bounds(action);
             assert_eq!(bounds.len(), 1);
