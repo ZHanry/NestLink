@@ -96,6 +96,7 @@ async function run(page, ready, report, { engine, disconnectedEvent, duringRateW
     await observe(page, 'space-owner');
     facts.stage = 'create_recipient_account';
     await click(page, '.sidebar nav button', 'Account management');
+    await page.locator('[data-action="create-account"]').click();
     await page.waitForSelector('#new-account', { visible: true });
     await page.waitForFunction(() => document.querySelector('#new-account')?.disabled === false);
     await page.locator('#new-account').fill(username);
@@ -104,12 +105,13 @@ async function run(page, ready, report, { engine, disconnectedEvent, duringRateW
     const accountCapture = active.observers.get(page)?.expect('POST /api/v3/accounts', 201, 12000);
     let account;
     try {
-      await page.locator('.inline-create button[type="submit"]').click();
+      await page.locator('.account-create-form button[type="submit"]').click();
       const accountResponse = await pending;
       check(accountResponse.status() === 201, 'Recipient account was not created through UI');
       account = (accountCapture ? await accountCapture.promise : await accountResponse.json()).id;
     } finally { accountCapture?.cancel(); }
     check(typeof account === 'string', 'Recipient account ID missing');
+    await page.waitForFunction(() => !document.querySelector('.task-dialog[open]'));
     await page.waitForFunction(() => document.querySelector('.refresh-button')?.disabled === false);
 
     facts.stage = 'create_space_and_join_device';
