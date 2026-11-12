@@ -346,32 +346,41 @@ async function main() {
     // Its logout must not replace or revoke this page's bearer session, nor
     // the native host's login. The first page must still establish and renew
     // the real media session below after the shared cookies are cleared.
-    const sibling = await page.browserContext().newPage();
-    try {
-      check(sibling.browserContext() === page.browserContext(),
-        'Concurrent sign-in must use the actual controller browser context');
-      await sibling.goto(ready.origin, { waitUntil: 'networkidle0' });
-      await sibling.locator('.entry-panel button.primary').click();
-      await sibling.waitForSelector('#username', { visible: true });
-      await sibling.locator('#username').fill(ready.username);
-      await sibling.locator('#password').fill(ready.password);
-      await sibling.locator('.entry-panel button.primary').click();
-      await sibling.waitForSelector('button.record', { visible: true });
-      await consoleUi.sessions(page, sibling, args, report);
-      await sibling.waitForFunction(() => document.querySelector('.entry-panel button.primary')?.disabled === false
-        && document.querySelector('#username')?.value === '' && !document.querySelector('.workspace'));
-      report.concurrent_login = { same_account: true, shared_browser_context: true, second_page_signed_out: true };
-    } finally {
-      await sibling.close();
-    }
+    const concurrentLogin = async () => {
+      const sibling = await page.browserContext().newPage();
+      try {
+        check(sibling.browserContext() === page.browserContext(),
+          'Concurrent sign-in must use the actual controller browser context');
+        await sibling.goto(ready.origin, { waitUntil: 'networkidle0' });
+        await sibling.locator('.entry-panel button.primary').click();
+        await sibling.waitForSelector('#username', { visible: true });
+        await sibling.locator('#username').fill(ready.username);
+        await sibling.locator('#password').fill(ready.password);
+        await sibling.locator('.entry-panel button.primary').click();
+        await sibling.waitForSelector('button.record', { visible: true });
+        await consoleUi.sessions(page, sibling, args, report);
+        await sibling.waitForFunction(() => document.querySelector('.entry-panel button.primary')?.disabled === false
+          && document.querySelector('#username')?.value === '' && !document.querySelector('.workspace'));
+        report.concurrent_login = { same_account: true, shared_browser_context: true, second_page_signed_out: true };
+      } finally {
+        await sibling.close();
+      }
+    };
     await edgeNamespaceUi.run(page, ready, report);
     await networkMembershipUi.run(page, ready, report, { engine: args.engine, disconnectedEvent: CDPSessionEvent.Disconnected });
     await relayAttributesUi.run(page, ready, report, { engine: args.engine, disconnectedEvent: CDPSessionEvent.Disconnected });
     await spacesUi.run(page, ready, report, { engine: args.engine,
       disconnectedEvent: CDPSessionEvent.Disconnected,
-      duringRateWindow: () => setupUi.runInDedicatedPage(page, ready, report,
-        reviewPage => consoleUi.pages(reviewPage, args, report)) });
-    await workspaceUi.workspaces(page, args, report);
+      duringRateWindow: async () => {
+        // Run independent UI checks while the original space mutation window
+        // expires. They still use the actual controller page and its bearer;
+        // spacesUi restores its panel and reads fresh server state afterward.
+        // Keep the native lifetime, steady interval and cleanup reserve intact.
+        await concurrentLogin();
+        await setupUi.runInDedicatedPage(page, ready, report,
+          reviewPage => consoleUi.pages(reviewPage, args, report));
+        await workspaceUi.workspaces(page, args, report);
+      } });
     check(await page.$$eval('button.record', nodes => nodes.length) === 1, 'Fixture must initially expose only its own native host');
     await page.locator('button.record').click();
     await page.locator('.detail-pane button.primary').click();
