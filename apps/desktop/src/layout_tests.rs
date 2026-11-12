@@ -1499,8 +1499,9 @@ impl Workspace {
         self.nodes.extend(update.nodes);
         if std::env::var_os("NESTLINK_UI_REVIEW_DIR").is_some() {
             self.review.frame(&output);
-            self.last_output = Some(output);
         }
+        // Geometry assertions inspect painted shapes in ordinary test runs too.
+        self.last_output = Some(output);
     }
 
     fn bounds(&self, label: &str) -> Vec<egui::Rect> {
