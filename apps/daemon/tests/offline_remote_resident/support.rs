@@ -165,15 +165,30 @@ impl Platform {
             let x = value.retain_constructor_child(x);
             value.construction_checkpoint("xvfb", &mut probe).await?;
             let mut display = String::new();
+            // The independently owned X server is test infrastructure. Allow
+            // its cold initialization before starting any resident deadline;
+            // keep one process and require its actual displayfd readiness.
+            let started = tokio::time::Instant::now();
             tokio::time::timeout(
-                Duration::from_secs(5),
+                Duration::from_secs(15),
                 BufReader::new(value.children[x].stdout.take().ok_or("Xvfb stdout")?)
                     .read_line(&mut display),
             )
             .await
             .map_err(|_| {
+                eprintln!(
+                    "original_xvfb_startup status=timeout elapsed_ms={} pid={:?} process={:?}",
+                    started.elapsed().as_millis(),
+                    value.children[x].id(),
+                    value.children[x].try_wait(),
+                );
                 io::Error::new(io::ErrorKind::TimedOut, "original Xvfb display deadline")
             })??;
+            eprintln!(
+                "original_xvfb_startup status=ready elapsed_ms={} pid={:?}",
+                started.elapsed().as_millis(),
+                value.children[x].id(),
+            );
             let _: u16 = display.trim().parse()?;
             let display = format!(":{}", display.trim());
             if display != seed_display {
