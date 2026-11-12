@@ -47,6 +47,9 @@ def completed_receipts():
     browser.update({"page_errors": [], "api_failures": [], "response_inspection_errors": [],
         "browser_product": "chrome", "browser_product_verified": True,
         "workspace_ui": completed_workspace_ui(),
+        "console_ui": {field: True for field in RUNNER.CONSOLE_UI_FIELDS},
+        "console_ui_helper_sha256": RUNNER.sha256(
+            (ROOT / "scripts/lib/refactor-browser-console.cjs").read_bytes()),
         "edge_namespace_ui": {field: True for field in (
             "passed", "forbidden_is_error", "explicit_revision_zero", "create_saved",
             "failed_initialization_preserves_draft", "same_node_draft_preserved",
@@ -189,6 +192,15 @@ class NativeRunnerTests(unittest.TestCase):
         for replacement in (False, None, "true"):
             receipts[0]["browser_product_verified"] = replacement
             self.assertIn("browser-product", RUNNER.validate_receipts(*receipts, expected_browser_product="edge"))
+
+    def test_console_requires_actual_entry_navigation_revoke_and_readback(self):
+        for field in RUNNER.CONSOLE_UI_FIELDS:
+            receipts = completed_receipts()
+            receipts[0]["console_ui"].pop(field)
+            self.assertIn("console-" + field, RUNNER.validate_receipts(*receipts))
+        receipts = completed_receipts()
+        receipts[0]["console_ui_helper_sha256"] = "0" * 64
+        self.assertIn("console-helper-source", RUNNER.validate_receipts(*receipts))
 
     def test_relay_attributes_require_actual_cases_cleanup_and_exact_helper(self):
         for replacement in (None, {}, {"passed": True}):

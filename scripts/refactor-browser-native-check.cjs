@@ -13,6 +13,7 @@ const { preparePermitResponseObservation } = require('./lib/refactor-browser-res
 const bidi = require('./lib/refactor-browser-bidi.cjs');
 const ownedData = require('./lib/refactor-browser-owned-data.cjs');
 const workspaceUi = require('./lib/refactor-browser-workspace-ui.cjs');
+const consoleUi = require('./lib/refactor-browser-console.cjs');
 const edgeNamespaceUi = require('./lib/refactor-browser-edge-namespace.cjs');
 const setupUi = require('./lib/refactor-browser-setup.cjs');
 const networkMembershipUi = require('./lib/refactor-browser-network-membership.cjs');
@@ -54,6 +55,7 @@ report.metrics_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-media-
 report.network_damage_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-network-damage.cjs'));
 report.response_observer_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-response-observer.cjs'));
 report.workspace_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-workspace-ui.cjs'));
+report.console_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-console.cjs'));
 report.edge_namespace_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-edge-namespace.cjs'));
 report.setup_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-setup.cjs'));
 report.network_membership_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-network-membership.cjs'));
@@ -329,10 +331,12 @@ async function main() {
     }, profile);
     await page.goto(ready.origin, { waitUntil: 'networkidle0' });
     check(await page.evaluate(() => isSecureContext && location.protocol === 'https:'), 'Production page must run in an HTTPS secure context');
+    await consoleUi.entry(page, args, report, 'connect');
     // The production entry screen discovers its deployment over this HTTPS
     // origin; it no longer exposes manual issuer/deployment input fields.
     await page.locator('.entry-panel button.primary').click();
     await page.waitForSelector('#username', { visible: true });
+    await consoleUi.entry(page, args, report, 'signin');
     await page.locator('#username').fill(ready.username);
     await page.locator('#password').fill(ready.password);
     await page.locator('.entry-panel button.primary').click();
@@ -352,7 +356,7 @@ async function main() {
       await sibling.locator('#password').fill(ready.password);
       await sibling.locator('.entry-panel button.primary').click();
       await sibling.waitForSelector('button.record', { visible: true });
-      await sibling.locator('::-p-xpath(//button[contains(.,"退出登录") or contains(.,"Sign out")])').click();
+      await consoleUi.sessions(page, sibling, args, report);
       await sibling.waitForFunction(() => document.querySelector('.entry-panel button.primary')?.disabled === false && !document.querySelector('#username'));
       report.concurrent_login = { same_account: true, shared_browser_context: true, second_page_signed_out: true };
     } finally {

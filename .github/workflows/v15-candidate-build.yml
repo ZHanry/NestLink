@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       source_revision:
-        description: Full clean final source commit with all public product versions already 0.8.1-rc.1
+        description: Full clean final source commit with all public product versions already 0.8.1-rc.2
         type: string
         required: true
       candidate_sequence:

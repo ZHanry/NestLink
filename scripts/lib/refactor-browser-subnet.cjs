@@ -33,7 +33,11 @@ async function disabled(page, text) {
   throw new Error('Subnet UI action missing: ' + text);
 }
 async function network(page) {
-  await click(page, '.sidebar nav button', 'Network and nodes');
+  await click(page, '.sidebar nav button', 'Network spaces');
+  await page.locator('[data-space-action="network"]').click();
+  if (!await page.$eval('.managed-network', element => element.open)) {
+    await page.locator('.managed-network > summary').click();
+  }
   await page.waitForSelector(PANEL, { visible: true, timeout: 12000 });
   await page.waitForFunction(() => document.querySelector('.refresh-button')?.disabled === false);
 }

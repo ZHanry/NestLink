@@ -761,7 +761,7 @@ class DeferredRCPublicationTests(RCPublicationTests):
         self.assertEqual(result['report_remediation_acceptance'], 'not-qualified')
         self.assertEqual(result['network_rewrite_acceptance'], 'not-qualified')
         self.assertFalse(result['production_update_eligible'])
-        self.assertEqual(self.github.release['name'], 'NestLink 0.8.1RC')
+        self.assertEqual(self.github.release['name'], 'NestLink 0.8.1RC2')
         disclosure = json.loads(self.github.assets[P.DEFERRED_NAME]['raw'])
         source = json.loads((self.args.source_root / 'docs/network-rewrite/NESTLINK-TASKS.json').read_bytes())
         self.assertEqual(disclosure['cases'], source['acceptance_cases'])

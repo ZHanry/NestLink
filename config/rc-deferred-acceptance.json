@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "repository": "ZHanry/NestLink",
-  "version": "0.8.1-rc.1",
+  "version": "0.8.1-rc.2",
   "authorization": "这些发布后我再自己验收",
   "authorization_context": "这是 0.8.0 RC 历史网络与硬件延期验收的原始授权记录，保留用于说明原失败及 pending，不是本轮用户原话，也不豁免 0.8.1 UI 本机验证。",
   "prerelease_only": true,
@@ -20,11 +20,14 @@
   ],
   "required_hosted_checks": "scripts/refactor-required-checks.py；精确源码检查与同源全平台制品要求继续适用。",
   "authorization_version": "0.8.0-rc.1",
-  "current_publication_authorization": "完全按照这个UI开始改吧，改完发布",
-  "current_publication_context": "2026-11-06：按已确认淡紫色原型实施 Windows UI，并先在用户电脑测试，再发布 0.8.1 RC。原网络与硬件记录继承其真实状态，正式资格不变。",
+  "current_publication_authorization": "还是有很多问题啊，比如说登录页有“配置向导与运行状态”，然后服务端也要按照这个UI风格来重构。你可以参考市面上成熟的同类项目来做，在发布rc2版本,功能也都要测试好。",
+  "current_publication_context": "2026-11-12：修复登录页，Windows 与服务端 Web 按已确认的淡紫原型统一；原型保真和真实功能测试后发布 RC2。历史网络、硬件和签名验收保留真实状态。",
   "required_before_publication": [
     "精确源码的全部 required workflows 成功",
     "同源候选构建、官方制品摘要与长度核验成功",
-    "固定 Windows 制品的本机验证；合成布局结果不得冒称真机画面、键鼠或完整功能验收"
-  ]
+    "固定 Windows 制品的本机验证；合成布局结果不得冒称真机画面、键鼠或完整功能验收",
+    "精确源码的真实 Chrome、Edge、Firefox 功能回归与新增登录会话撤销/取消/读回验证成功",
+    "审查新增登录页原生帧、Web 登录与全部页面/弹窗；按原型核对，不用工具合同测试替代产品运行"
+  ],
+  "previous_ui_publication_authorization": "完全按照这个UI开始改吧，改完发布"
 }

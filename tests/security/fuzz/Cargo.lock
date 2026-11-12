@@ -441,7 +441,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-protocol"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "prost",
  "prost-build",

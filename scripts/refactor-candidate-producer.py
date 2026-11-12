@@ -43,7 +43,7 @@ NATIVE = {
     "linux-x64": ("x86_64-unknown-linux-gnu", "linux-x86_64", ("server", "daemon")),
     "linux-arm64": ("aarch64-unknown-linux-gnu", "linux-aarch64", ("server", "daemon")),
 }
-VERSION = "0.8.1-rc.1"
+VERSION = "0.8.1-rc.2"
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
 CURRENT_ROLES = frozenset((

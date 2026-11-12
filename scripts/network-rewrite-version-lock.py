@@ -54,7 +54,7 @@ def main():
     before = lock.read_bytes()
     (args.output / "before.lock").write_bytes(before)
     version = tomllib.loads((root / "Cargo.toml").read_text(encoding="utf-8"))["workspace"]["package"]["version"]
-    if version != "0.8.1-rc.1":
+    if version != "0.8.1-rc.2":
         raise ValueError("This derivation is restricted to the requested 0.8.1RC")
     receipt = {"schema_version": 1, "purpose": "same-component-product-version-lock-derivation",
                "repository": os.environ["GITHUB_REPOSITORY"], "source_revision": source,

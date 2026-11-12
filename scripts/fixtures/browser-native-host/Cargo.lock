@@ -2079,7 +2079,7 @@ checksum = "1d87ecb2933e8aeadb3e3a02b828fed80a7528047e68b4f424523a0981a3a084"
 
 [[package]]
 name = "nestlink-app-core"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "base64 0.22.1",
  "nestlink-auth",
@@ -2106,7 +2106,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-auth"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "argon2",
  "base64 0.22.1",
@@ -2148,7 +2148,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-connectivity"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "nestlink-identity",
  "nestlink-policy",
@@ -2159,7 +2159,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-identity"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek",
@@ -2176,7 +2176,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-local-ipc"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "hkdf 0.12.4",
  "nestlink-auth",
@@ -2197,7 +2197,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-media-codec"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "cc",
  "fast_image_resize",
@@ -2211,7 +2211,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-media-session"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "nestlink-media-codec",
  "nestlink-protocol",
@@ -2224,7 +2224,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-node"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
@@ -2250,7 +2250,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-operations"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "argon2",
  "chacha20poly1305",
@@ -2268,7 +2268,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-clipboard"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "futures-util",
  "libc",
@@ -2284,7 +2284,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-files"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "cap-fs-ext",
  "cap-std",
@@ -2305,7 +2305,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-input"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "futures-util",
  "libc",
@@ -2324,7 +2324,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-network"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "if-addrs 0.14.0",
  "libc",
@@ -2335,7 +2335,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-security"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "rustix",
  "serde",
@@ -2348,7 +2348,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-session"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "futures-util",
  "libc",
@@ -2360,7 +2360,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-policy"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "nestlink-protocol",
  "serde",
@@ -2368,7 +2368,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-privileged"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -2390,7 +2390,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-protocol"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "prost",
  "prost-build",
@@ -2408,7 +2408,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-remote"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "nestlink-connectivity",
  "nestlink-identity",
@@ -2426,7 +2426,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-sdk"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "async-trait",
  "axum",
@@ -2485,7 +2485,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-server"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "axum",
  "base64 0.22.1",
@@ -2521,7 +2521,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-session"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "nestlink-identity",
  "nestlink-policy",
@@ -2531,7 +2531,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-storage"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "base64 0.22.1",
  "ipnet",
@@ -2550,7 +2550,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-transport-quic"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "base64 0.22.1",
  "nestlink-identity",
@@ -2567,7 +2567,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-transport-stream"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "nestlink-identity",
  "nestlink-protocol",
@@ -2582,7 +2582,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-transport-wss"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
@@ -2601,7 +2601,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-traversal"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "base64 0.22.1",
  "crab_nat",
@@ -2615,7 +2615,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-turn-service"
-version = "0.8.1-rc.1"
+version = "0.8.1-rc.2"
 dependencies = [
  "async-trait",
  "futures-util",

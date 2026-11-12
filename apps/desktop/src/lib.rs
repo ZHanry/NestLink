@@ -2161,7 +2161,11 @@ impl eframe::App for DesktopApp {
         egui::CentralPanel::default()
             .frame(
                 egui::Frame::new()
-                    .fill(context.global_style().visuals.panel_fill)
+                    .fill(if snapshot.authentication == Authentication::SignedIn {
+                        context.global_style().visuals.panel_fill
+                    } else {
+                        context.global_style().visuals.window_fill
+                    })
                     .inner_margin(if context.content_rect().height() < 700. {
                         16
                     } else {
@@ -2196,7 +2200,10 @@ impl eframe::App for DesktopApp {
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
                         ui.add_enabled_ui(self.connected && !self.exiting, |ui| {
-                            if self.screen == Screen::Server && snapshot.principal.is_some() {
+                            if self.screen == Screen::Server
+                                && snapshot.authentication == Authentication::SignedIn
+                                && snapshot.principal.is_some()
+                            {
                                 self.settings_page(ui, &snapshot);
                             } else if self.screen == Screen::Server
                                 || snapshot
@@ -2205,9 +2212,6 @@ impl eframe::App for DesktopApp {
                                     .is_none_or(|server| server.verified_health.is_none())
                             {
                                 self.connection_page(ui, &snapshot);
-                                if self.screen == Screen::Server {
-                                    self.local_network_settings(ui, &snapshot);
-                                }
                             } else if snapshot.authentication != Authentication::SignedIn {
                                 self.sign_in_page(ui, &snapshot);
                             } else {

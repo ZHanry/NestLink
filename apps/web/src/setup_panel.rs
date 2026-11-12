@@ -182,8 +182,8 @@ pub(super) fn SetupPanel(
         });
     });
     view! {
-        <details class="setup-guide" aria-label=move || t("配置向导", "Setup guide")>
-            <summary>{move || t("配置向导与实际状态", "Setup guide and actual state")}</summary>
+        <details class="setup-guide" aria-label=move || t("连接检查", "Connection checks")>
+            <summary>{move || t("读取连接状态", "Read connection state")}</summary>
             <section class="form-stack" aria-busy=move || busy.get().to_string()>
                 <p class="muted">{move || t("选择用途，再读取当前状态。这里使用已验证的管理连接；读取配置不会启用中继、虚拟网卡或公网发布。", "Choose a purpose, then read current state. Checks use the verified management connection. Reading configuration does not enable relays, virtual adapters or public publishing.")}</p>
                 <label for="setup-purpose">{move || t("用途", "Purpose")}</label>
@@ -215,7 +215,7 @@ pub(super) fn SetupPanel(
                     }.into_any(),
                     Purpose::Network => view! {
                         <p>{move || t("在账号与安全中管理自己的空间和邀请；网络管理员在网络与节点配置成员、地址、名称、子网和 WireGuard。系统 TUN 和转发需要运行设备另行批准并启用。浏览器只管理配置，不安装虚拟网卡。", "Manage your spaces and invitations in Account and security. Network administrators configure membership, addresses, names, subnets and WireGuard in Network and nodes. System TUN and forwarding require separate consent and activation on the runtime device. The browser manages configuration and does not install virtual adapters.")}</p>
-                        <button class="secondary" type="button" on:click=move |_| load.run(Section::Security.key().to_owned())>{move || t("打开我的空间", "Open my spaces")}</button>
+                        <button class="secondary" type="button" on:click=move |_| load.run(Section::Spaces.key().to_owned())>{move || t("打开我的空间", "Open my spaces")}</button>
                     }.into_any(),
                 }}
             </section>

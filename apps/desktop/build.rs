@@ -17,14 +17,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .next()
         .ok_or("version missing")?
         .replace('.', ",");
+    let revision = match version.split_once("-rc.") {
+        Some((_, value)) => value.parse::<u16>()?,
+        None if !version.contains('-') => 0,
+        None => return Err("unsupported Windows prerelease version".into()),
+    };
+    let numeric = format!("{numeric},{revision}");
     fs::write(
         &resource,
         format!(
             r#"#pragma code_page(65001)
 1 ICON "{}"
 1 VERSIONINFO
-FILEVERSION {},1
-PRODUCTVERSION {},1
+FILEVERSION {}
+PRODUCTVERSION {}
 FILEOS 0x40004
 FILETYPE 1
 BEGIN

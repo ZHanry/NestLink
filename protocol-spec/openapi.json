@@ -9268,7 +9268,7 @@
   "info": {
     "description": "Generated from protocol-spec/management.rs and management-routes.json.",
     "title": "NestLink management contract",
-    "version": "0.8.1-rc.1"
+    "version": "0.8.1-rc.2"
   },
   "openapi": "3.1.0",
   "paths": {

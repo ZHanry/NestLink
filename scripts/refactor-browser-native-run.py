@@ -34,6 +34,7 @@ JSON_RECEIPTS = (
 )
 JSONL_RECEIPTS = ("management-stages.jsonl", "input-records.jsonl")
 PNG_RECEIPTS = (
+    "browser-report-signin.png", "browser-report-login-devices.png",
     "browser-report-video.png", "browser-report-failure.png",
     "browser-report-workspace.png", "browser-report-tunnel-editor.png", "browser-report-remote-narrow.png",
 )
@@ -60,6 +61,11 @@ MEMBERSHIP_UI_FIELDS = (
     "failed_read_preserves_draft", "cas_conflict_preserves_draft", "reread_preserves_draft",
     "revision_epoch_bound", "revoke_and_reenroll", "unmounted_response_ignored",
     "logout_response_ignored", "new_session_clean",
+)
+CONSOLE_UI_FIELDS = (
+    "passed", "entry_is_focused", "navigation_matches_prototype", "real_login_sessions",
+    "cancel_keeps_session", "other_session_revoked_and_read_back",
+    "revoked_browser_requires_signin", "current_session_preserved",
 )
 AUTHORITY_UI_FIELDS = (
     "passed", "revision_epoch_bound", "rotation_advances_and_changes_key",
@@ -339,6 +345,11 @@ def validate_receipts(browser, host, data, database, exit_codes, expected_browse
             and browser.get("browser_product") == expected_browser_product
             and browser.get("browser_product_verified") is True, "browser-product")
     failures.extend(validate_workspace_ui(browser.get("workspace_ui")))
+    console = browser.get("console_ui", {})
+    for field in CONSOLE_UI_FIELDS:
+        require(isinstance(console, dict) and console.get(field) is True, "console-" + field)
+    require(browser.get("console_ui_helper_sha256") == sha256(
+        (ROOT / "scripts/lib/refactor-browser-console.cjs").read_bytes()), "console-helper-source")
     namespace = browser.get("edge_namespace_ui", {})
     for field in ("passed", "forbidden_is_error", "explicit_revision_zero", "create_saved",
                   "failed_initialization_preserves_draft", "same_node_draft_preserved", "read_saved_configuration", "cas_conflict_preserves_draft",

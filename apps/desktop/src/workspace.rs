@@ -428,17 +428,69 @@ impl DesktopApp {
 
 impl DesktopApp {
     pub(crate) fn login_brand_panel(&self, ui: &mut egui::Ui) {
-        let width = (ui.available_width() * 0.43).min(540.);
-        widgets::fixed_region(ui, "login-brand-story", egui::vec2(width, 570.), |ui| {
-            egui::Frame::new().fill(ui.visuals().selection.bg_fill.gamma_multiply(0.09)).corner_radius(20).inner_margin(40).show(ui,|ui|{
-                ui.set_width((width-80.).max(240.));ui.set_min_height(490.);
-                let (rect,_)=ui.allocate_exact_size(egui::vec2(52.,52.),egui::Sense::hover());crate::icons::brand(ui,rect);
-                ui.add_space(48.);
-                ui.label(RichText::new(self.t("你的设备，\n始终在身边。", "Your devices,\nwithin reach.")).size(32.).strong());
-                ui.add_space(20.);
-                ui.label(self.t("连接远程桌面，访问内网服务，让工作在设备之间自然衔接。", "Connect remote desktops and private services. Continue your work across devices."));
-                ui.add_space(56.);ui.separator();
-                ui.small(self.t("每一次连接，都在你的掌控之中。", "Every connection stays in your control."));
+        let width = ui.available_width() * 0.5;
+        let height = (ui.ctx().content_rect().height() - 140.).clamp(520., 920.);
+        widgets::fixed_region(ui, "login-brand-story", egui::vec2(width, height), |ui| {
+            let rect = ui.max_rect();
+            ui.painter().rect_filled(
+                rect,
+                19.,
+                crate::theme::color(if self.dark {
+                    &self.tokens.dark.sidebar
+                } else {
+                    &self.tokens.light.sidebar
+                }),
+            );
+            let content = rect.shrink(43.);
+            let mut story = ui.new_child(egui::UiBuilder::new().max_rect(content));
+            story.horizontal(|ui| {
+                let (rect, _) = ui.allocate_exact_size(egui::vec2(43., 43.), egui::Sense::hover());
+                crate::icons::brand(ui, rect);
+                ui.add_space(8.);
+                ui.label(RichText::new("NestLink").size(25.).strong());
+            });
+            story.add_space(68.);
+            story.label(
+                RichText::new(self.t(
+                    "熟悉的设备，\n不受距离限制。",
+                    "Familiar devices,\nwithout distance.",
+                ))
+                .size(33.)
+                .strong(),
+            );
+            story.add_space(16.);
+            story.label(RichText::new(self.t("连接你的控制中心，让远程桌面、内网服务与协作空间，自然融入每一天。", "Connect your control center. Bring remote desktops, private services and shared spaces into every day.")).color(ui.visuals().weak_text_color()));
+            story.add_space(40.);
+            story.horizontal(|ui| {
+                ui.add_space(((content.width() - 220.) / 2.).max(0.));
+                for (index, icon) in [widgets::NavIcon::Devices, widgets::NavIcon::Monitor]
+                    .into_iter()
+                    .enumerate()
+                {
+                    if index == 1 {
+                        let (logo, _) =
+                            ui.allocate_exact_size(egui::vec2(49., 49.), egui::Sense::hover());
+                        crate::icons::brand(ui, logo);
+                        ui.add_space(10.);
+                    }
+                    let (tile, _) =
+                        ui.allocate_exact_size(egui::vec2(65., 65.), egui::Sense::hover());
+                    ui.painter()
+                        .rect_filled(tile, 16., ui.visuals().window_fill);
+                    crate::icons::paint(ui, icon, tile.center(), 22., ui.visuals().hyperlink_color);
+                    ui.add_space(10.);
+                }
+            });
+            let footer = egui::Rect::from_min_max(
+                egui::pos2(content.left(), content.bottom() - 36.),
+                content.max,
+            );
+            ui.scope_builder(egui::UiBuilder::new().max_rect(footer), |ui| {
+                ui.small(self.t(
+                    "你的设备，你的空间，你的连接。",
+                    "Your devices. Your space. Your connection.",
+                ));
+                ui.small(format!("{} · Windows", env!("CARGO_PKG_VERSION")));
             });
         });
     }

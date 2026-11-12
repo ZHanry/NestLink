@@ -24,7 +24,7 @@ async function clickText(page, selector, text) {
   throw new Error('Edge namespace UI action missing: ' + text);
 }
 async function network(page) {
-  await clickText(page, '.sidebar nav button', 'Network and nodes');
+  await clickText(page, '.sidebar nav button', 'Relay nodes');
   await page.waitForSelector('.content-grid .records .record', { visible: true, timeout: 5000 });
 }
 async function node(page, name) {

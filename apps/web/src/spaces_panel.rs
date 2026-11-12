@@ -108,7 +108,10 @@ pub(super) fn SpacesPanel(
     api: Api,
     session_revision: RwSignal<u64>,
     auth_failure: Callback<SdkHandle>,
+    is_admin: bool,
 ) -> impl IntoView {
+    let tab = RwSignal::new(0_u8);
+    let dialog = RwSignal::new(0_u8);
     let spaces = RwSignal::new(Vec::<SpaceView>::new());
     let details = RwSignal::new(None::<SpaceDetails>);
     let devices = RwSignal::new(Vec::<(String, String)>::new());
@@ -350,6 +353,9 @@ pub(super) fn SpacesPanel(
                             issued.token
                         ));
                     }
+                    if matches!(command, Command::Accept | Command::Create) {
+                        dialog.set(0);
+                    }
                     if matches!(command, Command::Accept) {
                         incoming_link.set(String::new());
                     }
@@ -400,83 +406,112 @@ pub(super) fn SpacesPanel(
         invitation_minutes.set("60".into());
         incoming_link.set(take_invitation_link());
         issued_link.set(String::new());
+        dialog.set(if incoming_link.get_untracked().is_empty() {
+            0
+        } else {
+            2
+        });
+        tab.set(0);
         busy.set(false);
         problem.set(String::new());
         message.set(String::new());
+        request.run(Command::List);
     });
 
     view! {
-        <section class="policy-form form-stack" aria-label=move || t("网络空间", "Network spaces") aria-busy=move || busy.get().to_string()>
-            <h2>{move || t("网络空间", "Network spaces")}</h2>
-            <p class="muted">{move || t("空间角色管理成员和设备；远控、文件、服务及本机目标仍需单独授权。", "Space roles manage people and devices. Desktop, files, services, and local targets each require separate approval.")}</p>
-            <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| request.run(Command::List)>{move || t("读取我的空间", "Read my spaces")}</button>
-            <label>{move || t("新空间名称", "New space name")}<input data-space-field="name" maxlength="80" prop:value=move || name.get() disabled=move || busy.get() on:input=move |event| name.set(event_target_value(&event)) /></label>
-            <button type="button" class="primary" disabled=move || busy.get() || name.get().trim().is_empty() on:click=move |_| request.run(Command::Create)>{move || t("创建空间", "Create space")}</button>
-            <label>{move || t("一次性邀请链接", "One-use invitation link")}<input data-space-field="incoming" type="password" autocomplete="off" prop:value=move || incoming_link.get() disabled=move || busy.get() on:input=move |event| incoming_link.set(event_target_value(&event)) /></label>
-            <button type="button" class="secondary" disabled=move || busy.get() || invitation_parts(&incoming_link.get()).is_none() on:click=move |_| request.run(Command::Accept)>{move || t("接受邀请加入空间", "Accept invitation")}</button>
-            <Show when=move || !problem.get().is_empty()><p role="alert">{move || problem.get()}</p></Show>
-            <p role="status">{move || message.get()}</p>
-            {move || spaces.get().into_iter().map(|space| {
-                let id = space.space_id;
-                view! { <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| request.run(Command::Read(id.clone()))>{space.name} " · " {role_name(space.role)} {if space.archived { " · archived" } else { "" }}</button> }
-            }).collect_view()}
-            <Show when=move || details.get().is_some()>
-                <SpaceServicesPanel api session_revision auth_failure details />
-                <p>{move || details.get().map(|details| format!("{} · {} · revision {}", details.space.name, details.space.space_id, details.space.revision)).unwrap_or_default()}</p>
-                <label>{move || t("已登记设备", "Registered device")}<select data-space-field="device" prop:value=move || installation.get() disabled=move || busy.get() on:change=move |event| installation.set(event_target_value(&event))>
-                    <option value="">{move || t("选择设备", "Choose a device")}</option>
-                    {move || devices.get().into_iter().map(|(id, name)| view! { <option value=id>{name}</option> }).collect_view()}
-                </select></label>
-                <button type="button" class="primary" disabled=move || busy.get() || installation.get().is_empty() || details.get().is_none_or(|details| details.space.archived) on:click=move |_| request.run(Command::JoinDevice)>{move || t("加入或重新加入此设备", "Join or rejoin device")}</button>
-                {move || details.get().into_iter().flat_map(|details| details.devices).map(|device| {
-                    let id = device.installation_id;
-                    let epoch = device.membership_epoch;
-                    view! { <div><span>{device.name} " · " {role_name(device.role)} {if device.active { " · active" } else { " · revoked" }}</span><button type="button" class="secondary" disabled=move || busy.get() || !device.active on:click=move |_| request.run(Command::RemoveDevice(id.clone(), epoch))>{move || t("移除设备", "Remove device")}</button></div> }
-                }).collect_view()}
-                <Show when=move || details.get().is_some_and(|details| matches!(details.space.role, SpaceRole::Owner | SpaceRole::Admin) && !details.space.archived)>
-                    <label>{move || t("空间成员", "Space member")}<select data-space-field="account" prop:value=move || account.get() disabled=move || busy.get() on:change=move |event| account.set(event_target_value(&event))>
-                        <option value="">{move || t("选择成员", "Choose a member")}</option>
-                        {move || details.get().into_iter().flat_map(|details| details.members).map(|member| view! { <option value=member.account_id>{member.name} " · " {role_name(member.role)} {if member.active { "" } else { " · revoked" }}</option> }).collect_view()}
-                    </select></label>
-                    <label>{move || t("成员或邀请角色", "Member or invitation role")}<select data-space-field="role" prop:value=move || selected_role.get() disabled=move || busy.get() on:change=move |event| selected_role.set(event_target_value(&event))>
-                        <option value="member">"member"</option><option value="guest">"guest"</option>
-                        <Show when=move || details.get().is_some_and(|details| details.space.role == SpaceRole::Owner)><option value="admin">"admin"</option><option value="owner">{move || t("转让所有权（仅已有成员）", "Transfer ownership (existing member only)")}</option></Show>
-                    </select></label>
-                    <button type="button" class="primary" disabled=move || busy.get() || account.get().is_empty() on:click=move |_| request.run(Command::UpdateMember)>{move || t("保存角色或转让所有权", "Save role or transfer ownership")}</button>
-                    <button type="button" class="secondary" disabled=move || busy.get() || account.get().is_empty() on:click=move |_| request.run(Command::RemoveMember)>{move || t("移除成员及其空间设备", "Remove member and their space devices")}</button>
-                    <label>{move || t("邀请限定账号编号（可选）", "Invitation account ID (optional)")}<input data-space-field="target" maxlength="36" prop:value=move || invitation_target.get() disabled=move || busy.get() on:input=move |event| invitation_target.set(event_target_value(&event)) /></label>
-                    <label>{move || t("邀请有效分钟数（1–1440）", "Invitation lifetime in minutes (1–1440)")}<input data-space-field="lifetime" type="number" min="1" max="1440" prop:value=move || invitation_minutes.get() disabled=move || busy.get() on:input=move |event| invitation_minutes.set(event_target_value(&event)) /></label>
-                    <button type="button" class="primary" disabled=move || busy.get() || selected_role.get() == "owner" on:click=move |_| request.run(Command::Invite)>{move || t("生成一次性邀请", "Create one-use invitation")}</button>
-                    {move || details.get().into_iter().flat_map(|details| details.invitations).map(|invitation| {
-                        let id = invitation.invitation_id.clone();
-                        view! { <div><span>{invitation.invitation_id} " · " {role_name(invitation.role)} {if invitation.consumed { " · consumed" } else if invitation.revoked { " · revoked" } else { "" }}</span><button type="button" class="secondary" disabled=move || busy.get() || invitation.revoked || invitation.consumed on:click=move |_| request.run(Command::RevokeInvitation(id.clone()))>{move || t("撤销邀请", "Revoke invitation")}</button></div> }
+            <section class="spaces-workspace" aria-label=move || t("网络空间", "Network spaces") aria-busy=move || busy.get().to_string()>
+                <div class="space-toolbar"><p class="info-callout">{move || t("管理多设备的私有组网、空间成员与服务访问权限。账号登录设备请在「设备管理」查看。", "Manage private networks, people and service access. Find account sign-ins under Login devices.")}</p><button class="secondary" type="button" data-space-action="join" on:click=move |_| dialog.set(2)>{move || t("加入空间", "Join space")}</button><Show when=move || is_admin><button class="secondary" type="button" data-space-action="network" on:click=move |_| tab.set(2)>{move || t("受管网络", "Managed networks")}</button></Show><button class="primary" type="button" data-space-action="create" on:click=move |_| dialog.set(1)>{move || t("新建空间", "New space")}</button></div>
+                <Show when=move || !problem.get().is_empty()><p role="alert" class="error-message">{move || problem.get()}</p></Show>
+                <p role="status">{move || message.get()}</p>
+                <div class="space-layout"><aside class="space-list">
+                    <button type="button" class="text-button" disabled=move || busy.get() on:click=move |_| request.run(Command::List)>{move || t("读取我的空间", "Read my spaces")}</button>
+                    {move || spaces.get().into_iter().map(|space| {
+                        let id = space.space_id.clone();
+                        let active_id = space.space_id;
+                        view! { <button type="button" class="space-card" class:active=move || details.with(|current| current.as_ref().is_some_and(|current| current.space.space_id == active_id)) disabled=move || busy.get() on:click=move |_| request.run(Command::Read(id.clone()))><super::WorkspaceIcon kind=super::Section::Spaces /><strong>{space.name}</strong><small>" · "{role_name(space.role)}{if space.archived { " · archived" } else { "" }}</small></button> }
                     }).collect_view()}
+                    <Show when=move || spaces.with(Vec::is_empty)><p class="muted">{move || t("创建空间或接受邀请，开始连接你的设备。", "Create a space or accept an invitation to connect your devices.")}</p></Show>
+                </aside><div class="space-detail">
+                    <Show when=move || details.get().is_some() fallback=move || view! { <div class="empty-state"><super::WorkspaceIcon kind=super::Section::Spaces /><h2>{move || t("你的空间，从这里开始", "Your space starts here")}</h2><p>{move || t("从左侧选择空间，查看设备、成员与授权。", "Choose a space to review its devices, people and access.")}</p></div> }>
+                        <header class="space-detail-head"><div class="device-symbol"><super::WorkspaceIcon kind=super::Section::Spaces /></div><div><h2>{move || details.with(|current| current.as_ref().map(|current| current.space.name.clone()).unwrap_or_default())}</h2><p class="muted">{move || details.with(|current| current.as_ref().map(|current| format!("{} · revision {}", role_name(current.space.role), current.space.revision)).unwrap_or_default())}</p></div></header>
+                        <div class="workspace-tabs space-tabs" role="tablist" aria-label=move || t("空间页面", "Space pages")>
+                            {[(0_u8,"空间设备","Devices"),(1,"空间成员","Members"),(2,"受管网络","Managed networks"),(3,"服务授权","Service access")].into_iter().map(|(value,zh,en)| view! { <button type="button" role="tab" class="nav-item" class:active=move || tab.get()==value aria-selected=move || (tab.get()==value).to_string() data-space-tab=value on:click=move |_| tab.set(value)>{move || t(zh,en)}</button> }).collect_view()}
+                        </div>
+                        <div class="space-tab-body form-stack" role="tabpanel" hidden=move || tab.get()!=0>                <label>{move || t("已登记设备", "Registered device")}<select data-space-field="device" prop:value=move || installation.get() disabled=move || busy.get() on:change=move |event| installation.set(event_target_value(&event))>
+                        <option value="">{move || t("选择设备", "Choose a device")}</option>
+                        {move || devices.get().into_iter().map(|(id, name)| view! { <option value=id>{name}</option> }).collect_view()}
+                    </select></label>
+                    <button type="button" class="primary" disabled=move || busy.get() || installation.get().is_empty() || details.get().is_none_or(|details| details.space.archived) on:click=move |_| request.run(Command::JoinDevice)>{move || t("加入或重新加入此设备", "Join or rejoin device")}</button>
+                    {move || details.get().into_iter().flat_map(|details| details.devices).map(|device| {
+                        let id = device.installation_id;
+                        let epoch = device.membership_epoch;
+                        view! { <div><span>{device.name} " · " {role_name(device.role)} {if device.active { " · active" } else { " · revoked" }}</span><button type="button" class="secondary" disabled=move || busy.get() || !device.active on:click=move |_| request.run(Command::RemoveDevice(id.clone(), epoch))>{move || t("移除设备", "Remove device")}</button></div> }
+                    }).collect_view()}
+    </div>
+                        <div class="space-tab-body form-stack" role="tabpanel" hidden=move || tab.get()!=1>                <Show when=move || details.get().is_some_and(|details| matches!(details.space.role, SpaceRole::Owner | SpaceRole::Admin) && !details.space.archived)>
+                        <label>{move || t("空间成员", "Space member")}<select data-space-field="account" prop:value=move || account.get() disabled=move || busy.get() on:change=move |event| account.set(event_target_value(&event))>
+                            <option value="">{move || t("选择成员", "Choose a member")}</option>
+                            {move || details.get().into_iter().flat_map(|details| details.members).map(|member| view! { <option value=member.account_id>{member.name} " · " {role_name(member.role)} {if member.active { "" } else { " · revoked" }}</option> }).collect_view()}
+                        </select></label>
+                        <label>{move || t("成员或邀请角色", "Member or invitation role")}<select data-space-field="role" prop:value=move || selected_role.get() disabled=move || busy.get() on:change=move |event| selected_role.set(event_target_value(&event))>
+                            <option value="member">"member"</option><option value="guest">"guest"</option>
+
+                            <Show when=move || details.get().is_some_and(|current| !matches!(current.space.role, SpaceRole::Owner | SpaceRole::Admin))><p class="muted">{move || t("成员角色由空间所有者或管理员管理。", "Space owners and administrators manage member roles.")}</p>{move || details.get().into_iter().flat_map(|current| current.members).map(|member| view! { <div class="space-row"><strong>{member.name}</strong><span>{role_name(member.role)}</span></div> }).collect_view()}</Show>
+                                            <Show when=move || details.get().is_some_and(|details| details.space.role == SpaceRole::Owner)><option value="admin">"admin"</option><option value="owner">{move || t("转让所有权（仅已有成员）", "Transfer ownership (existing member only)")}</option></Show>
+                        </select></label>
+                        <button type="button" class="primary" disabled=move || busy.get() || account.get().is_empty() on:click=move |_| request.run(Command::UpdateMember)>{move || t("保存角色或转让所有权", "Save role or transfer ownership")}</button>
+                        <button type="button" class="secondary" disabled=move || busy.get() || account.get().is_empty() on:click=move |_| request.run(Command::RemoveMember)>{move || t("移除成员及其空间设备", "Remove member and their space devices")}</button>
+                        <label>{move || t("邀请限定账号编号（可选）", "Invitation account ID (optional)")}<input data-space-field="target" maxlength="36" prop:value=move || invitation_target.get() disabled=move || busy.get() on:input=move |event| invitation_target.set(event_target_value(&event)) /></label>
+                        <label>{move || t("邀请有效分钟数（1–1440）", "Invitation lifetime in minutes (1–1440)")}<input data-space-field="lifetime" type="number" min="1" max="1440" prop:value=move || invitation_minutes.get() disabled=move || busy.get() on:input=move |event| invitation_minutes.set(event_target_value(&event)) /></label>
+                        <button type="button" class="primary" disabled=move || busy.get() || selected_role.get() == "owner" on:click=move |_| request.run(Command::Invite)>{move || t("生成一次性邀请", "Create one-use invitation")}</button>
+                        {move || details.get().into_iter().flat_map(|details| details.invitations).map(|invitation| {
+                            let id = invitation.invitation_id.clone();
+                            view! { <div><span>{invitation.invitation_id} " · " {role_name(invitation.role)} {if invitation.consumed { " · consumed" } else if invitation.revoked { " · revoked" } else { "" }}</span><button type="button" class="secondary" disabled=move || busy.get() || invitation.revoked || invitation.consumed on:click=move |_| request.run(Command::RevokeInvitation(id.clone()))>{move || t("撤销邀请", "Revoke invitation")}</button></div> }
+                        }).collect_view()}
+                    </Show>
+                    <Show when=move || details.get().is_some_and(|details| details.space.role == SpaceRole::Owner && !details.space.archived)>
+                        <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| request.run(Command::Archive)>{move || t("归档空间并撤销全部设备和邀请", "Archive space and revoke all devices and invitations")}</button>
+                    </Show>
+                    <Show when=move || details.get().is_some_and(|details| matches!(details.space.role, SpaceRole::Owner | SpaceRole::Admin))>
+                        <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| request.run(Command::Audit)>{move || t("读取最近100条空间审计", "Read latest 100 space audit entries")}</button>
+                        {move || audit.get().into_iter().map(|entry| view! { <p>{entry.sequence} " · " {entry.action} " · " {entry.actor_account_id} " · " {entry.target_id}</p> }).collect_view()}
+                    </Show>
+
+                        </div>
+                        <div class="space-tab-body" role="tabpanel" hidden=move || tab.get()!=3><SpaceServicesPanel api session_revision auth_failure details /></div>
+                    </Show>
+                        <div class="space-tab-body" role="tabpanel" hidden=move || tab.get()!=2>
+                            <Show when=move || is_admin fallback=move || view! { <p class="info-callout">{move || t("受管网络配置由控制中心管理员管理。", "Control center administrators manage network configuration.")}</p> }><details class="managed-network"><summary>{move || t("受管网络与高级配置", "Managed networks and advanced configuration")}</summary><super::network_membership_panel::NetworkMembershipPanel api session_revision auth_failure /></details></Show>
+                        </div>
+                </div></div>
+                <Show when=move || dialog.get()!=0>
+                    <super::TaskDialog open=Signal::derive(move || dialog.get()!=0) label=Signal::derive(move || if dialog.get()==1 { t("创建空间","Create space") } else { t("加入空间","Join space") }.to_owned()) on_close=Callback::new(move |()| dialog.set(0))>
+                        <h2>{move || if dialog.get()==1 { t("创建空间","Create space") } else { t("加入空间","Join space") }}</h2>
+                        <div class="form-stack" hidden=move || dialog.get()!=1>            <label>{move || t("新空间名称", "New space name")}<input data-space-field="name" maxlength="80" prop:value=move || name.get() disabled=move || busy.get() on:input=move |event| name.set(event_target_value(&event)) /></label>
+                <button type="button" class="primary" disabled=move || busy.get() || name.get().trim().is_empty() on:click=move |_| request.run(Command::Create)>{move || t("创建空间", "Create space")}</button>
+    </div><div class="form-stack" hidden=move || dialog.get()!=2>            <label>{move || t("一次性邀请链接", "One-use invitation link")}<input data-space-field="incoming" type="password" autocomplete="off" prop:value=move || incoming_link.get() disabled=move || busy.get() on:input=move |event| incoming_link.set(event_target_value(&event)) /></label>
+                <button type="button" class="secondary" disabled=move || busy.get() || invitation_parts(&incoming_link.get()).is_none() on:click=move |_| request.run(Command::Accept)>{move || t("接受邀请加入空间", "Accept invitation")}</button>
+    </div>
+                    </super::TaskDialog>
                 </Show>
-                <Show when=move || details.get().is_some_and(|details| details.space.role == SpaceRole::Owner && !details.space.archived)>
-                    <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| request.run(Command::Archive)>{move || t("归档空间并撤销全部设备和邀请", "Archive space and revoke all devices and invitations")}</button>
+                            <Show when=move || !issued_link.get().is_empty()>
+                    <label>{move || t("请复制并妥善交付此链接；关闭面板后无法再次读取。", "Copy and deliver this link securely. It cannot be read again after closing this panel.")}<input data-space-field="issued" readonly autocomplete="off" prop:value=move || issued_link.get() /></label>
+                    <button type="button" class="secondary" on:click=move |_| {
+                        #[cfg(target_arch = "wasm32")]
+                        if let Some(window) = web_sys::window() {
+                            let session = session_revision.get_untracked();
+                            let operation = window.navigator().clipboard().write_text(&issued_link.get_untracked());
+                            spawn_local(async move {
+                                if wasm_bindgen_futures::JsFuture::from(operation).await.is_err()
+                                    && session_revision.try_get_untracked() == Some(session) {
+                                    let _ = problem.try_set(t("复制失败，请手动复制链接。", "Copy failed. Copy the link manually.").into());
+                                }
+                            });
+                        }
+                    }>{move || t("复制邀请链接", "Copy invitation link")}</button>
+                    <button type="button" class="secondary" on:click=move |_| issued_link.set(String::new())>{move || t("清除此链接", "Clear link")}</button>
                 </Show>
-                <Show when=move || details.get().is_some_and(|details| matches!(details.space.role, SpaceRole::Owner | SpaceRole::Admin))>
-                    <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| request.run(Command::Audit)>{move || t("读取最近100条空间审计", "Read latest 100 space audit entries")}</button>
-                    {move || audit.get().into_iter().map(|entry| view! { <p>{entry.sequence} " · " {entry.action} " · " {entry.actor_account_id} " · " {entry.target_id}</p> }).collect_view()}
-                </Show>
-            </Show>
-            <Show when=move || !issued_link.get().is_empty()>
-                <label>{move || t("请复制并妥善交付此链接；关闭面板后无法再次读取。", "Copy and deliver this link securely. It cannot be read again after closing this panel.")}<input data-space-field="issued" readonly autocomplete="off" prop:value=move || issued_link.get() /></label>
-                <button type="button" class="secondary" on:click=move |_| {
-                    #[cfg(target_arch = "wasm32")]
-                    if let Some(window) = web_sys::window() {
-                        let session = session_revision.get_untracked();
-                        let operation = window.navigator().clipboard().write_text(&issued_link.get_untracked());
-                        spawn_local(async move {
-                            if wasm_bindgen_futures::JsFuture::from(operation).await.is_err()
-                                && session_revision.try_get_untracked() == Some(session) {
-                                let _ = problem.try_set(t("复制失败，请手动复制链接。", "Copy failed. Copy the link manually.").into());
-                            }
-                        });
-                    }
-                }>{move || t("复制邀请链接", "Copy invitation link")}</button>
-                <button type="button" class="secondary" on:click=move |_| issued_link.set(String::new())>{move || t("清除此链接", "Clear link")}</button>
-            </Show>
-        </section>
-    }
+
+            </section>
+        }
 }

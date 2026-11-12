@@ -25,7 +25,7 @@ function expectedFailure(response) {
 }
 async function click(page, selector, text, prefix = false) {
   for (const button of await page.$$(selector)) {
-    if (await button.evaluate(element => element.disabled)) continue;
+    if (await button.evaluate(element => element.disabled) || !await button.boundingBox()) continue;
     const actual = await button.evaluate(element => element.textContent.trim());
     if (actual === text || (prefix && actual.startsWith(text))) { await button.click(); return; }
   }
@@ -37,11 +37,16 @@ async function settled(page) {
 }
 async function security(page) {
   await page.bringToFront();
-  await click(page, '.sidebar-foot button', 'Account and security');
+  await click(page, '.sidebar nav button', 'Network spaces');
   await page.waitForSelector(PANEL, { visible: true, timeout: 12000 });
   await page.waitForFunction(() => document.querySelector('.refresh-button')?.disabled === false);
 }
 async function action(page, text, method, pathname, status = 200) {
+  if (/invitation|role|member|Archive space|space audit/i.test(text) && text !== 'Accept invitation') {
+    const tab = await page.$('[data-space-tab="1"]');
+    if (tab) await tab.click();
+  }
+  if (/Join or rejoin device|Remove device/.test(text)) await page.locator('[data-space-tab="0"]').click();
   const captured = status === 200 || status === 201 ? active.observers.get(page)?.expect(method + ' ' + pathname, status, 12000) : null;
   const pending = page.waitForResponse(response => matches(response, method, pathname), { timeout: 12000 });
   try {
@@ -90,7 +95,7 @@ async function run(page, ready, report, { engine, disconnectedEvent, duringRateW
   try {
     await observe(page, 'space-owner');
     facts.stage = 'create_recipient_account';
-    await click(page, '.sidebar nav button', 'Account');
+    await click(page, '.sidebar nav button', 'Account management');
     await page.waitForSelector('#new-account', { visible: true });
     await page.waitForFunction(() => document.querySelector('#new-account')?.disabled === false);
     await page.locator('#new-account').fill(username);
@@ -109,6 +114,7 @@ async function run(page, ready, report, { engine, disconnectedEvent, duringRateW
 
     facts.stage = 'create_space_and_join_device';
     await security(page);
+    await page.locator('[data-space-action="create"]').click();
     await page.locator(field('name')).fill(name);
     const createdResponse = await action(page, 'Create space', 'POST', '/api/v3/network/spaces', 201);
     const windowStarted = Date.now();
@@ -130,6 +136,7 @@ async function run(page, ready, report, { engine, disconnectedEvent, duringRateW
     await read(page, name);
 
     facts.stage = 'one_use_guest_invitation';
+    await page.locator('[data-space-tab="1"]').click();
     await page.select(field('role'), 'guest');
     await page.locator(field('target')).fill(account);
     const issued = await action(page, 'Create one-use invitation', 'POST', active.base + '/invitations', 201);
@@ -154,6 +161,7 @@ async function run(page, ready, report, { engine, disconnectedEvent, duringRateW
     check(await recipient.$(field('role')) === null && await recipient.$(field('issued')) === null,
       'Guest received invitation/role management controls');
     facts.guest_isolated_context = true;
+    await recipient.locator('[data-space-action="join"]').click();
     await recipient.locator(field('incoming')).fill(link);
     await action(recipient, 'Accept invitation', 'POST', active.base + '/invitations/' + invitation.invitation.invitation_id + '/accept', 403);
     check(await recipient.$(field('device')) === null, 'Replay failure retained a writable snapshot');

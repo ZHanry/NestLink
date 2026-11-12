@@ -19,6 +19,7 @@ use nestlink_web::{browser_clipboard, browser_files, browser_rpc};
 
 mod account_security_panel;
 mod edge_namespace_panel;
+mod login_devices_panel;
 mod network_membership_panel;
 mod node_relay_attributes_panel;
 mod service_quota_panel;
@@ -43,6 +44,10 @@ enum Screen {
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Section {
     Desktop,
+    Hosts,
+    Spaces,
+    Diagnostics,
+    Nodes,
     Devices,
     Services,
     Quotas,
@@ -57,13 +62,17 @@ impl Section {
     fn title(self) -> &'static str {
         match self {
             Self::Desktop => t("远程桌面", "Remote desktop"),
-            Self::Devices => t("设备管理", "Devices"),
+            Self::Devices => t("设备管理", "Login devices"),
+            Self::Hosts => t("主机与授权", "Hosts and access"),
+            Self::Spaces => t("网络空间", "Network spaces"),
+            Self::Diagnostics => t("连接诊断", "Connection diagnostics"),
+            Self::Nodes => t("转发节点", "Relay nodes"),
             Self::Services => t("内网穿透", "Tunnels"),
             Self::Quotas => t("服务配额", "Service quotas"),
             Self::Requests => t("连接记录", "Access requests"),
-            Self::Network => t("网络与节点", "Network and nodes"),
+            Self::Network => t("网络策略与配额", "Network policy and quotas"),
             Self::Security => t("账号与安全", "Account and security"),
-            Self::Accounts => t("账号", "Account"),
+            Self::Accounts => t("账号管理", "Account management"),
             Self::Audit => t("审计记录", "Audit log"),
         }
     }
@@ -71,6 +80,10 @@ impl Section {
     fn key(self) -> &'static str {
         match self {
             Self::Desktop => "desktop",
+            Self::Hosts => "hosts",
+            Self::Spaces => "spaces",
+            Self::Diagnostics => "diagnostics",
+            Self::Nodes => "nodes",
             Self::Devices => "devices",
             Self::Services => "services",
             Self::Quotas => "quotas",
@@ -85,6 +98,10 @@ impl Section {
     fn from_key(value: &str) -> Self {
         match value {
             "desktop" => Self::Desktop,
+            "hosts" => Self::Hosts,
+            "spaces" => Self::Spaces,
+            "diagnostics" => Self::Diagnostics,
+            "nodes" => Self::Nodes,
             "devices" => Self::Devices,
             "requests" => Self::Requests,
             "services" => Self::Services,
@@ -108,8 +125,24 @@ impl Section {
                 "Publish an internal service through an assigned ingress and manage its access.",
             ),
             Self::Devices => t(
-                "管理已登记设备和授权。新增被控主机请使用 Windows 客户端。",
-                "Manage registered devices and access. Add a host from the Windows client.",
+                "管理当前账号登录的设备和浏览器会话。",
+                "Manage devices and browsers signed in to this account.",
+            ),
+            Self::Hosts => t(
+                "管理已登记主机的身份与授权。",
+                "Manage registered host identities and access.",
+            ),
+            Self::Spaces => t(
+                "管理私有组网中的设备、成员、受管网络和服务授权。",
+                "Manage devices, members, managed networks and service access in your private spaces.",
+            ),
+            Self::Diagnostics => t(
+                "按需检查当前连接配置和服务器返回的状态。",
+                "Read connection configuration and server state when you need to troubleshoot.",
+            ),
+            Self::Nodes => t(
+                "管理转发节点、入口配置与节点授权。",
+                "Manage relay nodes, ingress configuration and node access.",
             ),
             Self::Requests => t(
                 "查看远程访问请求及其授权状态。",
@@ -120,8 +153,8 @@ impl Section {
                 "Review and limit usage by account, device, node, or service.",
             ),
             Self::Network => t(
-                "管理数据节点、连接路径和服务发布策略。",
-                "Manage data nodes, connection paths, and publishing policy.",
+                "设置连接路径、转发规则与服务用量限制。",
+                "Configure connection paths, forwarding rules and service limits.",
             ),
             Self::Security => t(
                 "管理当前账号的密码和登录期限。",
@@ -276,6 +309,7 @@ fn App() -> impl IntoView {
         "No devices yet. Register devices from an approved NestLink client.",
     ));
     let selected = RwSignal::new(None::<Record>);
+    let pending_revoke = RwSignal::new(None::<Record>);
     let policy_revision = RwSignal::new(0_u64);
     let forwarding = RwSignal::new("deny".to_owned());
     let peer_path = RwSignal::new("direct_only".to_owned());
@@ -304,6 +338,7 @@ fn App() -> impl IntoView {
             "No devices yet. Register devices from an approved NestLink client.",
         ));
         selected.set(None);
+        pending_revoke.set(None);
         section.set(Section::Desktop);
         policy_revision.set(0);
         forwarding.set("deny".to_owned());
@@ -429,6 +464,7 @@ fn App() -> impl IntoView {
                 let _ = storage.set_item("nestlink.management-section", current.key());
             }
             if navigating {
+                pending_revoke.set(None);
                 selected.set(None);
                 rows.set(Vec::new());
                 audit_page.set(None);
@@ -440,7 +476,12 @@ fn App() -> impl IntoView {
             let session = session_revision.get_untracked();
             if matches!(
                 current,
-                Section::Services | Section::Quotas | Section::Security
+                Section::Services
+                    | Section::Quotas
+                    | Section::Security
+                    | Section::Spaces
+                    | Section::Devices
+                    | Section::Diagnostics
             ) {
                 rows.set(Vec::new());
                 audit_page.set(None);
@@ -585,7 +626,7 @@ fn App() -> impl IntoView {
                                 .map(|key| Section::from_key(&key))
                                 .unwrap_or(Section::Desktop);
                             let page = if spaces_panel::invitation_pending() {
-                                Section::Security
+                                Section::Spaces
                             } else {
                                 page
                             };
@@ -632,7 +673,7 @@ fn App() -> impl IntoView {
                                 screen.set(Screen::Workspace);
                                 busy.set(false);
                                 let page = if spaces_panel::invitation_pending() {
-                                    Section::Security
+                                    Section::Spaces
                                 } else {
                                     Section::Desktop
                                 };
@@ -744,7 +785,7 @@ fn App() -> impl IntoView {
                     screen.set(Screen::Workspace);
                     busy.set(false);
                     let page = if spaces_panel::invitation_pending() {
-                        Section::Security
+                        Section::Spaces
                     } else {
                         Section::Desktop
                     };
@@ -762,35 +803,33 @@ fn App() -> impl IntoView {
         });
     };
 
-    let sign_out = {
-        move |_| {
-            #[cfg(target_arch = "wasm32")]
-            browser_session_selector(Some(None));
-            if busy.get_untracked() {
-                return;
-            }
-            clear_workspace.run(());
-            screen.set(Screen::Trust);
-            busy.set(true);
-            error.set(String::new());
-            if let Some(sdk) = api.get_value() {
-                spawn_local(async move {
-                    if let Err(problem) = sdk.lock().await.logout().await {
-                        let problem = i18n::sdk_error(&problem);
-                        error.set(nestlink_web::localized_detail!(
-                            "服务器未确认退出：{}",
-                            "The server did not confirm sign-out: {}",
-                            problem
-                        ));
-                    }
-                    api.set_value(None);
-                    busy.set(false);
-                });
-            } else {
-                busy.set(false);
-            }
+    let sign_out = Callback::new(move |(): ()| {
+        #[cfg(target_arch = "wasm32")]
+        browser_session_selector(Some(None));
+        if busy.get_untracked() {
+            return;
         }
-    };
+        clear_workspace.run(());
+        screen.set(Screen::Trust);
+        busy.set(true);
+        error.set(String::new());
+        if let Some(sdk) = api.get_value() {
+            spawn_local(async move {
+                if let Err(problem) = sdk.lock().await.logout().await {
+                    let problem = i18n::sdk_error(&problem);
+                    error.set(nestlink_web::localized_detail!(
+                        "服务器未确认退出：{}",
+                        "The server did not confirm sign-out: {}",
+                        problem
+                    ));
+                }
+                api.set_value(None);
+                busy.set(false);
+            });
+        } else {
+            busy.set(false);
+        }
+    });
 
     let change_server = {
         move |_| {
@@ -831,9 +870,10 @@ fn App() -> impl IntoView {
         if busy.get_untracked() {
             return;
         }
-        let Some(item) = selected.get_untracked() else {
+        let Some(item) = pending_revoke.get_untracked() else {
             return;
         };
+        pending_revoke.set(None);
         let Some(sdk) = api.get_value() else {
             revoke_clear_workspace.run(());
             screen.set(Screen::SignIn);
@@ -846,10 +886,6 @@ fn App() -> impl IntoView {
             );
             return;
         };
-        let accepted = confirm_revoke();
-        if !accepted {
-            return;
-        }
         busy.set(true);
         error.set(String::new());
         let item_kind = item.kind;
@@ -1012,14 +1048,15 @@ fn App() -> impl IntoView {
     };
 
     view! {
-        <div class="app-topbar"><span>{move || t("内网穿透 + 远程桌面", "Tunnels + remote desktop")}</span><LanguageSelector /></div>
-        <Show when=move || screen.get() == Screen::Restoring><main class="entry-shell"><Brand /><section class="entry-panel"><h1>{move || t("正在恢复登录…", "Restoring your session…")}</h1><p class="muted">{move || t("正在核对服务器和管理会话。", "Verifying the server and management session.")}</p></section></main></Show>
+        <div class="app-topbar"><span class="topbar-context"><BrandMark />{move || t("NestLink / 控制中心", "NestLink / Control center")}</span><LanguageSelector /></div>
+        <Show when=move || screen.get() == Screen::Restoring><main class="entry-shell"><EntryBrand /><Brand /><section class="entry-panel"><h1>{move || t("正在恢复登录…", "Restoring your session…")}</h1><p class="muted">{move || t("正在核对服务器和管理会话。", "Verifying the server and management session.")}</p></section></main></Show>
             <Show when=move || screen.get() == Screen::Trust>
             <main class="entry-shell">
+                <EntryBrand />
                 <Brand />
                 <section class="entry-panel" aria-labelledby="trust-title">
-                    <div class="entry-symbol"><WorkspaceIcon kind=Section::Network /></div>
-                    <h1 id="trust-title">{move || t("连接服务器", "Connect to server")}</h1>
+                    <p class="entry-eyebrow">"WELCOME BACK"</p>
+                    <h1 id="trust-title">{move || t("连接你的控制中心", "Connect your control center")}</h1>
                     <p class="muted">{move || t("通过 HTTPS 自动读取当前服务器配置，连接后即可登录。", "Discover this server over HTTPS, then sign in with your account.")}</p>
                     <form on:submit=move |event| verify_server.run(event) class="form-stack">
                         <p class="origin-note">{move || t("当前服务器：", "Current server: ")} <code>{move || display_origin.get_value()}</code></p>
@@ -1034,18 +1071,19 @@ fn App() -> impl IntoView {
 
         <Show when=move || screen.get() == Screen::SignIn>
             <main class="entry-shell">
+                <EntryBrand />
                 <Brand />
                 <section class="entry-panel" aria-labelledby="signin-title">
-                    <p class="entry-kicker">{move || t("服务器身份已核验", "Server identity verified")}</p>
-                    <h1 id="signin-title">{move || t("登录 NestLink", "Sign in to NestLink")}</h1>
+                    <p class="entry-eyebrow">"WELCOME BACK"</p>
+                    <h1 id="signin-title">{move || t("连接你的控制中心", "Connect your control center")}</h1>
                     <p class="origin-note"><code>{move || display_origin.get_value()}</code></p>
                     <form on:submit=sign_in class="form-stack">
                         <label for="username">{move || t("账号", "Account")}</label>
-                        <input id="username" autocomplete="username" prop:value=move || username.get() on:input=move |event| username.set(event_target_value(&event)) />
+                        <input id="username" required maxlength="128" disabled=move || busy.get() autocomplete="username" prop:value=move || username.get() on:input=move |event| username.set(event_target_value(&event)) />
                         <label for="password">{move || t("密码", "Password")}</label>
-                        <input id="password" type="password" autocomplete="current-password" prop:value=move || password.get() on:input=move |event| password.set(event_target_value(&event)) />
+                        <input id="password" required maxlength="1024" disabled=move || busy.get() type="password" autocomplete="current-password" prop:value=move || password.get() on:input=move |event| password.set(event_target_value(&event)) />
 
-                        <label class="checkbox-row"><input type="checkbox" prop:checked=move || remember_login.get() on:change=move |event| remember_login.set(event_target_checked(&event)) />{move || t("在此浏览器保持登录（新标签页和重启时恢复此账号）", "Keep this account signed in across new tabs and browser restarts")}</label>
+                        <label class="checkbox-row"><input type="checkbox" prop:checked=move || remember_login.get() on:change=move |event| remember_login.set(event_target_checked(&event)) />{move || t("在此浏览器保持登录", "Keep me signed in on this browser")}</label>
                         <button class="primary" type="submit" disabled=move || busy.get()>
                             {move || if busy.get() { t("正在登录…", "Signing in…") } else { t("登录", "Sign in") }}
                         </button>
@@ -1067,27 +1105,27 @@ fn App() -> impl IntoView {
                         <aside class="sidebar">
                             <Brand />
                             <nav aria-label=move || t("主导航", "Main navigation")>
-                                <p class="nav-label">{move || t("工作区", "Workspace")}</p>
+                                <p class="nav-label">{move || t("主要功能", "Workspace")}</p>
                                 <NavButton section current=Section::Desktop load busy />
                                 <NavButton section current=Section::Services load busy />
-                                <p class="nav-label nav-group">{move || t("资源", "Resources")}</p>
+                                <NavButton section current=Section::Spaces load busy />
                                 <NavButton section current=Section::Devices load busy />
-                                <NavButton section current=Section::Requests load busy />
                                 {if is_admin {
                                     view! {
-                                        <p class="nav-label nav-group">{move || t("管理", "Administration")}</p>
-                                        <NavButton section current=Section::Quotas load busy />
-                                        <NavButton section current=Section::Network load busy />
+                                        <p class="nav-label nav-group">{move || t("管理控制台", "Administration")}</p>
                                         <NavButton section current=Section::Accounts load busy />
+                                        <NavButton section current=Section::Network load busy />
+                                        <NavButton section current=Section::Nodes load busy />
                                         <NavButton section current=Section::Audit load busy />
                                     }.into_any()
                                 } else { ().into_any() }}
                             </nav>
                             <div class="sidebar-foot">
+                                <button class="text-button" type="button" data-section="diagnostics" on:click=move |_| load.run(Section::Diagnostics.key().into())>{move || t("连接诊断", "Connection diagnostics")}</button>
                                 <span class="user-name">{user.as_ref().map(|v| v.1.clone()).unwrap_or_default()}</span>
                                 <span class="user-role">{move || if is_admin { t("管理员", "Administrator") } else { t("账号", "Account") }}</span>
                                 <button class="text-button" type="button" aria-current=move || (section.get() == Section::Security).then_some("page") disabled=move || busy.get() on:click=move |_| load.run(Section::Security.key().to_owned())>{move || t("账号与安全", "Account and security")}</button>
-                                <button class="text-button" type="button" on:click=sign_out disabled=move || busy.get()>{move || t("退出登录", "Sign out")}</button>
+                                <button class="text-button" type="button" on:click=move |_| sign_out.run(()) disabled=move || busy.get()>{move || t("退出登录", "Sign out")}</button>
                             </div>
                         </aside>
                         <main class="content">
@@ -1101,7 +1139,23 @@ fn App() -> impl IntoView {
                                 </button>
                             </header>
                             <Feedback error notice />
-                            <setup_panel::SetupPanel api session_revision auth_failure load />
+                            <div hidden=move || section.get() != Section::Diagnostics><setup_panel::SetupPanel api session_revision auth_failure load /></div>
+                            <Show when=move || matches!(section.get(), Section::Desktop | Section::Hosts | Section::Requests)>
+                                <div class="workspace-tabs" role="group" aria-label=move || t("远程桌面页面", "Remote desktop pages")>
+                                    <NavButton section current=Section::Desktop load busy />
+                                    <NavButton section current=Section::Hosts load busy />
+                                    <NavButton section current=Section::Requests load busy />
+                                </div>
+                            </Show>
+                            <Show when=move || matches!(section.get(), Section::Network | Section::Quotas)>
+                                <div class="workspace-tabs" role="group" aria-label=move || t("策略与配额页面", "Policy and quota pages")><NavButton section current=Section::Network load busy /><NavButton section current=Section::Quotas load busy /></div>
+                            </Show>
+                            <Show when=move || section.get() == Section::Devices>
+                                <login_devices_panel::LoginDevicesPanel api session_revision refresh=load_revision auth_failure sign_out error notice />
+                            </Show>
+                            <Show when=move || section.get() == Section::Spaces>
+                                <spaces_panel::SpacesPanel api session_revision auth_failure is_admin />
+                            </Show>
                             <Show when=move || section.get() == Section::Desktop>
                                 <DesktopWorkspace rows selected busy remote_target />
                             </Show>
@@ -1112,14 +1166,12 @@ fn App() -> impl IntoView {
                                 <service_quota_panel::ServiceQuotaPanel api session_revision refresh=load_revision active=Signal::derive(move || section.get() == Section::Quotas) auth_failure error notice />
                             </div>
                             <Show when=move || section.get() == Section::Security>
-                                <spaces_panel::SpacesPanel api session_revision auth_failure />
                                 <account_security_panel::AccountSecurityPanel api session_revision refresh=load_revision auth_failure password_changed error notice />
                             </Show>
-                            <Show when=move || !matches!(section.get(), Section::Desktop | Section::Services | Section::Quotas | Section::Security)>
-                            <div class="content-grid">
+                            <Show when=move || !matches!(section.get(), Section::Desktop | Section::Services | Section::Quotas | Section::Security | Section::Spaces | Section::Devices | Section::Diagnostics)>
+                            <div class="content-grid" class:policy-workspace=move || section.get() == Section::Network>
                                 <section class="list-pane" aria-label=move || t("当前列表", "Current list")>
                                     {move || (section.get() == Section::Network).then(|| view! {
-                                        <network_membership_panel::NetworkMembershipPanel api session_revision auth_failure />
                                         <form class="policy-form" on:submit=save_policy>
                                             <div class="section-heading">
                                                 <div><h2>{move || t("转发策略", "Forwarding policy")}</h2><p>{move || t("版本 ", "Revision ")} {move || policy_revision.get()}</p></div>
@@ -1154,7 +1206,7 @@ fn App() -> impl IntoView {
                                             <button class="secondary" type="submit" disabled=move || busy.get()>{move || t("创建账号", "Create account")}</button>
                                         </form>
                                     })}
-                                    <div class="section-heading list-heading">
+                                    <div hidden=move || section.get() == Section::Network><div class="section-heading list-heading">
                                         <div><h2>{move || list_heading(section.get())}</h2><p>{move || localized_format!("{} 项", "{} items", rows.with(Vec::len))}</p></div>
                                     </div>
                                     <div class="records" aria-live="polite">
@@ -1192,8 +1244,9 @@ fn App() -> impl IntoView {
                                             })}
                                         </div>
                                     })}
+                                    </div>
                                 </section>
-                                <aside class="detail-pane" aria-label=move || t("所选项目详情", "Selected item details") aria-live="polite" aria-atomic="true">
+                                <aside hidden=move || section.get() == Section::Network class="detail-pane" aria-label=move || t("所选项目详情", "Selected item details") aria-live="polite" aria-atomic="true">
                                     {move || if let Some(item) = selected.get() {
                                         let revocable = matches!(item.kind, "device" | "node" | "account");
                                         let detail = item.detail.clone();
@@ -1215,7 +1268,7 @@ fn App() -> impl IntoView {
                                                 }
                                             })}
                                             {revocable.then(|| view! {
-                                                <button class="danger" type="button" on:click=revoke_selected disabled=move || busy.get()>{move || t("撤销授权", "Revoke access")}</button>
+                                                <button class="danger" type="button" on:click=move |_| pending_revoke.set(selected.get_untracked()) disabled=move || busy.get()>{move || t("撤销授权", "Revoke access")}</button>
                                             })}
                                         }.into_any()
                                     } else {
@@ -1229,6 +1282,13 @@ fn App() -> impl IntoView {
                     </div>
                 }
             }}
+        </Show>
+        <Show when=move || pending_revoke.with(Option::is_some)>
+            <TaskDialog open=Signal::derive(move || pending_revoke.with(Option::is_some)) label=Signal::derive(move || t("撤销授权", "Revoke access").to_owned()) on_close=Callback::new(move |()| pending_revoke.set(None))>
+                <h2>{move || t("撤销所选对象的授权？", "Revoke access for this item?")}</h2><p>{move || pending_revoke.with(|value| value.as_ref().map(|value| value.title.clone()).unwrap_or_default())}</p>
+                <p class="muted">{move || t("相关的现有连接会停止。请确认所选对象后继续。", "Related active connections will stop. Confirm the selected item before continuing.")}</p>
+                <div class="confirmation-actions"><button class="secondary" type="button" on:click=move |_| pending_revoke.set(None)>{move || t("取消", "Cancel")}</button><button class="danger" type="button" disabled=move || busy.get() on:click=revoke_selected>{move || t("确认撤销", "Confirm revocation")}</button></div>
+            </TaskDialog>
         </Show>
         {remote_panel_view(api, remote_target, session_revision)}
     }
@@ -1250,24 +1310,6 @@ fn remote_panel_view(
     }
 }
 
-fn confirm_revoke() -> bool {
-    #[cfg(target_arch = "wasm32")]
-    {
-        web_sys::window()
-            .and_then(|window| {
-                window
-                    .confirm_with_message(t(
-                        "撤销此对象的当前授权？现有连接会停止。",
-                        "Revoke current access for this item? Existing connections will stop.",
-                    ))
-                    .ok()
-            })
-            .unwrap_or(false)
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    false
-}
-
 #[component]
 fn LanguageSelector() -> impl IntoView {
     view! {
@@ -1287,11 +1329,24 @@ fn LanguageSelector() -> impl IntoView {
 }
 
 #[component]
+fn EntryBrand() -> impl IntoView {
+    view! {
+        <aside class="entry-brand" aria-label=move || t("欢迎使用 NestLink", "Welcome to NestLink")>
+            <div class="entry-brand-name"><BrandMark /><strong>"NestLink"</strong></div>
+            <h2>{move || t("熟悉的设备，", "Familiar devices,")}<br />{move || t("不受距离限制。", "without distance.")}</h2>
+            <p>{move || t("连接你的控制中心，让远程桌面、内网服务与协作空间，自然融入每一天。", "Connect your control center. Bring remote desktops, private services and shared spaces into every day.")}</p>
+            <div class="entry-graphic" aria-hidden="true"><span><WorkspaceIcon kind=Section::Devices /></span><BrandMark /><span><WorkspaceIcon kind=Section::Desktop /></span></div>
+            <footer>{move || t("你的设备，你的空间，你的连接。", "Your devices. Your space. Your connection.")}<br />"NestLink · Control center"</footer>
+        </aside>
+    }
+}
+
+#[component]
 fn Brand() -> impl IntoView {
     view! {
         <div class="brand" aria-label="NestLink">
             <BrandMark />
-            <span>NestLink</span>
+            <span class="brand-name">NestLink<small>"STAY CONNECTED"</small></span>
         </div>
     }
 }
@@ -1311,7 +1366,10 @@ fn BrandMark(#[prop(optional)] small: bool) -> impl IntoView {
 #[component]
 fn WorkspaceIcon(kind: Section) -> impl IntoView {
     let path = match kind {
-        Section::Desktop => "M3 4h18v12H3z M8 21h8 M12 16v5",
+        Section::Desktop | Section::Hosts => "M3 4h18v12H3z M8 21h8 M12 16v5",
+        Section::Spaces => "M12 2l9 5v10l-9 5-9-5V7z M3 7l9 5 9-5 M12 12v10",
+        Section::Diagnostics => "M3 12h4l3-8 4 16 3-8h4",
+        Section::Nodes => "M3 3h18v6H3z M3 15h18v6H3z M7 6h1 M7 18h1",
         Section::Services => "M3 5h6v6H3z M15 13h6v6h-6z M9 8h7v5 M5 11v7h10",
         Section::Devices => "M3 3h13v10H3z M7 17h5 M10 13v4 M18 9h4v12h-8v-8",
         Section::Requests => "M5 5h14v16H5z M9 2v6 M15 2v6 M8 12h8 M8 16h5",
@@ -1423,6 +1481,8 @@ fn NavButton(
     view! {
         <button
             type="button"
+            data-section=current.key()
+            title=move || current.title()
             class=move || if section.get() == current { "nav-item active" } else { "nav-item" }
             aria-current=move || (section.get() == current).then_some("page")
             on:click=move |_| load.run(current.key().to_owned())
@@ -1447,11 +1507,16 @@ async fn load_records(
     let mut policy = None;
     let mut audit_page = None;
     let data = match section {
-        Section::Services | Section::Quotas | Section::Security => PanelData {
+        Section::Services
+        | Section::Quotas
+        | Section::Security
+        | Section::Spaces
+        | Section::Devices
+        | Section::Diagnostics => PanelData {
             rows: Vec::new(),
             empty: UiCopy::default(),
         },
-        Section::Desktop | Section::Devices => {
+        Section::Desktop | Section::Hosts => {
             let result = sdk.lock().await.devices().await.map_err(UiError::from)?;
             PanelData {
                 rows: result
@@ -1542,9 +1607,15 @@ async fn load_records(
             }
         }
         Section::Network => {
-            let result = sdk.lock().await.nodes().await.map_err(UiError::from)?;
             let current_policy = sdk.lock().await.policy().await.map_err(UiError::from)?;
             policy = Some((current_policy.revision, current_policy.policy));
+            PanelData {
+                rows: Vec::new(),
+                empty: UiCopy::default(),
+            }
+        }
+        Section::Nodes => {
+            let result = sdk.lock().await.nodes().await.map_err(UiError::from)?;
             PanelData {
                 rows: result
                     .into_iter()
@@ -1671,11 +1742,15 @@ async fn load_records(
 fn list_heading(section: Section) -> &'static str {
     match section {
         Section::Desktop => t("可连接设备", "Remote devices"),
-        Section::Devices => t("已登记设备", "Registered devices"),
+        Section::Devices => t("登录设备", "Login devices"),
         Section::Services => t("服务目录", "Service catalog"),
         Section::Quotas => t("服务配额", "Service quotas"),
         Section::Requests => t("近期请求", "Recent requests"),
-        Section::Network => t("数据节点", "Data nodes"),
+        Section::Network => t("部署策略", "Deployment policy"),
+        Section::Nodes => t("数据节点", "Data nodes"),
+        Section::Hosts => t("已登记主机", "Registered hosts"),
+        Section::Spaces => t("网络空间", "Network spaces"),
+        Section::Diagnostics => t("连接诊断", "Connection diagnostics"),
         Section::Security => t("账号与安全", "Account and security"),
         Section::Accounts => t("账号目录", "Accounts"),
         Section::Audit => t("最近事件", "Recent events"),
@@ -1750,10 +1825,56 @@ fn actor_summary(actor: &nestlink_protocol::api::AuditActor, english: bool) -> S
 }
 
 fn format_time(unix_ms: u64) -> UiCopy {
-    UiCopy::new(
-        format!("Unix 毫秒 {unix_ms}"),
-        format!("Unix milliseconds {unix_ms}"),
-    )
+    if let Some(value) = utc_timestamp(unix_ms) {
+        UiCopy::new(value.clone(), value)
+    } else {
+        UiCopy::new("时间不可用", "Time unavailable")
+    }
+}
+
+fn utc_timestamp(unix_ms: u64) -> Option<String> {
+    // Bound the calendar to four-digit years instead of rendering raw epoch
+    // counters or passing an invalid value to a browser Date constructor.
+    if unix_ms > 253_402_300_799_999 {
+        return None;
+    }
+    let days = (unix_ms / 86_400_000) as i64 + 719_468;
+    let era = days / 146_097;
+    let day_of_era = days - era * 146_097;
+    let year_of_era =
+        (day_of_era - day_of_era / 1460 + day_of_era / 36524 - day_of_era / 146096) / 365;
+    let mut year = year_of_era + era * 400;
+    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    let month_base = (5 * day_of_year + 2) / 153;
+    let day = day_of_year - (153 * month_base + 2) / 5 + 1;
+    let month = month_base + if month_base < 10 { 3 } else { -9 };
+    year += i64::from(month <= 2);
+    let seconds = unix_ms / 1000 % 86_400;
+    Some(format!(
+        "{year:04}-{month:02}-{day:02} {:02}:{:02}:{:02} UTC",
+        seconds / 3600,
+        seconds / 60 % 60,
+        seconds % 60
+    ))
+}
+
+#[cfg(test)]
+mod console_time_tests {
+    use super::utc_timestamp;
+
+    #[test]
+    fn timestamps_are_calendar_dates_with_leap_days_and_bounded_range() {
+        assert_eq!(utc_timestamp(0).as_deref(), Some("1970-01-01 00:00:00 UTC"));
+        assert_eq!(
+            utc_timestamp(951_827_696_000).as_deref(),
+            Some("2000-02-29 12:34:56 UTC")
+        );
+        assert_eq!(
+            utc_timestamp(253_402_300_799_999).as_deref(),
+            Some("9999-12-31 23:59:59 UTC")
+        );
+        assert!(utc_timestamp(u64::MAX).is_none());
+    }
 }
 
 fn remote_status(status: &str) -> UiCopy {

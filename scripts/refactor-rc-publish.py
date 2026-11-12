@@ -27,7 +27,7 @@ import zipfile
 
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
-VERSION = "0.8.1-rc.1"
+VERSION = "0.8.1-rc.2"
 TAG = "v" + VERSION
 MAX_ASSET_BYTES = 2 * 1024**3
 MANIFEST_NAME = "candidate-build-manifest.json"
@@ -437,9 +437,9 @@ def deferred_status(source_root, revision, checksum):
             and policy.get("production_update_eligible") is False
             and policy.get("authorization") == "这些发布后我再自己验收"
             and policy.get("authorization_version") == "0.8.0-rc.1"
-            and policy.get("current_publication_authorization") == "完全按照这个UI开始改吧，改完发布"
+            and policy.get("current_publication_authorization") == "还是有很多问题啊，比如说登录页有“配置向导与运行状态”，然后服务端也要按照这个UI风格来重构。你可以参考市面上成熟的同类项目来做，在发布rc2版本,功能也都要测试好。"
             and isinstance(policy.get("required_before_publication"), list)
-            and len(policy["required_before_publication"]) == 3,
+            and len(policy["required_before_publication"]) == 5,
             "Missing historical deferral or current UI publication requirements")
     tasks = json.loads(inputs[paths[1]], object_pairs_hook=unique_fields)
     require({item["id"] for item in tasks["tasks"]} == {f"W{i:02d}" for i in range(41)}
@@ -469,8 +469,8 @@ def deferred_acceptance(bundle, revision, checksum, source_root):
 
 
 def deferred_release_body(revision, checksum):
-    return ("NestLink 0.8.1RC（0.8.1-rc.1）预览版。\n\n"
-            "本版为 Windows 桌面界面改版，按已确认的淡紫色原型实施并保留原版 LOGO。"
+    return ("NestLink 0.8.1RC2（0.8.1-rc.2）预览版。\n\n"
+            "本版修复登录页，并将服务端 Web 与 Windows 桌面统一为已确认的淡紫色原型。保留原版 LOGO。"
             "原有网络、硬件与性能验收的失败和 pending 继续保留，不因 UI 发布变成通过；"
             "各工作包与70组网络用例的真实状态见 rc-acceptance-status.json。\n\n"
             "主要变化：\n"
@@ -478,6 +478,8 @@ def deferred_release_body(revision, checksum):
             "- 远程桌面包含控制与文件传输；内网穿透区分本机和其他获授权设备，支持卡片/列表。\n"
             "- 网络空间管理私有组网、成员和设备关系与服务授权；账号管理、网络策略与配额、转发节点、审计记录全部展开。\n"
             "- 设备管理使用真实账号登录会话，可单独退出 Windows/Web 登录；退出不会删除登记身份或空间成员。\n"
+            "- 登录页移除配置向导；连接诊断在登录后按需打开。Web 网络空间独立，设备/成员/受管网络/服务分标签管理。\n"
+            "- Web 设备管理绑定真实账号登录，退出设备使用应用内确认弹窗，并重新读取服务端结果。\n"
             "- schema 52 增加独立登录展示元数据；旧记录未知字段不伪造，最近活动按成功鉴权节流更新。\n\n"
             "Windows/Web/Linux 制品由同一源码在 GitHub Actions 构建。合成 egui 布局审查不等同于 Windows 桌面、键鼠或跨网验收。\n\n"
             "已知限制与待验：\n"
@@ -489,7 +491,7 @@ def deferred_release_body(revision, checksum):
             "升级前备份；服务器、Web与双方客户端一起升级。已写入新授权状态后使用前向修复，"
             "不要恢复旧授权数据库快照。恢复登录不会恢复屏幕、输入或文件授权。\n\n"
             "范围、操作及回滚：https://github.com/ZHanry/NestLink/blob/" + revision
-            + "/docs/RELEASE-0.8.1-RC.md\n"
+            + "/docs/RELEASE-0.8.1-RC2.md\n"
             "原网络范围与历史证据：https://github.com/ZHanry/NestLink/blob/" + revision
             + "/docs/network-rewrite/RELEASE-0.8.0-RC.md\n"
             "部署：https://github.com/ZHanry/NestLink/blob/" + revision + "/docs/REMOTE-CONNECTION.md\n\n"
@@ -595,7 +597,7 @@ def verify_tag(github, revision):
 
 
 def validate_release(release, plan):
-    name = "NestLink 0.8.1RC" if plan.get("deferred_target_acceptance") else "NestLink " + VERSION
+    name = "NestLink 0.8.1RC2" if plan.get("deferred_target_acceptance") else "NestLink " + VERSION
     require(isinstance(release, dict) and type(release.get("id")) is int and release["id"] > 0
             and release.get("tag_name") == TAG and type(release.get("draft")) is bool
             and release.get("prerelease") is True and release.get("name") == name
@@ -712,7 +714,7 @@ def promote(args, github=None):
         require(verify_tag(github, plan["source_revision"]), "Created RC tag failed readback")
     if release is None:
         release = github.request("POST", base + "/releases", value={"tag_name": TAG, "target_commitish": plan["source_revision"],
-            "name": "NestLink 0.8.1RC" if plan["deferred_target_acceptance"] else "NestLink " + VERSION,
+            "name": "NestLink 0.8.1RC2" if plan["deferred_target_acceptance"] else "NestLink " + VERSION,
             "body": plan["body"], "draft": True, "prerelease": True, "make_latest": "false"})
         mutated = True
         validate_release(release, plan)

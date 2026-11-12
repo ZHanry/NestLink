@@ -25,7 +25,7 @@ futures-util.workspace = true
 nestlink-identity.workspace = true
 nestlink-media-codec.workspace = true
 nestlink-sdk.workspace = true
-nestlink-server = { path = "../../apps/server", version = "=0.8.1-rc.1" }
+nestlink-server = { path = "../../apps/server", version = "=0.8.1-rc.2" }
 nestlink-storage.workspace = true
 tower.workspace = true
 

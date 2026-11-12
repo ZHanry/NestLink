@@ -23,6 +23,49 @@ fn export_synthetic_desktop_review_frames() {
     };
     let directory = PathBuf::from(directory);
     std::fs::create_dir_all(&directory).expect("review directory");
+    // Entry screens are product surfaces too. Export their actual outer frame,
+    // not an isolated form which could miss content accidentally appended below.
+    for (name, verified, failed) in [
+        ("connect", false, false),
+        ("signin", true, false),
+        ("signin-error", true, true),
+    ] {
+        for (mode, size, dark) in [
+            ("light", egui::vec2(1440., 960.), false),
+            ("dark", egui::vec2(1440., 960.), true),
+            ("small", egui::vec2(760., 560.), false),
+        ] {
+            let mut snapshot = enrolled_snapshot();
+            snapshot.authentication = Authentication::SignedOut;
+            snapshot.principal = None;
+            if !verified {
+                snapshot.server = None;
+            }
+            if failed {
+                snapshot.authentication_error = Some(nestlink_app_core::Failure {
+                    kind: nestlink_app_core::FailureKind::SignInRequired,
+                    status: Some(401),
+                    code: None,
+                });
+            }
+            let mut workspace = Workspace::new(snapshot);
+            workspace.app.screen = if verified {
+                Screen::Remote
+            } else {
+                Screen::Server
+            };
+            workspace.app.dark = dark;
+            theme::apply(&workspace.context, &workspace.app.tokens, dark);
+            for _ in 0..24 {
+                workspace.frame(size, vec![]);
+            }
+            workspace.review.write(
+                &workspace.context,
+                workspace.last_output.as_ref().expect("entry output"),
+                &directory.join(format!("{name}-{mode}.json")),
+            );
+        }
+    }
     for (name, screen) in [
         ("remote", Screen::Remote),
         ("tunnels", Screen::Services),
@@ -139,6 +182,54 @@ fn export_synthetic_desktop_review_frames() {
             workspace.last_output.as_ref().expect("rendered output"),
             &directory.join(format!("{name}.json")),
         );
+    }
+}
+
+#[test]
+fn entry_screens_do_not_render_setup_or_authenticated_settings() {
+    for verified in [false, true] {
+        for english in [false, true] {
+            for size in [egui::vec2(760., 560.), egui::vec2(1440., 960.)] {
+                let mut snapshot = enrolled_snapshot();
+                snapshot.authentication = Authentication::SignedOut;
+                // A stale cached principal must not expose the settings page.
+                if !verified {
+                    snapshot.server = None;
+                }
+                let mut workspace = Workspace::new(snapshot);
+                workspace.app.screen = if verified {
+                    Screen::Remote
+                } else {
+                    Screen::Server
+                };
+                workspace.app.english = english;
+                for _ in 0..5 {
+                    workspace.frame(size, vec![]);
+                }
+                for label in [
+                    "配置向导与运行状态",
+                    "Setup and current status",
+                    "本机连接设置",
+                    "Local connection settings",
+                    "常规设置",
+                    "General",
+                ] {
+                    assert!(workspace.bounds(label).is_empty(), "entry leaked {label}");
+                }
+                let primary = match (verified, english) {
+                    (false, false) => "连接服务器",
+                    (false, true) => "Connect to server",
+                    (true, false) => "登录",
+                    (true, true) => "Sign in",
+                };
+                let bounds = workspace.bounds(primary);
+                assert_eq!(bounds.len(), 1, "entry primary action: {primary}");
+                assert!(
+                    egui::Rect::from_min_size(egui::Pos2::ZERO, size).contains_rect(bounds[0]),
+                    "entry primary action is clipped: {bounds:?}"
+                );
+            }
+        }
     }
 }
 

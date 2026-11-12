@@ -29,7 +29,7 @@ async function click(page, selector, text) {
   throw new Error('Relay attributes UI action missing: ' + text);
 }
 async function network(page) {
-  await click(page, '.sidebar nav button', 'Network and nodes');
+  await click(page, '.sidebar nav button', 'Relay nodes');
   await page.waitForSelector('.content-grid .records .record', { visible: true, timeout: 8000 });
   await page.waitForFunction(() => document.querySelector('.refresh-button')?.disabled === false);
 }

@@ -5,16 +5,17 @@ use nestlink_app_ipc::wire::Command;
 
 impl DesktopApp {
     pub(crate) fn connection_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        ui.add_space(32.);
+        ui.add_space(0.);
         ui.horizontal_top(|ui| {
-            if ui.available_width()>1050. { self.login_brand_panel(ui); }
-            ui.add_space(((ui.available_width() - 460.) / 2.).max(0.));
+            if ui.available_width()>900. { self.login_brand_panel(ui); }
+            ui.add_space(((ui.available_width() - 330.) / 2.).max(0.));
             ui.vertical(|ui| {
-                ui.set_max_width(460.);
+                ui.set_width(330.);
+                ui.add_space(((ui.ctx().content_rect().height() - 620.) / 2.).max(0.));
+                ui.label(RichText::new("WELCOME BACK").size(10.).color(ui.visuals().hyperlink_color));
+                ui.add_space(12.);
                 ui.horizontal(|ui| {
-                    let (rect, _) = ui.allocate_exact_size(egui::vec2(32., 32.), egui::Sense::hover());
-                    crate::icons::brand(ui, rect);
-                    ui.heading(self.t("连接控制中心", "Connect your control center"));
+                    ui.heading(self.t("连接你的控制中心", "Connect your control center"));
                 });
                 ui.add_space(8.);
                 ui.label(
@@ -25,12 +26,9 @@ impl DesktopApp {
                     .color(ui.visuals().weak_text_color()),
                 );
                 ui.add_space(28.);
-                egui::Frame::new().fill(ui.visuals().window_fill)
-                    .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
-                    .inner_margin(24)
-                    .corner_radius(13)
+                egui::Frame::new().inner_margin(0)
                     .show(ui, |ui| {
-                        ui.set_width((ui.available_width()).min(412.));
+                        ui.set_width(330.);
                         ui.label(self.t("服务器地址", "Server address"));
                         let response = ui.add(
                             egui::TextEdit::singleline(&mut self.trust.origin)
@@ -99,8 +97,8 @@ impl DesktopApp {
                     });
                 ui.add_space(18.);
                 ui.small(self.t(
-                    "使用控制中心的 HTTPS 地址。自建服务器的连接设置位于下方。",
-                    "Use the HTTPS address of your control center. Local connection settings are below.",
+                    "使用控制中心的 HTTPS 地址。登录后可在设置中调整网络连接。",
+                    "Use your control center's HTTPS address. Network options are available in Settings after sign-in.",
                 ));
                 if let Some(server) = &snapshot.server {
                     if let Some(error) = &server.error {
@@ -123,7 +121,8 @@ impl DesktopApp {
     }
 
     pub(crate) fn local_network_settings(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        self.setup_guide(ui, snapshot);
+        egui::CollapsingHeader::new(self.t("连接诊断", "Connection diagnostics"))
+            .show(ui, |ui| self.connection_diagnostics(ui, snapshot));
         ui.add_space(24.);
         ui.separator();
         ui.heading(self.t("本机连接设置", "Local connection settings"));
@@ -146,10 +145,7 @@ impl DesktopApp {
         }
     }
 
-    fn setup_guide(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        ui.add_space(24.);
-        ui.separator();
-        ui.heading(self.t("配置向导与运行状态", "Setup and current status"));
+    fn connection_diagnostics(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         let verified = snapshot
             .server
             .as_ref()
@@ -373,16 +369,17 @@ impl DesktopApp {
     }
 
     pub(crate) fn sign_in_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        ui.add_space(32.);
+        ui.add_space(0.);
         ui.horizontal_top(|ui| {
-            if ui.available_width()>1050. { self.login_brand_panel(ui); }
-            ui.add_space(((ui.available_width() - 460.) / 2.).max(0.));
+            if ui.available_width()>900. { self.login_brand_panel(ui); }
+            ui.add_space(((ui.available_width() - 330.) / 2.).max(0.));
             ui.vertical(|ui| {
-                ui.set_max_width(460.);
+                ui.set_width(330.);
+                ui.add_space(((ui.ctx().content_rect().height() - 620.) / 2.).max(0.));
+                ui.label(RichText::new("WELCOME BACK").size(10.).color(ui.visuals().hyperlink_color));
+                ui.add_space(12.);
                 ui.horizontal(|ui| {
-                    let (rect, _) = ui.allocate_exact_size(egui::vec2(32., 32.), egui::Sense::hover());
-                    crate::icons::brand(ui, rect);
-                    ui.heading(self.t("登录 NestLink", "Sign in to NestLink"));
+                    ui.heading(self.t("连接你的控制中心", "Connect your control center"));
                 });
                 ui.add_space(8.);
                 ui.label(
@@ -393,12 +390,9 @@ impl DesktopApp {
                     .color(ui.visuals().weak_text_color()),
                 );
                 ui.add_space(28.);
-                egui::Frame::new().fill(ui.visuals().window_fill)
-                    .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
-                    .inner_margin(24)
-                    .corner_radius(13)
+                egui::Frame::new().inner_margin(0)
                     .show(ui, |ui| {
-                        ui.set_width((ui.available_width()).min(412.));
+                        ui.set_width(330.);
                         if let Some(server) = &snapshot.server {
                             ui.small(self.t("当前控制中心", "Current control center"));
                             ui.add(egui::Label::new(egui::RichText::new(&server.origin).strong()).truncate()).on_hover_text(&server.origin);

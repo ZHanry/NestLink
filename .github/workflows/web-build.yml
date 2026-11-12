@@ -67,6 +67,7 @@ jobs:
           python3 -B -m unittest discover -s tests/refactor -p "test_browser_native_runner.py" 2>&1 | tee "$RUNNER_TEMP/nestlink-browser-contracts-python.log"
           node --check scripts/refactor-browser-native-check.cjs
           node --check scripts/lib/refactor-browser-owned-data.cjs
+          node --check scripts/lib/refactor-browser-console.cjs
           node --check scripts/lib/refactor-browser-workspace-ui.cjs
           node --check scripts/lib/refactor-browser-edge-namespace.cjs
           node --check scripts/lib/refactor-browser-setup.cjs

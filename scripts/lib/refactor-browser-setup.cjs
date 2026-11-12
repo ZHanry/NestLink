@@ -1,6 +1,6 @@
 // Actual compiled onboarding controls and server readbacks; no response mocks.
 'use strict';
-const PANEL = 'details[aria-label="Setup guide"]';
+const PANEL = 'details[aria-label="Connection checks"]';
 function check(value, message) { if (!value) throw new Error('Setup guide: ' + message); }
 async function clickText(page, text) {
   for (const button of await page.$$(PANEL + ' button')) {
@@ -9,6 +9,10 @@ async function clickText(page, text) {
     }
   }
   throw new Error('Setup action missing: ' + text);
+}
+async function diagnostics(page) {
+  await page.locator('[data-section="diagnostics"]').click();
+  await page.waitForSelector(PANEL, { visible: true, timeout: 10000 });
 }
 async function signIn(page, ready) {
   await page.goto(ready.origin, { waitUntil: 'networkidle0' });
@@ -24,6 +28,7 @@ async function logoutDuringRead(page, ready, facts) {
   const sibling = await page.browserContext().newPage();
   try {
     await signIn(sibling, ready);
+    await diagnostics(sibling);
     await sibling.locator(PANEL + ' summary').click();
     let arrived = false, followups = 0;
     const observe = request => {
@@ -45,6 +50,7 @@ async function logoutDuringRead(page, ready, facts) {
     check(followups === 0, 'A signed-out setup read started a follow-up request');
     check(await sibling.$(PANEL) === null, 'A late account reply restored signed-out controls');
     await signIn(sibling, ready);
+    await diagnostics(sibling);
     check(await sibling.$$eval(PANEL + ' ul li', elements => elements.length) === 0,
       'A new login retained an old setup readback');
     facts.logout_during_read_no_followup = true;
@@ -64,7 +70,7 @@ async function run(page, ready, report) {
   page.on('request', observe);
   try {
     await page.bringToFront();
-    await page.waitForSelector(PANEL);
+    await diagnostics(page);
     await page.locator(PANEL + ' summary').click();
     check(await page.$$eval(PANEL + ' ul li', elements => elements.length) === 0,
       'An unread panel must not show passing observations');
@@ -98,6 +104,7 @@ async function run(page, ready, report) {
     await clickText(page, 'Open my spaces');
     await page.waitForSelector('[aria-label="Network spaces"]', { visible: true, timeout: 10000 });
     check(await page.$eval(PANEL, element => element.open), 'Navigation discarded the active guide');
+    await diagnostics(page);
     await page.select('#setup-purpose', 'remote');
     await clickText(page, 'Choose remote device');
     await page.waitForSelector('.desktop-directory button.record', { visible: true, timeout: 10000 });
@@ -105,6 +112,7 @@ async function run(page, ready, report) {
     check(observed.every(request => request.method === 'GET'), 'The setup read changed a protected resource');
     facts.read_only = true;
     await logoutDuringRead(page, ready, facts);
+    await diagnostics(page);
     await page.locator(PANEL + ' summary').click();
     facts.collapsed_after_checks = true;
     facts.passed = true;
