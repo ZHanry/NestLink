@@ -15,6 +15,7 @@ use tokio::{
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(1);
 const CLEANUP_TIMEOUT: Duration = Duration::from_secs(2);
 const AUTHORIZATION_INTERVAL: Duration = Duration::from_millis(250);
+const AUTOMATIC_BIND_ATTEMPTS: usize = 16;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SpaceDnsError {
@@ -81,15 +82,7 @@ impl SpaceDns {
                 transport: "UDP",
                 source,
             })?;
-        let address = udp.local_addr()?;
-        // Either both protocols bind the same port, or neither remains owned.
-        let tcp =
-            TcpListener::bind(address)
-                .await
-                .map_err(|source| SpaceDnsError::ListenerBind {
-                    transport: "TCP",
-                    source,
-                })?;
+        let (udp, tcp, address) = finish_listener_bind(bind, udp).await?;
         let (stop, mut stopping) = watch::channel(StopState::Running);
         let mut server = Server::new(handler::Handler::new(authority.clone(), stop.clone()));
         server.register_socket(udp);
@@ -199,5 +192,79 @@ impl Drop for SpaceDns {
         if let Some(task) = self.task.take() {
             task.abort();
         }
+    }
+}
+
+async fn finish_listener_bind(
+    requested: SocketAddr,
+    mut udp: UdpSocket,
+) -> Result<(UdpSocket, TcpListener, SocketAddr), SpaceDnsError> {
+    let mut attempts = 0;
+    loop {
+        let address = udp.local_addr()?;
+        attempts += 1;
+        match TcpListener::bind(address).await {
+            Ok(tcp) => return Ok((udp, tcp, address)),
+            Err(source)
+                if requested.port() == 0
+                    && source.kind() == std::io::ErrorKind::AddrInUse
+                    && attempts < AUTOMATIC_BIND_ATTEMPTS =>
+            {
+                // UDP and TCP have separate port namespaces. An OS-assigned
+                // UDP port can already belong to a TCP listener. Release this
+                // attempt before asking for another automatic pair.
+                drop(udp);
+                udp = UdpSocket::bind(requested).await.map_err(|source| {
+                    SpaceDnsError::ListenerBind {
+                        transport: "UDP",
+                        source,
+                    }
+                })?;
+            }
+            Err(source) => {
+                return Err(SpaceDnsError::ListenerBind {
+                    transport: "TCP",
+                    source,
+                });
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod listener_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn automatic_pair_retries_a_real_tcp_collision_and_releases_old_udp()
+    -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let requested: SocketAddr = "127.0.0.1:0".parse()?;
+        let (udp, reserved_tcp, occupied) =
+            finish_listener_bind(requested, UdpSocket::bind(requested).await?).await?;
+        // Keep the real TCP listener, then reuse its UDP half as the first
+        // automatic attempt so collision recovery is exercised deterministically.
+        let (udp, tcp, address) = finish_listener_bind(requested, udp).await?;
+        assert_ne!(address, occupied);
+        assert_eq!(udp.local_addr()?, address);
+        assert_eq!(tcp.local_addr()?, address);
+        let reclaimed_udp = UdpSocket::bind(occupied).await?;
+        assert_eq!(reserved_tcp.local_addr()?, reclaimed_udp.local_addr()?);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn explicit_port_collision_is_reported_and_releases_udp()
+    -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let requested: SocketAddr = "127.0.0.1:0".parse()?;
+        let (udp, reserved_tcp, occupied) =
+            finish_listener_bind(requested, UdpSocket::bind(requested).await?).await?;
+        let error = finish_listener_bind(occupied, udp).await.unwrap_err();
+        assert!(
+            matches!(error, SpaceDnsError::ListenerBind { transport: "TCP", source }
+            if source.kind() == std::io::ErrorKind::AddrInUse)
+        );
+        let reclaimed_udp = UdpSocket::bind(occupied).await?;
+        assert_eq!(reserved_tcp.local_addr()?, reclaimed_udp.local_addr()?);
+        Ok(())
     }
 }
