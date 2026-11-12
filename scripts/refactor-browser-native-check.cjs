@@ -329,6 +329,7 @@ async function main() {
         }
       };
     }, profile);
+    await page.setViewport({ width: 1440, height: 1000 });
     await page.goto(ready.origin, { waitUntil: 'networkidle0' });
     check(await page.evaluate(() => isSecureContext && location.protocol === 'https:'), 'Production page must run in an HTTPS secure context');
     await consoleUi.entry(page, args, report, 'connect');
@@ -362,6 +363,7 @@ async function main() {
     } finally {
       await sibling.close();
     }
+    await consoleUi.pages(page, args, report);
     await edgeNamespaceUi.run(page, ready, report);
     await networkMembershipUi.run(page, ready, report, { engine: args.engine, disconnectedEvent: CDPSessionEvent.Disconnected });
     await relayAttributesUi.run(page, ready, report, { engine: args.engine, disconnectedEvent: CDPSessionEvent.Disconnected });

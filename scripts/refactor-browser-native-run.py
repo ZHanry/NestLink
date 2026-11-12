@@ -35,6 +35,8 @@ JSON_RECEIPTS = (
 JSONL_RECEIPTS = ("management-stages.jsonl", "input-records.jsonl")
 PNG_RECEIPTS = (
     "browser-report-signin.png", "browser-report-login-devices.png",
+    *("browser-report-console-" + name + ".png" for name in (
+        "desktop", "services", "spaces", "devices", "accounts", "network", "nodes", "audit")),
     "browser-report-video.png", "browser-report-failure.png",
     "browser-report-workspace.png", "browser-report-tunnel-editor.png", "browser-report-remote-narrow.png",
 )
@@ -65,7 +67,7 @@ MEMBERSHIP_UI_FIELDS = (
 CONSOLE_UI_FIELDS = (
     "passed", "entry_is_focused", "navigation_matches_prototype", "real_login_sessions",
     "cancel_keeps_session", "other_session_revoked_and_read_back",
-    "revoked_browser_requires_signin", "current_session_preserved",
+    "revoked_browser_requires_signin", "current_session_preserved", "all_pages_reviewable",
 )
 AUTHORITY_UI_FIELDS = (
     "passed", "revision_epoch_bound", "rotation_advances_and_changes_key",

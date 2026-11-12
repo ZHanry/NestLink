@@ -296,7 +296,7 @@ class CandidateTests(unittest.TestCase):
         output = self.root / "candidate.deb"
         P.deb_candidate(inputs, output, "server", "arm64", self.value)
         fields = P.TOOLS.run(["dpkg-deb", "--field", output, "Version", "Architecture", "Package"]).decode()
-        self.assertIn("Version: 0.8.1~rc.1", fields)
+        self.assertIn("Version: 0.8.1~rc.2", fields)
         self.assertIn("Architecture: arm64", fields)
         self.assertIn("Package: nestlink-rc-server", fields)
         extracted = self.root / "installed"

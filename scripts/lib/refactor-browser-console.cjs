@@ -79,4 +79,30 @@ async function sessions(page, sibling, args, report) {
     facts.passed = true;
   } finally { page.off('request', observe); }
 }
-module.exports = { entry, sessions };
+async function pages(page, args, report) {
+  const facts = report.console_ui;
+  facts.pages = [];
+  await page.setViewport({ width: 1440, height: 1000 });
+  await page.locator('.language-selector button[lang="zh-CN"]').click();
+  for (const name of ['desktop','services','spaces','devices','accounts','network','nodes','audit']) {
+    await page.locator('.sidebar nav [data-section="' + name + '"]').click();
+    await page.waitForFunction(name => document.querySelector('.sidebar nav [aria-current="page"]')?.dataset.section === name
+      && document.querySelector('.refresh-button')?.disabled === false, {}, name);
+    if (name === 'services') await page.waitForFunction(() => document.querySelector('.tunnel-records')?.getAttribute('aria-busy') === 'false');
+    if (name === 'devices') await page.waitForFunction(() => document.querySelector('.login-devices')?.getAttribute('aria-busy') === 'false');
+    const layout = await page.evaluate(() => ({ horizontal_overflow: document.documentElement.scrollWidth > innerWidth + 1,
+      headings: document.querySelectorAll('.content > .page-head h1').length,
+      sidebar_width: document.querySelector('.sidebar').getBoundingClientRect().width,
+      sidebar_color: getComputedStyle(document.querySelector('.sidebar')).backgroundColor }));
+    check(!layout.horizontal_overflow && layout.headings === 1 && layout.sidebar_width === 214,
+      'Approved page frame is missing or overflows: ' + name);
+    check(layout.sidebar_color === 'rgb(238, 235, 245)', 'Sidebar must use the approved lilac token');
+    await page.screenshot({ path: args.report.replace(/\.json$/, '-console-' + name + '.png'), fullPage: false });
+    facts.pages.push({ name, ...layout });
+  }
+  await page.locator('.language-selector button[lang="en"]').click();
+  await page.locator('[data-section="desktop"]').click();
+  await page.waitForSelector('.desktop-directory button.record', { visible: true });
+  facts.all_pages_reviewable = true;
+}
+module.exports = { entry, sessions, pages };

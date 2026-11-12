@@ -86,7 +86,7 @@ jobs:
           assert tomllib.loads(pathlib.Path('Cargo.toml').read_text())['workspace']['dependencies']['futures-util'] == {
               'version': '0.3.31', 'features': ['sink']}
           assert security['target']['cfg(unix)']['dependencies']['rustix'] == {
-              'version': '1.1.2', 'features': ['process', 'fs']}
+              'version': '=1.1.6', 'features': ['process', 'fs']}
           assert security['target']['cfg(windows)']['dependencies']['tokio-util'] == {
               'version': '=0.7.20', 'features': ['io-util']}
           assert {'Win32_Foundation', 'Win32_System_Pipes', 'Win32_System_IO'} <= set(
