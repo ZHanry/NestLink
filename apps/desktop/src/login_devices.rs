@@ -20,28 +20,7 @@ fn activity(time: Option<u64>, english: bool) -> String {
     let Some(time) = time else {
         return if english { "Not recorded" } else { "未记录" }.into();
     };
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(time, |v| v.as_secs());
-    let seconds = now.saturating_sub(time);
-    match seconds {
-        0..60 => if english { "Just now" } else { "刚刚" }.into(),
-        60..3600 => format!(
-            "{} {}",
-            seconds / 60,
-            if english { "minutes ago" } else { "分钟前" }
-        ),
-        3600..86400 => format!(
-            "{} {}",
-            seconds / 3600,
-            if english { "hours ago" } else { "小时前" }
-        ),
-        _ => format!(
-            "{} {}",
-            seconds / 86400,
-            if english { "days ago" } else { "天前" }
-        ),
-    }
+    format!("{} UTC", widgets::utc_time(time))
 }
 
 impl DesktopApp {
